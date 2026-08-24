@@ -1,0 +1,17 @@
+# Prettier の対象外 (sdd-template が配布する初期値。以後は消費 repo が所有・追記してよい)。
+
+# rulesync 生成物 (正本は .rulesync/。整形は中央の生成時に適用済み)
+AGENTS.md
+CLAUDE.md
+.agents/
+.claude/
+.codex/
+.cursor/
+.mcp.json
+
+# 配布物のテンプレート。編集も整形も配布元 (sdd-template) でのみ行う。
+# 消費側で整形すると、次の link.sh が配布元版で上書きして巻き戻り、
+# commit のたびに整形と巻き戻りを往復する。
+# (project.yml のテンプレートは、値がプレースホルダ (<host> / <path> 等) の間は
+#  YAML として解析できず prettier が parse error で落ちるため、いずれにせよ対象外)
+templates/
