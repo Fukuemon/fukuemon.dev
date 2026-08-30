@@ -1,9 +1,9 @@
 /* preflight は読み込まない。
    本文の `p` の余白は UA 既定に依存しており、preflight はそれを 0 にする。
-   初期化と要素の既定は utilities.css が自前で持つ。
+   初期化と要素の既定は utilities.css の `@layer base` が持つ。
 
    層の順は下ほど強い。utility を最後に置き、markup 側の 1 語が部品の規則に勝つようにする。 */
-@layer theme, third-party, fukuemon, utilities;
+@layer theme, base, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
