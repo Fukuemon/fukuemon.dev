@@ -1,0 +1,41 @@
+---
+import AboutLinks from "./AboutLinks.astro";
+import Tate from "./Tate.astro";
+import { PROFILE, STACK } from "../data/profile";
+---
+
+{/* about は独立したページを作らず、ここに畳む (ADR-0009) */}
+<section class="g-rail about">
+  <Tate as="h2" class="tate-head" text="about" />
+  <div class="section-link">
+    <AboutLinks />
+  </div>
+  <div>
+    <div class="about__head">
+      {/* 名乗りが隣にあるので、絵に読み上げる中身は無い。
+          1 枚のために sharp を足さず、256px の webp に落として置いてある (4.7 KiB) */}
+      <img class="about__face" src="/avatar.webp" alt="" width="88" height="88" />
+      <div>
+        <p class="about__name">
+          <span class="mono">{PROFILE.name}</span>
+          <span class="meta about__real">{PROFILE.realName}</span>
+        </p>
+        <p class="prose about__role">{PROFILE.role}</p>
+      </div>
+    </div>
+
+    <p class="prose about__lead">{PROFILE.lead}</p>
+    <p class="prose about__note">{PROFILE.note}</p>
+
+    <dl class="about__stack">
+      {
+        STACK.map((row) => (
+          <div class="about__row">
+            <dt class="mono meta about__key">{row.label}</dt>
+            <dd class="mono about__val">{row.items.join(" · ")}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

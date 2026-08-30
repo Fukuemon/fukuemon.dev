@@ -854,6 +854,27 @@
 /* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
 @layer fukuemon {
   .about { margin: var(--gap-inter-2) var(--gutter); }
+  /* 絵と名乗りを横に並べる。狭い画面では上下に積む */
+  .about__head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-intra-4);
+    margin-block-end: var(--gap-intra-3);
+  }
+  /* 角丸を使わない。四角のまま置く */
+  .about__face { flex: 0 0 auto; border: 1px solid var(--rule-strong); }
+  /* 名乗り。肩書きより先に、何と呼べばよいかを出す */
+  .about__name {
+    display: flex;
+    align-items: baseline;
+    gap: var(--gap-intra-2);
+    margin: 0 0 var(--gap-intra-2);
+    font-size: 1.15rem;
+    letter-spacing: .12em;
+  }
+  /* handle だけでは登壇や OSS の名前と結び付かない。並べて置く */
+  .about__real { letter-spacing: .08em; }
+  .about__role { margin: 0; max-inline-size: var(--measure-w); }
   .about__lead { margin: 0; max-inline-size: var(--measure-w); }
   .about__note {
     margin: var(--gap-intra-3) 0 0;
@@ -861,34 +882,27 @@
     color: var(--fg-2);
     font-size: 0.9rem;
   }
+  /* 使っているもの。罫で行を分ける。面や角丸は使わない */
+  .about__stack {
+    margin: var(--gap-inter-1) 0 0;
+    max-inline-size: var(--measure-w);
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  .about__row {
+    display: grid;
+    grid-template-columns: 6.5em minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--gap-intra-3);
+    padding-block: var(--gap-intra-2);
+    border-block-end: 1px solid var(--rule);
+  }
+  .about__key { margin: 0; }
+  .about__val { margin: 0; font-size: 0.85rem; }
+  @media (max-width: 720px) {
+    /* 語が長いと 6.5em では 2 行に割れる。上下に積む */
+    .about__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  }
   .about__foot { margin-block-start: var(--gap-inter-2); }
-  .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-4); }
-  .links a { color: var(--link); }
-}
-
-/* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
-@layer fukuemon {
-  .labmain--wide { max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter)); }
-  .pg-intro { margin-block: var(--gap-intra-3); }
-  .pg-preset {
-    display: block;
-    inline-size: 100%;
-    padding-block: var(--gap-intra-1);
-    border: 0;
-    border-block-start: 1px solid var(--rule);
-    background: none;
-    color: var(--link);
-    font: inherit;
-    font-size: 0.875rem;
-    text-align: start;
-    cursor: pointer;
-  }
-  /* 外部キー。ER のリレーション */
-  .peek__rel {
-    padding: 0 0 var(--gap-intra-1) var(--gap-intra-3);
-    color: var(--fg-2);
-    font-size: 0.75rem;
-  }
 }
 
 /* ER 図。実体と外部キーだけを箱と線で描く */
