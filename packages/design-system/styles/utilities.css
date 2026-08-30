@@ -11,6 +11,10 @@
   *::before,
   *::after {
     box-sizing: border-box;
+    /* preflight を読まないので、その border の初期化だけをここに置く。
+       これが無いと `border-b` を当てた要素の他 3 辺に medium (3px) の枠が付く */
+    border-width: 0;
+    border-style: solid;
   }
 
   /* sticky ヘッダの下へアンカー先とフォーカスが隠れるのを防ぐ */

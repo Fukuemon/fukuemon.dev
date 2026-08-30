@@ -842,8 +842,6 @@
 /* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
 @layer components {
   /* 挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
-  .about { position: relative; overflow: hidden; }
-  .about__art { position: absolute; inset: 0; pointer-events: none; }
   .about__veil {
     position: absolute; inset: 0;
     background: linear-gradient(96deg, var(--color-veil-1) 0 42%, var(--color-veil-0) 88%);
@@ -851,58 +849,6 @@
   /* 全幅では横方向の霞だと枝が文字に掛かる */
   @media (max-width: 720px) {
     .about__veil { background: linear-gradient(to bottom, var(--color-veil-1) 0 82%, var(--color-veil-0) 100%); }
-  }
-  /* 層を作らないと霞の下へ潜る */
-  .about__grid {
-    position: relative;
-    margin: var(--spacing-inter-2) var(--gutter);
-    padding-block: var(--spacing-inter-1);
-  }
-  .about__head {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-intra-4);
-    margin-block-end: var(--spacing-inter-1);
-  }
-  .about__face { flex: 0 0 auto; border: 1px solid var(--color-rule-strong); background: var(--color-panel); }
-  .about__name {
-    margin: 0;
-    font-family: var(--font-mono);
-    letter-spacing: .04em;
-    line-height: 1.1;
-  }
-  /* 動きは motion.css が持つ */
-  .about__char { display: inline-block; }
-  .about__reading { margin: var(--spacing-intra-1) 0 0; }
-  .about__role { margin: var(--spacing-intra-2) 0 0; max-inline-size: var(--measure-w); }
-  .about__lead { margin: 0; max-inline-size: var(--measure-w); }
-  @media (max-width: 720px) {
-    .about__head { flex-direction: column; align-items: flex-start; gap: var(--spacing-intra-3); }
-  }
-  .about__note {
-    margin: var(--spacing-intra-3) 0 0;
-    max-inline-size: var(--measure-w);
-    color: var(--color-fg-2);
-    font-size: 0.9rem;
-  }
-  .about__stack {
-    margin: var(--spacing-inter-1) 0 0;
-    max-inline-size: var(--measure-w);
-    border-block-start: 1px solid var(--color-rule-strong);
-  }
-  .about__row {
-    display: grid;
-    grid-template-columns: 6.5em minmax(0, 1fr);
-    align-items: baseline;
-    gap: var(--spacing-intra-3);
-    padding-block: var(--spacing-intra-2);
-    border-block-end: 1px solid var(--color-rule);
-  }
-  .about__key { margin: 0; }
-  .about__val { margin: 0; font-size: 0.85rem; }
-  @media (max-width: 720px) {
-    /* 語が長いと 6.5em では 2 行に割れる */
-    .about__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   }
   .about__foot { margin-block-start: var(--spacing-inter-2); }
 
