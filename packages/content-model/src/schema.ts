@@ -17,47 +17,30 @@ export const portalBase = z.object({
     .optional(),
 });
 
-/**
- * 記事は固有の属性を持たない。
- * 読了時間は出さない。手で書くと本文の分量とずれ、ずれた数字は
- * 同じ行にある実測値まで疑われる。
- */
+/** 読了時間は出さない。手で書くと本文の分量とずれる */
 export const articleFields = {};
 
 export const handsOnFields = {
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
   duration: z.number().int().positive(),
-  /** 実行パネルが最初に流す SQL。全手順で 1 インスタンスを共有する */
+  /** 全手順で 1 インスタンスを共有する */
   setup: z.string().optional(),
   /**
-   * 手を動かす場所。3 つに分かれる。
-   *
-   * - `embedded` — ページの中で動く。cross-origin isolation を要求しない
-   * - `local`    — 読者が自分の環境に用意する。実行環境をこちらで持たない
-   *
-   * `level` で分けるのは、**ページに何を置くかが変わる**ためである。
-   * embedded は実行パネル、local は clone の手順を置く。
-   *
-   * `sandbox` (WebContainers / WebVM) は ADR-0006 で設計だけ決めてある。
-   * 実装するときに足す。受け口だけ先に開けない。
+   * ページに何を置くかが変わるので level で分ける。
+   * embedded は実行パネル、local は clone の手順。
+   * sandbox は ADR-0006 で設計だけ決めてあり、実装するときに足す。
    */
   interactive: z
     .discriminatedUnion("level", [
       z.object({
         level: z.literal("embedded"),
-        /**
-         * WASM の実行環境。**実装済みの値だけを並べる。**
-         * 先回りして受理すると、ビルドを通ったコンテンツが読者の押下で初めて失敗する。
-         */
+        /** 実装済みの値だけを並べる。先回りして受理すると読者の押下で初めて失敗する */
         runtime: z.enum(["pglite"]),
       }),
       z.object({
         level: z.literal("local"),
-        /** クローン先。読者はここを自分の環境へ持っていく */
         repository: z.string().url(),
-        /** 用意の仕方。devcontainer なら開くだけで済む */
         via: z.enum(["devcontainer", "docker-compose", "manual"]),
-        /** 始める前に要るもの。名前と、確かめるコマンド */
         requires: z
           .array(z.object({ name: z.string(), check: z.string().optional() }))
           .default([]),
@@ -66,25 +49,20 @@ export const handsOnFields = {
     .optional(),
 };
 
-/** 押すと入力欄へ入る例 */
 export const presetSchema = z.object({ label: z.string(), sql: z.string() });
 
-/**
- * 遊び場。手順に縛られず動かす場所。
- * 記事とハンズオンと同じく 1 枚の Markdown で表す (ADR-0009)。
- */
+/** 記事とハンズオンと同じく 1 枚の Markdown で表す (ADR-0009) */
 export const playgroundSchema = z.object({
   contentId: z.string().regex(CONTENT_ID),
   title: z.string(),
   description: z.string(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
-  /** 実行環境。実装済みの値だけを並べる */
+  /** 実装済みの値だけを並べる */
   runtime: z.enum(["pglite"]),
-  /** 最初に 1 度だけ流す初期化 */
   setup: z.string().optional(),
-  /** 押すと入力欄へ入る例。読者は白紙から書き始めなくてよい */
+  /** 押すと入力欄へ入る例 */
   presets: z.array(presetSchema).default([]),
-  /** 一覧の並び順。小さいほど前 */
+  /** 小さいほど前 */
   order: z.number().int().default(0),
 });
 

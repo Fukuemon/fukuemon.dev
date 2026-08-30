@@ -1,11 +1,9 @@
 /**
- * 配色の検査。ビルド前に走らせる。
+ * 配色の検査。色は手で書き換えるものなので、ずれても実行時には気づけない。
  *
  * 1. `code-theme.ts` の値が `tokens.css` の `--c-*` と一致すること
  * 2. 文字に使うトークンが地に対して 4.5:1 以上であること
  * 3. コードの 5 トークンが輝度の梯子になっていること
- *
- * 色は手で書き換えるものなので、ずれても実行時には気づけない。
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -33,10 +31,7 @@ export function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/**
- * `:root` の `light-dark(明, 暗)` を明暗 2 つの表に開く。
- * ブラウザが読むのと同じ 1 箇所を読むので、明暗で値がずれることがない。
- */
+/** ブラウザが読むのと同じ 1 箇所を読む。明暗で値がずれない */
 function readTokens(): { light: Map<string, string>; dark: Map<string, string> } {
   const css = readFileSync(here("./styles/tokens.css"), "utf8");
   const i = css.indexOf(":root {");
@@ -64,7 +59,6 @@ export function checkContrast(): string[] {
     ["明", LIGHT, tokens.light],
     ["暗", DARK, tokens.dark],
   ] as const) {
-    // 1. code-theme.ts と tokens.css が一致するか
     const bg = map.get("--code-bg");
     if (bg !== palette.bg) {
       errors.push(`${name}: --code-bg が ${bg} / code-theme.ts が ${palette.bg}`);
@@ -76,13 +70,11 @@ export function checkContrast(): string[] {
       }
     }
 
-    // 2. コードの 5 トークンが 4.5:1 以上か
     for (const k of CODE_KEYS) {
       const r = contrast(palette[k], palette.bg);
       if (r < MIN_TEXT) errors.push(`${name}: --c-${k} が ${r.toFixed(2)} (4.5 未満)`);
     }
 
-    // 3. 文字に使うトークンが地に対して 4.5:1 以上か
     const paper = map.get("--paper");
     if (paper) {
       for (const k of ["--ink", "--ink-2", "--green", "--blue", "--rust", "--rule-strong"]) {
@@ -93,7 +85,6 @@ export function checkContrast(): string[] {
       }
     }
 
-    // 4. 輝度の梯子が単調か
     const ladder = CODE_KEYS.map((k) => contrast(palette[k], palette.bg)).sort((a, b) => b - a);
     for (let i = 0; i < ladder.length - 1; i++) {
       const gap = (ladder[i] as number) / (ladder[i + 1] as number);
@@ -103,7 +94,7 @@ export function checkContrast(): string[] {
   return errors;
 }
 
-/** import しただけで終了しないよう、直接起動したときだけ走らせる */
+// import しただけで終了しないよう、直接起動したときだけ走らせる
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const errors = checkContrast();
   if (errors.length > 0) {

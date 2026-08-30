@@ -6,22 +6,18 @@ import SqlEditor from "./SqlEditor";
 import { useRunner } from "./useRunner";
 
 type Props = {
-  /** 最初に 1 度だけ流す初期化。無い遊び場もある */
   setup?: string;
-  /** 入力欄の初期値 */
   initial: string;
   engine?: string;
 };
 
 const KEY = "playground";
 
-/** 手順に縛られず動かす場所。手順の記録を持たないぶん SqlRunner より薄い */
 export default function Playground({ setup, initial, engine = "実行環境" }: Props) {
   const [text, setText] = useState(initial);
   const editorId = useId();
   const runner = useRunner({ key: KEY, setup });
 
-  // 側柱の「試す」は別の島。事象で受ける
   usePreset(KEY, setText);
 
   return (

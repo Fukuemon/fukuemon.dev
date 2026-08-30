@@ -3,7 +3,6 @@ import type { Column } from "./catalog";
 
 export type Detail = { columns: Column[]; head: string[]; rows: unknown[][] };
 
-/** 1 テーブルの中身。列の定義と、先頭の行 */
 export default function TableDetail({ detail, limit }: { detail: Detail; limit: number }) {
   return (
     <div className="sheet__body">

@@ -1,7 +1,6 @@
 import { cellText } from "./cell";
 import type { Result } from "./useRunner";
 
-/** 実行結果の表。列を返さない文 (insert / analyze) では何も出さない */
 export default function ResultTable({ result }: { result: Result }) {
   if (result.columns.length === 0) return null;
   return (

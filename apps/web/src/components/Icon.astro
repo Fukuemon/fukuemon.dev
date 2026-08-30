@@ -1,17 +1,9 @@
 ---
-/**
- * 外部サービスの印。
- * 語よりも形のほうが速く見分けられるものだけを持つ。
- *
- * ブランドの印は simple-icons (CC0-1.0) の path を写した。
- * RSS は商標ではなく、配信の標準の印なので自分で引いている。
- * 塗りは `currentColor`。差し色はリンク側が決める。
- */
+/** ブランドの印は simple-icons (CC0-1.0) の path を写した。RSS は自分で引いている */
 type IconName = "github" | "x" | "zenn" | "rss";
 
 interface Props {
   name: IconName;
-  /** 版面の字送りに合わせる。既定は本文脇の目安 */
   size?: number;
 }
 const { name, size = 18 } = Astro.props as Props;

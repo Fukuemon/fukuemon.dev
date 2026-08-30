@@ -12,7 +12,6 @@ type Props = {
 /** `reltuples` は ANALYZE が入るまで -1。概算であることも明示する */
 export const rowLabel = (n: number) => (n < 0 ? "未計測" : `約 ${n.toLocaleString("ja-JP")} 行`);
 
-/** 側柱の「いまのテーブル」。名前と概算行数、外部キーの向きを出す */
 export default function PeekList({
   tables,
   relations,

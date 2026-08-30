@@ -1,16 +1,11 @@
 import { cellText } from "./cell";
 import { serialize, type Runtime } from "./runtime";
 
-/**
- * いま DB に何が入っているかを Postgres のカタログから引く。
- * 問い合わせと行の組み立てをここに閉じ、component は結果だけを受け取る。
- */
-
 export type Table = { name: string; rows: number };
 export type Column = { name: string; type: string; nullable: boolean; pk: boolean };
 export type Relation = { name: string; src: string; tgt: string; def: string };
 
-/** `reltuples` は `ANALYZE` が入るまで -1 なので、そのまま負値で渡して呼ぶ側で断る */
+/** `reltuples` は ANALYZE が入るまで -1。負値のまま渡し、呼ぶ側が断る */
 const TABLES_SQL = `select c.relname as name, coalesce(c.reltuples::bigint, -1) as rows
 from pg_class c
 join pg_namespace n on n.oid = c.relnamespace
@@ -37,10 +32,8 @@ join pg_namespace n on n.oid = src.relnamespace
 where c.contype = 'f' and n.nspname = 'public'
 order by src.relname, c.conname`;
 
-/** 大文字や記号を含む名前のために識別子で包む */
-const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
-/** `regclass` へ渡す文字列リテラル */
-const literal = (v: string) => `'${v.replaceAll("'", "''")}'`;
+const quoteIdentifier = (name: string) => `"${name.replaceAll('"', '""')}"`;
+const quoteLiteral = (v: string) => `'${v.replaceAll("'", "''")}'`;
 
 const rowsOf = async (rt: Runtime, sql: string): Promise<unknown[][]> => {
   const { results } = await serialize(() => rt.exec(sql));
@@ -62,9 +55,9 @@ export async function fetchRelations(rt: Runtime): Promise<Relation[]> {
   }));
 }
 
-/** テーブル名はカタログ由来だけを渡す。読者の入力をここへ通さない */
+/** `table` はカタログ由来の名前だけを渡す。読者の入力をここへ通さない */
 export async function fetchColumns(rt: Runtime, table: string): Promise<Column[]> {
-  const rows = await rowsOf(rt, COLUMNS_SQL.replace("$1", literal(table)));
+  const rows = await rowsOf(rt, COLUMNS_SQL.replace("$1", quoteLiteral(table)));
   return rows.map((r) => ({
     name: cellText(r[0] ?? ""),
     type: cellText(r[1] ?? ""),
@@ -79,7 +72,7 @@ export async function fetchRows(
   limit: number,
 ): Promise<{ head: string[]; rows: unknown[][] }> {
   const { results } = await serialize(() =>
-    rt.exec(`select * from ${quote(table)} limit ${limit}`),
+    rt.exec(`select * from ${quoteIdentifier(table)} limit ${limit}`),
   );
   const last = results.at(-1);
   return { head: last?.fields.map((f) => f.name) ?? [], rows: last?.rows ?? [] };
