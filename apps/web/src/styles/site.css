@@ -57,15 +57,6 @@
   .wood-band--fill { position: absolute; inset: 0; }
 }
 
-/* SQL の編集。透明な textarea を色付き pre に重ねる。
-   ずれないよう font / padding / 折り返しを両者で揃える */
-@layer components {
-  .sqled__ink,
-  .sqled__input {
-    font: inherit;
-  }
-}
-
 @layer components {
   /* 末尾の自己紹介。about を 1 ページ持つほどの分量ではない */
   .colophon__links a { color: var(--color-link); display: flex; align-items: baseline; gap: var(--spacing-intra-1); }
