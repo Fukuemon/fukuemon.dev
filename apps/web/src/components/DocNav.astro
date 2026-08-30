@@ -14,21 +14,25 @@ const prev = i > 0 ? siblings[i - 1] : undefined;
 const next = i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : undefined;
 ---
 
-<nav class="docnav" aria-label={`ほかの${KIND_LABEL[current.type]}`}>
-  <a class="mono meta docnav__all" href={KIND_INDEX[current.type]}>
+{/* 狭い画面では側柱に畳まれるので出さない (max-wide:hidden) */}
+<nav
+  class="docnav flex flex-col gap-intra-2 pt-inter-1 border-t border-rule-strong max-wide:hidden"
+  aria-label={`ほかの${KIND_LABEL[current.type]}`}
+>
+  <a class="mono meta text-link" href={KIND_INDEX[current.type]}>
     {KIND_LABEL[current.type]}の一覧 →
   </a>
-  <ol class="docnav__list">
+  <ol class="list-none m-0 p-0">
     {
       siblings.map((s) => (
         <li>
           <a
-            class="docnav__item"
+            class="docnav__item flex flex-col gap-[2px] py-intra-1 border-t border-rule text-fg-2 aria-[current]:text-fg aria-[current]:ps-intra-2 aria-[current]:shadow-[inset_2px_0_0_var(--color-now)]"
             href={s.href}
             aria-current={s.contentId === current.contentId ? "page" : undefined}
           >
-            <span class="mono meta docnav__date">{ymd(s.date)}</span>
-            <span class="docnav__title">{s.title}</span>
+            <span class="mono meta text-[0.75rem]">{ymd(s.date)}</span>
+            <span class="text-[0.85rem] leading-[1.4] line-clamp-2">{s.title}</span>
           </a>
         </li>
       ))
@@ -36,9 +40,17 @@ const next = i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : undefined;
   </ol>
   {
     (prev || next) && (
-      <div class="docnav__seq mono meta">
-        {prev && <a href={prev.href}>← 新しい</a>}
-        {next && <a href={next.href}>古い →</a>}
+      <div class="mono meta flex justify-between gap-intra-3 pt-intra-2 border-t border-rule">
+        {prev && (
+          <a class="text-link" href={prev.href}>
+            ← 新しい
+          </a>
+        )}
+        {next && (
+          <a class="text-link" href={next.href}>
+            古い →
+          </a>
+        )}
       </div>
     )
   }

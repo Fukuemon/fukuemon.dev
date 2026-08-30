@@ -1,23 +1,29 @@
-<button type="button" class="btn search__open" data-search-open aria-haspopup="dialog">
+<button type="button" class="btn flex-none" data-search-open aria-haspopup="dialog">
   検索
 </button>
 
-<dialog class="sheet search" data-search>
-  <header class="sheet__head">
+<dialog
+  class="sheet search open:flex w-[min(92vw,var(--measure-wide))] max-h-[82dvh] flex-col border border-rule-strong bg-paper px-(--gutter) py-inter-1 text-fg"
+  data-search
+>
+  <header class="sheet__head flex flex-wrap items-baseline gap-x-intra-3 gap-y-intra-2 border-b-2 border-rule-strong pb-intra-2">
     <label class="sr" for="search-q">本文を検索</label>
     <input
       id="search-q"
-      class="mono search__input"
+      class="mono flex-[1_1_12rem] min-w-0 py-intra-1 px-intra-2 border border-rule-strong bg-paper text-fg text-[1rem]"
       type="search"
       autocomplete="off"
       placeholder="本文を検索"
       data-search-input
     />
-    <button type="button" class="btn sheet__close" data-search-close>閉じる</button>
+    <button type="button" class="btn sheet__close ms-auto flex-none whitespace-nowrap" data-search-close>
+      閉じる
+    </button>
   </header>
-  <div class="search__body">
-    <p class="mono meta search__note" data-search-note>語を入れてください</p>
-    <ol class="search__list" data-search-list></ol>
+  {/* 結果の一覧は search.ts が組む。その要素へ当てる規則だけ site.css に残す */}
+  <div class="overflow-y-auto pt-intra-3">
+    <p class="mono meta m-0" data-search-note>語を入れてください</p>
+    <ol class="list-none m-0 p-0" data-search-list></ol>
   </div>
 </dialog>
 

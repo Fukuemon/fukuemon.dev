@@ -60,12 +60,26 @@ const related = await getRelated(ref.contentId);
         <slot />
       </article>
 
-      <nav class="labnav" aria-label="手順の移動">
-        <button type="button" class="btn labnav__btn" data-go="prev" aria-disabled="true">
+      {/* 狭い画面の下余白は、左下に固定した開閉ボタンと前後ボタンの重なりを避けるため */}
+      <nav
+        class="flex items-center justify-between gap-intra-3 mt-inter-2 pt-intra-3 border-t border-rule-strong max-wide:pb-[calc(var(--gutter)+3rem)]"
+        aria-label="手順の移動"
+      >
+        <button
+          type="button"
+          class="btn aria-disabled:opacity-35 aria-disabled:cursor-default"
+          data-go="prev"
+          aria-disabled="true"
+        >
           ← 前へ
         </button>
-        <span class="mono meta labnav__now"></span>
-        <button type="button" class="btn labnav__btn" data-go="next" aria-disabled="true">
+        <span class="mono meta labnav__now flex-auto text-center"></span>
+        <button
+          type="button"
+          class="btn aria-disabled:opacity-35 aria-disabled:cursor-default"
+          data-go="next"
+          aria-disabled="true"
+        >
           次へ →
         </button>
       </nav>

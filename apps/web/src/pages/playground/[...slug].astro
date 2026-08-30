@@ -31,7 +31,7 @@ const d = entry.data;
         </p>
         <h1 class="display labhead__title">{d.title}</h1>
       </header>
-      <div class="prose pg-intro"><Content /></div>
+      <div class="prose my-intra-3"><Content /></div>
       <Playground client:load setup={d.setup} initial={d.presets[0]?.sql ?? "select version();"} engine="Postgres" />
     </div>
   </div>

@@ -38,8 +38,10 @@ export default function ErDiagram({ entities, relations }: Props) {
     PAD * 2 + Math.max(...placed.map((e) => e.y + HEAD_H + e.columns.length * ROW_H)) - PAD;
 
   return (
+    // viewBox に width/height が無いと器いっぱいに引き伸ばされる。
+    // 表と同じく、縮めて読めなくするより横へ流す
     <svg
-      className="er-svg"
+      className="er-svg h-auto w-max max-w-full min-w-full"
       viewBox={`0 0 ${width} ${height}`}
       role="img"
       aria-label="テーブル構成"
@@ -83,23 +85,27 @@ export default function ErDiagram({ entities, relations }: Props) {
             y2={e.y + HEAD_H}
             stroke="var(--color-rule-strong)"
           />
-          <text x={e.x + 10} y={e.y + 18} className="er-svg__name">
+          <text x={e.x + 10} y={e.y + 18} className="fill-fg text-[13px] font-semibold">
             {e.name}
           </text>
           {e.columns.map((c, i) => (
             <g key={c.name}>
               {c.pk && (
-                <text x={e.x + 10} y={e.y + HEAD_H + i * ROW_H + 14} className="er-svg__pk">
+                <text
+                  x={e.x + 10}
+                  y={e.y + HEAD_H + i * ROW_H + 14}
+                  className="fill-now text-[9px] font-semibold"
+                >
                   PK
                 </text>
               )}
-              <text x={e.x + 34} y={e.y + HEAD_H + i * ROW_H + 14} className="er-svg__col">
+              <text x={e.x + 34} y={e.y + HEAD_H + i * ROW_H + 14} className="fill-fg text-[11px]">
                 {c.name}
               </text>
               <text
                 x={e.x + BOX_W - 10}
                 y={e.y + HEAD_H + i * ROW_H + 14}
-                className="er-svg__type"
+                className="fill-fg-2 text-[10px]"
                 textAnchor="end"
               >
                 {short(c.type)}

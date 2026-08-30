@@ -1,9 +1,7 @@
 /* このサイトの部品。トークンと版面は @fukuemon/design-system が持つ */
 @layer components {
 
-
   /* ---- 手順一覧 ---- */
-
 
   /* ---- 種別の色 ---- */
   .kind--lab,
@@ -21,9 +19,6 @@
 }
 
 @layer components {
-}
-
-@layer components {
   @media (min-width: 721px) {
     .g-rail > .tate-head { grid-row: 1 / span 2; }
   }
@@ -32,44 +27,6 @@
 
 /* 実行パネル。Astro の scoped style は island に効かないのでここに置く */
 @layer components {
-  .runner {
-    margin-block: var(--spacing-intra-3);
-    border: 1px solid var(--color-rule-strong);
-    background: var(--color-code-bg);
-  }
-  .runner__bar {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-intra-2);
-    padding: 10px var(--spacing-intra-3);
-    border-block-end: 1px solid var(--color-rule-strong);
-  }
-  .runner__bar:has(.btn) {
-    border-block-end: 0;
-    border-block-start: 1px solid var(--color-rule-strong);
-  }
-  .runner__status, .runner__count { margin-inline-start: auto; }
-  /* 操作行に 2 つ並ぶので、指以外では詰める */
-  .runner .btn { min-block-size: 36px; padding: 0 var(--spacing-intra-3); }
-  @media (pointer: coarse) {
-    .runner .btn { min-block-size: 44px; }
-  }
-  .runner__note {
-    padding: var(--spacing-intra-2) var(--spacing-intra-3);
-    border-block-start: 1px solid var(--color-rule);
-    color: var(--color-now);
-  }
-  .runner__error {
-    margin: 0;
-    padding: var(--spacing-intra-3);
-    border-block-start: 1px solid var(--color-rust);
-    background: var(--color-tint-rust);
-    font-size: 0.85rem;
-    white-space: pre-wrap;
-  }
-  /* 左端を操作行と揃える */
-  .runner__more { margin: 0; padding: var(--spacing-intra-2) var(--spacing-intra-3); }
-  .runner__scroll { overflow-x: auto; border-block-start: 1px solid var(--color-rule-strong); }
   .runner__table { border-collapse: collapse; font-size: 0.85rem; inline-size: 100%; }
   .runner__table th, .runner__table td {
     text-align: start;
@@ -100,55 +57,13 @@
   .wood-band--fill { position: absolute; inset: 0; }
 }
 
-@layer components {
-  /* 起動した Postgres の版。実行が本物であることを示す */
-  .runner__engine { margin-inline-start: auto; color: var(--color-fg-2); }
-  .runner__bar:has(.btn) .runner__count { margin-inline-start: auto; }
-}
-
 /* SQL の編集。透明な textarea を色付き pre に重ねる。
    ずれないよう font / padding / 折り返しを両者で揃える */
 @layer components {
-  .sqled { position: relative; }
   .sqled__ink,
   .sqled__input {
-    margin: 0;
-    padding: var(--spacing-intra-3);
-    border: 0;
-    inline-size: 100%;
-    box-sizing: border-box;
     font: inherit;
-    font-size: 0.9rem;
-    line-height: 1.7;
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow: auto;
-    tab-size: 2;
   }
-  .sqled__ink {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    color: var(--color-c-plain);
-    background: none;
-  }
-  .sqled__input {
-    position: relative;
-    display: block;
-    background: transparent;
-    color: transparent;
-    caret-color: var(--color-fg);
-    resize: vertical;
-    min-block-size: 5em;
-  }
-  .sqled__input::selection { background: var(--color-tint-green); color: var(--color-c-plain); }
-  .sqled__input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
-}
-
-@layer components {
-  /* 縦組みを持たないページの版面 */
-  /* タブ・リード・表の右端を揃える。表だけ幅で止まると右端がずれる */
-  .page { padding: var(--spacing-inter-1) var(--gutter) 0; max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter)); }
 }
 
 @layer components {
@@ -159,77 +74,7 @@
 /* 側柱。目次 / 手順 と、ほかの記事への切り替えを 1 本にまとめる。
    種別が増えても構造が変わらないよう、中身を差し替える形にする */
 @layer components {
-  .rail, .drawer {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-inter-1);
-    max-block-size: calc(100vh - var(--topbar) - var(--spacing-intra-3) * 2);
-    overflow-y: auto;
-    scrollbar-width: thin;
-  }
   .toc { display: flex; flex-direction: column; }
-  .docnav {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-intra-2);
-    padding-block-start: var(--spacing-inter-1);
-    border-block-start: 1px solid var(--color-rule-strong);
-  }
-  .docnav__all { color: var(--color-link); }
-  .docnav__list { list-style: none; margin: 0; padding: 0; }
-  .docnav__item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding-block: var(--spacing-intra-1);
-    border-block-start: 1px solid var(--color-rule);
-    color: var(--color-fg-2);
-  }
-  .docnav__item[aria-current] {
-    color: var(--color-fg);
-    box-shadow: inset 2px 0 0 var(--color-now);
-    padding-inline-start: var(--spacing-intra-2);
-  }
-  .docnav__date { font-size: 0.75rem; }
-  .docnav__title {
-    font-size: 0.85rem;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .docnav__seq {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-intra-3);
-    padding-block-start: var(--spacing-intra-2);
-    border-block-start: 1px solid var(--color-rule);
-  }
-  .docnav__seq a { color: var(--color-link); }
-
-  @media (max-width: 1100px) {
-    .side__panel .docnav { display: none; }
-  }
-}
-
-@layer components {
-  /* 短いページでフッタが画面下端に届かず、下に地色が残る */
-  .shell { min-block-size: 100dvh; display: flex; flex-direction: column; }
-  .shell > main { flex: 1; }
-}
-
-/* playground。手順に縛られず SQL を試す */
-@layer components {
-  .pg-list { list-style: none; margin: 0; padding: 0; }
-  .pg-preset {
-    display: block; inline-size: 100%; text-align: start;
-    min-block-size: 36px; padding: var(--spacing-intra-1) 0;
-    border: 0; border-block-start: 1px solid var(--color-rule);
-    background: transparent; color: var(--color-fg); cursor: pointer;
-    font: inherit; font-size: 0.875rem;
-  }
-  .pg-preset:hover { color: var(--color-link); }
 }
 
 @layer components {
@@ -240,48 +85,15 @@
 
 /* 手元で用意するラボ。実行環境を持たないので、置くのは手順だけ */
 @layer components {
-  .local {
-    margin-block: var(--spacing-inter-1);
-    padding-block-start: var(--spacing-intra-3);
-  }
-  .local__head { margin-block-end: var(--spacing-intra-2); }
-  .local__note { margin-block: 0 var(--spacing-intra-3); color: var(--color-fg-2); }
-  .local__block { margin-block-end: var(--spacing-intra-3); }
-  .local__label { margin-block-end: var(--spacing-intra-1); }
-  .local__reqs { list-style: none; margin: 0; padding: 0; }
-  .local__reqs > li { margin-block-end: var(--spacing-intra-1); }
-  .local__req-name { display: block; font-size: 0.9rem; }
-  .local__repo a { color: var(--color-link); }
-
-  .cmd {
-    display: flex; align-items: center; gap: var(--spacing-intra-2);
-    background: var(--color-code-bg);
-    border: 1px solid var(--color-rule-strong);
-    padding: 8px var(--spacing-intra-3);
-    margin-block-start: 4px;
-  }
-  .cmd + .cmd { border-block-start: 0; }
-  .cmd[data-comment] { background: transparent; border-style: dashed; }
-  .cmd__text { flex: 1; font-size: 0.875rem; overflow-x: auto; white-space: pre; }
-  .cmd[data-comment] .cmd__text { color: var(--color-c-com); font-style: italic; }
   .cmd__copy {
-    flex: 0 0 auto; min-block-size: 32px; padding: 0 var(--spacing-intra-2);
     border: 1px solid var(--color-rule-strong); background: transparent;
     color: var(--color-fg-2); cursor: pointer; font: inherit; font-size: 0.75rem;
   }
   .cmd__copy:hover { background: var(--color-ink); color: var(--color-paper); }
 }
 
-
 /* ハンズオン。1 画面 1 手順。claat の drawer + main を版面に合わせて写した */
 @layer components {
-  .drawer {
-    padding: var(--spacing-intra-3) var(--spacing-intra-3) var(--spacing-inter-1) var(--gutter);
-    border-inline-end: 1px solid var(--color-rule-strong);
-    gap: var(--spacing-intra-4);
-    /* 一覧の中だけを流し、いまのテーブルを画面に残す */
-    overflow: hidden;
-  }
   /* 高さが足りないときは手順の中を流す */
   .drawer > .steps { flex: 1 1 auto; min-block-size: 9rem; }
   .drawer > .peek { flex: 0 0 auto; }
@@ -311,116 +123,10 @@
     margin-block-end: var(--spacing-intra-3);
   }
 
-  .labnav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-intra-3);
-    margin-block-start: var(--spacing-inter-2);
-    padding-block-start: var(--spacing-intra-3);
-    border-block-start: 1px solid var(--color-rule-strong);
-  }
-  .labnav__now { flex: 1 1 auto; text-align: center; }
-  .labnav__btn[aria-disabled="true"] {
-    opacity: 0.35;
-    cursor: default;
-  }
   .labfoot { margin-block-start: var(--spacing-inter-2); padding-block-end: var(--spacing-inter-2); }
 
-  /* いまのテーブル。実行するまで何も出ない */
-  .peek {
-    padding-block-start: var(--spacing-inter-1);
-    border-block-start: 1px solid var(--color-rule-strong);
-  }
-  .peek__label {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-intra-2);
-    inline-size: 100%;
-    padding-block: var(--spacing-intra-1);
-    background: none;
-    border: 0;
-    border-block-end: 1px solid var(--color-rule-strong);
-    color: var(--color-fg-2);
-    font: inherit;
-    text-align: start;
-    cursor: pointer;
-  }
-  .peek__n { margin-inline-start: auto; }
-  /* 開: 下向き / 閉: 右向き */
-  .peek__caret {
-    inline-size: 0;
-    block-size: 0;
-    flex: 0 0 auto;
-    border-inline: 4px solid transparent;
-    border-block-start: 5px solid currentColor;
-  }
-  .peek__label[aria-expanded="false"] .peek__caret {
-    border-block-start: 4px solid transparent;
-    border-block-end: 4px solid transparent;
-    border-inline-start: 5px solid currentColor;
-    border-inline-end: 0;
-  }
-  .peek__list { list-style: none; margin: 0; padding: 0; }
-  .peek__row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--spacing-intra-2);
-    inline-size: 100%;
-    padding-block: var(--spacing-intra-1);
-    border-block-start: 1px solid var(--color-rule);
-    background: none;
-    border-inline: 0;
-    border-block-end: 0;
-    color: var(--color-fg);
-    text-align: start;
-    font: inherit;
-    cursor: pointer;
-  }
-  .peek__name { font-size: 0.8125rem; }
-  .peek__empty { margin: var(--spacing-intra-2) 0 0; }
-
   /* テーブルの中身。top layer なので側柱の幅に縛られない */
-  /* dialog の既定は display:none。flex は開いているときだけに限る */
-  .sheet[open] {
-    display: flex;
-    flex-direction: column;
-  }
-  .sheet {
-    inline-size: min(92vw, var(--measure-wide));
-    max-block-size: 82dvh;
-    padding: var(--spacing-inter-1) var(--gutter);
-    border: 1px solid var(--color-rule-strong);
-    background: var(--color-paper);
-    color: var(--color-fg);
-  }
   .sheet::backdrop { background: rgb(0 0 0 / 0.42); }
-  .sheet__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--spacing-intra-2) var(--spacing-intra-3);
-    padding-block-end: var(--spacing-intra-2);
-    border-block-end: 2px solid var(--color-rule-strong);
-  }
-  .sheet__name { font-size: 1.05rem; font-weight: 600; white-space: nowrap; }
-  .sheet__close { margin-inline-start: auto; flex: 0 0 auto; white-space: nowrap; }
-  .sheet__cols {
-    padding-block: var(--spacing-intra-2);
-    line-height: 1.6;
-    color: var(--color-fg-2);
-  }
-  .sheet__scroll { flex: 1 1 auto; min-block-size: 0; overflow: auto; }
-  .sheet__tbl { border-collapse: collapse; font-size: 0.8125rem; inline-size: 100%; }
-  .sheet__tbl :is(th, td) {
-    padding: 5px var(--spacing-intra-2) 5px 0;
-    text-align: start;
-    white-space: nowrap;
-    border-block-end: 1px solid var(--color-rule);
-  }
-  .sheet__tbl th { border-block-end: 1px solid var(--color-rule-strong); }
-  .sheet__note { padding-block-start: var(--spacing-intra-2); }
 }
 
 /* 本文中の表。Markdown の表には class が付かないので要素で当てる */
@@ -455,178 +161,6 @@
       grid-template-columns: minmax(0, 1fr);
     }
     .labmain { padding-inline: var(--gutter); }
-    /* 画面の左下に固定した開閉ボタンと、本文末尾の前後ボタンが重なる */
-    .labnav { padding-block-end: calc(var(--gutter) + 3rem); }
-  }
-}
-
-/* トップの種別ごとの節。実物を 3 本並べる */
-@layer components {
-  .kind { margin: var(--spacing-inter-3) var(--gutter) 0; }
-  .kind__lead { margin: var(--spacing-intra-2) 0 0; max-inline-size: var(--measure-w); color: var(--color-fg-2); }
-  /* 3 枚に満たないとき、右が大きく空かないよう幅を詰める */
-  .kind__grid {
-    margin-block-start: var(--spacing-inter-1);
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 22rem));
-  }
-  .kind__card {
-    display: flex;
-    flex-direction: column;
-    padding-inline: var(--spacing-intra-4);
-    color: var(--color-fg);
-  }
-  .kind__card:first-child { padding-inline-start: 0; }
-  .kind__card + .kind__card { border-inline-start: 1px solid var(--color-rule); }
-  .kind__tick { inline-size: 26px; block-size: 2px; background: var(--color-now); }
-  .kind__title { margin-block-start: var(--spacing-intra-2); font-size: 1.05rem; }
-  .kind__desc {
-    margin: var(--spacing-intra-1) 0 var(--spacing-intra-3);
-    font-size: 0.9rem;
-    color: var(--color-fg-2);
-    flex-grow: 1;
-  }
-  .kind__meta { color: var(--color-fg-2); }
-
-  @media (max-width: 720px) {
-    .kind__grid { grid-template-columns: minmax(0, 1fr); }
-    .kind__card { padding-inline: 0; }
-    .kind__card + .kind__card {
-      border-inline-start: 0;
-      border-block-start: 1px solid var(--color-rule);
-      padding-block-start: var(--spacing-intra-3);
-      margin-block-start: var(--spacing-intra-3);
-    }
-  }
-}
-
-/* 側柱の開閉。広い画面では列が縮み、狭い画面では横から滑り出す */
-@layer components {
-  .side { display: contents; }
-
-  .side__toggle {
-    grid-column: 1;
-    grid-row: 1;
-    /* 本文が長いので、開閉の起点は画面に貼り付ける。
-       たたんだ側柱では、これだけが側柱への入口になる。
-       側柱の中身が画面より高いと sticky が効かず下へ流れるので、
-       地色を敷いて列幅いっぱいに取り、中身をこの下へ通す */
-    position: sticky;
-    inset-block-start: calc(var(--topbar) + var(--spacing-intra-3));
-    align-self: start;
-    justify-self: stretch;
-    background: var(--color-paper);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-intra-2);
-    margin: var(--spacing-intra-3) 0 0 var(--gutter);
-    padding: var(--spacing-intra-1) var(--spacing-intra-2) var(--spacing-intra-1) 0;
-    background: none;
-    border: 0;
-    color: var(--color-fg-2);
-    font: inherit;
-    font-size: 0.8125rem;
-    cursor: pointer;
-    z-index: 4;
-  }
-  .side__icon {
-    inline-size: 14px;
-    block-size: 10px;
-    flex: 0 0 auto;
-    border-block: 2px solid currentColor;
-    border-block-end-width: 6px;
-    box-sizing: content-box;
-  }
-  .side__panel {
-    grid-column: 1;
-    grid-row: 1;
-    padding-block-start: calc(var(--spacing-intra-3) + 2rem);
-  }
-  [data-open="false"] .side__panel { display: none; }
-  [data-open="false"] .side__toggle { flex-direction: column; }
-  [data-open="false"] .side__label { writing-mode: vertical-rl; letter-spacing: 0.1em; }
-
-  /* 覆いかぶさるのは狭い画面だけ */
-  .side__scrim { display: none; }
-
-  @media (max-width: 1100px) {
-    .side__toggle {
-      position: fixed;
-      inset-block-end: var(--gutter);
-      inset-inline-start: var(--gutter);
-      inset-block-start: auto;
-      justify-self: start;
-      margin: 0;
-      padding: var(--spacing-intra-2) var(--spacing-intra-3);
-      border: 1px solid var(--color-rule-strong);
-      background: var(--color-paper);
-      color: var(--color-fg);
-      z-index: 6;
-      box-shadow: 0 2px 10px rgb(0 0 0 / 0.14);
-    }
-    [data-open="false"] .side__toggle { flex-direction: row; }
-    [data-open="false"] .side__label { writing-mode: horizontal-tb; letter-spacing: normal; }
-
-    /* 横から滑り出す。上に積むと手順を読むたびに本文へ下りることになる */
-    .side__panel {
-      display: block;
-      position: fixed;
-      inset-block: var(--topbar) 0;
-      inset-inline-start: 0;
-      inline-size: min(86vw, 320px);
-      max-block-size: none;
-      padding: var(--spacing-inter-1) var(--gutter);
-      background: var(--color-paper);
-      border-inline-end: 1px solid var(--color-rule-strong);
-      overflow-y: auto;
-      z-index: 5;
-      transform: translateX(-100%);
-      transition: transform 220ms ease;
-    }
-    [data-open="true"] .side__panel { transform: none; }
-    [data-open="false"] .side__panel { display: block; }
-
-    [data-open="true"] .side__scrim {
-      display: block;
-      position: fixed;
-      inset: var(--topbar) 0 0;
-      z-index: 4;
-      border: 0;
-      background: rgb(0 0 0 / 0.34);
-      cursor: pointer;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .side__panel { transition: none; }
-  }
-}
-
-/* テーブルの中身。列の定義 (ER の実体) と先頭の行を並べる */
-@layer components {
-  .sheet__body { display: flex; flex-direction: column; min-block-size: 0; overflow: hidden; }
-  .sheet__sub { padding-block: var(--spacing-intra-2); }
-  /* 列が多いテーブルでは、行の一覧が潰れないよう列の側を先に縮める */
-  .sheet__cols { flex: 0 1 auto; min-block-size: 0; overflow-y: auto; }
-  .sheet__rows { flex: 1 1 auto; min-block-size: 0; display: flex; flex-direction: column; }
-
-  /* 列の一覧。ER 図の 1 実体にあたる */
-  .er { list-style: none; margin: 0; padding: 0; border-block-start: 1px solid var(--color-rule-strong); }
-  .er__row {
-    display: grid;
-    grid-template-columns: 2.4em minmax(6em, 14em) minmax(8em, 1fr) 6em;
-    gap: var(--spacing-intra-2);
-    align-items: baseline;
-    padding-block: 4px;
-    border-block-end: 1px solid var(--color-rule);
-    font-size: 0.8125rem;
-  }
-  .er__key { color: var(--color-now); font-weight: 600; }
-  .er__name { font-weight: 600; }
-
-  @media (max-width: 720px) {
-    .er__row { grid-template-columns: 2.4em minmax(0, 1fr); }
-    .er__type, .er__null { grid-column: 2; }
   }
 }
 
@@ -646,7 +180,6 @@
 @layer components {
   /* 挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
   .about__veil {
-    position: absolute; inset: 0;
     background: linear-gradient(96deg, var(--color-veil-1) 0 42%, var(--color-veil-0) 88%);
   }
   /* 全幅では横方向の霞だと枝が文字に掛かる */
@@ -655,74 +188,16 @@
   }
   .about__foot { margin-block-start: var(--spacing-inter-2); }
 
-  .outside { margin-block-start: var(--spacing-inter-3); }
-  .outside__list { list-style: none; margin: 0; padding: 0; }
-  .outside__row {
-    display: grid;
-    grid-template-columns: 92px minmax(0, 1fr) 4em;
-    align-items: baseline;
-    gap: var(--spacing-intra-4);
-    padding-block: var(--spacing-intra-2);
-    border-block-start: 1px solid var(--color-rule);
-    color: var(--color-fg);
-  }
-  .outside__row:hover .outside__title { text-decoration: underline; text-underline-offset: .2em; }
-  .outside__kind { text-align: end; white-space: nowrap; }
-  @media (max-width: 720px) {
-    /* 題が 2 語しか入らなくなる */
-    .outside__row {
-      grid-template-columns: 92px minmax(0, 1fr);
-      row-gap: 4px;
-    }
-    .outside__title { grid-column: 1 / -1; grid-row: 2; }
-  }
-  /* 字ではないので溝は詰める。当たり判定は 44px を保つ */
-  .links { display: flex; flex-wrap: wrap; gap: var(--spacing-intra-1); margin: 0; }
-  .links__item {
-    justify-content: center;
-    inline-size: 44px;
-    color: var(--color-fg-2);
-    transition: color 140ms ease-out;
-  }
-  .links__item:hover { color: var(--color-link); }
 }
 
 /* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
 @layer components {
   .labmain--wide { max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter)); }
-  .pg-intro { margin-block: var(--spacing-intra-3); }
-  .pg-preset {
-    display: block;
-    inline-size: 100%;
-    padding-block: var(--spacing-intra-1);
-    border: 0;
-    border-block-start: 1px solid var(--color-rule);
-    background: none;
-    color: var(--color-link);
-    font: inherit;
-    font-size: 0.875rem;
-    text-align: start;
-    cursor: pointer;
-  }
-  /* 外部キー。ER のリレーション */
-  .peek__rel {
-    padding: 0 0 var(--spacing-intra-1) var(--spacing-intra-3);
-    color: var(--color-fg-2);
-    font-size: 0.75rem;
-  }
 }
 
 /* ER 図。実体と外部キーだけを箱と線で描く */
 @layer components {
-  .peek__er { inline-size: 100%; margin-block: var(--spacing-intra-2); }
-  /* viewBox に width/height が無いと器いっぱいに引き伸ばされる。
-     表と同じく、縮めて読めなくするより横へ流す */
-  .er-svg { inline-size: max-content; min-inline-size: 100%; max-inline-size: 100%; block-size: auto; }
   .er-svg text { font-family: var(--font-mono); }
-  .er-svg__name { font-size: 13px; font-weight: 600; fill: var(--color-fg); }
-  .er-svg__col { font-size: 11px; fill: var(--color-fg); }
-  .er-svg__type { font-size: 10px; fill: var(--color-fg-2); }
-  .er-svg__pk { font-size: 9px; font-weight: 600; fill: var(--color-now); }
 }
 
 /* playground。結果が長いので、実行の操作列を画面に貼り付ける */
@@ -734,8 +209,6 @@
     background: var(--color-code-bg);
     border-block-end: 1px solid var(--color-rule-strong);
   }
-  /* 側柱も同じだけ下げる。上端がヘッダに隠れない */
-  .pg-presets { padding-block-start: var(--spacing-intra-2); }
 }
 
 /* Expressive Code の写しボタン。
@@ -754,19 +227,6 @@
 
 /* 窓の骨組みは .sheet を借りる */
 @layer components {
-  .search__open { flex: 0 0 auto; }
-  .search__input {
-    flex: 1 1 12rem;
-    min-inline-size: 0;
-    padding: var(--spacing-intra-1) var(--spacing-intra-2);
-    border: 1px solid var(--color-rule-strong);
-    background: var(--color-paper);
-    color: var(--color-fg);
-    font-size: 1rem;
-  }
-  .search__body { overflow-y: auto; padding-block-start: var(--spacing-intra-3); }
-  .search__note { margin: 0; }
-  .search__list { list-style: none; margin: 0; padding: 0; }
   .search__hit {
     display: flex;
     flex-direction: column;

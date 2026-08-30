@@ -51,11 +51,19 @@ export default function SqlRunner({
   const runner = useRunner({ key: contentId, kind, setup, replay, onDone });
 
   return (
-    <section className="runner" data-phase={runner.phase} aria-labelledby={groupId}>
-      <div className="runner__bar mono meta">
+    <section
+      className="runner my-intra-3 border border-rule-strong bg-code-bg"
+      data-phase={runner.phase}
+      aria-labelledby={groupId}
+    >
+      <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-[10px]">
         <span id={groupId}>{stepTitle}</span>
+        {/* 起動した Postgres の版。実行が本物であることを示す */}
         {runner.version !== null && (
-          <span className="runner__engine" title="この端末のブラウザ内で動いています">
+          <span
+            className="runner__engine ms-auto text-fg-2"
+            title="この端末のブラウザ内で動いています"
+          >
             {runner.version}
           </span>
         )}
@@ -83,11 +91,15 @@ export default function SqlRunner({
       />
 
       {runner.stale && (
-        <p className="runner__note mono meta">
+        <p className="runner__note mono meta border-t border-rule px-intra-3 py-intra-2 text-now">
           前回の続きを再現できなかった手順があります。「初めから」で作り直せます
         </p>
       )}
-      {runner.message !== null && <pre className="runner__error mono">{runner.message}</pre>}
+      {runner.message !== null && (
+        <pre className="runner__error mono m-0 border-t border-rust bg-tint-rust p-intra-3 text-[0.85rem] whitespace-pre-wrap">
+          {runner.message}
+        </pre>
+      )}
       {runner.result !== null && <ResultTable result={runner.result} />}
     </section>
   );

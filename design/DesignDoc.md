@@ -150,8 +150,8 @@ fukuemon.dev は、**技術記事とハンズオンの 2 種類だけを公開�
 
 **Astro 7 を採る。** Node.js 22.12 以上を要求する。
 
-CSS フレームワークを採らない。
-共有できるのは素の CSS カスタムプロパティだけであり、フレームワークを挟むと経路が 1 本増える。
+意匠の土台は Tailwind CSS v4 ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
+preflight は読まず、トークンは `@theme static` に置く。
 
 コードブロックは `astro-expressive-code`、図は `rehype-mermaid`、全文検索の索引は `pagefind` を使う ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
 
@@ -460,6 +460,7 @@ ARIA の `tablist` は使わない。
 | [0006](../adr/0006-interactive-content-levels.md)          | 手を動かす場所を 4 つに分け、cross-origin isolation を局所に限定する                          |
 | [0007](../adr/0007-quality-gates.md)                       | 品質ゲートに react-doctor / knip / similarity-ts を採り、mise / Bun / Biome を採らない       |
 | [0008](../adr/0008-no-reader-identity.md)                  | 読者の identity を前提とする機能を作らない。バックエンドを持たない                           |
+| [0010](../adr/0010-tailwind-as-styling-base.md)             | Tailwind CSS v4 を意匠の土台にし、部品の CSS を utility へ移す                              |
 | [0009](../adr/0009-site-sections-and-playground-collection.md) | サイトを about / blog / playground の 3 面に分け、playground を collection にする         |
 
 ---
