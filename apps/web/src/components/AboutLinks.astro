@@ -1,0 +1,17 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: extra } = Astro.props as Props;
+
+/** 外部の置き場。ここ以外に URL を書かない */
+const LINKS = [
+  { label: "GitHub", href: "https://github.com/Fukuemon" },
+  { label: "X", href: "https://x.com/fukuemony" },
+  { label: "RSS", href: "/rss.xml" },
+];
+---
+
+<p class:list={["mono", "meta", "links", extra]}>
+  {LINKS.map((l) => <a href={l.href}>{l.label}</a>)}
+</p>
