@@ -1,6 +1,8 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import Playground from "../../components/lab/Playground";
+import DbPeek from "../../components/lab/DbPeek";
+import Side from "../../components/Side.astro";
 import { listPlaygrounds, renderPlayground } from "../../lib/content";
 
 export async function getStaticPaths() {
@@ -14,17 +16,28 @@ const d = entry.data;
 ---
 
 <SiteLayout title={`${d.title} — playground`} description={d.description}>
-  <div class="labmain">
-    <header class="labhead">
-      <p class="mono meta doc__crumb">
-        <a href="/playground">playground</a>
-        <span aria-hidden="true">/</span>
-        <span>{d.runtime}</span>
-      </p>
-      <h1 class="display labhead__title">{d.title}</h1>
-    </header>
-    <div class="prose pg-intro"><Content /></div>
-    <Playground client:load setup={d.setup} presets={d.presets} engine="Postgres" />
+  <div class="g-doc" data-side-root data-open="true">
+    <Side id="pg" label="試す">
+      <DbPeek client:idle contentId="playground" />
+    </Side>
+    <div class="labmain labmain--wide">
+      <header class="labhead">
+        <p class="mono meta doc__crumb">
+          <a href="/playground">playground</a>
+          <span aria-hidden="true">/</span>
+          <span>{d.runtime}</span>
+        </p>
+        <h1 class="display labhead__title">{d.title}</h1>
+      </header>
+      <div class="prose pg-intro"><Content /></div>
+      <Playground client:load setup={d.setup} presets={d.presets} engine="Postgres" />
+    </div>
   </div>
   <div class="tail"></div>
 </SiteLayout>
+
+<script>
+  import { mountSide } from "../../components/side";
+  const root = document.querySelector<HTMLElement>("[data-side-root]");
+  if (root) mountSide(root);
+</script>

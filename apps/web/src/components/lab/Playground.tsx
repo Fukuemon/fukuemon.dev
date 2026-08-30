@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { dropRuntime, getRuntime, peekRuntime, serialize } from "./runtime";
+import { useCallback, useId, useRef, useState } from "react";
+import { dropRuntime, getRuntime, serialize } from "./runtime";
 import { cellText } from "./cell";
-import { TABLES_SQL, type Table } from "./schema";
+import { RAN_EVENT } from "./schema";
 import SqlEditor from "./SqlEditor";
 
 type Preset = { label: string; sql: string };
@@ -24,23 +24,8 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
   const [result, setResult] = useState<Result | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
-  const [tables, setTables] = useState<Table[]>([]);
   const editorId = useId();
   const locked = useRef(false);
-
-  const loadSchema = useCallback(async () => {
-    try {
-      const rt = peekRuntime(KEY);
-      if (!rt) return;
-      const { results } = await serialize(() => rt.exec(TABLES_SQL));
-      const rows = results.at(-1)?.rows ?? [];
-      setTables(
-        rows.map((r) => ({ name: cellText(r[0] ?? ""), rows: Number(r[1] ?? 0) })),
-      );
-    } catch {
-      // 一覧が出せなくても実行はできる
-    }
-  }, [setup]);
 
   const run = useCallback(async () => {
     if (locked.current) return;
@@ -65,7 +50,8 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
         ms,
       });
       setPhase("done");
-      void loadSchema();
+      // 側柱の「いまのテーブル」に引き直させる
+      globalThis.dispatchEvent(new CustomEvent(RAN_EVENT, { detail: { contentId: KEY } }));
     } catch (e) {
       setResult(null);
       setMessage(e instanceof Error ? e.message : String(e));
@@ -73,12 +59,7 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
     } finally {
       locked.current = false;
     }
-  }, [loadSchema, setup, text]);
-
-  useEffect(() => {
-    // 開いただけでは何も落とさない。起動は押されてから
-    return () => dropRuntime(KEY);
-  }, []);
+  }, [setup, text]);
 
   const busy = phase === "booting" || phase === "waiting" || phase === "running";
   const label =
@@ -121,7 +102,7 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
               type="button"
               onClick={() => {
                 dropRuntime(KEY);
-                setTables([]);
+                globalThis.dispatchEvent(new CustomEvent(RAN_EVENT, { detail: { contentId: KEY } }));
                 setResult(null);
                 setMessage(null);
                 setPhase("idle");
@@ -179,9 +160,10 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
         )}
       </div>
 
-      <div className="pg-aside">
-        <section>
+      <aside className="pg-aside">
+        <section className="pg-panel">
           <h2 className="mono meta pg-aside__head">試す</h2>
+          <p className="mono meta pg-aside__note">押すと入力欄へ入ります</p>
           <ul className="pg-list">
             {presets.map((p) => (
               <li key={p.label}>
@@ -192,25 +174,7 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
             ))}
           </ul>
         </section>
-
-        <section>
-          <h2 className="mono meta pg-aside__head">いま入っているもの</h2>
-          {tables.length === 0 ? (
-            <p className="mono meta pg-empty">実行すると出ます</p>
-          ) : (
-            <ul className="pg-list">
-              {tables.map((t) => (
-                <li key={t.name} className="pg-table">
-                  <span className="mono pg-table__name">{t.name}</span>
-                  <span className="mono meta pg-table__rows">
-                    {t.rows > 0 ? `約 ${t.rows.toLocaleString("ja-JP")} 行` : "0 行"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+      </aside>
     </div>
   );
 }
