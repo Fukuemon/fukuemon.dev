@@ -35,7 +35,8 @@ const url = new URL(Astro.url.pathname, Astro.site);
   <body class="shell">
     <a class="sr" href="#main">本文へスキップ</a>
     <SiteHeader current={current} />
-    <main id="main" data-pagefind-body><slot /></main>
+    {/* 索引の対象は本文だけ。`data-pagefind-body` は本文の要素が付ける */}
+    <main id="main"><slot /></main>
     <SiteFooter />
   </body>
 </html>

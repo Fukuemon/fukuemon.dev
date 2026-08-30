@@ -23,7 +23,10 @@ a { color: var(--fg); text-decoration: none; }
 /* 外部リンクは罫の色を変える。内部リンクは相対パスなので、絶対 URL だけが外を指す */
 .prose :is(p, li, td) a[href^="http"] { text-decoration-color: var(--link-ext); }
 .prose :is(p, li, td) a:visited { text-decoration-color: var(--rule-strong); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+:is(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
 
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .meta { font-size: 0.8125rem; line-height: 1; color: var(--fg-2); }
