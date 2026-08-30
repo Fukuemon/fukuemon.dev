@@ -302,11 +302,11 @@ flowchart LR
 
 ### URL 構成
 
-サイトは about / blog / playground の 3 面である ([ADR-0009](../adr/0009-site-sections-and-playground-collection.md))。
+サイトは about / blog / playground の 3 つのセクションである ([ADR-0009](../adr/0009-site-sections-and-playground-collection.md))。
 
 | URL                | 中身                                                       |
 | ------------------ | ---------------------------------------------------------- |
-| `/`                | 表紙。about が兼ねる。最近の更新、各面への入口、登壇と寄稿 |
+| `/`                | 表紙。about が兼ねる。最近の更新、各セクションへの入口、登壇と寄稿 |
 | `/blog`            | すべての一覧 (表)                                          |
 | `/blog/articles`   | 記事だけの一覧                                             |
 | `/blog/labs`       | ハンズオンだけの一覧                                       |
@@ -389,7 +389,7 @@ ARIA の `tablist` は使わない。
 | --- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | 5   | `vp run --cache` が `astro build` の入力を正しく推論すること (3 項目)            | キャッシュ無効化、または Turborepo へ切り替え                                    |
 | 6   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ紐付くこと | provider の issue を再確認し、`cloudflare_workers_route` + DNS record へ切り替え |
-| 7   | R2 backend の `skip_s3_checksum` で state 書き込みが通ること                     | state backend をローカル + 手動バックアップへ落とす                              |
+| 7   | R2 backend の `skip_s3_checksum` で state 書き込みが通ること                     | state backend をローカル + 手動バックアップへ切り替える                              |
 
 検証を終えた前提は次のとおり。
 
@@ -461,7 +461,7 @@ ARIA の `tablist` は使わない。
 | [0007](../adr/0007-quality-gates.md)                       | 品質ゲートに react-doctor / knip / similarity-ts を採り、mise / Bun / Biome を採らない       |
 | [0008](../adr/0008-no-reader-identity.md)                  | 読者の identity を前提とする機能を作らない。バックエンドを持たない                           |
 | [0010](../adr/0010-tailwind-as-styling-base.md)             | Tailwind CSS v4 を意匠の土台にし、部品の CSS を utility へ移す                              |
-| [0009](../adr/0009-site-sections-and-playground-collection.md) | サイトを about / blog / playground の 3 面に分け、playground を collection にする         |
+| [0009](../adr/0009-site-sections-and-playground-collection.md) | サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする         |
 
 ---
 

@@ -16,7 +16,7 @@
   - [imaimai17468/imaimai-front-templete](https://github.com/imaimai17468/imaimai-front-templete)
 - 本 repo には既に `lefthook.yml` がある。
 - Vite+ が Oxlint / Oxfmt / Vitest / tsgo と Node.js runtime を同梱する (ADR-0003)。
-- **本サイトの React 表面は小さい。** 静的 HTML で表現できるものに React を使わない方針であり、当初は Island がゼロになる見込みである。
+- **本サイトで React を使う範囲は小さい。** 静的 HTML で表現できるものに React を使わない方針であり、当初は Island がゼロになる見込みである。
 - Design System は「カードを使わない」「罫線と余白で階層を作る」「見出しをほとんど大きくしない」といった、汎用 UI ルールと衝突しうる規則を持つ。
 - 2026-08-25 時点の版を実測した。
   react-doctor 0.9.12 (npm の license 欄は `SEE LICENSE IN LICENSE`)、knip 6.32.2 (ISC)、similarity-ts 0.5.0 (cargo)、Biome 2.5.10 (MIT OR Apache-2.0)。
@@ -45,7 +45,7 @@
 ### react-doctor の適用範囲
 
 **当初はスコアを gate にしない。** Island が存在しないため対象コードがない。
-CI には組み込むが、**Island が実在してから「スコアを下げる変更を落とす」ゲートへ昇格させる。**
+CI には組み込むが、**Island が実在してから「スコアを下げる変更を止める」ゲートへ昇格させる。**
 
 | 場面                 | コマンド                                            |
 | -------------------- | --------------------------------------------------- |
@@ -87,7 +87,7 @@ cargo 製の外部バイナリで `vp env` の管理外にある。**未イン�
   package を 5 つ以上持つ構成では knip の価値が大きい。
 - React 固有の誤りは汎用 lint では拾えない。
 
-### 2. Biome に寄せる
+### 2. Biome に集約する
 
 #### Pros
 

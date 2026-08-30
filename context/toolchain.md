@@ -34,15 +34,15 @@ verified_commit: unverified
 | 用途            | ツール                              | version           | 制約                                            |
 | --------------- | ----------------------------------- | ----------------- | ----------------------------------------------- |
 | framework       | Astro                               | 7.2.9             | Node.js 22.12 以上                              |
-| island          | React + `@astrojs/react`            | 19.2.8 / 6.0.4    | 実行パネルと側柱だけに使う                      |
+| island          | React + `@astrojs/react`            | 19.2.8 / 6.0.4    | 実行パネルとサイドバーだけに使う                      |
 | CSS             | Tailwind CSS + `@tailwindcss/vite`  | 4.3.3             | preflight は読まない (ADR-0010)                 |
 | コードブロック  | `astro-expressive-code`             | 0.44.1            | 意匠は `styleOverrides` から指定する            |
-| 図              | `rehype-mermaid`                    | 3.0.0             | peer に `playwright`。ビルド時に SVG へ落とす   |
+| 図              | `rehype-mermaid`                    | 3.0.0             | peer に `playwright`。ビルド時に SVG へ変換する |
 | 全文検索        | `pagefind`                          | 1.5.2             | `astro build` のあとに索引を作る                |
 | WASM の実行環境 | `@electric-sql/pglite`              | 0.5.8             | Worker で動かす。COOP/COEP を要求しない         |
 | package manager | pnpm (workspace)                    | 10.27.0           | `vp install` が wrap                            |
 | toolchain 入口  | Vite+ (`vp`)                        | beta (2026-07-02) | MIT。"stable, but not yet complete"             |
-| lint            | Oxlint                              | 1.80.0            | `--type-aware` で走らせる                       |
+| lint            | Oxlint                              | 1.80.0            | `--type-aware` で実行する                       |
 | format          | Oxfmt                               | 0.48.0            | —                                               |
 | typecheck       | `astro check` + tsgo                | —                 | —                                               |
 | 未使用の検出    | knip                                | 6.32.2            | `check` に含める                                |
@@ -55,7 +55,7 @@ verified_commit: unverified
 描画は Astro のページとして自前で組む。
 
 意匠の土台は Tailwind CSS v4 である ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
-トークンは `@theme static` に置き、`styleOverrides` から引ける素のカスタムプロパティとして残す。
+トークンは `@theme static` に置き、`styleOverrides` から参照できる素のカスタムプロパティとして残す。
 
 ## Vite+ の適用範囲
 
@@ -127,7 +127,7 @@ Astro の入力は `src/content/**` / `astro.config.ts` / `public/**` / 依存 p
 ### react-doctor
 
 **当初はスコアを gate にしない。** React Island が存在しないため対象コードがない。
-CI には組み込み、Island が実在してから「スコアを下げる変更を落とす」ゲートへ昇格させる。
+CI には組み込み、Island が実在してから「スコアを下げる変更を止める」ゲートへ昇格させる。
 
 | 場面                 | コマンド                                            |
 | -------------------- | --------------------------------------------------- |
@@ -158,7 +158,7 @@ cargo 製の外部バイナリで `vp env` の管理外にある。**未イン�
 ## 採用方針
 
 - **同梱で足りるものを別途入れない。** Vite+ が持つ Oxlint / Oxfmt / Vitest / tsgo をそのまま使う。
-- **バージョン管理の入口を 1 つにする。** Node は `vp env` に寄せ、mise を併用しない。
+- **バージョン管理の入口を 1 つにする。** Node は `vp env` に集約し、mise を併用しない。
 - **beta のツールを採るときは撤退経路を明記する。** Vite+ に対する Turborepo がこれに当たる。
 
 ## Scaffold Policy
