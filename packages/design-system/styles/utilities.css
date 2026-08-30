@@ -157,6 +157,13 @@ pre { overflow-x: auto; max-inline-size: 100%; }
 
 /* forced colors では box-shadow が消える。現在地の手掛かりを別に立てる */
 @media (forced-colors: active) {
+  /* box-shadow と background は強制配色で消える。border で立て直す */
+  .steps__link[aria-current], .docnav__item[aria-current] {
+    border-inline-start: 3px solid;
+  }
+  .toc__item[aria-current] .toc__bar, .steps__mark[data-state="done"] {
+    border: 1px solid;
+  }
   .topbar nav a[aria-current], .tabs a[aria-current] {
     border-block-end: 2px solid Highlight; margin-block-end: -2px;
   }
@@ -175,7 +182,7 @@ pre { overflow-x: auto; max-inline-size: 100%; }
 
 /* 表。列幅は固定。自動幅だと題の列だけが伸びる */
 .tbl {
-  inline-size: 100%; max-inline-size: 68rem;
+  inline-size: 100%; max-inline-size: var(--measure-wide);
   border-collapse: collapse; text-align: start; table-layout: fixed;
 }
 .tbl { margin-block-start: var(--gap-inter-1); }
@@ -204,18 +211,13 @@ pre { overflow-x: auto; max-inline-size: 100%; }
 /* 側柱を畳む。目次と柱は本文の前後へ回す */
 @media (max-width: 1100px) {
   .toc {
-    position: static !important; block-size: auto !important;
-    display: flex; flex-wrap: wrap; gap: 0 var(--gap-intra-3);
+    display: flex; flex-direction: row; flex-wrap: wrap; gap: 0 var(--gap-intra-3);
     padding-block-end: var(--gap-intra-3);
     border-block-end: 1px solid var(--rule-strong);
   }
   .toc .toc__bar { display: none; }
   .g-doc { grid-template-columns: minmax(0, 1fr); }
-  /* inline style を上書きする。折り返しは版面の決定であり、個別指定より強い */
-  .steps {
-    position: static !important; block-size: auto !important;
-    border-inline-end: 0 !important; border-block-end: 1px solid var(--rule-strong);
-  }
+  .steps { border-block-end: 1px solid var(--rule-strong); }
 }
 
 /* 縦組みを横へ倒す。46px の列は狭い画面で本文を圧迫する */

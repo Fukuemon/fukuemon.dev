@@ -72,6 +72,8 @@
   --measure-w: 42rem;
   --measure: min(100% - 2 * var(--gutter), var(--measure-w));
   --measure-fig: min(100% - 2 * var(--gutter), 52rem);
+  /* 一覧や実行結果など、行長より広く取る版面 */
+  --measure-wide: 68rem;
   --topbar: 45px;  /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
   /* 折り返す幅。3 段階だけ持つ */
   --bp-wide: 1100px; /* 側柱を畳む */
