@@ -28,7 +28,7 @@
 - WebContainers は `SharedArrayBuffer` を要求し、そのため `COOP: same-origin` + `COEP: require-corp` が要る。
 - PGlite は Linux VM を使わず Postgres の単一ユーザーモードを WASM 化したものである。
   単一スレッド・単一接続のため `SharedArrayBuffer` を使わない。
-- **配信量を 2026-08-30 に実測した。** ブラウザが落とすのは 4 ファイルで、合計 gzip 5.28 MiB / brotli 3.74 MiB。
+- **配信量を 2026-08-30 に実測した。** ブラウザがダウンロードするのは 4 ファイルで、合計 gzip 5.28 MiB / brotli 3.74 MiB。
   `pglite.wasm` 単体は gzip 3.23 MiB であり、これだけを見ると 4 割少なく見積もる。
 
   | file | raw | gzip |
@@ -214,7 +214,7 @@ SQLite WASM の OPFS VFS は VFS 実装により分かれる (未確認)。
   誤って全体へ掛けると第三者の埋め込みが一律で壊れるため、変更時に注意が要る。
 - `sandbox` を本文と別ドキュメントにするため、本文と playground の間で状態を共有できない。
 - `local` は読者の端末で動くため、こちらから完了を検知できない。
-  側柱に完了の印を出さない。
+  サイドバーに完了マーカーを出さない。
 
 ### 影響範囲
 

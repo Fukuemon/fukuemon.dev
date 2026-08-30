@@ -194,7 +194,7 @@ Geist Mono は Google Fonts に存在せずいずれにせよ Fontsource が要�
   強調の手段がサイズ・small-caps・letter-spacing・罫線に限られる。
   これは Design System の意図でもある。
 - self-host のため配信物にフォントが含まれ、ビルド成果物が増える。
-- 和文の落ち先を明示するため、フォールバック列に `Yu Mincho` を必ず含める。
+- 和文のフォールバック先を明示するため、フォールバック列に `Yu Mincho` を必ず含める。
 
 ### 影響範囲
 

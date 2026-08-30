@@ -33,8 +33,8 @@ fukuemon.dev/
 │       ├── src/
 │       │   ├── pages/                # URL の写し。Astro が予約する唯一のディレクトリ
 │       │   ├── layouts/              # ページの外枠
-│       │   ├── features/             # 面ごとの部品。lab/ listing/ doc/ about/ search/
-│       │   ├── components/           # 面をまたぐ素の部品。.astro と .tsx を同居させる
+│       │   ├── features/             # セクションごとの部品。lab/ listing/ doc/ about/ search/
+│       │   ├── components/           # セクションをまたぐ素の部品。.astro と .tsx を同居させる
 │       │   ├── lib/content/          # astro:content ↔ content-model のアダプタ
 │       │   ├── content/             # articles/ labs/ playgrounds/
 │       │   ├── data/                 # 書いている人の正本 (about が読む)
@@ -63,9 +63,9 @@ fukuemon.dev/
 | ディレクトリ  | 答える問い                     | 増え方                    |
 | ------------- | ------------------------------ | ------------------------- |
 | `pages/`      | この URL は何か                | 画面が増えたら 1 ファイル |
-| `layouts/`    | このページの外枠は何か         | 面が増えたときだけ        |
-| `features/`   | この面は何をする所か           | 面が増えたときだけ        |
-| `components/` | 面をまたぐ素の部品は何か       | ほぼ増えない              |
+| `layouts/`    | このページの外枠は何か         | セクションが増えたときだけ |
+| `features/`   | このセクションは何をする所か   | セクションが増えたときだけ |
+| `components/` | セクションをまたぐ素の部品は何か | ほぼ増えない            |
 | `data/`       | 書いている人の情報はどこにあるか | 増えない                |
 | `lib/`        | このデータはどこから来るか     | ほぼ増えない              |
 
@@ -79,7 +79,7 @@ fukuemon.dev/
 | ------------ | ------------------------------------------ |
 | `lab/`       | ハンズオンと playground の実行まわり       |
 | `listing/`   | 一覧の行・表・タブ・関連                   |
-| `doc/`       | 本文の側柱。目次とほかの記事               |
+| `doc/`       | 本文のサイドバー。目次とほかの記事               |
 | `about/`     | トップの表紙                               |
 | `search/`    | 本文の検索                                 |
 
@@ -96,7 +96,7 @@ fukuemon.dev/
 
 `bus.ts` は 3 つの島がまたぐので `lab/` の直下に置く。
 
-**`components/` に残すのは、面をまたぐ素の部品だけにする。**
+**`components/` に残すのは、セクションをまたぐ素の部品だけにする。**
 `Icon` / `Tate` / `ArtBand` / `SiteHeader` / `SiteFooter` の 5 つである。
 どれか 1 つの feature でしか使わなくなったら、その feature へ移す。
 
@@ -111,13 +111,13 @@ Astro の公式ドキュメントも、UI framework のコンポーネントを 
 | --------------- | -------------------------------------------------------- |
 | `SiteLayout`    | ヘッダとフッタを持つ。トップ / 一覧 / playground         |
 | `DocShell`      | 本文の外枠 (パンくず・題・meta・関連)。記事              |
-| `ArticleLayout` | `SiteLayout` + 側柱 + `DocShell`                          |
-| `LabLayout`     | `SiteLayout` + 側柱 + 1 画面 1 手順の面                   |
+| `ArticleLayout` | `SiteLayout` + サイドバー + `DocShell`                          |
+| `LabLayout`     | `SiteLayout` + サイドバー + 1 画面 1 手順の面                   |
 | `PostsLayout`   | `SiteLayout` + 一覧の外枠                                 |
 
-**記事とハンズオンで layout を分ける。** 側柱の中身 (目次 / 手順) と本文の出し方 (通し / 1 画面 1 手順) が違う。
-1 つにまとめると `if` が生える。
-**版面と側柱の見た目は共通の class (`.g-doc` / `.side`) で揃える。**
+**記事とハンズオンで layout を分ける。** サイドバーの中身 (目次 / 手順) と本文の出し方 (通し / 1 画面 1 手順) が違う。
+1 つにまとめると `if` が増える。
+**版面とサイドバーの見た目は共通の class (`.g-doc` / `.side`) で揃える。**
 
 ### Island の規約
 
@@ -169,7 +169,7 @@ React と Vue を同じページに混ぜると両方を配ることになる。
 `ContentTable` / `KindTabs` / ハンズオンの `StepList` がこれに当たる。
 いずれもこのサイトの画面のために変わる。
 
-`tokens.css` と `code-theme.ts` は Expressive Code の `styleOverrides` からも引くため `packages/design-system` に置く。
+`tokens.css` と `code-theme.ts` は Expressive Code の `styleOverrides` からも参照するため `packages/design-system` に置く。
 
 ### `infra/` を `packages/` に入れない
 
@@ -251,11 +251,11 @@ flowchart LR
 
 ## URL 規約
 
-サイトは about / blog / playground の 3 面である ([ADR-0009](../adr/0009-site-sections-and-playground-collection.md))。
+サイトは about / blog / playground の 3 つのセクションである ([ADR-0009](../adr/0009-site-sections-and-playground-collection.md))。
 
 | URL                           | 実装                                           |
 | ----------------------------- | ---------------------------------------------- |
-| `/`                           | `src/pages/index.astro` (about を畳む)         |
+| `/`                           | `src/pages/index.astro` (about をまとめる)         |
 | `/blog`                       | `src/pages/blog/index.astro`                   |
 | `/blog/articles` `/blog/labs` | `src/pages/blog/[kind].astro`                  |
 | `/articles/<path>`            | `src/pages/articles/[...slug].astro`           |

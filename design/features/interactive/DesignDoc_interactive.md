@@ -69,7 +69,7 @@ verified_commit: 84b6c77
 | 形       | 1 画面 1 手順。全手順を 1 文書に入れ、CSS で 1 枚だけ出す  |
 | 進捗     | 持つ。`localStorage` に手順単位で残す                      |
 | 実行     | 本文中でコードが動く。題材が許さない場合は読者の端末で動かす |
-| layout   | `LabLayout`。`SiteLayout` に側柱と 1 画面 1 手順の面を足す |
+| layout   | `LabLayout`。`SiteLayout` にサイドバーと 1 画面 1 手順の面を足す |
 
 分けない理由は 2 つある。
 種別を増やすと、著者が書く前に「これはどちらか」を判断させられる。
@@ -92,21 +92,21 @@ Google Codelabs の `claat` は Markdown / Google Docs から静的 HTML を生�
 | ---------------------------------------- | ------------------------------------------------------------------------ |
 | 手順の分割                               | 本文の `h2` を手順の境界とし、ビルド時に見出しを走査して導出する         |
 | 手順ごとの所要時間                       | 見出し直後の `Duration: MM:SS` 行                                        |
-| 手順一覧 + 進捗バー + 現在地の印         | ハンズオン専用 layout。手順は 1 ページに通しで並べる                     |
+| 手順一覧 + 進捗バー + 現在地マーカー   | ハンズオン専用 layout。手順は 1 ページに通しで並べる                     |
 | 完了状態の永続化                         | `localStorage`                                                           |
 | 前後の移動                               | 本文の下の前後ボタン。端では `aria-disabled`                             |
-| いま DB に何が入っているか               | 側柱の一覧。行を押すと `<dialog>` に先頭 20 行を出す                     |
-| テーブル同士の関係                       | 側柱の「テーブル構成」。`<dialog>` に ER 図を出す                        |
+| いま DB に何が入っているか               | サイドバーの一覧。行を押すと `<dialog>` に先頭 20 行を出す                     |
+| テーブル同士の関係                       | サイドバーの「テーブル構成」。`<dialog>` に ER 図を出す                        |
 
 **手順数を frontmatter に持たない。** 本文と手順数が乖離する経路をなくすためである ([content-model](../content-model/DesignDoc_content-model.md) の `handsOn` 拡張)。
 
 **数える場所は 1 つにする。**
 `remark-lab` が mdast の `h2` を数え、`remarkPluginFrontmatter.labSteps` で layout へ渡す。
-`rehype-lab-steps` は同じ `h2` を面に畳むだけで、数え直さない。
+`rehype-lab-steps` は同じ `h2` を 1 画面にまとめるだけで、数え直さない。
 ページ側でも本文を再走査しない。
 生の Markdown を正規表現で数えると、setext 見出しやフェンス内の `##` で AST 側とずれる。
 
-**1 手順 1 画面にする。** 左の側柱で切り替え、下の前後ボタンで進む。
+**1 手順 1 画面にする。** 左のサイドバーで切り替え、下の前後ボタンで進む。
 Google Codelabs (`claat`) と同じ形である。
 
 **別 URL のページには割らない。** 全手順を 1 文書に入れ、CSS で 1 枚だけ出す。
@@ -138,7 +138,7 @@ frontmatter の `interactive.level` が 1 対 1 で対応する。
 
 ページに置くものが `level` ごとに変わる。
 
-| `level`    | 本文に出るもの     | 側柱                       | 配る JavaScript (gzip)     |
+| `level`    | 本文に出るもの     | サイドバー                       | 配る JavaScript (gzip)     |
 | ---------- | ------------------ | -------------------------- | -------------------------- |
 | `embedded` | 実行パネル         | 手順 + いまのテーブル      | 61.6 KiB (React + 実行環境) |
 | `sandbox`  | iframe             | 手順                       | 未実装                     |
@@ -148,7 +148,7 @@ frontmatter の `interactive.level` が 1 対 1 で対応する。
 `embedded` の 61.6 KiB に WASM は含まない。
 WASM は実行ボタンを押すまで落とさない。
 
-完了の印が付くのは**実行が成功した手順**と、**この読み込みのあいだに通り過ぎた手順**だけである。
+完了マーカーが付くのは**実行が成功した手順**と、**この読み込みのあいだに通り過ぎた手順**だけである。
 `localStorage` を書き換えるだけで完了を捏造できないよう、現在地からは推し量らない。
 `local` のハンズオンでは実行が起きないので、印は通り過ぎた分だけになる。
 
@@ -249,9 +249,9 @@ const interactive = z.discriminatedUnion("level", [
 初期化スクリプト (`setup`) は `interactive` の外、`handsOn` の直下に持つ。
 `level` を変えても書き直さずに済むためである。
 
-### 側柱
+### サイドバー
 
-| 面         | 側柱の中身                  |
+| ページ     | サイドバーの中身                  |
 | ---------- | --------------------------- |
 | ハンズオン | 手順の一覧 + いまのテーブル |
 | playground | 試す + いまのテーブル       |
@@ -260,10 +260,10 @@ const interactive = z.discriminatedUnion("level", [
 読者が手順を追っているあいだ、別の記事の題は判断の材料にならない。
 一覧へは本文上部のパンくずから戻る。
 
-playground の「試す」は側柱に置く。
+playground の「試す」はサイドバーに置く。
 本文の側に置くと、結果の表と例が縦に並んで、どちらも幅を使えない。
 
-側柱はたためる。
+サイドバーはたためる。
 たたむと `--drawer-shut` (46px) まで縮み、開閉ボタンだけが残る。
 開閉の状態は `localStorage` に置く。
 この端末の都合であり、読者の identity を作らない ([ADR-0008](../../../adr/0008-no-reader-identity.md))。
@@ -272,9 +272,9 @@ playground の「試す」は側柱に置く。
 実行パネルが 1 度でも走ったあとに、そのインスタンスへ問い合わせる。
 ページを開いただけで 5 MiB を落とさないためである。
 
-中身は側柱ではなく `<dialog>` に出す。
+中身はサイドバーではなく `<dialog>` に出す。
 306px の列に列を並べると日時が途中で切れ、値を読むという用を成さない。
-`<dialog>` は top layer に出るので、側柱の `overflow` に切られない。
+`<dialog>` は top layer に出るので、サイドバーの `overflow` に切られない。
 
 窓は 2 種類ある。
 
@@ -283,9 +283,9 @@ playground の「試す」は側柱に置く。
 | テーブルの窓 | 列の定義と、先頭 20 行                     |
 | テーブル構成 | ER 図。テーブルの箱と外部キーの向き        |
 
-**開いたままの窓は、実行のたびに中身を引き直す。**
-引き直しはカタログへ問い合わせ直す。
-側柱の一覧 (state) から組むと、実行の直後に古い姿のまま描いてしまう。
+**開いたままの窓は、実行のたびに中身を取得し直す。**
+取得し直しはカタログへ問い合わせ直す。
+サイドバーの一覧 (state) から組むと、実行の直後に古い姿のまま描いてしまう。
 
 ### 進捗の永続化
 
@@ -310,12 +310,12 @@ flowchart TD
     md["labs/*.md(x) (h2 = 手順)"] --> loader["Content Layer loader"]
     loader --> remark["remark-lab<br/>h2 を数え、```lang run を JSX へ"]
     remark -->|"remarkPluginFrontmatter.labSteps"| layout["LabLayout.astro"]
-    remark --> rehype["rehype-lab-steps<br/>同じ h2 で section へ畳む"]
+    remark --> rehype["rehype-lab-steps<br/>同じ h2 で section へまとめる"]
     rehype --> layout
     layout --> list["StepList.astro<br/>手順一覧 (静的)"]
-    layout --> ctl["controller.ts<br/>面の出し入れ / 開閉 / 前後"]
+    layout --> ctl["controller.ts<br/>画面の切り替え / 開閉 / 前後"]
     ctl --> ls["localStorage<br/>lab:&lt;contentId&gt;"]
-    layout --> body["手順の面 (1 枚だけ表示)"]
+    layout --> body["手順の画面 (1 枚だけ表示)"]
     body -.->|"embedded"| runner["SqlRunner.tsx"]
     pg["Playground.tsx"] --> hook
     runner --> hook["useRunner.ts<br/>実行の状態機械"]
@@ -333,17 +333,17 @@ flowchart TD
 ```
 
 React Island になるのは**実行パネル・「いまのテーブル」・「試す」だけ**である。
-手順の一覧・面の出し入れ・側柱の開閉は `controller.ts` が属性の付け替えで行う。
+手順の一覧・画面の切り替え・サイドバーの開閉は `controller.ts` が属性の付け替えで行う。
 **ハンズオンと playground 以外のページには載らない。**
 
 #### 島をまたぐ通知
 
-実行パネルと側柱は別の React root なので、props でも context でも繋がらない。
+実行パネルとサイドバーは別の React root なので、props でも context でも繋がらない。
 唯一の共通の足場が `document` なので、CustomEvent を通す。
 
 | 事象         | 送り手       | 受け手       | 用途                       |
 | ------------ | ------------ | ------------ | -------------------------- |
-| `lab:ran`    | `useRunner`  | `DbPeek`     | DB を引き直す              |
+| `lab:ran`    | `useRunner`  | `DbPeek`     | DB を取得し直す              |
 | `lab:preset` | `Presets`    | `Playground` | 入力欄へ SQL を入れる      |
 
 **購読は `bus.ts` を通す。**
@@ -358,7 +358,7 @@ hast まで来れば拡張子の違いが消えて 1 通りで済む。
 
 #### 実行環境を足す経路
 
-`remark-lab.ts` の `RUNNERS` が、フェンスの言語から部品を引く表を持つ。
+`remark-lab.ts` の `RUNNERS` が、フェンスの言語から部品を探す表を持つ。
 
 ```ts
 const RUNNERS: Record<string, Runner> = {
@@ -396,11 +396,11 @@ engine を足す手順は「実行環境を足す」と同じである。
 
 ### 読者がハンズオンでクエリを実行する (`embedded`)
 
-1. `/labs/rdbms-query-execution` を開く。「はじめに」の面が出る
-2. 側柱の手順を押すか、下の「次へ」で進む
+1. `/labs/rdbms-query-execution` を開く。「はじめに」の画面が出る
+2. サイドバーの手順を押すか、下の「次へ」で進む
 3. その手順の埋め込みエディタに SQL が用意されている
 4. 実行すると、ページ内の PGlite が本物の Postgres として `EXPLAIN ANALYZE` を返す
-5. 側柱の「いまのテーブル」が更新される。行を押すと中身が `<dialog>` に出る
+5. サイドバーの「いまのテーブル」が更新される。行を押すと中身が `<dialog>` に出る
 6. 「テーブル構成」を押すと ER 図が出る。開いたまま実行すると、図も追従する
 7. 読者は SQL を書き換えて再実行できる
 
@@ -413,7 +413,7 @@ engine を足す手順は「実行環境を足す」と同じである。
 2. 本文の前に「手元で用意する」が出る。
    前提条件、`git clone`、起動コマンドがコピーボタン付きで並ぶ
 3. 読者は自分の端末で Dev Container を開き、本文の手順を追う
-4. 側柱は手順の一覧だけを出す。
+4. サイドバーは手順の一覧だけを出す。
    完了の印は出さない
 
 **ページは JavaScript を配らない。**
@@ -422,7 +422,7 @@ engine を足す手順は「実行環境を足す」と同じである。
 
 1. `/labs/<path>` の手順 4 まで進む
 2. 離脱する
-3. 同じ端末で再訪すると、手順 4 の面から再開できる
+3. 同じ端末で再訪すると、手順 4 の画面から再開できる
 4. **DB は初期状態に戻っている。** 保存先がメモリのためである。
    次の実行で、完了済みの手順の SQL を順に流し直してから走る
 5. **別の端末では最初からになる。** 許容する
@@ -431,7 +431,7 @@ engine を足す手順は「実行環境を足す」と同じである。
 
 横断規約は [context/testing.md](../../../context/testing.md)。
 
-- **手順の導出 (`remark-lab`) と面の畳み込み (`rehype-lab-steps`) にテストを置く。** どちらも壊れても画面は出るため、目視では見つからない。
+- **手順の導出 (`remark-lab`) と画面へのまとめ (`rehype-lab-steps`) にテストを置く。** どちらも壊れても画面は出るため、目視では見つからない。
   `Duration:` の有無、`h2` が 0 個、フェンス内の `##`、`.md` に `run` を書いた場合を踏む
 - 進捗 (`progress.ts`) は `localStorage` を差し替えて、読めない・書けない・壊れた JSON の 3 経路を踏む
 - `localStorage` へのアクセスは try/catch で囲む。**プライベートウィンドウや設定でブロックされる環境で例外を投げるため、進捗が読めなくてもページが壊れないこと**を確認する
