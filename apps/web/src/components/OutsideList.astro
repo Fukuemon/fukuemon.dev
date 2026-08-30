@@ -1,0 +1,27 @@
+---
+import Tate from "./Tate.astro";
+import { OUTSIDE } from "../data/profile";
+
+const ymd = (iso: string) => iso.replaceAll("-", ".");
+---
+
+{/* そとの置き場。サイト内の一覧とは別の棚にする */}
+<section class="g-rail outside section-x">
+  <Tate as="h2" class="tate-head" text="登壇と寄稿" />
+  <div class="section-link">
+    <a class="mono meta" href="https://zenn.dev/fukuemon">Zenn の記事すべて →</a>
+  </div>
+  <ul class="outside__list">
+    {
+      OUTSIDE.map((o) => (
+        <li>
+          <a class="hit outside__row" href={o.href}>
+            <span class="mono meta outside__date">{ymd(o.date)}</span>
+            <span class="outside__title">{o.title}</span>
+            <span class="mono meta outside__kind">{o.kind}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
