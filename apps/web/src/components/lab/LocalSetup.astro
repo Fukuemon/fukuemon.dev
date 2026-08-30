@@ -23,21 +23,21 @@ const START: Record<Props["via"], { label: string; lines: string[] }> = {
 const start = START[via];
 ---
 
-<section class="local" aria-labelledby="local-setup">
-  <h2 class="mono meta local__head" id="local-setup">手元で用意する</h2>
+<section class="my-inter-1 pt-intra-3" aria-labelledby="local-setup">
+  <h2 class="mono meta mb-intra-2" id="local-setup">手元で用意する</h2>
 
-  <p class="prose local__note">
+  <p class="prose mt-0 mb-intra-3 text-fg-2">
     このハンズオンはブラウザの中では動きません。リポジトリを自分の環境へ持っていって進めます。
   </p>
 
   {
     requires.length > 0 && (
-      <div class="local__block">
-        <p class="mono meta local__label">要るもの</p>
-        <ul class="local__reqs">
+      <div class="mb-intra-3">
+        <p class="mono meta mb-intra-1">要るもの</p>
+        <ul class="list-none m-0 p-0">
           {requires.map((r) => (
-            <li>
-              <span class="local__req-name">{r.name}</span>
+            <li class="mb-intra-1">
+              <span class="block text-[0.9rem]">{r.name}</span>
               {r.check && <CopyLine text={r.check} />}
             </li>
           ))}
@@ -46,18 +46,18 @@ const start = START[via];
     )
   }
 
-  <div class="local__block">
-    <p class="mono meta local__label">取ってくる</p>
+  <div class="mb-intra-3">
+    <p class="mono meta mb-intra-1">取ってくる</p>
     <CopyLine text={`git clone ${repository}`} />
     <CopyLine text={`cd ${dir}`} />
   </div>
 
-  <div class="local__block">
-    <p class="mono meta local__label">{start.label}</p>
+  <div class="mb-intra-3">
+    <p class="mono meta mb-intra-1">{start.label}</p>
     {start.lines.map((l) => <CopyLine text={l} />)}
   </div>
 
-  <p class="mono meta local__repo">
-    <a href={repository}>{name} ↗</a>
+  <p class="mono meta">
+    <a class="text-link" href={repository}>{name} ↗</a>
   </p>
 </section>

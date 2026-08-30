@@ -25,7 +25,7 @@ const title = current === "all" ? ALL_KIND.title : KIND_LABEL[current];
 ---
 
 <SiteLayout title={`${title} — fukuemon.dev`} description={lead} current="posts">
-  <div class="page">
+  <div class="pt-inter-1 px-(--gutter) max-w-[calc(var(--measure-wide)_+_2_*_var(--gutter))]">
     <div class="flex flex-wrap justify-between items-baseline gap-x-intra-3 gap-y-intra-1 pb-intra-2">
       <p class="prose m-0 text-fg-2 text-[0.95rem]">{lead}</p>
       <SiteSearch />

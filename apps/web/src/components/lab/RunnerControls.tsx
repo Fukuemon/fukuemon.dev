@@ -11,6 +11,9 @@ type Props = {
   onReset: () => void;
 };
 
+/** 操作行に 2 つ並ぶので、指以外では詰める */
+const BTN = "btn min-h-[36px] px-intra-3 py-0 pointer-coarse:min-h-[44px]";
+
 /** 実行パネルの操作行。押せる状態と、直前の実行の結末を出す */
 export default function RunnerControls({
   phase,
@@ -42,10 +45,10 @@ export default function RunnerControls({
           : "";
 
   return (
-    <div className="runner__bar">
+    <div className="runner__bar flex items-center gap-intra-2 border-t border-rule-strong px-intra-3 py-[10px]">
       {/* disabled にするとフォーカスが外れて、押した位置を見失う */}
       <button
-        className="btn"
+        className={BTN}
         type="button"
         onClick={onRun}
         aria-disabled={busy}
@@ -56,15 +59,15 @@ export default function RunnerControls({
       {/* key を分けて DOM ノードを共有させない。
           同じノードだとラベルだけ入れ替わり、Enter の連打で初期化が走る */}
       {busy ? (
-        <button key="cancel" className="btn" type="button" onClick={onCancel}>
+        <button key="cancel" className={BTN} type="button" onClick={onCancel}>
           中断
         </button>
       ) : (
-        <button key="reset" className="btn" type="button" onClick={onReset}>
+        <button key="reset" className={BTN} type="button" onClick={onReset}>
           初めから
         </button>
       )}
-      <p className="mono meta runner__count" role="status">
+      <p className="mono meta runner__count ms-auto" role="status">
         {status}
       </p>
     </div>

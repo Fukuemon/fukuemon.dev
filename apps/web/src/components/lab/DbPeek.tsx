@@ -91,7 +91,7 @@ export default function DbPeek({ contentId }: Props) {
           setEr(null);
         }}
       >
-        <div className="sheet__scroll">
+        <div className="min-h-0 flex-auto overflow-auto">
           {er === null ? (
             <p className="mono meta">読み込み中…</p>
           ) : (

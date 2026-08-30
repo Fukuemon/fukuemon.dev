@@ -6,22 +6,85 @@ interface Props {
   label: string;
 }
 const { id, label } = Astro.props as Props;
+
+/**
+ * 開閉の起点。本文が長いので画面に貼り付ける。
+ * たたんだ側柱では、これだけが側柱への入口になる。
+ * 狭い画面では画面の左下へ固定し、面が滑り出す起点にする。
+ */
+const TOGGLE = [
+  "col-start-1 row-start-1 z-4",
+  "sticky top-[calc(var(--topbar)+var(--spacing-intra-3))] self-start justify-self-stretch",
+  "flex items-center gap-intra-2",
+  "mt-intra-3 mr-0 mb-0 ml-(--gutter)",
+  "py-intra-1 pr-intra-2 pl-0",
+  "bg-transparent text-fg-2 font-serif text-[0.8125rem] leading-[1.85] cursor-pointer",
+  "[[data-open=false]_&]:flex-col",
+  "max-wide:fixed max-wide:top-auto max-wide:bottom-(--gutter) max-wide:start-(--gutter)",
+  "max-wide:justify-self-start max-wide:z-6",
+  "max-wide:mt-0 max-wide:mr-0 max-wide:mb-0 max-wide:ml-0",
+  "max-wide:py-intra-2 max-wide:pr-intra-3 max-wide:pl-intra-3",
+  "max-wide:border max-wide:border-rule-strong max-wide:bg-paper max-wide:text-fg",
+  "max-wide:shadow-[0_2px_10px_rgb(0_0_0/0.14)]",
+  "max-wide:[[data-open=false]_&]:flex-row",
+].join(" ");
+
+/** たたむと縦組みで残る文字。狭い画面ではボタンごと横倒しになるので横組みへ戻す */
+const LABEL = [
+  "[[data-open=false]_&]:[writing-mode:vertical-rl] [[data-open=false]_&]:tracking-[0.1em]",
+  "max-wide:[[data-open=false]_&]:[writing-mode:horizontal-tb]",
+  "max-wide:[[data-open=false]_&]:tracking-[normal]",
+].join(" ");
+
+/**
+ * 側柱の面。広い画面では列の中に納め、狭い画面では横から滑り出す。
+ * 上に積むと手順を読むたびに本文へ下りることになる。
+ * `side__panel` は狭い画面で他記事を畳む規則の、`drawer` は中身の伸縮の掛かり先。
+ */
+const PANEL = [
+  "side__panel drawer stick",
+  "col-start-1 row-start-1",
+  "flex flex-col gap-intra-4",
+  "max-h-[calc(100vh-var(--topbar)-var(--spacing-intra-3)*2)] overflow-hidden [scrollbar-width:thin]",
+  "pt-[calc(var(--spacing-intra-3)+2rem)] pr-intra-3 pb-inter-1 pl-(--gutter)",
+  "border-e border-rule-strong",
+  "[[data-open=false]_&]:hidden",
+  "max-wide:block max-wide:fixed max-wide:top-(--topbar) max-wide:bottom-0 max-wide:start-0 max-wide:z-5",
+  "max-wide:w-[min(86vw,320px)] max-wide:max-h-none max-wide:overflow-y-auto",
+  "max-wide:pt-inter-1 max-wide:pr-(--gutter) max-wide:pb-inter-1 max-wide:pl-(--gutter)",
+  "max-wide:bg-paper",
+  "max-wide:-translate-x-full max-wide:transition-transform max-wide:duration-220 max-wide:ease-[ease]",
+  "motion-reduce:transition-none!",
+  "max-wide:[[data-open=true]_&]:translate-none",
+  "max-wide:[[data-open=false]_&]:block",
+].join(" ");
+
+/** 覆いかぶさるのは狭い画面だけ */
+const SCRIM = [
+  "hidden",
+  "max-wide:[[data-open=true]_&]:block max-wide:[[data-open=true]_&]:fixed",
+  "max-wide:[[data-open=true]_&]:top-(--topbar) max-wide:[[data-open=true]_&]:inset-x-0 max-wide:[[data-open=true]_&]:bottom-0",
+  "max-wide:[[data-open=true]_&]:z-4",
+  "max-wide:[[data-open=true]_&]:bg-[rgb(0_0_0/0.34)] max-wide:[[data-open=true]_&]:cursor-pointer",
+].join(" ");
 ---
 
 {/* 開閉ボタンは面の外に置く。狭い画面では面が横へ滑って消えるため */}
-<div class="side">
+<div class="contents">
   <button
     type="button"
-    class="side__toggle"
+    class={TOGGLE}
     data-side={id}
     aria-expanded="true"
     aria-controls={`side-${id}`}
   >
-    <span aria-hidden="true" class="side__icon"></span>
-    <span class="side__label">{label}</span>
+    <span
+      aria-hidden="true"
+      class="w-[14px] h-[10px] flex-none border-t-2 border-b-6 box-content"></span>
+    <span class={LABEL}>{label}</span>
   </button>
-  <div class="side__panel drawer stick" id={`side-${id}`}>
+  <div class={PANEL} id={`side-${id}`}>
     <slot />
   </div>
-  <button type="button" class="side__scrim" data-side-close aria-label="閉じる"></button>
+  <button type="button" class={SCRIM} data-side-close aria-label="閉じる"></button>
 </div>

@@ -22,10 +22,16 @@ export default function Playground({ setup, initial, engine = "実行環境" }: 
 
   return (
     <div className="pg">
-      <div className="runner" data-phase={runner.phase}>
-        <div className="runner__bar mono meta">
+      <div
+        className="runner my-intra-3 border border-rule-strong bg-code-bg"
+        data-phase={runner.phase}
+      >
+        <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-[10px]">
           <span>SQL</span>
-          {runner.version !== null && <span className="runner__engine">{runner.version}</span>}
+          {/* 起動した Postgres の版。実行が本物であることを示す */}
+          {runner.version !== null && (
+            <span className="runner__engine ms-auto text-fg-2">{runner.version}</span>
+          )}
         </div>
 
         <SqlEditor
@@ -47,7 +53,11 @@ export default function Playground({ setup, initial, engine = "実行環境" }: 
           onReset={runner.reset}
         />
 
-        {runner.message !== null && <pre className="runner__error mono">{runner.message}</pre>}
+        {runner.message !== null && (
+          <pre className="runner__error mono m-0 border-t border-rust bg-tint-rust p-intra-3 text-[0.85rem] whitespace-pre-wrap">
+            {runner.message}
+          </pre>
+        )}
         {runner.result !== null && <ResultTable result={runner.result} />}
       </div>
     </div>

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# git-wt が作る worktree の置き場 (~/.gitconfig の wt.basedir)
+.wt/
 .astro/
 .wrangler/
 .turbo/

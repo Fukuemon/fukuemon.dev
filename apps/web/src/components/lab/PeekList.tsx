@@ -21,36 +21,47 @@ export default function PeekList({
   onShowTable,
 }: Props) {
   return (
-    <section className="peek" aria-label="いまのテーブル">
+    <section className="peek border-t border-rule-strong pt-inter-1" aria-label="いまのテーブル">
       <button
         type="button"
-        className="hit peek__label mono meta"
+        className="hit group mono meta flex w-full cursor-pointer items-center gap-intra-2 border-b border-rule-strong bg-transparent py-intra-1 text-start text-fg-2 [font:inherit]"
         aria-expanded={open}
         onClick={onToggle}
       >
-        <span aria-hidden="true" className="peek__caret" />
+        {/* 開: 下向き / 閉: 右向き */}
+        <span
+          aria-hidden="true"
+          className="h-0 w-0 flex-none border-x-4 border-t-5 border-x-transparent border-t-current group-aria-[expanded=false]:border-t-4 group-aria-[expanded=false]:border-b-4 group-aria-[expanded=false]:border-s-5 group-aria-[expanded=false]:border-e-0 group-aria-[expanded=false]:border-t-transparent group-aria-[expanded=false]:border-b-transparent group-aria-[expanded=false]:border-s-current"
+        />
         いまのテーブル
-        <span className="mono meta peek__n">{tables.length}</span>
+        <span className="mono meta ms-auto">{tables.length}</span>
       </button>
       {open && (
         <>
-          {tables.length === 0 && <p className="mono meta peek__empty">まだありません</p>}
+          {tables.length === 0 && <p className="mono meta mt-intra-2 mb-0">まだありません</p>}
           {tables.length > 0 && (
-            <button type="button" className="btn peek__er" onClick={onShowEr}>
+            <button type="button" className="btn w-full my-intra-2" onClick={onShowEr}>
               テーブル構成
             </button>
           )}
-          <ul className="peek__list">
+          <ul className="m-0 list-none p-0">
             {tables.map((t) => (
               <li key={t.name}>
-                <button type="button" className="hit peek__row" onClick={() => onShowTable(t)}>
-                  <span className="mono peek__name">{t.name}</span>
-                  <span className="mono meta peek__rows">{rowLabel(t.rows)}</span>
+                <button
+                  type="button"
+                  className="hit flex w-full cursor-pointer items-baseline justify-between gap-intra-2 border-t border-rule bg-transparent py-intra-1 text-start text-fg [font:inherit]"
+                  onClick={() => onShowTable(t)}
+                >
+                  <span className="mono text-[0.8125rem]">{t.name}</span>
+                  <span className="mono meta">{rowLabel(t.rows)}</span>
                 </button>
                 {relations
                   .filter((r) => r.src === t.name)
                   .map((r) => (
-                    <p key={r.name} className="mono meta peek__rel">
+                    <p
+                      key={r.name}
+                      className="mono meta pb-intra-1 ps-intra-3 text-[0.75rem] text-fg-2"
+                    >
                       <span aria-hidden="true">└→</span> {r.tgt}
                     </p>
                   ))}

@@ -5,19 +5,25 @@ import { OUTSIDE } from "../data/profile";
 const ymd = (iso: string) => iso.replaceAll("-", ".");
 ---
 
-<section class="g-rail outside mx-(--gutter)">
+<section class="g-rail mt-inter-3 mx-(--gutter)">
   <Tate as="h2" class="tate-head" text="登壇と寄稿" />
   <div class="flex justify-end items-baseline pb-intra-1">
     <a class="mono meta" href="https://zenn.dev/fukuemon">Zenn の記事すべて →</a>
   </div>
-  <ul class="outside__list">
+  {/* 狭い画面では題が 2 語しか入らないので、題だけ 2 行目へ回す */}
+  <ul class="list-none m-0 p-0">
     {
       OUTSIDE.map((o) => (
         <li>
-          <a class="hit outside__row" href={o.href}>
-            <span class="mono meta outside__date">{ymd(o.date)}</span>
-            <span class="outside__title">{o.title}</span>
-            <span class="mono meta outside__kind">{o.kind}</span>
+          <a
+            class="hit group grid grid-cols-[92px_minmax(0,1fr)_4em] items-baseline gap-intra-4 py-intra-2 border-t border-rule text-fg max-narrow:grid-cols-[92px_minmax(0,1fr)] max-narrow:gap-y-1"
+            href={o.href}
+          >
+            <span class="mono meta">{ymd(o.date)}</span>
+            <span class="group-hover:underline group-hover:underline-offset-[.2em] max-narrow:col-span-full max-narrow:row-start-2">
+              {o.title}
+            </span>
+            <span class="mono meta text-end whitespace-nowrap">{o.kind}</span>
           </a>
         </li>
       ))

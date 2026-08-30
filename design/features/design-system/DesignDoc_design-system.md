@@ -59,6 +59,7 @@ Typography の判断理由は [ADR-0004](../../../adr/0004-typography-static-wei
 - 動きの規則と、退行したときの見え方
 - 印 (icon) を使ってよい範囲
 - 版面のユーティリティ (`.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫の 3 段階)
+- Tailwind の層の順と、状態を markup で書く形 ([ADR-0010](../../../adr/0010-tailwind-as-styling-base.md))
 
 ### やらないこと
 
@@ -638,33 +639,68 @@ flowchart TD
 `packages/design-system` が配るのはトークンと版面までにする。
 1 サイトでしか使わない部品を package へ上げると、変更のたびに 2 つの repo 境界をまたぐ。
 
-### 配布
+### 配布と層
 
-`packages/design-system` は 2 本の CSS を配る。
-
-| ファイル        | 中身                                     |
-| --------------- | ---------------------------------------- |
-| `tokens.css`    | カスタムプロパティのみ。レイヤに入れない |
-| `utilities.css` | `@layer fukuemon` に閉じる               |
-
-**ユーティリティをレイヤに閉じる。**
-CSS Cascade Layers では、レイヤに属さない宣言があらゆるレイヤ内の宣言より優先する。
-詳細度では逆転できない。
-レイヤ外の要素セレクタ (`body` / `a` / `h1, h2, h3`) は、第三者のスタイルを無条件に上書きする。
-`astro-expressive-code` が挿すコードブロックの CSS が、その対象になる。
-
-消費側はレイヤ順を宣言する。
+意匠の土台は Tailwind CSS v4 である ([ADR-0010](../../../adr/0010-tailwind-as-styling-base.md))。
 
 ```css
-@layer third-party, fukuemon;
+/* apps/web/src/styles/global.css */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "@fukuemon/design-system/tokens.css";
+@import "@fukuemon/design-system/utilities.css";
+@import "./site.css";
+@import "./motion.css";
 ```
 
-`tokens.css` をレイヤに入れない。
-カスタムプロパティは値の供給であって、勝ち負けを競う宣言ではない。
+| 層           | 中身                                             |
+| ------------ | ------------------------------------------------ |
+| `theme`      | Tailwind の既定と `@theme static` のトークン     |
+| `base`       | 要素の既定 (`body` / `a` / `h1, h2, h3` / `pre`) |
+| `components` | 部品。markup では表せないものだけ                |
+| `utilities`  | Tailwind の utility                              |
+
+**utility を最後に置く。** markup 側の 1 語が部品の規則に勝つ。
+
+**preflight を読み込まない。**
+本文の段落間隔は UA 既定の `margin-block: 1em` に依存しており、preflight はそれを 0 にする。
+ただし **border の初期化だけは `base` に自前で持つ。**
+`border-width: 0; border-style: solid` が無いと、`border-b` を当てた要素の
+他 3 辺に `medium` (3px) の枠が付く。
+
+**版面と部品のクラスを `@utility` にしない。**
+`@utility` は utilities 層に入り、`[data-open="false"].g-doc` のような状態つきの上書きにも、
+`.g-rail > .tate-head` の狭い画面の上書きにも勝つ。
+実測では `@utility` 化した時点で 40 枚中 28 枚が退行した。
 
 **第三者の CSS が使う class 名を避ける。**
 Expressive Code は `.expressive-code` 以下を使う。
 そこへは触らず、意匠は `styleOverrides` から指定する。
+**上書きが要るときは cascade layer の外に置く。**
+Expressive Code の CSS は層に属さないので、層の中からは詳細度でも勝てない。
+
+### 状態の書き方
+
+**基準値と状態の上書きは同じ層に置く。**
+基準値だけ markup へ移すと、utility が層の上で状態に勝つ。
+
+| 元の CSS                                  | markup                                     |
+| ----------------------------------------- | ------------------------------------------ |
+| `[data-open="false"] .side__panel`        | `data-[open=false]:...`                    |
+| `.steps__link[aria-current]`              | `aria-[current]:...`                       |
+| `.steps__link[aria-current] .steps__text` | 親に `group`、子に `group-aria-[current]:` |
+| `.steps__mark[data-state="done"]`         | `data-[state=done]:...`                    |
+| `.runner__bar:has(.btn)`                  | `has-[.btn]:...`                           |
+| `.sheet[open]`                            | `open:...`                                 |
+
+手順の現在地は `aria-current="step"` である。
+組み込みの `aria-current:` は `[aria-current="true"]` なので当たらない。`aria-[current]:` を使う。
+
+`<dialog>` の UA 既定は `dialog:not([open]) { display: none }` である。
+`display` を `[open]` に限定せず当てると、閉じている窓が側柱に出る。
 
 #### 配色の切り替え
 
@@ -693,14 +729,17 @@ Expressive Code は `.expressive-code` 以下を使う。
 
 ### トークン共有の必要条件
 
-**`tokens.css` は素の CSS で書き、CSS フレームワークに依存させない。**
+トークンは `@theme static` に置く。
+`--color-paper` は `bg-paper` / `text-paper` を生み、同時に `var(--color-paper)` として残る。
+
+**`static` を付ける。**
+既定では utility から参照された変数しか出力されない。
+挿絵の SVG は `fill="var(--color-wood-1)"` で色を引くので Tailwind の走査に映らず、
+3 階調が消える。
 
 `astro-expressive-code` が挿す CSS は、こちらのビルドを通らない。
-トークンをフレームワークのレイヤに閉じ込めると、`styleOverrides` から引けなくなる。
-これが素の CSS で書く理由である (設計不変量 5)。
-
-CSS フレームワークは採っていない。
-素の CSS で足りており、採るとトークンの経路が 1 本増える。
+`styleOverrides` から引けるのは素の CSS カスタムプロパティだけである (設計不変量 5)。
+`@theme` は変数を `:root` に出すので、この条件を満たす。
 
 ### Expressive Code への橋渡し
 

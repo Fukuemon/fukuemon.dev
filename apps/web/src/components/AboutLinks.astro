@@ -8,10 +8,16 @@ interface Props {
 const { class: extra } = Astro.props as Props;
 ---
 
-<p class:list={["links", extra]}>
+{/* 字ではないので溝は詰める。当たり判定は 44px を保つ (.hit + w-11) */}
+<p class:list={["flex flex-wrap gap-intra-1 m-0", extra]}>
   {
     LINKS.map((l) => (
-      <a class="hit links__item" href={l.href} aria-label={l.label} title={l.label}>
+      <a
+        class="hit justify-center w-11 text-fg-2 transition-[color] duration-[140ms] ease-out hover:text-link"
+        href={l.href}
+        aria-label={l.label}
+        title={l.label}
+      >
         <Icon name={l.icon} />
       </a>
     ))

@@ -7,11 +7,18 @@ const { text } = Astro.props;
 const isComment = text.trimStart().startsWith("#");
 ---
 
-<div class="cmd" data-comment={isComment ? "true" : undefined}>
-  <code class="mono cmd__text">{text}</code>
+<div
+  class="cmd group flex items-center gap-intra-2 border border-rule-strong bg-code-bg px-intra-3 py-[8px] mt-[4px] data-[comment]:border-dashed data-[comment]:bg-transparent [.cmd+&]:border-t-0"
+  data-comment={isComment ? "true" : undefined}
+>
+  <code class="mono cmd__text flex-1 overflow-x-auto text-[0.875rem] whitespace-pre group-data-[comment]:text-c-com group-data-[comment]:italic">{text}</code>
   {
     !isComment && (
-      <button class="cmd__copy mono meta" type="button" data-copy={text}>
+      <button
+        class="cmd__copy mono meta flex-none min-h-[32px] px-intra-2 py-0"
+        type="button"
+        data-copy={text}
+      >
         コピー
       </button>
     )

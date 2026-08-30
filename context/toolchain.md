@@ -35,7 +35,7 @@ verified_commit: unverified
 | --------------- | ----------------------------------- | ----------------- | ----------------------------------------------- |
 | framework       | Astro                               | 7.2.9             | Node.js 22.12 以上                              |
 | island          | React + `@astrojs/react`            | 19.2.8 / 6.0.4    | 実行パネルと側柱だけに使う                      |
-| CSS             | 素の CSS                            | —                 | フレームワークを採らない                        |
+| CSS             | Tailwind CSS + `@tailwindcss/vite`  | 4.3.3             | preflight は読まない (ADR-0010)                 |
 | コードブロック  | `astro-expressive-code`             | 0.44.1            | 意匠は `styleOverrides` から指定する            |
 | 図              | `rehype-mermaid`                    | 3.0.0             | peer に `playwright`。ビルド時に SVG へ落とす   |
 | 全文検索        | `pagefind`                          | 1.5.2             | `astro build` のあとに索引を作る                |
@@ -51,8 +51,11 @@ verified_commit: unverified
 | infra           | Terraform + `cloudflare/cloudflare` | 1.14.3 / provider 5.24.0 | CI は 1.14.3 に固定。認証は `CLOUDFLARE_API_TOKEN` |
 | deploy          | Wrangler                            | 4.127.1           | 認証は `CLOUDFLARE_API_TOKEN` (2026-08-30 実測)    |
 
-**Starlight と CSS フレームワークは採らない** ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
-描画は Astro のページとして自前で組み、共有するのは素の CSS カスタムプロパティだけにする。
+**Starlight は採らない** ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
+描画は Astro のページとして自前で組む。
+
+意匠の土台は Tailwind CSS v4 である ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
+トークンは `@theme static` に置き、`styleOverrides` から引ける素のカスタムプロパティとして残す。
 
 ## Vite+ の適用範囲
 

@@ -7,13 +7,13 @@ type Props = { contentId: string; presets: Preset[] };
 export default function Presets({ contentId, presets }: Props) {
   if (presets.length === 0) return null;
   return (
-    <section className="pg-presets" aria-label="試す">
-      <ul className="pg-list">
+    <section className="pt-intra-2" aria-label="試す">
+      <ul className="list-none m-0 p-0">
         {presets.map((p) => (
           <li key={p.label}>
             <button
               type="button"
-              className="hit pg-preset"
+              className="block w-full min-h-[36px] py-intra-1 px-0 border-t border-rule bg-transparent text-start text-[0.875rem] text-link font-[family-name:inherit] [font-weight:inherit] leading-[inherit] cursor-pointer"
               onClick={() => emitPreset(contentId, p.sql)}
             >
               {p.label}
