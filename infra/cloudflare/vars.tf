@@ -3,6 +3,11 @@ variable "account_id" {
   type        = string
 }
 
+variable "zone_id" {
+  description = "既存 zone の ID (Cloudflare Registrar が作成済み)"
+  type        = string
+}
+
 variable "zone_name" {
   description = "サイトのドメイン名"
   type        = string
