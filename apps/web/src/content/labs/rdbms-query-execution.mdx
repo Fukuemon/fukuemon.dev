@@ -1,0 +1,302 @@
+---
+contentId: rdbms-query-execution
+title: RDBMS のクエリ実行を理解する
+description: プランナが何を材料に計画を選ぶのかを、見積もりと実測を並べながら自分の手で確かめます。
+tags: [postgres]
+status: published
+publishedAt: 2026-08-21
+difficulty: intermediate
+duration: 52
+interactive:
+  level: embedded
+  runtime: pglite
+setup: |
+  create table events (
+    id bigserial primary key,
+    kind text not null,
+    user_id int not null,
+    at timestamptz not null,
+    payload text not null
+  );
+  insert into events (kind, user_id, at, payload)
+  select case when g % 100 = 0 then 'purchase'
+              when g % 4 = 0 then 'click'
+              else 'view' end,
+         (g * 7919) % 5000,
+         now() - (g || ' seconds')::interval,
+         repeat('x', 80)
+  from generate_series(1, 200000) g;
+  analyze events;
+related: [index-not-used]
+---
+
+実行ボタンを押すと、この端末のブラウザのなかで Postgres が起動します。サーバーへは何も送りません。
+
+本物の Postgres を WebAssembly にしたものなので、`EXPLAIN` のコストも `Buffers:` も実際の値が返ります。SQL は書き換えて再実行できます。`select version()` を実行すれば、どの版が動いているか確かめられます。
+
+初回は数十秒かかります。以降の手順では同じインスタンスを使い回すので待ちません。
+
+使うのは `events` テーブル 1 つです。実行ボタンを押した時点で、次の状態で用意されます。
+
+| 列        | 型             | 中身                                            |
+| --------- | -------------- | ----------------------------------------------- |
+| `id`      | `bigserial`    | 主キー                                          |
+| `kind`    | `text`         | `view` が 75%、`click` が 24%、`purchase` が 1% |
+| `user_id` | `int`          | 0〜4999 の 5,000 種                             |
+| `at`      | `timestamptz`  | 1 秒刻みで 200,000 秒前まで                     |
+| `payload` | `text`         | 80 バイトの詰め物                               |
+
+全 200,000 行、`analyze` 済みです。`payload` が入っているのは、1 行を太らせてページ数を稼ぐためです。行が細いと、どんな条件でも全ページ読むことになり、手順 04 の差が出ません。
+
+## 計画を読む
+
+Duration: 04:00
+
+`EXPLAIN` はプランナが選んだ計画と、その**見積もり**を返します。まだ実行はしていません。
+
+```sql run
+explain
+select kind, count(*) from events group by kind;
+```
+
+`cost=A..B` の A は最初の 1 行を返すまで、B は全部返すまでの推定です。**単位は秒ではありません。** 1 ページを順に読む手間を 1.0 とした相対値です。
+
+内側が先に走ります。`->` の深い行から読みます。
+
+`Seq Scan` の `rows=` が 200000 になっているのを確かめてください。絞り込みが無いので全行です。その上の `HashAggregate` の `rows=3` は `kind` の種類数の見積もりです。この 3 がどこから来たのかは、手順 03 で回収します。
+
+`group by kind` を `group by user_id` に変えて、`rows=` がいくつになるか見てください。
+
+## 見積もりと実測を並べる
+
+Duration: 05:00
+
+`ANALYZE` を付けると、実際に実行して `(actual ...)` を返します。
+
+```sql run
+explain analyze
+select kind, count(*) from events group by kind;
+```
+
+同じ行に `rows=` が 2 回出ます。**左が見積もり、右が実測です。** この 2 つの比が、以降すべての手順の主役になります。
+
+`Buffers: shared hit=` も出ています。読んだ 8 KB ページの枚数です。Postgres 18 から `EXPLAIN ANALYZE` の既定で付くようになりました。
+
+**時間ではなく `Buffers` を物差しにしてください。** 実行時間は測るたびに変わりますが、読んだページ数は仕事量そのものなのでぶれません。手順 05 では、速いほうが誤った計画である例も出てきます。
+
+`Seq Scan` の `Buffers` が、テーブルの全ページ数と一致しているはずです。全部読んだ証拠です。
+
+`where kind = 'purchase'` を足して、`Buffers` が減るか見てください。減りません。理由は手順 04 で回収します。
+
+## 見積もりを手で計算する
+
+Duration: 06:00
+
+プランナが見ているのはテーブルの中身ではありません。`ANALYZE` が作った統計だけです。
+
+等価条件の見積もりは、**最頻値の頻度に総行数を掛けただけ**の値です。掛け算を自分で再現します。
+
+```sql run
+select v.kind, v.freq,
+       round(v.freq::numeric * c.reltuples::numeric) as planner_rows
+from pg_stats s
+cross join lateral unnest(s.most_common_vals::text::text[], s.most_common_freqs)
+       as v(kind, freq)
+join pg_class c on c.relname = s.tablename
+where s.tablename = 'events' and s.attname = 'kind'
+order by v.freq desc;
+```
+
+`most_common_vals` は `anyarray` 型なので、`::text::text[]` と二段でキャストします。
+
+答え合わせをします。
+
+```sql run
+create index if not exists events_kind_idx on events (kind);
+
+explain
+select * from events where kind = 'purchase';
+```
+
+計画の `rows=` が、上の表の `purchase` の `planner_rows` と一致します。**プランナは魔法ではなく掛け算です。**
+
+`planner_rows` は真の値 (2,000 行) から少しずれています。`ANALYZE` は全行ではなく標本を見ているためです。この値は実行のたびに数 % 変わります。
+
+`'purchase'` を `'click'`、`'view'` に変えて、そのつど一致することを確かめてください。
+
+## 選択率が走査方法を決める
+
+Duration: 07:00
+
+索引は `events_kind_idx` の 1 本だけです。それでも `kind` の値によって計画が変わります。
+
+分かれ目は索引の有無ではありません。**選択率**、つまり条件が何 % の行を通すかです。
+
+```sql run
+explain analyze
+select * from events where kind = 'purchase';
+```
+
+```sql run
+explain analyze
+select * from events where kind = 'click';
+```
+
+```sql run
+explain analyze
+select * from events where kind = 'view';
+```
+
+3 つの `Heap Blocks` を並べてください。
+
+`purchase` (1%) は全体の半分ほどのページで済みます。ここが索引の効く領域です。
+
+`click` (24%) の `Heap Blocks` は、テーブルの全ページ数と同じになります。**索引を引いた末に、結局すべてのページを読んでいます。** 索引走査が全表走査へ退化していく途中経過が、この数字に出ます。
+
+`view` (75%) では索引ノードが計画から消えます。
+
+## 捨てられた計画を出す
+
+Duration: 05:00
+
+プランナが選ばなかった計画は表示されません。`enable_seqscan` を切ると、次点を出せます。
+
+`set` はセッションに残るので、必ず同じフェンスの末尾で `reset` します。
+
+```sql run
+set enable_seqscan = off;
+
+explain analyze
+select * from events where kind = 'view';
+
+reset enable_seqscan;
+```
+
+手順 04 の `view` と見比べてください。強制した側は `Heap Blocks` で結局テーブル全体を読み、その**上に**索引ページを余計に読んでいます。仕事量が厳密に多いことが `Buffers` に出ます。
+
+ところが実行時間は、強制した側のほうが速いことがあります。
+
+**これは矛盾ではありません。** コストモデルは、円盤上のランダム読み取りが順次読み取りより高価であることを前提にしています。ブラウザの中で動く Postgres に円盤はありません。プランナはモデルを最適化しているのであって、あなたの環境を最適化しているのではない、ということです。
+
+末尾の `reset enable_seqscan;` を消して実行し、そのあと手順 04 をやり直してみてください。設定が残って計画が変わったままになります。確かめたら `reset enable_seqscan;` を単独で実行して戻してください。
+
+## 境目を自分で動かす
+
+Duration: 06:00
+
+`user_id` は 5,000 種あります。`user_id < N` の `N` を動かすと、選択率を 0 から 100% まで無段階に振れます。
+
+```sql run
+create index if not exists events_user_idx on events (user_id);
+analyze events;
+
+explain
+select * from events where user_id < 500;
+```
+
+**この手順の主作業は書き換えです。** `500` を `1000`、`2000`、`2500`、`2600` と上げて、`Seq Scan` に変わる `N` を挟み込んでください。
+
+Seq Scan が選ばれたあとの総コストは、条件を変えても一切動きません。全ページ読む値段は条件と無関係だからです。Bitmap 側だけが選択率に比例して上がり、交わったところで切り替わります。
+
+境目は全体の半分あたりにあります。「索引は 10% を越えると使われない」という通説より、はるかに高い位置です。この環境では `effective_cache_size` が大きく、ランダム読み取りが安く見積もられているためです。
+
+境目を見つけたら、フェンスの先頭に `set random_page_cost = 16;` を足して探し直してください。ランダム読み取りが高いと申告すると、プランナは索引を早く諦めます。終わったら `reset random_page_cost;` を足してください。
+
+## 統計を古くして計画を壊す
+
+Duration: 07:00
+
+ここまでは統計が正しい世界でした。古くします。
+
+40,000 行入れて、`ANALYZE` を走らせません。プランナは `refund` という値の存在を知りません。
+
+```sql run
+delete from events where kind = 'refund';
+insert into events (kind, user_id, at, payload)
+select 'refund', g % 5000, now() - (g || ' milliseconds')::interval, repeat('x', 80)
+from generate_series(1, 40000) g;
+
+explain analyze
+select * from events where kind = 'refund';
+```
+
+先頭の `delete` は、何度押しても同じ状態になるようにするためです。
+
+`rows=1` に対して実測が 40,000 行。**40,000 倍の外れです。**
+
+総コストを見てください。1 行だけ取り出すつもりの値段です。その安さゆえに `Index Scan` が選ばれています。手順 08 と見比べると、これが誤った選択だったと分かります。
+
+`generate_series(1, 40000)` を `(1, 4000)` に減らして実行し直してください。見積もりは `rows=1` のままです。**統計に無い値は、何行入れても 1 行と見なされます。**
+
+## ANALYZE で直す
+
+Duration: 03:00
+
+標本を取り直して、`refund` を統計に載せます。
+
+```sql run
+analyze events;
+
+explain analyze
+select * from events where kind = 'refund';
+```
+
+見積もりが実測にほぼ一致します。総コストは数百倍に増えています。
+
+**速くなったのではありません。値段が正しくなったのです。** その結果、選ばれる計画が `Index Scan` から入れ替わります。
+
+手順 03 の `pg_stats` のフェンスへ戻って実行し直してください。`refund` が最頻値の一覧に加わっています。
+
+## 統計では直らないずれ
+
+Duration: 07:00
+
+統計を正しくしても消えないずれがあります。
+
+プランナは、条件に合う行が索引の並びに**均等に散らばっている**と仮定します。偏っていると読みが外れます。
+
+`refund` は手順 07 で `at` の最新側だけに固めました。並び順を変えた 2 本を比べます。
+
+```sql run
+create index if not exists events_at_idx on events (at);
+analyze events;
+
+explain analyze
+select * from events where kind = 'refund' order by at limit 10;
+```
+
+```sql run
+explain analyze
+select * from events where kind = 'refund' order by at desc limit 10;
+```
+
+**2 本の総コストが完全に一致していることを確かめてください。** プランナはこの 2 つを区別できていません。
+
+それでいて `Buffers` は 3 桁違い、実測は 3 桁近く違います。
+
+昇順側の `Rows Removed by Filter` を見てください。`LIMIT 10` のために 20 万行を読んで捨てています。**`LIMIT` が付いた計画で最初に見る場所がここです。**
+
+プランナは「`refund` は全体の 2 割弱だから、`at` 順に数十行も読めば 10 件そろう」と考えます。実際は全部が末尾にあります。`ANALYZE` を何度走らせてもこの誤りは直りません。列ごとの頻度は、**値が並びのどこに固まっているかを記録しない**からです。
+
+`limit 10` を `limit 100`、`limit 1000` と増やしてください。総コストは動きますが、昇順と降順の差は変わりません。
+
+昇順を速くする方法を考えてください。フェンスの先頭に `create index if not exists events_kind_at_idx on events (kind, at);` を足して実行し直すと、`Rows Removed by Filter` が消えます。
+
+## まとめ
+
+Duration: 02:00
+
+遅いクエリの原因は、たいてい計画そのものではありません。**計画を選ぶ材料が間違っている**ことです。
+
+```sql run
+explain analyze
+select * from events where kind = 'refund' order by at limit 10;
+```
+
+見る順序を 3 つに決めておけば足ります。
+
+| 見る場所                      | 何を疑うか                       | 直し方                             |
+| ----------------------------- | -------------------------------- | ---------------------------------- |
+| `rows=` の左右の比            | 統計が古い                       | `ANALYZE`                          |
+| `Rows Removed by Filter`      | 読んでから捨てている             | 条件に合う索引を足す               |
+| `Buffers` と `Heap Blocks`    | 索引を引いた末に全ページ読んでいる | 選択率を見直す。索引をやめる判断も |
