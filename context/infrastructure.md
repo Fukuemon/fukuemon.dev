@@ -185,17 +185,31 @@ deploy workflow は environment を指定しないため、そこへ届かない
 
 #### token の権限
 
-| token                     | 権限                                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | Account / Workers Scripts / Edit                                                            |
-| `TF_CLOUDFLARE_API_TOKEN` | Account / Workers R2 Storage / Edit、Account / Zone / Edit、Account / Workers Scripts / Edit |
-| R2 の S3 互換キー         | Object Read & Write。state バケットに限定する                                                |
+権限は「スコープ / 権限グループ / アクセスレベル」の 3 段で指定する。
+
+| token                     | 権限                                                                                      |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | Account / Workers Scripts / Edit                                                          |
+| `TF_CLOUDFLARE_API_TOKEN` | Account / Workers R2 Storage / Edit、Account / Workers Scripts / Edit、Zone / Zone / Edit |
+| R2 の S3 互換キー         | Object Read & Write。state バケットに限定する                                              |
 
 apply 用の権限名は、provider が各リソースに挙げる Accepted Permissions に対応する。
 
-- **zone の作成は Account スコープの Zone 権限である。** Zone スコープの権限は既存 zone の設定変更に使うものであり、作成には使えない。
+- **zone の作成は Zone スコープの `Zone Zone Edit` である。** `POST /zones` の Accepted Permissions は `Zone Zone Edit` と `Zone DNS Edit` のいずれか 1 つであり、Account スコープに `Zone` の権限グループは存在しない。
+  作成対象の zone はまだ存在しないため、Zone Resources には `All zones from an account` を選ぶ。
 - **DNS の権限は要らない。** custom domain が作る apex のレコードは Cloudflare 側の内部処理であり、`Workers Scripts` の配下にある。
 - **deploy 用に Zone 権限は要らない。** custom domain は Terraform の管轄であり、deploy 経路は触らない。
+
+#### Client IP Address Filtering を CI の token に掛けない
+
+**GitHub Actions から使う token では空にする。** runner の IP は 7251 件の CIDR に散らばり、GitHub 側で変動する。
+フィルタに入れ切れず、入れても runner の割り当てが変わるたびに 403 になる。
+2026-08-31 に `curl -s https://api.github.com/meta` の `actions` を数えて確認した (IPv4 5625 / IPv6 1626)。
+
+手元から実行する `bootstrap/` の token は、固定 IP の回線であれば絞れる。
+動的 IP では再接続のたびに 403 になるため設定しない。
+
+IP フィルタの代わりに効くのは、権限の最小化、Account / Zone Resources の限定、apply workflow の environment protection rules である。
 
 ### secret を Terraform state に載せない
 
@@ -268,8 +282,9 @@ isolation が要るのは `/playground/*` だけである ([ADR-0006](../adr/000
 | 1   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ実際に紐付くか                                                           | 初回 apply 時 |
 | 2   | R2 backend の `skip_s3_checksum` で state 書き込みが通るか。HashiCorp は S3 互換ストレージを best effort とし Amazon S3 でしかテストしていない | 初回 apply 時 |
 | 3   | deploy 用 token を Account / Workers Scripts / Edit だけに絞って `wrangler deploy` が通るか。403 になる場合は Account Settings / Read を足す | 初回 deploy 時 |
-| 4   | apply 用 token の zone 権限が `Zone Read` / `Zone Write` で足りるか。provider は `cloudflare_zone` に 42 件の権限を挙げるが、作成と読み取りだけなら 2 件で足りるはずである | 初回 apply 時 |
+| 4   | apply 用 token の `Zone / Zone / Edit` 1 つで `cloudflare_zone` の作成と読み取りが通るか。`Edit` は CRUDL を含むため足りるはずである | 初回 apply 時 |
 | 5   | R2 の Object Read & Write で `use_lockfile` のロックオブジェクト削除が通るか。落ちる場合は Admin Read & Write へ上げる | 初回 apply 時 |
+| 6   | Client IP Address Filtering が IPv6 を受け付けるか、指定件数に上限があるか。Cloudflare のドキュメントに記載がない | 手元用の token を作るとき |
 
 1 は provider 5.24.0 で `environment` が Optional かつ Deprecated に変わり、schema 上の前提は解消済みである (cloudflare/terraform-provider-cloudflare#5618)。
 実 apply が未実施のため未確認として残す。
