@@ -43,6 +43,19 @@ flowchart LR
 設定ファイルは **`wrangler.jsonc`** を使う。
 Cloudflare は新規プロジェクトへ JSONC を推奨しており、一部の新機能は JSON 形式でのみ使える。
 
+### deploy 経路
+
+| 項目          | 値                                                        |
+| ------------- | --------------------------------------------------------- |
+| Worker 名     | `fukuemon-dev`                                            |
+| 契機          | 既定ブランチへの push                                     |
+| workflow      | `.github/workflows/deploy.yml`                            |
+| wrangler 設定 | `apps/web/wrangler.jsonc`                                 |
+| 配信元        | `apps/web/dist` (Astro の build 成果物 + pagefind の索引) |
+| 必要な secret | `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`          |
+
+**custom domain はまだ無い。** ドメインが未取得のため、到達先は `workers.dev` のサブドメインである。
+
 ## Infrastructure Contract (Terraform / Wrangler 管轄表)
 
 > **基盤設定を Terraform、アプリの deploy と runtime 設定を Wrangler が管理する。1 つのリソースを両方から管理しない。**
@@ -178,10 +191,10 @@ Workers Static Assets が解釈する。
 **cross-origin isolation をサイト全体に掛けない。** 掛けると CORP を返さない第三者リソースが一律でブロックされる。
 2026-08-26 に実測で確認した。
 
-| リソース                            | `cross-origin-resource-policy` | `COEP: require-corp` 下 |
-| ----------------------------------- | ------------------------------ | ----------------------- |
-| `fonts.gstatic.com`                 | `cross-origin`                 | 読める                  |
-| CORP を返さない第三者の埋め込み     | なし                           | **ブロックされる**      |
+| リソース                        | `cross-origin-resource-policy` | `COEP: require-corp` 下 |
+| ------------------------------- | ------------------------------ | ----------------------- |
+| `fonts.gstatic.com`             | `cross-origin`                 | 読める                  |
+| CORP を返さない第三者の埋め込み | なし                           | **ブロックされる**      |
 
 isolation は取り消しの効かない方向の制約である。
 全体へ掛けると、第三者リソースを使いたくなるたびに、そのリソースが CORP を返すかどうかに実現可能性を握られる。
