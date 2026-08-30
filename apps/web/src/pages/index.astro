@@ -6,6 +6,7 @@ import Tate from "../components/Tate.astro";
 import KindSection from "../components/KindSection.astro";
 import About from "../components/About.astro";
 import AboutLinks from "../components/AboutLinks.astro";
+import OutsideList from "../components/OutsideList.astro";
 import { listContent } from "../lib/content";
 
 const [all, labs, articles] = await Promise.all([
@@ -46,6 +47,8 @@ const [all, labs, articles] = await Promise.all([
   />
 
   <KindSection heading="記事" items={articles} lead="調べて分かったことを書いています。" />
+
+  <OutsideList />
 
   <section class="section-x section--flush about__foot">
     <AboutLinks />

@@ -903,6 +903,56 @@
     .about__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   }
   .about__foot { margin-block-start: var(--gap-inter-2); }
+
+  /* そとで話す・書く。行の形は一覧に揃える */
+  .outside { margin-block-start: var(--gap-inter-3); }
+  .outside__list { list-style: none; margin: 0; padding: 0; }
+  .outside__row {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) 4em;
+    align-items: baseline;
+    gap: var(--gap-intra-4);
+    padding-block: var(--gap-intra-2);
+    border-block-start: 1px solid var(--rule);
+    color: var(--fg);
+  }
+  .outside__row:hover .outside__title { text-decoration: underline; text-underline-offset: .2em; }
+  .outside__kind { text-align: end; white-space: nowrap; }
+  @media (max-width: 720px) {
+    /* 題が 2 語しか入らなくなる。日付と種別を 1 行にまとめて上へ置く */
+    .outside__row {
+      grid-template-columns: 92px minmax(0, 1fr);
+      row-gap: 4px;
+    }
+    .outside__title { grid-column: 1 / -1; grid-row: 2; }
+  }
+  .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-4); }
+  .links a { color: var(--link); }
+}
+
+/* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
+@layer fukuemon {
+  .labmain--wide { max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter)); }
+  .pg-intro { margin-block: var(--gap-intra-3); }
+  .pg-preset {
+    display: block;
+    inline-size: 100%;
+    padding-block: var(--gap-intra-1);
+    border: 0;
+    border-block-start: 1px solid var(--rule);
+    background: none;
+    color: var(--link);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: start;
+    cursor: pointer;
+  }
+  /* 外部キー。ER のリレーション */
+  .peek__rel {
+    padding: 0 0 var(--gap-intra-1) var(--gap-intra-3);
+    color: var(--fg-2);
+    font-size: 0.75rem;
+  }
 }
 
 /* ER 図。実体と外部キーだけを箱と線で描く */

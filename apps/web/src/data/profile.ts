@@ -41,3 +41,49 @@ export const STACK: { label: string; items: string[] }[] = [
     items: ["GDG Greater Kwansai Organizer", "Go Workshop Conference 2025 IN KOBE 運営"],
   },
 ];
+
+/**
+ * そとで話したもの・書いたもの。
+ * このサイトの記事とは別の棚にする。置き場が違えば消える条件も違う。
+ */
+export type Outside = { date: string; title: string; href: string; kind: "登壇" | "記事" };
+
+export const OUTSIDE: Outside[] = [
+  {
+    date: "2025-07-25",
+    title: "メモ整理が苦手な者による頑張らないObsidian活用術",
+    href: "https://speakerdeck.com/optim/20250725-obsidian-fukuura",
+    kind: "登壇",
+  },
+  {
+    date: "2024-11-06",
+    title: "GDGs Innovative Crosstalk at 東大 【関西 x 東京】イベントレポート",
+    href: "https://zenn.dev/fukuemon/articles/47809f2eeeeff9",
+    kind: "記事",
+  },
+  {
+    date: "2024-09-30",
+    title:
+      "OpenAPIの仕様書から指定したPostmanのコレクションを自動更新するDockerイメージを作ったので紹介します",
+    href: "https://zenn.dev/fukuemon/articles/1a918a5ade7cf7",
+    kind: "記事",
+  },
+  {
+    date: "2023-10-07",
+    title: "Next.js(13.5)でTailwindCSS・Sassの導入。ESLint・Stylelint・Prettierのセットアップ",
+    href: "https://zenn.dev/fukuemon/articles/e5f7e7f01bbc05",
+    kind: "記事",
+  },
+  {
+    date: "2023-10-05",
+    title: "フロントエンドテスト入門 〜テストの種類と目的〜",
+    href: "https://zenn.dev/fukuemon/articles/3f9739b179fb58",
+    kind: "記事",
+  },
+  {
+    date: "2023-08-20",
+    title: "Viteで React✖︎TailwindCSS(TS) の環境構築した時の手順をメモ",
+    href: "https://zenn.dev/fukuemon/articles/51c606246776d7",
+    kind: "記事",
+  },
+];
