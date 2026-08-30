@@ -21,12 +21,19 @@ const [TEXT, LINE, FILL, ACCENT, MUTED] = Object.keys(MERMAID_TOKENS) as [
   string,
 ];
 
-/** ビルド時に mermaid へ渡す設定。線画にして、色は目印だけを使う */
+/**
+ * ビルド時に mermaid へ渡す設定。線画にして、色は目印だけを使う。
+ *
+ * **書体をサイトのものに合わせない。** mermaid は箱の大きさを描画時に測って焼き込む。
+ * ビルドの headless chromium に本文の書体は入っていないので、別の書体で測った箱に
+ * 本文の書体を流し込むことになり、文字が箱からはみ出して切れる。
+ * 環境をまたいで字幅の揃う総称に固定し、表示側でも上書きしない。
+ */
 export const mermaidConfig = {
   theme: "base",
   themeVariables: {
-    fontFamily: '"Zen Old Mincho", ui-serif, serif',
-    fontSize: "15px",
+    fontFamily: "Arial, Helvetica, sans-serif",
+    fontSize: "14px",
     background: "transparent",
     primaryColor: FILL,
     primaryTextColor: TEXT,
@@ -55,5 +62,7 @@ export const mermaidConfig = {
     signalTextColor: TEXT,
     sequenceNumberColor: TEXT,
   },
-  flowchart: { curve: "linear", useMaxWidth: true },
+  // SVG の text で描く。foreignObject は測った幅で切るので、ずれると文字が消える
+  htmlLabels: false,
+  flowchart: { curve: "linear", useMaxWidth: true, htmlLabels: false },
 };
