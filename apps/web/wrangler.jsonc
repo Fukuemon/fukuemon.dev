@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fukuemon-dev",
+  "compatibility_date": "2026-08-30",
+  // ハンドラを持たないため main を置かない (ADR-0005)
+  "assets": {
+    "directory": "./dist"
+  }
+}
