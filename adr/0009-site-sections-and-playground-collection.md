@@ -99,9 +99,9 @@ WASM で完結する TypeScript と Go は isolation を要求しないが、同
 playground は 300 KiB を払う場所である。
 PGlite の 5.28 MiB を払っているのと同じ判断で、**押されるまで落とさない**。
 
-### 5. 見た目は既存の決定に従う
+### 5. デザインは既存の決定に従う
 
-セクションを増やしても、見た目の正本は [design-system](../design/features/design-system/DesignDoc_design-system.md) のままである。
+セクションを増やしても、デザインの正本は [design-system](../design/features/design-system/DesignDoc_design-system.md) のままである。
 「角丸を使わず、影で奥行きを作らない」「紙に刷った版面の見えを保つ」を about と playground にも適用する。
 
 動きは状態の変化を伝えるときだけに使う。
@@ -226,5 +226,5 @@ about に判断は無い。
 - [design/DesignDoc.md](../design/DesignDoc.md): 全体像
 - [ADR-0006](0006-interactive-content-levels.md): `/playground/*` の予約と cross-origin isolation
 - [ADR-0001](0001-starlight-as-docs-renderer.md): 描画レイヤと URL 規約
-- [design-system](../design/features/design-system/DesignDoc_design-system.md): 見た目の正本
+- [design-system](../design/features/design-system/DesignDoc_design-system.md): デザインの正本
 - [rehype-mermaid](https://github.com/remcohaszing/rehype-mermaid)
