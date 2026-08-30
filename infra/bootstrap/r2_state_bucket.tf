@@ -4,7 +4,6 @@ resource "cloudflare_r2_bucket" "state" {
   location      = var.location
   storage_class = "Standard"
 
-  # 消えると infra/cloudflare/ の state を失う
   lifecycle {
     prevent_destroy = true
   }
