@@ -1,0 +1,51 @@
+name: Check
+
+# 品質ゲート (ADR-0007)。lint → typecheck → contrast → test → build を 1 本で通す。
+#
+# `vp run` ではなく pnpm の script を直接叩く。toolchain.md の
+# 「`vp` の無い環境でも `pnpm -r run build` が同じことをする」規約に合わせる。
+#
+# branches は "**" で受けて job 側で絞る (on ではブランチ名を動的に解決できない)。
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          # 版は package.json の engines と packageManager を正本にする。
+          # ここに数字を書くと二重管理になる
+          node-version-file: package.json
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # 図をビルド時に SVG へ落とすため、build に chromium が要る (ADR-0009)。
+      # 依存が入っていなければ何もしない
+      - name: playwright の chromium を入れる
+        run: |
+          if pnpm --filter @fukuemon/web exec playwright --version >/dev/null 2>&1; then
+            pnpm --filter @fukuemon/web exec playwright install --with-deps chromium
+          else
+            echo "playwright が無いので飛ばす"
+          fi
+
+      - run: pnpm run check
+
+      # 未使用の export と依存。落とさず報告にとどめる (ADR-0007)
+      - name: knip
+        run: pnpm run knip
+        continue-on-error: true
