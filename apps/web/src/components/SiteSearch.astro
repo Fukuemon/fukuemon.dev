@@ -1,0 +1,42 @@
+---
+/**
+ * 本文の検索。索引は Pagefind がビルド後に作る。
+ * 索引は数百 KiB あるので、押されるまで読まない。
+ */
+---
+
+<button type="button" class="hit search__open" data-search-open aria-haspopup="dialog">
+  検索
+</button>
+
+{/* top layer に出る。ヘッダの sticky や側柱の overflow に切られない */}
+<dialog class="sheet search" data-search>
+  <header class="sheet__head">
+    <label class="sr" for="search-q">本文を検索</label>
+    <input
+      id="search-q"
+      class="mono search__input"
+      type="search"
+      autocomplete="off"
+      placeholder="本文を検索"
+      data-search-input
+    />
+    <button type="button" class="btn sheet__close" data-search-close>閉じる</button>
+  </header>
+  <div class="search__body">
+    <p class="mono meta search__note" data-search-note>語を入れてください</p>
+    <ol class="search__list" data-search-list></ol>
+  </div>
+</dialog>
+
+{/* Astro に bundle させない。bundle すると Vite が preload の包みを足し、
+    その script が HTML へ inline されたときに置換が漏れて実行時に落ちる。
+    索引は押されるまで読まないので、ここでは入口だけを置く */}
+<script is:inline type="module">
+  window.loadPagefind = () => import("/pagefind/pagefind.js");
+</script>
+
+<script>
+  import { mountSearch } from "./search";
+  mountSearch();
+</script>

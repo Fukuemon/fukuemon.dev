@@ -14,7 +14,7 @@ const { ref, class: extra } = Astro.props;
 const related = await getRelated(ref.contentId);
 ---
 
-<article class:list={["marks", "prose", extra ?? "doc"]}>
+<article class:list={["marks", "prose", extra ?? "doc"]} data-pagefind-body>
   <p class="mono meta doc__crumb">
     <a href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
     <span aria-hidden="true">/</span>

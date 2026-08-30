@@ -1,4 +1,6 @@
 ---
+import SiteSearch from "./SiteSearch.astro";
+
 interface Props {
   current?: "posts" | "playground";
 }
@@ -13,5 +15,6 @@ const nav = [
   <a class="mono hit" href="/" style="font-size: 0.875rem; letter-spacing: .18em">fukuemon.dev</a>
   <nav class="label">
     {nav.map((n) => <a class="hit" href={n.href} aria-current={current === n.key ? "page" : undefined}>{n.label}</a>)}
+    <SiteSearch />
   </nav>
 </header>

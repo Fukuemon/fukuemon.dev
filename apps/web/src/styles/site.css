@@ -931,3 +931,49 @@
   }
 }
 
+/* 本文の検索。窓の骨組みは .sheet を借りる */
+@layer fukuemon {
+  .search__open {
+    padding-inline: 14px;
+    background: none;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+  }
+  .search__open:hover { color: var(--fg); }
+  /* 検索語の入力が見出しの位置に入る */
+  .search__input {
+    flex: 1 1 12rem;
+    min-inline-size: 0;
+    padding: var(--gap-intra-1) var(--gap-intra-2);
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+    color: var(--fg);
+    font-size: 1rem;
+  }
+  .search__body { overflow-y: auto; padding-block-start: var(--gap-intra-3); }
+  .search__note { margin: 0; }
+  .search__list { list-style: none; margin: 0; padding: 0; }
+  .search__hit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-block: var(--gap-intra-2);
+    border-block-end: 1px solid var(--rule);
+  }
+  .search__title { font-size: 1rem; }
+  /* 抜粋は 2 行で止める。件数を一目で数えられる高さに保つ */
+  .search__excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.6;
+  }
+  .search__excerpt mark {
+    background: var(--tint-green);
+    color: inherit;
+  }
+}
