@@ -1,0 +1,32 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import Tate from "../../components/Tate.astro";
+import { listPlaygrounds } from "../../lib/content";
+
+const items = await listPlaygrounds();
+---
+
+<SiteLayout title="playground — fukuemon.dev" description="手順に縛られず動かす場所。">
+  <section class="g-rail kind">
+    <Tate as="h2" class="tate-head" text="遊び場" />
+    <div class="section-link"></div>
+    <div>
+      <p class="prose kind__lead">
+        手順に縛られず動かす場所です。ブラウザの中だけで動き、サーバーへは何も送りません。
+      </p>
+      <div class="kind__grid">
+        {
+          items.map((p) => (
+            <a class="kind__card" href={`/playground/${p.data.contentId}`}>
+              <span aria-hidden="true" class="kind__tick" />
+              <h3 class="kind__title">{p.data.title}</h3>
+              <p class="prose kind__desc">{p.data.description}</p>
+              <span class="mono meta kind__meta">{p.data.runtime}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+  <div class="tail"></div>
+</SiteLayout>

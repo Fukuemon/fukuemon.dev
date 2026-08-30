@@ -8,6 +8,7 @@ import {
 
 type ArticleEntry = CollectionEntry<"articles">;
 type LabEntry = CollectionEntry<"labs">;
+type PlaygroundEntry = CollectionEntry<"playgrounds">;
 type Entry = ArticleEntry | LabEntry;
 
 const HREF: Record<ContentType, string> = { article: "/articles", "hands-on": "/labs" };
@@ -85,6 +86,14 @@ export const listArticleEntries = (filter?: (e: ArticleEntry) => boolean) =>
   getCollection("articles", filter);
 export const listLabEntries = (filter?: (e: LabEntry) => boolean) => getCollection("labs", filter);
 export const renderEntry = (entry: Entry) => render(entry);
+export const renderPlayground = (entry: PlaygroundEntry) => render(entry);
+
+/** 遊び場。`order` の昇順に並べる */
+export async function listPlaygrounds(): Promise<PlaygroundEntry[]> {
+  const found = await getCollection("playgrounds", isPublic);
+  return [...found].sort((a, b) => a.data.order - b.data.order);
+}
+
 
 /** 片方向に書かれた related から、双方向に導出した関連を返す。下書きは出さない */
 export async function getRelated(contentId: string): Promise<ContentRef[]> {
