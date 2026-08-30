@@ -18,7 +18,13 @@
     "knip": "knip",
     "doctor": "npx --yes react-doctor@latest --verbose --scope changed",
     "check:contrast": "pnpm --filter @fukuemon/design-system run check",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:contrast && pnpm run test && pnpm run build"
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:contrast && pnpm run test && pnpm run build",
+    "infra:init": "terraform -chdir=infra/cloudflare init",
+    "infra:import": "terraform -chdir=infra/cloudflare import",
+    "infra:plan": "terraform -chdir=infra/cloudflare plan",
+    "infra:apply": "terraform -chdir=infra/cloudflare apply",
+    "infra:bootstrap:init": "terraform -chdir=infra/bootstrap init",
+    "infra:bootstrap:apply": "terraform -chdir=infra/bootstrap apply"
   },
   "devDependencies": {
     "knip": "^6.32.2",
@@ -35,6 +41,9 @@
           "src/components/lab/SqlRunner.tsx"
         ]
       }
-    }
+    },
+    "ignoreBinaries": [
+      "terraform"
+    ]
   }
 }

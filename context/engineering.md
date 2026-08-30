@@ -93,7 +93,7 @@ root から束ねるタスクと、直実行するタスクを分ける。
 | `knip`                                  | root で 1 回                       | workspace 横断で未使用を判定する |
 | `similarity`                            | root で 1 回                       | 重複は package をまたぐ          |
 | `e2e`                                   | root の `e2e/` を直実行            | 単一 package に属さない          |
-| `infra:plan` / `infra:apply`            | root script から `infra/` を直実行 | workspace package ではない       |
+| `infra:*`                               | root script から `infra/` を直実行 | workspace package ではない       |
 
 **実際のコマンドは各 package の `package.json` scripts に置く。** root の `vite.config.ts` には `dependsOn` だけを宣言する ([context/toolchain.md](toolchain.md))。
 

@@ -47,11 +47,12 @@ state をローカルに置く前提を壊す。
 この段の state はローカルに残る。
 失った場合は `terraform import` で回復する。
 
+実行は repo root から root script で行う (`infra/` は workspace package ではない)。
+
 ```sh
 export CLOUDFLARE_API_TOKEN=<apply 用の token>
-cd infra/bootstrap
-terraform init
-terraform apply
+pnpm run infra:bootstrap:init
+pnpm run infra:bootstrap:apply
 ```
 
 `terraform.tfvars` に書く値は次のとおり。
@@ -88,11 +89,10 @@ export CLOUDFLARE_API_TOKEN=<apply 用の token>
 export AWS_ACCESS_KEY_ID=<R2 の access key id>
 export AWS_SECRET_ACCESS_KEY=<R2 の secret access key>
 export AWS_ENDPOINT_URL_S3=https://<Cloudflare の account ID>.r2.cloudflarestorage.com
-cd infra/cloudflare
-terraform init -backend-config="bucket=<1 で作ったバケット名>"
-terraform import cloudflare_zone.site <zone ID>
-terraform plan
-terraform apply
+pnpm run infra:init -- -backend-config="bucket=<1 で作ったバケット名>"
+pnpm run infra:import -- cloudflare_zone.site <zone ID>
+pnpm run infra:plan
+pnpm run infra:apply
 ```
 
 zone ID は Cloudflare の Overview 画面の右側にある。
@@ -109,8 +109,10 @@ zone_name  = "fukuemon.dev"
 
 import は手元で 1 回だけ行う。
 以後 CI から実行する場合は Actions の **Terraform Apply** を `workflow_dispatch` で起動する。
-`mode` を `plan` にすると plan で止まり、`apply` にすると apply まで進む。
-`infra` environment の protection rules を通る。
+
+`mode` を `plan` にすると plan job だけが動く。
+`apply` にすると plan job の後に apply job が続き、**それぞれで `infra` environment の承認を求める。**
+apply job は plan job が保存した plan file を使うため、2 回目の承認時に見た差分がそのまま適用される。
 
 ## 現状
 
