@@ -1,0 +1,36 @@
+---
+import SiteLayout from "./SiteLayout.astro";
+import KindTabs from "../components/KindTabs.astro";
+import ContentTable from "../components/ContentTable.astro";
+import { listContent } from "../lib/content";
+import type { ContentRef } from "@fukuemon/content-model";
+
+interface Props {
+  current: "all" | "article" | "hands-on";
+  items: ContentRef[];
+  showKind: boolean;
+  lead: string;
+}
+const { current, items, showKind, lead } = Astro.props;
+
+const counts = {
+  all: (await listContent()).length,
+  article: (await listContent({ type: "article" })).length,
+  "hands-on": (await listContent({ type: "hands-on" })).length,
+};
+
+const title = { all: "一覧", article: "記事", "hands-on": "ハンズオン" }[current];
+---
+
+<SiteLayout title={`${title} — fukuemon.dev`} description={lead} current="posts">
+  <div class="page">
+    <div class="section-lead">
+      <p class="prose">{lead}</p>
+    </div>
+
+    <KindTabs current={current} counts={counts} />
+    <ContentTable items={items} showKind={showKind} />
+  </div>
+
+  <div class="tail"></div>
+</SiteLayout>

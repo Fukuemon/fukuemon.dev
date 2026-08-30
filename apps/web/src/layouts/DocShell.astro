@@ -1,0 +1,27 @@
+---
+import MetaLine from "../components/MetaLine.astro";
+import RelatedList from "../components/RelatedList.astro";
+import { getRelated } from "../lib/content";
+import { KIND_INDEX, KIND_LABEL } from "../lib/format";
+import type { ContentRef } from "@fukuemon/content-model";
+
+interface Props {
+  ref: ContentRef;
+  /** 記事は 42rem、ハンズオンは縦罫の分だけ広い */
+  class?: string;
+}
+const { ref, class: extra } = Astro.props;
+const related = await getRelated(ref.contentId);
+---
+
+<article class:list={["marks", "prose", extra ?? "doc"]}>
+  <p class="mono meta doc__crumb">
+    <a href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
+    <span aria-hidden="true">/</span>
+    <span>{ref.tags[0]}</span>
+  </p>
+  <h1 class="display doc__title">{ref.title}</h1>
+  <MetaLine ref={ref} />
+  <slot />
+  <RelatedList items={related} />
+</article>

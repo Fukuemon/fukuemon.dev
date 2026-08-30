@@ -1,0 +1,23 @@
+---
+interface Props {
+  current: "all" | "article" | "hands-on";
+  counts: { all: number; article: number; "hands-on": number };
+}
+const { current, counts } = Astro.props;
+const tabs = [
+  { key: "all", label: "すべて", href: "/blog" },
+  { key: "article", label: "記事", href: "/blog/articles" },
+  { key: "hands-on", label: "ハンズオン", href: "/blog/labs" },
+] as const;
+---
+
+<nav class="tabs" aria-label="種類で絞り込む">
+  {
+    tabs.map((t) => (
+      <a href={t.href} aria-current={current === t.key ? "page" : undefined}>
+        {t.label}
+        <span class="n mono">{counts[t.key]}</span>
+      </a>
+    ))
+  }
+</nav>

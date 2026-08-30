@@ -1,0 +1,20 @@
+---
+import { tcy } from "../lib/tate";
+
+interface Props {
+  text: string;
+  /** 版面の直接の子になる必要があるので、包む要素を足さず tag を選ばせる */
+  as?: "span" | "h2" | "p";
+  class?: string;
+}
+const { text, as: Tag = "span", class: extra } = Astro.props as Props;
+---
+
+{/* 短い欧文・数字だけを縦中横で正立させる */}
+<Tag class:list={["tate", extra]}>
+  {
+    tcy(text).map((part) =>
+      part.upright ? <span class="tcy">{part.text}</span> : <>{part.text}</>,
+    )
+  }
+</Tag>

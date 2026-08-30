@@ -1,0 +1,37 @@
+---
+import Tate from "./Tate.astro";
+import type { ContentRef } from "@fukuemon/content-model";
+import { KIND_INDEX, kindLine } from "../lib/format";
+
+interface Props {
+  heading: string;
+  items: ContentRef[];
+  lead: string;
+}
+const { heading, items, lead } = Astro.props as Props;
+const shown = items.slice(0, 3);
+const href = KIND_INDEX[items[0]?.type ?? "article"];
+---
+
+{/* 種別の抽象的な札ではなく、実物を 3 本並べる。何が読めるかがその場で分かる */}
+<section class="g-rail kind">
+  <Tate as="h2" class="tate-head" text={heading} />
+  <div class="section-link">
+    <a class="mono meta" href={href}>{items.length} 本すべて →</a>
+  </div>
+  <div>
+    <p class="prose kind__lead">{lead}</p>
+    <div class="kind__grid">
+      {
+        shown.map((r) => (
+          <a class="kind__card" href={r.href}>
+            <span aria-hidden="true" class="kind__tick" />
+            <h3 class="kind__title">{r.title}</h3>
+            <p class="prose kind__desc">{r.description}</p>
+            <span class="mono meta kind__meta">{kindLine(r, false)}</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

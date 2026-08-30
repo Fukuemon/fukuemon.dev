@@ -1,0 +1,14 @@
+---
+import type { ContentRef } from "@fukuemon/content-model";
+import { ymd } from "../lib/format";
+
+interface Props {
+  ref: ContentRef;
+}
+const { ref } = Astro.props;
+---
+
+<p class="mono meta doc__meta">
+  <time datetime={ref.date.toISOString().slice(0, 10)}>{ymd(ref.date)}</time>
+  {ref.meta.map((m) => <span>{m.value}</span>)}
+</p>

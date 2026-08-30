@@ -1,0 +1,53 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import ContentRow from "../components/ContentRow.astro";
+import ArtBand from "../components/ArtBand.astro";
+import Tate from "../components/Tate.astro";
+import KindSection from "../components/KindSection.astro";
+import { listContent } from "../lib/content";
+
+const [all, labs, articles] = await Promise.all([
+  listContent(),
+  listContent({ type: "hands-on" }),
+  listContent({ type: "article" }),
+]);
+---
+
+<SiteLayout title="fukuemon.dev" description="読んで、動かして、確かめる。">
+  <section class="hero">
+    <ArtBand motif="woodland" fill />
+    <div class="hero__veil"></div>
+    <div class="hero__fg">
+      <p class="mono meta hero__eyebrow">WRITING &amp; LABS</p>
+      <h1 class="display lede-title">読んで、動かして、確かめる。</h1>
+    </div>
+  </section>
+
+  <section class="section-x section--flush">
+    <p class="prose lede">
+      Postgres と可観測性のあたりを調べて書いています。手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。
+    </p>
+  </section>
+
+  <section data-band class="band">
+    <div class="g-rail">
+      <Tate as="h2" class="tate-head band-head" text="最近の更新" />
+      <div class="section-link">
+        <a class="mono meta" href="/blog">すべて見る →</a>
+      </div>
+      <div>
+        {all.slice(0, 6).map((r, i) => <ContentRow ref={r} trailing="kind" cap={false} index={i} />)}
+      </div>
+    </div>
+  </section>
+
+  <KindSection
+    heading="ハンズオン"
+    items={labs}
+    lead="ブラウザのなかで Postgres が動きます。環境構築は要りません。"
+  />
+
+  <KindSection heading="記事" items={articles} lead="調べて分かったことを書いています。" />
+
+  <ArtBand motif="grass" height="132px" />
+</SiteLayout>

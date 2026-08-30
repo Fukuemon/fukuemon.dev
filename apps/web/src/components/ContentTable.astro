@@ -1,0 +1,43 @@
+---
+import type { ContentRef } from "@fukuemon/content-model";
+import { kindClass, kindLine, ymd } from "../lib/format";
+
+interface Props {
+  items: ContentRef[];
+  /** 絞り込み中は列見出しを「所要」にして、行から種別名を落とす */
+  showKind: boolean;
+}
+const { items, showKind } = Astro.props;
+---
+
+<table class="tbl">
+  <thead>
+    <tr class="mono meta">
+      <th scope="col" class="c-date">日付</th>
+      <th scope="col" class="c-title">題</th>
+      <th scope="col" class="c-tag">分類</th>
+      <th scope="col" class="c-kind">{showKind ? "種類" : "所要"}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      items.map((r, i) => (
+        <tr style={`--i:${Math.min(i, 12)}`}>
+          <td class="c-date">
+            <a class="mono meta" href={r.href}>{ymd(r.date)}</a>
+          </td>
+          <td class="c-title">
+            <a href={r.href}>{r.title}</a>
+            <span class="c-desc">{r.description}</span>
+          </td>
+          <td class="c-tag">
+            <span class="label">{r.tags[0]}</span>
+          </td>
+          <td class="c-kind">
+            <span class:list={["meta", kindClass(r.type)]}>{kindLine(r, showKind)}</span>
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

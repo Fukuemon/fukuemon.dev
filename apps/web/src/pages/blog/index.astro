@@ -1,0 +1,13 @@
+---
+import PostsLayout from "../../layouts/PostsLayout.astro";
+import { listContent } from "../../lib/content";
+
+const items = await listContent();
+---
+
+<PostsLayout
+  current="all"
+  items={items}
+  showKind={true}
+  lead="技術記事と、ブラウザだけで進められるハンズオン。"
+/>

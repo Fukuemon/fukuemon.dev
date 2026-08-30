@@ -1,0 +1,29 @@
+---
+import woodland from "@fukuemon/design-system/art/woodland.svg?raw";
+import bamboo from "@fukuemon/design-system/art/bamboo_tall.svg?raw";
+import grass from "@fukuemon/design-system/art/grass.svg?raw";
+import ridge from "@fukuemon/design-system/art/ridge.svg?raw";
+import ripple from "@fukuemon/design-system/art/ripple.svg?raw";
+
+const ART = { woodland, bamboo, grass, ridge, ripple } as const;
+
+interface Props {
+  motif: keyof typeof ART;
+  /** 帯の高さ。fill のときは親いっぱいに広げる */
+  height?: string;
+  fill?: boolean;
+}
+const { motif, height = "132px", fill = false } = Astro.props;
+
+// 装飾なので aria-hidden。role="img" を併せるとラベルが読み上げに届かない
+const svg = ART[motif].replace(/\srole="img"\s+aria-label="[^"]*"/, "");
+---
+
+<div
+  class:list={["wood-band", fill && "wood-band--fill"]}
+  aria-hidden="true"
+  style={fill ? undefined : `block-size: ${height}`}
+>
+  <Fragment set:html={svg} />
+  <div class="wood-grain"></div>
+</div>
