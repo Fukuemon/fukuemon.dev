@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from "react";
-import { useRan } from "./bus";
+import { useRan } from "../bus";
 import { fetchColumns, fetchRows, fetchTables, type Table } from "./catalog";
 import ErDiagram, { type Entity } from "./ErDiagram";
 import PeekList, { rowLabel } from "./PeekList";
-import { peekRuntime } from "./runtime";
+import { peekRuntime } from "../runtime/runtime";
 import Sheet from "./Sheet";
 import TableDetail, { type Detail } from "./TableDetail";
 import { useCatalog } from "./useCatalog";

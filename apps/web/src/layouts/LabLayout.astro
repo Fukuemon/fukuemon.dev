@@ -1,11 +1,11 @@
 ---
 import SiteLayout from "./SiteLayout.astro";
-import StepList from "../components/lab/StepList.astro";
-import Side from "../components/Side.astro";
-import DbPeek from "../components/lab/DbPeek";
-import LocalSetup from "../components/lab/LocalSetup.astro";
-import MetaLine from "../components/MetaLine.astro";
-import RelatedList from "../components/RelatedList.astro";
+import StepList from "../features/lab/steps/StepList.astro";
+import Side from "../features/doc/Side.astro";
+import DbPeek from "../features/lab/catalog/DbPeek";
+import LocalSetup from "../features/lab/local/LocalSetup.astro";
+import MetaLine from "../features/listing/MetaLine.astro";
+import RelatedList from "../features/listing/RelatedList.astro";
 import { getRelated } from "../lib/content";
 import { KIND_INDEX, KIND_LABEL } from "../lib/format";
 import type { ContentRef, Step } from "@fukuemon/content-model";
@@ -92,7 +92,7 @@ const related = await getRelated(ref.contentId);
 </SiteLayout>
 
 <script>
-  import { mountSteps } from "../components/lab/controller";
+  import { mountSteps } from "../features/lab/steps/controller";
   const root = document.querySelector<HTMLElement>("[data-lab]");
   if (root) mountSteps(root);
 </script>

@@ -1,4 +1,4 @@
-import type { Phase, Result } from "./useRunner";
+import type { Phase, Result } from "../runtime/useRunner";
 
 type Props = {
   phase: Phase;

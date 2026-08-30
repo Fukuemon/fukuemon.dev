@@ -1,4 +1,4 @@
-import { cellText } from "./cell";
+import { cellText } from "../runtime/cell";
 import type { Column } from "./catalog";
 
 export type Detail = { columns: Column[]; head: string[]; rows: unknown[][] };

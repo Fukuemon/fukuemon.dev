@@ -1,9 +1,9 @@
 import { useId, useState } from "react";
-import { usePreset } from "./bus";
+import { usePreset } from "../bus";
 import ResultTable from "./ResultTable";
 import RunnerControls from "./RunnerControls";
-import SqlEditor from "./SqlEditor";
-import { useRunner } from "./useRunner";
+import SqlEditor from "../editor/SqlEditor";
+import { useRunner } from "../runtime/useRunner";
 
 type Props = {
   setup?: string;

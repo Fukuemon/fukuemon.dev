@@ -1,9 +1,9 @@
 ---
 import SiteLayout from "./SiteLayout.astro";
 import DocShell from "./DocShell.astro";
-import DocToc from "../components/DocToc.astro";
-import Side from "../components/Side.astro";
-import DocNav from "../components/DocNav.astro";
+import DocToc from "../features/doc/DocToc.astro";
+import Side from "../features/doc/Side.astro";
+import DocNav from "../features/doc/DocNav.astro";
 import { listContent } from "../lib/content";
 import type { ContentRef, TocItem } from "@fukuemon/content-model";
 
@@ -29,7 +29,7 @@ const siblings = await listContent({ type: ref.type });
 </SiteLayout>
 
 <script>
-  import { mountSide } from "../components/side";
+  import { mountSide } from "../features/doc/side";
   const root = document.querySelector<HTMLElement>("[data-side-root]");
   if (root) mountSide(root);
 </script>

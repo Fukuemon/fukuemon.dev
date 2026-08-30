@@ -40,7 +40,7 @@
     "workspaces": {
       "apps/web": {
         "entry": [
-          "src/components/lab/SqlRunner.tsx"
+          "src/features/lab/panel/SqlRunner.tsx"
         ]
       }
     },

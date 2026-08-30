@@ -1,5 +1,5 @@
-import { cellText } from "./cell";
-import type { Result } from "./useRunner";
+import { cellText } from "../runtime/cell";
+import type { Result } from "../runtime/useRunner";
 
 export default function ResultTable({ result }: { result: Result }) {
   if (result.columns.length === 0) return null;

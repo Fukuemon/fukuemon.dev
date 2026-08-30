@@ -1,5 +1,5 @@
 import type { Preset } from "@fukuemon/content-model";
-import { emitPreset } from "./bus";
+import { emitPreset } from "../bus";
 
 type Props = { contentId: string; presets: Preset[] };
 

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { fetchRelations, fetchTables, type Relation, type Table } from "./catalog";
-import { peekRuntime } from "./runtime";
+import { peekRuntime } from "../runtime/runtime";
 
 /** 実行パネルが起こしたインスタンスへ相乗りする。側柱のためだけに WASM を落とさせない */
 export function useCatalog(contentId: string) {
