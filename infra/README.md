@@ -74,7 +74,10 @@ pnpm --filter @fukuemon/web run build
 pnpm --filter @fukuemon/web run deploy
 ```
 
-### 3. zone と custom domain を作る
+### 3. zone を import して custom domain を作る
+
+**zone は Cloudflare Registrar がドメイン取得時に作っている。** Terraform では作らず、既存の zone を state へ取り込む。
+ネームサーバは既に Cloudflare を向いているため、レジストラ側の設定は要らない。
 
 backend の設定は account ID を含むため commit しない。
 bucket 名は `-backend-config` で、endpoint は `AWS_ENDPOINT_URL_S3` で渡す。
@@ -87,31 +90,30 @@ export AWS_SECRET_ACCESS_KEY=<R2 の secret access key>
 export AWS_ENDPOINT_URL_S3=https://<Cloudflare の account ID>.r2.cloudflarestorage.com
 cd infra/cloudflare
 terraform init -backend-config="bucket=<1 で作ったバケット名>"
+terraform import cloudflare_zone.site <zone ID>
+terraform plan
 terraform apply
 ```
+
+zone ID は Cloudflare の Overview 画面の右側にある。
+
+**`terraform plan` が zone に差分を出さないことを確かめてから apply する。** 差分が出る場合は、実際の zone 設定に合わせて `zone.tf` を直す。
+`cloudflare_zone` には `prevent_destroy` を付けてあるため、destroy しようとすると apply が止まる。
 
 `terraform.tfvars` に書く値は次のとおり。
 
 ```hcl
 account_id = "<Cloudflare の account ID>"
-zone_name  = "<ドメイン名>"
+zone_name  = "fukuemon.dev"
 ```
 
-CI から実行する場合は Actions の **Terraform Apply** を `workflow_dispatch` で起動する。
+import は手元で 1 回だけ行う。
+以後 CI から実行する場合は Actions の **Terraform Apply** を `workflow_dispatch` で起動する。
 `mode` を `plan` にすると plan で止まり、`apply` にすると apply まで進む。
 `infra` environment の protection rules を通る。
 
-### 4. ネームサーバを向ける
-
-```sh
-terraform output name_servers
-```
-
-出力された 2 つのネームサーバをレジストラへ設定する。
-**zone が active になるまで custom domain は名前解決しない。**
-
 ## 現状
 
-**まだ 1 度も apply していない。** ドメインが未取得であり、Cloudflare アカウントも未作成である。
+**まだ 1 度も apply していない。** ドメインは Cloudflare Registrar で取得済みであり、zone は既に存在する。
 
 未確認事項は [context/infrastructure.md](../context/infrastructure.md) の「未確認事項」に置く。

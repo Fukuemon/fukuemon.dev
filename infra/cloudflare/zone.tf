@@ -4,9 +4,8 @@ resource "cloudflare_zone" "site" {
   }
   name = var.zone_name
   type = "full"
-}
 
-output "name_servers" {
-  description = "レジストラへ設定する Cloudflare のネームサーバ"
-  value       = cloudflare_zone.site.name_servers
+  lifecycle {
+    prevent_destroy = true
+  }
 }

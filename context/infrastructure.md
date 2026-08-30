@@ -124,7 +124,11 @@ infra/
    commit しない。
    失った場合は `terraform import` で回復する)
 2. `wrangler deploy` — Worker script + assets を作る。**Pages と異なり事前の手動作成は不要である**
-3. `infra/cloudflare/` を apply — custom domain + DNS を作る (state は R2 backend)
+3. `infra/cloudflare/` で zone を import してから apply — custom domain を作る (state は R2 backend)
+
+**zone は Terraform で作らない。** ドメインを Cloudflare Registrar で取得しており、zone は取得時に作られている。
+`terraform import cloudflare_zone.site <zone ID>` で state へ取り込む。
+ネームサーバも既に Cloudflare を向いているため、レジストラ側の設定は要らない。
 
 ## state backend
 
@@ -285,6 +289,7 @@ isolation が要るのは `/playground/*` だけである ([ADR-0006](../adr/000
 | 4   | apply 用 token の `Zone / Zone / Edit` 1 つで `cloudflare_zone` の作成と読み取りが通るか。`Edit` は CRUDL を含むため足りるはずである | 初回 apply 時 |
 | 5   | R2 の Object Read & Write で `use_lockfile` のロックオブジェクト削除が通るか。落ちる場合は Admin Read & Write へ上げる | 初回 apply 時 |
 | 6   | Client IP Address Filtering が IPv6 を受け付けるか、指定件数に上限があるか。Cloudflare のドキュメントに記載がない | 手元用の token を作るとき |
+| 7   | zone を import した後、`terraform plan` が差分を出さないか。`type` や `account` が実際の zone と食い違う場合は `zone.tf` を直す | 初回 import 時 |
 
 1 は provider 5.24.0 で `environment` が Optional かつ Deprecated に変わり、schema 上の前提は解消済みである (cloudflare/terraform-provider-cloudflare#5618)。
 実 apply が未実施のため未確認として残す。
