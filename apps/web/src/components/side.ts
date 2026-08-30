@@ -44,4 +44,5 @@ export function shutIfNarrow(root: HTMLElement): void {
   root.querySelector<HTMLButtonElement>("[data-side][aria-expanded='true']")?.click();
 }
 
-const wide = () => globalThis.matchMedia?.("(min-width: 1101px)").matches ?? true;
+/** CSS の折り返しと同じ問いにする。1101px と書くと 1100.5px で両方が偽になる */
+const wide = () => !(globalThis.matchMedia?.("(max-width: 1100px)").matches ?? false);
