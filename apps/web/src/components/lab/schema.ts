@@ -1,5 +1,8 @@
-/** public のテーブル名と概算行数 */
-export const TABLES_SQL = `select c.relname as name, coalesce(c.reltuples::bigint, 0) as rows
+/**
+ * public のテーブル名と概算行数。
+ * `reltuples` は `ANALYZE` が入るまで -1 なので、そのまま出さず負値で渡す。
+ */
+export const TABLES_SQL = `select c.relname as name, coalesce(c.reltuples::bigint, -1) as rows
 from pg_class c
 join pg_namespace n on n.oid = c.relnamespace
 where c.relkind = 'r' and n.nspname = 'public'
@@ -22,3 +25,16 @@ export type Column = { name: string; type: string; nullable: boolean; pk: boolea
 /** 実行パネルが走り終えた合図。`DbPeek` が一覧を引き直す */
 export const RAN_EVENT = "lab:ran";
 export type RanEvent = CustomEvent<{ contentId: string }>;
+
+/** 外部キー。ER のリレーションを引く */
+export const RELATIONS_SQL = `select c.conname as name,
+       src.relname as src, tgt.relname as tgt,
+       pg_get_constraintdef(c.oid) as def
+from pg_constraint c
+join pg_class src on src.oid = c.conrelid
+join pg_class tgt on tgt.oid = c.confrelid
+join pg_namespace n on n.oid = src.relnamespace
+where c.contype = 'f' and n.nspname = 'public'
+order by src.relname, c.conname`;
+
+export type Relation = { name: string; src: string; tgt: string; def: string };

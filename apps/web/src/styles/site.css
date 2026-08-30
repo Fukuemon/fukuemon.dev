@@ -942,3 +942,35 @@
   .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-4); }
   .links a { color: var(--link); }
 }
+
+/* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
+@layer fukuemon {
+  .labmain--wide { max-inline-size: calc(72rem + 2 * var(--gutter)); }
+  .pg-intro { margin-block: var(--gap-intra-3); }
+  .pg-aside {
+    margin-block-start: var(--gap-inter-1);
+    padding-block-start: var(--gap-intra-3);
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  .pg-aside__head { margin: 0; }
+  .pg-aside__note { color: var(--fg-2); margin: 4px 0 var(--gap-intra-2); }
+  .pg-preset {
+    display: block;
+    inline-size: 100%;
+    padding-block: var(--gap-intra-1);
+    border: 0;
+    border-block-start: 1px solid var(--rule);
+    background: none;
+    color: var(--link);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: start;
+    cursor: pointer;
+  }
+  /* 外部キー。ER のリレーション */
+  .peek__rel {
+    padding: 0 0 var(--gap-intra-1) var(--gap-intra-3);
+    color: var(--fg-2);
+    font-size: 0.75rem;
+  }
+}

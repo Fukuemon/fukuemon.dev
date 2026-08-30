@@ -4,9 +4,11 @@ import { cellText } from "./cell";
 import {
   COLUMNS_SQL,
   RAN_EVENT,
+  RELATIONS_SQL,
   TABLES_SQL,
   type Column,
   type RanEvent,
+  type Relation,
   type Table,
 } from "./schema";
 
@@ -23,6 +25,7 @@ type Detail = { columns: Column[]; head: string[]; rows: unknown[][] };
  */
 export default function DbPeek({ contentId }: Props) {
   const [tables, setTables] = useState<Table[] | null>(null);
+  const [relations, setRelations] = useState<Relation[]>([]);
   const [shown, setShown] = useState(true);
   const [open, setOpen] = useState<Table | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -35,6 +38,16 @@ export default function DbPeek({ contentId }: Props) {
       const { results } = await serialize(() => rt.exec(TABLES_SQL));
       const found = results.at(-1)?.rows ?? [];
       setTables(found.map((r) => ({ name: cellText(r[0] ?? ""), rows: Number(r[1] ?? 0) })));
+
+      const rel = await serialize(() => rt.exec(RELATIONS_SQL));
+      setRelations(
+        (rel.results.at(-1)?.rows ?? []).map((r) => ({
+          name: cellText(r[0] ?? ""),
+          src: cellText(r[1] ?? ""),
+          tgt: cellText(r[2] ?? ""),
+          def: cellText(r[3] ?? ""),
+        })),
+      );
     } catch {
       // 一覧が出せなくても本文は読める
     }
@@ -102,8 +115,15 @@ export default function DbPeek({ contentId }: Props) {
                 <li key={t.name}>
                   <button type="button" className="hit peek__row" onClick={() => void show(t)}>
                     <span className="mono peek__name">{t.name}</span>
-                    <span className="mono meta peek__rows">{t.rows.toLocaleString("ja-JP")} 行</span>
+                    <span className="mono meta peek__rows">{rowLabel(t.rows)}</span>
                   </button>
+                  {relations
+                    .filter((r) => r.src === t.name)
+                    .map((r) => (
+                      <p key={r.name} className="mono meta peek__rel">
+                        <span aria-hidden="true">└→</span> {r.tgt}
+                      </p>
+                    ))}
                 </li>
               ))}
             </ul>
@@ -115,7 +135,7 @@ export default function DbPeek({ contentId }: Props) {
       <dialog ref={dialog} className="sheet" onClose={() => setOpen(null)}>
         <header className="sheet__head">
           <span className="mono sheet__name">{open?.name}</span>
-          <span className="mono meta">約 {open?.rows.toLocaleString("ja-JP")} 行</span>
+          <span className="mono meta">{rowLabel(open?.rows ?? -1)}</span>
           <button type="button" className="btn sheet__close" onClick={() => dialog.current?.close()}>
             閉じる
           </button>
@@ -174,6 +194,9 @@ export default function DbPeek({ contentId }: Props) {
     </>
   );
 }
+
+/** `reltuples` は ANALYZE が入るまで -1。概算であることも明示する */
+const rowLabel = (n: number) => (n < 0 ? "未計測" : `約 ${n.toLocaleString("ja-JP")} 行`);
 
 /** 大文字や記号を含む名前のために識別子で包む */
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
