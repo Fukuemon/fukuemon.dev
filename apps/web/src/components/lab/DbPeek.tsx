@@ -1,67 +1,38 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { peekRuntime, serialize } from "./runtime";
-import { cellText } from "./cell";
+import { useCallback, useRef, useState } from "react";
+import { useRan } from "./bus";
+import { fetchColumns, fetchRows, fetchTables, type Table } from "./catalog";
 import ErDiagram, { type Entity } from "./ErDiagram";
-import {
-  COLUMNS_SQL,
-  RAN_EVENT,
-  RELATIONS_SQL,
-  TABLES_SQL,
-  type Column,
-  type RanEvent,
-  type Relation,
-  type Table,
-} from "./schema";
+import PeekList, { rowLabel } from "./PeekList";
+import { peekRuntime } from "./runtime";
+import Sheet from "./Sheet";
+import TableDetail, { type Detail } from "./TableDetail";
+import { useCatalog } from "./useCatalog";
 
 type Props = { contentId: string };
 
 const MAX_PEEK = 20;
 
-type Detail = { columns: Column[]; head: string[]; rows: unknown[][] };
-
 /**
  * いま DB に入っているテーブルを側柱に出す。
- * 自分からは起動せず、実行パネルが走ったあとのインスタンスへ相乗りする。
  * 中身は幅が要るので `<dialog>` に出す。
+ * 取得は `useCatalog` と `catalog.ts`、見せ方は `PeekList` / `TableDetail` が持つ。
  */
 export default function DbPeek({ contentId }: Props) {
-  const [tables, setTables] = useState<Table[] | null>(null);
-  const [relations, setRelations] = useState<Relation[]>([]);
+  const { tables, relations, reload } = useCatalog(contentId);
+  const [listOpen, setListOpen] = useState(true);
+
   const [er, setEr] = useState<Entity[] | null>(null);
   const erDialog = useRef<HTMLDialogElement>(null);
+  const [table, setTable] = useState<Table | null>(null);
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const tableDialog = useRef<HTMLDialogElement>(null);
   // 開いている窓。実行のたびに同じものを引き直す
   const openEr = useRef(false);
   const openTable = useRef<Table | null>(null);
-  const [shown, setShown] = useState(true);
-  const [open, setOpen] = useState<Table | null>(null);
-  const [detail, setDetail] = useState<Detail | null>(null);
-  const dialog = useRef<HTMLDialogElement>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const rt = peekRuntime(contentId);
-      if (!rt) return;
-      const { results } = await serialize(() => rt.exec(TABLES_SQL));
-      const found = results.at(-1)?.rows ?? [];
-      setTables(found.map((r) => ({ name: cellText(r[0] ?? ""), rows: Number(r[1] ?? 0) })));
-
-      const rel = await serialize(() => rt.exec(RELATIONS_SQL));
-      setRelations(
-        (rel.results.at(-1)?.rows ?? []).map((r) => ({
-          name: cellText(r[0] ?? ""),
-          src: cellText(r[1] ?? ""),
-          tgt: cellText(r[2] ?? ""),
-          def: cellText(r[3] ?? ""),
-        })),
-      );
-    } catch {
-      // 一覧が出せなくても本文は読める
-    }
-  }, [contentId]);
 
   /**
-   * テーブル構成。**一覧から引き直す。**
-   * state の `tables` を見ると、実行の直後に呼ばれたとき古い一覧のまま描いてしまう
+   * テーブル構成。**カタログから引き直す。**
+   * `tables` を見ると、実行の直後に呼ばれたとき古い一覧のまま描いてしまう
    */
   const showEr = useCallback(async () => {
     openEr.current = true;
@@ -71,51 +42,26 @@ export default function DbPeek({ contentId }: Props) {
     }
     const rt = peekRuntime(contentId);
     if (!rt) return setEr([]);
-    const found = await serialize(() => rt.exec(TABLES_SQL));
-    const names = (found.results.at(-1)?.rows ?? []).map((r) => cellText(r[0] ?? ""));
+    const found = await fetchTables(rt);
     const out: Entity[] = [];
-    for (const name of names) {
-      const r = await serialize(() => rt.exec(COLUMNS_SQL.replace("$1", literal(name))));
-      out.push({
-        name,
-        columns: (r.results.at(-1)?.rows ?? []).map((c) => ({
-          name: cellText(c[0] ?? ""),
-          type: cellText(c[1] ?? ""),
-          nullable: c[2] === true,
-          pk: c[3] === true,
-        })),
-      });
-    }
+    for (const t of found) out.push({ name: t.name, columns: await fetchColumns(rt, t.name) });
     setEr(out);
   }, [contentId]);
 
-  const show = useCallback(
+  const showTable = useCallback(
     async (t: Table) => {
       openTable.current = t;
-      setOpen(t);
-      if (!dialog.current?.open) {
+      setTable(t);
+      if (!tableDialog.current?.open) {
         setDetail(null);
-        dialog.current?.showModal();
+        tableDialog.current?.showModal();
       }
       try {
         const rt = peekRuntime(contentId);
         if (!rt) return setDetail({ columns: [], head: [], rows: [] });
-        // 識別子は pg_class 由来のみ。読者の入力は混ぜない
-        const cols = await serialize(() => rt.exec(COLUMNS_SQL.replace("$1", literal(t.name))));
-        const rows = await serialize(() =>
-          rt.exec(`select * from ${quote(t.name)} limit ${MAX_PEEK}`),
-        );
-        const last = rows.results.at(-1);
-        setDetail({
-          columns: (cols.results.at(-1)?.rows ?? []).map((r) => ({
-            name: cellText(r[0] ?? ""),
-            type: cellText(r[1] ?? ""),
-            nullable: r[2] === true,
-            pk: r[3] === true,
-          })),
-          head: last?.fields.map((f) => f.name) ?? [],
-          rows: last?.rows ?? [],
-        });
+        const columns = await fetchColumns(rt, t.name);
+        const { head, rows } = await fetchRows(rt, t.name, MAX_PEEK);
+        setDetail({ columns, head, rows });
       } catch {
         setDetail({ columns: [], head: [], rows: [] });
       }
@@ -123,84 +69,36 @@ export default function DbPeek({ contentId }: Props) {
     [contentId],
   );
 
-  useEffect(() => {
-    const on = (e: Event) => {
-      if ((e as RanEvent).detail.contentId !== contentId) return;
-      void load();
-      // 開いたままの窓は、実行のたびに中身を引き直す
-      if (openEr.current) void showEr();
-      const t = openTable.current;
-      if (t) void show(t);
-    };
-    globalThis.addEventListener(RAN_EVENT, on);
-    return () => globalThis.removeEventListener(RAN_EVENT, on);
-  }, [contentId, load, show, showEr]);
+  useRan(contentId, () => {
+    void reload();
+    // 開いたままの窓は、実行のたびに中身を引き直す
+    if (openEr.current) void showEr();
+    const t = openTable.current;
+    if (t) void showTable(t);
+  });
 
   if (tables === null) return null;
 
   return (
     <>
-      <section className="peek" aria-label="いまのテーブル">
-        <button
-          type="button"
-          className="hit peek__label mono meta"
-          aria-expanded={shown}
-          onClick={() => setShown((v) => !v)}
-        >
-          <span aria-hidden="true" className="peek__caret" />
-          いまのテーブル
-          <span className="mono meta peek__n">{tables.length}</span>
-        </button>
-        {shown && (
-          <>
-            {tables.length === 0 && <p className="mono meta peek__empty">まだありません</p>}
-            {tables.length > 0 && (
-              <button type="button" className="btn peek__er" onClick={() => void showEr()}>
-                テーブル構成
-              </button>
-            )}
-            <ul className="peek__list">
-              {tables.map((t) => (
-                <li key={t.name}>
-                  <button type="button" className="hit peek__row" onClick={() => void show(t)}>
-                    <span className="mono peek__name">{t.name}</span>
-                    <span className="mono meta peek__rows">{rowLabel(t.rows)}</span>
-                  </button>
-                  {relations
-                    .filter((r) => r.src === t.name)
-                    .map((r) => (
-                      <p key={r.name} className="mono meta peek__rel">
-                        <span aria-hidden="true">└→</span> {r.tgt}
-                      </p>
-                    ))}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
+      <PeekList
+        tables={tables}
+        relations={relations}
+        open={listOpen}
+        onToggle={() => setListOpen((v) => !v)}
+        onShowEr={() => void showEr()}
+        onShowTable={(t) => void showTable(t)}
+      />
 
-      <dialog
+      <Sheet
         ref={erDialog}
-        className="sheet"
+        title="テーブル構成"
+        meta={`${tables.length} テーブル · 外部キー ${relations.length} 本`}
         onClose={() => {
           openEr.current = false;
           setEr(null);
         }}
       >
-        <header className="sheet__head">
-          <span className="mono sheet__name">テーブル構成</span>
-          <span className="mono meta">
-            {tables.length} テーブル · 外部キー {relations.length} 本
-          </span>
-          <button
-            type="button"
-            className="btn sheet__close"
-            onClick={() => erDialog.current?.close()}
-          >
-            閉じる
-          </button>
-        </header>
         <div className="sheet__scroll">
           {er === null ? (
             <p className="mono meta">読み込み中…</p>
@@ -208,83 +106,23 @@ export default function DbPeek({ contentId }: Props) {
             <ErDiagram entities={er} relations={relations} />
           )}
         </div>
-      </dialog>
+      </Sheet>
 
-      {/* top layer なので側柱の overflow に切られない */}
-      <dialog
-        ref={dialog}
-        className="sheet"
+      <Sheet
+        ref={tableDialog}
+        title={table?.name ?? ""}
+        meta={rowLabel(table?.rows ?? -1)}
         onClose={() => {
           openTable.current = null;
-          setOpen(null);
+          setTable(null);
         }}
       >
-        <header className="sheet__head">
-          <span className="mono sheet__name">{open?.name}</span>
-          <span className="mono meta">{rowLabel(open?.rows ?? -1)}</span>
-          <button type="button" className="btn sheet__close" onClick={() => dialog.current?.close()}>
-            閉じる
-          </button>
-        </header>
-
         {detail === null ? (
           <p className="mono meta">読み込み中…</p>
         ) : (
-          <div className="sheet__body">
-            <section className="sheet__cols" aria-label="列">
-              <p className="mono meta sheet__sub">列</p>
-              <ul className="er">
-                {detail.columns.map((c) => (
-                  <li key={c.name} className="er__row">
-                    <span className="mono er__key" aria-hidden="true">
-                      {c.pk ? "PK" : ""}
-                    </span>
-                    <span className="mono er__name">{c.name}</span>
-                    <span className="mono meta er__type">{c.type}</span>
-                    <span className="mono meta er__null">{c.nullable ? "null 可" : "not null"}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="sheet__rows" aria-label="先頭の行">
-              <p className="mono meta sheet__sub">先頭 {MAX_PEEK} 行</p>
-              <div className="sheet__scroll">
-                <table className="sheet__tbl">
-                  <thead>
-                    <tr>
-                      {detail.head.map((c) => (
-                        <th key={c} className="mono meta">
-                          {c}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detail.rows.map((row, i) => (
-                      <tr key={i}>
-                        {row.map((v, j) => (
-                          <td key={j} className="mono">
-                            {cellText(v)}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
+          <TableDetail detail={detail} limit={MAX_PEEK} />
         )}
-      </dialog>
+      </Sheet>
     </>
   );
 }
-
-/** `reltuples` は ANALYZE が入るまで -1。概算であることも明示する */
-const rowLabel = (n: number) => (n < 0 ? "未計測" : `約 ${n.toLocaleString("ja-JP")} 行`);
-
-/** 大文字や記号を含む名前のために識別子で包む */
-const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
-/** `regclass` へ渡す文字列リテラル */
-const literal = (v: string) => `'${v.replaceAll("'", "''")}'`;
