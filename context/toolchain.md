@@ -43,7 +43,7 @@ verified_commit: unverified
 | typecheck       | `astro check` + tsgo                | —                 | —                                                  |
 | unit test       | Vitest                              | 4.1.11            | 対象は `packages/content-model`                    |
 | e2e             | Playwright                          | —                 | root の `e2e/`                                     |
-| infra           | Terraform + `cloudflare/cloudflare` | provider 5.24.0   | 認証は `CLOUDFLARE_API_TOKEN`                      |
+| infra           | Terraform + `cloudflare/cloudflare` | 1.14.3 / provider 5.24.0 | CI は 1.14.3 に固定。認証は `CLOUDFLARE_API_TOKEN` |
 | deploy          | Wrangler                            | 4.127.1           | 認証は `CLOUDFLARE_API_TOKEN` (2026-08-30 実測)    |
 
 **Astro 7 + Tailwind 4 を採る。** コードブロックは `astro-expressive-code`、全文検索の索引は `pagefind` を使う ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
