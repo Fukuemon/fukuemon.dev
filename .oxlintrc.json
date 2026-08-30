@@ -2,7 +2,12 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "overrides": [
     {
-      "files": ["apps/web/src/pages/**", "apps/web/src/layouts/**", "apps/web/src/components/**"],
+      "files": [
+        "apps/web/src/pages/**",
+        "apps/web/src/layouts/**",
+        "apps/web/src/features/**",
+        "apps/web/src/components/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -18,14 +23,47 @@
       }
     },
     {
-      "files": ["packages/**"],
+      "files": [
+        "apps/web/src/**/*.tsx",
+        "apps/web/src/**/*.jsx",
+        "apps/web/src/**/*.vue"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "astro:content",
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "*.astro"
+                ],
+                "message": "island は .astro を参照しない。素の props だけを受ける (context/architecture.md Island の規約)"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "packages/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": ["**/apps/**", "@fukuemon/web*"],
+                "group": [
+                  "**/apps/**",
+                  "@fukuemon/web*"
+                ],
                 "message": "packages から apps への逆依存は禁止 (context/architecture.md 規約 3)"
               }
             ]
