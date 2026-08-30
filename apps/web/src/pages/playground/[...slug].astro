@@ -1,9 +1,9 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
-import Playground from "../../components/lab/Playground";
-import DbPeek from "../../components/lab/DbPeek";
-import Presets from "../../components/lab/Presets";
-import Side from "../../components/Side.astro";
+import Playground from "../../features/lab/panel/Playground";
+import DbPeek from "../../features/lab/catalog/DbPeek";
+import Presets from "../../features/lab/panel/Presets";
+import Side from "../../features/doc/Side.astro";
 import { listPlaygrounds, renderPlayground } from "../../lib/content";
 
 export async function getStaticPaths() {
@@ -39,7 +39,7 @@ const d = entry.data;
 </SiteLayout>
 
 <script>
-  import { mountSide } from "../../components/side";
+  import { mountSide } from "../../features/doc/side";
   const root = document.querySelector<HTMLElement>("[data-side-root]");
   if (root) mountSide(root);
 </script>

@@ -10,7 +10,7 @@ const DURATION = /^Duration:\s*(\d{1,2}):(\d{2})\s*$/;
 type Runner = { name: string; path: string; engine: string; kind: string };
 
 const RUNNERS: Record<string, Runner> = {
-  sql: { name: "SqlRunner", path: "~/components/lab/SqlRunner", engine: "Postgres", kind: "pglite" },
+  sql: { name: "SqlRunner", path: "~/features/lab/panel/SqlRunner", engine: "Postgres", kind: "pglite" },
 };
 
 /** frontmatter の runtime から表示名を引く。フェンスの言語より優先する */

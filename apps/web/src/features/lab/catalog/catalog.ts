@@ -1,5 +1,5 @@
-import { cellText } from "./cell";
-import { serialize, type Runtime } from "./runtime";
+import { cellText } from "../runtime/cell";
+import { serialize, type Runtime } from "../runtime/runtime";
 
 export type Table = { name: string; rows: number };
 export type Column = { name: string; type: string; nullable: boolean; pk: boolean };

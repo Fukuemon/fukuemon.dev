@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { emitRan } from "./bus";
+import { emitRan } from "../bus";
 import { dropRuntime, getRuntime, serialize, type RuntimeKind } from "./runtime";
 
 export type Phase = "idle" | "booting" | "waiting" | "running" | "done" | "failed";

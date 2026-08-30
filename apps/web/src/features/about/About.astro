@@ -1,8 +1,8 @@
 ---
 import AboutLinks from "./AboutLinks.astro";
-import ArtBand from "./ArtBand.astro";
-import Tate from "./Tate.astro";
-import { PROFILE, STACK } from "../data/profile";
+import ArtBand from "../../components/ArtBand.astro";
+import Tate from "../../components/Tate.astro";
+import { PROFILE, STACK } from "../../data/profile";
 
 // ビルド時に分ける。クライアントで分けると JS が動くまで名乗りが出ない
 const chars = [...PROFILE.name];

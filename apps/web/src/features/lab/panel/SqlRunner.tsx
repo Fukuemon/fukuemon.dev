@@ -1,10 +1,10 @@
 import { useCallback, useId, useState } from "react";
-import type { RuntimeKind } from "./runtime";
-import { completeStep, loadProgress } from "./progress";
+import type { RuntimeKind } from "../runtime/runtime";
+import { completeStep, loadProgress } from "../steps/progress";
 import ResultTable from "./ResultTable";
 import RunnerControls from "./RunnerControls";
-import SqlEditor from "./SqlEditor";
-import { useRunner } from "./useRunner";
+import SqlEditor from "../editor/SqlEditor";
+import { useRunner } from "../runtime/useRunner";
 
 type Props = {
   contentId: string;
