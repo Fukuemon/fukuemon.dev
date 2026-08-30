@@ -170,6 +170,19 @@ backend "s3" {
 **1 名体制で実際に効く分離は 2 つである。** apply が自動実行されず手動起動という明示的な行為を伴うこと、通常の CI が apply 用 credential を持たないこと。
 レビューによる職務分離は成立しないため `CODEOWNERS` は設定しない。
 
+**分離は置き場で担保する。** apply 用の credential は `infra` environment にのみ置く。
+deploy workflow は environment を指定しないため、そこへ届かない。
+
+| 名前                     | 置き場                     | 使う経路             |
+| ------------------------ | -------------------------- | -------------------- |
+| `CLOUDFLARE_API_TOKEN`   | repository secret          | deploy workflow      |
+| `CLOUDFLARE_ACCOUNT_ID`  | repository secret          | deploy / apply の両方 |
+| `TF_CLOUDFLARE_API_TOKEN`| `infra` environment secret | apply workflow       |
+| `R2_ACCESS_KEY_ID`       | `infra` environment secret | apply workflow の state backend |
+| `R2_SECRET_ACCESS_KEY`   | `infra` environment secret | apply workflow の state backend |
+| `R2_STATE_BUCKET`        | `infra` environment secret | apply workflow の state backend |
+| `ZONE_NAME`              | `infra` environment variable | apply workflow     |
+
 ### secret を Terraform state に載せない
 
 - 値は `wrangler secret put` で投入する。
