@@ -3,18 +3,12 @@ type Result = { data: () => Promise<Hit> };
 type Pagefind = { search: (q: string) => Promise<{ results: Result[] }> };
 
 const MAX = 12;
-/** 打つたびに引かない。語の途中で無駄な検索が走る */
 const DEBOUNCE = 160;
 
-/**
- * 索引の読み込み口。`SiteSearch.astro` の `is:inline` な script が置く。
- * 索引は `astro build` のあとに `pagefind` が生成するので、
- * 開発サーバでは読み込みに失敗する。握り潰さず理由を出す。
- */
+/** 読み込み口は SiteSearch.astro の is:inline な script が置く */
 type Loader = () => Promise<Pagefind>;
 const loader = (): Loader | undefined => (globalThis as { loadPagefind?: Loader }).loadPagefind;
 
-/** 本文の検索。索引は数百 KiB あるので、押されるまで読まない */
 export function mountSearch(root: ParentNode = document): void {
   const dialog = root.querySelector<HTMLDialogElement>("[data-search]");
   const input = root.querySelector<HTMLInputElement>("[data-search-input]");
@@ -90,7 +84,6 @@ export function mountSearch(root: ParentNode = document): void {
   open.addEventListener("click", () => {
     dialog.showModal();
     input.focus();
-    // 押した時点で読み始める。1 文字目の待ちを短くする
     void load();
   });
   close?.addEventListener("click", () => dialog.close());

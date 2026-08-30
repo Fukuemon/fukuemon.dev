@@ -1,12 +1,10 @@
 /* Design Tokens。値の正本。Tailwind の構文を書かない。
    根拠: design/features/design-system/DesignDoc_design-system.md
 
-   色は `light-dark(明, 暗)` で 1 度だけ書く。
-   選択子を明暗で分けると、システム設定用と明示指定用で同じ値を 2 度書くことになり、
-   片方だけ直した事故に実行時まで気づけない。解決は `color-scheme` が決める。 */
+   色は light-dark(明, 暗) で 1 度だけ書く。選択子を明暗で分けると同じ値を 2 度書くことになり、
+   片方だけ直した事故に実行時まで気づけない。 */
 
 :root {
-  /* 既定はシステム設定に従う。`[data-theme]` が付けば、そちらが勝つ */
   color-scheme: light dark;
 
   /* ---- 書体 ---- */
@@ -53,7 +51,7 @@
   --c-lit: light-dark(#7a4a12, #e8c08a);   /*  6.43 /  9.85 */
   --c-com: light-dark(#6a6459, #938d80);   /*  5.06 /  5.08 */
 
-  /* semantic。画面はここだけを参照する */
+  /* 画面はここだけを参照する */
   --fg: var(--ink);
   --fg-2: var(--ink-2);
   --link: var(--green);
@@ -79,14 +77,12 @@
   /* 一覧や実行結果など、行長より広く取る版面 */
   --measure-wide: 68rem;
   --topbar: 45px;  /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
-  /* 折り返す幅は 1100px (側柱を畳む) と 720px (縦組みを横へ倒す) の 2 段だけ。
-     `@media` は custom property を読めないので、トークンにせず値を直接書く */
+  /* 折り返しは 1100px と 720px の 2 段。@media は custom property を読めないのでトークンにしない */
   --rail: 46px;    /* 縦組み見出しの列 */
   --drawer: 306px; /* ハンズオンの手順サイドバー。題が 2 行に収まる幅 */
   --drawer-shut: 46px; /* たたんだときの幅。開閉ボタンだけが残る */
 }
 
-/* 読者の明示指定。システム設定より優先する */
 [data-theme="light"] { color-scheme: light; }
 [data-theme="dark"] { color-scheme: dark; }
 

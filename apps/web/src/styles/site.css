@@ -258,7 +258,7 @@
     font-size: 0.85rem;
     white-space: pre-wrap;
   }
-  /* 表の下の断り書き。左端を操作行と揃える */
+  /* 左端を操作行と揃える */
   .runner__more { margin: 0; padding: var(--gap-intra-2) var(--gap-intra-3); }
   .runner__scroll { overflow-x: auto; border-block-start: 1px solid var(--rule-strong); }
   .runner__table { border-collapse: collapse; font-size: 0.85rem; inline-size: 100%; }
@@ -841,41 +841,37 @@
 
 /* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
 @layer fukuemon {
-  /* 表紙を兼ねる。挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
+  /* 挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
   .about { position: relative; overflow: hidden; }
   .about__art { position: absolute; inset: 0; pointer-events: none; }
   .about__veil {
     position: absolute; inset: 0;
     background: linear-gradient(96deg, var(--veil-1) 0 42%, var(--veil-0) 88%);
   }
-  /* 狭い画面では本文が版面の全幅を使うので、横方向の霞では枝が文字に掛かる。
-     下端だけを残して縦に掛け直す */
+  /* 全幅では横方向の霞だと枝が文字に掛かる */
   @media (max-width: 720px) {
     .about__veil { background: linear-gradient(to bottom, var(--veil-1) 0 82%, var(--veil-0) 100%); }
   }
-  /* 挿絵の上に載る。層を作らないと霞の下へ潜る */
+  /* 層を作らないと霞の下へ潜る */
   .about__grid {
     position: relative;
     margin: var(--gap-inter-2) var(--gutter);
     padding-block: var(--gap-inter-1);
   }
-  /* 絵と名乗りを横に並べる。狭い画面では上下に積む */
   .about__head {
     display: flex;
     align-items: center;
     gap: var(--gap-intra-4);
     margin-block-end: var(--gap-inter-1);
   }
-  /* 角丸を使わない。四角のまま置く */
   .about__face { flex: 0 0 auto; border: 1px solid var(--rule-strong); background: var(--panel); }
-  /* 名乗り。肩書きより先に、何と呼べばよいかを出す */
   .about__name {
     margin: 0;
     font-family: var(--font-mono);
     letter-spacing: .04em;
     line-height: 1.1;
   }
-  /* 1 字ずつ刷り上がらせるための入れ物。動きは motion.css が持つ */
+  /* 動きは motion.css が持つ */
   .about__char { display: inline-block; }
   .about__reading { margin: var(--gap-intra-1) 0 0; }
   .about__role { margin: var(--gap-intra-2) 0 0; max-inline-size: var(--measure-w); }
@@ -889,7 +885,6 @@
     color: var(--fg-2);
     font-size: 0.9rem;
   }
-  /* 使っているもの。罫で行を分ける。面や角丸は使わない */
   .about__stack {
     margin: var(--gap-inter-1) 0 0;
     max-inline-size: var(--measure-w);
@@ -906,12 +901,11 @@
   .about__key { margin: 0; }
   .about__val { margin: 0; font-size: 0.85rem; }
   @media (max-width: 720px) {
-    /* 語が長いと 6.5em では 2 行に割れる。上下に積む */
+    /* 語が長いと 6.5em では 2 行に割れる */
     .about__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   }
   .about__foot { margin-block-start: var(--gap-inter-2); }
 
-  /* そとで話す・書く。行の形は一覧に揃える */
   .outside { margin-block-start: var(--gap-inter-3); }
   .outside__list { list-style: none; margin: 0; padding: 0; }
   .outside__row {
@@ -926,14 +920,14 @@
   .outside__row:hover .outside__title { text-decoration: underline; text-underline-offset: .2em; }
   .outside__kind { text-align: end; white-space: nowrap; }
   @media (max-width: 720px) {
-    /* 題が 2 語しか入らなくなる。日付と種別を 1 行にまとめて上へ置く */
+    /* 題が 2 語しか入らなくなる */
     .outside__row {
       grid-template-columns: 92px minmax(0, 1fr);
       row-gap: 4px;
     }
     .outside__title { grid-column: 1 / -1; grid-row: 2; }
   }
-  /* 印の列。字ではないので溝は詰める。当たり判定は 44px を保つ */
+  /* 字ではないので溝は詰める。当たり判定は 44px を保つ */
   .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-1); margin: 0; }
   .links__item {
     justify-content: center;
@@ -1009,10 +1003,9 @@
   }
 }
 
-/* 本文の検索。窓の骨組みは .sheet を借りる */
+/* 窓の骨組みは .sheet を借りる */
 @layer fukuemon {
   .search__open { flex: 0 0 auto; }
-  /* 検索語の入力が見出しの位置に入る */
   .search__input {
     flex: 1 1 12rem;
     min-inline-size: 0;
@@ -1033,7 +1026,7 @@
     border-block-end: 1px solid var(--rule);
   }
   .search__title { font-size: 1rem; }
-  /* 抜粋は 2 行で止める。件数を一目で数えられる高さに保つ */
+  /* 件数を一目で数えられる高さに保つ */
   .search__excerpt {
     display: -webkit-box;
     -webkit-line-clamp: 2;

@@ -8,30 +8,22 @@ type ExecResult = {
 };
 
 export type Runtime = {
-  /** 起動した engine の版。実行が本物であることを画面で示す */
   version: string;
-  /** 流し直しに失敗した手順の番号。完了表示と DB がずれていることを示す */
+  /** 流し直しに失敗した手順の番号。完了表示と DB がずれている */
   replayFailed: readonly number[];
   exec: (source: string) => Promise<{ results: ExecResult[]; ms: number }>;
 };
 
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
 
-/**
- * engine ごとの Worker。engine を足すときはここへ 1 行足す。
- * Vite が `new URL(..., import.meta.url)` を静的に解決するため、パスは literal で置く。
- */
+/** Vite が `new URL(..., import.meta.url)` を静的に解決するので、パスは literal で置く */
 const WORKERS = {
   pglite: () => new Worker(new URL("./pglite.worker.ts", import.meta.url), { type: "module" }),
 } satisfies Record<string, () => Worker>;
 
 export type RuntimeKind = keyof typeof WORKERS;
 
-/**
- * 実行環境 1 つぶんの Worker。
- * メインスレッドだと重いクエリでタブごと固まる (実測で rAF が 28 秒途切れた)。
- * Worker なら `terminate()` で中断できる。
- */
+/** メインスレッドだと重いクエリでタブごと固まる (実測で rAF が 28 秒途切れた) */
 class Session {
   #worker: Worker | undefined;
   #seq = 0;
@@ -45,7 +37,6 @@ class Session {
   constructor(
     private readonly kind: RuntimeKind,
     private readonly setup?: string,
-    /** 再訪時に流し直す、完了済み手順の入力。順に流す */
     private readonly replay: string[] = [],
   ) {}
 
@@ -114,7 +105,7 @@ class Session {
     return this.#dead;
   }
 
-  /** boot 済みか。未了の Session へ exec を送ると失敗する */
+  /** 未了の Session へ exec を送ると失敗する */
   get booted(): boolean {
     return this.#version !== undefined;
   }
@@ -127,7 +118,7 @@ class Session {
     return this.#replayFailed;
   }
 
-  /** 実行中でも止める。Worker を落とし、この Session は以後使わない */
+  /** 実行中でも止める。この Session は以後使わない */
   cancel(): void {
     this.#dead = true;
     this.#worker?.terminate();
@@ -140,7 +131,7 @@ class Session {
 
 const pool = new Map<string, Session>();
 
-/** 単一接続の engine は同時実行を受けないので、待ち行列を持って直列に流す */
+/** 単一接続の engine は同時実行を受けない */
 let queue: Promise<unknown> = Promise.resolve();
 
 export function serialize<T>(task: () => Promise<T>): Promise<T> {
@@ -154,30 +145,21 @@ export function serialize<T>(task: () => Promise<T>): Promise<T> {
 
 /** 起動のときだけ使う材料。すでに起きている Session には効かない */
 export type BootSpec = {
-  /** 最初に 1 度だけ流す初期化 */
   setup?: string;
   /**
-   * 完了済み手順の入力。進捗は localStorage に残るが DB はメモリなので、
-   * 流し直さないと表示と中身が食い違う。
-   * **完了済みの全手順を渡す。** パネルごとに変えると最初の 1 つが状態を固定する。
+   * 進捗は localStorage に残るが DB はメモリなので、流し直さないと表示と中身が食い違う。
+   * 完了済みの全手順を渡す。パネルごとに変えると最初の 1 つが状態を固定する。
    */
   replay?: string[];
 };
 
-/**
- * `key` ごとに 1 インスタンスを共有して返す。無ければ `boot` を材料に起動する。
- *
- * **`boot` は起動のときだけ効く。** すでに起きていれば、その状態をそのまま返す。
- * 2 つ目のパネルが押されたときには DB に前の手順の結果が入っているので、
- * 流し直す必要がない。保存先はメモリなので、再読み込みで初期状態に戻る。
- */
+/** `key` ごとに 1 インスタンスを共有する。`boot` は起動のときだけ効く */
 export async function getRuntime(
   key: string,
   kind: RuntimeKind,
   boot: BootSpec = {},
 ): Promise<Runtime> {
   const found = pool.get(key);
-  // 中断された Session は使い回さない
   const live = found && !found.dead ? found : undefined;
   const session = live ?? new Session(kind, boot.setup, boot.replay ?? []);
   pool.set(key, session);
@@ -191,21 +173,14 @@ export async function getRuntime(
   }
 }
 
-/**
- * 起動済みの Session にだけ相乗りする。無ければ `undefined` を返し、起動しない。
- * 側柱の一覧のために WASM を落とさせないための入口。
- */
+/** 起動済みの Session にだけ相乗りする。無ければ起動せず `undefined` を返す */
 export function peekRuntime(key: string): Runtime | undefined {
   const s = pool.get(key);
   if (!s || s.dead || !s.booted) return undefined;
   return { version: s.version ?? "", replayFailed: s.replayFailed, exec: (source) => s.exec(source) };
 }
 
-/**
- * Worker を落として pool から外す。次の実行は起動からやり直す。
- * 「中断」と「初めから」はどちらもこれで足りる。保存先がメモリなので、
- * 起動し直せば setup から流し直される。
- */
+/** 「中断」と「初めから」はどちらもこれで足りる。次の実行は起動からやり直す */
 export function dropRuntime(key: string): void {
   pool.get(key)?.cancel();
   pool.delete(key);

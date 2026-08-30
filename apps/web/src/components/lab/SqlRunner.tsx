@@ -14,15 +14,12 @@ type Props = {
   stepTitle: string;
   sql: string;
   setup?: string;
-  /** 実行環境の表示名。Postgres 以外も載る */
   engine?: string;
-  /** どの Worker を起こすか。frontmatter の runtime が決める */
   kind?: RuntimeKind;
   /** 全手順の SQL。再訪時に完了済みだけを順に流し直す */
   steps?: { step: number; sql: string }[];
 };
 
-/** ハンズオンの 1 手順ぶんの実行パネル */
 export default function SqlRunner({
   contentId,
   stepIndex,
@@ -38,7 +35,7 @@ export default function SqlRunner({
   const editorId = useId();
   const groupId = useId();
 
-  // 完了済みを流し直す。全手順から選ぶので、どのパネルから起動しても同じ状態になる
+  // 全手順から選ぶので、どのパネルから起動しても同じ状態になる
   const replay = useCallback(() => {
     const saved = loadProgress(contentId, stepCount);
     return [...steps]

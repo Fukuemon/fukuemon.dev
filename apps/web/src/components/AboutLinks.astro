@@ -8,7 +8,6 @@ interface Props {
 const { class: extra } = Astro.props as Props;
 ---
 
-{/* 印だけを並べる。語より形のほうが速く見分けられる。名前は aria-label が持つ */}
 <p class:list={["links", extra]}>
   {
     LINKS.map((l) => (

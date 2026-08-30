@@ -1,22 +1,15 @@
-/**
- * 書いている人の正本。about 節と外部リンクはここだけを読む。
- * 本文に直書きしない (`context/project.yml` の固有値の扱いに合わせる)。
- */
+/** 書いている人の正本。本文へ直書きしない */
 
 export const PROFILE = {
-  /** 名乗り。ドメインと GitHub の handle に合わせる */
   name: "fukuemon",
-  /** 読み。handle の綴りだけでは呼び方が決まらない */
   reading: "ふくえもん",
-  /** 何をしている人か。**勤め先は書かない。** 変わるたびに書き直しが要る */
+  // 勤め先は書かない。変わるたびに書き直しが要る
   role: "エンジニア。",
-  /** このサイトで何を書いているか */
   lead: "Postgres と可観測性のあたりを調べて書いています。",
-  /** どう書いているか。lead の補足 */
   note: "手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。",
 } as const;
 
-/** 外部の置き場。ここ以外に URL を書かない。`icon` は Icon.astro の名前 */
+/** ここ以外に URL を書かない */
 export const LINKS = [
   { label: "GitHub", href: "https://github.com/Fukuemon", icon: "github" },
   { label: "X", href: "https://x.com/fukuemony", icon: "x" },
@@ -24,23 +17,12 @@ export const LINKS = [
   { label: "RSS", href: "/rss.xml", icon: "rss" },
 ] as const;
 
-/**
- * 経歴の代わりに置く一覧。
- * **直近 1 年で実際に動かした公開リポジトリから採る。**
- * 触ったことがあるだけのものを並べない。名前を増やすほど 1 つあたりの意味が薄くなる。
- * 最終確認 2026-08-30。
- */
+/** 直近 1 年で動かした公開リポジトリから採る。最終確認 2026-08-30 */
 export const STACK: { label: string; items: string[] }[] = [
-  // depwalk (Go の CLI + Java 解析器) / Garden-Lore / python_template
   { label: "言語", items: ["Go", "TypeScript", "Java", "Python"] },
-  // kufu-infra / n8n-playground / announce-workflow
   { label: "基盤", items: ["Terraform", "AWS", "Google Cloud"] },
 ];
 
-/**
- * そとで話したもの・書いたもの。
- * このサイトの記事とは別の棚にする。置き場が違えば消える条件も違う。
- */
 export type Outside = { date: string; title: string; href: string; kind: "登壇" | "記事" };
 
 export const OUTSIDE: Outside[] = [

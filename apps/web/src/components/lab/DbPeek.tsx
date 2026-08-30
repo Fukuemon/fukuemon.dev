@@ -12,11 +12,6 @@ type Props = { contentId: string };
 
 const MAX_PEEK = 20;
 
-/**
- * いま DB に入っているテーブルを側柱に出す。
- * 中身は幅が要るので `<dialog>` に出す。
- * 取得は `useCatalog` と `catalog.ts`、見せ方は `PeekList` / `TableDetail` が持つ。
- */
 export default function DbPeek({ contentId }: Props) {
   const { tables, relations, reload } = useCatalog(contentId);
   const [listOpen, setListOpen] = useState(true);
@@ -26,14 +21,10 @@ export default function DbPeek({ contentId }: Props) {
   const [table, setTable] = useState<Table | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const tableDialog = useRef<HTMLDialogElement>(null);
-  // 開いている窓。実行のたびに同じものを引き直す
   const openEr = useRef(false);
   const openTable = useRef<Table | null>(null);
 
-  /**
-   * テーブル構成。**カタログから引き直す。**
-   * `tables` を見ると、実行の直後に呼ばれたとき古い一覧のまま描いてしまう
-   */
+  /** カタログから引き直す。state の `tables` は実行直後に古い */
   const showEr = useCallback(async () => {
     openEr.current = true;
     if (!erDialog.current?.open) {
@@ -56,14 +47,15 @@ export default function DbPeek({ contentId }: Props) {
         setDetail(null);
         tableDialog.current?.showModal();
       }
+      const empty = { columns: [], head: [], rows: [] };
       try {
         const rt = peekRuntime(contentId);
-        if (!rt) return setDetail({ columns: [], head: [], rows: [] });
+        if (!rt) return setDetail(empty);
         const columns = await fetchColumns(rt, t.name);
         const { head, rows } = await fetchRows(rt, t.name, MAX_PEEK);
         setDetail({ columns, head, rows });
       } catch {
-        setDetail({ columns: [], head: [], rows: [] });
+        setDetail(empty);
       }
     },
     [contentId],
