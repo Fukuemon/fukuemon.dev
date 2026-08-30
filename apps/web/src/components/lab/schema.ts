@@ -42,4 +42,3 @@ export type Relation = { name: string; src: string; tgt: string; def: string };
 /** 側柱の「試す」から実行パネルへ SQL を渡す。島が別なので事象で繋ぐ */
 export const PRESET_EVENT = "lab:preset";
 export type PresetEvent = CustomEvent<{ contentId: string; sql: string }>;
-export type Preset = { label: string; sql: string };
