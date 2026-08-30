@@ -16,12 +16,12 @@ export const PROFILE = {
   note: "手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。",
 } as const;
 
-/** 外部の置き場。ここ以外に URL を書かない */
+/** 外部の置き場。ここ以外に URL を書かない。`icon` は Icon.astro の名前 */
 export const LINKS = [
-  { label: "GitHub", href: "https://github.com/Fukuemon" },
-  { label: "X", href: "https://x.com/fukuemony" },
-  { label: "Zenn", href: "https://zenn.dev/fukuemon" },
-  { label: "RSS", href: "/rss.xml" },
+  { label: "GitHub", href: "https://github.com/Fukuemon", icon: "github" },
+  { label: "X", href: "https://x.com/fukuemony", icon: "x" },
+  { label: "Zenn", href: "https://zenn.dev/fukuemon", icon: "zenn" },
+  { label: "RSS", href: "/rss.xml", icon: "rss" },
 ] as const;
 
 /**

@@ -1,4 +1,5 @@
 ---
+import Icon from "./Icon.astro";
 import { LINKS } from "../data/profile";
 
 interface Props {
@@ -7,6 +8,13 @@ interface Props {
 const { class: extra } = Astro.props as Props;
 ---
 
-<p class:list={["mono", "meta", "links", extra]}>
-  {LINKS.map((l) => <a href={l.href}>{l.label}</a>)}
+{/* 印だけを並べる。語より形のほうが速く見分けられる。名前は aria-label が持つ */}
+<p class:list={["links", extra]}>
+  {
+    LINKS.map((l) => (
+      <a class="hit links__item" href={l.href} aria-label={l.label} title={l.label}>
+        <Icon name={l.icon} />
+      </a>
+    ))
+  }
 </p>

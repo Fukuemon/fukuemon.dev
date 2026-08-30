@@ -186,8 +186,9 @@
   }
   .foot__links {
     display: flex;
-    gap: var(--gap-intra-4);
+    gap: var(--gap-intra-1);
   }
+  .foot__links a { justify-content: center; inline-size: 40px; }
 
   /* ---- 種別の色 ---- */
   .kind--lab,
@@ -205,7 +206,8 @@
 }
 
 @layer fukuemon {
-  .foot__links a { color: var(--link); }
+  .foot__links a { color: var(--fg-2); transition: color 140ms ease-out; }
+  .foot__links a:hover { color: var(--link); }
 }
 
 @layer fukuemon {
@@ -931,8 +933,15 @@
     }
     .outside__title { grid-column: 1 / -1; grid-row: 2; }
   }
-  .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-4); }
-  .links a { color: var(--link); }
+  /* 印の列。字ではないので溝は詰める。当たり判定は 44px を保つ */
+  .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-1); margin: 0; }
+  .links__item {
+    justify-content: center;
+    inline-size: 44px;
+    color: var(--fg-2);
+    transition: color 140ms ease-out;
+  }
+  .links__item:hover { color: var(--link); }
 }
 
 /* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
