@@ -1,4 +1,4 @@
-# ADR-0010: Tailwind CSS v4 を見た目の基盤にし、部品の CSS を utility へ移す
+# ADR-0010: Tailwind CSS v4 を CSS スタイリングの基盤にし、部品の CSS を utility へ移す
 
 ## 状態
 
@@ -36,7 +36,7 @@
 
 ### 1. Tailwind CSS v4 を採る
 
-見た目の基盤を Tailwind にし、**部品の CSS を utility へ移して統一する。**
+CSS スタイリングの基盤を Tailwind にし、**部品の CSS を utility へ移して統一する。**
 
 採る理由は技術的な優位ではなく、**規約が 1 つであることの価値**である。
 utility と手書き CSS が混在すると、どちらの規約に従うべきかがファイルごとに変わり、
@@ -153,13 +153,13 @@ utility は CSS より層が上なので、基準値だけ markup へ移すと�
 
 #### Cons
 
-- 境界が「島かどうか」になり、見た目の都合と無関係な線が引かれる。
+- 境界が「島かどうか」になり、スタイリングの都合と無関係な線が引かれる。
 
 ## 影響
 
 ### 良い影響
 
-- 見た目の規約が 1 つになる。
+- スタイリングの規約が 1 つになる。
 - トークンが utility を生むので、値を手で書き写す経路が減る。
 - 状態が markup に出る。CSS を開かずに、その要素が何で変わるかが読める。
 
@@ -192,6 +192,6 @@ utility は CSS より層が上なので、基準値だけ markup へ移すと�
 ## 関連ドキュメント / チケット
 
 - [ADR-0001](0001-starlight-as-docs-renderer.md): Starlight を採らない決定
-- [design-system](../design/features/design-system/DesignDoc_design-system.md): 見た目の正本
+- [design-system](../design/features/design-system/DesignDoc_design-system.md): デザインの正本
 - [Tailwind CSS v4 のカスタムスタイル](https://tailwindcss.com/docs/adding-custom-styles)
 - [cascade layer と第三者 CSS の衝突](https://github.com/tailwindlabs/tailwindcss/discussions/20306)

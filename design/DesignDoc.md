@@ -141,7 +141,7 @@ fukuemon.dev は、**技術記事とハンズオンの 2 種類だけを公開�
 
 **Astro 7 を採る。** Node.js 22.12 以上を要求する。
 
-見た目の基盤は Tailwind CSS v4 ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
+CSS スタイリングの基盤は Tailwind CSS v4 ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
 preflight は読まず、トークンは `@theme static` に置く。
 
 コードブロックは `astro-expressive-code`、図は `rehype-mermaid`、全文検索の索引は `pagefind` を使う ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
@@ -386,7 +386,7 @@ ARIA の `tablist` は使わない。
 
 | 内容                                                         | 結果                                                                |
 | ------------------------------------------------------------ | ------------------------------------------------------------------- |
-| `astro-expressive-code` で画面案のコードの見た目を出せること | 満たす。見た目は `styleOverrides` から指定する                      |
+| `astro-expressive-code` で画面案のコードの見た目を出せること | 満たす。スタイリングは `styleOverrides` から指定する                |
 | 実行パネルを Expressive Code の枠外に置いて見た目が揃うこと  | 満たす。枠の中へ差し込む必要は無かった                              |
 | `pagefind` が自前ページを索引すること                        | 満たす。`data-pagefind-body` は本文の要素にだけ付ける               |
 | config の rehype plugin が Expressive Code より先に走ること  | 満たす。素の `<pre><code>` のまま拾えるので `rehype-mermaid` が効く |
@@ -451,7 +451,7 @@ ARIA の `tablist` は使わない。
 | [0006](../adr/0006-interactive-content-levels.md)              | 手を動かす場所を 4 つに分け、cross-origin isolation を局所に限定する                          |
 | [0007](../adr/0007-quality-gates.md)                           | 品質ゲートに react-doctor / knip / similarity-ts を採り、mise / Bun / Biome を採らない        |
 | [0008](../adr/0008-no-reader-identity.md)                      | 読者の identity を前提とする機能を作らない。バックエンドを持たない                            |
-| [0010](../adr/0010-tailwind-as-styling-base.md)                | Tailwind CSS v4 を見た目の基盤にし、部品の CSS を utility へ移す                              |
+| [0010](../adr/0010-tailwind-as-styling-base.md)                | Tailwind CSS v4 を CSS スタイリングの基盤にし、部品の CSS を utility へ移す                   |
 | [0009](../adr/0009-site-sections-and-playground-collection.md) | サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする |
 
 ---

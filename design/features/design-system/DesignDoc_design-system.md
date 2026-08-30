@@ -64,7 +64,7 @@ Typography の判断理由は [ADR-0004](../../../adr/0004-typography-static-wei
 
 ## 設計
 
-### 見た目の方針
+### デザインの方針
 
 **情報を運ぶ要素は無彩色と罫線だけで組む。**
 色を持つのは、挿絵・リンク・現在地マーカーの 3 つに限る。
@@ -638,7 +638,7 @@ flowchart TD
 
 ### 配布と層
 
-見た目の基盤は Tailwind CSS v4 である ([ADR-0010](../../../adr/0010-tailwind-as-styling-base.md))。
+CSS スタイリングの基盤は Tailwind CSS v4 である ([ADR-0010](../../../adr/0010-tailwind-as-styling-base.md))。
 
 ```css
 /* apps/web/src/styles/global.css */
@@ -675,7 +675,7 @@ flowchart TD
 
 **第三者の CSS が使う class 名を避ける。**
 Expressive Code は `.expressive-code` 以下を使う。
-そこへは触らず、見た目は `styleOverrides` から指定する。
+そこへは触らず、スタイリングは `styleOverrides` から指定する。
 **上書きが要るときは cascade layer の外に置く。**
 Expressive Code の CSS は層に属さないので、層の中からは詳細度でも勝てない。
 
@@ -741,7 +741,7 @@ Expressive Code の CSS は層に属さないので、層の中からは詳細�
 ### Expressive Code への橋渡し
 
 コードブロックだけは `astro-expressive-code` が描く。
-見た目は class を上書きせず、`styleOverrides` から指定する。
+スタイリングは class を上書きせず、`styleOverrides` から指定する。
 
 ```ts
 // astro.config.ts

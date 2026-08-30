@@ -25,7 +25,7 @@ verified_commit: unverified
 | framework       | Astro                               | 7.2.9             | Node.js 22.12 以上                                |
 | island          | React + `@astrojs/react`            | 19.2.8 / 6.0.4    | 実行パネルとサイドバーだけに使う                  |
 | CSS             | Tailwind CSS + `@tailwindcss/vite`  | 4.3.3             | preflight は読まない (ADR-0010)                   |
-| コードブロック  | `astro-expressive-code`             | 0.44.1            | 見た目は `styleOverrides` から指定する            |
+| コードブロック  | `astro-expressive-code`             | 0.44.1            | スタイリングは `styleOverrides` から指定する      |
 | 図              | `rehype-mermaid`                    | 3.0.0             | peer に `playwright`。ビルド時に SVG へ変換する   |
 | 全文検索        | `pagefind`                          | 1.5.2             | `astro build` のあとに索引を作る                  |
 | WASM の実行環境 | `@electric-sql/pglite`              | 0.5.8             | Worker で動かす。COOP/COEP を要求しない           |
@@ -43,7 +43,7 @@ verified_commit: unverified
 **Starlight は採らない** ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
 描画は Astro のページとして自前で組む。
 
-見た目の基盤は Tailwind CSS v4 である ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
+CSS スタイリングの基盤は Tailwind CSS v4 である ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
 トークンは `@theme static` に置き、`styleOverrides` から参照できる素のカスタムプロパティとして残す。
 
 ## Vite+ の適用範囲
