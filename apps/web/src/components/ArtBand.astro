@@ -12,15 +12,17 @@ interface Props {
   /** 帯の高さ。fill のときは親いっぱいに広げる */
   height?: string;
   fill?: boolean;
+  /** 上端を紙へ溶かす。図の mask は帯が低いと映らず、切り口が区切りに見える */
+  fade?: boolean;
 }
-const { motif, height = "132px", fill = false } = Astro.props;
+const { motif, height = "132px", fill = false, fade = false } = Astro.props;
 
 // 装飾なので aria-hidden。role="img" を併せるとラベルが読み上げに届かない
 const svg = ART[motif].replace(/\srole="img"\s+aria-label="[^"]*"/, "");
 ---
 
 <div
-  class:list={["wood-band", fill && "wood-band--fill"]}
+  class:list={["wood-band", fill && "wood-band--fill", fade && "wood-band--fade"]}
   aria-hidden="true"
   style={fill ? undefined : `block-size: ${height}`}
 >
