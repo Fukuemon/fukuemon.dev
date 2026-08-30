@@ -1,0 +1,122 @@
+/* 動き。配る JavaScript は 0 バイト。
+   位置は動かさない。罫の位置が確定するまで読み始められないため、
+   変えるのは濃度と、罫そのものの長さに限る。 */
+
+/* ページ遷移。Chrome 126 / Safari 18.2 以降で効く。
+   Firefox では何も起きず通常の遷移になる。
+   レイヤの外に置く。@view-transition は値の供給であり勝ち負けを競わない */
+@view-transition {
+  navigation: auto;
+}
+
+/* 既定は 0.25s の全画面クロスフェード。紙の版面には長い */
+::view-transition-group(*) {
+  animation-duration: 90ms;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-timing-function: linear;
+}
+
+/* 全称セレクタは view transition の疑似要素に届かない。
+   utilities.css の一括停止では止まらないので、ここに書く */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+@layer fukuemon {
+  /* 一覧の行が刷り上がる。濃度だけを変え、罫は動かさない。
+     段送りの添字はビルド時に埋める */
+  .rule-row {
+    opacity: 1;
+    transition:
+      opacity 220ms ease-out calc(var(--i, 0) * 45ms),
+      border-block-start-color 140ms ease-out;
+  }
+  @starting-style {
+    .rule-row {
+      opacity: 0;
+    }
+  }
+
+  /* 行に触れると上罫が濃くなり、端の縦棒が伸びる。
+     「罫が引かれた」ではなく「印を置いた」の延長 */
+  .rule-cap::after {
+    transform-origin: block-start;
+    transition: transform 140ms ease-out;
+  }
+  @media (hover: hover) {
+    .rule-row:hover {
+      border-block-start-color: var(--rule-strong);
+    }
+    .rule-cap:hover::after {
+      transform: scaleY(1.9);
+    }
+  }
+  .rule-cap:focus-visible::after {
+    transform: scaleY(1.9);
+  }
+
+  /* 縦組み見出しの 2px 罫が上から引かれる。
+     border-width はレイアウトを動かすので使わない。
+     background-size は物理軸なので writing-mode の影響を受けない */
+  .tate-head {
+    border-inline-end-color: transparent;
+    background-image: linear-gradient(var(--rule-strong), var(--rule-strong));
+    background-repeat: no-repeat;
+    background-position: 100% 0;
+    background-size: 2px 100%;
+    transition: background-size 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  [data-band] .tate-head {
+    background-image: linear-gradient(var(--rule), var(--rule));
+  }
+  @starting-style {
+    .tate-head {
+      background-size: 2px 0%;
+    }
+  }
+
+  /* 720px 以下では罫が下端へ倒れる。
+     utilities.css が border-block-end を立てるので、そちらも透明にする。
+     透明にしないと 2px の border と 2px の gradient が重なって 4px になり、
+     下の 2px は最初から全長で出ているので「上から引かれる」動きが成立しない */
+  @media (max-width: 720px) {
+    .g-rail > .tate-head {
+      border-block-end-color: transparent;
+      background-position: 0 100%;
+      background-size: 100% 2px;
+    }
+    @starting-style {
+      .g-rail > .tate-head {
+        background-size: 0% 2px;
+      }
+    }
+  }
+
+  /* 表の行も同じ規則で刷り上がる。一覧は .rule-row ではなく tr で組む */
+  .tbl tbody tr {
+    opacity: 1;
+    transition: opacity 220ms ease-out calc(var(--i, 0) * 45ms);
+  }
+  @starting-style {
+    .tbl tbody tr {
+      opacity: 0;
+    }
+  }
+
+  /* 挿絵の帯。紙に刷られたものなので動かさない。
+     現れ方だけを濃度で作る */
+  .wood-band > .art {
+    transition: opacity 420ms ease-out;
+  }
+  @starting-style {
+    .wood-band > .art {
+      opacity: 0;
+    }
+  }
+}

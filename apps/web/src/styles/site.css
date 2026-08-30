@@ -1,0 +1,929 @@
+/* このサイトの部品。トークンと版面は @fukuemon/design-system が持つ */
+@layer fukuemon {
+  /* ---- 面 ---- */
+  .section {
+    padding-block: var(--gap-inter-2);
+    padding-inline: var(--gutter);
+  }
+  .section--flush {
+    margin-block-start: var(--gap-inter-3);
+    padding-block: 0;
+  }
+  .band {
+    padding-block: var(--gap-inter-2);
+    padding-inline: var(--gutter);
+    border-block: 1px solid var(--rule);
+  }
+  .tail {
+    block-size: var(--gap-inter-3);
+  }
+
+  /* ---- 表紙 ---- */
+  .lede {
+    margin-block-start: var(--gap-inter-1);
+    max-inline-size: var(--measure);
+    color: var(--ink-2);
+  }
+
+  /* ---- 節の頭。左に見出し、右に導線 ---- */
+  .section-link {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding-block-end: var(--gap-intra-1);
+  }
+  .section-lead {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--gap-intra-1) var(--gap-intra-3);
+    padding-block-end: var(--gap-intra-2);
+  }
+  .section-lead > p {
+    margin: 0;
+    color: var(--fg-2);
+    font-size: 0.95rem;
+  }
+  .section-lead > .meta { flex: 0 0 auto; }
+
+  /* ---- 行の一覧 ---- */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-intra-4);
+    min-block-size: 44px;
+  }
+  .row__date {
+    flex: 0 0 92px;
+  }
+  .row__title {
+    flex-grow: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---- 本文 ---- */
+  /* 版面は .labmain が持つ */
+  .doc { inline-size: 100%; }
+  .doc__crumb {
+    display: flex;
+    gap: var(--gap-intra-2);
+    align-items: baseline;
+  }
+  .doc__title {
+    margin-block: var(--gap-intra-3);
+  }
+  .doc__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-intra-3);
+    margin-block: var(--gap-intra-2) var(--gap-intra-3);
+  }
+
+  /* ---- 目次 ---- */
+  .toc__label {
+    margin-block-end: var(--gap-intra-2);
+  }
+  .toc__item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    /* min-block-size だと中身が溢れたとき重なる。padding で高さを作る */
+    padding-block: var(--gap-intra-1);
+  }
+  .toc__text {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+  .toc__bar {
+    block-size: 1px;
+    background: var(--rule-strong);
+  }
+  .toc__item[aria-current] .toc__bar {
+    block-size: 2px;
+    background: var(--now);
+  }
+  .toc__item[aria-current] .toc__text {
+    color: var(--fg);
+  }
+
+  /* ---- 手順一覧 ---- */
+  /* sticky と高さは .rail / .drawer が持つ */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-intra-1);
+  }
+  .steps__bar {
+    margin-block: var(--gap-intra-1) var(--gap-intra-3);
+    block-size: 3px;
+    background: var(--rule-soft);
+  }
+  .steps__fill {
+    display: block;
+    block-size: 100%;
+    background: var(--now);
+    transition: inline-size 240ms ease;
+  }
+  .steps__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+  }
+  .steps__mark {
+    inline-size: 9px;
+    block-size: 9px;
+    flex: 0 0 auto;
+    box-shadow: inset 0 0 0 1px var(--rule-strong);
+  }
+  /* claat の drawer は 1 行 48px 以上を確保している。
+     2 行に折り返しても行が潰れないよう、高さは padding で作る */
+  /* 所要時間を横に並べると題の幅が 100px を切って 3 行に割れる。下へ積む */
+  .steps__link {
+    display: grid;
+    grid-template-columns: 9px auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: var(--gap-intra-2);
+    row-gap: 2px;
+    min-block-size: 44px;
+    padding: var(--gap-intra-2) var(--gap-intra-2) var(--gap-intra-2) var(--gap-intra-1);
+    border-block-end: 1px solid var(--rule);
+    color: var(--fg-2);
+  }
+  .steps__link[aria-current] {
+    color: var(--fg);
+    background: var(--panel);
+    box-shadow: inset 2px 0 0 var(--now);
+  }
+  .steps__text {
+    grid-column: 3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .steps__dur { grid-column: 3; }
+  .steps__link[aria-current] .steps__text { font-weight: 600; }
+  .steps__mark[data-state="done"] {
+    background: var(--fg-2);
+    box-shadow: none;
+  }
+  .steps__mark[data-state="now"] {
+    background: var(--now);
+    box-shadow: none;
+    outline: 1px solid var(--ink);
+    outline-offset: 3px;
+  }
+  .steps__note { padding-block-start: var(--gap-intra-2); }
+
+  /* ---- ハンズオン本文 ---- */
+  /* 版面は .labmain が持つ。ここで padding を足すと二重に効く */
+  .lab-body { inline-size: 100%; }
+
+  /* ---- 関連 ---- */
+  .related {
+    margin-block-start: var(--gap-inter-3);
+    padding-block-start: var(--gap-intra-3);
+  }
+  .related__label {
+    margin-block-end: var(--gap-intra-2);
+  }
+
+  /* ---- footer ---- */
+  .foot {
+    border-block-start: 1px solid var(--rule);
+    padding: var(--gap-inter-1) var(--gutter);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .foot__links {
+    display: flex;
+    gap: var(--gap-intra-4);
+  }
+
+  /* ---- 種別の色 ---- */
+  .kind--lab,
+  .kind--article {
+    color: var(--fg-2);
+  }
+
+  @media (max-width: 1100px) {
+    .steps__list {
+      overflow-y: visible;
+    }
+  }
+}
+
+@layer fukuemon {
+  .foot__links a { color: var(--link); }
+}
+
+@layer fukuemon {
+  .lede-title { max-inline-size: 20em; }
+  .section-x { margin-inline: var(--gutter); }
+  .band-head { border-inline-end-color: var(--rule); color: var(--fg); }
+  .g-rail > .tate-head { grid-row: 1 / span 2; }
+  .steps__text { font-size: 0.875rem; line-height: 1.4; }
+  .steps .hit { gap: var(--gap-intra-2); }
+  .tbl .c-date a { color: var(--ink-2); }
+}
+
+/* 実行パネル。Astro の scoped style は island に効かないのでここに置く */
+@layer fukuemon {
+  .runner {
+    margin-block: var(--gap-intra-3);
+    border: 1px solid var(--rule-strong);
+    background: var(--code-bg);
+  }
+  .runner__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-intra-2);
+    padding: 10px var(--gap-intra-3);
+    border-block-end: 1px solid var(--rule-strong);
+  }
+  .runner__bar:has(.btn) {
+    border-block-end: 0;
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  .runner__status, .runner__count { margin-inline-start: auto; }
+  .runner__editor {
+    display: block;
+    inline-size: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--c-plain);
+    padding: var(--gap-intra-3);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    resize: vertical;
+  }
+  .runner__editor:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .runner .btn { min-block-size: 36px; padding: 0 var(--gap-intra-3); }
+  .runner__note {
+    padding: var(--gap-intra-2) var(--gap-intra-3);
+    border-block-start: 1px solid var(--rule);
+    color: var(--now);
+  }
+  .runner__error {
+    margin: 0;
+    padding: var(--gap-intra-3);
+    border-block-start: 1px solid var(--rust);
+    background: var(--tint-rust);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+  }
+  .runner__scroll { overflow-x: auto; border-block-start: 1px solid var(--rule-strong); }
+  .runner__table { border-collapse: collapse; font-size: 0.85rem; inline-size: 100%; }
+  .runner__table th, .runner__table td {
+    text-align: start;
+    padding: 6px var(--gap-intra-3);
+    border-block-end: 1px solid var(--rule-soft);
+    /* nowrap だと先頭の空白が潰れ、EXPLAIN の木構造が消える */
+    white-space: pre;
+  }
+  /* 右端に続きがあることを示す。overlay scrollbar では目印が出ない */
+  .runner__scroll {
+    background:
+      linear-gradient(to right, var(--code-bg) 30%, transparent) left / 40px 100% no-repeat,
+      linear-gradient(to left, var(--code-bg) 30%, transparent) right / 40px 100% no-repeat,
+      radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / .12), transparent) left / 14px 100% no-repeat,
+      radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / .12), transparent) right / 14px 100% no-repeat;
+    background-attachment: local, local, scroll, scroll;
+  }
+  /* 実行パネルは本文より広く出す。EXPLAIN の右端が落ちる。
+     playground は 2 列なので、はみ出させない */
+  @media (min-width: 1200px) {
+    .lab-body .runner, .doc .runner { margin-inline-end: calc(-1 * var(--gap-inter-3)); }
+  }
+  .runner__table th { font-weight: 600; color: var(--ink-2); }
+}
+
+/* about の見開き。左の面が固定、右だけ送る */
+@layer fukuemon {
+  .spread { display: grid; grid-template-columns: 44% minmax(0, 1fr); }
+  .spread__panel {
+    position: sticky; inset-block-start: var(--topbar);
+    block-size: calc(100vh - var(--topbar));
+    overflow: hidden;
+    border-inline-end: 1px solid var(--rule-strong);
+  }
+  .spread__veil {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(
+      180deg, var(--veil-1) 0 9%, var(--veil-0) 30%,
+      var(--veil-0) 44%, var(--veil-1) 62%
+    );
+  }
+  .spread__fg {
+    position: relative;
+    padding: var(--gap-inter-2) var(--gutter);
+    display: flex; flex-direction: column; gap: var(--gap-intra-3);
+  }
+  .spread__note { margin: 0; max-inline-size: 22em; }
+  .spread__body { padding-block-start: var(--gap-inter-2); padding-inline-end: var(--gutter); }
+  .spread__body > .g-rail { margin-inline-start: var(--gutter); }
+  .wood-band--fill { position: absolute; inset: 0; }
+  .wood-band--fill > svg { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+
+  @media (max-width: 1100px) {
+    .spread { grid-template-columns: minmax(0, 1fr); }
+    .spread__panel {
+      position: static; block-size: clamp(220px, 32vh, 320px);
+      border-inline-end: 0; border-block-end: 1px solid var(--rule-strong);
+    }
+    .spread__body { padding-inline: 0; }
+    .spread__body > .g-rail { margin-inline: var(--gutter); }
+  }
+}
+
+@layer fukuemon {
+  /* 見開きの左面。挿絵は下端へ寄せる。竹は縦に伸びるので上を切ると根元だけになる */
+  .wood-band--fill > svg { object-fit: cover; object-position: 50% 100%; }
+  /* 右面の一覧が版面の右端を超えない */
+  .spread__body .row { padding-inline-end: var(--gap-intra-2); }
+}
+
+@layer fukuemon {
+  /* 起動した Postgres の版。実行が本物であることを示す */
+  .runner__engine { margin-inline-start: auto; color: var(--fg-2); }
+  .runner__bar:has(.btn) .runner__count { margin-inline-start: auto; }
+}
+
+/* SQL の編集。透明な textarea を色付き pre に重ねる。
+   ずれないよう font / padding / 折り返しを両者で揃える */
+@layer fukuemon {
+  .sqled { position: relative; }
+  .sqled__ink,
+  .sqled__input {
+    margin: 0;
+    padding: var(--gap-intra-3);
+    border: 0;
+    inline-size: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+    tab-size: 2;
+  }
+  .sqled__ink {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    color: var(--c-plain);
+    background: none;
+  }
+  .sqled__input {
+    position: relative;
+    display: block;
+    background: transparent;
+    color: transparent;
+    caret-color: var(--fg);
+    resize: vertical;
+    min-block-size: 5em;
+  }
+  .sqled__input::selection { background: var(--tint-green); color: var(--c-plain); }
+  .sqled__input:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+}
+
+@layer fukuemon {
+  /* 縦組みを持たないページの版面 */
+  .page { padding: var(--gap-inter-1) var(--gutter) 0; }
+}
+
+@layer fukuemon {
+  /* 表紙。挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
+  .hero { position: relative; overflow: hidden; min-block-size: clamp(320px, 46vh, 460px); display: flex; }
+  .hero__veil {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(96deg, var(--veil-1) 0 26%, var(--veil-0) 64%);
+  }
+  .hero__fg {
+    position: relative;
+    align-self: center;
+    padding: var(--gap-inter-2) var(--gutter);
+  }
+  .hero .wood-band--fill > svg { object-position: 50% 100%; }
+
+  /* 末尾の自己紹介。about を 1 ページ持つほどの分量ではない */
+  .colophon { max-inline-size: var(--measure); padding-block-end: var(--gap-inter-2); }
+  .colophon > p { margin: 0; color: var(--fg-2); }
+  .colophon > p + p { margin-block-start: var(--gap-intra-3); }
+  .colophon__links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-4); margin-block-start: var(--gap-intra-3); }
+  .colophon__links a { color: var(--link); display: flex; align-items: baseline; gap: var(--gap-intra-1); }
+}
+
+/* 側柱。目次 / 手順 と、ほかの記事への切り替えを 1 本にまとめる。
+   種別が増えても構造が変わらないよう、中身を差し替える形にする */
+@layer fukuemon {
+  .rail, .drawer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-inter-1);
+    max-block-size: calc(100vh - var(--topbar) - var(--gap-intra-3) * 2);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .toc { display: flex; flex-direction: column; }
+  .docnav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-intra-2);
+    padding-block-start: var(--gap-inter-1);
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  .docnav__all { color: var(--link); }
+  .docnav__list { list-style: none; margin: 0; padding: 0; }
+  .docnav__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-block: var(--gap-intra-1);
+    border-block-start: 1px solid var(--rule);
+    color: var(--fg-2);
+  }
+  .docnav__item[aria-current] {
+    color: var(--fg);
+    box-shadow: inset 2px 0 0 var(--now);
+    padding-inline-start: var(--gap-intra-2);
+  }
+  .docnav__date { font-size: 0.75rem; }
+  .docnav__title {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .docnav__seq {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--gap-intra-3);
+    padding-block-start: var(--gap-intra-2);
+    border-block-start: 1px solid var(--rule);
+  }
+  .docnav__seq a { color: var(--link); }
+
+  @media (max-width: 1100px) {
+    .rail {
+      max-block-size: none;
+      overflow: visible;
+      position: static !important;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--gap-intra-4);
+    }
+    .rail .docnav { display: none; }
+  }
+}
+
+@layer fukuemon {
+  /* 短いページでフッタが画面下端に届かず、下に地色が残る */
+  .shell { min-block-size: 100dvh; display: flex; flex-direction: column; }
+  .shell > main { flex: 1; }
+}
+
+/* playground。手順に縛られず SQL を試す */
+@layer fukuemon {
+  .playground {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: var(--gap-inter-1);
+    align-items: start;
+    margin-block-start: var(--gap-inter-1);
+  }
+  .playground > .runner { margin-block: 0; }
+  .pg-aside { display: flex; flex-direction: column; gap: var(--gap-inter-1); }
+  .pg-aside__head { margin-block-end: var(--gap-intra-2); }
+  .pg-list { list-style: none; margin: 0; padding: 0; }
+  .pg-preset {
+    display: block; inline-size: 100%; text-align: start;
+    min-block-size: 36px; padding: var(--gap-intra-1) 0;
+    border: 0; border-block-start: 1px solid var(--rule);
+    background: transparent; color: var(--fg); cursor: pointer;
+    font: inherit; font-size: 0.875rem;
+  }
+  .pg-preset:hover { color: var(--link); }
+  .pg-empty { color: var(--fg-2); }
+  .pg-table {
+    display: flex; flex-wrap: wrap; gap: 0 var(--gap-intra-2);
+    padding-block: var(--gap-intra-1);
+    border-block-start: 1px solid var(--rule);
+  }
+  .pg-table__name { font-size: 0.875rem; }
+  .pg-table__cols { flex-basis: 100%; font-size: 0.75rem; line-height: 1.5; }
+
+  @media (max-width: 1100px) {
+    .playground { grid-template-columns: minmax(0, 1fr); }
+  }
+}
+
+@layer fukuemon {
+  /* disabled はフォーカスを body へ飛ばす。見た目だけ無効にする */
+  .btn[aria-disabled="true"] { opacity: .55; cursor: default; }
+  .btn[aria-disabled="true"]:hover { background: transparent; color: var(--fg); }
+}
+
+/* 手元で用意するラボ。実行環境を持たないので、置くのは手順だけ */
+@layer fukuemon {
+  .local {
+    margin-block: var(--gap-inter-1);
+    padding-block-start: var(--gap-intra-3);
+  }
+  .local__head { margin-block-end: var(--gap-intra-2); }
+  .local__note { margin-block: 0 var(--gap-intra-3); color: var(--fg-2); }
+  .local__block { margin-block-end: var(--gap-intra-3); }
+  .local__label { margin-block-end: var(--gap-intra-1); }
+  .local__reqs { list-style: none; margin: 0; padding: 0; }
+  .local__reqs > li { margin-block-end: var(--gap-intra-1); }
+  .local__req-name { display: block; font-size: 0.9rem; }
+  .local__repo a { color: var(--link); }
+
+  .cmd {
+    display: flex; align-items: center; gap: var(--gap-intra-2);
+    background: var(--code-bg);
+    border: 1px solid var(--rule-strong);
+    padding: 8px var(--gap-intra-3);
+    margin-block-start: 4px;
+  }
+  .cmd + .cmd { border-block-start: 0; }
+  .cmd[data-comment] { background: transparent; border-style: dashed; }
+  .cmd__text { flex: 1; font-size: 0.875rem; overflow-x: auto; white-space: pre; }
+  .cmd[data-comment] .cmd__text { color: var(--c-com); font-style: italic; }
+  .cmd__copy {
+    flex: 0 0 auto; min-block-size: 32px; padding: 0 var(--gap-intra-2);
+    border: 1px solid var(--rule-strong); background: transparent;
+    color: var(--fg-2); cursor: pointer; font: inherit; font-size: 0.75rem;
+  }
+  .cmd__copy:hover { background: var(--ink); color: var(--paper); }
+}
+
+@layer fukuemon {
+
+}
+
+/* ハンズオン。1 画面 1 手順。claat の drawer + main を版面に合わせて写した */
+@layer fukuemon {
+  .drawer {
+    padding: var(--gap-intra-3) var(--gap-intra-3) var(--gap-inter-1) var(--gutter);
+    border-inline-end: 1px solid var(--rule-strong);
+    gap: var(--gap-intra-4);
+    /* 一覧の中だけを流し、いまのテーブルを画面に残す */
+    overflow: hidden;
+  }
+  /* 高さが足りないときは手順の中を流す */
+  .drawer > .steps { flex: 1 1 auto; min-block-size: 9rem; }
+  .drawer > .peek { flex: 0 0 auto; }
+  .drawer .steps__list { flex: 1 1 auto; min-block-size: 0; overflow-y: auto; }
+  /* astro-island の display: contents は層の外から効くので、
+     包みではなく中の要素を名指しで消す */
+
+  .labmain {
+    display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+    max-inline-size: calc(var(--measure-w) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding: var(--gap-inter-1) var(--gutter) 0;
+  }
+  .labhead {
+    padding-block-end: var(--gap-intra-3);
+    border-block-end: 2px solid var(--rule-strong);
+  }
+  .labhead__title { margin-block: var(--gap-intra-3) 0; }
+
+  /* 表示中の 1 枚だけ。JS が動くまでは全手順を縦に並べる */
+  .step { padding-block-start: var(--gap-inter-1); }
+  [data-ready] .step:not([data-current]) { display: none; }
+  .step > h2 {
+    padding-block-end: var(--gap-intra-2);
+    border-block-end: 1px solid var(--rule);
+    margin-block-end: var(--gap-intra-3);
+  }
+
+  .labnav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-intra-3);
+    margin-block-start: var(--gap-inter-2);
+    padding-block-start: var(--gap-intra-3);
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  .labnav__now { flex: 1 1 auto; text-align: center; }
+  .labnav__btn[aria-disabled="true"] {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .labfoot { margin-block-start: var(--gap-inter-2); }
+
+  /* いまのテーブル。実行するまで何も出ない */
+  .peek {
+    padding-block-start: var(--gap-inter-1);
+    border-block-start: 1px solid var(--rule-strong);
+  }
+  .peek__label {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-intra-2);
+    inline-size: 100%;
+    padding-block: var(--gap-intra-1);
+    background: none;
+    border: 0;
+    border-block-end: 1px solid var(--rule-strong);
+    color: var(--fg-2);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .peek__n { margin-inline-start: auto; }
+  /* 開: 下向き / 閉: 右向き */
+  .peek__caret {
+    inline-size: 0;
+    block-size: 0;
+    flex: 0 0 auto;
+    border-inline: 4px solid transparent;
+    border-block-start: 5px solid currentColor;
+  }
+  .peek__label[aria-expanded="false"] .peek__caret {
+    border-block-start: 4px solid transparent;
+    border-block-end: 4px solid transparent;
+    border-inline-start: 5px solid currentColor;
+    border-inline-end: 0;
+  }
+  .peek__list { list-style: none; margin: 0; padding: 0; }
+  .peek__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--gap-intra-2);
+    inline-size: 100%;
+    padding-block: var(--gap-intra-1);
+    border-block-start: 1px solid var(--rule);
+    background: none;
+    border-inline: 0;
+    border-block-end: 0;
+    color: var(--fg);
+    text-align: start;
+    font: inherit;
+    cursor: pointer;
+  }
+  .peek__name { font-size: 0.8125rem; }
+
+  /* テーブルの中身。top layer なので側柱の幅に縛られない */
+  /* dialog の既定は display:none。flex は開いているときだけに限る */
+  .sheet[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .sheet {
+    inline-size: min(92vw, 72rem);
+    max-block-size: 82dvh;
+    padding: var(--gap-inter-1) var(--gutter);
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+    color: var(--fg);
+  }
+  .sheet::backdrop { background: rgb(0 0 0 / 0.42); }
+  .sheet__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--gap-intra-3);
+    padding-block-end: var(--gap-intra-2);
+    border-block-end: 2px solid var(--rule-strong);
+  }
+  .sheet__name { font-size: 1.05rem; font-weight: 600; }
+  .sheet__close { margin-inline-start: auto; }
+  .sheet__cols {
+    padding-block: var(--gap-intra-2);
+    line-height: 1.6;
+    color: var(--fg-2);
+  }
+  .sheet__scroll { flex: 1 1 auto; min-block-size: 0; overflow: auto; }
+  .sheet__tbl { border-collapse: collapse; font-size: 0.8125rem; inline-size: 100%; }
+  .sheet__tbl :is(th, td) {
+    padding: 5px var(--gap-intra-2) 5px 0;
+    text-align: start;
+    white-space: nowrap;
+    border-block-end: 1px solid var(--rule);
+  }
+  .sheet__tbl th { border-block-end: 1px solid var(--rule-strong); }
+  .sheet__note { padding-block-start: var(--gap-intra-2); }
+}
+
+/* 本文中の表。Markdown の表には class が付かないので要素で当てる */
+@layer fukuemon {
+  .prose table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    margin-block: var(--gap-intra-3);
+    font-size: 0.9375rem;
+  }
+  .prose :is(th, td) {
+    padding: var(--gap-intra-1) var(--gap-intra-2);
+    text-align: start;
+    vertical-align: top;
+    border-block-end: 1px solid var(--rule);
+  }
+  .prose th {
+    font-weight: 600;
+    border-block-end: 1px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+  .prose thead { border-block-start: 2px solid var(--rule-strong); }
+  /* 版面をはみ出す表は器の中で横に流す (rehype-scroll-table) */
+  .scroll-x { overflow-x: auto; margin-block: var(--gap-intra-3); }
+  .scroll-x > table { inline-size: max-content; min-inline-size: 100%; margin-block: 0; }
+}
+
+/* 狭い画面。側柱は横から滑り出すので、版面は 1 列にする */
+@layer fukuemon {
+  @media (max-width: 1100px) {
+    .g-doc, [data-open="false"].g-doc, [data-open="true"].g-doc {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .labmain { padding-inline: var(--gutter); }
+  }
+}
+
+/* トップの種別ごとの節。実物を 3 本並べる */
+@layer fukuemon {
+  .kind { margin: var(--gap-inter-3) var(--gutter) 0; }
+  .kind__lead { margin: var(--gap-intra-2) 0 0; max-inline-size: var(--measure-w); color: var(--fg-2); }
+  .kind__grid {
+    margin-block-start: var(--gap-inter-1);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .kind__card {
+    display: flex;
+    flex-direction: column;
+    padding-inline: var(--gap-intra-4);
+    color: var(--fg);
+  }
+  .kind__card:first-child { padding-inline-start: 0; }
+  .kind__card + .kind__card { border-inline-start: 1px solid var(--rule); }
+  .kind__tick { inline-size: 26px; block-size: 2px; background: var(--now); }
+  .kind__title { margin-block-start: var(--gap-intra-2); font-size: 1.05rem; }
+  .kind__desc {
+    margin: var(--gap-intra-1) 0 var(--gap-intra-3);
+    font-size: 0.9rem;
+    color: var(--fg-2);
+    flex-grow: 1;
+  }
+  .kind__meta { color: var(--fg-2); }
+  .hero__eyebrow { letter-spacing: 0.18em; margin-block-end: var(--gap-intra-2); }
+
+  @media (max-width: 720px) {
+    .kind__grid { grid-template-columns: minmax(0, 1fr); }
+    .kind__card { padding-inline: 0; }
+    .kind__card + .kind__card {
+      border-inline-start: 0;
+      border-block-start: 1px solid var(--rule);
+      padding-block-start: var(--gap-intra-3);
+      margin-block-start: var(--gap-intra-3);
+    }
+  }
+}
+
+/* 側柱の開閉。広い画面では列が縮み、狭い画面では横から滑り出す */
+@layer fukuemon {
+  .side { display: contents; }
+
+  .side__toggle {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: var(--gap-intra-2);
+    margin: var(--gap-intra-3) 0 0 var(--gutter);
+    padding: var(--gap-intra-1) var(--gap-intra-2) var(--gap-intra-1) 0;
+    background: none;
+    border: 0;
+    color: var(--fg-2);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    z-index: 4;
+  }
+  .side__icon {
+    inline-size: 14px;
+    block-size: 10px;
+    flex: 0 0 auto;
+    border-block: 2px solid currentColor;
+    border-block-end-width: 6px;
+    box-sizing: content-box;
+  }
+  .side__panel {
+    grid-column: 1;
+    grid-row: 1;
+    padding-block-start: calc(var(--gap-intra-3) + 2rem);
+  }
+  [data-open="false"] .side__panel { display: none; }
+  [data-open="false"] .side__toggle { flex-direction: column; }
+  [data-open="false"] .side__label { writing-mode: vertical-rl; letter-spacing: 0.1em; }
+
+  /* 覆いかぶさるのは狭い画面だけ */
+  .side__scrim { display: none; }
+
+  @media (max-width: 1100px) {
+    .side__toggle {
+      position: fixed;
+      inset-block-end: var(--gutter);
+      inset-inline-start: var(--gutter);
+      margin: 0;
+      padding: var(--gap-intra-2) var(--gap-intra-3);
+      border: 1px solid var(--rule-strong);
+      background: var(--paper);
+      color: var(--fg);
+      z-index: 6;
+      box-shadow: 0 2px 10px rgb(0 0 0 / 0.14);
+    }
+    [data-open="false"] .side__toggle { flex-direction: row; }
+    [data-open="false"] .side__label { writing-mode: horizontal-tb; letter-spacing: normal; }
+
+    /* 横から滑り出す。上に積むと手順を読むたびに本文へ下りることになる */
+    .side__panel {
+      display: block;
+      position: fixed;
+      inset-block: var(--topbar) 0;
+      inset-inline-start: 0;
+      inline-size: min(86vw, 320px);
+      max-block-size: none;
+      padding: var(--gap-inter-1) var(--gutter);
+      background: var(--paper);
+      border-inline-end: 1px solid var(--rule-strong);
+      overflow-y: auto;
+      z-index: 5;
+      transform: translateX(-100%);
+      transition: transform 220ms ease;
+    }
+    [data-open="true"] .side__panel { transform: none; }
+    [data-open="false"] .side__panel { display: block; }
+
+    [data-open="true"] .side__scrim {
+      display: block;
+      position: fixed;
+      inset: var(--topbar) 0 0;
+      z-index: 4;
+      border: 0;
+      background: rgb(0 0 0 / 0.34);
+      cursor: pointer;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .side__panel { transition: none; }
+  }
+}
+
+/* テーブルの中身。列の定義 (ER の実体) と先頭の行を並べる */
+@layer fukuemon {
+  .sheet__body { display: flex; flex-direction: column; min-block-size: 0; overflow: hidden; }
+  .sheet__sub { padding-block: var(--gap-intra-2); }
+  .sheet__cols { flex: 0 0 auto; }
+  .sheet__rows { flex: 1 1 auto; min-block-size: 0; display: flex; flex-direction: column; }
+
+  /* 列の一覧。ER 図の 1 実体にあたる */
+  .er { list-style: none; margin: 0; padding: 0; border-block-start: 1px solid var(--rule-strong); }
+  .er__row {
+    display: grid;
+    grid-template-columns: 2.4em minmax(6em, 14em) minmax(8em, 1fr) 6em;
+    gap: var(--gap-intra-2);
+    align-items: baseline;
+    padding-block: 4px;
+    border-block-end: 1px solid var(--rule);
+    font-size: 0.8125rem;
+  }
+  .er__key { color: var(--now); font-weight: 600; }
+  .er__name { font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .er__row { grid-template-columns: 2.4em minmax(0, 1fr); }
+    .er__type, .er__null { grid-column: 2; }
+  }
+}
+
+/* mermaid の図。色はビルド時にトークンへ置き換え済み */
+@layer fukuemon {
+  .prose svg.figure {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    margin-block: var(--gap-inter-1);
+  }
+  /* 図の中の背景は敷かない。紙の地をそのまま通す */
+  .prose svg.figure rect[fill="var(--panel)"] { fill: transparent; }
+}
