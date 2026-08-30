@@ -1,0 +1,22 @@
+---
+import PostsLayout from "../../layouts/PostsLayout.astro";
+import { listContent } from "../../lib/content";
+import type { ContentType } from "@fukuemon/content-model";
+
+// 種別は 2 つで固定なので静的に書き出す
+export async function getStaticPaths() {
+  return [
+    { params: { kind: "articles" }, props: { type: "article" as ContentType } },
+    { params: { kind: "labs" }, props: { type: "hands-on" as ContentType } },
+  ];
+}
+
+const { type } = Astro.props;
+const items = await listContent({ type });
+const lead =
+  type === "hands-on"
+    ? "ブラウザの中だけで動かせます。環境構築は要りません。"
+    : "読んで分かるところまでを書いたもの。";
+---
+
+<PostsLayout current={type} items={items} showKind={false} lead={lead} />

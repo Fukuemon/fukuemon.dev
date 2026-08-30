@@ -1,0 +1,35 @@
+---
+import SiteLayout from "./SiteLayout.astro";
+import DocShell from "./DocShell.astro";
+import DocToc from "../components/DocToc.astro";
+import Side from "../components/Side.astro";
+import DocNav from "../components/DocNav.astro";
+import { listContent } from "../lib/content";
+import type { ContentRef, TocItem } from "@fukuemon/content-model";
+
+interface Props {
+  ref: ContentRef;
+  toc: TocItem[];
+}
+const { ref, toc } = Astro.props;
+const siblings = await listContent({ type: ref.type });
+---
+
+<SiteLayout title={`${ref.title} — fukuemon.dev`} description={ref.description}>
+  <div class="g-doc section--flush" data-side-root data-open="true">
+    <Side id="doc" label="目次">
+      {toc.length > 1 && <DocToc items={toc} />}
+      <DocNav current={ref} siblings={siblings} />
+    </Side>
+    <div class="labmain">
+      <DocShell ref={ref}><slot /></DocShell>
+    </div>
+  </div>
+  <div class="tail"></div>
+</SiteLayout>
+
+<script>
+  import { mountSide } from "../components/side";
+  const root = document.querySelector<HTMLElement>("[data-side-root]");
+  if (root) mountSide(root);
+</script>

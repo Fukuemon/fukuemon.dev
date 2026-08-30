@@ -1,0 +1,45 @@
+---
+import type { ContentRef } from "@fukuemon/content-model";
+import { KIND_INDEX, KIND_LABEL, ymd } from "../lib/format";
+
+interface Props {
+  /** いま開いているもの */
+  current: ContentRef;
+  /** 同じ種別のもの。新しい順 */
+  siblings: ContentRef[];
+}
+const { current, siblings } = Astro.props;
+const i = siblings.findIndex((s) => s.contentId === current.contentId);
+const prev = i > 0 ? siblings[i - 1] : undefined;
+const next = i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : undefined;
+---
+
+<nav class="docnav" aria-label={`ほかの${KIND_LABEL[current.type]}`}>
+  <a class="mono meta docnav__all" href={KIND_INDEX[current.type]}>
+    {KIND_LABEL[current.type]}の一覧 →
+  </a>
+  <ol class="docnav__list">
+    {
+      siblings.map((s) => (
+        <li>
+          <a
+            class="docnav__item"
+            href={s.href}
+            aria-current={s.contentId === current.contentId ? "page" : undefined}
+          >
+            <span class="mono meta docnav__date">{ymd(s.date)}</span>
+            <span class="docnav__title">{s.title}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+  {
+    (prev || next) && (
+      <div class="docnav__seq mono meta">
+        {prev && <a href={prev.href}>← 新しい</a>}
+        {next && <a href={next.href}>古い →</a>}
+      </div>
+    )
+  }
+</nav>

@@ -1,0 +1,26 @@
+---
+import type { ContentRef } from "@fukuemon/content-model";
+import { KIND_LABEL, kindClass, ymd } from "../lib/format";
+
+interface Props {
+  ref: ContentRef;
+  /** 右端に何を出すか。種別か分類か */
+  trailing?: "kind" | "tag";
+  cap?: boolean;
+  /** 刷り上がりの段送り。ビルド時に埋める */
+  index?: number;
+}
+const { ref, trailing = "tag", cap = true, index = 0 } = Astro.props;
+---
+
+<a class:list={["row", "rule-row", cap && "rule-cap"]} href={ref.href} style={`--i:${index}`}>
+  <span class="mono meta row__date">{ymd(ref.date)}</span>
+  <span class="row__title">{ref.title}</span>
+  {
+    trailing === "kind" ? (
+      <span class:list={["meta", kindClass(ref.type)]}>{KIND_LABEL[ref.type]}</span>
+    ) : (
+      <span class="label">{ref.tags[0]}</span>
+    )
+  }
+</a>

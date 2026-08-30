@@ -1,0 +1,20 @@
+---
+import type { ContentRef } from "@fukuemon/content-model";
+import ContentRow from "./ContentRow.astro";
+
+interface Props {
+  items: ContentRef[];
+}
+const { items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="related rule-struct">
+      <h2 class="mono meta related__label">関連</h2>
+      {items.map((r) => (
+        <ContentRow ref={r} trailing="kind" />
+      ))}
+    </section>
+  )
+}

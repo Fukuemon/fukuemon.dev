@@ -1,0 +1,57 @@
+---
+import type { TocItem } from "@fukuemon/content-model";
+
+interface Props {
+  items: TocItem[];
+}
+const { items } = Astro.props;
+
+// 罫の長さで章の分量を示す。最長の章を 100% とした比を取る
+const max = Math.max(1, ...items.map((i) => i.weight));
+---
+
+{/* 見出しは側柱の開閉ボタンが持つ */}
+<nav class="toc" aria-label="目次">
+  {
+    items.map((i) => (
+      <a class="toc__item" href={`#${i.slug}`} data-toc-link={i.slug}>
+        <span class="toc__text">{i.text}</span>
+        <span
+          aria-hidden="true"
+          class="toc__bar"
+          style={`inline-size: ${Math.round(28 + (i.weight / max) * 100)}px`}
+        />
+      </a>
+    ))
+  }
+</nav>
+
+<script>
+  // 現在地の章を示す。IntersectionObserver だけで、依存を持たない
+  const links = document.querySelectorAll<HTMLElement>("[data-toc-link]");
+  if (links.length > 0) {
+    const bySlug = new Map<string, HTMLElement>();
+    for (const el of links) bySlug.set(el.dataset.tocLink ?? "", el);
+
+    const heads = [...bySlug.keys()]
+      .map((slug) => document.getElementById(slug))
+      .filter((el): el is HTMLElement => el !== null);
+
+    let current = "";
+    const mark = (slug: string) => {
+      if (slug === current) return;
+      bySlug.get(current)?.removeAttribute("aria-current");
+      bySlug.get(slug)?.setAttribute("aria-current", "true");
+      current = slug;
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (hit) mark(hit.target.id);
+      },
+      { rootMargin: "-15% 0px -70% 0px" },
+    );
+    for (const h of heads) io.observe(h);
+  }
+</script>
