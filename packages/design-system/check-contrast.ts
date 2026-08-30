@@ -33,20 +33,24 @@ export function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** tokens.css からブロックごとにカスタムプロパティを読む */
+/**
+ * `:root` の `light-dark(明, 暗)` を明暗 2 つの表に開く。
+ * ブラウザが読むのと同じ 1 箇所を読むので、明暗で値がずれることがない。
+ */
 function readTokens(): { light: Map<string, string>; dark: Map<string, string> } {
   const css = readFileSync(here("./styles/tokens.css"), "utf8");
-  const pick = (start: string) => {
-    const i = css.indexOf(start);
-    if (i < 0) throw new Error(`tokens.css に ${start} が無い`);
-    const body = css.slice(i, css.indexOf("\n}", i));
-    const map = new Map<string, string>();
-    for (const m of body.matchAll(/(--[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{6})/g)) {
-      map.set(m[1] as string, (m[2] as string).toLowerCase());
-    }
-    return map;
-  };
-  return { light: pick(":root {"), dark: pick('[data-theme="dark"] {') };
+  const i = css.indexOf(":root {");
+  if (i < 0) throw new Error("tokens.css に :root が無い");
+  const body = css.slice(i, css.indexOf("\n}", i));
+  const light = new Map<string, string>();
+  const dark = new Map<string, string>();
+  const pair = /(--[a-z0-9-]+)\s*:\s*light-dark\(\s*(#[0-9a-fA-F]{6})\s*,\s*(#[0-9a-fA-F]{6})\s*\)/g;
+  for (const m of body.matchAll(pair)) {
+    light.set(m[1] as string, (m[2] as string).toLowerCase());
+    dark.set(m[1] as string, (m[3] as string).toLowerCase());
+  }
+  if (light.size === 0) throw new Error("tokens.css から light-dark() を 1 つも読めなかった");
+  return { light, dark };
 }
 
 const CODE_KEYS = ["plain", "key", "ident", "lit", "com"] as const;
@@ -99,10 +103,13 @@ export function checkContrast(): string[] {
   return errors;
 }
 
-const errors = checkContrast();
-if (errors.length > 0) {
-  console.error("配色の検査に失敗しました:");
-  for (const e of errors) console.error(`  ${e}`);
-  process.exit(1);
+/** import しただけで終了しないよう、直接起動したときだけ走らせる */
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const errors = checkContrast();
+  if (errors.length > 0) {
+    console.error("配色の検査に失敗しました:");
+    for (const e of errors) console.error(`  ${e}`);
+    process.exit(1);
+  }
+  console.log("配色の検査を通過しました");
 }
-console.log("配色の検査を通過しました");

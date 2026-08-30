@@ -20,6 +20,8 @@ body {
 a { color: var(--fg); text-decoration: none; }
 /* 本文中のリンクは色だけで区別しない。行の一覧やパンくずには掛けない */
 .prose :is(p, li, td) a { text-decoration: underline; text-underline-offset: .2em; text-decoration-thickness: 1px; text-decoration-color: var(--link); }
+/* 外部リンクは罫の色を変える。内部リンクは相対パスなので、絶対 URL だけが外を指す */
+.prose :is(p, li, td) a[href^="http"] { text-decoration-color: var(--link-ext); }
 .prose :is(p, li, td) a:visited { text-decoration-color: var(--rule-strong); }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
@@ -133,7 +135,13 @@ h3 { font-size: 1.05rem; line-height: 1.30; font-weight: 600; margin: 0; }
   /* 下端で粒を消す。継ぎ目を隠す */
   mask-image: linear-gradient(to bottom, #000 0 78%, transparent 100%);
 }
+/* 暗い地では粒を乗算でなく加算で置く。
+   `mix-blend-mode` は色ではないので `light-dark()` で書けない。
+   明暗を分ける唯一の規則なので、選択子を 2 本並べる */
 [data-theme="dark"] .wood-grain { mix-blend-mode: screen; opacity: .28; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .wood-grain { mix-blend-mode: screen; opacity: .28; }
+}
 .wood-veil { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(96deg, var(--veil-1) 0 26%, var(--veil-0) 64%); }
 .wood-band > .wood-fg { position: relative; }
