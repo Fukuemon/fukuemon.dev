@@ -26,8 +26,8 @@ const title = current === "all" ? ALL_KIND.title : KIND_LABEL[current];
 
 <SiteLayout title={`${title} — fukuemon.dev`} description={lead} current="posts">
   <div class="page">
-    <div class="section-lead">
-      <p class="prose">{lead}</p>
+    <div class="flex flex-wrap justify-between items-baseline gap-x-intra-3 gap-y-intra-1 pb-intra-2">
+      <p class="prose m-0 text-fg-2 text-[0.95rem]">{lead}</p>
       <SiteSearch />
     </div>
 
@@ -35,5 +35,5 @@ const title = current === "all" ? ALL_KIND.title : KIND_LABEL[current];
     <ContentTable items={items} showKind={showKind} />
   </div>
 
-  <div class="tail"></div>
+  <div class="h-inter-3"></div>
 </SiteLayout>

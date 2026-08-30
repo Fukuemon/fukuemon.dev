@@ -9,7 +9,7 @@ const items = await listPlaygrounds();
 <SiteLayout title="playground — fukuemon.dev" description="手順に縛られず動かす場所。">
   <section class="g-rail kind">
     <Tate as="h2" class="tate-head" text="遊び場" />
-    <div class="section-link">
+    <div class="flex justify-end items-baseline pb-intra-1">
       <span class="mono meta">{items.length} 本</span>
     </div>
     <div>
@@ -30,5 +30,5 @@ const items = await listPlaygrounds();
       </div>
     </div>
   </section>
-  <div class="tail"></div>
+  <div class="h-inter-3"></div>
 </SiteLayout>

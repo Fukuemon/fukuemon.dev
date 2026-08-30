@@ -1,73 +1,5 @@
 /* このサイトの部品。トークンと版面は @fukuemon/design-system が持つ */
 @layer components {
-  /* ---- 面 ---- */
-  .band {
-    padding-block: var(--spacing-inter-2);
-    padding-inline: var(--gutter);
-    border-block: 1px solid var(--color-rule);
-  }
-  .tail {
-    block-size: var(--spacing-inter-3);
-  }
-
-  /* ---- 表紙 ---- */
-
-  /* ---- 節の頭。左に見出し、右に導線 ---- */
-  .section-link {
-    display: flex;
-    justify-content: flex-end;
-    align-items: baseline;
-    padding-block-end: var(--spacing-intra-1);
-  }
-  .section-lead {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--spacing-intra-1) var(--spacing-intra-3);
-    padding-block-end: var(--spacing-intra-2);
-  }
-  .section-lead > p {
-    margin: 0;
-    color: var(--color-fg-2);
-    font-size: 0.95rem;
-  }
-
-  /* ---- 行の一覧 ---- */
-  .row {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-intra-4);
-    min-block-size: 44px;
-  }
-  .row__date {
-    flex: 0 0 92px;
-  }
-  .row__title {
-    flex-grow: 1;
-    min-inline-size: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* ---- 本文 ---- */
-  /* 版面は .labmain が持つ */
-  .doc { inline-size: 100%; }
-  .doc__crumb {
-    display: flex;
-    gap: var(--spacing-intra-2);
-    align-items: baseline;
-  }
-  .doc__title {
-    margin-block: var(--spacing-intra-3);
-  }
-  .doc__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-intra-3);
-    margin-block: var(--spacing-intra-2) var(--spacing-intra-3);
-  }
 
   /* ---- 目次 ---- */
   .toc__item {
@@ -168,13 +100,6 @@
   .lab-body { inline-size: 100%; }
 
   /* ---- 関連 ---- */
-  .related {
-    margin-block-start: var(--spacing-inter-3);
-    padding-block: var(--spacing-intra-3) var(--spacing-inter-2);
-  }
-  .related__label {
-    margin-block-end: var(--spacing-intra-2);
-  }
 
   /* ---- footer ---- */
   .foot {
@@ -211,8 +136,6 @@
 }
 
 @layer components {
-  .section-x { margin-inline: var(--gutter); }
-  .band-head { border-inline-end-color: var(--color-rule); color: var(--color-fg); }
   @media (min-width: 721px) {
     .g-rail > .tate-head { grid-row: 1 / span 2; }
   }
@@ -281,7 +204,7 @@
   /* 実行パネルは本文より広く出す。EXPLAIN の右端が落ちる。
      playground は 2 列なので、はみ出させない */
   @media (min-width: 1200px) {
-    .lab-body .runner, .doc .runner { margin-inline-end: calc(-1 * var(--spacing-inter-3)); }
+    .lab-body .runner, .doc-body .runner { margin-inline-end: calc(-1 * var(--spacing-inter-3)); }
   }
   .runner__table th { font-weight: 600; color: var(--color-ink-2); }
 }
@@ -289,12 +212,6 @@
 /* about の見開き。左の面が固定、右だけ送る */
 @layer components {
   .wood-band--fill { position: absolute; inset: 0; }
-}
-
-@layer components {
-  /* 見開きの左面。挿絵は下端へ寄せる。竹は縦に伸びるので上を切ると根元だけになる */
-  /* 右面の一覧が版面の右端を超えない */
-  .spread__body .row { padding-inline-end: var(--spacing-intra-2); }
 }
 
 @layer components {

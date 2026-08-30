@@ -13,9 +13,17 @@ interface Props {
 const { ref, trailing = "tag", cap = true, index = 0 } = Astro.props;
 ---
 
-<a class:list={["row", "rule-row", cap && "rule-cap"]} href={ref.href} style={`--i:${index}`}>
-  <span class="mono meta row__date">{ymd(ref.date)}</span>
-  <span class="row__title">{ref.title}</span>
+<a
+  class:list={[
+    "flex items-center gap-intra-4 min-h-[44px]",
+    "rule-row",
+    cap && "rule-cap",
+  ]}
+  href={ref.href}
+  style={`--i:${index}`}
+>
+  <span class="mono meta shrink-0 grow-0 basis-[92px]">{ymd(ref.date)}</span>
+  <span class="grow min-w-0 truncate">{ref.title}</span>
   {
     trailing === "kind" ? (
       <span class:list={["meta", kindClass(ref.type)]}>{KIND_LABEL[ref.type]}</span>

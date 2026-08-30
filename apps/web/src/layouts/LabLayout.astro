@@ -39,7 +39,7 @@ const related = await getRelated(ref.contentId);
 
     <div class="labmain">
       <header class="labhead">
-        <p class="mono meta doc__crumb">
+        <p class="mono meta flex gap-intra-2 items-baseline">
           <a href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
           <span aria-hidden="true">/</span>
           <span>{ref.tags[0]}</span>
