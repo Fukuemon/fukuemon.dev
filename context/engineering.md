@@ -2,17 +2,7 @@
 type: context
 title: Engineering Conventions
 description: 共有設定の境界、root task の構成、repository 全体の品質ゲートと除外方針、コメントの書き分け。
-keywords:
-  [
-    shared config,
-    root task,
-    quality gate,
-    Lefthook,
-    knip,
-    react-doctor,
-    コメント,
-    Why not,
-  ]
+keywords: [shared config, root task, quality gate, Lefthook, knip, react-doctor, コメント, Why not]
 governs:
   - package.json
   - lefthook.yml
@@ -53,11 +43,39 @@ toolchain 一覧は [toolchain.md](toolchain.md)、プロジェクト固有コ�
 
 書かないもの: コードを言い換えただけの行、型を繰り返すだけの doc、変更の経緯や issue 番号 (commit と ADR が持つ)。
 
-### 言語
+### 言語と語彙
 
-- コード内コメント / ドキュメント / commit / PR は日本語で書く。
+- ドキュメント / commit / PR は日本語で書く。
 - **ユーザーに見える文字列リテラルは変えない。** 観測可能な契約であり、テストが固定している。
 - 識別子・型名・API 名は原語のまま使う。
+
+**比喩や省略に寄った言い回しを使わない。**
+短い比喩は書き手には密度が高く見えるが、読み手には辞書が要る。
+初見で意味を推測できない語は、圧縮ではなく欠落になる。
+
+| 使わない | 使う                              |
+| -------- | --------------------------------- |
+| 畳む     | まとめる / 折りたたむ             |
+| 落とす   | 削除する / 隠す / 変換する        |
+| 潰す     | 上書きする / 読めなくなる         |
+| 引く     | 参照する / 探す                   |
+| 走らせる | 実行する                          |
+| 寄せる   | 集約する                          |
+| 面       | セクション / ページ / 画面 / 背景 |
+| 意匠     | 見た目 / スタイル                 |
+| 土台     | 基盤 / 仕組み                     |
+
+**組版の専門語は残す。** 版面・罫・縦組み・縦中横は、
+design system の文脈では平易な言い換えより正確である。
+`.rulesync/` の contract が定義して使っている語 (正本・phase gate など) も、
+定義が共有されているので残す。
+
+### PR 本文
+
+見出しは `workflow-git` skill の `assets/pr-body-template.md` をそのまま使う。
+必須は `概要` / `変更内容` / `検証` で、訳し替えも言い換えもしない。
+UI やデザインに触れる PR では `Design Guard` を付け、
+**満たしていない項目はチェックせず、満たしていない理由を書く。**
 
 ### 参照の張り方
 
@@ -111,14 +129,14 @@ CI で回す。
 
 ## Repository Quality Gate
 
-| 検査                   | 正本 config                                                   | 実行点          |
-| ---------------------- | ------------------------------------------------------------- | --------------- |
+| 検査                   | 正本 config                                                                     | 実行点          |
+| ---------------------- | ------------------------------------------------------------------------------- | --------------- |
 | 依存境界 (規約 1)      | ルートの `.oxlintrc.json` の `no-restricted-imports` (`overrides` で方向を固定) | pre-commit / CI |
-| 依存境界 (規約 2)      | 各 package の `dependencies` 宣言                             | `knip` (CI)     |
-| dead code / 未使用依存 | `knip.json`                                                   | CI              |
-| コード重複             | `similarity-ts` の既定                                        | CI              |
-| 型                     | `astro check` + tsgo                                          | pre-commit / CI |
-| React 診断             | `doctor.config.*`                                             | CI              |
+| 依存境界 (規約 2)      | 各 package の `dependencies` 宣言                                               | `knip` (CI)     |
+| dead code / 未使用依存 | `knip.json`                                                                     | CI              |
+| コード重複             | `similarity-ts` の既定                                                          | CI              |
+| 型                     | `astro check` + tsgo                                                            | pre-commit / CI |
+| React 診断             | `doctor.config.*`                                                               | CI              |
 
 ### 除外方針
 

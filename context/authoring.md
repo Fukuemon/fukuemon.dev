@@ -52,10 +52,10 @@ related: [rdbms-query-execution] # 相手の contentId。片方向でよい
 手を動かす場所を `interactive.level` で選ぶ。
 **level がページに置くものを決める。**
 
-| `level`    | 手を動かす場所     | ページに出るもの   | 拡張子 |
-| ---------- | ------------------ | ------------------ | ------ |
-| `embedded` | ページの中 (WASM)  | 実行パネル         | `.mdx` |
-| `local`    | 読者の端末         | clone と起動の手順 | `.md`  |
+| `level`    | 手を動かす場所    | ページに出るもの   | 拡張子 |
+| ---------- | ----------------- | ------------------ | ------ |
+| `embedded` | ページの中 (WASM) | 実行パネル         | `.mdx` |
+| `local`    | 読者の端末        | clone と起動の手順 | `.md`  |
 
 `sandbox` (WebContainers / WebVM) は [ADR-0006](../adr/0006-interactive-content-levels.md) で設計だけ決めてある。
 **schema は受け付けない。** 実装するときに足す。
@@ -274,7 +274,12 @@ Vite は `new URL(..., import.meta.url)` を静的に解決するため、パス
 
 ```ts
 const RUNNERS: Record<string, Runner> = {
-  sql: { name: "SqlRunner", path: "~/components/lab/SqlRunner", engine: "Postgres", kind: "pglite" },
+  sql: {
+    name: "SqlRunner",
+    path: "~/components/lab/SqlRunner",
+    engine: "Postgres",
+    kind: "pglite",
+  },
   py: { name: "PyRunner", path: "~/components/lab/PyRunner", engine: "Python", kind: "pyodide" },
 };
 ```

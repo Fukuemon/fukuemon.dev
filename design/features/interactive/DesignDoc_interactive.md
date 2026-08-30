@@ -3,17 +3,7 @@ type: feature-design
 title: Feature 設計 — ハンズオンと Interactive
 description: ハンズオンの形式 (手順分割・進捗・本文中の実行)、手を動かす場所の 4 分類、cross-origin isolation のパス分離を定める。
 status: 実装済み
-keywords:
-  [
-    ハンズオン,
-    Codelab,
-    手順,
-    進捗,
-    PGlite,
-    cross-origin isolation,
-    COEP,
-    playground,
-  ]
+keywords: [ハンズオン, Codelab, 手順, 進捗, PGlite, cross-origin isolation, COEP, playground]
 governs:
   - apps/web/src/content/labs/
   - apps/web/src/components/lab/
@@ -64,12 +54,12 @@ verified_commit: 84b6c77
 
 **種別は 1 つである。** 読みながら手を動かす記事と、手順を踏破する教材を分けない。
 
-| 要素     | 扱い                                                       |
-| -------- | ---------------------------------------------------------- |
-| 形       | 1 画面 1 手順。全手順を 1 文書に入れ、CSS で 1 枚だけ出す  |
-| 進捗     | 持つ。`localStorage` に手順単位で残す                      |
-| 実行     | 本文中でコードが動く。題材が許さない場合は読者の端末で動かす |
-| layout   | `LabLayout`。`SiteLayout` にサイドバーと 1 画面 1 手順の面を足す |
+| 要素   | 扱い                                                             |
+| ------ | ---------------------------------------------------------------- |
+| 形     | 1 画面 1 手順。全手順を 1 文書に入れ、CSS で 1 枚だけ出す        |
+| 進捗   | 持つ。`localStorage` に手順単位で残す                            |
+| 実行   | 本文中でコードが動く。題材が許さない場合は読者の端末で動かす     |
+| layout | `LabLayout`。`SiteLayout` にサイドバーと 1 画面 1 手順の面を足す |
 
 分けない理由は 2 つある。
 種別を増やすと、著者が書く前に「これはどちらか」を判断させられる。
@@ -88,15 +78,15 @@ Google Codelabs の `claat` は Markdown / Google Docs から静的 HTML を生�
 
 ### Codelab 形式の実体
 
-| 要素                                     | 実装                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
-| 手順の分割                               | 本文の `h2` を手順の境界とし、ビルド時に見出しを走査して導出する         |
-| 手順ごとの所要時間                       | 見出し直後の `Duration: MM:SS` 行                                        |
-| 手順一覧 + 進捗バー + 現在地マーカー   | ハンズオン専用 layout。手順は 1 ページに通しで並べる                     |
-| 完了状態の永続化                         | `localStorage`                                                           |
-| 前後の移動                               | 本文の下の前後ボタン。端では `aria-disabled`                             |
-| いま DB に何が入っているか               | サイドバーの一覧。行を押すと `<dialog>` に先頭 20 行を出す                     |
-| テーブル同士の関係                       | サイドバーの「テーブル構成」。`<dialog>` に ER 図を出す                        |
+| 要素                                 | 実装                                                             |
+| ------------------------------------ | ---------------------------------------------------------------- |
+| 手順の分割                           | 本文の `h2` を手順の境界とし、ビルド時に見出しを走査して導出する |
+| 手順ごとの所要時間                   | 見出し直後の `Duration: MM:SS` 行                                |
+| 手順一覧 + 進捗バー + 現在地マーカー | ハンズオン専用 layout。手順は 1 ページに通しで並べる             |
+| 完了状態の永続化                     | `localStorage`                                                   |
+| 前後の移動                           | 本文の下の前後ボタン。端では `aria-disabled`                     |
+| いま DB に何が入っているか           | サイドバーの一覧。行を押すと `<dialog>` に先頭 20 行を出す       |
+| テーブル同士の関係                   | サイドバーの「テーブル構成」。`<dialog>` に ER 図を出す          |
 
 **手順数を frontmatter に持たない。** 本文と手順数が乖離する経路をなくすためである ([content-model](../content-model/DesignDoc_content-model.md) の `handsOn` 拡張)。
 
@@ -138,11 +128,11 @@ frontmatter の `interactive.level` が 1 対 1 で対応する。
 
 ページに置くものが `level` ごとに変わる。
 
-| `level`    | 本文に出るもの     | サイドバー                       | 配る JavaScript (gzip)     |
-| ---------- | ------------------ | -------------------------- | -------------------------- |
-| `embedded` | 実行パネル         | 手順 + いまのテーブル      | 61.6 KiB (React + 実行環境) |
-| `sandbox`  | iframe             | 手順                       | 未実装                     |
-| `local`    | clone と起動の手順 | 手順                       | **1.5 KiB** (切り替えのみ) |
+| `level`    | 本文に出るもの     | サイドバー            | 配る JavaScript (gzip)      |
+| ---------- | ------------------ | --------------------- | --------------------------- |
+| `embedded` | 実行パネル         | 手順 + いまのテーブル | 61.6 KiB (React + 実行環境) |
+| `sandbox`  | iframe             | 手順                  | 未実装                      |
+| `local`    | clone と起動の手順 | 手順                  | **1.5 KiB** (切り替えのみ)  |
 
 2026-08-30 実測。
 `embedded` の 61.6 KiB に WASM は含まない。
@@ -198,15 +188,15 @@ flowchart TD
 
 ### ランタイムの候補 (2026-08-26 時点の実測)
 
-| ランタイム                    | version | license                                                    | isolation                     | `level`    |
-| ----------------------------- | ---------- | ---------------------------------------------------------- | ----------------------------- | ---------- |
-| `@electric-sql/pglite`        | 0.5.8   | Apache-2.0                                                 | **不要** (実測)               | `embedded` |
-| `@sqlite.org/sqlite-wasm`     | 3.53.0  | Apache-2.0                                                 | VFS 実装による (未確認)       | `embedded` |
-| `@duckdb/duckdb-wasm`         | 1.33.1  | MIT                                                        | 単一スレッド版は不要 (未確認) | `embedded` |
-| `pyodide`                     | 314.0.6 | MPL-2.0                                                    | 不要                          | `embedded` |
+| ランタイム                    | version | license                                                    | isolation                     | `level`                |
+| ----------------------------- | ------- | ---------------------------------------------------------- | ----------------------------- | ---------------------- |
+| `@electric-sql/pglite`        | 0.5.8   | Apache-2.0                                                 | **不要** (実測)               | `embedded`             |
+| `@sqlite.org/sqlite-wasm`     | 3.53.0  | Apache-2.0                                                 | VFS 実装による (未確認)       | `embedded`             |
+| `@duckdb/duckdb-wasm`         | 1.33.1  | MIT                                                        | 単一スレッド版は不要 (未確認) | `embedded`             |
+| `pyodide`                     | 314.0.6 | MPL-2.0                                                    | 不要                          | `embedded`             |
 | `codemirror`                  | 6.0.2   | MIT                                                        | 不要                          | `embedded` / `sandbox` |
-| `@codesandbox/sandpack-react` | 2.20.0  | Apache-2.0                                                 | バンドラのみなら不要 (未確認) | `sandbox`  |
-| `@webcontainer/api`           | 1.6.4   | MIT (パッケージ)。**営利目的の本番利用には商用ライセンス** | **必要**                      | `sandbox`  |
+| `@codesandbox/sandpack-react` | 2.20.0  | Apache-2.0                                                 | バンドラのみなら不要 (未確認) | `sandbox`              |
+| `@webcontainer/api`           | 1.6.4   | MIT (パッケージ)。**営利目的の本番利用には商用ライセンス** | **必要**                      | `sandbox`              |
 
 **DB 系のハンズオンは PGlite を既定とする。**
 
@@ -251,7 +241,7 @@ const interactive = z.discriminatedUnion("level", [
 
 ### サイドバー
 
-| ページ     | サイドバーの中身                  |
+| ページ     | サイドバーの中身            |
 | ---------- | --------------------------- |
 | ハンズオン | 手順の一覧 + いまのテーブル |
 | playground | 試す + いまのテーブル       |
@@ -278,10 +268,10 @@ playground の「試す」はサイドバーに置く。
 
 窓は 2 種類ある。
 
-| 窓           | 中身                                       |
-| ------------ | ------------------------------------------ |
-| テーブルの窓 | 列の定義と、先頭 20 行                     |
-| テーブル構成 | ER 図。テーブルの箱と外部キーの向き        |
+| 窓           | 中身                                |
+| ------------ | ----------------------------------- |
+| テーブルの窓 | 列の定義と、先頭 20 行              |
+| テーブル構成 | ER 図。テーブルの箱と外部キーの向き |
 
 **開いたままの窓は、実行のたびに中身を取得し直す。**
 取得し直しはカタログへ問い合わせ直す。
@@ -305,7 +295,7 @@ value: { completedSteps: number[], lastStep: number }
 
 ### コンポーネント構成 (C4 L3)
 
-```mermaid
+````mermaid
 flowchart TD
     md["labs/*.md(x) (h2 = 手順)"] --> loader["Content Layer loader"]
     loader --> remark["remark-lab<br/>h2 を数え、```lang run を JSX へ"]
@@ -330,7 +320,7 @@ flowchart TD
     peek --> er["ErDiagram.tsx"]
     body -.->|"sandbox"| frame["iframe → /playground/&lt;id&gt;"]
     layout -.->|"local"| setup["LocalSetup.astro<br/>clone / 前提条件 / 起動"]
-```
+````
 
 React Island になるのは**実行パネル・「いまのテーブル」・「試す」だけ**である。
 手順の一覧・画面の切り替え・サイドバーの開閉は `controller.ts` が属性の付け替えで行う。
@@ -341,10 +331,10 @@ React Island になるのは**実行パネル・「いまのテーブル」・�
 実行パネルとサイドバーは別の React root なので、props でも context でも繋がらない。
 唯一の共通の足場が `document` なので、CustomEvent を通す。
 
-| 事象         | 送り手       | 受け手       | 用途                       |
-| ------------ | ------------ | ------------ | -------------------------- |
-| `lab:ran`    | `useRunner`  | `DbPeek`     | DB を取得し直す              |
-| `lab:preset` | `Presets`    | `Playground` | 入力欄へ SQL を入れる      |
+| 事象         | 送り手      | 受け手       | 用途                  |
+| ------------ | ----------- | ------------ | --------------------- |
+| `lab:ran`    | `useRunner` | `DbPeek`     | DB を取得し直す       |
+| `lab:preset` | `Presets`   | `Playground` | 入力欄へ SQL を入れる |
 
 **購読は `bus.ts` を通す。**
 `addEventListener` を component に置くと、事象名と `contentId` の照合が使う側の数だけ重複する。
@@ -362,7 +352,12 @@ hast まで来れば拡張子の違いが消えて 1 通りで済む。
 
 ```ts
 const RUNNERS: Record<string, Runner> = {
-  sql: { name: "SqlRunner", path: "~/components/lab/SqlRunner", engine: "Postgres", kind: "pglite" },
+  sql: {
+    name: "SqlRunner",
+    path: "~/components/lab/SqlRunner",
+    engine: "Postgres",
+    kind: "pglite",
+  },
 };
 ```
 
@@ -382,12 +377,12 @@ engine を足す手順は 3 つである。
 **言語の記事はこの形を採る。**
 [codapi](https://codapi.org/try/postgres/) と同じ「読む → 実行する → 書き換える」を、記事の中で成立させる。
 
-| 言語   | 実行環境                   | 状態                    |
-| ------ | -------------------------- | ----------------------- |
-| SQL    | PGlite                     | 済                      |
-| Python | Pyodide                    | 未。WASM で完結する     |
-| TS/JS  | Worker で直接              | 未。WASM も要らない     |
-| Go     | TinyGo / Go の wasm target | 未。実行可能かは未確認  |
+| 言語   | 実行環境                   | 状態                   |
+| ------ | -------------------------- | ---------------------- |
+| SQL    | PGlite                     | 済                     |
+| Python | Pyodide                    | 未。WASM で完結する    |
+| TS/JS  | Worker で直接              | 未。WASM も要らない    |
+| Go     | TinyGo / Go の wasm target | 未。実行可能かは未確認 |
 
 engine を足す手順は「実行環境を足す」と同じである。
 記事側の書き方は変わらない。
@@ -439,13 +434,13 @@ engine を足す手順は「実行環境を足す」と同じである。
 
 ## 未決事項
 
-| #   | 論点                                                                         | 期限                  | 状態                                                                    |
-| --- | ---------------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------- |
-| 1   | ~~`@sqlite.org/sqlite-wasm` の OPFS VFS が cross-origin isolation を要求するか~~ | — | **解決。** `"opfs"` VFS は `SharedArrayBuffer` と `Atomics` を要求するため COOP + COEP が要る。`opfs-sahpool` とメモリは不要 |
-| 2   | WebContainers の商用ライセンス条件に本サイトが該当するか                     | `sandbox` を検討する時 | 未決。該当するなら Sandpack (Apache-2.0) を採る                         |
-| 3   | Sandpack の Node ランタイムが isolation を要求するか                         | `sandbox` を検討する時 | 未確認。バンドラのみなら不要                                            |
-| 4   | ~~`Duration:` 行を本文に書くか frontmatter に書くか~~                        | —                     | **解決。** 本文の見出し直後に書き、`remark-lab` が本文から除く          |
-| 5   | `sandbox` の結果をどう出すか                                                 | `sandbox` を実装する時 | 未決。端末の出力とプレビューの URL は表の形に合わないため、`SqlRunner` の系統を再利用しない |
+| #   | 論点                                                                             | 期限                   | 状態                                                                                                                         |
+| --- | -------------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ~~`@sqlite.org/sqlite-wasm` の OPFS VFS が cross-origin isolation を要求するか~~ | —                      | **解決。** `"opfs"` VFS は `SharedArrayBuffer` と `Atomics` を要求するため COOP + COEP が要る。`opfs-sahpool` とメモリは不要 |
+| 2   | WebContainers の商用ライセンス条件に本サイトが該当するか                         | `sandbox` を検討する時 | 未決。該当するなら Sandpack (Apache-2.0) を採る                                                                              |
+| 3   | Sandpack の Node ランタイムが isolation を要求するか                             | `sandbox` を検討する時 | 未確認。バンドラのみなら不要                                                                                                 |
+| 4   | ~~`Duration:` 行を本文に書くか frontmatter に書くか~~                            | —                      | **解決。** 本文の見出し直後に書き、`remark-lab` が本文から除く                                                               |
+| 5   | `sandbox` の結果をどう出すか                                                     | `sandbox` を実装する時 | 未決。端末の出力とプレビューの URL は表の形に合わないため、`SqlRunner` の系統を再利用しない                                  |
 
 ## 関連ドキュメント
 

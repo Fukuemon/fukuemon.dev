@@ -53,11 +53,11 @@ Oxlint の `no-restricted-imports` で機械検査する。
 
 ### この 5 点が保証すること
 
-| 変更                                | 変更範囲                                        |
-| ----------------------------------- | ----------------------------------------------- |
-| 本文の描画レイヤを差し替え          | `layouts/DocLayout.astro` のみ                 |
-| Markdown から別のデータソースへ移行 | `content.config.ts` の loader                   |
-| Astro のメジャーアップグレード      | `apps/web/src/lib/content/` のアダプタ          |
+| 変更                                | 変更範囲                               |
+| ----------------------------------- | -------------------------------------- |
+| 本文の描画レイヤを差し替え          | `layouts/DocLayout.astro` のみ         |
+| Markdown から別のデータソースへ移行 | `content.config.ts` の loader          |
+| Astro のメジャーアップグレード      | `apps/web/src/lib/content/` のアダプタ |
 
 ## 代替案
 

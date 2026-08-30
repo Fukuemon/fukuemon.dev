@@ -2,16 +2,7 @@
 type: context
 title: Codebase Architecture
 description: package 境界、依存規約、ディレクトリ構成、URL 規約。どこに何を置き、どこから何を import してよいかを定める。
-keywords:
-  [
-    package boundary,
-    依存規約,
-    monorepo,
-    pnpm workspace,
-    astro:content,
-    URL 規約,
-    contentId,
-  ]
+keywords: [package boundary, 依存規約, monorepo, pnpm workspace, astro:content, URL 規約, contentId]
 governs:
   - pnpm-workspace.yaml
   - apps/web/src/
@@ -60,14 +51,14 @@ fukuemon.dev/
 **共有度で分けない。** 共有度は増えるほど片側に寄り、一方が残余のバケツになる。
 軸は「そのディレクトリが答える問い」とする。
 
-| ディレクトリ  | 答える問い                     | 増え方                    |
-| ------------- | ------------------------------ | ------------------------- |
-| `pages/`      | この URL は何か                | 画面が増えたら 1 ファイル |
-| `layouts/`    | このページの外枠は何か         | セクションが増えたときだけ |
-| `features/`   | このセクションは何をする所か   | セクションが増えたときだけ |
-| `components/` | セクションをまたぐ素の部品は何か | ほぼ増えない            |
-| `data/`       | 書いている人の情報はどこにあるか | 増えない                |
-| `lib/`        | このデータはどこから来るか     | ほぼ増えない              |
+| ディレクトリ  | 答える問い                       | 増え方                     |
+| ------------- | -------------------------------- | -------------------------- |
+| `pages/`      | この URL は何か                  | 画面が増えたら 1 ファイル  |
+| `layouts/`    | このページの外枠は何か           | セクションが増えたときだけ |
+| `features/`   | このセクションは何をする所か     | セクションが増えたときだけ |
+| `components/` | セクションをまたぐ素の部品は何か | ほぼ増えない               |
+| `data/`       | 書いている人の情報はどこにあるか | 増えない                   |
+| `lib/`        | このデータはどこから来るか       | ほぼ増えない               |
 
 **`components/` を最初から分類しない。割るのは増えてからにする。**
 45 ファイルになった時点で割った。分類のコストが検索のコストを下回るのは、
@@ -75,13 +66,13 @@ fukuemon.dev/
 
 `features/` の中も同じ軸で割る。
 
-| feature      | 中身                                       |
-| ------------ | ------------------------------------------ |
-| `lab/`       | ハンズオンと playground の実行まわり       |
-| `listing/`   | 一覧の行・表・タブ・関連                   |
-| `doc/`       | 本文のサイドバー。目次とほかの記事               |
-| `about/`     | トップの表紙                               |
-| `search/`    | 本文の検索                                 |
+| feature    | 中身                                 |
+| ---------- | ------------------------------------ |
+| `lab/`     | ハンズオンと playground の実行まわり |
+| `listing/` | 一覧の行・表・タブ・関連             |
+| `doc/`     | 本文のサイドバー。目次とほかの記事   |
+| `about/`   | トップの表紙                         |
+| `search/`  | 本文の検索                           |
 
 `lab/` はさらに 6 つの問いで割る。
 
@@ -107,13 +98,13 @@ Astro の公式ドキュメントも、UI framework のコンポーネントを 
 
 `layouts/` の中身は次のとおり。
 
-| layout          | 用途                                                     |
-| --------------- | -------------------------------------------------------- |
-| `SiteLayout`    | ヘッダとフッタを持つ。トップ / 一覧 / playground         |
-| `DocShell`      | 本文の外枠 (パンくず・題・meta・関連)。記事              |
-| `ArticleLayout` | `SiteLayout` + サイドバー + `DocShell`                          |
-| `LabLayout`     | `SiteLayout` + サイドバー + 1 画面 1 手順の面                   |
-| `PostsLayout`   | `SiteLayout` + 一覧の外枠                                 |
+| layout          | 用途                                             |
+| --------------- | ------------------------------------------------ |
+| `SiteLayout`    | ヘッダとフッタを持つ。トップ / 一覧 / playground |
+| `DocShell`      | 本文の外枠 (パンくず・題・meta・関連)。記事      |
+| `ArticleLayout` | `SiteLayout` + サイドバー + `DocShell`           |
+| `LabLayout`     | `SiteLayout` + サイドバー + 1 画面 1 手順の面    |
+| `PostsLayout`   | `SiteLayout` + 一覧の外枠                        |
 
 **記事とハンズオンで layout を分ける。** サイドバーの中身 (目次 / 手順) と本文の出し方 (通し / 1 画面 1 手順) が違う。
 1 つにまとめると `if` が増える。
@@ -143,14 +134,13 @@ React と Vue を同じページに混ぜると両方を配ることになる。
 - `ContentTable` / `KindTabs` / `LabStepList` / `ArtBand`
 - 状態の接尾辞を先頭へ置かない。`ActiveTab` ではなく `TabActive` でもなく、状態は props で表す
 
-
-| package                   | 責務                                                                 | 依存してよい先                 |
-| ------------------------- | -------------------------------------------------------------------- | ------------------------------ |
-| `@fukuemon/config`        | tsconfig の共有設定。oxlint と vitest はルートで 1 つ持つ            | なし                           |
-| `@fukuemon/content-model` | Content Model の zod schema、`ContentRef` 型、関係グラフの構築と検証 | `zod` のみ                     |
-| `@fukuemon/design-system` | Design Tokens (素の CSS)、版面のユーティリティ、挿絵、コードの配色   | なし                           |
-| `apps/web`                | Astro アプリ。全画面の描画                                           | 上記 3 package                 |
-| `infra/`                  | Terraform                                                            | なし                           |
+| package                   | 責務                                                                 | 依存してよい先 |
+| ------------------------- | -------------------------------------------------------------------- | -------------- |
+| `@fukuemon/config`        | tsconfig の共有設定。oxlint と vitest はルートで 1 つ持つ            | なし           |
+| `@fukuemon/content-model` | Content Model の zod schema、`ContentRef` 型、関係グラフの構築と検証 | `zod` のみ     |
+| `@fukuemon/design-system` | Design Tokens (素の CSS)、版面のユーティリティ、挿絵、コードの配色   | なし           |
+| `apps/web`                | Astro アプリ。全画面の描画                                           | 上記 3 package |
+| `infra/`                  | Terraform                                                            | なし           |
 
 ### package を増やす条件
 
@@ -227,11 +217,11 @@ flowchart LR
 
 ### 変更の局所性
 
-| 変更                                | 変更範囲                                        |
-| ----------------------------------- | ----------------------------------------------- |
-| 本文の描画レイヤを差し替え          | `layouts/{Article,Lab}Layout.astro`             |
-| データソースの移行 (Markdown → 別)  | `content.config.ts` の loader                   |
-| Astro のメジャーアップグレード      | `apps/web/src/lib/content/` のアダプタ          |
+| 変更                               | 変更範囲                               |
+| ---------------------------------- | -------------------------------------- |
+| 本文の描画レイヤを差し替え         | `layouts/{Article,Lab}Layout.astro`    |
+| データソースの移行 (Markdown → 別) | `content.config.ts` の loader          |
+| Astro のメジャーアップグレード     | `apps/web/src/lib/content/` のアダプタ |
 
 ## Runtime Boundary
 
@@ -253,16 +243,16 @@ flowchart LR
 
 サイトは about / blog / playground の 3 つのセクションである ([ADR-0009](../adr/0009-site-sections-and-playground-collection.md))。
 
-| URL                           | 実装                                           |
-| ----------------------------- | ---------------------------------------------- |
-| `/`                           | `src/pages/index.astro` (about をまとめる)         |
-| `/blog`                       | `src/pages/blog/index.astro`                   |
-| `/blog/articles` `/blog/labs` | `src/pages/blog/[kind].astro`                  |
-| `/articles/<path>`            | `src/pages/articles/[...slug].astro`           |
-| `/labs/<path>`                | `src/pages/labs/[...slug].astro`               |
-| `/playground`                 | `src/pages/playground/index.astro`             |
+| URL                           | 実装                                                              |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `/`                           | `src/pages/index.astro` (about をまとめる)                        |
+| `/blog`                       | `src/pages/blog/index.astro`                                      |
+| `/blog/articles` `/blog/labs` | `src/pages/blog/[kind].astro`                                     |
+| `/articles/<path>`            | `src/pages/articles/[...slug].astro`                              |
+| `/labs/<path>`                | `src/pages/labs/[...slug].astro`                                  |
+| `/playground`                 | `src/pages/playground/index.astro`                                |
 | `/playground/<id>`            | `src/pages/playground/[...slug].astro`。isolation を予約 (未適用) |
-| `/api/*`                      | **予約**。条件が成立するまで使わない           |
+| `/api/*`                      | **予約**。条件が成立するまで使わない                              |
 
 ### 規約
 

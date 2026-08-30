@@ -2,10 +2,6 @@
   "name": "fukuemon-dev",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.27.0",
-  "engines": {
-    "node": ">=22.12.0"
-  },
   "scripts": {
     "dev": "pnpm --filter @fukuemon/web dev",
     "build": "pnpm -r --sequential run build",
@@ -36,6 +32,10 @@
     "typescript": "^5.9.0",
     "vitest": "^4.1.11"
   },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "packageManager": "pnpm@10.27.0",
   "knip": {
     "workspaces": {
       "apps/web": {
