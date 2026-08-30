@@ -5,13 +5,19 @@ interface Props {
   text: string;
   /** 版面の直接の子になる必要があるので、包む要素を足さず tag を選ばせる */
   as?: "span" | "h2" | "p";
+  /**
+   * 全体を 1 字ずつ正立させる。
+   * JLReq の原則は 90 度回転だが、4 字以上の欧文の見出しは寝たまま読ませることになる。
+   * 見出しは指で追う対象なので、こちらだけ例外にする。
+   */
+  upright?: boolean;
   class?: string;
 }
-const { text, as: Tag = "span", class: extra } = Astro.props as Props;
+const { text, as: Tag = "span", upright = false, class: extra } = Astro.props as Props;
 ---
 
 {/* 短い欧文・数字だけを縦中横で正立させる */}
-<Tag class:list={["tate", extra]}>
+<Tag class:list={["tate", upright && "tate--upright", extra]}>
   {
     tcy(text).map((part) =>
       part.upright ? <span class="tcy">{part.text}</span> : <>{part.text}</>,

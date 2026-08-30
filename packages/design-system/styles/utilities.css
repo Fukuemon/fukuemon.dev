@@ -98,6 +98,9 @@ h3 { font-size: 1.05rem; line-height: 1.30; font-weight: 600; margin: 0; }
 }
 /* 縦中横。JLReq では縦組みの欧文は 90 度回転が原則で、短い略語だけを正立させる */
 .tcy { text-combine-upright: all; }
+/* 見出しだけの例外。1 字ずつ正立させて縦に積む。
+   字面が横に広がるので、字間で詰める */
+.tate--upright { text-orientation: upright; letter-spacing: -0.04em; }
 
 /* 縦組みの見出し。右側に 2px の罫を立てる */
 .tate-head {
