@@ -20,16 +20,12 @@
       閉じる
     </button>
   </header>
-  {/* 結果の一覧は search.ts が組む。その要素へ当てる規則だけ site.css に残す */}
   <div class="overflow-y-auto pt-intra-3">
     <p class="mono meta m-0" data-search-note>語を入れてください</p>
     <ol class="list-none m-0 p-0" data-search-list></ol>
   </div>
 </dialog>
 
-{/* Astro に bundle させない。bundle すると Vite が preload の包みを足し、
-    その script が HTML へ inline されたときに置換が漏れて実行時に落ちる。
-    索引は押されるまで読まないので、ここでは入口だけを置く */}
 <script is:inline type="module">
   window.loadPagefind = () => import("/pagefind/pagefind.js");
 </script>

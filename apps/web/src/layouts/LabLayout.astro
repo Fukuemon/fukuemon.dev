@@ -28,8 +28,6 @@ const { ref, steps, intro, live, local } = Astro.props;
 const related = await getRelated(ref.contentId);
 ---
 
-{/* 全手順を 1 文書に入れて CSS で 1 枚だけ出す。
-    別 URL に割ると手順ごとに実行環境を作り直すことになる */}
 <SiteLayout title={`${ref.title} — fukuemon.dev`} description={ref.description}>
   <div class="g-doc" data-lab data-content-id={ref.contentId} data-open="true">
     <Side id="lab" label="手順">
@@ -50,7 +48,6 @@ const related = await getRelated(ref.contentId);
 
       <article class="prose lab-body w-full" data-pagefind-body>
         {
-          /* 手順ごとに繰り返す情報ではないので「はじめに」の面に置く */
           local && (
             <div class="step" id="step--1" data-step="-1" data-title="はじめに">
               <LocalSetup {...local} />
@@ -60,7 +57,6 @@ const related = await getRelated(ref.contentId);
         <slot />
       </article>
 
-      {/* 狭い画面の下余白は、左下に固定した開閉ボタンと前後ボタンの重なりを避けるため */}
       <nav
         class="flex items-center justify-between gap-intra-3 mt-inter-2 pt-intra-3 border-t border-rule-strong max-wide:pb-[calc(var(--gutter)+3rem)]"
         aria-label="手順の移動"

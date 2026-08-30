@@ -38,12 +38,7 @@ export const DARK: CodePalette = {
 
 const scopes = (p: CodePalette) => [
   {
-    scope: [
-      "comment",
-      "punctuation.definition.comment",
-      "string.comment",
-      "meta.documentation",
-    ],
+    scope: ["comment", "punctuation.definition.comment", "string.comment", "meta.documentation"],
     settings: { foreground: p.com, fontStyle: "italic" },
   },
   {

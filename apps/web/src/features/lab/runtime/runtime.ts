@@ -42,7 +42,6 @@ class Session {
 
   #spawn(): Worker {
     const make = WORKERS[this.kind];
-    // frontmatter の runtime に対応する Worker が無いまま公開されうる
     if (!make) throw new Error(`${String(this.kind)} の実行環境はまだありません`);
     const w = make();
     w.onmessage = (e: MessageEvent<{ id: number; ok: boolean; error?: string }>) => {
@@ -52,7 +51,6 @@ class Session {
       if (e.data.ok) p.resolve(e.data);
       else p.reject(new Error(e.data.error ?? "不明な失敗"));
     };
-    // 落ちた Worker を残すと、次の postMessage が応答せず Promise が解けない
     w.onerror = (e) => {
       const err = new Error(e.message || "Worker が落ちました");
       this.cancel();
@@ -67,8 +65,6 @@ class Session {
   }
 
   #send<T>(msg: Record<string, unknown>): Promise<T> {
-    // 中断後に待ち行列のタスクが来ると Worker が boot なしで復活し、
-    // pool の外にいるので誰も terminate できなくなる
     if (this.#dead) return Promise.reject(new Error("中断しました"));
     const w = (this.#worker ??= this.#spawn());
     const id = ++this.#seq;
@@ -90,7 +86,6 @@ class Session {
         return r.version;
       })
       .catch((e: unknown) => {
-        // 残すと再試行が永久に同じ失敗を返す
         this.cancel();
         throw e;
       });
@@ -167,7 +162,6 @@ export async function getRuntime(
     const version = await session.boot();
     return { version, replayFailed: session.replayFailed, exec: (source) => session.exec(source) };
   } catch (e) {
-    // 残すと再試行が永久に同じ失敗を返す
     if (pool.get(key) === session) pool.delete(key);
     throw e;
   }
@@ -177,7 +171,11 @@ export async function getRuntime(
 export function peekRuntime(key: string): Runtime | undefined {
   const s = pool.get(key);
   if (!s || s.dead || !s.booted) return undefined;
-  return { version: s.version ?? "", replayFailed: s.replayFailed, exec: (source) => s.exec(source) };
+  return {
+    version: s.version ?? "",
+    replayFailed: s.replayFailed,
+    exec: (source) => s.exec(source),
+  };
 }
 
 /** 「中断」と「初めから」はどちらもこれで足りる。次の実行は起動からやり直す */

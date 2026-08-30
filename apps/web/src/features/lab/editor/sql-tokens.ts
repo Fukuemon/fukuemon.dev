@@ -8,7 +8,6 @@
 
 export type Tok = { t: "com" | "lit" | "key" | "id" | ""; v: string };
 
-// 予約語。大小を無視して照合する
 const KEYWORDS = new Set(
   `select from where group by order having limit offset insert into values update set delete
    create table index view drop alter add column constraint primary key foreign references
@@ -45,7 +44,6 @@ export function tokenizeSql(src: string): Tok[] {
   while (i < src.length) {
     const c = src[i] as string;
 
-    // 行コメント
     if (c === "-" && src[i + 1] === "-") {
       const end = src.indexOf("\n", i);
       const stop = end === -1 ? src.length : end;
@@ -53,7 +51,6 @@ export function tokenizeSql(src: string): Tok[] {
       i = stop;
       continue;
     }
-    // ブロックコメント
     if (c === "/" && src[i + 1] === "*") {
       const end = src.indexOf("*/", i + 2);
       const stop = end === -1 ? src.length : end + 2;
@@ -61,7 +58,6 @@ export function tokenizeSql(src: string): Tok[] {
       i = stop;
       continue;
     }
-    // 文字列。'' は中のエスケープ
     if (c === "'") {
       let j = i + 1;
       while (j < src.length) {
@@ -75,7 +71,6 @@ export function tokenizeSql(src: string): Tok[] {
       i = j;
       continue;
     }
-    // 引用識別子
     if (c === '"') {
       const end = src.indexOf('"', i + 1);
       const stop = end === -1 ? src.length : end + 1;
@@ -116,8 +111,9 @@ const escape = (s: string) => s.replace(/[&<>]/g, (c) => ESC[c] as string);
 
 /** `.t-*` を付けた HTML にする。クラスは utilities.css が --c-* へ落とす */
 export function highlightSql(src: string): string {
-  // 末尾の改行が pre で潰れないよう 1 つ足す
   return tokenizeSql(`${src}\n`)
-    .map((tok) => (tok.t === "" ? escape(tok.v) : `<span class="t-${tok.t}">${escape(tok.v)}</span>`))
+    .map((tok) =>
+      tok.t === "" ? escape(tok.v) : `<span class="t-${tok.t}">${escape(tok.v)}</span>`,
+    )
     .join("");
 }

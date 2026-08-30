@@ -3,15 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     "./tokens.css": "./styles/tokens.css",
     "./utilities.css": "./styles/utilities.css",
     "./art/*": "./art/*",
     "./code-theme": "./code-theme.ts"
   },
-  "sideEffects": [
-    "*.css"
-  ],
   "scripts": {
     "check": "node --experimental-strip-types check-contrast.ts"
   }

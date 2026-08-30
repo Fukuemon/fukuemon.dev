@@ -10,14 +10,11 @@ export function mountSide(root: HTMLElement): void {
     btn.title = open ? "たたむ" : "ひらく";
   };
 
-  // 狭い画面では本文に覆いかぶさるので既定は「閉」
   let open = wide();
   try {
     const saved = globalThis.localStorage?.getItem(key);
     if (saved) open = saved === "open";
-  } catch {
-    // プライベートウィンドウでは読めない
-  }
+  } catch {}
   apply(open);
 
   const set = (next: boolean) => {
@@ -25,14 +22,11 @@ export function mountSide(root: HTMLElement): void {
     apply(open);
     try {
       globalThis.localStorage?.setItem(key, open ? "open" : "closed");
-    } catch {
-      // 保存できなくても開閉は効く
-    }
+    } catch {}
   };
 
   btn.addEventListener("click", () => set(!open));
   root.querySelector("[data-side-close]")?.addEventListener("click", () => set(false));
-  // 覆いかぶさっている面は Esc で閉じられるようにする
   globalThis.addEventListener("keydown", (e: Event) => {
     if ((e as KeyboardEvent).key === "Escape" && open && !wide()) set(false);
   });

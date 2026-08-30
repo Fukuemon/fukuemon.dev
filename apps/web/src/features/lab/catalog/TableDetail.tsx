@@ -6,7 +6,6 @@ export type Detail = { columns: Column[]; head: string[]; rows: unknown[][] };
 export default function TableDetail({ detail, limit }: { detail: Detail; limit: number }) {
   return (
     <div className="flex min-h-0 flex-col overflow-hidden">
-      {/* 列が多いテーブルでは、行の一覧が潰れないよう列の側を先に縮める */}
       <section
         className="min-h-0 flex-initial overflow-y-auto py-intra-2 leading-[1.6] text-fg-2"
         aria-label="列"

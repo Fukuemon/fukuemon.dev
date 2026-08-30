@@ -5,10 +5,9 @@ import { LINKS } from "../../data/profile";
 interface Props {
   class?: string;
 }
-const { class: extra } = Astro.props as Props;
+const { class: extra } = Astro.props;
 ---
 
-{/* 字ではないので溝は詰める。当たり判定は 44px を保つ (.hit + w-11) */}
 <p class:list={["flex flex-wrap gap-intra-1 m-0", extra]}>
   {
     LINKS.map((l) => (

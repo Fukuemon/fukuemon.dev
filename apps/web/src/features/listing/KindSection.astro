@@ -8,12 +8,11 @@ interface Props {
   items: ContentRef[];
   lead: string;
 }
-const { heading, items, lead } = Astro.props as Props;
+const { heading, items, lead } = Astro.props;
 const shown = items.slice(0, 3);
 const href = KIND_INDEX[items[0]?.type ?? "article"];
 ---
 
-{/* 種別の抽象的な札ではなく、実物を 3 本並べる。何が読めるかがその場で分かる */}
 <section class="g-rail mt-inter-3 mx-(--gutter)">
   <Tate as="h2" class="tate-head" text={heading} />
   <div class="flex justify-end items-baseline pb-intra-1">

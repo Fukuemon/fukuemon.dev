@@ -6,11 +6,9 @@ interface Props {
 }
 const { items } = Astro.props;
 
-// 罫の長さで章の分量を示す。最長の章を 100% とした比を取る
 const max = Math.max(1, ...items.map((i) => i.weight));
 ---
 
-{/* 見出しは側柱の開閉ボタンが持つ */}
 <nav class="toc" aria-label="目次">
   {
     items.map((i) => (
@@ -31,7 +29,6 @@ const max = Math.max(1, ...items.map((i) => i.weight));
 </nav>
 
 <script>
-  // 現在地の章を示す。IntersectionObserver だけで、依存を持たない
   const links = document.querySelectorAll<HTMLElement>("[data-toc-link]");
   if (links.length > 0) {
     const bySlug = new Map<string, HTMLElement>();

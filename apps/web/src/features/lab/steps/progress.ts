@@ -3,7 +3,6 @@ export type Progress = {
   lastStep: number;
 };
 
-// path は改名されうる。contentId を鍵にして改名で進捗が消えないようにする
 const key = (contentId: string) => `lab:${contentId}`;
 
 /** 実行パネルと手順一覧は別の island になる。書き込みを知らせる */
@@ -17,7 +16,10 @@ const clamp = (n: number, max: number) => Math.min(Math.max(0, Math.trunc(n)), M
  * localStorage はプライベートウィンドウや設定で例外を投げる。読めなくてもページを壊さない。
  * 手順を減らすと古い番号が残るので、必ず現在の手順数で丸める。
  */
-export function loadProgress(contentId: string, stepCount = Number.MAX_SAFE_INTEGER): Progress | undefined {
+export function loadProgress(
+  contentId: string,
+  stepCount = Number.MAX_SAFE_INTEGER,
+): Progress | undefined {
   try {
     const raw = globalThis.localStorage?.getItem(key(contentId));
     if (!raw) return undefined;
@@ -42,9 +44,7 @@ export function loadProgress(contentId: string, stepCount = Number.MAX_SAFE_INTE
 export function saveProgress(contentId: string, value: Progress): void {
   try {
     globalThis.localStorage?.setItem(key(contentId), JSON.stringify(value));
-  } catch {
-    // 保存できなくても、同じページの island へは値を渡す
-  }
+  } catch {}
   globalThis.dispatchEvent?.(
     new CustomEvent(PROGRESS_EVENT, { detail: { contentId, value } }) satisfies ProgressEvent,
   );

@@ -21,17 +21,17 @@
   --color-code-bg: light-dark(#f1eee6, #211d17);
 
   /* 文字。比は --color-paper に対する実測値 (明 / 暗) */
-  --color-ink: light-dark(#1a1714, #f4f1ea);   /* 17.25 / 16.28 */
+  --color-ink: light-dark(#1a1714, #f4f1ea); /* 17.25 / 16.28 */
   --color-ink-2: light-dark(#57534b, #b9b4a8); /*  7.40 /  7.26 */
 
   /* 差し色。線と文字のみ。面は --color-tint-* */
   --color-green: light-dark(#4f6138, #9db086); /*  6.55  内部リンク / ハンズオン / 完了 */
-  --color-blue: light-dark(#2c4a6e, #8fb0d6);  /*  8.78  外部リンク / 前提 */
-  --color-rust: light-dark(#9e3a26, #e08a6c);  /*  6.57  現在地 / 注意 */
+  --color-blue: light-dark(#2c4a6e, #8fb0d6); /*  8.78  外部リンク / 前提 */
+  --color-rust: light-dark(#9e3a26, #e08a6c); /*  6.57  現在地 / 注意 */
 
   /* 罫 */
   --color-rule-strong: light-dark(#78726a, #8a8375); /* 4.60  UI 境界 */
-  --color-rule-soft: light-dark(#d9d4c8, #3a352d);   /* 1.43  UI 境界に使わない */
+  --color-rule-soft: light-dark(#d9d4c8, #3a352d); /* 1.43  UI 境界に使わない */
 
   /* 面 */
   --color-tint-green: light-dark(#dfe4d3, #262e1d);
@@ -50,10 +50,10 @@
 
   /* コード。輝度の梯子。隣接比 最小 1.27 */
   --color-c-plain: light-dark(#1a1714, #f4f1ea); /* 15.39 / 14.86 */
-  --color-c-key: light-dark(#5e1b33, #e48fa8);   /* 10.78 /  7.02 */
+  --color-c-key: light-dark(#5e1b33, #e48fa8); /* 10.78 /  7.02 */
   --color-c-ident: light-dark(#2a4470, #5a88c4); /*  8.39 /  4.59 */
-  --color-c-lit: light-dark(#7a4a12, #e8c08a);   /*  6.43 /  9.85 */
-  --color-c-com: light-dark(#6a6459, #938d80);   /*  5.06 /  5.08 */
+  --color-c-lit: light-dark(#7a4a12, #e8c08a); /*  6.43 /  9.85 */
+  --color-c-com: light-dark(#6a6459, #938d80); /*  5.06 /  5.08 */
 
   /* 画面はここだけを参照する */
   --color-fg: var(--color-ink);
@@ -90,14 +90,18 @@
   --measure: min(100% - 2 * var(--gutter), var(--measure-w));
   /* 一覧や実行結果など、行長より広く取る版面 */
   --measure-wide: 68rem;
-  --topbar: 45px;  /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
-  --rail: 46px;    /* 縦組み見出しの列 */
+  --topbar: 45px; /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
+  --rail: 46px; /* 縦組み見出しの列 */
   --drawer: 306px; /* 側柱。題が 2 行に収まる幅 */
   --drawer-shut: 46px; /* たたんだときの幅。開閉ボタンだけが残る */
 }
 
-[data-theme="light"] { color-scheme: light; }
-[data-theme="dark"] { color-scheme: dark; }
+[data-theme="light"] {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
 
 /* 反転帯。semantic を丸ごと差し替える。値は帯専用 */
 [data-band] {

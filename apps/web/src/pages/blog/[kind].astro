@@ -3,7 +3,6 @@ import PostsLayout from "../../layouts/PostsLayout.astro";
 import { listContent } from "../../lib/content";
 import { CONTENT_TYPES, kindSlug } from "../../lib/format";
 
-// URL の綴りは format.ts が正本
 export async function getStaticPaths() {
   return CONTENT_TYPES.map((type) => ({ params: { kind: kindSlug(type) }, props: { type } }));
 }

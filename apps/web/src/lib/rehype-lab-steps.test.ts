@@ -6,9 +6,10 @@ import type { Root } from "hast";
 import { rehypeLabSteps } from "./rehype-lab-steps";
 
 function run(md: string, path = "/x/content/labs/a.mdx") {
-  const tree = unified().use(remarkParse).use(remarkRehype).runSync(
-    unified().use(remarkParse).parse(md),
-  ) as Root;
+  const tree = unified()
+    .use(remarkParse)
+    .use(remarkRehype)
+    .runSync(unified().use(remarkParse).parse(md)) as Root;
   rehypeLabSteps()(tree, { path });
   return tree;
 }

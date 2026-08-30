@@ -8,7 +8,6 @@ interface Props {
 }
 const { current, counts } = Astro.props;
 
-// 種別の表示名と URL は format.ts が正本。ここでは並び順だけを決める
 const tabs = [
   { key: "all" as const, label: ALL_KIND.label, href: ALL_KIND.href },
   ...CONTENT_TYPES.map((t) => ({ key: t, label: KIND_LABEL[t], href: KIND_INDEX[t] })),

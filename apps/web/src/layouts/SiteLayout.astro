@@ -33,10 +33,8 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary" />
   </head>
   <body class="flex min-h-dvh flex-col">
-    {/* 縦に伸ばして本文だけを広げる。短いページでフッタが画面下端に届かず、下に地色が残る */}
     <a class="sr" href="#main">本文へスキップ</a>
     <SiteHeader current={current} />
-    {/* 索引の対象は本文だけ。`data-pagefind-body` は本文の要素が付ける */}
     <main id="main" class="flex-1"><slot /></main>
     <SiteFooter />
   </body>

@@ -3,7 +3,6 @@ interface Props {
   text: string;
 }
 const { text } = Astro.props;
-// コメント行は押しても意味がないので、コピーの対象にしない
 const isComment = text.trimStart().startsWith("#");
 ---
 
@@ -26,7 +25,6 @@ const isComment = text.trimStart().startsWith("#");
 </div>
 
 <script>
-  // 依存を足さない。Clipboard API だけで足りる
   for (const btn of document.querySelectorAll<HTMLButtonElement>("[data-copy]")) {
     btn.addEventListener("click", async () => {
       try {
@@ -37,7 +35,6 @@ const isComment = text.trimStart().startsWith("#");
           btn.textContent = before;
         }, 1400);
       } catch {
-        // 権限が無ければ何もしない。選択してコピーはできる
       }
     });
   }

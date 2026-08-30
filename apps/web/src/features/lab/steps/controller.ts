@@ -22,7 +22,6 @@ export function mountSteps(root: HTMLElement): void {
   const links = [...root.querySelectorAll<HTMLAnchorElement>(".steps__link")];
   if (sections.length === 0) return;
 
-  // 「はじめに」は本文と LocalSetup の 2 要素に分かれる
   const order = [...new Set(sections.map((s) => Number(s.dataset.step)))].sort((a, b) => a - b);
 
   const refs: Refs = {
@@ -34,12 +33,8 @@ export function mountSteps(root: HTMLElement): void {
     count: order.filter((i) => i >= 0).length,
   };
 
-  // 保存しない。localStorage の書き換えで完了を捏造させない
   const seen = new Set<number>();
-  // localStorage が書けない環境では、island が届けた値だけが手がかりになる。
-  // 読み直しに頼ると、実行が成功しても完了の印が出ない
   let relayed: number[] | undefined;
-  // 直前に開いていた手順。初回は無い
   let was: number | undefined;
 
   const show = (index: number, push: boolean) => {
@@ -55,23 +50,19 @@ export function mountSteps(root: HTMLElement): void {
       if (on) a.setAttribute("aria-current", "step");
       else a.removeAttribute("aria-current");
     }
-    // 離れた手順だけを印にする。飛ばして開いた手順は通っていない
     if (was !== undefined && was >= 0 && was !== i) seen.add(was);
     was = i;
 
-    // 初回も hash を書く。空のままだと戻り先が保存済みの続きになる
     const hash = `#step-${i}`;
     if (location.hash !== hash) {
       if (push) history.pushState(null, "", hash);
       else history.replaceState(null, "", hash);
     }
 
-    // 初回はブラウザの hash 送りが後から走る。1 フレーム待って上書きする
     const top = () => globalThis.scrollTo({ top: 0, behavior: "instant" });
     top();
     requestAnimationFrame(top);
 
-    // 「はじめに」は手順ではないので続きに覚えない
     if (i >= 0) {
       saveProgress(contentId, {
         completedSteps: loadProgress(contentId, refs.count)?.completedSteps ?? [],
@@ -90,7 +81,6 @@ export function mountSteps(root: HTMLElement): void {
   }
   for (const b of root.querySelectorAll<HTMLButtonElement>("[data-go]")) {
     b.addEventListener("click", () => {
-      // aria-disabled は押下を止めない
       if (b.getAttribute("aria-disabled") === "true") return;
       const at = order.indexOf(current(sections));
       show(order[at + (b.dataset.go === "next" ? 1 : -1)] ?? current(sections), true);
@@ -98,7 +88,6 @@ export function mountSteps(root: HTMLElement): void {
   }
 
   mountSide(root);
-  // ここで初めて 1 枚だけ出す。JS が動かない環境では全手順が縦に並ぶ
   root.dataset.ready = "true";
 
   globalThis.addEventListener("popstate", () => show(fromHash(refs), false));
@@ -108,7 +97,6 @@ export function mountSteps(root: HTMLElement): void {
     relayed = detail.value.completedSteps;
     paint(refs, seen, relayed);
   });
-  // 別タブでの完了。こちらは保存が効いているので読み直す
   globalThis.addEventListener("storage", () => paint(refs, seen, relayed));
 
   show(fromHash(refs), false);
@@ -169,4 +157,3 @@ function toggle(el: Element | null, on: boolean): void {
   if (!el) return;
   el.setAttribute("aria-disabled", String(!on));
 }
-

@@ -28,7 +28,6 @@ export default function Playground({ setup, initial, engine = "実行環境" }: 
       >
         <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-[10px]">
           <span>SQL</span>
-          {/* 起動した Postgres の版。実行が本物であることを示す */}
           {runner.version !== null && (
             <span className="runner__engine ms-auto text-fg-2">{runner.version}</span>
           )}
@@ -49,7 +48,6 @@ export default function Playground({ setup, initial, engine = "実行環境" }: 
           engine={engine}
           onRun={() => void runner.run(text)}
           onCancel={runner.cancel}
-          // 遊び場では書いたものを消さない。実行環境だけ捨てる
           onReset={runner.reset}
         />
 

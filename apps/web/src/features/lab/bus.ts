@@ -15,7 +15,6 @@ export function emitPreset(contentId: string, sql: string): void {
 }
 
 function useBus<T extends Detail>(type: string, contentId: string, on: (detail: T) => void): void {
-  // 依存に入れると、呼ぶ側が useCallback を外した途端に毎レンダー購読を張り直す
   const latest = useRef(on);
   useEffect(() => {
     latest.current = on;

@@ -12,9 +12,7 @@ export const portalBase = z.object({
   publishedAt: z.coerce.date(),
   updatedAt: z.coerce.date().optional(),
   related: z.array(z.string()).default([]),
-  repository: z
-    .object({ url: z.string().url(), path: z.string().optional() })
-    .optional(),
+  repository: z.object({ url: z.string().url(), path: z.string().optional() }).optional(),
 });
 
 /** 読了時間は出さない。手で書くと本文の分量とずれる */
@@ -41,9 +39,7 @@ export const handsOnFields = {
         level: z.literal("local"),
         repository: z.string().url(),
         via: z.enum(["devcontainer", "docker-compose", "manual"]),
-        requires: z
-          .array(z.object({ name: z.string(), check: z.string().optional() }))
-          .default([]),
+        requires: z.array(z.object({ name: z.string(), check: z.string().optional() })).default([]),
       }),
     ])
     .optional(),

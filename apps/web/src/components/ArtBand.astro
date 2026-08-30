@@ -17,7 +17,6 @@ interface Props {
 }
 const { motif, height = "132px", fill = false, fade = false } = Astro.props;
 
-// 装飾なので aria-hidden。role="img" を併せるとラベルが読み上げに届かない
 const svg = ART[motif].replace(/\srole="img"\s+aria-label="[^"]*"/, "");
 ---
 

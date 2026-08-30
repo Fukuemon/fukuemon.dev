@@ -79,7 +79,6 @@ describe("saveProgress", () => {
         throw new Error("quota");
       },
     });
-    // node 環境には DOM のイベント機構が無い。発火だけを見る
     const dispatch = vi.fn();
     vi.stubGlobal("dispatchEvent", dispatch);
     saveProgress("a", { completedSteps: [1], lastStep: 1 });
@@ -93,7 +92,7 @@ describe("saveProgress", () => {
     const map = stubStorage();
     vi.stubGlobal("dispatchEvent", undefined);
     saveProgress("a", { completedSteps: [0], lastStep: 0 });
-    expect(map.get("lab:a")).toContain("\"lastStep\":0");
+    expect(map.get("lab:a")).toContain('"lastStep":0');
   });
 });
 

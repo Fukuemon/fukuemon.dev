@@ -10,7 +10,12 @@ const DURATION = /^Duration:\s*(\d{1,2}):(\d{2})\s*$/;
 type Runner = { name: string; path: string; engine: string; kind: string };
 
 const RUNNERS: Record<string, Runner> = {
-  sql: { name: "SqlRunner", path: "~/features/lab/panel/SqlRunner", engine: "Postgres", kind: "pglite" },
+  sql: {
+    name: "SqlRunner",
+    path: "~/features/lab/panel/SqlRunner",
+    engine: "Postgres",
+    kind: "pglite",
+  },
 };
 
 /** frontmatter の runtime から表示名を引く。フェンスの言語より優先する */
@@ -119,7 +124,6 @@ export function remarkLab() {
     },
   ) => {
     const isLab = (file.path ?? "").includes("/content/labs/");
-    // .md は JSX を解釈せず、import 文がそのまま本文に出る
     const isMdx = (file.path ?? "").endsWith(".mdx");
     const fm = file.data?.astro?.frontmatter ?? {};
     const setup = typeof fm.setup === "string" ? fm.setup : undefined;
@@ -130,8 +134,6 @@ export function remarkLab() {
         : undefined;
     const declared = ENGINE[runtime ?? ""];
 
-    // 手順の正本。ここで 1 度だけ数え、frontmatter 経由で layout へ渡す。
-    // 別の場所で数え直すと、setext 見出しやフェンス内の ## でずれる
     const labSteps: Step[] = [];
     for (const node of tree.children) {
       if (node.type === "heading" && node.depth === 2) {
@@ -142,12 +144,9 @@ export function remarkLab() {
 
     let stepIndex = -1;
     let stepTitle = "";
-    // 最初の h2 より前に本文があるか。layout が「はじめに」の面を出すかを決める
     let hasIntro = false;
     const out: RootContent[] = [];
     const runners: { node: Code; stepIndex: number; stepTitle: string }[] = [];
-    // 全手順ぶんを各パネルへ渡す。「自分より前」だけにすると
-    // 最初に押したパネルが DB の状態を固定する
     const steps: { step: number; sql: string }[] = [];
 
     for (const node of tree.children) {
@@ -158,7 +157,6 @@ export function remarkLab() {
         continue;
       }
 
-      // Duration は手順の metadata で、読者に見せる文ではない
       const secs = durationOf(node);
       if (secs !== undefined) {
         const step = labSteps[stepIndex];
@@ -169,7 +167,6 @@ export function remarkLab() {
       if (stepIndex < 0 && !isBlank(node)) hasIntro = true;
 
       if (!isMdx && node.type === "code" && isRunnable(node)) {
-        // 黙って壊さず、書いた人に知らせる
         throw new Error(
           `${file.path ?? "(不明)"}: \`\`\`sql run は .mdx でだけ使えます。` +
             "拡張子を .mdx に変えるか、run を外してください。",
@@ -177,7 +174,6 @@ export function remarkLab() {
       }
 
       if (isMdx && node.type === "code" && isRunnable(node)) {
-        // 0 に潰すと手順 01 を勝手に完了にする
         runners.push({ node, stepIndex, stepTitle });
         out.push(node); // 後で差し替える
         if (stepIndex >= 0) steps.push({ step: stepIndex, sql: node.value });
@@ -187,7 +183,6 @@ export function remarkLab() {
       out.push(node);
     }
 
-    // 全パネルが同じ steps を持つよう、揃ってから差し替える
     for (const r of runners) {
       const i = out.indexOf(r.node);
       if (i < 0) continue;
@@ -200,15 +195,15 @@ export function remarkLab() {
         stepTitle: r.stepTitle,
         setup,
         engine: declared ?? runner.engine,
-        // 同じ SqlRunner が sqlite も duckdb も動かす
         kind: runtime ?? runner.kind,
         runner,
         steps,
       });
     }
 
-    // import は 1 度だけ足す
-    const used = [...new Set(runners.map((r) => runnerFor(r.node.lang)).filter(Boolean))] as Runner[];
+    const used = [
+      ...new Set(runners.map((r) => runnerFor(r.node.lang)).filter(Boolean)),
+    ] as Runner[];
     for (const r of used) {
       out.unshift({
         type: "mdxjsEsm",
@@ -219,7 +214,6 @@ export function remarkLab() {
 
     tree.children = out;
 
-    // 手順の正本を layout へ渡す。ページ側で数え直させない
     if (isLab && file.data?.astro?.frontmatter) {
       file.data.astro.frontmatter.labSteps = labSteps;
       file.data.astro.frontmatter.labHasIntro = hasIntro;

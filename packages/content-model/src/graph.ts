@@ -8,7 +8,10 @@ export class DuplicateContentIdError extends Error {
 }
 
 export class DanglingRelatedError extends Error {
-  constructor(readonly from: string, readonly to: string) {
+  constructor(
+    readonly from: string,
+    readonly to: string,
+  ) {
     super(`related の参照先が存在しません: ${from} -> ${to}`);
     this.name = "DanglingRelatedError";
   }
