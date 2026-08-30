@@ -66,9 +66,32 @@ export const handsOnFields = {
     .optional(),
 };
 
+/**
+ * 遊び場。手順に縛られず動かす場所。
+ * 記事とハンズオンと同じく 1 枚の Markdown で表す (ADR-0009)。
+ */
+export const playgroundSchema = z.object({
+  contentId: z.string().regex(CONTENT_ID),
+  title: z.string(),
+  description: z.string(),
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  /** 実行環境。実装済みの値だけを並べる */
+  runtime: z.enum(["pglite"]),
+  /** 最初に 1 度だけ流す初期化 */
+  setup: z.string().optional(),
+  /** 押すと入力欄へ入る例。読者は白紙から書き始めなくてよい */
+  presets: z
+    .array(z.object({ label: z.string(), sql: z.string() }))
+    .default([]),
+  /** 一覧の並び順。小さいほど前 */
+  order: z.number().int().default(0),
+});
+
 export const articleSchema = portalBase.extend(articleFields);
 export const handsOnSchema = portalBase.extend(handsOnFields);
 
 export type PortalBase = z.infer<typeof portalBase>;
 export type ArticleData = z.infer<typeof articleSchema>;
 export type HandsOnData = z.infer<typeof handsOnSchema>;
+
+export type PlaygroundData = z.infer<typeof playgroundSchema>;

@@ -1,0 +1,30 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import Playground from "../../components/lab/Playground";
+import { listPlaygrounds, renderPlayground } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const items = await listPlaygrounds();
+  return items.map((entry) => ({ params: { slug: entry.data.contentId }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await renderPlayground(entry);
+const d = entry.data;
+---
+
+<SiteLayout title={`${d.title} — playground`} description={d.description}>
+  <div class="labmain">
+    <header class="labhead">
+      <p class="mono meta doc__crumb">
+        <a href="/playground">playground</a>
+        <span aria-hidden="true">/</span>
+        <span>{d.runtime}</span>
+      </p>
+      <h1 class="display labhead__title">{d.title}</h1>
+    </header>
+    <div class="prose pg-intro"><Content /></div>
+    <Playground client:load setup={d.setup} presets={d.presets} engine="Postgres" />
+  </div>
+  <div class="tail"></div>
+</SiteLayout>

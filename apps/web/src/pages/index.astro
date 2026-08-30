@@ -4,6 +4,7 @@ import ContentRow from "../components/ContentRow.astro";
 import ArtBand from "../components/ArtBand.astro";
 import Tate from "../components/Tate.astro";
 import KindSection from "../components/KindSection.astro";
+import AboutLinks from "../components/AboutLinks.astro";
 import { listContent } from "../lib/content";
 
 const [all, labs, articles] = await Promise.all([
@@ -23,10 +24,20 @@ const [all, labs, articles] = await Promise.all([
     </div>
   </section>
 
-  <section class="section-x section--flush">
-    <p class="prose lede">
-      Postgres と可観測性のあたりを調べて書いています。手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。
-    </p>
+  {/* about は独立したページを作らず、ここに畳む (ADR-0009) */}
+  <section class="g-rail about">
+    <Tate as="h2" class="tate-head" text="about" />
+    <div class="section-link">
+      <AboutLinks />
+    </div>
+    <div>
+      <p class="prose about__lead">
+        Postgres と可観測性のあたりを調べて書いています。手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。
+      </p>
+      <p class="prose about__note">
+        ハンズオンは環境構築を要求しません。実行環境は WebAssembly としてページの中で動き、書き換えて再実行できます。進捗はこの端末にだけ残ります。
+      </p>
+    </div>
   </section>
 
   <section data-band class="band">
@@ -48,6 +59,10 @@ const [all, labs, articles] = await Promise.all([
   />
 
   <KindSection heading="記事" items={articles} lead="調べて分かったことを書いています。" />
+
+  <section class="section-x section--flush about__foot">
+    <AboutLinks />
+  </section>
 
   <ArtBand motif="grass" height="132px" />
 </SiteLayout>

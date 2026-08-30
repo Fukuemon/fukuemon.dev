@@ -7,7 +7,8 @@ import SqlEditor from "./SqlEditor";
 type Preset = { label: string; sql: string };
 
 type Props = {
-  setup: string;
+  /** 最初に 1 度だけ流す初期化。無い遊び場もある */
+  setup?: string;
   presets: Preset[];
   engine?: string;
 };
