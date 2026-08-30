@@ -33,7 +33,8 @@ fukuemon.dev/
 │       ├── src/
 │       │   ├── pages/                # URL の写し。Astro が予約する唯一のディレクトリ
 │       │   ├── layouts/              # ページの外枠
-│       │   ├── components/           # 部品。.astro と .tsx を同居させる
+│       │   ├── features/             # 面ごとの部品。lab/ listing/ doc/ about/ search/
+│       │   ├── components/           # 面をまたぐ素の部品。.astro と .tsx を同居させる
 │       │   ├── lib/content/          # astro:content ↔ content-model のアダプタ
 │       │   ├── content/             # articles/ labs/ playgrounds/
 │       │   ├── data/                 # 書いている人の正本 (about が読む)
@@ -59,15 +60,45 @@ fukuemon.dev/
 **共有度で分けない。** 共有度は増えるほど片側に寄り、一方が残余のバケツになる。
 軸は「そのディレクトリが答える問い」とする。
 
-| ディレクトリ  | 答える問い                 | 増え方                    |
-| ------------- | -------------------------- | ------------------------- |
-| `pages/`      | この URL は何か            | 画面が増えたら 1 ファイル |
-| `layouts/`    | このページの外枠は何か     | 面が増えたときだけ        |
-| `components/` | この部品は何か             | フラット。増えたら割る    |
-| `lib/`        | このデータはどこから来るか | ほぼ増えない              |
+| ディレクトリ  | 答える問い                     | 増え方                    |
+| ------------- | ------------------------------ | ------------------------- |
+| `pages/`      | この URL は何か                | 画面が増えたら 1 ファイル |
+| `layouts/`    | このページの外枠は何か         | 面が増えたときだけ        |
+| `features/`   | この面は何をする所か           | 面が増えたときだけ        |
+| `components/` | 面をまたぐ素の部品は何か       | ほぼ増えない              |
+| `data/`       | 書いている人の情報はどこにあるか | 増えない                |
+| `lib/`        | このデータはどこから来るか     | ほぼ増えない              |
 
-`components/` を最初から分類しない。
-自作するのは 10 個前後であり、分類のコストが検索のコストを上回る。
+**`components/` を最初から分類しない。割るのは増えてからにする。**
+45 ファイルになった時点で割った。分類のコストが検索のコストを下回るのは、
+フラットに並べて目で追えなくなってからである。
+
+`features/` の中も同じ軸で割る。
+
+| feature      | 中身                                       |
+| ------------ | ------------------------------------------ |
+| `lab/`       | ハンズオンと playground の実行まわり       |
+| `listing/`   | 一覧の行・表・タブ・関連                   |
+| `doc/`       | 本文の側柱。目次とほかの記事               |
+| `about/`     | トップの表紙                               |
+| `search/`    | 本文の検索                                 |
+
+`lab/` はさらに 6 つの問いで割る。
+
+| ディレクトリ | 答える問い           |
+| ------------ | -------------------- |
+| `runtime/`   | どこで動くか         |
+| `editor/`    | どう書くか           |
+| `panel/`     | どう実行するか       |
+| `catalog/`   | いま何が入っているか |
+| `steps/`     | どこまで進んだか     |
+| `local/`     | 手元でどう組むか     |
+
+`bus.ts` は 3 つの島がまたぐので `lab/` の直下に置く。
+
+**`components/` に残すのは、面をまたぐ素の部品だけにする。**
+`Icon` / `Tate` / `ArtBand` / `SiteHeader` / `SiteFooter` の 5 つである。
+どれか 1 つの feature でしか使わなくなったら、その feature へ移す。
 
 **`.astro` と `.tsx` を同居させる。**
 技術で分けない。
@@ -90,7 +121,7 @@ Astro の公式ドキュメントも、UI framework のコンポーネントを 
 
 ### Island の規約
 
-対象は `apps/web/src/components/**/*.{tsx,jsx,vue}`。
+対象は `apps/web/src/{features,components}/**/*.{tsx,jsx,vue}`。
 
 - **Astro を import しない。**
   `astro:content` も `.astro` も参照しない
@@ -99,7 +130,7 @@ Astro の公式ドキュメントも、UI framework のコンポーネントを 
 - テストを隣に置く
 
 **検査**: Oxlint の `no-restricted-imports`。
-対象を拡張子で指定する。
+対象を拡張子で指定し、`astro:content` を `paths`、`*.astro` を `patterns` で禁じる。
 
 **フレームワークは 1 つに絞る。**
 hydrate するページは、そのフレームワークのランタイムを配る。
@@ -158,7 +189,7 @@ app を分けると一覧が分かれる。
 
 ### 規約 1 — ページから `astro:content` を直接 import しない
 
-`apps/web/src/pages/**` / `components/**` / `layouts/**` は、コンテンツへの参照を必ず `apps/web/src/lib/content/` の公開関数経由で行う。
+`apps/web/src/pages/**` / `features/**` / `components/**` / `layouts/**` は、コンテンツへの参照を必ず `apps/web/src/lib/content/` の公開関数経由で行う。
 
 ```
 listContent() / getContent() / getRelated()
@@ -168,7 +199,7 @@ listContent() / getContent() / getRelated()
 
 ### 規約 3 — Island は Astro を import しない
 
-対象は `apps/web/src/components/**/*.{tsx,jsx,vue}`。
+対象は `apps/web/src/{features,components}/**/*.{tsx,jsx,vue}`。
 `astro` / `astro:content` / `.astro` ファイルのいずれも参照しない。
 必要な値は props で受ける。
 
