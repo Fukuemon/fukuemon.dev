@@ -1,52 +1,57 @@
 /* Design Tokens。値の正本。Tailwind の構文を書かない。
-   根拠: design/features/design-system/DesignDoc_design-system.md */
+   根拠: design/features/design-system/DesignDoc_design-system.md
+
+   色は `light-dark(明, 暗)` で 1 度だけ書く。
+   選択子を明暗で分けると、システム設定用と明示指定用で同じ値を 2 度書くことになり、
+   片方だけ直した事故に実行時まで気づけない。解決は `color-scheme` が決める。 */
 
 :root {
-  color-scheme: light;
+  /* 既定はシステム設定に従う。`[data-theme]` が付けば、そちらが勝つ */
+  color-scheme: light dark;
 
   /* ---- 書体 ---- */
   --font-serif: "EB Garamond", "Zen Old Mincho", "Yu Mincho", serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 
   /* ---- 地 ---- */
-  --paper: #fcfbf8;
-  --panel: #f4f2ec;
-  --code-bg: #f1eee6;
+  --paper: light-dark(#fcfbf8, #17140f);
+  --panel: light-dark(#f4f2ec, #211d17);
+  --code-bg: light-dark(#f1eee6, #211d17);
 
-  /* 文字。比は --paper に対する実測値 */
-  --ink: #1a1714;   /* 17.25 */
-  --ink-2: #57534b; /*  7.40 */
+  /* 文字。比は --paper に対する実測値 (明 / 暗) */
+  --ink: light-dark(#1a1714, #f4f1ea);   /* 17.25 / 16.28 */
+  --ink-2: light-dark(#57534b, #b9b4a8); /*  7.40 /  7.26 */
 
   /* 差し色。線と文字のみ。面は --tint-* */
-  --green: #4f6138; /*  6.55  内部リンク / ハンズオン / 完了 */
-  --blue: #2c4a6e;  /*  8.78  外部リンク / 前提 */
-  --rust: #9e3a26;  /*  6.57  現在地 / 注意 */
+  --green: light-dark(#4f6138, #9db086); /*  6.55  内部リンク / ハンズオン / 完了 */
+  --blue: light-dark(#2c4a6e, #8fb0d6);  /*  8.78  外部リンク / 前提 */
+  --rust: light-dark(#9e3a26, #e08a6c);  /*  6.57  現在地 / 注意 */
 
   /* 罫 */
-  --rule-strong: #78726a; /* 4.60  UI 境界 */
-  --rule-soft: #d9d4c8;   /* 1.43  UI 境界に使わない */
+  --rule-strong: light-dark(#78726a, #8a8375); /* 4.60  UI 境界 */
+  --rule-soft: light-dark(#d9d4c8, #3a352d);   /* 1.43  UI 境界に使わない */
 
   /* 面 */
-  --tint-green: #dfe4d3;
-  --tint-blue: #d9e1ea;
-  --tint-rust: #f0dcd2;
-  --band: #1a1714;
+  --tint-green: light-dark(#dfe4d3, #262e1d);
+  --tint-blue: light-dark(#d9e1ea, #1e2833);
+  --tint-rust: light-dark(#f0dcd2, #33211a);
+  --band: light-dark(#1a1714, #e7e3d8);
 
   /* 挿絵の 3 階調 */
-  --wood-1: #6f7d55;
-  --wood-2: #9aa57f;
-  --wood-3: #c3cbb0;
+  --wood-1: light-dark(#6f7d55, #4a5638);
+  --wood-2: light-dark(#9aa57f, #39412c);
+  --wood-3: light-dark(#c3cbb0, #2a3021);
 
   /* 霞。地の色を透過させる */
-  --veil-1: #fcfbf8;
-  --veil-0: rgb(252 251 248 / 0);
+  --veil-1: light-dark(#fcfbf8, #17140f);
+  --veil-0: light-dark(rgb(252 251 248 / 0), rgb(23 20 15 / 0));
 
   /* コード。輝度の梯子。隣接比 最小 1.27 */
-  --c-plain: #1a1714; /* 15.39 */
-  --c-key: #5e1b33;   /* 10.78 */
-  --c-ident: #2a4470; /*  8.39 */
-  --c-lit: #7a4a12;   /*  6.43 */
-  --c-com: #6a6459;   /*  5.06 */
+  --c-plain: light-dark(#1a1714, #f4f1ea); /* 15.39 / 14.86 */
+  --c-key: light-dark(#5e1b33, #e48fa8);   /* 10.78 /  7.02 */
+  --c-ident: light-dark(#2a4470, #5a88c4); /*  8.39 /  4.59 */
+  --c-lit: light-dark(#7a4a12, #e8c08a);   /*  6.43 /  9.85 */
+  --c-com: light-dark(#6a6459, #938d80);   /*  5.06 /  5.08 */
 
   /* semantic。画面はここだけを参照する */
   --fg: var(--ink);
@@ -71,110 +76,28 @@
   /* 本文の行長。42rem でおよそ 37 字。日本語は 40〜45 字を超えると行を追いにくい */
   --measure-w: 42rem;
   --measure: min(100% - 2 * var(--gutter), var(--measure-w));
-  --measure-fig: min(100% - 2 * var(--gutter), 52rem);
   /* 一覧や実行結果など、行長より広く取る版面 */
   --measure-wide: 68rem;
   --topbar: 45px;  /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
-  /* 折り返す幅。3 段階だけ持つ */
-  --bp-wide: 1100px; /* 側柱を畳む */
-  --bp-narrow: 720px; /* 縦組みを横へ倒し、表の列を落とす */
+  /* 折り返す幅は 1100px (側柱を畳む) と 720px (縦組みを横へ倒す) の 2 段だけ。
+     `@media` は custom property を読めないので、トークンにせず値を直接書く */
   --rail: 46px;    /* 縦組み見出しの列 */
-  --toc: 200px;    /* 記事の目次 */
   --drawer: 306px; /* ハンズオンの手順サイドバー。題が 2 行に収まる幅 */
   --drawer-shut: 46px; /* たたんだときの幅。開閉ボタンだけが残る */
 }
 
-[data-theme="dark"] {
-  color-scheme: dark;
-  --paper: #17140f;
-  --panel: #211d17;
-  --code-bg: #211d17;
-  --ink: #f4f1ea; /* 16.28 */
-  --ink-2: #b9b4a8;
-  --green: #9db086;
-  --blue: #8fb0d6;
-  --rust: #e08a6c;
-  --rule-strong: #8a8375;
-  --rule-soft: #3a352d;
-  --tint-green: #262e1d;
-  --tint-blue: #1e2833;
-  --tint-rust: #33211a;
-  --band: #e7e3d8;
-  --wood-1: #4a5638;
-  --wood-2: #39412c;
-  --wood-3: #2a3021;
-  --veil-1: #17140f;
-  --veil-0: rgb(23 20 15 / 0);
-  --focus: #f4f1ea;
-  --c-plain: #f4f1ea; /* 14.86 */
-  --c-lit: #e8c08a;   /*  9.85 */
-  --c-key: #e48fa8;   /*  7.02 */
-  --c-com: #938d80;   /*  5.08 */
-  --c-ident: #5a88c4; /*  4.59 */
-}
+/* 読者の明示指定。システム設定より優先する */
+[data-theme="light"] { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
 
 /* 反転帯。semantic を丸ごと差し替える。値は帯専用 */
 [data-band] {
   background: var(--band);
-  color: #f4f1ea;
-  --fg: #f4f1ea;
-  --fg-2: #b9b4a8;
-  --link: #9db086;
-  --link-ext: #8fb0d6;
-  --now: #e08a6c;
-  --rule: #7a746a;
-  --focus: #f4f1ea;
-}
-
-[data-theme="dark"] [data-band] {
-  color: #1a1714;
-  --fg: #1a1714;
-  --fg-2: #57534b;
-  --link: #4f6138;
-  --link-ext: #2c4a6e;
-  --now: #9e3a26;
-  --rule: #857f72;
-  --focus: #1a1714;
-}
-
-/* システム設定。data-theme の明示指定が勝つ */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --paper: #17140f;
-    --panel: #211d17;
-    --code-bg: #211d17;
-    --ink: #f4f1ea;
-    --ink-2: #b9b4a8;
-    --green: #9db086;
-    --blue: #8fb0d6;
-    --rust: #e08a6c;
-    --rule-strong: #8a8375;
-    --rule-soft: #3a352d;
-    --tint-green: #262e1d;
-    --tint-blue: #1e2833;
-    --tint-rust: #33211a;
-    --band: #e7e3d8;
-    --wood-1: #4a5638;
-    --wood-2: #39412c;
-    --wood-3: #2a3021;
-    --veil-1: #17140f;
-    --veil-0: rgb(23 20 15 / 0);
-    --focus: #f4f1ea;
-    --c-plain: #f4f1ea;
-    --c-lit: #e8c08a;
-    --c-key: #e48fa8;
-    --c-com: #938d80;
-    --c-ident: #5a88c4;
-  }
-  :root:not([data-theme="light"]) [data-band] {
-    color: #1a1714;
-    --fg: #1a1714;
-    --fg-2: #57534b;
-    --link: #4f6138;
-    --link-ext: #2c4a6e;
-    --now: #9e3a26;
-    --rule: #857f72;
-    --focus: #1a1714;
-  }
+  color: light-dark(#f4f1ea, #1a1714);
+  --fg: light-dark(#f4f1ea, #1a1714);
+  --fg-2: light-dark(#b9b4a8, #57534b);
+  --link: light-dark(#9db086, #4f6138);
+  --now: light-dark(#e08a6c, #9e3a26);
+  --rule: light-dark(#7a746a, #857f72);
+  --focus: light-dark(#f4f1ea, #1a1714);
 }
