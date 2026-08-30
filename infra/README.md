@@ -21,15 +21,17 @@ state をローカルに置く前提を壊す。
   `backend "s3"` の `use_lockfile` を使うため。
   CI は 1.14.3 に固定する。
 - apply 用の API token。
-  次の権限を持たせる。
-  - Account / Workers R2 Storage / Edit (`bootstrap/`)
-  - Account / Workers Scripts / Edit (custom domain)
-  - Zone / Zone / Edit と Zone / DNS / Edit (zone)
+  権限は [context/infrastructure.md](../context/infrastructure.md) の「token の権限」に従う。
+  `bootstrap/` は R2 の権限だけを使い、`cloudflare/` は zone と Workers Scripts の権限を使う。
 - R2 の S3 互換 access key。
   `cloudflare/` の state backend が使う。
-  Cloudflare の R2 画面で発行する。
+  R2 の画面の Account Details から API Tokens → Manage で発行する。
+  権限は上と同じ表に従い、state バケットに限定する。
+  secret access key は作成直後にしか表示されない。
 
 **deploy workflow の token と分ける。** 置き場と scope は [context/infrastructure.md](../context/infrastructure.md) の credential の表に従う。
+
+最小権限が確かめられていない点は、同じファイルの「未確認事項」の 3 から 5 に置く。
 
 変数の値は各ディレクトリの `terraform.tfvars` に置く。
 `.gitignore` が `*.tfvars` を無視するため commit されない。
