@@ -9,47 +9,62 @@ const chars = [...PROFILE.name];
 ---
 
 {/* 独立したページを作らず、トップの表紙を兼ねる (ADR-0009) */}
-<section class="about">
-  <div class="about__art" aria-hidden="true">
+<section class="about relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
     <ArtBand motif="woodland" fill />
     <div class="about__veil"></div>
   </div>
 
-  <div class="g-rail about__grid">
+  {/* 層を作らないと霞の下へ潜る */}
+  <div class="g-rail relative my-inter-2 mx-(--gutter) py-inter-1">
     <Tate as="h2" class="tate-head" text="about" upright />
     <div class="section-link">
       <AboutLinks />
     </div>
 
     <div>
-      <div class="about__head">
+      <div
+        class="flex items-center gap-intra-4 mb-inter-1 max-narrow:flex-col max-narrow:items-start max-narrow:gap-intra-3"
+      >
         {/* 1 枚のために sharp を足さず、256px の webp に落として置いてある */}
-        <img class="about__face" src="/avatar.webp" alt="" width="104" height="104" />
+        <img
+          class="shrink-0 border border-rule-strong bg-panel"
+          src="/avatar.webp"
+          alt=""
+          width="104"
+          height="104"
+        />
         <div>
           {/* 読み上げには 1 語で渡す。字ごとに切ると 1 字ずつ読まれる */}
-          <h1 class="display about__name" aria-label={PROFILE.name}>
+          <h1
+            class="display font-mono leading-[1.1] tracking-[.04em]"
+            aria-label={PROFILE.name}
+          >
             {
               chars.map((c, i) => (
-                <span class="about__char" style={`--i:${i}`} aria-hidden="true">
+                <span class="about__char inline-block" style={`--i:${i}`} aria-hidden="true">
                   {c}
                 </span>
               ))
             }
           </h1>
-          <p class="mono meta about__reading">{PROFILE.reading}</p>
-          <p class="prose about__role">{PROFILE.role}</p>
+          <p class="about__reading mono meta mt-intra-1 mb-0">{PROFILE.reading}</p>
+          <p class="about__role prose mt-intra-2 mb-0 max-w-(--measure-w)">{PROFILE.role}</p>
         </div>
       </div>
 
-      <p class="prose about__lead">{PROFILE.lead}</p>
-      <p class="prose about__note">{PROFILE.note}</p>
+      <p class="prose m-0 max-w-(--measure-w)">{PROFILE.lead}</p>
+      <p class="prose mt-intra-3 mb-0 max-w-(--measure-w) text-fg-2 text-[0.9rem]">{PROFILE.note}</p>
 
-      <dl class="about__stack">
+      <dl class="mt-inter-1 mb-0 max-w-(--measure-w) border-t border-rule-strong">
         {
           STACK.map((row, i) => (
-            <div class="about__row" style={`--i:${i}`}>
-              <dt class="mono meta about__key">{row.label}</dt>
-              <dd class="mono about__val">{row.items.join(" · ")}</dd>
+            <div
+              class="about__row grid grid-cols-[6.5em_minmax(0,1fr)] items-baseline gap-intra-3 py-intra-2 border-b border-rule max-narrow:grid-cols-[minmax(0,1fr)] max-narrow:gap-1"
+              style={`--i:${i}`}
+            >
+              <dt class="mono meta m-0">{row.label}</dt>
+              <dd class="mono m-0 text-[0.85rem]">{row.items.join(" · ")}</dd>
             </div>
           ))
         }
