@@ -12,13 +12,20 @@ on:
   pull_request:
     branches: ["**"]
 
+# push と pull_request で別の group にする。同じにすると、PR のある枝への push で
+# 片方が他方を打ち消し、PR の check が「実行されなかった」まま残る
 concurrency:
-  group: check-${{ github.ref }}
+  group: check-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    # PR のある枝では push と pull_request が二重に走り、chromium の取得も 2 回になる。
+    # PR か、既定ブランチへの push だけを対象にする
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.ref_name == github.event.repository.default_branch
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 

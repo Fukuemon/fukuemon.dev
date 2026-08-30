@@ -36,6 +36,9 @@ export function mountSteps(root: HTMLElement): void {
 
   // 保存しない。localStorage の書き換えで完了を捏造させない
   const seen = new Set<number>();
+  // localStorage が書けない環境では、island が届けた値だけが手がかりになる。
+  // 読み直しに頼ると、実行が成功しても完了の印が出ない
+  let relayed: number[] | undefined;
   // 直前に開いていた手順。初回は無い
   let was: number | undefined;
 
@@ -75,7 +78,7 @@ export function mountSteps(root: HTMLElement): void {
         lastStep: i,
       });
     }
-    paint(refs, seen);
+    paint(refs, seen, relayed);
   };
 
   for (const a of links) {
@@ -100,9 +103,13 @@ export function mountSteps(root: HTMLElement): void {
 
   globalThis.addEventListener("popstate", () => show(fromHash(refs), false));
   globalThis.addEventListener(PROGRESS_EVENT, (e) => {
-    if ((e as ProgressEvent).detail.contentId === contentId) paint(refs, seen);
+    const { detail } = e as ProgressEvent;
+    if (detail.contentId !== contentId) return;
+    relayed = detail.value.completedSteps;
+    paint(refs, seen, relayed);
   });
-  globalThis.addEventListener("storage", () => paint(refs, seen));
+  // 別タブでの完了。こちらは保存が効いているので読み直す
+  globalThis.addEventListener("storage", () => paint(refs, seen, relayed));
 
   show(fromHash(refs), false);
 }
@@ -121,9 +128,13 @@ function current(sections: HTMLElement[]): number {
   return Number(on?.dataset.step ?? 0);
 }
 
-/** 完了の印・進捗バー・前後ボタンを描き直す */
-function paint(refs: Refs, seen: ReadonlySet<number>): void {
-  const done = new Set(loadProgress(refs.contentId, refs.count)?.completedSteps ?? []);
+/**
+ * 完了の印・進捗バー・前後ボタンを描き直す。
+ * `relayed` は island が直接届けた完了。localStorage が書けない環境でも届く
+ */
+function paint(refs: Refs, seen: ReadonlySet<number>, relayed?: readonly number[]): void {
+  const stored = loadProgress(refs.contentId, refs.count)?.completedSteps;
+  const done = new Set([...(stored ?? []), ...(relayed ?? [])]);
   const passed = (i: number) => done.has(i) || seen.has(i);
   const now = current(refs.sections);
 
