@@ -1,0 +1,51 @@
+name: Terraform Apply
+
+# 手動起動と environment protection rules を必ず通す (ADR-0005)。
+# apply 用の credential は infra environment にのみ置き、deploy workflow からは届かない。
+#
+# infra/bootstrap/ は対象にしない。state をローカルに置く前提を壊すため、運用者が手元で 1 回だけ実行する。
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: plan で止めるか apply まで行うか
+        type: choice
+        options: [plan, apply]
+        default: plan
+
+concurrency:
+  group: terraform-cloudflare
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: infra
+    defaults:
+      run:
+        working-directory: infra/cloudflare
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.TF_CLOUDFLARE_API_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      TF_VAR_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TF_VAR_zone_name: ${{ vars.ZONE_NAME }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          # 版は infra/*/.terraform.lock.hcl と context/toolchain.md を正本にする
+          terraform_version: 1.14.3
+          terraform_wrapper: false
+
+      - run: terraform init -input=false -backend-config="bucket=${{ secrets.R2_STATE_BUCKET }}"
+
+      - run: terraform plan -input=false
+
+      - if: inputs.mode == 'apply'
+        run: terraform apply -auto-approve -input=false
