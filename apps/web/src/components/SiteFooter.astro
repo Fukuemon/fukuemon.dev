@@ -1,0 +1,13 @@
+---
+const links = [
+  { href: "https://github.com/Fukuemon", label: "github" },
+  { href: "/rss.xml", label: "rss" },
+];
+---
+
+<footer data-band class="foot">
+  <span class="mono meta">© 2026 fukuemon · CC BY 4.0</span>
+  <span class="foot__links">
+    {links.map((l) => <a class="label" href={l.href}>{l.label}</a>)}
+  </span>
+</footer>

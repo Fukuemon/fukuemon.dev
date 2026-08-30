@@ -1,0 +1,42 @@
+{
+  "name": "@fukuemon/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^7.0.8",
+    "@astrojs/react": "^6.0.4",
+    "@astrojs/rss": "^4.0.19",
+    "@electric-sql/pglite": "^0.5.8",
+    "@fukuemon/content-model": "workspace:*",
+    "@fukuemon/design-system": "workspace:*",
+    "astro": "^7.2.9",
+    "astro-expressive-code": "^0.44.1",
+    "pagefind": "^1.5.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@fukuemon/config": "workspace:*",
+    "@types/hast": "^3.0.5",
+    "@types/mdast": "^4.0.4",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitest/coverage-v8": "^4.1.11",
+    "playwright": "^1.62.1",
+    "rehype-mermaid": "^3.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "typescript": "^5.9.0",
+    "unified": "^11.0.5"
+  }
+}

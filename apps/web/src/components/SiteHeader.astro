@@ -1,0 +1,17 @@
+---
+interface Props {
+  current?: "posts" | "playground";
+}
+const { current } = Astro.props;
+const nav = [
+  { href: "/blog", label: "一覧", key: "posts" },
+  { href: "/playground", label: "playground", key: "playground" },
+] as const;
+---
+
+<header class="topbar">
+  <a class="mono hit" href="/" style="font-size: 0.875rem; letter-spacing: .18em">fukuemon.dev</a>
+  <nav class="label">
+    {nav.map((n) => <a class="hit" href={n.href} aria-current={current === n.key ? "page" : undefined}>{n.label}</a>)}
+  </nav>
+</header>
