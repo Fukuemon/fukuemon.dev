@@ -3,12 +3,14 @@ import { emitPreset } from "./bus";
 
 type Props = { contentId: string; presets: Preset[] };
 
-/** 側柱の「試す」。押すと実行パネルの入力欄へ入る */
+/**
+ * 側柱の「試す」。押すと実行パネルの入力欄へ入る。
+ * 見出しは側柱の開閉ボタンが兼ねるので置かない。同じ語が縦に 2 つ並ぶ。
+ */
 export default function Presets({ contentId, presets }: Props) {
   if (presets.length === 0) return null;
   return (
     <section className="pg-presets" aria-label="試す">
-      <p className="mono meta pg-presets__head">試す</p>
       <ul className="pg-list">
         {presets.map((p) => (
           <li key={p.label}>
