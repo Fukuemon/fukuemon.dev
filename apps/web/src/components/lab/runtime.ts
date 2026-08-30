@@ -1,4 +1,4 @@
-export type ExecResult = {
+type ExecResult = {
   fields: { name: string }[];
   /** Worker 側で上限まで切られた行 */
   rows: unknown[][];

@@ -8,9 +8,6 @@ importers:
 
   .:
     devDependencies:
-      '@fukuemon/config':
-        specifier: workspace:*
-        version: link:packages/config
       knip:
         specifier: ^6.32.2
         version: 6.33.0
@@ -69,9 +66,6 @@ importers:
       '@astrojs/check':
         specifier: ^0.9.10
         version: 0.9.10(prettier@3.9.6)(typescript@5.9.3)
-      '@fukuemon/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       '@types/hast':
         specifier: ^3.0.5
         version: 3.0.5

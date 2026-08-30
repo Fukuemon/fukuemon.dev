@@ -43,9 +43,5 @@ jobs:
             echo "playwright が無いので飛ばす"
           fi
 
+      # knip は check に含む。無指摘の状態から始めるので、増えたら落とす
       - run: pnpm run check
-
-      # 未使用の export と依存。落とさず報告にとどめる (ADR-0007)
-      - name: knip
-        run: pnpm run knip
-        continue-on-error: true

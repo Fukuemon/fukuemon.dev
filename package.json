@@ -16,17 +16,25 @@
     "typecheck": "pnpm -r --sequential run typecheck",
     "test": "pnpm -r --sequential run test:cov",
     "knip": "knip",
-    "doctor": "react-doctor --verbose --scope changed",
+    "doctor": "npx --yes react-doctor@latest --verbose --scope changed",
     "check:contrast": "pnpm --filter @fukuemon/design-system run check",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run check:contrast && pnpm run test && pnpm run build"
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:contrast && pnpm run test && pnpm run build"
   },
   "devDependencies": {
-    "@fukuemon/config": "workspace:*",
     "knip": "^6.32.2",
     "oxfmt": "^0.48.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",
     "typescript": "^5.9.0",
     "vitest": "^4.1.11"
+  },
+  "knip": {
+    "workspaces": {
+      "apps/web": {
+        "entry": [
+          "src/components/lab/SqlRunner.tsx"
+        ]
+      }
+    }
   }
 }
