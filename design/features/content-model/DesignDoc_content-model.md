@@ -3,17 +3,7 @@ type: feature-design
 title: Feature 設計 — Content Model
 description: 記事とハンズオンに共通する schema、安定識別子 contentId、相互参照グラフ、ContentRef への正規化を定める。
 status: 実装済み
-keywords:
-  [
-    contentId,
-    portalBase,
-    ContentRef,
-    related,
-    相互参照,
-    Content Layer,
-    loader,
-    zod,
-  ]
+keywords: [contentId, portalBase, ContentRef, related, 相互参照, Content Layer, loader, zod]
 governs:
   - packages/content-model/
   - apps/web/src/content.config.ts
@@ -88,9 +78,7 @@ export const portalBase = z.object({
   publishedAt: z.coerce.date(),
   updatedAt: z.coerce.date().optional(),
   related: z.array(z.string()).default([]), // 他コンテンツの contentId
-  repository: z
-    .object({ url: z.string().url(), path: z.string().optional() })
-    .optional(),
+  repository: z.object({ url: z.string().url(), path: z.string().optional() }).optional(),
 });
 ```
 
@@ -102,11 +90,11 @@ export const portalBase = z.object({
 
 **読み物の種別は 2 つだけであり、増やさない** (設計不変量 8)。
 
-| collection    | 追加属性                                                                           | 描画                          |
-| ------------- | ---------------------------------------------------------------------------------- | ----------------------------- |
-| `articles`    | 持たない                                                                            | `ArticleLayout`               |
-| `labs`        | `difficulty`, `duration: number`, `setup?: string`, `interactive?: InteractiveSpec` | `LabLayout` + 手順一覧        |
-| `playgrounds` | `runtime`, `setup?`, `presets`, `order`                                             | playground 専用ページ         |
+| collection    | 追加属性                                                                            | 描画                   |
+| ------------- | ----------------------------------------------------------------------------------- | ---------------------- |
+| `articles`    | 持たない                                                                            | `ArticleLayout`        |
+| `labs`        | `difficulty`, `duration: number`, `setup?: string`, `interactive?: InteractiveSpec` | `LabLayout` + 手順一覧 |
+| `playgrounds` | `runtime`, `setup?`, `presets`, `order`                                             | playground 専用ページ  |
 
 **`playgrounds` は種別ではない。**
 一覧のタブにも RSS にも出ず、`ContentRef` にも写さない ([ADR-0009](../../../adr/0009-site-sections-and-playground-collection.md))。
@@ -124,10 +112,10 @@ frontmatter に書くと本文と二重管理になり、手順を足したと�
 
 ### 分類 (tag) の扱い
 
-| 軸                                | 実現方法                                  | 索引ページ |
-| --------------------------------- | ----------------------------------------- | ---------- |
-| 種別 (すべて / 記事 / ハンズオン) | `/blog`、`/blog/articles`、`/blog/labs` の 3 ページ | 持つ |
-| 分類 (`postgres` など)            | URL パラメータ + クライアント側の絞り込み | 持たない   |
+| 軸                                | 実現方法                                            | 索引ページ |
+| --------------------------------- | --------------------------------------------------- | ---------- |
+| 種別 (すべて / 記事 / ハンズオン) | `/blog`、`/blog/articles`、`/blog/labs` の 3 ページ | 持つ       |
+| 分類 (`postgres` など)            | URL パラメータ + クライアント側の絞り込み           | 持たない   |
 
 **分類を束ねる上位の分類軸を持たない。**
 種別が 2 つなので、分類ごとの交差ページを作っても相互参照 (`related`) 以上のものが得られない。
@@ -183,9 +171,9 @@ export type ContentRef = {
 
 `meta` の中身は一覧の「種類」列に出る文字列に対応する。
 
-| 種別       | `meta` の例                                                |
-| ---------- | ---------------------------------------------------------- |
-| `article`  | `[{ label: "所要", value: "12分" }]`                       |
+| 種別       | `meta` の例                                                               |
+| ---------- | ------------------------------------------------------------------------- |
+| `article`  | `[{ label: "所要", value: "12分" }]`                                      |
 | `hands-on` | `[{ label: "所要", value: "60分" }, { label: "手順", value: "全 9 歩" }]` |
 
 ### コンポーネント構成 (C4 L3)
@@ -225,8 +213,7 @@ listContent({ type: "hands-on" }); // ハンズオン → /blog/labs
 
 ```ts
 // apps/web/src/content.config.ts
-const loader = (dir: string) =>
-  glob({ base: `./src/content/${dir}`, pattern: "**/*.{md,mdx}" });
+const loader = (dir: string) => glob({ base: `./src/content/${dir}`, pattern: "**/*.{md,mdx}" });
 
 // データソースを差し替える点。schema は種別ごとに持つ
 export const collections = {
@@ -273,11 +260,11 @@ export const collections = {
 
 ## 未決事項
 
-| #   | 論点                                                                                                 | 期限                     | 状態                                                                                                   |
-| --- | ---------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| #   | 論点                                                                                                 | 期限                      | 状態                                                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 1   | 分類 (tag) の粒度と初期セット                                                                        | seed コンテンツを書いた後 | **暫定で始める。** 索引ページを持たないので、値の集合を事前に確定させる必要がない。コンテンツが 10 件を超えた時点で見直す |
-| 2   | `repository` の表示位置 (ハンズオン本文に出すか、詳細の末尾に留めるか)                               | 実装着手前               | 未決                                                                                                   |
-| 3   | `status: draft` のコンテンツをビルドに含めるか (プレビュー用に含めて `noindex` にするか、除外するか) | 実装着手前               | 未決                                                                                                   |
+| 2   | `repository` の表示位置 (ハンズオン本文に出すか、詳細の末尾に留めるか)                               | 実装着手前                | 未決                                                                                                                      |
+| 3   | `status: draft` のコンテンツをビルドに含めるか (プレビュー用に含めて `noindex` にするか、除外するか) | 実装着手前                | 未決                                                                                                                      |
 
 ## 関連ドキュメント
 

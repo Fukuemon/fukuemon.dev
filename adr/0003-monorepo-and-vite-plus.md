@@ -165,7 +165,7 @@ Turborepo は `outputs` / `inputs` を明示宣言する方式のため入力推
 
 #### Cons
 
-- pnpm workspace を土台とする決定と衝突する。
+- pnpm workspace を基盤とする決定と衝突する。
   Vite+ は lockfile から package manager を検出して wrap するため、pnpm のまま Vite+ の利得を受け取れる。
 
 ## 外部依存の健全性

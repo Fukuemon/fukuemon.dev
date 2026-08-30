@@ -14,11 +14,11 @@
   版面は `design/features/design-system/DesignDoc_design-system.md` を正本とする。
 - 画面の構造は次である。
 
-  | 位置 | 記事                                | ハンズオン                                  |
-  | ---- | ----------------------------------- | ------------------------------------------- |
-  | 左   | サイドバー 306px。目次 + 同じ種別の一覧    | サイドバー 306px。手順一覧 + いまのテーブル       |
-  | 中   | 本文                                | 本文 (手順は通し。1 枚ずつ出す)             |
-  | 右   | なし                                | なし                                        |
+  | 位置 | 記事                                    | ハンズオン                                  |
+  | ---- | --------------------------------------- | ------------------------------------------- |
+  | 左   | サイドバー 306px。目次 + 同じ種別の一覧 | サイドバー 306px。手順一覧 + いまのテーブル |
+  | 中   | 本文                                    | 本文 (手順は通し。1 枚ずつ出す)             |
+  | 右   | なし                                    | なし                                        |
 
   サイドバーは折りたためる。折りたたむと 46px になり、縦組みの見出しと開閉ボタンだけが残る。
 
@@ -27,13 +27,13 @@
 
 - Starlight 0.41.10 の構造を実ソースで確認した (2026-08-29)。
 
-  | 事実 | 出典 |
-  | ---- | ---- |
-  | Component Override の対象は 28 個 | `packages/starlight/schemas/components.ts` |
-  | `hasSidebar: entry.data.template !== 'splash'` | `packages/starlight/utils/routing/data.ts:54` |
-  | `template: 'splash'` は目次も同時に消す | 同 `:64-65` |
-  | `components` は astro.config に 1 組だけ持つグローバル設定 | `packages/starlight/schemas/components.ts` |
-  | ページの組み立ては `Page.astro` に固定。`PageFrame` → `TwoColumnContent` → `ContentPanel` の入れ子順は変えられない | `packages/starlight/components/Page.astro` |
+  | 事実                                                                                                               | 出典                                          |
+  | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+  | Component Override の対象は 28 個                                                                                  | `packages/starlight/schemas/components.ts`    |
+  | `hasSidebar: entry.data.template !== 'splash'`                                                                     | `packages/starlight/utils/routing/data.ts:54` |
+  | `template: 'splash'` は目次も同時に消す                                                                            | 同 `:64-65`                                   |
+  | `components` は astro.config に 1 組だけ持つグローバル設定                                                         | `packages/starlight/schemas/components.ts`    |
+  | ページの組み立ては `Page.astro` に固定。`PageFrame` → `TwoColumnContent` → `ContentPanel` の入れ子順は変えられない | `packages/starlight/components/Page.astro`    |
 
 - Starlight は「サイドバー = ページ間ナビゲーション」「目次 = 右に 1 本」を前提に `--sl-content-inline-start` と `data-has-sidebar` を組む。
 - Expressive Code は `astro-expressive-code` として Starlight なしで導入できる。
@@ -50,25 +50,25 @@ Docs UI を Astro のページとして自前で組む。
 
 **画面案が Starlight のレイアウト前提と 3 点すべてで逆向きだからである。**
 
-| | Starlight の前提 | 画面案 |
-| --- | --- | --- |
+|            | Starlight の前提         | 画面案                                      |
+| ---------- | ------------------------ | ------------------------------------------- |
 | サイドバー | サイト全体のページツリー | 1 文書の中身 (目次 / 手順) と同じ種別の兄弟 |
-| 目次 | 右に 1 本 | 左のサイドバーの中 |
-| 右カラム | 目次 | 持たない |
+| 目次       | 右に 1 本                | 左のサイドバーの中                          |
+| 右カラム   | 目次                     | 持たない                                    |
 
 `template: splash` はサイドバーと目次を同時に消すため、**「サイドバーだけ外して目次を自前で置く」標準経路が存在しない。**
 
-### 2. Markdown の描画とコードの意匠は既存の部品を使う
+### 2. Markdown の描画とコードの見た目は既存の部品を使う
 
-| 役割             | 採るもの                                        |
-| ---------------- | ----------------------------------------------- |
-| Markdown の描画  | Astro の content collections と `render()`       |
-| コードブロック   | `astro-expressive-code`                          |
-| 全文検索の索引   | `pagefind` (ビルド後に `dist/` を索引)           |
-| 見出しアンカー   | `rehype-autolink-headings`                       |
+| 役割            | 採るもの                                   |
+| --------------- | ------------------------------------------ |
+| Markdown の描画 | Astro の content collections と `render()` |
+| コードブロック  | `astro-expressive-code`                    |
+| 全文検索の索引  | `pagefind` (ビルド後に `dist/` を索引)     |
+| 見出しアンカー  | `rehype-autolink-headings`                 |
 
-**Expressive Code は画面案のコード意匠をそのまま出せる。**
-ファイル名の frame、コピーボタン、行の強調が標準機能であり、強調の意匠は `styleOverrides.textMarkers` の `markBackground` / `markBorderColor` / `lineMarkerAccentWidth` で指定できる。
+**Expressive Code は画面案のコードの見た目をそのまま出せる。**
+ファイル名の frame、コピーボタン、行の強調が標準機能であり、強調の見た目は `styleOverrides.textMarkers` の `markBackground` / `markBorderColor` / `lineMarkerAccentWidth` で指定できる。
 トークンの色は `themes` に VS Code 互換の JSON を渡す。
 
 ### 3. 検索の UI は条件つきバックログへ回す
@@ -102,12 +102,12 @@ Design Tokens と `@layer fukuemon` のユーティリティが、記事・ハ�
 - `components` がグローバル設定であるため、構造の異なる記事とハンズオンを 1 組の Override 群の中で `entry.data` により分岐させることになる。
   レイアウトを 2 つ書くより読みにくい。
 - Override した箇所は Starlight のアップグレードごとに追従コストが発生する。
-- 意匠は Starlight の既定を広範に打ち消す必要がある。
+- 見た目は Starlight の既定を広範に打ち消す必要がある。
   画面案は見出しをほとんど大きくせず、罫線で階層を作る。
 
 **この代替案は成立する。** 採らない理由は不可能性ではなく、置き換える量に対して受け取るものが釣り合わないことにある。
 
-### 2. Starlight を採り、意匠を Starlight の既定へ集約する
+### 2. Starlight を採り、見た目を Starlight の既定へ集約する
 
 #### Pros
 
@@ -124,7 +124,7 @@ Design Tokens と `@layer fukuemon` のユーティリティが、記事・ハ�
 
 #### Pros
 
-- 検索とコードの意匠を Starlight に任せられる。
+- 検索とコードの見た目を Starlight に任せられる。
 
 #### Cons
 
@@ -135,11 +135,11 @@ Design Tokens と `@layer fukuemon` のユーティリティが、記事・ハ�
 
 ## 外部依存の健全性
 
-| 項目             | `astro-expressive-code`      | `pagefind`                   |
-| ---------------- | ---------------------------- | ---------------------------- |
-| 位置づけ         | Astro の integration          | ビルド後に走る CLI / JS API  |
-| Astro への依存   | integration として直接依存    | なし (`dist/` を読むだけ)    |
-| 後継・代替の有無 | Shiki を直接使う             | Orama / 静的 embedding 索引  |
+| 項目             | `astro-expressive-code`    | `pagefind`                  |
+| ---------------- | -------------------------- | --------------------------- |
+| 位置づけ         | Astro の integration       | ビルド後に走る CLI / JS API |
+| Astro への依存   | integration として直接依存 | なし (`dist/` を読むだけ)   |
+| 後継・代替の有無 | Shiki を直接使う           | Orama / 静的 embedding 索引 |
 
 **版の確認は実装着手時に行う。** 本 ADR の判断は版に依存しない。
 

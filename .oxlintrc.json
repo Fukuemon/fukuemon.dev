@@ -23,11 +23,7 @@
       }
     },
     {
-      "files": [
-        "apps/web/src/**/*.tsx",
-        "apps/web/src/**/*.jsx",
-        "apps/web/src/**/*.vue"
-      ],
+      "files": ["apps/web/src/**/*.tsx", "apps/web/src/**/*.jsx", "apps/web/src/**/*.vue"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -40,9 +36,7 @@
             ],
             "patterns": [
               {
-                "group": [
-                  "*.astro"
-                ],
+                "group": ["*.astro"],
                 "message": "island は .astro を参照しない。素の props だけを受ける (context/architecture.md Island の規約)"
               }
             ]
@@ -51,19 +45,14 @@
       }
     },
     {
-      "files": [
-        "packages/**"
-      ],
+      "files": ["packages/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": [
-                  "**/apps/**",
-                  "@fukuemon/web*"
-                ],
+                "group": ["**/apps/**", "@fukuemon/web*"],
                 "message": "packages から apps への逆依存は禁止 (context/architecture.md 規約 3)"
               }
             ]
