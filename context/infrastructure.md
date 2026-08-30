@@ -54,7 +54,8 @@ Cloudflare は新規プロジェクトへ JSONC を推奨しており、一部�
 | 配信元        | `apps/web/dist` (Astro の build 成果物 + pagefind の索引) |
 | 必要な secret | `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`          |
 
-**custom domain はまだ無い。** ドメインが未取得のため、到達先は `workers.dev` のサブドメインである。
+**custom domain はまだ無い。** `infra/cloudflare/` を apply していないため、到達先は `workers.dev` のサブドメインである。
+ドメインは Cloudflare Registrar で取得済みであり、zone も存在する。
 
 ## Infrastructure Contract (Terraform / Wrangler 管轄表)
 
