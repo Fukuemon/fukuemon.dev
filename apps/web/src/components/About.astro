@@ -1,41 +1,63 @@
 ---
 import AboutLinks from "./AboutLinks.astro";
+import ArtBand from "./ArtBand.astro";
 import Tate from "./Tate.astro";
 import { PROFILE, STACK } from "../data/profile";
+
+/**
+ * 1 字ずつ刷り上がらせるため、ビルド時に分ける。
+ * クライアントで分けると、JS が動くまで名乗りが出ない。
+ */
+const chars = [...PROFILE.name];
 ---
 
-{/* about は独立したページを作らず、ここに畳む (ADR-0009) */}
-<section class="g-rail about">
-  <Tate as="h2" class="tate-head" text="about" />
-  <div class="section-link">
-    <AboutLinks />
+{/* about は独立したページを作らず、トップの表紙を兼ねる (ADR-0009) */}
+<section class="about">
+  <div class="about__art" aria-hidden="true">
+    <ArtBand motif="woodland" fill />
+    <div class="about__veil"></div>
   </div>
-  <div>
-    <div class="about__head">
-      {/* 名乗りが隣にあるので、絵に読み上げる中身は無い。
-          1 枚のために sharp を足さず、256px の webp に落として置いてある (4.7 KiB) */}
-      <img class="about__face" src="/avatar.webp" alt="" width="88" height="88" />
-      <div>
-        <p class="about__name">
-          <span class="mono">{PROFILE.name}</span>
-          <span class="meta about__real">{PROFILE.realName}</span>
-        </p>
-        <p class="prose about__role">{PROFILE.role}</p>
-      </div>
+
+  <div class="g-rail about__grid">
+    <Tate as="h2" class="tate-head" text="about" upright />
+    <div class="section-link">
+      <AboutLinks />
     </div>
 
-    <p class="prose about__lead">{PROFILE.lead}</p>
-    <p class="prose about__note">{PROFILE.note}</p>
+    <div>
+      <div class="about__head">
+        {/* 名乗りが隣にあるので、絵に読み上げる中身は無い。
+            1 枚のために sharp を足さず、256px の webp に落として置いてある (4.7 KiB) */}
+        <img class="about__face" src="/avatar.webp" alt="" width="104" height="104" />
+        <div>
+          {/* 読み上げには 1 語で渡す。字ごとに切ると 1 字ずつ読まれる */}
+          <h1 class="display about__name" aria-label={PROFILE.name}>
+            {
+              chars.map((c, i) => (
+                <span class="about__char" style={`--i:${i}`} aria-hidden="true">
+                  {c}
+                </span>
+              ))
+            }
+          </h1>
+          <p class="mono meta about__reading">{PROFILE.reading}</p>
+          <p class="prose about__role">{PROFILE.role}</p>
+        </div>
+      </div>
 
-    <dl class="about__stack">
-      {
-        STACK.map((row) => (
-          <div class="about__row">
-            <dt class="mono meta about__key">{row.label}</dt>
-            <dd class="mono about__val">{row.items.join(" · ")}</dd>
-          </div>
-        ))
-      }
-    </dl>
+      <p class="prose about__lead">{PROFILE.lead}</p>
+      <p class="prose about__note">{PROFILE.note}</p>
+
+      <dl class="about__stack">
+        {
+          STACK.map((row, i) => (
+            <div class="about__row" style={`--i:${i}`}>
+              <dt class="mono meta about__key">{row.label}</dt>
+              <dd class="mono about__val">{row.items.join(" · ")}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
   </div>
 </section>
