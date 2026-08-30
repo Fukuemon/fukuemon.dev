@@ -1,14 +1,18 @@
 ---
+import type { ContentType } from "@fukuemon/content-model";
+import { ALL_KIND, CONTENT_TYPES, KIND_INDEX, KIND_LABEL } from "../lib/format";
+
 interface Props {
-  current: "all" | "article" | "hands-on";
-  counts: { all: number; article: number; "hands-on": number };
+  current: "all" | ContentType;
+  counts: Record<"all" | ContentType, number>;
 }
 const { current, counts } = Astro.props;
+
+// 種別の表示名と URL は format.ts が正本。ここでは並び順だけを決める
 const tabs = [
-  { key: "all", label: "すべて", href: "/blog" },
-  { key: "article", label: "記事", href: "/blog/articles" },
-  { key: "hands-on", label: "ハンズオン", href: "/blog/labs" },
-] as const;
+  { key: "all" as const, label: ALL_KIND.label, href: ALL_KIND.href },
+  ...CONTENT_TYPES.map((t) => ({ key: t, label: KIND_LABEL[t], href: KIND_INDEX[t] })),
+];
 ---
 
 <nav class="tabs" aria-label="種類で絞り込む">

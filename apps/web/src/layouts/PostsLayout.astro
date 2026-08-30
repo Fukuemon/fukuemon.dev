@@ -3,10 +3,11 @@ import SiteLayout from "./SiteLayout.astro";
 import KindTabs from "../components/KindTabs.astro";
 import ContentTable from "../components/ContentTable.astro";
 import { listContent } from "../lib/content";
-import type { ContentRef } from "@fukuemon/content-model";
+import { ALL_KIND, KIND_LABEL } from "../lib/format";
+import type { ContentRef, ContentType } from "@fukuemon/content-model";
 
 interface Props {
-  current: "all" | "article" | "hands-on";
+  current: "all" | ContentType;
   items: ContentRef[];
   showKind: boolean;
   lead: string;
@@ -19,7 +20,7 @@ const counts = {
   "hands-on": (await listContent({ type: "hands-on" })).length,
 };
 
-const title = { all: "一覧", article: "記事", "hands-on": "ハンズオン" }[current];
+const title = current === "all" ? ALL_KIND.title : KIND_LABEL[current];
 ---
 
 <SiteLayout title={`${title} — fukuemon.dev`} description={lead} current="posts">
