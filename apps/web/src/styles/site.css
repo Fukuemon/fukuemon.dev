@@ -1,5 +1,5 @@
 /* このサイトの部品。トークンと版面は @fukuemon/design-system が持つ */
-@layer fukuemon {
+@layer components {
   /* ---- 面 ---- */
   .band {
     padding-block: var(--spacing-inter-2);
@@ -205,12 +205,12 @@
   }
 }
 
-@layer fukuemon {
+@layer components {
   .foot__links a { color: var(--color-fg-2); transition: color 140ms ease-out; }
   .foot__links a:hover { color: var(--color-link); }
 }
 
-@layer fukuemon {
+@layer components {
   .section-x { margin-inline: var(--gutter); }
   .band-head { border-inline-end-color: var(--color-rule); color: var(--color-fg); }
   @media (min-width: 721px) {
@@ -222,7 +222,7 @@
 }
 
 /* 実行パネル。Astro の scoped style は island に効かないのでここに置く */
-@layer fukuemon {
+@layer components {
   .runner {
     margin-block: var(--spacing-intra-3);
     border: 1px solid var(--color-rule-strong);
@@ -287,17 +287,17 @@
 }
 
 /* about の見開き。左の面が固定、右だけ送る */
-@layer fukuemon {
+@layer components {
   .wood-band--fill { position: absolute; inset: 0; }
 }
 
-@layer fukuemon {
+@layer components {
   /* 見開きの左面。挿絵は下端へ寄せる。竹は縦に伸びるので上を切ると根元だけになる */
   /* 右面の一覧が版面の右端を超えない */
   .spread__body .row { padding-inline-end: var(--spacing-intra-2); }
 }
 
-@layer fukuemon {
+@layer components {
   /* 起動した Postgres の版。実行が本物であることを示す */
   .runner__engine { margin-inline-start: auto; color: var(--color-fg-2); }
   .runner__bar:has(.btn) .runner__count { margin-inline-start: auto; }
@@ -305,7 +305,7 @@
 
 /* SQL の編集。透明な textarea を色付き pre に重ねる。
    ずれないよう font / padding / 折り返しを両者で揃える */
-@layer fukuemon {
+@layer components {
   .sqled { position: relative; }
   .sqled__ink,
   .sqled__input {
@@ -342,20 +342,20 @@
   .sqled__input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
 }
 
-@layer fukuemon {
+@layer components {
   /* 縦組みを持たないページの版面 */
   /* タブ・リード・表の右端を揃える。表だけ幅で止まると右端がずれる */
   .page { padding: var(--spacing-inter-1) var(--gutter) 0; max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter)); }
 }
 
-@layer fukuemon {
+@layer components {
   /* 末尾の自己紹介。about を 1 ページ持つほどの分量ではない */
   .colophon__links a { color: var(--color-link); display: flex; align-items: baseline; gap: var(--spacing-intra-1); }
 }
 
 /* 側柱。目次 / 手順 と、ほかの記事への切り替えを 1 本にまとめる。
    種別が増えても構造が変わらないよう、中身を差し替える形にする */
-@layer fukuemon {
+@layer components {
   .rail, .drawer {
     display: flex;
     flex-direction: column;
@@ -410,14 +410,14 @@
   }
 }
 
-@layer fukuemon {
+@layer components {
   /* 短いページでフッタが画面下端に届かず、下に地色が残る */
   .shell { min-block-size: 100dvh; display: flex; flex-direction: column; }
   .shell > main { flex: 1; }
 }
 
 /* playground。手順に縛られず SQL を試す */
-@layer fukuemon {
+@layer components {
   .pg-list { list-style: none; margin: 0; padding: 0; }
   .pg-preset {
     display: block; inline-size: 100%; text-align: start;
@@ -429,14 +429,14 @@
   .pg-preset:hover { color: var(--color-link); }
 }
 
-@layer fukuemon {
+@layer components {
   /* disabled はフォーカスを body へ飛ばす。見た目だけ無効にする */
   .btn[aria-disabled="true"] { opacity: .55; cursor: default; }
   .btn[aria-disabled="true"]:hover { background: transparent; color: var(--color-fg); }
 }
 
 /* 手元で用意するラボ。実行環境を持たないので、置くのは手順だけ */
-@layer fukuemon {
+@layer components {
   .local {
     margin-block: var(--spacing-inter-1);
     padding-block-start: var(--spacing-intra-3);
@@ -471,7 +471,7 @@
 
 
 /* ハンズオン。1 画面 1 手順。claat の drawer + main を版面に合わせて写した */
-@layer fukuemon {
+@layer components {
   .drawer {
     padding: var(--spacing-intra-3) var(--spacing-intra-3) var(--spacing-inter-1) var(--gutter);
     border-inline-end: 1px solid var(--color-rule-strong);
@@ -621,7 +621,7 @@
 }
 
 /* 本文中の表。Markdown の表には class が付かないので要素で当てる */
-@layer fukuemon {
+@layer components {
   .prose table {
     inline-size: 100%;
     border-collapse: collapse;
@@ -646,7 +646,7 @@
 }
 
 /* 狭い画面。側柱は横から滑り出すので、版面は 1 列にする */
-@layer fukuemon {
+@layer components {
   @media (max-width: 1100px) {
     .g-doc, [data-open="false"].g-doc, [data-open="true"].g-doc {
       grid-template-columns: minmax(0, 1fr);
@@ -658,7 +658,7 @@
 }
 
 /* トップの種別ごとの節。実物を 3 本並べる */
-@layer fukuemon {
+@layer components {
   .kind { margin: var(--spacing-inter-3) var(--gutter) 0; }
   .kind__lead { margin: var(--spacing-intra-2) 0 0; max-inline-size: var(--measure-w); color: var(--color-fg-2); }
   /* 3 枚に満たないとき、右が大きく空かないよう幅を詰める */
@@ -698,7 +698,7 @@
 }
 
 /* 側柱の開閉。広い画面では列が縮み、狭い画面では横から滑り出す */
-@layer fukuemon {
+@layer components {
   .side { display: contents; }
 
   .side__toggle {
@@ -800,7 +800,7 @@
 }
 
 /* テーブルの中身。列の定義 (ER の実体) と先頭の行を並べる */
-@layer fukuemon {
+@layer components {
   .sheet__body { display: flex; flex-direction: column; min-block-size: 0; overflow: hidden; }
   .sheet__sub { padding-block: var(--spacing-intra-2); }
   /* 列が多いテーブルでは、行の一覧が潰れないよう列の側を先に縮める */
@@ -828,7 +828,7 @@
 }
 
 /* mermaid の図。色はビルド時にトークンへ置き換え済み */
-@layer fukuemon {
+@layer components {
   .prose svg.figure {
     display: block;
     inline-size: 100%;
@@ -840,7 +840,7 @@
 }
 
 /* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
-@layer fukuemon {
+@layer components {
   /* 挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
   .about { position: relative; overflow: hidden; }
   .about__art { position: absolute; inset: 0; pointer-events: none; }
@@ -939,7 +939,7 @@
 }
 
 /* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
-@layer fukuemon {
+@layer components {
   .labmain--wide { max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter)); }
   .pg-intro { margin-block: var(--spacing-intra-3); }
   .pg-preset {
@@ -964,7 +964,7 @@
 }
 
 /* ER 図。実体と外部キーだけを箱と線で描く */
-@layer fukuemon {
+@layer components {
   .peek__er { inline-size: 100%; margin-block: var(--spacing-intra-2); }
   /* viewBox に width/height が無いと器いっぱいに引き伸ばされる。
      表と同じく、縮めて読めなくするより横へ流す */
@@ -977,7 +977,7 @@
 }
 
 /* playground。結果が長いので、実行の操作列を画面に貼り付ける */
-@layer fukuemon {
+@layer components {
   .pg .runner__bar:has(.btn) {
     position: sticky;
     inset-block-start: var(--topbar);
@@ -1004,7 +1004,7 @@
 }
 
 /* 窓の骨組みは .sheet を借りる */
-@layer fukuemon {
+@layer components {
   .search__open { flex: 0 0 auto; }
   .search__input {
     flex: 1 1 12rem;

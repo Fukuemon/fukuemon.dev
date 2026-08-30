@@ -13,7 +13,7 @@ const { text, as: Tag = "span", upright = false, class: extra } = Astro.props as
 ---
 
 {/* 短い欧文・数字だけを縦中横で正立させる */}
-<Tag class:list={["tate", upright && "tate--upright", extra]}>
+<Tag class:list={["tate", upright && "tate-upright", extra]}>
   {
     tcy(text).map((part) =>
       part.upright ? <span class="tcy">{part.text}</span> : <>{part.text}</>,
