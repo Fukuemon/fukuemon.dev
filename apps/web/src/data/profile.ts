@@ -51,12 +51,6 @@ export const OUTSIDE: Outside[] = [
     kind: "登壇",
   },
   {
-    date: "2024-11-06",
-    title: "GDGs Innovative Crosstalk at 東大 【関西 x 東京】イベントレポート",
-    href: "https://zenn.dev/fukuemon/articles/47809f2eeeeff9",
-    kind: "記事",
-  },
-  {
     date: "2024-09-30",
     title:
       "OpenAPIの仕様書から指定したPostmanのコレクションを自動更新するDockerイメージを作ったので紹介します",
