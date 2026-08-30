@@ -47,7 +47,7 @@ toolchain 一覧は [toolchain.md](toolchain.md)、プロジェクト固有コ�
 
 - `contentId` を Astro の `id` に載せない理由 (Astro が占有し、`slug` は schema に置けない)
 - 関係に `reference()` を使わない理由 (collection をまたぐため / Astro 非依存を保つため)
-- `tokens.css` に Tailwind の構文を書かない理由 (Expressive Code が挿す CSS が Tailwind を通らないため)
+- `tokens.css` を素の CSS で書く理由 (Expressive Code が挿す CSS はこちらのビルドを通らないため)
 
 いずれも該当 ADR へのリンクを 1 行添える。
 
@@ -113,7 +113,7 @@ CI で回す。
 
 | 検査                   | 正本 config                                                   | 実行点          |
 | ---------------------- | ------------------------------------------------------------- | --------------- |
-| 依存境界 (規約 1)      | `packages/config/oxlint/base.json` の `no-restricted-imports` | pre-commit / CI |
+| 依存境界 (規約 1)      | ルートの `.oxlintrc.json` の `no-restricted-imports` (`overrides` で方向を固定) | pre-commit / CI |
 | 依存境界 (規約 2)      | 各 package の `dependencies` 宣言                             | `knip` (CI)     |
 | dead code / 未使用依存 | `knip.json`                                                   | CI              |
 | コード重複             | `similarity-ts` の既定                                        | CI              |

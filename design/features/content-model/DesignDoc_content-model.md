@@ -18,7 +18,7 @@ governs:
   - packages/content-model/
   - apps/web/src/content.config.ts
   - apps/web/src/lib/content/
-verified_commit: unverified # MR2 の commit を入れる
+verified_commit: 84b6c77
 ---
 
 # Feature 設計: Content Model
@@ -100,12 +100,17 @@ export const portalBase = z.object({
 
 ### 種別ごとの拡張
 
-種別は 2 つだけであり、**増やさない** (設計不変量 8)。
+**読み物の種別は 2 つだけであり、増やさない** (設計不変量 8)。
 
-| collection | 追加属性                                                                    | 描画                   |
-| ---------- | --------------------------------------------------------------------------- | ---------------------- |
-| `articles` | 持たない                                                                    | `DocLayout`            |
-| `handsOn`  | `difficulty`, `duration: number`, `setup?: string`, `interactive?: InteractiveSpec` | `DocLayout` + 手順一覧 |
+| collection    | 追加属性                                                                           | 描画                          |
+| ------------- | ---------------------------------------------------------------------------------- | ----------------------------- |
+| `articles`    | 持たない                                                                            | `ArticleLayout`               |
+| `labs`        | `difficulty`, `duration: number`, `setup?: string`, `interactive?: InteractiveSpec` | `LabLayout` + 手順一覧        |
+| `playgrounds` | `runtime`, `setup?`, `presets`, `order`                                             | playground 専用ページ         |
+
+**`playgrounds` は種別ではない。**
+一覧のタブにも RSS にも出ず、`ContentRef` にも写さない ([ADR-0009](../../../adr/0009-site-sections-and-playground-collection.md))。
+collection にするのは、遊び場を足す手順を記事と同じ「Markdown 1 枚」に保つためである。
 
 **記事は固有の属性を持たない。** 読了時間を出さない。
 手で書くと本文の分量とずれ、ずれた数字は同じ行にある実測値まで疑われる。
@@ -220,17 +225,14 @@ listContent({ type: "hands-on" }); // ハンズオン → /blog/labs
 
 ```ts
 // apps/web/src/content.config.ts
-const glob = (dir) => ({ base: `src/content/${dir}`, pattern: "**/*.{md,mdx}" });
+const loader = (dir: string) =>
+  glob({ base: `./src/content/${dir}`, pattern: "**/*.{md,mdx}" });
 
+// データソースを差し替える点。schema は種別ごとに持つ
 export const collections = {
-  articles: defineCollection({
-    loader: glob("articles"), // ← データソースを差し替える点
-    schema: portalBase.extend(articleFields),
-  }),
-  labs: defineCollection({
-    loader: glob("labs"),
-    schema: portalBase.extend(handsOnFields),
-  }),
+  articles: defineCollection({ loader: loader("articles"), schema: articleSchema }),
+  labs: defineCollection({ loader: loader("labs"), schema: handsOnSchema }),
+  playgrounds: defineCollection({ loader: loader("playgrounds"), schema: playgroundSchema }),
 };
 ```
 

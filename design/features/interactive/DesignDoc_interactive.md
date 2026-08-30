@@ -19,7 +19,7 @@ governs:
   - apps/web/src/components/lab/
   - apps/web/src/lib/remark-lab.ts
   - apps/web/public/_headers
-verified_commit: unverified # MR2 の commit を入れる
+verified_commit: 84b6c77
 ---
 
 # Feature 設計: ハンズオンと Interactive
@@ -69,7 +69,7 @@ verified_commit: unverified # MR2 の commit を入れる
 | 形       | 1 画面 1 手順。全手順を 1 文書に入れ、CSS で 1 枚だけ出す  |
 | 進捗     | 持つ。`localStorage` に手順単位で残す                      |
 | 実行     | 本文中でコードが動く。題材が許さない場合は読者の端末で動かす |
-| layout   | `DocLayout` に手順一覧と進捗バーを足した専用 layout        |
+| layout   | `LabLayout`。`SiteLayout` に側柱と 1 画面 1 手順の面を足す |
 
 分けない理由は 2 つある。
 種別を増やすと、著者が書く前に「これはどちらか」を判断させられる。
@@ -96,6 +96,7 @@ Google Codelabs の `claat` は Markdown / Google Docs から静的 HTML を生�
 | 完了状態の永続化                         | `localStorage`                                                           |
 | 前後の移動                               | 本文の下の前後ボタン。端では `aria-disabled`                             |
 | いま DB に何が入っているか               | 側柱の一覧。行を押すと `<dialog>` に先頭 20 行を出す                     |
+| テーブル同士の関係                       | 側柱の「テーブル構成」。`<dialog>` に ER 図を出す                        |
 
 **手順数を frontmatter に持たない。** 本文と手順数が乖離する経路をなくすためである ([content-model](../content-model/DesignDoc_content-model.md) の `handsOn` 拡張)。
 
@@ -189,7 +190,9 @@ flowchart TD
 - `sandbox` は `/playground/<id>` の別ドキュメントに置き、本文からは `iframe` で埋め込む
 - `local` は実行環境を持たない。
   リポジトリの URL と前提条件だけを持ち、コマンドを出す
-- isolation は `apps/web/public/_headers` で `/playground/*` にのみ掛ける ([context/infrastructure.md](../../../context/infrastructure.md))
+- isolation は `apps/web/public/_headers` で `/playground/*` にのみ掛ける ([context/infrastructure.md](../../../context/infrastructure.md))。
+  **`_headers` はまだ書いていない。** PGlite は素の Worker で動き `SharedArrayBuffer` を要求しないため、
+  isolation を要求するランタイムが実在するまで掛けない
 
 **この分離により、本文の描画と playground を持つかどうかが独立した判断になる。** `embedded` の埋め込みも `sandbox` の iframe も本文のレイアウトを変えずに実現できる。
 
@@ -248,10 +251,17 @@ const interactive = z.discriminatedUnion("level", [
 
 ### 側柱
 
-側柱に置くのは**手順の一覧**と**いまのテーブル**の 2 つだけである。
-他のハンズオンへの導線は置かない。
+| 面         | 側柱の中身                  |
+| ---------- | --------------------------- |
+| ハンズオン | 手順の一覧 + いまのテーブル |
+| playground | 試す + いまのテーブル       |
+
+**他のハンズオンへの導線は置かない。**
 読者が手順を追っているあいだ、別の記事の題は判断の材料にならない。
 一覧へは本文上部のパンくずから戻る。
+
+playground の「試す」は側柱に置く。
+本文の側に置くと、結果の表と例が縦に並んで、どちらも幅を使えない。
 
 側柱はたためる。
 たたむと `--drawer-shut` (46px) まで縮み、開閉ボタンだけが残る。
@@ -265,6 +275,17 @@ const interactive = z.discriminatedUnion("level", [
 中身は側柱ではなく `<dialog>` に出す。
 306px の列に列を並べると日時が途中で切れ、値を読むという用を成さない。
 `<dialog>` は top layer に出るので、側柱の `overflow` に切られない。
+
+窓は 2 種類ある。
+
+| 窓           | 中身                                       |
+| ------------ | ------------------------------------------ |
+| テーブルの窓 | 列の定義と、先頭 20 行                     |
+| テーブル構成 | ER 図。テーブルの箱と外部キーの向き        |
+
+**開いたままの窓は、実行のたびに中身を引き直す。**
+引き直しはカタログへ問い合わせ直す。
+側柱の一覧 (state) から組むと、実行の直後に古い姿のまま描いてしまう。
 
 ### 進捗の永続化
 
@@ -296,17 +317,40 @@ flowchart TD
     ctl --> ls["localStorage<br/>lab:&lt;contentId&gt;"]
     layout --> body["手順の面 (1 枚だけ表示)"]
     body -.->|"embedded"| runner["SqlRunner.tsx"]
-    runner --> rt["runtime.ts<br/>Session / WORKERS / serialize"]
+    pg["Playground.tsx"] --> hook
+    runner --> hook["useRunner.ts<br/>実行の状態機械"]
+    hook --> rt["runtime.ts<br/>Session / WORKERS / serialize"]
     rt --> w["pglite.worker.ts"]
-    runner -.->|"lab:ran"| peek["DbPeek.tsx<br/>いまのテーブル → dialog"]
-    peek --> rt
+    hook -.->|"lab:ran"| bus["bus.ts<br/>島をまたぐ通知"]
+    preset["Presets.tsx"] -.->|"lab:preset"| bus
+    bus -.-> pg
+    bus -.-> peek["DbPeek.tsx"]
+    peek --> cat["catalog.ts<br/>カタログの問い合わせ"]
+    cat --> rt
+    peek --> er["ErDiagram.tsx"]
     body -.->|"sandbox"| frame["iframe → /playground/&lt;id&gt;"]
     layout -.->|"local"| setup["LocalSetup.astro<br/>clone / 前提条件 / 起動"]
 ```
 
-React Island になるのは**実行パネルと「いまのテーブル」だけ**である。
+React Island になるのは**実行パネル・「いまのテーブル」・「試す」だけ**である。
 手順の一覧・面の出し入れ・側柱の開閉は `controller.ts` が属性の付け替えで行う。
-**ハンズオン以外のページには載らない。**
+**ハンズオンと playground 以外のページには載らない。**
+
+#### 島をまたぐ通知
+
+実行パネルと側柱は別の React root なので、props でも context でも繋がらない。
+唯一の共通の足場が `document` なので、CustomEvent を通す。
+
+| 事象         | 送り手       | 受け手       | 用途                       |
+| ------------ | ------------ | ------------ | -------------------------- |
+| `lab:ran`    | `useRunner`  | `DbPeek`     | DB を引き直す              |
+| `lab:preset` | `Presets`    | `Playground` | 入力欄へ SQL を入れる      |
+
+**購読は `bus.ts` を通す。**
+`addEventListener` を component に置くと、事象名と `contentId` の照合が使う側の数だけ重複する。
+
+状態管理のライブラリを入れない。
+購読は `useSyncExternalStore` を経由しても本数が減らず、流しているのは値ではなく合図である。
 
 `rehype-lab-steps` を remark ではなく rehype に置くのは、
 remark で包むと `.mdx` は JSX、`.md` は生 HTML と 2 通りの書き分けが要るためである。
@@ -318,14 +362,14 @@ hast まで来れば拡張子の違いが消えて 1 通りで済む。
 
 ```ts
 const RUNNERS: Record<string, Runner> = {
-  sql: { name: "SqlRunner", path: "~/components/lab/SqlRunner", engine: "Postgres" },
+  sql: { name: "SqlRunner", path: "~/components/lab/SqlRunner", engine: "Postgres", kind: "pglite" },
 };
 ```
 
 engine を足す手順は 3 つである。
 
-1. `pglite.worker.ts` と同じ `boot` / `exec` を持つ Worker を書く
-2. `SqlRunner.tsx` と同じ props を取る部品を書く
+1. `pglite.worker.ts` と同じ `boot` / `exec` を持つ Worker を書き、`runtime.ts` の `WORKERS` に足す
+2. `SqlRunner.tsx` と同じ props を取る部品を書く。実行の状態機械は `useRunner` を再利用する
 3. `RUNNERS` に 1 行足す
 
 **コンテンツ側の書き方は変わらない。** 著者はフェンスの言語を変えるだけである。
@@ -357,7 +401,8 @@ engine を足す手順は「実行環境を足す」と同じである。
 3. その手順の埋め込みエディタに SQL が用意されている
 4. 実行すると、ページ内の PGlite が本物の Postgres として `EXPLAIN ANALYZE` を返す
 5. 側柱の「いまのテーブル」が更新される。行を押すと中身が `<dialog>` に出る
-6. 読者は SQL を書き換えて再実行できる
+6. 「テーブル構成」を押すと ER 図が出る。開いたまま実行すると、図も追従する
+7. 読者は SQL を書き換えて再実行できる
 
 **環境構築が不要で、ヘッダの制約も受けない。**
 手順を移っても同じ文書のままなので、**インスタンスは落ちない**。
