@@ -209,7 +209,6 @@
 }
 
 @layer fukuemon {
-  .lede-title { max-inline-size: 20em; }
   .section-x { margin-inline: var(--gutter); }
   .band-head { border-inline-end-color: var(--rule); color: var(--fg); }
   @media (min-width: 721px) {
@@ -348,18 +347,6 @@
 }
 
 @layer fukuemon {
-  /* 表紙。挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
-  .hero { position: relative; overflow: hidden; min-block-size: clamp(320px, 46vh, 460px); display: flex; }
-  .hero__veil {
-    position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(96deg, var(--veil-1) 0 26%, var(--veil-0) 64%);
-  }
-  .hero__fg {
-    position: relative;
-    align-self: center;
-    padding: var(--gap-inter-2) var(--gutter);
-  }
-
   /* 末尾の自己紹介。about を 1 ページ持つほどの分量ではない */
   .colophon__links a { color: var(--link); display: flex; align-items: baseline; gap: var(--gap-intra-1); }
 }
@@ -695,7 +682,6 @@
     flex-grow: 1;
   }
   .kind__meta { color: var(--fg-2); }
-  .hero__eyebrow { letter-spacing: 0.18em; margin-block-end: var(--gap-intra-2); }
 
   @media (max-width: 720px) {
     .kind__grid { grid-template-columns: minmax(0, 1fr); }
@@ -853,29 +839,48 @@
 
 /* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
 @layer fukuemon {
-  .about { margin: var(--gap-inter-2) var(--gutter); }
+  /* 表紙を兼ねる。挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
+  .about { position: relative; overflow: hidden; }
+  .about__art { position: absolute; inset: 0; pointer-events: none; }
+  .about__veil {
+    position: absolute; inset: 0;
+    background: linear-gradient(96deg, var(--veil-1) 0 42%, var(--veil-0) 88%);
+  }
+  /* 狭い画面では本文が版面の全幅を使うので、横方向の霞では枝が文字に掛かる。
+     下端だけを残して縦に掛け直す */
+  @media (max-width: 720px) {
+    .about__veil { background: linear-gradient(to bottom, var(--veil-1) 0 82%, var(--veil-0) 100%); }
+  }
+  /* 挿絵の上に載る。層を作らないと霞の下へ潜る */
+  .about__grid {
+    position: relative;
+    margin: var(--gap-inter-2) var(--gutter);
+    padding-block: var(--gap-inter-1);
+  }
   /* 絵と名乗りを横に並べる。狭い画面では上下に積む */
   .about__head {
     display: flex;
     align-items: center;
     gap: var(--gap-intra-4);
-    margin-block-end: var(--gap-intra-3);
+    margin-block-end: var(--gap-inter-1);
   }
   /* 角丸を使わない。四角のまま置く */
-  .about__face { flex: 0 0 auto; border: 1px solid var(--rule-strong); }
+  .about__face { flex: 0 0 auto; border: 1px solid var(--rule-strong); background: var(--panel); }
   /* 名乗り。肩書きより先に、何と呼べばよいかを出す */
   .about__name {
-    display: flex;
-    align-items: baseline;
-    gap: var(--gap-intra-2);
-    margin: 0 0 var(--gap-intra-2);
-    font-size: 1.15rem;
-    letter-spacing: .12em;
+    margin: 0;
+    font-family: var(--font-mono);
+    letter-spacing: .04em;
+    line-height: 1.1;
   }
-  /* handle だけでは登壇や OSS の名前と結び付かない。並べて置く */
-  .about__real { letter-spacing: .08em; }
-  .about__role { margin: 0; max-inline-size: var(--measure-w); }
+  /* 1 字ずつ刷り上がらせるための入れ物。動きは motion.css が持つ */
+  .about__char { display: inline-block; }
+  .about__reading { margin: var(--gap-intra-1) 0 0; }
+  .about__role { margin: var(--gap-intra-2) 0 0; max-inline-size: var(--measure-w); }
   .about__lead { margin: 0; max-inline-size: var(--measure-w); }
+  @media (max-width: 720px) {
+    .about__head { flex-direction: column; align-items: flex-start; gap: var(--gap-intra-3); }
+  }
   .about__note {
     margin: var(--gap-intra-3) 0 0;
     max-inline-size: var(--measure-w);

@@ -6,8 +6,8 @@
 export const PROFILE = {
   /** 名乗り。ドメインと GitHub の handle に合わせる */
   name: "fukuemon",
-  /** 本名。handle だけだと、登壇や OSS の名前と結び付かない */
-  realName: "福浦",
+  /** 読み。handle の綴りだけでは呼び方が決まらない */
+  reading: "ふくえもん",
   /** 何をしている人か。**勤め先は書かない。** 変わるたびに書き直しが要る */
   role: "エンジニア。",
   /** このサイトで何を書いているか */

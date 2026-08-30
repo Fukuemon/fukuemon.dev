@@ -120,3 +120,52 @@
     }
   }
 }
+
+/* about。トップの表紙を兼ねるので、ここだけ動きを厚くする (ADR-0009 の例外)。
+   規則は他と同じ。位置は動かさず、変えるのは濃度と罫の長さに限る。 */
+@layer fukuemon {
+  /* 名乗りが 1 字ずつ刷り上がる。段送りは字の添字で決める */
+  .about__char {
+    opacity: 1;
+    transition: opacity 320ms ease-out calc(var(--i, 0) * 55ms);
+  }
+  @starting-style {
+    .about__char { opacity: 0; }
+  }
+
+  /* 絵と読みは名乗りの後に続く */
+  .about__face, .about__reading, .about__role {
+    opacity: 1;
+    transition: opacity 420ms ease-out 260ms;
+  }
+  @starting-style {
+    .about__face, .about__reading, .about__role { opacity: 0; }
+  }
+
+  /* 使っているものは、画面に入ったところで行ごとに刷り上がる。
+     scroll-driven animation は Chrome 115+ のみ。
+     対応していない環境では規則ごと無視され、最初から見えている */
+  @supports (animation-timeline: view()) {
+    /* 短縮形で書くと、ビルドの圧縮が animation-timeline ごと落とす。長い形で書く */
+    .about__row {
+      animation-name: ink;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 26%;
+    }
+  }
+  @keyframes ink {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* 動きを減らす設定では、最初から出す */
+  @media (prefers-reduced-motion: reduce) {
+    .about__char, .about__face, .about__reading, .about__role, .about__row {
+      animation: none;
+      transition: none;
+      opacity: 1;
+    }
+  }
+}
