@@ -1,5 +1,5 @@
 import type { Preset } from "@fukuemon/content-model";
-import { PRESET_EVENT } from "./schema";
+import { emitPreset } from "./bus";
 
 type Props = { contentId: string; presets: Preset[] };
 
@@ -15,11 +15,7 @@ export default function Presets({ contentId, presets }: Props) {
             <button
               type="button"
               className="hit pg-preset"
-              onClick={() =>
-                globalThis.dispatchEvent(
-                  new CustomEvent(PRESET_EVENT, { detail: { contentId, sql: p.sql } }),
-                )
-              }
+              onClick={() => emitPreset(contentId, p.sql)}
             >
               {p.label}
             </button>

@@ -1,4 +1,4 @@
-import type { Column, Relation } from "./schema";
+import type { Column, Relation } from "./catalog";
 
 export type Entity = { name: string; columns: Column[] };
 
