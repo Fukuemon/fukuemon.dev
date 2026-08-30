@@ -31,7 +31,8 @@ Cloudflare リソースの管轄と運用手順。
 
 ```mermaid
 flowchart LR
-    push["git push"] --> ci["deploy workflow (自動)"]
+    push["git push"] --> chk["check workflow"]
+    chk -->|"成功したときだけ"| ci["deploy workflow"]
     ci -->|"deploy scope の token"| wd["wrangler deploy"]
     wd --> worker["Worker script + assets"]
     manual["運用者が手動起動"] --> env["environment protection rules"]
@@ -48,7 +49,7 @@ Cloudflare は新規プロジェクトへ JSONC を推奨しており、一部�
 | 項目          | 値                                                        |
 | ------------- | --------------------------------------------------------- |
 | Worker 名     | `fukuemon-dev`                                            |
-| 契機          | 既定ブランチへの push                                     |
+| 契機          | Check workflow が既定ブランチで成功したとき               |
 | workflow      | `.github/workflows/deploy.yml`                            |
 | wrangler 設定 | `apps/web/wrangler.jsonc`                                 |
 | 配信元        | `apps/web/dist` (Astro の build 成果物 + pagefind の索引) |
@@ -128,7 +129,7 @@ infra/
 3. `infra/cloudflare/` で zone を import してから apply — custom domain を作る (state は R2 backend)
 
 **zone は Terraform で作らない。** ドメインを Cloudflare Registrar で取得しており、zone は取得時に作られている。
-`terraform import cloudflare_zone.site <zone ID>` で state へ取り込む。
+`zone.tf` の `import` ブロックが apply のたびに state へ取り込むため、手動の `terraform import` は要らない。
 ネームサーバも既に Cloudflare を向いているため、レジストラ側の設定は要らない。
 
 ## state backend
@@ -153,6 +154,9 @@ backend "s3" {
 
 **state の key に scope を含める** (`cloudflare/main/terraform.tfstate`)。
 後から兄弟の state を足すとき、既存 state のリネームを避けられる。
+
+**バケットのバージョニングは設定しない。** provider 5.24.0 の `cloudflare_r2_bucket` に versioning 引数が無く、Terraform から設定できない。
+state を失った場合は `terraform import` で回復する。
 
 ## Environment Strategy
 
@@ -186,22 +190,27 @@ deploy workflow は environment を指定しないため、そこへ届かない
 | `R2_ACCESS_KEY_ID`       | `infra` environment secret | apply workflow の state backend |
 | `R2_SECRET_ACCESS_KEY`   | `infra` environment secret | apply workflow の state backend |
 | `R2_STATE_BUCKET`        | `infra` environment secret | apply workflow の state backend |
+| `CLOUDFLARE_ZONE_ID`     | repository secret          | apply workflow (zone の import) |
 | `ZONE_NAME`              | `infra` environment variable | apply workflow     |
 
 #### token の権限
 
 権限は「スコープ / 権限グループ / アクセスレベル」の 3 段で指定する。
 
-| token                     | 権限                                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | Account / Workers Scripts / Edit                                                          |
-| `TF_CLOUDFLARE_API_TOKEN` | Account / Workers R2 Storage / Edit、Account / Workers Scripts / Edit、Zone / Zone / Edit |
-| R2 の S3 互換キー         | Object Read & Write。state バケットに限定する                                              |
+| token                     | 使う経路                    | 権限                                                     |
+| ------------------------- | --------------------------- | -------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | deploy workflow             | Account / Workers Scripts / Edit                         |
+| `TF_CLOUDFLARE_API_TOKEN` | apply workflow              | Account / Workers Scripts / Edit、Zone / Zone / Edit     |
+| bootstrap 用 (手元のみ)   | `infra/bootstrap/` の apply | Account / Workers R2 Storage / Edit                      |
+| R2 の S3 互換キー         | state backend               | Object Read & Write。state バケットに限定する            |
+
+**apply workflow の token に R2 の権限を与えない。** CI は R2 バケットを管理せず、state backend へは S3 互換キーで接続する。
+R2 バケットを作るのは手元で 1 回だけ実行する `infra/bootstrap/` であり、その token は CI へ渡さない。
 
 apply 用の権限名は、provider が各リソースに挙げる Accepted Permissions に対応する。
 
 - **zone の作成は Zone スコープの `Zone Zone Edit` である。** `POST /zones` の Accepted Permissions は `Zone Zone Edit` と `Zone DNS Edit` のいずれか 1 つであり、Account スコープに `Zone` の権限グループは存在しない。
-  作成対象の zone はまだ存在しないため、Zone Resources には `All zones from an account` を選ぶ。
+  zone は Registrar が作成済みのため、Zone Resources は対象の zone だけに限定する。
 - **DNS の権限は要らない。** custom domain が作る apex のレコードは Cloudflare 側の内部処理であり、`Workers Scripts` の配下にある。
 - **deploy 用に Zone 権限は要らない。** custom domain は Terraform の管轄であり、deploy 経路は触らない。
 
@@ -246,6 +255,12 @@ Workers Static Assets が解釈する。
 
 isolation は取り消しの効かない方向の制約である。
 全体へ掛けると、第三者リソースを使いたくなるたびに、そのリソースが CORP を返すかどうかに実現可能性を握られる。
+
+**HTML に `Cache-Control` を書かない。** Workers Static Assets の既定が `public, max-age=0, must-revalidate` であり、書きたい値と一致する。
+`/_astro/*` だけは名前にハッシュが入るため `immutable` を明示する。
+
+**HSTS に `includeSubDomains` を付ける。** サブドメインを HTTP で公開する予定が無い。
+HTTP のサブドメインが要るときは、その時点で外す。
 
 isolation が要るのは `/playground/*` だけである ([ADR-0006](../adr/0006-interactive-content-levels.md))。
 
