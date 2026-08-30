@@ -1,15 +1,14 @@
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { dropRuntime, getRuntime, serialize } from "./runtime";
 import { cellText } from "./cell";
-import { RAN_EVENT } from "./schema";
+import { PRESET_EVENT, RAN_EVENT, type PresetEvent } from "./schema";
 import SqlEditor from "./SqlEditor";
-
-type Preset = { label: string; sql: string };
 
 type Props = {
   /** 最初に 1 度だけ流す初期化。無い遊び場もある */
   setup?: string;
-  presets: Preset[];
+  /** 入力欄の初期値 */
+  initial: string;
   engine?: string;
 };
 
@@ -18,8 +17,8 @@ type Result = { columns: string[]; rows: unknown[][]; total: number; affected: n
 
 const KEY = "playground";
 
-export default function Playground({ setup, presets, engine = "実行環境" }: Props) {
-  const [text, setText] = useState(presets[0]?.sql ?? "select version();");
+export default function Playground({ setup, initial, engine = "実行環境" }: Props) {
+  const [text, setText] = useState(initial);
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<Result | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -61,6 +60,16 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
     }
   }, [setup, text]);
 
+  // 側柱の「試す」は別の島。事象で受ける
+  useEffect(() => {
+    const on = (e: Event) => {
+      const { detail } = e as PresetEvent;
+      if (detail.contentId === KEY) setText(detail.sql);
+    };
+    globalThis.addEventListener(PRESET_EVENT, on);
+    return () => globalThis.removeEventListener(PRESET_EVENT, on);
+  }, []);
+
   const busy = phase === "booting" || phase === "waiting" || phase === "running";
   const label =
     phase === "booting"
@@ -72,7 +81,7 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
           : "実行";
 
   return (
-    <div className="playground">
+    <div className="pg">
       <div className="runner" data-phase={phase}>
         <div className="runner__bar mono meta">
           <span>SQL</span>
@@ -160,21 +169,6 @@ export default function Playground({ setup, presets, engine = "実行環境" }: 
         )}
       </div>
 
-      <aside className="pg-aside">
-        <section className="pg-panel">
-          <h2 className="mono meta pg-aside__head">試す</h2>
-          <p className="mono meta pg-aside__note">押すと入力欄へ入ります</p>
-          <ul className="pg-list">
-            {presets.map((p) => (
-              <li key={p.label}>
-                <button className="pg-preset" type="button" onClick={() => setText(p.sql)}>
-                  {p.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </aside>
     </div>
   );
 }

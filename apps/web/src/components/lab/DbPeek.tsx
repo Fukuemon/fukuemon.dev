@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { peekRuntime, serialize } from "./runtime";
 import { cellText } from "./cell";
+import ErDiagram, { type Entity } from "./ErDiagram";
 import {
   COLUMNS_SQL,
   RAN_EVENT,
@@ -26,6 +27,11 @@ type Detail = { columns: Column[]; head: string[]; rows: unknown[][] };
 export default function DbPeek({ contentId }: Props) {
   const [tables, setTables] = useState<Table[] | null>(null);
   const [relations, setRelations] = useState<Relation[]>([]);
+  const [er, setEr] = useState<Entity[] | null>(null);
+  const erDialog = useRef<HTMLDialogElement>(null);
+  // 開いている窓。実行のたびに同じものを引き直す
+  const openEr = useRef(false);
+  const openTable = useRef<Table | null>(null);
   const [shown, setShown] = useState(true);
   const [open, setOpen] = useState<Table | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -53,19 +59,44 @@ export default function DbPeek({ contentId }: Props) {
     }
   }, [contentId]);
 
-  useEffect(() => {
-    const on = (e: Event) => {
-      if ((e as RanEvent).detail.contentId === contentId) void load();
-    };
-    globalThis.addEventListener(RAN_EVENT, on);
-    return () => globalThis.removeEventListener(RAN_EVENT, on);
-  }, [contentId, load]);
+  /**
+   * テーブル構成。**一覧から引き直す。**
+   * state の `tables` を見ると、実行の直後に呼ばれたとき古い一覧のまま描いてしまう
+   */
+  const showEr = useCallback(async () => {
+    openEr.current = true;
+    if (!erDialog.current?.open) {
+      setEr(null);
+      erDialog.current?.showModal();
+    }
+    const rt = peekRuntime(contentId);
+    if (!rt) return setEr([]);
+    const found = await serialize(() => rt.exec(TABLES_SQL));
+    const names = (found.results.at(-1)?.rows ?? []).map((r) => cellText(r[0] ?? ""));
+    const out: Entity[] = [];
+    for (const name of names) {
+      const r = await serialize(() => rt.exec(COLUMNS_SQL.replace("$1", literal(name))));
+      out.push({
+        name,
+        columns: (r.results.at(-1)?.rows ?? []).map((c) => ({
+          name: cellText(c[0] ?? ""),
+          type: cellText(c[1] ?? ""),
+          nullable: c[2] === true,
+          pk: c[3] === true,
+        })),
+      });
+    }
+    setEr(out);
+  }, [contentId]);
 
   const show = useCallback(
     async (t: Table) => {
+      openTable.current = t;
       setOpen(t);
-      setDetail(null);
-      dialog.current?.showModal();
+      if (!dialog.current?.open) {
+        setDetail(null);
+        dialog.current?.showModal();
+      }
       try {
         const rt = peekRuntime(contentId);
         if (!rt) return setDetail({ columns: [], head: [], rows: [] });
@@ -92,6 +123,19 @@ export default function DbPeek({ contentId }: Props) {
     [contentId],
   );
 
+  useEffect(() => {
+    const on = (e: Event) => {
+      if ((e as RanEvent).detail.contentId !== contentId) return;
+      void load();
+      // 開いたままの窓は、実行のたびに中身を引き直す
+      if (openEr.current) void showEr();
+      const t = openTable.current;
+      if (t) void show(t);
+    };
+    globalThis.addEventListener(RAN_EVENT, on);
+    return () => globalThis.removeEventListener(RAN_EVENT, on);
+  }, [contentId, load, show, showEr]);
+
   if (tables === null) return null;
 
   return (
@@ -110,6 +154,11 @@ export default function DbPeek({ contentId }: Props) {
         {shown && (
           <>
             {tables.length === 0 && <p className="mono meta peek__empty">まだありません</p>}
+            {tables.length > 0 && (
+              <button type="button" className="btn peek__er" onClick={() => void showEr()}>
+                テーブル構成
+              </button>
+            )}
             <ul className="peek__list">
               {tables.map((t) => (
                 <li key={t.name}>
@@ -131,8 +180,45 @@ export default function DbPeek({ contentId }: Props) {
         )}
       </section>
 
+      <dialog
+        ref={erDialog}
+        className="sheet"
+        onClose={() => {
+          openEr.current = false;
+          setEr(null);
+        }}
+      >
+        <header className="sheet__head">
+          <span className="mono sheet__name">テーブル構成</span>
+          <span className="mono meta">
+            {tables.length} テーブル · 外部キー {relations.length} 本
+          </span>
+          <button
+            type="button"
+            className="btn sheet__close"
+            onClick={() => erDialog.current?.close()}
+          >
+            閉じる
+          </button>
+        </header>
+        <div className="sheet__scroll">
+          {er === null ? (
+            <p className="mono meta">読み込み中…</p>
+          ) : (
+            <ErDiagram entities={er} relations={relations} />
+          )}
+        </div>
+      </dialog>
+
       {/* top layer なので側柱の overflow に切られない */}
-      <dialog ref={dialog} className="sheet" onClose={() => setOpen(null)}>
+      <dialog
+        ref={dialog}
+        className="sheet"
+        onClose={() => {
+          openTable.current = null;
+          setOpen(null);
+        }}
+      >
         <header className="sheet__head">
           <span className="mono sheet__name">{open?.name}</span>
           <span className="mono meta">{rowLabel(open?.rows ?? -1)}</span>
