@@ -17,26 +17,34 @@ const rows = [
 ---
 
 {/* 印と進捗は controller.ts が塗る */}
-<nav class="steps" aria-label="手順">
+<nav class="steps flex flex-col gap-intra-1" aria-label="手順">
   <p class="mono meta steps__count">0 / {steps.length} 歩</p>
-  <div class="steps__bar">
+  <div class="steps__bar mt-intra-1 mb-intra-3 h-[3px] bg-rule-soft">
     <span
-      class="steps__fill"
+      class="steps__fill block h-full bg-now transition-[inline-size] duration-[240ms] ease-[ease]"
       role="progressbar"
       aria-valuenow="0"
       aria-valuemin="0"
       aria-valuemax={steps.length}
       aria-label="進捗"></span>
   </div>
-  <ol class="steps__list">
+  <ol class="steps__list list-none m-0 p-0 overflow-y-auto">
     {
       rows.map((s) => (
         <li>
-          <a class="steps__link hit" href={`#step-${s.index}`} data-step={s.index}>
-            <span aria-hidden="true" class="steps__mark" data-state="todo" />
+          <a
+            class="steps__link hit group grid grid-cols-[9px_auto_minmax(0,1fr)] items-baseline gap-x-intra-2 gap-y-[2px] min-h-[44px] py-intra-2 pr-intra-2 pl-intra-1 border-b border-rule text-fg-2 aria-[current]:text-fg aria-[current]:bg-panel aria-[current]:shadow-[inset_2px_0_0_var(--color-now)]"
+            href={`#step-${s.index}`}
+            data-step={s.index}
+          >
+            <span
+              aria-hidden="true"
+              class="steps__mark size-[9px] shrink-0 grow-0 shadow-[inset_0_0_0_1px_var(--color-rule-strong)] data-[state=done]:bg-fg-2 data-[state=done]:shadow-none data-[state=now]:bg-now data-[state=now]:shadow-none data-[state=now]:outline data-[state=now]:outline-1 data-[state=now]:outline-ink data-[state=now]:outline-offset-[3px]"
+              data-state="todo"
+            />
             <span class="mono meta steps__no">{s.index < 0 ? "—" : pad(s.index)}</span>
-            <span class="steps__text">{s.title}</span>
-            {mins(s.duration) && <span class="mono meta steps__dur">{mins(s.duration)}</span>}
+            <span class="steps__text col-start-3 line-clamp-2 text-[0.875rem] leading-[1.4] group-aria-[current]:font-semibold">{s.title}</span>
+            {mins(s.duration) && <span class="mono meta steps__dur col-start-3">{mins(s.duration)}</span>}
             <span class="sr steps__state" />
           </a>
         </li>
