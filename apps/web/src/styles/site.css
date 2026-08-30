@@ -1011,16 +1011,7 @@
 
 /* 本文の検索。窓の骨組みは .sheet を借りる */
 @layer fukuemon {
-  .search__open {
-    padding-inline: 14px;
-    background: none;
-    border: 0;
-    color: inherit;
-    font: inherit;
-    letter-spacing: inherit;
-    cursor: pointer;
-  }
-  .search__open:hover { color: var(--fg); }
+  .search__open { flex: 0 0 auto; }
   /* 検索語の入力が見出しの位置に入る */
   .search__input {
     flex: 1 1 12rem;

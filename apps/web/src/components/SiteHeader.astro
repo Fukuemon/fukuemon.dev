@@ -1,6 +1,4 @@
 ---
-import SiteSearch from "./SiteSearch.astro";
-
 interface Props {
   current?: "posts" | "playground";
 }
@@ -13,11 +11,7 @@ const nav = [
 
 <header class="topbar">
   <a class="mono hit topbar__logo" href="/">fukuemon.dev</a>
-  {/* 検索は移動先を持たないので nav の外に置く */}
-  <div class="topbar__end">
-    <nav class="label">
-      {nav.map((n) => <a class="hit" href={n.href} aria-current={current === n.key ? "page" : undefined}>{n.label}</a>)}
-    </nav>
-    <SiteSearch />
-  </div>
+  <nav class="label">
+    {nav.map((n) => <a class="hit" href={n.href} aria-current={current === n.key ? "page" : undefined}>{n.label}</a>)}
+  </nav>
 </header>

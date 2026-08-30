@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "./SiteLayout.astro";
 import KindTabs from "../components/KindTabs.astro";
+import SiteSearch from "../components/SiteSearch.astro";
 import ContentTable from "../components/ContentTable.astro";
 import { listContent } from "../lib/content";
 import { ALL_KIND, KIND_LABEL } from "../lib/format";
@@ -27,6 +28,7 @@ const title = current === "all" ? ALL_KIND.title : KIND_LABEL[current];
   <div class="page">
     <div class="section-lead">
       <p class="prose">{lead}</p>
+      <SiteSearch />
     </div>
 
     <KindTabs current={current} counts={counts} />
