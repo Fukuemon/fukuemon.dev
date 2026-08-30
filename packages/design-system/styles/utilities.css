@@ -160,6 +160,8 @@ h3 { font-size: 1.05rem; line-height: 1.30; font-weight: 600; margin: 0; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .wood-grain { mix-blend-mode: screen; opacity: .28; }
 }
+/* 図の切り口が線として出ると、絵ではなく区切りに見える */
+.wood-band--fade { mask-image: linear-gradient(to bottom, transparent 0, #000 62%); }
 .wood-veil { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(96deg, var(--veil-1) 0 26%, var(--veil-0) 64%); }
 .wood-band > .wood-fg { position: relative; }
