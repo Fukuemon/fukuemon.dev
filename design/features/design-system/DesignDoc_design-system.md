@@ -18,7 +18,7 @@ keywords:
 governs:
   - packages/design-system/
   - apps/web/src/styles/
-verified_commit: unverified # MR2 の commit を入れる
+verified_commit: 84b6c77
 ---
 
 # Feature 設計: Design System
@@ -56,12 +56,17 @@ Typography の判断理由は [ADR-0004](../../../adr/0004-typography-static-wei
 - Typography / 縦組み / Color / Spacing / Grid の確定値
 - 明るい配色と暗い配色の両方
 - 挿絵の版の仕様と、図柄を足す手順
-- Layout primitives (`Stack` / `Rule` / `Frame` / `Grid`)
+- 動きの規則と、退行したときの見え方
+- 印 (icon) を使ってよい範囲
+- 版面のユーティリティ (`.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫の 3 段階)
 
 ### やらないこと
 
 - 汎用 UI コンポーネントライブラリの自作。
-  共通化は Tokens と Layout primitives までとする
+  共通化はトークンと版面のユーティリティまでとする
+- **Layout primitives の component 化。**
+  `Stack` / `Frame` のような包む component を作らず、class で当てる。
+  Astro と React が混在するので、component にすると同じものを 2 度書くことになる
 - Portal components (`ContentRow` / `MetaLine` 等) の設計 → 各 feature doc
 - 挿絵の描画コードそのもの。
   **本書は版の仕様を定め、実装は `packages/design-system/art/` に置く**
@@ -142,17 +147,24 @@ CSS は左から順にグリフを探すため、Latin は EB Garamond、和文�
 | -------------------------- | ------------------------------------------- |
 | 和文                     | そのまま正立する (`text-orientation: mixed` の既定)      |
 | 3 文字までの数字・略語   | `text-combine-upright: all` で 1 マスに畳んで正立させる   |
-| 4 文字以上の欧文         | 横倒しのまま残す。縦組みの通常の組み方である             |
+| 4 文字以上の欧文 (本文)  | 横倒しのまま残す。縦組みの通常の組み方である             |
+| 4 文字以上の欧文 (見出し) | `text-orientation: upright` で 1 字ずつ正立させて積む    |
 | ロゴなど正立必須の欧文   | **縦組みへ入れない。** 横組みのヘッダに置く              |
 
-**全部を正立させない。**
+**本文では全部を正立させない。**
 日本語組版処理の要件 (JLReq) では、縦組みの欧文は 90 度回転が原則である。
 `text-orientation: upright` を掛けると `OpenTelemetry Collector` が縦に 21 文字積まれ、帯だけが伸びる。
 
 畳む長さの上限を 3 文字にするのは、4 文字を超えると 1 マスに収めたとき字が潰れるためである。
 
+**見出しだけを例外にする。**
+`about` のような 4 文字以上の欧文の見出しは、原則どおり回転させると横倒しのまま残る。
+見出しは読み手が節を探すときに最初に当たる語なので、寝かせない。
+長さの上限が要らないのは、見出しが数語で終わるためである。
+
 割り振りは `apps/web/src/lib/tate.ts` の `tcy()` が行う。
-著者は書くときに意識しない。
+見出しの例外は `<Tate upright />` で明示する。
+著者は本文を書くときに意識しない。
 
 ```css
 .tate {
@@ -227,11 +239,14 @@ CSS は左から順にグリフを探すため、Latin は EB Garamond、和文�
 - 各色の用途を固定する。
   数で制限しない。手順を持つ画面では現在地の印が複数必要になる
 
-  | 色        | 用途                                                       |
-  | --------- | ---------------------------------------------------------- |
-  | `--green` | 内部リンク、ハンズオンであること、完了と正常状態           |
-  | `--blue`  | 外部リンク、前提の注記                                     |
-  | `--rust`  | 現在地 (ヘッダ / タブ / 手順 / 目次)、注意                 |
+  | 色        | semantic     | 用途                                             |
+  | --------- | ------------ | ------------------------------------------------ |
+  | `--green` | `--link`     | 内部リンク、ハンズオンであること、完了と正常状態 |
+  | `--blue`  | `--link-ext` | 外部リンク、前提の注記                           |
+  | `--rust`  | `--now`      | 現在地 (ヘッダ / タブ / 手順 / 目次)、注意       |
+
+  外部リンクの判定は `a[href^="http"]` で行う。
+  内部リンクは相対パスなので、絶対 URL だけが外を指す。
 - `--rule-soft` は**情報を持たない区切りにのみ使う**。
   地に対して明 1.43 / 暗 1.51 しかなく、UI 境界としては見えない。
   一覧の行の区切りのように、消えても情報が失われない場所に限る
@@ -364,16 +379,17 @@ ARIA の `tablist` は使わない。
 
 #### ページごとの骨格
 
-| ページ     | 列                                | 左       | 右  |
-| ---------- | --------------------------------- | -------- | --- |
-| トップ     | `--rail` + 1fr                    | 節見出し | —   |
-| 一覧       | `--rail` + 1fr                    | 節見出し | —   |
-| 記事       | `--toc` + `--measure-w` を中央寄せ | 目次     | —   |
-| ハンズオン | `--drawer` + 1fr                  | 側柱     | —   |
+| ページ         | 列                | 左       |
+| -------------- | ----------------- | -------- |
+| トップ         | `--rail` + 1fr    | 節見出し |
+| 一覧           | `--rail` + 1fr    | 節見出し |
+| 記事           | `--drawer` + 1fr  | 側柱     |
+| ハンズオン     | `--drawer` + 1fr  | 側柱     |
+| playground     | `--drawer` + 1fr  | 側柱     |
 
-**記事は目次と本文をひとまとまりにして中央へ置く。**
-右を `1fr` にすると、本文が行長 (`--measure-w`) で止まったぶんだけ余白が右に残り、崩れて見える。
-`justify-content: center` で塊ごと中央へ寄せ、左右の余りを揃える。
+**本文を持つ 3 面は同じ骨格にする。**
+側柱の幅と開閉のふるまいが揃うので、面をまたいでも操作を覚え直さずに済む。
+本文は `--measure-w` で止め、右の余りは版面の中で吸収する。
 
 行長は 42rem で止める。
 日本語は 1 行 40〜45 字を超えると行を追いにくくなる。
@@ -382,12 +398,18 @@ ARIA の `tablist` は使わない。
 記事の目次は**罫の長さで章の分量を示す**。
 現在地の章だけ 2px の `--rust`、他は 1px の `--rule-strong`。
 
-**ハンズオンの側柱はたためる。**
+**側柱はたためる。**
 `--drawer` (306px) と `--drawer-shut` (46px) を `[data-open]` で切り替える。
 たたむと開閉ボタンだけが残り、本文が広がる。
 
-側柱に置くのは手順の一覧と「いまのテーブル」の 2 つだけである。
-他のハンズオンへの導線は置かない。
+| 面         | 側柱の中身                     |
+| ---------- | ------------------------------ |
+| 記事       | 目次 + 同じ種別の一覧          |
+| ハンズオン | 手順の一覧 + いまのテーブル    |
+| playground | 試す + いまのテーブル          |
+
+**側柱が並べるのは、開いている 1 文書の中身と、同じ種別の兄弟だけである。**
+サイト全体のページツリーは持たない ([ADR-0001](../../../adr/0001-starlight-as-docs-renderer.md))。
 
 ハンズオンの手順一覧は進捗バーと手順の印を持つ。
 印は完了 `--green` / 現在 `--rust` + `outline` / 未着手 `inset` の罫。
@@ -497,11 +519,14 @@ CSS 層に置く。
 霞は**横方向**のグラデーションである (`linear-gradient(96deg, ...)`)。
 挿絵が右へ寄り、文字が左に載る構図を、この 1 本が作っている。
 
+**720px 以下では縦方向へ掛け直す。**
+本文が版面の全幅を使うので、横方向のままだと図の枝が文字に掛かる。
+
 #### 図柄
 
 | 名前   | 特徴                                   | 向く場所           |
 | ------ | -------------------------------------- | ------------------ |
-| 木立   | 幹 41 本 + 枝。手前を斜面が横切る      | トップの表紙       |
+| 木立   | 幹 41 本 + 枝。手前を斜面が横切る      | about (トップの表紙) |
 | 竹     | 節を地の色で切る。縦に強い             | 縦長のパネル       |
 | 水面   | 同心の波紋 3 群と浮かぶ葉              | 章の切れ目         |
 | 遠い山 | 稜線 3 枚の重なり。最も静か            | 表紙 (静かめ)      |
@@ -510,6 +535,15 @@ CSS 層に置く。
 **140px 以下の細い帯には密な図柄を使う。**
 `xMidYMax slice` は下端付近だけを残すため、木立のように要素が縦に伸びる図柄は幹の根元しか映らず、左右に空白ができる。
 草はどの高さで断っても幅いっぱいが埋まる。
+
+#### 帯の上端
+
+図の霧 (`mask`) は viewBox の全体に掛かる。
+**帯が低いと霧の範囲が映らず、切り口が直線で出る。**
+絵ではなく区切りに見えるので、帯の側でも上端を紙へ溶かす (`ArtBand` の `fade`)。
+
+低い帯で霧を効かせようとして図の停止点を動かさない。
+動かすと `fill` で使ったときに図が全体に薄くなる。
 
 #### 図柄を足すときのプロンプト
 
@@ -532,21 +566,77 @@ details. Calm, still, unpopulated.
 
 雨・石・苔・鳥・雪も同じ版で作れる。
 
+### 動き
+
+**動きは状態の変化を伝えるときだけに使う。**
+about だけを例外にする ([ADR-0009](../../../adr/0009-site-sections-and-playground-collection.md))。
+
+規則は全面で共通である。
+
+| 規則                       | 理由                                                     |
+| -------------------------- | -------------------------------------------------------- |
+| 位置を動かさない           | 罫の位置が確定するまで読み始められない                   |
+| 変えるのは濃度と罫の長さ   | 版面が動かないので、読み手は待たずに読み始められる       |
+| 配る JavaScript は 0 バイト | `@starting-style` と `animation-timeline: view()` で組む |
+
+| 対象               | 動き                                       |
+| ------------------ | ------------------------------------------ |
+| 一覧の行           | 濃度。段送りは行の添字で決める             |
+| 縦組み見出しの罫   | 上から引かれる (`background-size`)         |
+| 挿絵の帯           | 濃度                                       |
+| about の名乗り     | 1 字ずつ濃度。字はビルド時に分ける         |
+| about の一覧       | 画面に入ったところで行ごとに濃度           |
+
+**退行の受け皿を必ず持つ。**
+
+- `animation-timeline` は Chrome 115 以降でだけ効く。対応しない環境では規則ごと無視され、最初から見えている
+- `prefers-reduced-motion: reduce` では最初から見えている
+- `border-width` を動かさない。レイアウトが動く。罫は `background-size` で伸ばす
+
+`animation` の短縮形で書かない。
+ビルドの CSS 圧縮が `animation-timeline` ごと落とす。長い形で書く。
+
+正本は [apps/web/src/styles/motion.css](../../../apps/web/src/styles/motion.css)。
+
+### 印
+
+**語よりも形のほうが速く見分けられるものにだけ使う。**
+現在の対象は外部サービスへのリンク (GitHub / X / Zenn / RSS) だけである。
+
+- ブランドの印は simple-icons (CC0-1.0) の path を写す。RSS は商標ではないので自分で引く
+- 塗りは `currentColor`。差し色はリンク側が決める
+- 名前は `aria-label` が持ち、`<svg>` は `aria-hidden`
+- 当たり判定は 44px を保つ
+
+**ページ内の移動先には使わない。**
+「一覧」「playground」に定着した印は無く、印にすると語より遅くなる。
+
 ### コンポーネント構成 (C4 L3)
 
 ```mermaid
 flowchart TD
-    tokens["packages/design-system/tokens.css<br/>primitive / semantic (素の CSS)"]
+    tokens["packages/design-system/styles/tokens.css<br/>primitive / semantic"]
+    utils["packages/design-system/styles/utilities.css<br/>版面・当たり判定・縦組み"]
     art["packages/design-system/art/<br/>挿絵の生成器"]
-    prim["packages/design-system/primitives/<br/>Stack / Rule / Frame / Grid"]
-    global["apps/web/src/styles/global.css<br/>Tailwind @theme が tokens を参照"]
-    tokens --> prim
+    theme["packages/design-system/code-theme.ts<br/>Expressive Code の配色"]
+    global["apps/web/src/styles/global.css<br/>4 本を束ねる入口"]
+    site["apps/web/src/styles/site.css<br/>このサイトの部品"]
+    motion["apps/web/src/styles/motion.css<br/>動き"]
+    tokens --> utils
     tokens --> art
+    tokens --> theme
     tokens --> global
+    utils --> global
+    site --> global
+    motion --> global
     global --> portal["Portal UI"]
-    prim --> portal
     art --> portal
+    theme --> ec["astro-expressive-code"]
 ```
+
+**部品の CSS は `apps/web` に置く。**
+`packages/design-system` が配るのはトークンと版面までにする。
+1 サイトでしか使わない部品を package へ上げると、変更のたびに 2 つの repo 境界をまたぐ。
 
 ### 配布
 
@@ -578,13 +668,22 @@ Expressive Code は `.expressive-code` 以下を使う。
 
 #### 配色の切り替え
 
-3 系統を書く。
+**色は `light-dark(明, 暗)` で 1 度だけ書く。**
+どちらを解決するかは `color-scheme` が決める。
 
-| 系統                                              | 役割                         |
-| ------------------------------------------------- | ---------------------------- |
-| `:root`                                           | 明るい配色 (既定)            |
-| `@media (prefers-color-scheme: dark)` + `:not([data-theme="light"])` | システム設定に追随 |
-| `[data-theme="dark"]`                             | 明示切り替え。常に勝つ       |
+| 選択子                  | `color-scheme` | 役割              |
+| ----------------------- | -------------- | ----------------- |
+| `:root`                 | `light dark`   | システム設定に追随 |
+| `[data-theme="light"]`  | `light`        | 明示切り替え       |
+| `[data-theme="dark"]`   | `dark`         | 明示切り替え       |
+
+選択子を明暗で分けて値を 2 度書かない。
+システム設定用と明示指定用に同じ値を並べると、片方だけ直した事故に実行時まで気づけない。
+`check-contrast.ts` はブラウザが読むのと同じ `:root` の 1 箇所を読む。
+
+**色でないものは `light-dark()` で書けない。**
+`mix-blend-mode` のように色以外を明暗で分ける規則は、選択子を 2 本並べる。
+現在その対象は挿絵の粒 (`.wood-grain`) だけである。
 
 **`color-scheme` を宣言する。**
 スクロールバーとフォーム部品の既定色は、この宣言でしか切り替わらない。
@@ -594,12 +693,14 @@ Expressive Code は `.expressive-code` 以下を使う。
 
 ### トークン共有の必要条件
 
-**`tokens.css` に Tailwind の構文を書かない。**
-Tailwind の `@theme` は `tokens.css` の値を参照するだけとする。
+**`tokens.css` は素の CSS で書き、CSS フレームワークに依存させない。**
 
-**`astro-expressive-code` が挿す CSS は Tailwind を通らない。**
-トークンを Tailwind のレイヤに閉じ込めると、`styleOverrides` から引けなくなる。
+`astro-expressive-code` が挿す CSS は、こちらのビルドを通らない。
+トークンをフレームワークのレイヤに閉じ込めると、`styleOverrides` から引けなくなる。
 これが素の CSS で書く理由である (設計不変量 5)。
+
+CSS フレームワークは採っていない。
+素の CSS で足りており、採るとトークンの経路が 1 本増える。
 
 ### Expressive Code への橋渡し
 
@@ -640,14 +741,16 @@ Shiki はビルド時に色を解決するため CSS カスタムプロパティ
 
 ### 共通化の範囲
 
-| 層                | 内容                                  | 置き場                               |
-| ----------------- | ------------------------------------- | ------------------------------------ |
-| Design Tokens     | primitive / semantic                  | `packages/design-system/tokens.css`  |
-| 挿絵              | 版の実装と図柄の生成器                | `packages/design-system/art/`        |
-| Layout primitives | `Stack` / `Rule` / `Frame` / `Grid`   | `packages/design-system/primitives/` |
-| Portal components | `ContentRow` / `MetaLine` / `TabNav`  | `apps/web/src/components/`           |
+| 層                | 内容                                            | 置き場                                       |
+| ----------------- | ----------------------------------------------- | -------------------------------------------- |
+| Design Tokens     | primitive / semantic                            | `packages/design-system/styles/tokens.css`   |
+| 版面              | `.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫    | `packages/design-system/styles/utilities.css` |
+| 挿絵              | 版の実装と図柄の生成器                          | `packages/design-system/art/`                |
+| コードの配色      | Expressive Code のテーマと配色の検査            | `packages/design-system/code-theme.ts`       |
+| このサイトの部品  | `ContentRow` / `MetaLine` / 実行パネル / 側柱   | `apps/web/src/components/` と `styles/site.css` |
+| 動き              | 全面の動きの実装                                | `apps/web/src/styles/motion.css`             |
 
-**Portal components を `packages/design-system` に入れない。**
+**このサイトの部品を `packages/design-system` に入れない。**
 消費者が `apps/web` の 1 つだけであり、「2 つ以上の消費者が実在するまで package にしない」規約に従う ([context/architecture.md](../../../context/architecture.md))。
 
 shadcn/ui は対話的コンポーネント (Command Palette / Dialog) が実在してから導入する。
@@ -665,6 +768,9 @@ shadcn/ui は対話的コンポーネント (Command Palette / Dialog) が実在
   「カードを使わない」「見出しを大きくしない」は汎用ルールに反する可能性がある
 - 挿絵は視覚回帰テストの対象にしない。
   乱数由来の版ずれを含むため、画素比較が安定しない
+- **動きは自動テストの対象にしない。**
+  退行の受け皿 (`prefers-reduced-motion`、`animation-timeline` 非対応) は
+  「最初から見えている」状態なので、動かないこと自体は不具合にならない
 
 ## 未決事項
 

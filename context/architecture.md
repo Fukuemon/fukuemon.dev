@@ -36,15 +36,16 @@ fukuemon.dev/
 │       │   ├── components/           # 部品。.astro と .tsx を同居させる
 │       │   ├── lib/content/          # astro:content ↔ content-model のアダプタ
 │       │   ├── content/             # articles/ labs/ playgrounds/
+│       │   ├── data/                 # 書いている人の正本 (about が読む)
 │       │   ├── content.config.ts     # loader と schema の結線 (データソースの差し替え点)
-│       │   └── styles/
-│       ├── public/_headers           # レスポンスヘッダ
+│       │   └── styles/               # global.css が site.css / motion.css を束ねる
+│       ├── public/                   # そのまま配る。avatar.webp / favicon.svg / _headers (未作成)
 │       ├── astro.config.ts
 │       └── wrangler.jsonc
 ├── packages/
-│   ├── config/                       # tsconfig / oxlint / vitest の共有設定
+│   ├── config/                       # tsconfig の共有設定
 │   ├── content-model/                # schema / ContentRef / 関係グラフ (Astro 非依存)
-│   └── design-system/                # tokens.css / utilities.css / art / primitives
+│   └── design-system/                # tokens.css / utilities.css / art / code-theme.ts
 ├── infra/                            # Terraform。workspace package ではない
 ├── e2e/                              # E2E。全体に関わるためルート直下
 ├── design/ context/ specs/ adr/
@@ -114,9 +115,9 @@ React と Vue を同じページに混ぜると両方を配ることになる。
 
 | package                   | 責務                                                                 | 依存してよい先                 |
 | ------------------------- | -------------------------------------------------------------------- | ------------------------------ |
-| `@fukuemon/config`        | tsconfig / oxlint / vitest の共有設定                                | なし                           |
+| `@fukuemon/config`        | tsconfig の共有設定。oxlint と vitest はルートで 1 つ持つ            | なし                           |
 | `@fukuemon/content-model` | Content Model の zod schema、`ContentRef` 型、関係グラフの構築と検証 | `zod` のみ                     |
-| `@fukuemon/design-system` | Design Tokens (素の CSS)、Layout primitives                          | なし                           |
+| `@fukuemon/design-system` | Design Tokens (素の CSS)、版面のユーティリティ、挿絵、コードの配色   | なし                           |
 | `apps/web`                | Astro アプリ。全画面の描画                                           | 上記 3 package                 |
 | `infra/`                  | Terraform                                                            | なし                           |
 
@@ -137,7 +138,7 @@ React と Vue を同じページに混ぜると両方を配ることになる。
 `ContentTable` / `KindTabs` / ハンズオンの `StepList` がこれに当たる。
 いずれもこのサイトの画面のために変わる。
 
-`tokens.css` と `primitives/` は Expressive Code の `styleOverrides` からも引くため `packages/design-system` に置く。
+`tokens.css` と `code-theme.ts` は Expressive Code の `styleOverrides` からも引くため `packages/design-system` に置く。
 
 ### `infra/` を `packages/` に入れない
 
@@ -206,8 +207,9 @@ flowchart LR
 - **実行時のサーバーコンポーネントを持たない。** すべてビルド時に解決する。
   Worker はハンドラを持たず静的アセットの配信のみを行う ([ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md))。
 - React は Astro Islands として局所適用に限る。**静的 HTML で表現できるものに React を使わない。** Island の追加は「静的では不可能」を根拠にする。
-- Expressive Code が挿す CSS は Tailwind を通らない。
+- Expressive Code が挿す CSS はこちらのビルドを通らない。
   共有できるのは素の CSS カスタムプロパティのみ。
+  規則も cascade layer に属さないため、上書きするときは layer の外に置く。
 
 ## State Boundary
 
@@ -228,7 +230,7 @@ flowchart LR
 | `/articles/<path>`            | `src/pages/articles/[...slug].astro`           |
 | `/labs/<path>`                | `src/pages/labs/[...slug].astro`               |
 | `/playground`                 | `src/pages/playground/index.astro`             |
-| `/playground/<id>`            | `src/pages/playground/[...slug].astro`。cross-origin isolated |
+| `/playground/<id>`            | `src/pages/playground/[...slug].astro`。isolation を予約 (未適用) |
 | `/api/*`                      | **予約**。条件が成立するまで使わない           |
 
 ### 規約

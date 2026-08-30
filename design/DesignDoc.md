@@ -17,7 +17,7 @@ governs:
   - apps/web/
   - packages/
   - infra/
-verified_commit: unverified
+verified_commit: 84b6c77
 ---
 
 # fukuemon.dev Design Doc
@@ -101,7 +101,7 @@ fukuemon.dev は、**技術記事とハンズオンの 2 種類だけを公開�
 - `/playground` — 手順に縛られず実行環境を触れる場所
 
 - 自前 Content Model と、描画レイヤから独立した正規化レイヤ
-- Design System (Design Tokens / Typography / Layout primitives)
+- Design System (Design Tokens / Typography / 版面 / 動き)
 - Cloudflare 基盤の Terraform 管理と Wrangler による deploy
 
 #### やらないこと (Non-Goals)
@@ -120,7 +120,7 @@ fukuemon.dev は、**技術記事とハンズオンの 2 種類だけを公開�
 | Highlight / Annotation                                       | identity とテキストアンカーが要る。実装が重い割に利用者がいない                                  |
 | サーバー側の永続状態                                         | 上記を作らないため要求元がない                                                                   |
 | サイト全体の SPA 化                                          | React は Astro Islands として局所適用に限る                                                     |
-| 汎用 UI コンポーネントライブラリの自作                       | 共通化は Design Tokens と Layout primitives まで                                                 |
+| 汎用 UI コンポーネントライブラリの自作                       | 共通化は Design Tokens と版面のユーティリティまで                                                |
 | 多言語対応                                                   | 日本語単一とする                                                                                 |
 | 直接的な和風意匠 (桜 / 鳥居 / 筆文字 / 和柄 / 庭園写真)      | 版画的な自然の図版と縦組みで表現する。意匠の直輸入はしない ([design-system](features/design-system/DesignDoc_design-system.md)) |
 
@@ -148,10 +148,12 @@ fukuemon.dev は、**技術記事とハンズオンの 2 種類だけを公開�
 
 ### バージョン制約
 
-**Astro 7 + Tailwind 4 を採る。**
-Astro 7 は Node.js 22 以上を要求する。
+**Astro 7 を採る。** Node.js 22.12 以上を要求する。
 
-コードブロックは `astro-expressive-code`、全文検索の索引は `pagefind` を使う ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
+CSS フレームワークを採らない。
+共有できるのは素の CSS カスタムプロパティだけであり、フレームワークを挟むと経路が 1 本増える。
+
+コードブロックは `astro-expressive-code`、図は `rehype-mermaid`、全文検索の索引は `pagefind` を使う ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
 
 版の一覧は [context/toolchain.md](../context/toolchain.md) を正本とする。
 
@@ -223,7 +225,7 @@ flowchart TD
 
     subgraph repo ["fukuemon.dev monorepo"]
         cm["packages/content-model<br/>schema / ContentRef / 関係グラフ"]
-        ds["packages/design-system<br/>tokens.css / layout primitives"]
+        ds["packages/design-system<br/>tokens.css / utilities.css / art"]
         web["apps/web (Astro 7)"]
         infra["infra/ (Terraform)"]
         cm --> web
@@ -253,13 +255,14 @@ flowchart TD
 | モジュール                       | 責務                                                                                 | 公開境界                                                              | 依存先                         |
 | -------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------ |
 | `@fukuemon/content-model`        | Content Model の schema、`ContentRef` 型、関係グラフの構築と検証                     | `portalBase` / `ContentRef` / `buildContentGraph()`                    | `zod` のみ                     |
-| `@fukuemon/design-system`        | Design Tokens (素の CSS)、Layout primitives                                          | CSS カスタムプロパティ名、primitives                                   | なし                           |
-| `@fukuemon/config`               | tsconfig / oxlint / vitest の共有設定                                                | 設定ファイル                                                           | なし                           |
+| `@fukuemon/design-system`        | Design Tokens (素の CSS)、版面のユーティリティ、挿絵、コードの配色                  | CSS カスタムプロパティ名、`utilities.css` の class、`code-theme`       | なし                           |
+| `@fukuemon/config`               | tsconfig の共有設定。oxlint と vitest はルートで 1 つ持つ                            | `tsconfig/base.json`                                                   | なし                           |
 | `apps/web/src/content.config.ts` | 全 collection の loader と schema を結線する。**データソースを切り替える唯一の場所** | collection 名                                                          | `astro:content`, content-model |
 | `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、graph を組み立てる                 | `listContent()` / `getContent()` / `getRelated()`                      | `astro:content`, content-model |
-| `apps/web/src/pages/**`          | Portal UI (一覧 / About)                                                             | URL                                                                    | `lib/content`, components      |
+| `apps/web/src/pages/**`          | Portal UI (about / 一覧 / playground)                                                | URL                                                                    | `lib/content`, components      |
+| `apps/web/src/data/`             | 書いている人の正本。名乗り・外部リンク・使っているもの・登壇と寄稿                  | `PROFILE` / `LINKS` / `STACK` / `OUTSIDE`                              | なし                           |
 | `apps/web/src/content/**`        | 記事とハンズオンの本体 (Markdown / MDX)                                              | —                                                                      | —                              |
-| `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` / `DocLayout` / `BareLayout` の 3 つ                      | —                                                                      | components                     |
+| `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を土台に `Posts` / `Article` / `Lab` と本文の `DocShell`  | —                                                                      | components                     |
 | `apps/web/src/components/**`     | 部品。`.astro` と `.tsx` を同居させる。**`.tsx` は Astro を import しない**          | props                                                                  | `lib/content`                  |
 | `infra/`                         | Zone / DNS / Workers custom domain                                                   | Terraform state                                                        | Cloudflare provider            |
 
@@ -290,7 +293,7 @@ flowchart LR
 | 2   | 関係は `contentId` から `contentId` への片方向の辺とし、逆方向は導出する    | 書き忘れによる不整合が起きない。関係テーブルへそのまま写せる                      | [ADR-0002](../adr/0002-content-model-independence.md)              |
 | 3   | `pages/**` と `components/**` は `astro:content` を直接参照しない           | ページ実装がデータソースに依存しない                                              | [ADR-0002](../adr/0002-content-model-independence.md)              |
 | 4   | `@fukuemon/content-model` は Astro に依存しない                             | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)              |
-| 5   | `tokens.css` は Tailwind に依存しない素の CSS で書き、ユーティリティは `@layer` に閉じる | レイヤ外の宣言はあらゆるレイヤ内の宣言に優先する。第三者の CSS と競合しない | [design-system](features/design-system/DesignDoc_design-system.md) |
+| 5   | `tokens.css` は素の CSS で書き、ユーティリティは `@layer` に閉じる           | レイヤ外の宣言はあらゆるレイヤ内の宣言に優先する。第三者の CSS と競合しない | [design-system](features/design-system/DesignDoc_design-system.md) |
 | 6   | 1 つの Cloudflare リソースを Terraform と Wrangler の両方から管理しない     | 二重管理による差分の消し合いが起きない                                            | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md)     |
 | 7   | cross-origin isolation をサイト全体に掛けない。必要な経路にのみ掛ける       | 全体に掛けると外部埋め込みが一律で壊れる。影響範囲を局所に閉じる                  | [ADR-0006](../adr/0006-interactive-content-levels.md)              |
 | 8   | 種別は URL を持つページとして分け、分類 (tag) は URL パラメータで絞り込む   | 種別は 2 つで固定なので静的に書き出せる。分類は組み合わせで数が爆発する           | 本書 (下記)                                                        |
@@ -303,21 +306,24 @@ flowchart LR
 
 | URL                | 中身                                                       |
 | ------------------ | ---------------------------------------------------------- |
-| `/`                | 表紙。about を畳む。外部リンク。最近の更新と各面への入口   |
+| `/`                | 表紙。about が兼ねる。最近の更新、各面への入口、登壇と寄稿 |
 | `/blog`            | すべての一覧 (表)                                          |
 | `/blog/articles`   | 記事だけの一覧                                             |
 | `/blog/labs`       | ハンズオンだけの一覧                                       |
 | `/articles/<path>` | 記事の本体                                                 |
 | `/labs/<path>`     | ハンズオンの本体                                           |
 | `/playground`      | 遊び場の一覧                                               |
-| `/playground/<id>` | 1 つの遊び場。cross-origin isolated                        |
+| `/playground/<id>` | 1 つの遊び場。cross-origin isolation を予約している (未適用) |
 | `/rss.xml`         | RSS                                                        |
 
 **表紙と一覧を分ける。**
 表紙は伝える場所、一覧は探す場所であり、要求が異なる。
 
 **about に独立したページを与えない。** 分量が増えないものに 1 ページを割かない。
-一覧のタブは `/blog` 以下の 3 ページにだけ出る。
+表紙を about が兼ねる。伝える場所に置くものが 2 つあると、どちらの印象も薄くなる。
+
+一覧のタブと本文の検索は `/blog` 以下の 3 ページにだけ出る。
+**検索を全ページの上端に置かない。** 探す気がある人は一覧まで来る。
 
 `/articles/<path>` は本体の URL であり、`/blog/articles` は一覧である。
 **描画の実装詳細を URL に露出しない** ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
@@ -381,12 +387,18 @@ ARIA の `tablist` は使わない。
 
 | #   | 内容                                                                             | 満たさない場合                                                                   |
 | --- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | `astro-expressive-code` で画面案のコード意匠 (ファイル名バー / 行の強調 / トークン 5 色) を出せること | 強調の意匠を諦めるか、Shiki を直接使って自前で組む                    |
-| 2   | 実行パネル (RUN / 出力) を Expressive Code の枠外に置いて意匠が揃うこと          | プラグインの `postprocessRenderedBlock` で枠の中へ差し込む                       |
-| 3   | `pagefind` が自前ページを索引すること (`data-pagefind-body` の付与)              | 索引の範囲を限定するか、静的 embedding 索引へ切り替える                          |
 | 5   | `vp run --cache` が `astro build` の入力を正しく推論すること (3 項目)            | キャッシュ無効化、または Turborepo へ切り替え                                    |
 | 6   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ紐付くこと | provider の issue を再確認し、`cloudflare_workers_route` + DNS record へ切り替え |
 | 7   | R2 backend の `skip_s3_checksum` で state 書き込みが通ること                     | state backend をローカル + 手動バックアップへ落とす                              |
+
+検証を終えた前提は次のとおり。
+
+| 内容                                                                     | 結果                                                          |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `astro-expressive-code` で画面案のコード意匠を出せること                 | 満たす。意匠は `styleOverrides` から指定する                  |
+| 実行パネルを Expressive Code の枠外に置いて意匠が揃うこと                | 満たす。枠の中へ差し込む必要は無かった                        |
+| `pagefind` が自前ページを索引すること                                    | 満たす。`data-pagefind-body` は本文の要素にだけ付ける         |
+| config の rehype plugin が Expressive Code より先に走ること              | 満たす。素の `<pre><code>` のまま拾えるので `rehype-mermaid` が効く |
 
 ---
 
@@ -398,7 +410,6 @@ ARIA の `tablist` は使わない。
 | 条件                                                 | 作るもの                                                              | 設計                                                               |
 | ---------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | 分類での絞り込みが要ると判断したとき                 | URL パラメータによる絞り込み (React Island)。**ページは増やさない**    | 設計不変量 8                                                       |
-| コンテンツが 50 本を超えたとき                       | 検索のモーダル UI (Pagefind の JS API)。**索引は最初から作る**          | [ADR-0001](../adr/0001-starlight-as-docs-renderer.md)              |
 | 分類が 12 を超えたとき                               | 分類ごとの絞り込み (URL パラメータ)。**索引ページは作らない**           | 設計不変量 8                                                       |
 | 見せるためのコンポーネント集を作りたくなったとき     | `packages/<name>/` と、実物を並べる demo ページ。**別 repo も検討する** | [context/architecture.md](../context/architecture.md) の package を増やす条件 |
 | コンテンツが増えて一覧から辿れなくなったとき         | Command Palette (React Island + shadcn/ui)                             | —                                                                  |
