@@ -1,0 +1,47 @@
+/** 側柱の開閉を `root` に取り付ける。状態は `localStorage` に置く */
+export function mountSide(root: HTMLElement): void {
+  const btn = root.querySelector<HTMLButtonElement>("[data-side]");
+  if (!btn) return;
+  const key = `side:${btn.dataset.side ?? ""}`;
+
+  const apply = (open: boolean) => {
+    root.dataset.open = String(open);
+    btn.setAttribute("aria-expanded", String(open));
+    btn.title = open ? "たたむ" : "ひらく";
+  };
+
+  // 狭い画面では本文に覆いかぶさるので既定は「閉」
+  let open = wide();
+  try {
+    const saved = globalThis.localStorage?.getItem(key);
+    if (saved) open = saved === "open";
+  } catch {
+    // プライベートウィンドウでは読めない
+  }
+  apply(open);
+
+  const set = (next: boolean) => {
+    open = next;
+    apply(open);
+    try {
+      globalThis.localStorage?.setItem(key, open ? "open" : "closed");
+    } catch {
+      // 保存できなくても開閉は効く
+    }
+  };
+
+  btn.addEventListener("click", () => set(!open));
+  root.querySelector("[data-side-close]")?.addEventListener("click", () => set(false));
+  // 覆いかぶさっている面は Esc で閉じられるようにする
+  globalThis.addEventListener("keydown", (e: Event) => {
+    if ((e as KeyboardEvent).key === "Escape" && open && !wide()) set(false);
+  });
+}
+
+/** 狭い画面で開いている側柱を畳む。本文に覆いかぶさるため */
+export function shutIfNarrow(root: HTMLElement): void {
+  if (wide()) return;
+  root.querySelector<HTMLButtonElement>("[data-side][aria-expanded='true']")?.click();
+}
+
+const wide = () => globalThis.matchMedia?.("(min-width: 1101px)").matches ?? true;

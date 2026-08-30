@@ -1,0 +1,84 @@
+---
+import SiteLayout from "./SiteLayout.astro";
+import StepList from "../components/lab/StepList.astro";
+import Side from "../components/Side.astro";
+import DbPeek from "../components/lab/DbPeek";
+import LocalSetup from "../components/lab/LocalSetup.astro";
+import MetaLine from "../components/MetaLine.astro";
+import RelatedList from "../components/RelatedList.astro";
+import { getRelated } from "../lib/content";
+import { KIND_INDEX, KIND_LABEL } from "../lib/format";
+import type { ContentRef, Step } from "@fukuemon/content-model";
+
+interface Props {
+  ref: ContentRef;
+  steps: Step[];
+  /** 最初の `h2` より前に本文があるか。「はじめに」の面を出すかを決める */
+  intro: boolean;
+  /** 実行環境を持つときだけ true。DB の一覧を側柱に出す */
+  live: boolean;
+  /** 手元で用意する種類のときだけ渡す */
+  local?: {
+    repository: string;
+    via: "devcontainer" | "docker-compose" | "manual";
+    requires: { name: string; check?: string }[];
+  };
+}
+const { ref, steps, intro, live, local } = Astro.props;
+const related = await getRelated(ref.contentId);
+---
+
+{/* 全手順を 1 文書に入れて CSS で 1 枚だけ出す。
+    別 URL に割ると手順ごとに実行環境を作り直すことになる */}
+<SiteLayout title={`${ref.title} — fukuemon.dev`} description={ref.description}>
+  <div class="g-doc" data-lab data-content-id={ref.contentId} data-open="true">
+    <Side id="lab" label="手順">
+      <StepList steps={steps} intro={intro} />
+      {live && <DbPeek client:idle contentId={ref.contentId} />}
+    </Side>
+
+    <div class="labmain">
+      <header class="labhead">
+        <p class="mono meta doc__crumb">
+          <a href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
+          <span aria-hidden="true">/</span>
+          <span>{ref.tags[0]}</span>
+        </p>
+        <h1 class="display labhead__title">{ref.title}</h1>
+        <MetaLine ref={ref} />
+      </header>
+
+      <article class="prose lab-body" data-pagefind-body>
+        {
+          /* 手順ごとに繰り返す情報ではないので「はじめに」の面に置く */
+          local && (
+            <div class="step" id="step--1" data-step="-1" data-title="はじめに">
+              <LocalSetup {...local} />
+            </div>
+          )
+        }
+        <slot />
+      </article>
+
+      <nav class="labnav" aria-label="手順の移動">
+        <button type="button" class="btn labnav__btn" data-go="prev" aria-disabled="true">
+          ← 前へ
+        </button>
+        <span class="mono meta labnav__now"></span>
+        <button type="button" class="btn labnav__btn" data-go="next" aria-disabled="true">
+          次へ →
+        </button>
+      </nav>
+
+      <footer class="labfoot">
+        <RelatedList items={related} />
+            </footer>
+    </div>
+  </div>
+</SiteLayout>
+
+<script>
+  import { mountSteps } from "../components/lab/controller";
+  const root = document.querySelector<HTMLElement>("[data-lab]");
+  if (root) mountSteps(root);
+</script>

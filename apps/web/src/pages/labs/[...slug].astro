@@ -1,0 +1,33 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import { getContent, isPublic, listLabEntries, renderEntry } from "../../lib/content";
+import type { Step } from "@fukuemon/content-model";
+
+export async function getStaticPaths() {
+  const entries = await listLabEntries(isPublic);
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+// 手順の正本は remark-lab。ここで本文を数え直さない
+const { Content, remarkPluginFrontmatter } = await renderEntry(entry);
+const steps = (remarkPluginFrontmatter.labSteps ?? []) as Step[];
+
+const ref = await getContent(entry.data.contentId);
+if (!ref) throw new Error(`ContentRef が見つかりません: ${entry.data.contentId}`);
+
+const it = entry.data.interactive;
+const local =
+  it?.level === "local"
+    ? { repository: it.repository, via: it.via, requires: it.requires }
+    : undefined;
+
+// 「はじめに」の面を出すか。本文の前置きか、local の手順があれば出す
+const intro = remarkPluginFrontmatter.labHasIntro === true || local !== undefined;
+// 実行環境を持つラボだけ、側柱に DB の一覧を出す
+const live = it?.level === "embedded";
+---
+
+<LabLayout ref={ref} steps={steps} intro={intro} live={live} local={local}>
+  <Content />
+</LabLayout>
