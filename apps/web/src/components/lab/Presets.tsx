@@ -13,7 +13,7 @@ export default function Presets({ contentId, presets }: Props) {
           <li key={p.label}>
             <button
               type="button"
-              className="block w-full min-h-[36px] py-intra-1 px-0 border-t border-rule bg-transparent text-start text-[0.875rem] text-link font-[family-name:inherit] [font-weight:inherit] leading-[inherit] cursor-pointer"
+              className="block w-full min-h-[36px] py-intra-1 px-0 border-t border-rule bg-transparent text-start text-[0.875rem] text-fg hover:text-link font-[family-name:inherit] [font-weight:inherit] leading-[inherit] cursor-pointer"
               onClick={() => emitPreset(contentId, p.sql)}
             >
               {p.label}
