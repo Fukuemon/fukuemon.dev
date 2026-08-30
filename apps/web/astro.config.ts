@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import tailwindcss from "@tailwindcss/vite";
 import expressiveCode, { ExpressiveCodeTheme } from "astro-expressive-code";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
@@ -12,6 +13,7 @@ import { codeThemeDark, codeThemeLight } from "@fukuemon/design-system/code-them
 
 export default defineConfig({
   site: "https://fukuemon.dev",
+  vite: { plugins: [tailwindcss()] },
   markdown: {
     remarkPlugins: [remarkLab],
     rehypePlugins: [
@@ -26,29 +28,29 @@ export default defineConfig({
   integrations: [
     react(),
     expressiveCode({
-      // --c-* を写した自前のテーマ。全トークンが 4.5:1 を満たす
+      // --color-c-* を写した自前のテーマ。全トークンが 4.5:1 を満たす
       themes: [new ExpressiveCodeTheme(codeThemeLight), new ExpressiveCodeTheme(codeThemeDark)],
       // 自前で 4.5:1 を満たしているので、自動補正で梯子を崩させない
       minSyntaxHighlightingColorContrast: 0,
       styleOverrides: {
-        borderColor: "var(--rule-strong)",
+        borderColor: "var(--color-rule-strong)",
         borderRadius: "0",
-        codeBackground: "var(--code-bg)",
+        codeBackground: "var(--color-code-bg)",
         codeFontFamily: "var(--font-mono)",
         frames: {
           frameBoxShadowCssValue: "none",
-          editorTabBarBackground: "var(--code-bg)",
-          editorActiveTabBackground: "var(--code-bg)",
-          editorActiveTabIndicatorTopColor: "var(--green)",
-          editorActiveTabBorderColor: "var(--rule-strong)",
-          editorBackground: "var(--code-bg)",
-          terminalBackground: "var(--code-bg)",
-          terminalTitlebarBackground: "var(--code-bg)",
-          tooltipSuccessBackground: "var(--green)",
+          editorTabBarBackground: "var(--color-code-bg)",
+          editorActiveTabBackground: "var(--color-code-bg)",
+          editorActiveTabIndicatorTopColor: "var(--color-green)",
+          editorActiveTabBorderColor: "var(--color-rule-strong)",
+          editorBackground: "var(--color-code-bg)",
+          terminalBackground: "var(--color-code-bg)",
+          terminalTitlebarBackground: "var(--color-code-bg)",
+          tooltipSuccessBackground: "var(--color-green)",
         },
         textMarkers: {
-          markBackground: "var(--tint-green)",
-          markBorderColor: "var(--green)",
+          markBackground: "var(--color-tint-green)",
+          markBorderColor: "var(--color-green)",
           lineMarkerAccentWidth: "2px",
         },
       },

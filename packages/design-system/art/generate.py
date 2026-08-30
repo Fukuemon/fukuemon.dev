@@ -77,26 +77,26 @@ def art_woodland():
     nt, nb_ = trees(47, 4, 660, 1180, 380, 210, 340, 12, 22, (4, 7))
     inner = f'''  <g filter="url(#rough-wood)">
     <g mask="url(#mist-wood)">
-      <g fill="var(--wood-3)">
+      <g fill="var(--color-wood-3)">
 {paths(ft)}
       </g>
-      <g fill="none" stroke="var(--wood-3)" stroke-width="1.4" stroke-linecap="round">
+      <g fill="none" stroke="var(--color-wood-3)" stroke-width="1.4" stroke-linecap="round">
 {paths(fb)}
       </g>
-      <g fill="var(--wood-2)">
+      <g fill="var(--color-wood-2)">
 {paths(mt)}
       </g>
-      <g fill="none" stroke="var(--wood-2)" stroke-width="2" stroke-linecap="round">
+      <g fill="none" stroke="var(--color-wood-2)" stroke-width="2" stroke-linecap="round">
 {paths(mb)}
       </g>
-      <g fill="var(--wood-1)" opacity="0.86">
+      <g fill="var(--color-wood-1)" opacity="0.86">
 {paths(nt)}
       </g>
-      <g fill="none" stroke="var(--wood-1)" stroke-width="2.6" stroke-linecap="round" opacity="0.86">
+      <g fill="none" stroke="var(--color-wood-1)" stroke-width="2.6" stroke-linecap="round" opacity="0.86">
 {paths(nb_)}
       </g>
     </g>
-    <path d="{ridge(5, 436, 132, 300, 1250, 82)}" fill="var(--wood-1)"/>
+    <path d="{ridge(5, 436, 132, 300, 1250, 82)}" fill="var(--color-wood-1)"/>
   </g>'''
     return svg("wood", "霧のなかの木立と、手前を横切る斜面", inner)
 
@@ -105,9 +105,9 @@ def art_woodland():
 def art_bamboo(w=W, h=H, sfx='bamboo', n_scale=1.0, label='竹林'):
     r = random.Random(23)
     layers = []
-    specs = [("var(--wood-3)", max(3, round(15*n_scale)), 6, 13, 1.0),
-             ("var(--wood-2)", max(2, round(9*n_scale)), 12, 22, 1.0),
-             ("var(--wood-1)", max(1, round(4*n_scale)), 22, 36, 0.9)]
+    specs = [("var(--color-wood-3)", max(3, round(15*n_scale)), 6, 13, 1.0),
+             ("var(--color-wood-2)", max(2, round(9*n_scale)), 12, 22, 1.0),
+             ("var(--color-wood-1)", max(1, round(4*n_scale)), 22, 36, 0.9)]
     for ci, (col, n, wmin, wmax, op) in enumerate(specs):
         stalks, nodes, leaves = [], [], []
         for i in range(n):
@@ -141,7 +141,7 @@ def art_bamboo(w=W, h=H, sfx='bamboo', n_scale=1.0, label='竹林'):
 {paths(stalks)}
 {paths(leaves)}
     </g>
-    <g fill="none" stroke="var(--paper)" stroke-width="3.4" stroke-linecap="butt" opacity="{op}">
+    <g fill="none" stroke="var(--color-paper)" stroke-width="3.4" stroke-linecap="butt" opacity="{op}">
 {paths(nodes)}
     </g>''')
     inner = (f'  <g filter="url(#rough-{sfx})">\n    <g mask="url(#mist-{sfx})">\n'
@@ -156,7 +156,7 @@ def art_bamboo(w=W, h=H, sfx='bamboo', n_scale=1.0, label='竹林'):
 def art_ripple():
     r = random.Random(31)
     groups = []
-    centers = [(300, 306, 1.0, "var(--wood-3)", 8), (770, 244, 1.0, "var(--wood-2)", 7), (1055, 340, 1.0, "var(--wood-1)", 5)]
+    centers = [(300, 306, 1.0, "var(--color-wood-3)", 8), (770, 244, 1.0, "var(--color-wood-2)", 7), (1055, 340, 1.0, "var(--color-wood-1)", 5)]
     for gi, (cx, cy, op, col, n) in enumerate(centers):
         arcs = []
         for i in range(n):
@@ -183,7 +183,7 @@ def art_ripple():
         d = r.choice([-1, 1])
         leaves.append(f"M{x:.1f} {y:.1f}Q{x+d*ln*0.5:.1f} {y-ln*0.30:.1f} {x+d*ln:.1f} {y-ln*0.06:.1f}"
                       f"Q{x+d*ln*0.5:.1f} {y+ln*0.16:.1f} {x:.1f} {y:.1f}Z")
-    groups.append(f'''    <g fill="var(--wood-1)" opacity="0.9">
+    groups.append(f'''    <g fill="var(--color-wood-1)" opacity="0.9">
 {paths(leaves)}
     </g>''')
     inner = '  <g filter="url(#rough-ripple)">\n    <g mask="url(#mist-ripple)">\n' + "\n".join(groups) + "\n    </g>\n  </g>"
@@ -196,7 +196,7 @@ def art_ripple():
 def art_ridge():
     r = random.Random(53)
     layers = []
-    specs = [("var(--wood-3)", 176, 62, 0.85), ("var(--wood-2)", 262, 48, 0.92), ("var(--wood-1)", 336, 34, 1.0)]
+    specs = [("var(--color-wood-3)", 176, 62, 0.85), ("var(--color-wood-2)", 262, 48, 0.92), ("var(--color-wood-1)", 336, 34, 1.0)]
     for li, (col, base_y, amp, op) in enumerate(specs):
         n = 240
         pts = []
@@ -220,7 +220,7 @@ def art_ridge():
 def art_grass():
     r = random.Random(71)
     layers = []
-    specs = [("var(--wood-3)", 150, 60, 170, 1.2, 0.9), ("var(--wood-2)", 95, 90, 240, 1.9, 1.0), ("var(--wood-1)", 46, 130, 320, 2.8, 1.0)]
+    specs = [("var(--color-wood-3)", 150, 60, 170, 1.2, 0.9), ("var(--color-wood-2)", 95, 90, 240, 1.9, 1.0), ("var(--color-wood-1)", 46, 130, 320, 2.8, 1.0)]
     for col, n, hmin, hmax, sw, op in specs:
         blades, heads = [], []
         for i in range(n):

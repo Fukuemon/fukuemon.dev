@@ -6,11 +6,11 @@
  * これで 1 枚の SVG が明暗どちらの地でも成立する。
  */
 export const MERMAID_TOKENS: Record<string, string> = {
-  "#ff0001": "var(--fg)",
-  "#ff0002": "var(--rule-strong)",
-  "#ff0003": "var(--panel)",
-  "#ff0004": "var(--now)",
-  "#ff0005": "var(--fg-2)",
+  "#ff0001": "var(--color-fg)",
+  "#ff0002": "var(--color-rule-strong)",
+  "#ff0003": "var(--color-panel)",
+  "#ff0004": "var(--color-now)",
+  "#ff0005": "var(--color-fg-2)",
 };
 
 const [TEXT, LINE, FILL, ACCENT, MUTED] = Object.keys(MERMAID_TOKENS) as [
