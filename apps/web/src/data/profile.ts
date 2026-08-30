@@ -35,11 +35,6 @@ export const STACK: { label: string; items: string[] }[] = [
   { label: "言語", items: ["Go", "TypeScript", "Java", "Python"] },
   // kufu-infra / n8n-playground / announce-workflow
   { label: "基盤", items: ["Terraform", "AWS", "Google Cloud"] },
-  { label: "このサイト", items: ["Astro", "React", "PGlite (PostgreSQL)"] },
-  {
-    label: "コミュニティ",
-    items: ["GDG Greater Kwansai Organizer", "Go Workshop Conference 2025 IN KOBE 運営"],
-  },
 ];
 
 /**
