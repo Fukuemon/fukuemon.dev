@@ -1,75 +1,89 @@
-/* Design Tokens。値の正本。Tailwind の構文を書かない。
+/* Design Tokens。値の正本。
    根拠: design/features/design-system/DesignDoc_design-system.md
 
    色は light-dark(明, 暗) で 1 度だけ書く。選択子を明暗で分けると同じ値を 2 度書くことになり、
-   片方だけ直した事故に実行時まで気づけない。 */
+   片方だけ直した事故に実行時まで気づけない。
 
-:root {
-  color-scheme: light dark;
+   `@theme` に置いた名前は utility も生む。`--color-paper` なら `bg-paper` / `text-paper`。
+   utility を生まない版面の寸法は `:root` に置く。
 
+   `static` を付ける。既定では「utility から参照されている変数」しか出力されず、
+   挿絵の SVG が `fill="var(--color-wood-1)"` で引く色が消える。 */
+
+@theme static {
   /* ---- 書体 ---- */
   --font-serif: "EB Garamond", "Zen Old Mincho", "Yu Mincho", serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 
   /* ---- 地 ---- */
-  --paper: light-dark(#fcfbf8, #17140f);
-  --panel: light-dark(#f4f2ec, #211d17);
-  --code-bg: light-dark(#f1eee6, #211d17);
+  --color-paper: light-dark(#fcfbf8, #17140f);
+  --color-panel: light-dark(#f4f2ec, #211d17);
+  --color-code-bg: light-dark(#f1eee6, #211d17);
 
-  /* 文字。比は --paper に対する実測値 (明 / 暗) */
-  --ink: light-dark(#1a1714, #f4f1ea);   /* 17.25 / 16.28 */
-  --ink-2: light-dark(#57534b, #b9b4a8); /*  7.40 /  7.26 */
+  /* 文字。比は --color-paper に対する実測値 (明 / 暗) */
+  --color-ink: light-dark(#1a1714, #f4f1ea);   /* 17.25 / 16.28 */
+  --color-ink-2: light-dark(#57534b, #b9b4a8); /*  7.40 /  7.26 */
 
-  /* 差し色。線と文字のみ。面は --tint-* */
-  --green: light-dark(#4f6138, #9db086); /*  6.55  内部リンク / ハンズオン / 完了 */
-  --blue: light-dark(#2c4a6e, #8fb0d6);  /*  8.78  外部リンク / 前提 */
-  --rust: light-dark(#9e3a26, #e08a6c);  /*  6.57  現在地 / 注意 */
+  /* 差し色。線と文字のみ。面は --color-tint-* */
+  --color-green: light-dark(#4f6138, #9db086); /*  6.55  内部リンク / ハンズオン / 完了 */
+  --color-blue: light-dark(#2c4a6e, #8fb0d6);  /*  8.78  外部リンク / 前提 */
+  --color-rust: light-dark(#9e3a26, #e08a6c);  /*  6.57  現在地 / 注意 */
 
   /* 罫 */
-  --rule-strong: light-dark(#78726a, #8a8375); /* 4.60  UI 境界 */
-  --rule-soft: light-dark(#d9d4c8, #3a352d);   /* 1.43  UI 境界に使わない */
+  --color-rule-strong: light-dark(#78726a, #8a8375); /* 4.60  UI 境界 */
+  --color-rule-soft: light-dark(#d9d4c8, #3a352d);   /* 1.43  UI 境界に使わない */
 
   /* 面 */
-  --tint-green: light-dark(#dfe4d3, #262e1d);
-  --tint-blue: light-dark(#d9e1ea, #1e2833);
-  --tint-rust: light-dark(#f0dcd2, #33211a);
-  --band: light-dark(#1a1714, #e7e3d8);
+  --color-tint-green: light-dark(#dfe4d3, #262e1d);
+  --color-tint-blue: light-dark(#d9e1ea, #1e2833);
+  --color-tint-rust: light-dark(#f0dcd2, #33211a);
+  --color-band: light-dark(#1a1714, #e7e3d8);
 
   /* 挿絵の 3 階調 */
-  --wood-1: light-dark(#6f7d55, #4a5638);
-  --wood-2: light-dark(#9aa57f, #39412c);
-  --wood-3: light-dark(#c3cbb0, #2a3021);
+  --color-wood-1: light-dark(#6f7d55, #4a5638);
+  --color-wood-2: light-dark(#9aa57f, #39412c);
+  --color-wood-3: light-dark(#c3cbb0, #2a3021);
 
   /* 霞。地の色を透過させる */
-  --veil-1: light-dark(#fcfbf8, #17140f);
-  --veil-0: light-dark(rgb(252 251 248 / 0), rgb(23 20 15 / 0));
+  --color-veil-1: light-dark(#fcfbf8, #17140f);
+  --color-veil-0: light-dark(rgb(252 251 248 / 0), rgb(23 20 15 / 0));
 
   /* コード。輝度の梯子。隣接比 最小 1.27 */
-  --c-plain: light-dark(#1a1714, #f4f1ea); /* 15.39 / 14.86 */
-  --c-key: light-dark(#5e1b33, #e48fa8);   /* 10.78 /  7.02 */
-  --c-ident: light-dark(#2a4470, #5a88c4); /*  8.39 /  4.59 */
-  --c-lit: light-dark(#7a4a12, #e8c08a);   /*  6.43 /  9.85 */
-  --c-com: light-dark(#6a6459, #938d80);   /*  5.06 /  5.08 */
+  --color-c-plain: light-dark(#1a1714, #f4f1ea); /* 15.39 / 14.86 */
+  --color-c-key: light-dark(#5e1b33, #e48fa8);   /* 10.78 /  7.02 */
+  --color-c-ident: light-dark(#2a4470, #5a88c4); /*  8.39 /  4.59 */
+  --color-c-lit: light-dark(#7a4a12, #e8c08a);   /*  6.43 /  9.85 */
+  --color-c-com: light-dark(#6a6459, #938d80);   /*  5.06 /  5.08 */
 
   /* 画面はここだけを参照する */
-  --fg: var(--ink);
-  --fg-2: var(--ink-2);
-  --link: var(--green);
-  --link-ext: var(--blue);
-  --now: var(--rust);
-  --rule: var(--rule-soft);
-  --focus: var(--ink);
+  --color-fg: var(--color-ink);
+  --color-fg-2: var(--color-ink-2);
+  --color-link: var(--color-green);
+  --color-link-ext: var(--color-blue);
+  --color-now: var(--color-rust);
+  --color-rule: var(--color-rule-soft);
+  --color-focus: var(--color-ink);
 
   /* 余白。節の内側と外側で数列を分ける */
-  --gap-intra-1: 8px;
-  --gap-intra-2: 13px;
-  --gap-intra-3: 21px;
-  --gap-intra-4: 28px; /* 水平方向の溝 */
-  --gap-inter-1: 34px; /* 面の内側 */
-  --gap-inter-2: 55px;
-  --gap-inter-3: 89px; /* 節の間 */
+  --spacing-intra-1: 8px;
+  --spacing-intra-2: 13px;
+  --spacing-intra-3: 21px;
+  --spacing-intra-4: 28px; /* 水平方向の溝 */
+  --spacing-inter-1: 34px; /* 面の内側 */
+  --spacing-inter-2: 55px;
+  --spacing-inter-3: 89px; /* 節の間 */
 
-  /* 版面 */
+  /* 折り返しは 2 段だけ。値は「その幅から上」を指すので、
+     `max-narrow:` が max-width: 720.98px、`max-wide:` が max-width: 1100.98px になる */
+  --breakpoint-narrow: 721px;
+  --breakpoint-wide: 1101px;
+}
+
+:root {
+  /* 既定はシステム設定に従う */
+  color-scheme: light dark;
+
+  /* 版面。utility を生まないのでここに置く */
   --gutter: clamp(20px, 5vw, 56px);
   /* 本文の行長。42rem でおよそ 37 字。日本語は 40〜45 字を超えると行を追いにくい */
   --measure-w: 42rem;
@@ -77,9 +91,8 @@
   /* 一覧や実行結果など、行長より広く取る版面 */
   --measure-wide: 68rem;
   --topbar: 45px;  /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
-  /* 折り返しは 1100px と 720px の 2 段。@media は custom property を読めないのでトークンにしない */
   --rail: 46px;    /* 縦組み見出しの列 */
-  --drawer: 306px; /* ハンズオンの手順サイドバー。題が 2 行に収まる幅 */
+  --drawer: 306px; /* 側柱。題が 2 行に収まる幅 */
   --drawer-shut: 46px; /* たたんだときの幅。開閉ボタンだけが残る */
 }
 
@@ -88,12 +101,12 @@
 
 /* 反転帯。semantic を丸ごと差し替える。値は帯専用 */
 [data-band] {
-  background: var(--band);
+  background: var(--color-band);
   color: light-dark(#f4f1ea, #1a1714);
-  --fg: light-dark(#f4f1ea, #1a1714);
-  --fg-2: light-dark(#b9b4a8, #57534b);
-  --link: light-dark(#9db086, #4f6138);
-  --now: light-dark(#e08a6c, #9e3a26);
-  --rule: light-dark(#7a746a, #857f72);
-  --focus: light-dark(#f4f1ea, #1a1714);
+  --color-fg: light-dark(#f4f1ea, #1a1714);
+  --color-fg-2: light-dark(#b9b4a8, #57534b);
+  --color-link: light-dark(#9db086, #4f6138);
+  --color-now: light-dark(#e08a6c, #9e3a26);
+  --color-rule: light-dark(#7a746a, #857f72);
+  --color-focus: light-dark(#f4f1ea, #1a1714);
 }

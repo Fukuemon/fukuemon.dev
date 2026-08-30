@@ -59,9 +59,9 @@ export default function ErDiagram({ entities, relations }: Props) {
             <path
               d={`M ${x1} ${ay} C ${mid} ${ay}, ${mid} ${by}, ${x2} ${by}`}
               fill="none"
-              stroke="var(--rule-strong)"
+              stroke="var(--color-rule-strong)"
             />
-            <circle cx={x2} cy={by} r="3" fill="var(--now)" />
+            <circle cx={x2} cy={by} r="3" fill="var(--color-now)" />
           </g>
         );
       })}
@@ -74,14 +74,14 @@ export default function ErDiagram({ entities, relations }: Props) {
             width={BOX_W}
             height={HEAD_H + e.columns.length * ROW_H}
             fill="none"
-            stroke="var(--rule-strong)"
+            stroke="var(--color-rule-strong)"
           />
           <line
             x1={e.x}
             y1={e.y + HEAD_H}
             x2={e.x + BOX_W}
             y2={e.y + HEAD_H}
-            stroke="var(--rule-strong)"
+            stroke="var(--color-rule-strong)"
           />
           <text x={e.x + 10} y={e.y + 18} className="er-svg__name">
             {e.name}

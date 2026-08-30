@@ -34,8 +34,8 @@ export function contrast(a: string, b: string): number {
 /** ブラウザが読むのと同じ 1 箇所を読む。明暗で値がずれない */
 function readTokens(): { light: Map<string, string>; dark: Map<string, string> } {
   const css = readFileSync(here("./styles/tokens.css"), "utf8");
-  const i = css.indexOf(":root {");
-  if (i < 0) throw new Error("tokens.css に :root が無い");
+  const i = css.indexOf("@theme");
+  if (i < 0) throw new Error("tokens.css に @theme が無い");
   const body = css.slice(i, css.indexOf("\n}", i));
   const light = new Map<string, string>();
   const dark = new Map<string, string>();
@@ -59,12 +59,12 @@ export function checkContrast(): string[] {
     ["明", LIGHT, tokens.light],
     ["暗", DARK, tokens.dark],
   ] as const) {
-    const bg = map.get("--code-bg");
+    const bg = map.get("--color-code-bg");
     if (bg !== palette.bg) {
       errors.push(`${name}: --code-bg が ${bg} / code-theme.ts が ${palette.bg}`);
     }
     for (const k of CODE_KEYS) {
-      const css = map.get(`--c-${k}`);
+      const css = map.get(`--color-c-${k}`);
       if (css !== palette[k]) {
         errors.push(`${name}: --c-${k} が ${css} / code-theme.ts が ${palette[k]}`);
       }
@@ -75,9 +75,16 @@ export function checkContrast(): string[] {
       if (r < MIN_TEXT) errors.push(`${name}: --c-${k} が ${r.toFixed(2)} (4.5 未満)`);
     }
 
-    const paper = map.get("--paper");
+    const paper = map.get("--color-paper");
     if (paper) {
-      for (const k of ["--ink", "--ink-2", "--green", "--blue", "--rust", "--rule-strong"]) {
+      for (const k of [
+        "--color-ink",
+        "--color-ink-2",
+        "--color-green",
+        "--color-blue",
+        "--color-rust",
+        "--color-rule-strong",
+      ]) {
         const v = map.get(k);
         if (!v) continue;
         const r = contrast(v, paper);
