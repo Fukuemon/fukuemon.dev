@@ -7,15 +7,19 @@ Worker script と静的アセットの deploy は Wrangler の管轄であり、
 
 ## 構成
 
-| ディレクトリ  | 対象                          | state の置き場           |
-| ------------- | ----------------------------- | ------------------------ |
-| `bootstrap/`  | state 用の R2 バケット        | ローカル (commit しない) |
-| `cloudflare/` | zone と Workers custom domain | R2 (`bootstrap/` が作る) |
+| ディレクトリ  | 対象                          | state の置き場           | 実行者                     |
+| ------------- | ----------------------------- | ------------------------ | -------------------------- |
+| `bootstrap/`  | state 用の R2 バケット        | ローカル (commit しない) | 運用者が手元で 1 回        |
+| `cloudflare/` | zone と Workers custom domain | R2 (`bootstrap/` が作る) | apply workflow または手元 |
+
+`bootstrap/` を CI から実行しない。
+state をローカルに置く前提を壊す。
 
 ## 前提
 
 - Terraform 1.11 以上。
   `backend "s3"` の `use_lockfile` を使うため。
+  CI は 1.14.3 に固定する。
 - apply 用の API token。
   次の権限を持たせる。
   - Account / Workers R2 Storage / Edit (`bootstrap/`)
@@ -23,10 +27,9 @@ Worker script と静的アセットの deploy は Wrangler の管轄であり、
   - Zone / Zone / Edit と Zone / DNS / Edit (zone)
 - R2 の S3 互換 access key。
   `cloudflare/` の state backend が使う。
-  Cloudflare の R2 画面で発行し、`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` として渡す。
+  Cloudflare の R2 画面で発行する。
 
-**deploy workflow の token と分ける。** deploy 用の token に apply 権限を持たせない。
-1 名体制で実際に効く分離は、apply が手動起動であることと、日常の CI が apply 用 credential を持たないことの 2 つである (ADR-0005)。
+**deploy workflow の token と分ける。** 置き場と scope は [context/infrastructure.md](../context/infrastructure.md) の credential の表に従う。
 
 変数の値は各ディレクトリの `terraform.tfvars` に置く。
 `.gitignore` が `*.tfvars` を無視するため commit されない。
@@ -72,21 +75,16 @@ pnpm --filter @fukuemon/web run deploy
 ### 3. zone と custom domain を作る
 
 backend の設定は account ID を含むため commit しない。
-`infra/cloudflare/backend.tfvars` に置いて `-backend-config` で渡す。
-
-```hcl
-bucket = "<1 で作ったバケット名>"
-endpoints = {
-  s3 = "https://<Cloudflare の account ID>.r2.cloudflarestorage.com"
-}
-```
+bucket 名は `-backend-config` で、endpoint は `AWS_ENDPOINT_URL_S3` で渡す。
+apply workflow も同じ形で渡す。
 
 ```sh
 export CLOUDFLARE_API_TOKEN=<apply 用の token>
 export AWS_ACCESS_KEY_ID=<R2 の access key id>
 export AWS_SECRET_ACCESS_KEY=<R2 の secret access key>
+export AWS_ENDPOINT_URL_S3=https://<Cloudflare の account ID>.r2.cloudflarestorage.com
 cd infra/cloudflare
-terraform init -backend-config=backend.tfvars
+terraform init -backend-config="bucket=<1 で作ったバケット名>"
 terraform apply
 ```
 
@@ -96,6 +94,10 @@ terraform apply
 account_id = "<Cloudflare の account ID>"
 zone_name  = "<ドメイン名>"
 ```
+
+CI から実行する場合は Actions の **Terraform Apply** を `workflow_dispatch` で起動する。
+`mode` を `plan` にすると plan で止まり、`apply` にすると apply まで進む。
+`infra` environment の protection rules を通る。
 
 ### 4. ネームサーバを向ける
 
