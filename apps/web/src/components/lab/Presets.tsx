@@ -1,4 +1,5 @@
-import { PRESET_EVENT, type Preset } from "./schema";
+import type { Preset } from "@fukuemon/content-model";
+import { PRESET_EVENT } from "./schema";
 
 type Props = { contentId: string; presets: Preset[] };
 
