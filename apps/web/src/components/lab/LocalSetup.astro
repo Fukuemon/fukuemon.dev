@@ -1,0 +1,63 @@
+---
+import CopyLine from "./CopyLine.astro";
+
+interface Props {
+  repository: string;
+  via: "devcontainer" | "docker-compose" | "manual";
+  requires: { name: string; check?: string }[];
+}
+const { repository, via, requires } = Astro.props;
+
+const name = repository.replace(/^https?:\/\/[^/]+\//, "").replace(/\.git$/, "");
+const dir = name.split("/").pop() ?? "repo";
+
+/** via ごとの起動コマンド */
+const START: Record<Props["via"], { label: string; lines: string[] }> = {
+  devcontainer: {
+    label: "Dev Container で開く",
+    lines: ["code .", "# コマンドパレット → Dev Containers: Reopen in Container"],
+  },
+  "docker-compose": { label: "起動する", lines: ["docker compose up -d"] },
+  manual: { label: "用意する", lines: ["# README の手順に従ってください"] },
+};
+const start = START[via];
+---
+
+<section class="local" aria-labelledby="local-setup">
+  <h2 class="mono meta local__head" id="local-setup">手元で用意する</h2>
+
+  <p class="prose local__note">
+    このハンズオンはブラウザの中では動きません。リポジトリを自分の環境へ持っていって進めます。
+  </p>
+
+  {
+    requires.length > 0 && (
+      <div class="local__block">
+        <p class="mono meta local__label">要るもの</p>
+        <ul class="local__reqs">
+          {requires.map((r) => (
+            <li>
+              <span class="local__req-name">{r.name}</span>
+              {r.check && <CopyLine text={r.check} />}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  <div class="local__block">
+    <p class="mono meta local__label">取ってくる</p>
+    <CopyLine text={`git clone ${repository}`} />
+    <CopyLine text={`cd ${dir}`} />
+  </div>
+
+  <div class="local__block">
+    <p class="mono meta local__label">{start.label}</p>
+    {start.lines.map((l) => <CopyLine text={l} />)}
+  </div>
+
+  <p class="mono meta local__repo">
+    <a href={repository}>{name} ↗</a>
+  </p>
+</section>
