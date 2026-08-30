@@ -239,7 +239,11 @@
     border-block-start: 1px solid var(--rule-strong);
   }
   .runner__status, .runner__count { margin-inline-start: auto; }
+  /* 操作行に 2 つ並ぶので、指以外では詰める */
   .runner .btn { min-block-size: 36px; padding: 0 var(--gap-intra-3); }
+  @media (pointer: coarse) {
+    .runner .btn { min-block-size: 44px; }
+  }
   .runner__note {
     padding: var(--gap-intra-2) var(--gap-intra-3);
     border-block-start: 1px solid var(--rule);
@@ -253,6 +257,8 @@
     font-size: 0.85rem;
     white-space: pre-wrap;
   }
+  /* 表の下の断り書き。左端を操作行と揃える */
+  .runner__more { margin: 0; padding: var(--gap-intra-2) var(--gap-intra-3); }
   .runner__scroll { overflow-x: auto; border-block-start: 1px solid var(--rule-strong); }
   .runner__table { border-collapse: collapse; font-size: 0.85rem; inline-size: 100%; }
   .runner__table th, .runner__table td {
@@ -581,6 +587,7 @@
     cursor: pointer;
   }
   .peek__name { font-size: 0.8125rem; }
+  .peek__empty { margin: var(--gap-intra-2) 0 0; }
 
   /* テーブルの中身。top layer なので側柱の幅に縛られない */
   /* dialog の既定は display:none。flex は開いているときだけに限る */
@@ -908,5 +915,19 @@
   }
   /* 側柱も同じだけ下げる。上端がヘッダに隠れない */
   .pg-presets { padding-block-start: var(--gap-intra-2); }
-  .pg-presets__head { margin: 0 0 var(--gap-intra-1); }
 }
+
+/* Expressive Code の写しボタン。
+   触る端末は hover が無いのでボタンが出たままになり、1 行目の上に重なる。
+   EC の規則は cascade layer に属さない (`all: revert` を含む) ので、
+   ここも layer の外に置かないと負ける。 */
+@media (hover: none) {
+  /* 半透明だと下の文字が透けて、壊れた表示に見える。
+     EC の同名の規則より後に効かせるため、frame を 1 段挟んで詳細度を上げる */
+  .expressive-code .frame .copy button { opacity: 1; }
+  /* EC が空ける 2rem は hover 端末のボタン幅。触る端末は 2.5rem ある */
+  .expressive-code :nth-child(1 of .ec-line) .code {
+    padding-inline-end: calc(2.5rem + var(--ec-codePadInl));
+  }
+}
+
