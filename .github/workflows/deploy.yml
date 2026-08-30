@@ -1,10 +1,11 @@
 name: Deploy
 
-# 既定ブランチへの push で配信する (ADR-0005)。品質ゲートは check workflow が PR で回す (ADR-0007)。
-# branches は "**" で受けて job 側で絞る (on ではブランチ名を動的に解決できない)。
+# check workflow が既定ブランチで成功したときだけ配信する (ADR-0005 / ADR-0007)。
+# push を直接の契機にすると、check の結果を待たずに配信されてしまう。
 on:
-  push:
-    branches: ["**"]
+  workflow_run:
+    workflows: [Check]
+    types: [completed]
 
 concurrency:
   group: deploy
@@ -16,13 +17,19 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref_name == github.event.repository.default_branch
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch
     steps:
-      - uses: actions/checkout@v5
+      # workflow_run の既定は既定ブランチの HEAD のため、検査した commit を明示する
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: package.json
           cache: pnpm
