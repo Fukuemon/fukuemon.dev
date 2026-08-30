@@ -35,7 +35,6 @@ describe("buildToc", () => {
   });
 
   it("h3 で章を区切らない", () => {
-    // あ(1) + ### 小見出し(8) + いう(2) = 11。h3 の行そのものも本文量に数える
     const md = "## 一\n\nあ\n\n### 小見出し\n\nいう";
     expect(buildToc(md, [h("一")])[0]?.weight).toBe(11);
   });
@@ -46,7 +45,6 @@ describe("buildToc", () => {
   });
 
   it("本文に h2 が 1 つも無ければ weight は 0", () => {
-    // 見出しの一覧は h2 を主張するが本文には無い、という食い違いでも落ちない
     expect(buildToc("本文だけ", [h("一")])[0]?.weight).toBe(0);
   });
 

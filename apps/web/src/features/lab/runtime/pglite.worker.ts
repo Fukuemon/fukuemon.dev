@@ -31,8 +31,6 @@ self.onmessage = async (e: MessageEvent<Req>) => {
     if (req.kind === "boot") {
       db = await PGlite.create();
       if (req.setup) await db.exec(req.setup);
-      // 完了済みの手順を流し直す。失敗しても起動は続けるが、
-      // どこで落ちたかは返す。黙って進むと完了表示と DB の中身が食い違う
       const replayFailed: number[] = [];
       for (const [i, sql] of (req.replay ?? []).entries()) {
         try {
@@ -58,8 +56,6 @@ self.onmessage = async (e: MessageEvent<Req>) => {
       id: req.id,
       ok: true,
       kind: "exec",
-      // Date は構造化複製で渡るが、fields の関数は渡らない。素の形へ落とす。
-      // 行はここで切る。全行を構造化複製で渡すとメインスレッドが詰まる
       results: results.map((r) => ({
         fields: r.fields.map((f) => ({ name: f.name })),
         rows: r.rows.slice(0, MAX_ROWS),

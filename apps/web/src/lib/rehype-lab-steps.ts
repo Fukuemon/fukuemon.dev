@@ -14,7 +14,6 @@ export function rehypeLabSteps() {
   return (tree: Root, file: { path?: string }) => {
     if (!(file.path ?? "").includes("/content/labs/")) return;
 
-    // import を面の中に入れると MDX が解決できない
     const hoisted: LabNode[] = [];
     const sections: Element[] = [];
     let current: LabNode[] = [];
@@ -22,7 +21,6 @@ export function rehypeLabSteps() {
     let title = "はじめに";
 
     const flush = () => {
-      // 前置きが空なら「はじめに」を作らない
       if (index < 0 && current.every((n) => n.type === "text" && !n.value.trim())) {
         current = [];
         return;

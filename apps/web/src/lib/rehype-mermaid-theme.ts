@@ -26,7 +26,6 @@ function walk(node: Root | Element, inSvg: boolean): void {
       for (const [k, v] of Object.entries(child.properties ?? {})) {
         if (typeof v === "string") child.properties[k] = swap(v);
       }
-      // 図は本文の色を継ぐ。地は敷かない
       if (child.tagName === "svg") child.properties.className = ["figure"];
     }
     walk(child, svg);

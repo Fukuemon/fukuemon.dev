@@ -19,11 +19,9 @@ export const isPublic = (e: { data: { status: string } }) =>
 
 function toRef(entry: Entry, type: ContentType): ContentRef {
   const d = entry.data;
-  // 記事に所要時間を出さない。手で書いた数字は本文の分量とずれる
   const meta =
     type === "hands-on" && "duration" in d ? [{ label: "所要", value: `${d.duration}分` }] : [];
-  const level =
-    "interactive" in d && d.interactive ? d.interactive.level : undefined;
+  const level = "interactive" in d && d.interactive ? d.interactive.level : undefined;
   return {
     contentId: d.contentId,
     type,
@@ -42,7 +40,10 @@ function toRef(entry: Entry, type: ContentType): ContentRef {
  * 除外してから組むと、下書きを指す `related` が「存在しません」で落ちる。
  * 実際には存在しており、公開されていないだけなので、表示の側で落とす。
  */
-async function load(): Promise<{ entries: { ref: ContentRef; related: string[] }[]; publicIds: Set<string> }> {
+async function load(): Promise<{
+  entries: { ref: ContentRef; related: string[] }[];
+  publicIds: Set<string>;
+}> {
   const [articles, labs] = await Promise.all([getCollection("articles"), getCollection("labs")]);
   const all = [
     ...articles.map((e) => ({ e, ref: toRef(e, "article") })),
@@ -93,7 +94,6 @@ export async function listPlaygrounds(): Promise<PlaygroundEntry[]> {
   const found = await getCollection("playgrounds", isPublic);
   return [...found].sort((a, b) => a.data.order - b.data.order);
 }
-
 
 /** 片方向に書かれた related から、双方向に導出した関連を返す。下書きは出さない */
 export async function getRelated(contentId: string): Promise<ContentRef[]> {

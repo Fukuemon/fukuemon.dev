@@ -9,7 +9,6 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-// 手順の正本は remark-lab。ここで本文を数え直さない
 const { Content, remarkPluginFrontmatter } = await renderEntry(entry);
 const steps = (remarkPluginFrontmatter.labSteps ?? []) as Step[];
 
@@ -22,9 +21,7 @@ const local =
     ? { repository: it.repository, via: it.via, requires: it.requires }
     : undefined;
 
-// 「はじめに」の面を出すか。本文の前置きか、local の手順があれば出す
 const intro = remarkPluginFrontmatter.labHasIntro === true || local !== undefined;
-// 実行環境を持つラボだけ、側柱に DB の一覧を出す
 const live = it?.level === "embedded";
 ---
 

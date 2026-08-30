@@ -3,7 +3,6 @@
 export const PROFILE = {
   name: "fukuemon",
   reading: "ふくえもん",
-  // 勤め先は書かない。変わるたびに書き直しが要る
   role: "エンジニア。",
   lead: "Postgres と可観測性のあたりを調べて書いています。",
   note: "手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。",

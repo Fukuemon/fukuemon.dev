@@ -14,7 +14,6 @@ const prev = i > 0 ? siblings[i - 1] : undefined;
 const next = i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : undefined;
 ---
 
-{/* 狭い画面では側柱に畳まれるので出さない (max-wide:hidden) */}
 <nav
   class="docnav flex flex-col gap-intra-2 pt-inter-1 border-t border-rule-strong max-wide:hidden"
   aria-label={`ほかの${KIND_LABEL[current.type]}`}

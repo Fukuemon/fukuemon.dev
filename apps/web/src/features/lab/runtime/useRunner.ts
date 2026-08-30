@@ -13,7 +13,12 @@ export type Result = {
   ms: number;
 };
 
-type ExecResult = { fields: { name: string }[]; rows: unknown[][]; total: number; affectedRows: number };
+type ExecResult = {
+  fields: { name: string }[];
+  rows: unknown[][];
+  total: number;
+  affectedRows: number;
+};
 
 type Options = {
   key: string;
@@ -62,7 +67,6 @@ export function useRunner({ key, kind = "pglite", setup, replay, onDone }: Optio
    * 案内した復旧の道が閉じる。
    */
   const skipReplay = useRef(false);
-  // 呼ぶ側が毎レンダー作り直しても run を作り直さない
   const hooks = useRef({ replay, onDone });
   hooks.current = { replay, onDone };
 
@@ -78,9 +82,7 @@ export function useRunner({ key, kind = "pglite", setup, replay, onDone }: Optio
         const rt = await getRuntime(key, kind, { setup, replay: boot });
         setVersion(rt.version);
         setStale(rt.replayFailed.length > 0);
-        // 単一接続なので、他のパネルが走っていれば待つ
         setPhase("waiting");
-        // 待ち時間を実行時間に混ぜないよう、Worker 側で測る
         const { results, ms } = await serialize(async () => {
           setPhase("running");
           return rt.exec(source);

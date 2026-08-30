@@ -13,9 +13,7 @@ export function useCatalog(contentId: string) {
     try {
       setTables(await fetchTables(rt));
       setRelations(await fetchRelations(rt));
-    } catch {
-      // 一覧が出せなくても本文は読める
-    }
+    } catch {}
   }, [contentId]);
 
   return { tables, relations, reload };

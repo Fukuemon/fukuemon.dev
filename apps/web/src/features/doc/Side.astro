@@ -5,7 +5,7 @@ interface Props {
   /** たたんだときに縦組みで残る文字 */
   label: string;
 }
-const { id, label } = Astro.props as Props;
+const { id, label } = Astro.props;
 
 /**
  * 開閉の起点。本文が長いので画面に貼り付ける。
@@ -69,7 +69,6 @@ const SCRIM = [
 ].join(" ");
 ---
 
-{/* 開閉ボタンは面の外に置く。狭い画面では面が横へ滑って消えるため */}
 <div class="contents">
   <button
     type="button"

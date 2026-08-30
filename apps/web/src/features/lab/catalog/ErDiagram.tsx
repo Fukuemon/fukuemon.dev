@@ -19,7 +19,6 @@ const PAD = 12;
 export default function ErDiagram({ entities, relations }: Props) {
   if (entities.length === 0) return <p className="mono meta">まだテーブルがありません</p>;
 
-  // 列の多い実体から順に、2 列で敷き詰める
   const cols = entities.length === 1 ? 1 : 2;
   const placed = entities.map((e, i) => {
     const col = i % cols;
@@ -38,8 +37,6 @@ export default function ErDiagram({ entities, relations }: Props) {
     PAD * 2 + Math.max(...placed.map((e) => e.y + HEAD_H + e.columns.length * ROW_H)) - PAD;
 
   return (
-    // viewBox に width/height が無いと器いっぱいに引き伸ばされる。
-    // 表と同じく、縮めて読めなくするより横へ流す
     <svg
       className="er-svg h-auto w-max max-w-full min-w-full"
       viewBox={`0 0 ${width} ${height}`}

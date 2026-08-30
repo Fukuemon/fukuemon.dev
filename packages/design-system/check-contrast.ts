@@ -39,7 +39,8 @@ function readTokens(): { light: Map<string, string>; dark: Map<string, string> }
   const body = css.slice(i, css.indexOf("\n}", i));
   const light = new Map<string, string>();
   const dark = new Map<string, string>();
-  const pair = /(--[a-z0-9-]+)\s*:\s*light-dark\(\s*(#[0-9a-fA-F]{6})\s*,\s*(#[0-9a-fA-F]{6})\s*\)/g;
+  const pair =
+    /(--[a-z0-9-]+)\s*:\s*light-dark\(\s*(#[0-9a-fA-F]{6})\s*,\s*(#[0-9a-fA-F]{6})\s*\)/g;
   for (const m of body.matchAll(pair)) {
     light.set(m[1] as string, (m[2] as string).toLowerCase());
     dark.set(m[1] as string, (m[3] as string).toLowerCase());
@@ -101,7 +102,6 @@ export function checkContrast(): string[] {
   return errors;
 }
 
-// import しただけで終了しないよう、直接起動したときだけ走らせる
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const errors = checkContrast();
   if (errors.length > 0) {

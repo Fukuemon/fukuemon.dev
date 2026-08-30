@@ -62,7 +62,6 @@ export const mermaidConfig = {
     signalTextColor: TEXT,
     sequenceNumberColor: TEXT,
   },
-  // SVG の text で描く。foreignObject は測った幅で切るので、ずれると文字が消える
   htmlLabels: false,
   flowchart: { curve: "linear", useMaxWidth: true, htmlLabels: false },
 };

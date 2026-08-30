@@ -130,16 +130,24 @@
     transition: opacity 320ms ease-out calc(var(--i, 0) * 55ms);
   }
   @starting-style {
-    .about__char { opacity: 0; }
+    .about__char {
+      opacity: 0;
+    }
   }
 
   /* 絵と読みは名乗りの後に続く */
-  .about__face, .about__reading, .about__role {
+  .about__face,
+  .about__reading,
+  .about__role {
     opacity: 1;
     transition: opacity 420ms ease-out 260ms;
   }
   @starting-style {
-    .about__face, .about__reading, .about__role { opacity: 0; }
+    .about__face,
+    .about__reading,
+    .about__role {
+      opacity: 0;
+    }
   }
 
   /* 使っているものは、画面に入ったところで行ごとに刷り上がる。
@@ -156,13 +164,21 @@
     }
   }
   @keyframes ink {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   /* 動きを減らす設定では、最初から出す */
   @media (prefers-reduced-motion: reduce) {
-    .about__char, .about__face, .about__reading, .about__role, .about__row {
+    .about__char,
+    .about__face,
+    .about__reading,
+    .about__role,
+    .about__row {
       animation: none;
       transition: none;
       opacity: 1;

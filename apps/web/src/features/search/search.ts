@@ -48,7 +48,6 @@ export function mountSearch(root: ParentNode = document): void {
         title.textContent = h.meta.title ?? h.url;
         const body = document.createElement("span");
         body.className = "meta search__excerpt";
-        // Pagefind が組む抜粋。一致箇所が <mark> で来る
         body.innerHTML = h.excerpt;
         a.append(title, body);
         li.append(a);
@@ -58,7 +57,6 @@ export function mountSearch(root: ParentNode = document): void {
   };
 
   const run = async (q: string) => {
-    // 古い語の結果で新しい語の結果を上書きしない
     const mine = ++seq;
     if (q.trim() === "") return say("語を入れてください");
 

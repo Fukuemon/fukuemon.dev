@@ -63,7 +63,6 @@ export default function DbPeek({ contentId }: Props) {
 
   useRan(contentId, () => {
     void reload();
-    // 開いたままの窓は、実行のたびに中身を引き直す
     if (openEr.current) void showEr();
     const t = openTable.current;
     if (t) void showTable(t);

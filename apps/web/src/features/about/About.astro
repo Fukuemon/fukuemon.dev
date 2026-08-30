@@ -4,18 +4,15 @@ import ArtBand from "../../components/ArtBand.astro";
 import Tate from "../../components/Tate.astro";
 import { PROFILE, STACK } from "../../data/profile";
 
-// ビルド時に分ける。クライアントで分けると JS が動くまで名乗りが出ない
 const chars = [...PROFILE.name];
 ---
 
-{/* 独立したページを作らず、トップの表紙を兼ねる (ADR-0009) */}
 <section class="about relative overflow-hidden">
   <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
     <ArtBand motif="woodland" fill />
     <div class="about__veil absolute inset-0"></div>
   </div>
 
-  {/* 層を作らないと霞の下へ潜る */}
   <div class="g-rail relative my-inter-2 mx-(--gutter) py-inter-1">
     <Tate as="h2" class="tate-head" text="about" upright />
     <div class="flex justify-end items-baseline pb-intra-1">
@@ -26,7 +23,6 @@ const chars = [...PROFILE.name];
       <div
         class="flex items-center gap-intra-4 mb-inter-1 max-narrow:flex-col max-narrow:items-start max-narrow:gap-intra-3"
       >
-        {/* 1 枚のために sharp を足さず、256px の webp に落として置いてある */}
         <img
           class="shrink-0 border border-rule-strong bg-panel"
           src="/avatar.webp"
@@ -35,7 +31,6 @@ const chars = [...PROFILE.name];
           height="104"
         />
         <div>
-          {/* 読み上げには 1 語で渡す。字ごとに切ると 1 字ずつ読まれる */}
           <h1
             class="display font-mono leading-[1.1] tracking-[.04em]"
             aria-label={PROFILE.name}

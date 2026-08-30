@@ -9,10 +9,9 @@ interface Props {
   upright?: boolean;
   class?: string;
 }
-const { text, as: Tag = "span", upright = false, class: extra } = Astro.props as Props;
+const { text, as: Tag = "span", upright = false, class: extra }: Props = Astro.props;
 ---
 
-{/* 短い欧文・数字だけを縦中横で正立させる */}
 <Tag class:list={["tate", upright && "tate-upright", extra]}>
   {
     tcy(text).map((part) =>

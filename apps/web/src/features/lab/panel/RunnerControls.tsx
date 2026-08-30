@@ -46,7 +46,6 @@ export default function RunnerControls({
 
   return (
     <div className="runner__bar flex items-center gap-intra-2 border-t border-rule-strong px-intra-3 py-[10px]">
-      {/* disabled にするとフォーカスが外れて、押した位置を見失う */}
       <button
         className={BTN}
         type="button"
@@ -56,8 +55,6 @@ export default function RunnerControls({
       >
         {label}
       </button>
-      {/* key を分けて DOM ノードを共有させない。
-          同じノードだとラベルだけ入れ替わり、Enter の連打で初期化が走る */}
       {busy ? (
         <button key="cancel" className={BTN} type="button" onClick={onCancel}>
           中断

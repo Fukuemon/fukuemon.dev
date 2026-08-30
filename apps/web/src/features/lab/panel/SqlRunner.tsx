@@ -35,7 +35,6 @@ export default function SqlRunner({
   const editorId = useId();
   const groupId = useId();
 
-  // 全手順から選ぶので、どのパネルから起動しても同じ状態になる
   const replay = useCallback(() => {
     const saved = loadProgress(contentId, stepCount);
     return [...steps]
@@ -58,7 +57,6 @@ export default function SqlRunner({
     >
       <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-[10px]">
         <span id={groupId}>{stepTitle}</span>
-        {/* 起動した Postgres の版。実行が本物であることを示す */}
         {runner.version !== null && (
           <span
             className="runner__engine ms-auto text-fg-2"
