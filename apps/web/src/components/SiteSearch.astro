@@ -1,15 +1,7 @@
----
-/**
- * 本文の検索。索引は Pagefind がビルド後に作る。
- * 索引は数百 KiB あるので、押されるまで読まない。
- */
----
-
-<button type="button" class="label hit search__open" data-search-open aria-haspopup="dialog">
+<button type="button" class="btn search__open" data-search-open aria-haspopup="dialog">
   検索
 </button>
 
-{/* top layer に出る。ヘッダの sticky や側柱の overflow に切られない */}
 <dialog class="sheet search" data-search>
   <header class="sheet__head">
     <label class="sr" for="search-q">本文を検索</label>
