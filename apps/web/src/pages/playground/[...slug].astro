@@ -2,6 +2,7 @@
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import Playground from "../../components/lab/Playground";
 import DbPeek from "../../components/lab/DbPeek";
+import Presets from "../../components/lab/Presets";
 import Side from "../../components/Side.astro";
 import { listPlaygrounds, renderPlayground } from "../../lib/content";
 
@@ -18,6 +19,7 @@ const d = entry.data;
 <SiteLayout title={`${d.title} — playground`} description={d.description}>
   <div class="g-doc" data-side-root data-open="true">
     <Side id="pg" label="試す">
+      <Presets client:idle contentId="playground" presets={d.presets} />
       <DbPeek client:idle contentId="playground" />
     </Side>
     <div class="labmain labmain--wide">
@@ -30,7 +32,7 @@ const d = entry.data;
         <h1 class="display labhead__title">{d.title}</h1>
       </header>
       <div class="prose pg-intro"><Content /></div>
-      <Playground client:load setup={d.setup} presets={d.presets} engine="Postgres" />
+      <Playground client:load setup={d.setup} initial={d.presets[0]?.sql ?? "select version();"} engine="Postgres" />
     </div>
   </div>
   <div class="tail"></div>

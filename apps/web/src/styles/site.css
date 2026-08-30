@@ -803,6 +803,10 @@
   .side__toggle {
     grid-column: 1;
     grid-row: 1;
+    /* 本文が長いので、開閉の起点は画面に貼り付ける。
+       たたんだ側柱では、これだけが側柱への入口になる */
+    position: sticky;
+    inset-block-start: calc(var(--topbar) + var(--gap-intra-3));
     align-self: start;
     justify-self: start;
     display: flex;
@@ -973,4 +977,29 @@
     color: var(--fg-2);
     font-size: 0.75rem;
   }
+}
+
+/* ER 図。実体と外部キーだけを箱と線で描く */
+@layer fukuemon {
+  .peek__er { inline-size: 100%; margin-block: var(--gap-intra-2); }
+  .er-svg { inline-size: 100%; block-size: auto; }
+  .er-svg text { font-family: var(--font-mono); }
+  .er-svg__name { font-size: 13px; font-weight: 600; fill: var(--fg); }
+  .er-svg__col { font-size: 11px; fill: var(--fg); }
+  .er-svg__type { font-size: 10px; fill: var(--fg-2); }
+  .er-svg__pk { font-size: 9px; font-weight: 600; fill: var(--now); }
+}
+
+/* playground。結果が長いので、実行の操作列を画面に貼り付ける */
+@layer fukuemon {
+  .pg .runner__bar:has(.btn) {
+    position: sticky;
+    inset-block-start: var(--topbar);
+    z-index: 2;
+    background: var(--code-bg);
+    border-block-end: 1px solid var(--rule-strong);
+  }
+  /* 側柱も同じだけ下げる。上端がヘッダに隠れない */
+  .pg-presets { padding-block-start: var(--gap-intra-2); }
+  .pg-presets__head { margin: 0 0 var(--gap-intra-1); }
 }
