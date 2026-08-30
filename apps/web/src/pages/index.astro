@@ -19,10 +19,10 @@ const [all, labs, articles] = await Promise.all([
 <SiteLayout title="fukuemon.dev" description="読んで、動かして、確かめる。">
   <About />
 
-  <section data-band class="band">
+  <section data-band class="py-inter-2 px-(--gutter) border-y border-rule">
     <div class="g-rail">
-      <Tate as="h2" class="tate-head band-head" text="最近の更新" />
-      <div class="section-link">
+      <Tate as="h2" class="tate-head text-fg" text="最近の更新" />
+      <div class="flex justify-end items-baseline pb-intra-1">
         <a class="mono meta" href="/blog">すべて見る →</a>
       </div>
       <div>
@@ -41,7 +41,7 @@ const [all, labs, articles] = await Promise.all([
 
   <OutsideList />
 
-  <section class="section-x section--flush about__foot">
+  <section class="section--flush about__foot mx-(--gutter)">
     <AboutLinks />
   </section>
 

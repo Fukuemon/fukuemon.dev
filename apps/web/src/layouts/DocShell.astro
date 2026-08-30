@@ -14,13 +14,13 @@ const { ref, class: extra } = Astro.props;
 const related = await getRelated(ref.contentId);
 ---
 
-<article class:list={["marks", "prose", extra ?? "doc"]} data-pagefind-body>
-  <p class="mono meta doc__crumb">
+<article class:list={["marks", "prose", "doc-body", extra ?? "w-full"]} data-pagefind-body>
+  <p class="mono meta flex gap-intra-2 items-baseline">
     <a href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
     <span aria-hidden="true">/</span>
     <span>{ref.tags[0]}</span>
   </p>
-  <h1 class="display doc__title">{ref.title}</h1>
+  <h1 class="display my-intra-3">{ref.title}</h1>
   <MetaLine ref={ref} />
   <slot />
   <RelatedList items={related} />

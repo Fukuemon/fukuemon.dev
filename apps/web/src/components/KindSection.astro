@@ -16,7 +16,7 @@ const href = KIND_INDEX[items[0]?.type ?? "article"];
 {/* 種別の抽象的な札ではなく、実物を 3 本並べる。何が読めるかがその場で分かる */}
 <section class="g-rail kind">
   <Tate as="h2" class="tate-head" text={heading} />
-  <div class="section-link">
+  <div class="flex justify-end items-baseline pb-intra-1">
     <a class="mono meta" href={href}>{items.length} 本すべて →</a>
   </div>
   <div>

@@ -8,7 +8,7 @@ interface Props {
 const { ref } = Astro.props;
 ---
 
-<p class="mono meta doc__meta">
+<p class="mono meta flex flex-wrap gap-intra-3 mt-intra-2 mb-intra-3">
   <time datetime={ref.date.toISOString().slice(0, 10)}>{ymd(ref.date)}</time>
   {ref.meta.map((m) => <span>{m.value}</span>)}
 </p>
