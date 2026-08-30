@@ -14,11 +14,15 @@ const max = Math.max(1, ...items.map((i) => i.weight));
 <nav class="toc" aria-label="目次">
   {
     items.map((i) => (
-      <a class="toc__item" href={`#${i.slug}`} data-toc-link={i.slug}>
-        <span class="toc__text">{i.text}</span>
+      <a
+        class="toc__item group flex flex-col items-start gap-[7px] py-intra-1"
+        href={`#${i.slug}`}
+        data-toc-link={i.slug}
+      >
+        <span class="toc__text text-[0.85rem] leading-[1.4] group-aria-[current]:text-fg">{i.text}</span>
         <span
           aria-hidden="true"
-          class="toc__bar"
+          class="toc__bar h-px bg-rule-strong group-aria-[current]:h-[2px] group-aria-[current]:bg-now"
           style={`inline-size: ${Math.round(28 + (i.weight / max) * 100)}px`}
         />
       </a>

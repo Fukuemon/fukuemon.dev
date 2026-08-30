@@ -3,12 +3,17 @@ import Icon from "./Icon.astro";
 import { LINKS } from "../data/profile";
 ---
 
-<footer data-band class="foot">
+<footer data-band class="foot flex justify-between items-baseline border-t border-rule py-inter-1 px-(--gutter)">
   <span class="mono meta">© 2026 fukuemon · CC BY 4.0</span>
-  <span class="foot__links">
+  <span class="flex gap-intra-1">
     {
       LINKS.map((l) => (
-        <a class="hit" href={l.href} aria-label={l.label} title={l.label}>
+        <a
+          class="hit justify-center w-[40px] text-fg-2 transition-colors duration-[140ms] ease-out hover:text-link"
+          href={l.href}
+          aria-label={l.label}
+          title={l.label}
+        >
           <Icon name={l.icon} size={16} />
         </a>
       ))

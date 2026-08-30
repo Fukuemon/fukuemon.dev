@@ -1,119 +1,9 @@
 /* このサイトの部品。トークンと版面は @fukuemon/design-system が持つ */
 @layer components {
 
-  /* ---- 目次 ---- */
-  .toc__item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 7px;
-    /* min-block-size だと中身が溢れたとき重なる。padding で高さを作る */
-    padding-block: var(--spacing-intra-1);
-  }
-  .toc__text {
-    font-size: 0.85rem;
-    line-height: 1.4;
-  }
-  .toc__bar {
-    block-size: 1px;
-    background: var(--color-rule-strong);
-  }
-  .toc__item[aria-current] .toc__bar {
-    block-size: 2px;
-    background: var(--color-now);
-  }
-  .toc__item[aria-current] .toc__text {
-    color: var(--color-fg);
-  }
 
   /* ---- 手順一覧 ---- */
-  /* sticky と高さは .rail / .drawer が持つ */
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-intra-1);
-  }
-  .steps__bar {
-    margin-block: var(--spacing-intra-1) var(--spacing-intra-3);
-    block-size: 3px;
-    background: var(--color-rule-soft);
-  }
-  .steps__fill {
-    display: block;
-    block-size: 100%;
-    background: var(--color-now);
-    transition: inline-size 240ms ease;
-  }
-  .steps__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    overflow-y: auto;
-  }
-  .steps__mark {
-    inline-size: 9px;
-    block-size: 9px;
-    flex: 0 0 auto;
-    box-shadow: inset 0 0 0 1px var(--color-rule-strong);
-  }
-  /* claat の drawer は 1 行 48px 以上を確保している。
-     2 行に折り返しても行が潰れないよう、高さは padding で作る */
-  /* 所要時間を横に並べると題の幅が 100px を切って 3 行に割れる。下へ積む */
-  .steps__link {
-    display: grid;
-    grid-template-columns: 9px auto minmax(0, 1fr);
-    align-items: baseline;
-    column-gap: var(--spacing-intra-2);
-    row-gap: 2px;
-    min-block-size: 44px;
-    padding: var(--spacing-intra-2) var(--spacing-intra-2) var(--spacing-intra-2) var(--spacing-intra-1);
-    border-block-end: 1px solid var(--color-rule);
-    color: var(--color-fg-2);
-  }
-  .steps__link[aria-current] {
-    color: var(--color-fg);
-    background: var(--color-panel);
-    box-shadow: inset 2px 0 0 var(--color-now);
-  }
-  .steps__text {
-    grid-column: 3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .steps__dur { grid-column: 3; }
-  .steps__link[aria-current] .steps__text { font-weight: 600; }
-  .steps__mark[data-state="done"] {
-    background: var(--color-fg-2);
-    box-shadow: none;
-  }
-  .steps__mark[data-state="now"] {
-    background: var(--color-now);
-    box-shadow: none;
-    outline: 1px solid var(--color-ink);
-    outline-offset: 3px;
-  }
 
-  /* ---- ハンズオン本文 ---- */
-  /* 版面は .labmain が持つ。ここで padding を足すと二重に効く */
-  .lab-body { inline-size: 100%; }
-
-  /* ---- 関連 ---- */
-
-  /* ---- footer ---- */
-  .foot {
-    border-block-start: 1px solid var(--color-rule);
-    padding: var(--spacing-inter-1) var(--gutter);
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  .foot__links {
-    display: flex;
-    gap: var(--spacing-intra-1);
-  }
-  .foot__links a { justify-content: center; inline-size: 40px; }
 
   /* ---- 種別の色 ---- */
   .kind--lab,
@@ -131,16 +21,12 @@
 }
 
 @layer components {
-  .foot__links a { color: var(--color-fg-2); transition: color 140ms ease-out; }
-  .foot__links a:hover { color: var(--color-link); }
 }
 
 @layer components {
   @media (min-width: 721px) {
     .g-rail > .tate-head { grid-row: 1 / span 2; }
   }
-  .steps__text { font-size: 0.875rem; line-height: 1.4; }
-  .steps .hit { column-gap: var(--spacing-intra-2); }
   .tbl .c-date a { color: var(--color-ink-2); }
 }
 
