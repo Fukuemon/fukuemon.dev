@@ -1,0 +1,27 @@
+---
+interface Props {
+  /** 開閉状態の保存先を分ける鍵 */
+  id: string;
+  /** たたんだときに縦組みで残る文字 */
+  label: string;
+}
+const { id, label } = Astro.props as Props;
+---
+
+{/* 開閉ボタンは面の外に置く。狭い画面では面が横へ滑って消えるため */}
+<div class="side">
+  <button
+    type="button"
+    class="side__toggle"
+    data-side={id}
+    aria-expanded="true"
+    aria-controls={`side-${id}`}
+  >
+    <span aria-hidden="true" class="side__icon"></span>
+    <span class="side__label">{label}</span>
+  </button>
+  <div class="side__panel drawer stick" id={`side-${id}`}>
+    <slot />
+  </div>
+  <button type="button" class="side__scrim" data-side-close aria-label="閉じる"></button>
+</div>
