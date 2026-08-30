@@ -104,11 +104,13 @@ infra/
 └── cloudflare/      # 本体
     ├── provider.tf  # terraform{} + backend (R2) + provider
     ├── vars.tf
-    ├── dns.tf
+    ├── zone.tf
     └── workers_domain.tf
 ```
 
 - ファイル命名は `provider.tf` / `<subject>.tf` / `vars.tf` の 3 種に揃える (Cloudflare Terraform Best Practices)。
+- **DNS レコードの `.tf` を置かない。** `cloudflare_workers_custom_domain` が apex のレコードを自動で管理するため、手書きのレコードは衝突する。
+  custom domain が管理しないレコード (MX / TXT 等) が要るまで `dns.tf` を作らない。
 - **`modules/` を作らない。** 対象が 1 アカウント / 1 zone / 1 サイトで括り出す重複がない。
   同じ形が 2 箇所以上に実在するまで作らない。
 - **環境をディレクトリで分けない。** staging を持たない。
