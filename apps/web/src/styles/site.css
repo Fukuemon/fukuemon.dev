@@ -927,3 +927,18 @@
   /* 図の中の背景は敷かない。紙の地をそのまま通す */
   .prose svg.figure rect[fill="var(--panel)"] { fill: transparent; }
 }
+
+/* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
+@layer fukuemon {
+  .about { margin: var(--gap-inter-2) var(--gutter) 0; }
+  .about__lead { margin: 0; max-inline-size: var(--measure-w); }
+  .about__note {
+    margin: var(--gap-intra-3) 0 0;
+    max-inline-size: var(--measure-w);
+    color: var(--fg-2);
+    font-size: 0.9rem;
+  }
+  .about__foot { margin-block-start: var(--gap-inter-2); }
+  .links { display: flex; flex-wrap: wrap; gap: var(--gap-intra-4); }
+  .links a { color: var(--link); }
+}
