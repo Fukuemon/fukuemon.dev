@@ -51,6 +51,10 @@ export default function SqlRunner({
   const editorId = useId();
   const groupId = useId();
   const locked = useRef(false);
+  // 「初めから」の直後は流し直しを飛ばす。
+  // 完了済みの手順が決定的に失敗する場合、同じ replay を組み直すと同じ所で落ち、
+  // 案内した復旧の道が閉じる
+  const fresh = useRef(false);
 
   const run = useCallback(async () => {
     if (locked.current) return;
@@ -59,11 +63,12 @@ export default function SqlRunner({
     setPhase("booting");
     try {
       // 完了済みを流し直す。全手順から選ぶので、どのパネルから起動しても同じ状態になる
-      const saved = loadProgress(contentId, stepCount);
+      const saved = fresh.current ? undefined : loadProgress(contentId, stepCount);
       const replay = [...steps]
         .sort((a, b) => a.step - b.step)
         .filter((p) => saved?.completedSteps.includes(p.step))
         .map((p) => p.sql);
+      fresh.current = false;
       const rt = await getRuntime(contentId, kind, { setup, replay });
       setVersion(rt.version);
       // 前回の続きを再現できなかったことを黙って飲み込まない
@@ -105,7 +110,8 @@ export default function SqlRunner({
     setPhase("idle");
     setVersion(null);
     setStale(false);
-    // 次の実行で setup が流し直される
+    // 次の実行は setup だけで起動する
+    fresh.current = true;
     dropRuntime(contentId);
     globalThis.dispatchEvent(new CustomEvent(RAN_EVENT, { detail: { contentId } }));
   }, [contentId, sql]);
