@@ -39,11 +39,11 @@ fukuemon.dev/
 │   ├── content-model/                # schema / ContentRef / 関係グラフ (Astro 非依存)
 │   └── design-system/                # tokens.css / utilities.css / art / code-theme.ts
 ├── infra/                            # Terraform。workspace package ではない
-├── e2e/                              # E2E。全体に関わるためルート直下
+├── e2e/                              # 見た目の画素比較。全体に関わるためルート直下
+├── scripts/                          # check の補助 (Worker 名 / Terraform / spec 残存)
 ├── design/ context/ specs/ adr/
 ├── pnpm-workspace.yaml               # apps/* packages/*
-├── vite.config.ts                    # Vite+ の task graph (依存関係のみ)
-└── package.json
+└── package.json                      # root script (check の入口) と knip の設定
 ```
 
 ### ディレクトリの軸

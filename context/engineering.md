@@ -87,59 +87,75 @@ UI やデザインに触れる PR では `Design Guard` を付け、
 
 ## Shared Config Boundary
 
-`@fukuemon/config` が tsconfig / oxlint / vitest の設定を export する。**設定を package ごとに複製しない。**
+**設定を package ごとに複製しない。** 置き場は次のとおり。
 
-```jsonc
-// packages/config/package.json の exports
-{
-  "./tsconfig/base": "./tsconfig/base.json",
-  "./tsconfig/astro": "./tsconfig/astro.json",
-  "./oxlint/base": "./oxlint/base.json",
-  "./vitest/base": "./vitest/base.ts",
-}
-```
+| 設定            | 正本                                         | 参照のしかた                                 |
+| --------------- | -------------------------------------------- | -------------------------------------------- |
+| tsconfig        | `@fukuemon/config` の `./tsconfig/base.json` | 各 package が `extends` する                 |
+| lint / 依存境界 | ルートの `.oxlintrc.json` 1 枚               | root から repo 全体へ 1 回掛ける             |
+| dead code       | `package.json` の `knip` フィールド          | 同上                                         |
+| format          | `oxfmt` の既定                               | 設定ファイルを持たない                       |
+| vitest          | 各 package の `vitest.config.ts`             | 共有しない (対象の列挙が package ごとに違う) |
 
-各 package は `extends` / `import` で参照し、差分だけを自身の設定に書く。
+`@fukuemon/config` が export するのは tsconfig だけである。
+Astro 向けの tsconfig は `apps/web/tsconfig.json` が `astro/tsconfigs/strict` を直接 `extends` する。
 
-**`no-restricted-imports` の依存規約は `oxlint/base.json` に置く。** package ごとに書くと片方だけ更新される。
+**`no-restricted-imports` の依存規約はルートの `.oxlintrc.json` に置く。**
+package ごとに書くと片方だけ更新される。
 
 ## Root Task Boundary
 
 root から束ねるタスクと、直実行するタスクを分ける。
 
-| タスク                                  | 実行                               | 束ねる理由                       |
-| --------------------------------------- | ---------------------------------- | -------------------------------- |
-| `build` / `typecheck` / `test` / `lint` | `vp run -r <task>`                 | package 間に依存順序がある       |
-| `format`                                | `vp fmt`                           | repo 全体に一括で掛ける          |
-| `knip`                                  | root で 1 回                       | workspace 横断で未使用を判定する |
-| `similarity`                            | root で 1 回                       | 重複は package をまたぐ          |
-| `e2e`                                   | root の `e2e/` を直実行            | 単一 package に属さない          |
-| `infra:*`                               | root script から `infra/` を直実行 | workspace package ではない       |
+| タスク                         | root の script                        | そうする理由                      |
+| ------------------------------ | ------------------------------------- | --------------------------------- |
+| `build` / `typecheck` / `test` | `pnpm -r --sequential run <task>`     | package 間に依存順序がある        |
+| `lint`                         | `oxlint --type-aware` を root で 1 回 | 依存境界の検査が package をまたぐ |
+| `format`                       | `oxfmt .` を root で 1 回             | repo 全体に一括で掛ける           |
+| `knip`                         | root で 1 回                          | workspace 横断で未使用を判定する  |
+| `check:contrast`               | `packages/design-system` を直実行     | 配色の正本がそこにある            |
+| `shot` / `shot:diff`           | root の `e2e/` を直実行               | 単一 package に属さない           |
+| `infra:*`                      | root script から `infra/` を直実行    | workspace package ではない        |
 
-**実際のコマンドは各 package の `package.json` scripts に置く。** root の `vite.config.ts` には `dependsOn` だけを宣言する ([context/toolchain.md](toolchain.md))。
+**package ごとに変わるコマンドは、その package の `package.json` scripts に置く。**
+root は `pnpm -r` で束ねるだけにする。
+
+`check` が上を 1 本につないでいる。CI もこれを実行する。
+
+```
+lint → typecheck → knip → check:contrast → check:worker-name → test → build → check:deploy
+```
+
+`shot` / `shot:diff` は `check` に入れない。理由は [testing.md](testing.md) を読む。
 
 ### commit 前に通す検査
 
-Lefthook の pre-commit で次を実行する。
+Lefthook の pre-commit は 2 つだけを実行する。
 
-1. `vp fmt --check`
-2. `vp run -r lint`
-3. `vp run -r typecheck`
-4. `npx react-doctor@latest --scope changed` (React 変更がある場合)
+1. 保護ブランチの検査 (`hooks/protected-branch/`)
+2. 整形 (`hooks/format/run_prettier.sh`)
 
-**test は pre-commit で回さない。** 時間がかかり、commit の粒度を粗くする方向に働く。
-CI で回す。
+**lint / typecheck / test を pre-commit で回さない。** 時間がかかり、commit の粒度を粗くする方向に働く。
+これらは `pnpm run check` と CI が担う。
+
+hook は sdd-template が配る初期値である ([README.md](../README.md))。
+足すときは消費 repo 側ではなくテンプレ側を直す。
 
 ## Repository Quality Gate
 
-| 検査                   | 正本 config                                                                     | 実行点          |
-| ---------------------- | ------------------------------------------------------------------------------- | --------------- |
-| 依存境界 (規約 1)      | ルートの `.oxlintrc.json` の `no-restricted-imports` (`overrides` で方向を固定) | pre-commit / CI |
-| 依存境界 (規約 2)      | 各 package の `dependencies` 宣言                                               | `knip` (CI)     |
-| dead code / 未使用依存 | `knip.json`                                                                     | CI              |
-| コード重複             | `similarity-ts` の既定                                                          | CI              |
-| 型                     | `astro check` + tsgo                                                            | pre-commit / CI |
-| React 診断             | `doctor.config.*`                                                               | CI              |
+| 検査                    | 正本 config                                                                     | 実行点                |
+| ----------------------- | ------------------------------------------------------------------------------- | --------------------- |
+| 依存境界 (規約 1・3〜5) | ルートの `.oxlintrc.json` の `no-restricted-imports` (`overrides` で方向を固定) | `check` / CI          |
+| 依存境界 (規約 2)       | 各 package の `dependencies` 宣言                                               | `knip` (`check` / CI) |
+| dead code / 未使用依存  | `package.json` の `knip` フィールド                                             | `check` / CI          |
+| 型                      | `astro check` + tsgo                                                            | `check` / CI          |
+| 配色                    | `packages/design-system/check-contrast.ts`                                      | `check` / CI          |
+| 見た目の回帰            | `e2e/shoot.ts` + `e2e/diff.ts`                                                  | 手で回す              |
+
+**コード重複 (`similarity-ts`) と React 診断 (`react-doctor`) は入れていない。**
+`similarity-ts` は cargo 製の外部バイナリで、環境によっては存在しない。
+`doctor` は root script にあるが `check` からは呼んでいない (`npx` で毎回取りに行くため)。
+どちらも「入れていない」であって「通っている」ではない。
 
 ### 除外方針
 
@@ -184,7 +200,9 @@ module の `<script>` より **後ろ** に書く。
 
 ### 検査が「実行されなかった」ことを「通った」と扱わない
 
-`similarity-ts` は cargo 製の外部バイナリで、環境によっては存在しない。**CI では存在を検査し、欠けていれば警告として報告する。** スキップされた検査を成功として集計しない。
+**入れていない検査を、表から黙って消さない。** 上の表に「入れていない」と書くところまでを含めて記録する。
+外部バイナリに依存する検査を後から足すときは、**存在しない場合を失敗として扱う。**
+存在検査なしに実行すると、環境に無いというだけで成功として集計される。
 
 ## 参照
 

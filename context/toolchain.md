@@ -6,7 +6,6 @@ keywords:
   [Vite+, vp run, vp env, pnpm workspace, Oxlint, Oxfmt, react-doctor, knip, similarity-ts, Astro 7]
 governs:
   - package.json
-  - vite.config.ts
   - pnpm-workspace.yaml
 verified_commit: unverified
 ---
@@ -20,25 +19,25 @@ verified_commit: unverified
 
 版の正本は各 `package.json` である。下表は 2026-08-30 時点の実測。
 
-| 用途            | ツール                              | version           | 制約                                              |
-| --------------- | ----------------------------------- | ----------------- | ------------------------------------------------- |
-| framework       | Astro                               | 7.2.9             | Node.js 22.12 以上                                |
-| island          | React + `@astrojs/react`            | 19.2.8 / 6.0.4    | 実行パネルとサイドバーだけに使う                  |
-| CSS             | Tailwind CSS + `@tailwindcss/vite`  | 4.3.3             | preflight は読まない (ADR-0010)                   |
-| コードブロック  | `astro-expressive-code`             | 0.44.1            | スタイリングは `styleOverrides` から指定する      |
-| 図              | `rehype-mermaid`                    | 3.0.0             | peer に `playwright`。ビルド時に SVG へ変換する   |
-| 全文検索        | `pagefind`                          | 1.5.2             | `astro build` のあとに索引を作る                  |
-| WASM の実行環境 | `@electric-sql/pglite`              | 0.5.8             | Worker で動かす。COOP/COEP を要求しない           |
-| package manager | pnpm (workspace)                    | 10.27.0           | `vp install` が wrap                              |
-| toolchain 入口  | Vite+ (`vp`)                        | beta (2026-07-02) | MIT。"stable, but not yet complete"               |
-| lint            | Oxlint                              | 1.80.0            | `--type-aware` で実行する                         |
-| format          | Oxfmt                               | 0.48.0            | —                                                 |
-| typecheck       | `astro check` + tsgo                | —                 | —                                                 |
-| 未使用の検出    | knip                                | 6.32.2            | `check` に含める                                  |
-| unit test       | Vitest                              | 4.1.11            | 対象は `packages/content-model` と `apps/web/src` |
-| e2e             | Playwright                          | 1.62.1            | root の `e2e/`                                    |
-| infra           | Terraform + `cloudflare/cloudflare` | 1.14.3 / provider 5.24.0 | CI は 1.14.3 に固定。認証は `CLOUDFLARE_API_TOKEN` |
-| deploy          | Wrangler                            | 4.127.1           | 認証は `CLOUDFLARE_API_TOKEN` (2026-08-30 実測)    |
+| 用途            | ツール                              | version                  | 制約                                                      |
+| --------------- | ----------------------------------- | ------------------------ | --------------------------------------------------------- |
+| framework       | Astro                               | 7.2.9                    | Node.js 22.12 以上                                        |
+| island          | React + `@astrojs/react`            | 19.2.8 / 6.0.4           | 実行パネルとサイドバーだけに使う                          |
+| CSS             | Tailwind CSS + `@tailwindcss/vite`  | 4.3.3                    | preflight は読まない (ADR-0010)                           |
+| コードブロック  | `astro-expressive-code`             | 0.44.1                   | スタイリングは `styleOverrides` から指定する              |
+| 図              | `rehype-mermaid`                    | 3.0.0                    | peer に `playwright`。ビルド時に SVG へ変換する           |
+| 全文検索        | `pagefind`                          | 1.5.2                    | `astro build` のあとに索引を作る                          |
+| WASM の実行環境 | `@electric-sql/pglite`              | 0.5.8                    | Worker で動かす。COOP/COEP を要求しない                   |
+| package manager | pnpm (workspace)                    | 10.27.0                  | root script から `pnpm -r` で束ねる                       |
+| toolchain 入口  | Vite+ (`vp`)                        | **未導入**               | 依存に入れていない。入口は root の `package.json` scripts |
+| lint            | Oxlint                              | 1.80.0                   | `--type-aware` で実行する                                 |
+| format          | Oxfmt                               | 0.48.0                   | —                                                         |
+| typecheck       | `astro check` + tsgo                | —                        | —                                                         |
+| 未使用の検出    | knip                                | 6.32.2                   | `check` に含める                                          |
+| unit test       | Vitest                              | 4.1.11                   | 対象は `packages/content-model` と `apps/web/src`         |
+| e2e             | Playwright                          | 1.62.1                   | root の `e2e/`                                            |
+| infra           | Terraform + `cloudflare/cloudflare` | 1.14.3 / provider 5.24.0 | CI は 1.14.3 に固定。認証は `CLOUDFLARE_API_TOKEN`        |
+| deploy          | Wrangler                            | 4.127.1                  | 認証は `CLOUDFLARE_API_TOKEN` (2026-08-30 実測)           |
 
 **Starlight は採らない** ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
 描画は Astro のページとして自前で組む。
@@ -47,6 +46,13 @@ CSS スタイリングの基盤は Tailwind CSS v4 である ([ADR-0010](../adr/
 トークンは `@theme static` に置き、`styleOverrides` から参照できる素のカスタムプロパティとして残す。
 
 ## Vite+ の適用範囲
+
+**まだ導入していない。** `vp` は依存に無く、`vite.config.ts` も存在しない。
+現在の入口は root の `package.json` scripts で、`pnpm -r --sequential run <task>` と
+`oxlint` / `oxfmt` を直接叩いている。CI も `pnpm run check` を実行する。
+
+以下は [ADR-0003](../adr/0003-monorepo-and-vite-plus.md) で決めた導入後の姿である。
+導入するまでは、この節を実装の説明として読まない。
 
 | 領域                              | 担当                                        |
 | --------------------------------- | ------------------------------------------- |
@@ -84,7 +90,7 @@ export default defineConfig({
 
 - **成果物を生むコマンドを `run.tasks` に書かない。** 書くと `vp` 必須になる
 - **`oxlint` / `oxfmt` / `vitest` / `typescript` を devDependencies にも宣言する。** 同梱版だけに頼ると `vp` の無い環境で検査が動かない
-- CI は `vp run` を使うが、失敗時の切り分けのため各 package の script を直接叩ける状態を保つ
+- 導入後も CI から各 package の script を直接叩ける状態を保つ。失敗時の切り分けに要る
 
 **この形により `vp` の無い環境でも `pnpm -r run build` が同じことをする。**
 
