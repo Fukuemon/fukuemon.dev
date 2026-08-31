@@ -90,7 +90,7 @@ export CLOUDFLARE_API_TOKEN=<apply 用の token>
 export AWS_ACCESS_KEY_ID=<R2 の access key id>
 export AWS_SECRET_ACCESS_KEY=<R2 の secret access key>
 export AWS_ENDPOINT_URL_S3=https://<Cloudflare の account ID>.r2.cloudflarestorage.com
-pnpm run infra:init -- -backend-config="bucket=<1 で作ったバケット名>"
+pnpm run infra:init -backend-config="bucket=<1 で作ったバケット名>"
 pnpm run infra:plan
 pnpm run infra:apply
 ```

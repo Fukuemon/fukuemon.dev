@@ -42,14 +42,14 @@ jobs:
 
       # credential は必要な step にのみ渡す。job 単位に置くと action からも参照できる
       - name: init
-        run: pnpm run infra:init -- -input=false -backend-config="bucket=${{ secrets.R2_STATE_BUCKET }}"
+        run: pnpm run infra:init -input=false -backend-config="bucket=${{ secrets.R2_STATE_BUCKET }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
       - name: plan
-        run: pnpm run infra:plan -- -input=false -out=tfplan
+        run: pnpm run infra:plan -input=false -out=tfplan
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.TF_CLOUDFLARE_API_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -62,7 +62,7 @@ jobs:
       # 変数は plan file が持つため TF_VAR を渡さない
       - name: apply
         if: inputs.mode == 'apply'
-        run: pnpm run infra:apply -- -input=false tfplan
+        run: pnpm run infra:apply -input=false tfplan
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.TF_CLOUDFLARE_API_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
