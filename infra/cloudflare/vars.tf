@@ -1,11 +1,14 @@
+# plan のログは public repo では誰でも読める。sensitive を外すと ID が出る
 variable "account_id" {
   description = "Cloudflare の account ID"
   type        = string
+  sensitive   = true
 }
 
 variable "zone_id" {
   description = "既存 zone の ID (Cloudflare Registrar が作成済み)"
   type        = string
+  sensitive   = true
 }
 
 variable "zone_name" {

@@ -179,6 +179,14 @@ state を失った場合は `terraform import` で回復する。
 **1 名体制で実際に効く分離は 2 つである。** apply が自動実行されず手動起動という明示的な行為を伴うこと、通常の CI が apply 用 credential を持たないこと。
 レビューによる職務分離は成立しないため `CODEOWNERS` は設定しない。
 
+**差分の確認は 2 回の起動で行う。** `mode=plan` で起動して plan を読み、納得してから `mode=apply` で起動し直す。
+plan と apply は 1 つの job に置く。
+**plan file を artifact に上げない。** plan file は変数の値と prior state を平文で持ち、`terraform show -json` で復元できる。
+public repository の artifact は誰でも取得できるため、job をまたぐと account ID と zone ID が漏れる。
+
+同じ理由で `account_id` と `zone_id` は `sensitive = true` を付ける。
+付けないと plan のログに実値が出る。Actions のログも public repository では誰でも読める。
+
 **分離は置き場で担保する。** apply 用の credential は `infra` environment にのみ置く。
 deploy workflow は environment を指定しないため、そこへ届かない。
 
