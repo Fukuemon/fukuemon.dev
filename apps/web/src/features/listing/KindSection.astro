@@ -6,9 +6,11 @@ import { KIND_INDEX } from "../../lib/format";
 interface Props {
   heading: string;
   items: ContentRef[];
+  /** 改行で分けた各行がそのまま 1 行になる。折り返しの位置を書き手が決める */
   lead: string;
 }
 const { heading, items, lead } = Astro.props;
+const leadLines = lead.split("\n").map((l) => l.trim());
 const shown = items.slice(0, 3);
 const href = KIND_INDEX[items[0]?.type ?? "article"];
 ---
@@ -19,7 +21,16 @@ const href = KIND_INDEX[items[0]?.type ?? "article"];
     <a class="mono meta" href={href}>{items.length} 本すべて →</a>
   </div>
   <div>
-    <p class="prose mt-intra-2 mb-0 max-w-(--measure-w) text-fg-2">{lead}</p>
+    <p class="prose mt-intra-2 mb-0 max-w-(--measure-w) text-fg-2">
+      {
+        leadLines.map((line, i) => (
+          <>
+            {i > 0 && <br />}
+            {line}
+          </>
+        ))
+      }
+    </p>
     <div class="mt-inter-1 grid grid-cols-[repeat(auto-fit,minmax(min(18rem,100%),22rem))] max-narrow:grid-cols-[minmax(0,1fr)]">
       {
         shown.map((r) => (
