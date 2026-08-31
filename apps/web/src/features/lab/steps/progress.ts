@@ -27,6 +27,7 @@ export function loadProgress(
     if (typeof parsed !== "object" || parsed === null) return undefined;
     const { completedSteps, lastStep } = parsed as Partial<Progress>;
     if (!Array.isArray(completedSteps) || typeof lastStep !== "number") return undefined;
+    if (!Number.isFinite(lastStep)) return undefined;
     const max = stepCount - 1;
     return {
       completedSteps: [

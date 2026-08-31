@@ -52,9 +52,7 @@ class Session {
       else p.reject(new Error(e.data.error ?? "不明な失敗"));
     };
     w.onerror = (e) => {
-      const err = new Error(e.message || "Worker が落ちました");
-      this.cancel();
-      this.#failAll(err);
+      this.#teardown(new Error(e.message || "実行環境が異常終了しました"));
     };
     return w;
   }
@@ -113,14 +111,19 @@ class Session {
     return this.#replayFailed;
   }
 
-  /** 実行中でも止める。この Session は以後使わない */
-  cancel(): void {
+  /** 未了の呼び出しへ `reason` を返してから閉じる。この Session は以後使わない */
+  #teardown(reason: Error): void {
     this.#dead = true;
     this.#worker?.terminate();
     this.#worker = undefined;
     this.#booting = undefined;
     this.#version = undefined;
-    this.#failAll(new Error("中断しました"));
+    this.#failAll(reason);
+  }
+
+  /** 実行中でも止める。この Session は以後使わない */
+  cancel(): void {
+    this.#teardown(new Error("中断しました"));
   }
 }
 

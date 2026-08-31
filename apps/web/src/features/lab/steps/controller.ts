@@ -64,8 +64,9 @@ export function mountSteps(root: HTMLElement): void {
     requestAnimationFrame(top);
 
     if (i >= 0) {
+      const stored = loadProgress(contentId, refs.count)?.completedSteps ?? [];
       saveProgress(contentId, {
-        completedSteps: loadProgress(contentId, refs.count)?.completedSteps ?? [],
+        completedSteps: merge(stored, relayed),
         lastStep: i,
       });
     }
@@ -94,7 +95,7 @@ export function mountSteps(root: HTMLElement): void {
   globalThis.addEventListener(PROGRESS_EVENT, (e) => {
     const { detail } = e as ProgressEvent;
     if (detail.contentId !== contentId) return;
-    relayed = detail.value.completedSteps;
+    relayed = merge(relayed, detail.value.completedSteps);
     paint(refs, seen, relayed);
   });
   globalThis.addEventListener("storage", () => paint(refs, seen, relayed));
@@ -114,6 +115,14 @@ function fromHash(refs: Refs): number {
 function current(sections: HTMLElement[]): number {
   const on = sections.find((s) => s.hasAttribute("data-current"));
   return Number(on?.dataset.step ?? 0);
+}
+
+/**
+ * 完了の番号を合流させる。
+ * localStorage が読めない環境では読み出しが空になるので、置き換えると island が届けた完了が消える
+ */
+function merge(a: readonly number[] = [], b: readonly number[] = []): number[] {
+  return [...new Set([...a, ...b])].sort((x, y) => x - y);
 }
 
 /**
