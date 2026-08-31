@@ -84,3 +84,11 @@ E2E で押さえるのは「ビルドは通るが意味が壊れている」ケ�
 - [architecture.md](architecture.md): `packages/content-model` の責務
 - [ADR-0002](../adr/0002-content-model-independence.md): Astro 非依存とテスト可能性
 - [design/features/content-model/DesignDoc_content-model.md](../design/features/content-model/DesignDoc_content-model.md): テスト対象の設計
+
+## 見た目の回帰
+
+スタイリングに触れる変更は、`e2e/shoot.ts` で前後 40 枚 (10 ページ × 明暗 2 配色 × 2 幅) を撮り、
+`e2e/diff.ts` で突き合わせる。手順は [ADR-0010](../adr/0010-tailwind-as-styling-base.md) の「検証」節。
+
+**`check` には入れない。** 「変更前」を撮っておく必要があり、CI では自動化できない。
+ページを足したら `e2e/pages.ts` の `PAGES` へ 1 行足す。

@@ -182,6 +182,20 @@ utility は CSS より層が上なので、基準値だけ markup へ移すと�
 
 **「見た目を変えない」を目視で確かめない。** 3px の差は目で追えない。
 
+道具は `e2e/` に置く。
+
+```sh
+pnpm run preview
+pnpm run shot /tmp/before
+# 変更する
+pnpm run build && pnpm run shot /tmp/after
+pnpm run shot:diff /tmp/before /tmp/after
+```
+
+`check` には入れない。ビルドと preview の起動が要り、
+かつ「変更前」を撮っておく必要があるため、CI では自動化できない。
+スタイリングに触れる変更のときに手で回す。
+
 ## 実装・運用への反映
 
 - spec 更新要否: 不要
