@@ -120,6 +120,9 @@ root から束ねるタスクと、直実行するタスクを分ける。
 **package ごとに変わるコマンドは、その package の `package.json` scripts に置く。**
 root は `pnpm -r` で束ねるだけにする。
 
+**root script へ引数を渡すときに `--` を挟まない。** pnpm は `--` を区切りとして取り除かず、そのままコマンドへ渡す。
+`pnpm run infra:init -- -input=false` は `terraform ... init -- -input=false` になり、`Too many command line arguments` で落ちる。
+
 `check` が上を 1 本につないでいる。CI もこれを実行する。
 
 ```
