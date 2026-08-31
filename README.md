@@ -5,12 +5,8 @@
 
 https://fukuemon.dev
 
-## 何を解くか
-
-**読んで分かった気になる段階と、動かして分かる段階のあいだを、同じサイトの中で埋める。** 記事とハンズオンは相互に参照し、片方から他方へ渡れる。
-
-読者アカウントを持たず、サーバー側の永続状態も持たない。
-判断の全体像は [design/DesignDoc.md](design/DesignDoc.md) が正本である。
+**読んで分かった気になる段階と、動かして分かる段階のあいだを埋めることを狙う。** 読者アカウントを持たず、サーバー側の永続状態も持たない。
+Why / What / How の正本は [design/DesignDoc.md](design/DesignDoc.md) である。
 
 ## 構成
 
@@ -19,7 +15,7 @@ pnpm workspace の monorepo。
 | ディレクトリ               | 中身                                             |
 | -------------------------- | ------------------------------------------------ |
 | `apps/web`                 | Astro のサイト本体。記事とハンズオンの描画       |
-| `apps/web/src/content`     | 記事 (`articles`)、ハンズオン (`labs`)、playground の原稿 |
+| `apps/web/src/content`     | 記事 (`articles`)、ハンズオン (`labs`)、playground (`playgrounds`) の原稿 |
 | `packages/content-model`   | 記事とハンズオンの schema、関係グラフ、目次      |
 | `packages/design-system`   | Design Tokens、版面、配色のコントラスト検査      |
 | `packages/config`          | 共有 tsconfig                                    |
@@ -38,7 +34,8 @@ pnpm workspace の monorepo。
 | 配信          | Cloudflare Workers Static Assets         |
 | 基盤          | Terraform + `cloudflare/cloudflare`      |
 
-**版の正本は各 `package.json` である。** 採否の理由と一覧は [context/toolchain.md](context/toolchain.md) にある。
+**JavaScript 側の版の正本は各 `package.json` である。** Terraform 本体の版は `.github/workflows/` が、provider の版は `infra/*/.terraform.lock.hcl` が固定する。
+採否の理由と一覧は [context/toolchain.md](context/toolchain.md) にある。
 
 ## 開発
 
@@ -57,7 +54,8 @@ pnpm run dev
 | `pnpm run infra:check`  | Terraform の書式と構文 (要 Terraform) |
 
 `check` は lint → typecheck → knip → 配色 → Worker 名 → test → build → deploy の dry-run をこの順に通す。
-`infra:check` は Terraform を必要とするため `check` に含めない。
+`infra:check` は Terraform を必要とするため `pnpm run check` には含めない。
+CI の Check workflow では別の step として先に回す。
 
 図をビルド時に SVG へ変換するので、`build` には Playwright の Chromium が要る。
 
@@ -70,7 +68,10 @@ pnpm --filter @fukuemon/web exec playwright install chromium
 既定ブランチへ merge すると Check workflow が回り、**成功したときだけ** Deploy workflow が `wrangler deploy` を実行する。
 push を直接の契機にすると、検査の結果を待たずに配信されてしまうためである。
 
-基盤リソース (zone / custom domain / state 用の R2 バケット) は Terraform の管轄で、`workflow_dispatch` の手動起動と environment の承認を通す。
+基盤リソースは Terraform の管轄である。
+zone と custom domain は `workflow_dispatch` の手動起動と environment の承認を通す。
+**state 用の R2 バケットだけは運用者が手元で 1 回だけ apply する。** state をローカルに置く前提を CI から壊さないためである。
+
 **1 つのリソースを Terraform と Wrangler の両方から管理しない。**
 
 - 管轄の分担と credential の置き場: [context/infrastructure.md](context/infrastructure.md)

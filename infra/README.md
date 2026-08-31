@@ -25,9 +25,7 @@ state をローカルに置く前提を壊す。
   `bootstrap/` は R2 の権限だけを使い、`cloudflare/` は zone と Workers Scripts の権限を使う。
 - R2 の S3 互換 access key。
   `cloudflare/` の state backend が使う。
-  **R2 のページの Account details から API Tokens → Manage で発行する。** 通常の API Tokens 画面 (`dash.cloudflare.com/profile/api-tokens`) で作った token は S3 互換キーではなく、渡すと `SignatureDoesNotMatch` で 403 になる。
-  権限は Object Read & Write を選び、state バケットに限定する。
-  発行時に 3 つの値が出る。使うのは `Access Key ID` と `Secret Access Key` であり、`Token value` ではない。
+  **発行元と使う値は [context/infrastructure.md](../context/infrastructure.md) の state backend の節に従う。** 通常の API Tokens 画面で作った token では通らない。
   secret access key は作成直後にしか表示されない。
 
 **deploy workflow の token と分ける。** 置き場と scope は [context/infrastructure.md](../context/infrastructure.md) の credential の表に従う。
@@ -111,9 +109,10 @@ zone_name  = "fukuemon.dev"
 
 CI から実行する場合は Actions の **Terraform Apply** を `workflow_dispatch` で起動する。
 
-`mode` を `plan` にすると plan job だけが動く。
-`apply` にすると plan job の後に apply job が続き、**それぞれで `infra` environment の承認を求める。**
-apply job は plan job が保存した plan file を使うため、2 回目の承認時に見た差分がそのまま適用される。
+`mode` を `plan` にすると plan で止まり、`apply` にすると同じ job の中で apply まで進む。
+どちらの起動でも `infra` environment の承認を 1 回通す。
+
+**差分を見てから適用するときは、`mode=plan` で 1 回起動して結果を読み、納得してから `mode=apply` で起動し直す。** plan file を job をまたいで渡さないのは、public repository の artifact から account ID と zone ID が漏れるためである。
 
 ## 現状
 
