@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   if (!before || !after) throw new Error("2 つのディレクトリを渡してください");
 
   const [a, b] = await Promise.all([readdir(before), readdir(after)]);
-  const names = [...new Set([...a, ...b])].sort();
+  const names = [...new Set([...a, ...b])].sort((x, y) => x.localeCompare(y));
   const missing: string[] = [];
   const changed: string[] = [];
 

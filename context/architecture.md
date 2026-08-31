@@ -88,7 +88,9 @@ fukuemon.dev/
 `bus.ts` は 3 つの島がまたぐので `lab/` の直下に置く。
 
 **`components/` に残すのは、セクションをまたぐ素の部品だけにする。**
-`Icon` / `Tate` / `ArtBand` / `SiteHeader` / `SiteFooter` の 5 つである。
+`Icon` / `Tate` / `ArtBand` / `SiteHeader` / `SiteFooter` / `Side` の 6 つである。
+`Side` は開閉するサイドバーの外枠で、`id` と `label` と slot しか受け取らない。
+記事・ハンズオン・playground の 3 セクションが使う。
 どれか 1 つの feature でしか使わなくなったら、その feature へ移す。
 
 **`.astro` と `.tsx` を同居させる。**
@@ -175,7 +177,11 @@ app を分けると一覧が分かれる。
 
 ## 依存規約
 
-**この 2 本が、描画レイヤの差し替えとデータソースの移行を成立させる。** 理由は [ADR-0002](../adr/0002-content-model-independence.md)。
+**規約 1 と 2 が、描画レイヤの差し替えとデータソースの移行を成立させる。** 理由は [ADR-0002](../adr/0002-content-model-independence.md)。
+規約 3 から 5 は、その 2 本を維持するための境界である。
+
+**検査は `.oxlintrc.json` に置く。** `overrides` は同じ規則名を後勝ちで上書きし、前の entry とは合流しない。
+entry を足すときの作法は [engineering.md](engineering.md) を読む。
 
 ### 規約 1 — ページから `astro:content` を直接 import しない
 
@@ -200,6 +206,30 @@ listContent() / getContent() / getRelated()
 `astro` / `astro:content` を `dependencies` にも `devDependencies` にも入れない。`astro:content` から取得したエントリは引数で受け取る。
 
 **検査**: package の依存宣言と `knip`。
+
+### 規約 4 — `packages/**` は `apps/**` を参照しない
+
+共有 package が消費側の都合を知らないことが、その境界の価値である。
+
+**検査**: Oxlint の `no-restricted-imports`。
+
+### 規約 5 — 層をまたぐ参照は 1 方向にする
+
+| 層            | 参照してよい先                                    |
+| ------------- | ------------------------------------------------- |
+| `pages/`      | `layouts/` / `features/` / `components/` / `lib/` |
+| `layouts/`    | `features/` / `components/` / `lib/`              |
+| `features/`   | `components/` / `lib/` / 同じ feature の中        |
+| `components/` | `lib/`                                            |
+| `lib/`        | `packages/` のみ                                  |
+
+**`lib/` は `features/` を知らない。** 必要なものは引数で受ける。
+実行パネルの登録表 (`features/lab/runners.ts`) を `remark-lab` へ渡しているのがこの形である。
+文字列でパスを持つと typecheck も lint も追随せず、ディレクトリを動かすたびに手で直すことになる。
+
+**feature どうしは直接参照しない。** 2 つ以上の feature が使う部品は `components/` へ移す。
+
+**検査**: Oxlint の `no-restricted-imports`。
 
 ### 依存の向き
 

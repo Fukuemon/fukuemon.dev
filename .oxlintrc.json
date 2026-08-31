@@ -2,12 +2,7 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "overrides": [
     {
-      "files": [
-        "apps/web/src/pages/**",
-        "apps/web/src/layouts/**",
-        "apps/web/src/features/**",
-        "apps/web/src/components/**"
-      ],
+      "files": ["apps/web/src/pages/**", "apps/web/src/layouts/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -16,6 +11,70 @@
               {
                 "name": "astro:content",
                 "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/web/src/lib/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/features/**", "~/features/**", "**/components/**", "~/components/**"],
+                "message": "lib は features / components を知らない。必要なら引数で受ける (context/architecture.md 規約 5)"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/web/src/components/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "astro:content",
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/features/**", "~/features/**"],
+                "message": "components はセクションをまたぐ素の部品。features を参照しない (context/architecture.md 規約 5)"
+              },
+              {
+                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
+                "message": "features / components は pages / layouts を参照しない (context/architecture.md 規約 5)"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/web/src/features/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "astro:content",
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
+                "message": "features / components は pages / layouts を参照しない (context/architecture.md 規約 5)"
               }
             ]
           }
@@ -32,12 +91,36 @@
               {
                 "name": "astro:content",
                 "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+              },
+              {
+                "name": "astro",
+                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+              },
+              {
+                "name": "astro:assets",
+                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+              },
+              {
+                "name": "astro:transitions",
+                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+              },
+              {
+                "name": "astro:middleware",
+                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
               }
             ],
             "patterns": [
               {
-                "group": ["*.astro"],
-                "message": "island は .astro を参照しない。素の props だけを受ける (context/architecture.md Island の規約)"
+                "group": ["*.astro", "**/*.astro"],
+                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+              },
+              {
+                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
+                "message": "features / components は pages / layouts を参照しない (context/architecture.md 規約 5)"
+              },
+              {
+                "group": ["~/features/**"],
+                "message": "components はセクションをまたぐ素の部品。features を参照しない (context/architecture.md 規約 5)"
               }
             ]
           }
@@ -53,7 +136,7 @@
             "patterns": [
               {
                 "group": ["**/apps/**", "@fukuemon/web*"],
-                "message": "packages から apps への逆依存は禁止 (context/architecture.md 規約 3)"
+                "message": "packages から apps への逆依存は禁止 (context/architecture.md 規約 4)"
               }
             ]
           }
