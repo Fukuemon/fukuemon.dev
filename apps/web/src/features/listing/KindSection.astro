@@ -1,7 +1,7 @@
 ---
 import Tate from "../../components/Tate.astro";
 import type { ContentRef } from "@fukuemon/content-model";
-import { KIND_INDEX, kindLine } from "../../lib/format";
+import { KIND_INDEX } from "../../lib/format";
 
 interface Props {
   heading: string;
@@ -26,8 +26,7 @@ const href = KIND_INDEX[items[0]?.type ?? "article"];
           <a class="flex flex-col px-intra-4 first:ps-0 max-narrow:px-0 text-fg border-rule not-first:border-s max-narrow:not-first:border-s-0 max-narrow:not-first:border-t max-narrow:not-first:pt-intra-3 max-narrow:not-first:mt-intra-3" href={r.href}>
             <span aria-hidden="true" class="w-[26px] h-[2px] bg-now" />
             <h3 class="mt-intra-2 text-[1.05rem]">{r.title}</h3>
-            <p class="prose mt-intra-1 mb-intra-3 text-[0.9rem] text-fg-2 grow">{r.description}</p>
-            <span class="mono meta text-fg-2">{kindLine(r, false)}</span>
+            <p class="prose mt-intra-1 mb-0 text-[0.9rem] text-fg-2 grow">{r.description}</p>
           </a>
         ))
       }

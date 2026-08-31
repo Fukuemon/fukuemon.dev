@@ -4,8 +4,8 @@ export const PROFILE = {
   name: "fukuemon",
   reading: "ふくえもん",
   role: "エンジニア。",
-  lead: "Postgres と可観測性のあたりを調べて書いています。",
-  note: "手を動かして確かめられるものは、ブラウザの中で動かせる形にしています。",
+  lead: "食と筋トレ駆動のうぇぶえんじにあ",
+  note: "フロントエンド、バックエンド、インフラなど浅く広く....深みをつけたい",
 } as const;
 
 /** ここ以外に URL を書かない */
@@ -25,6 +25,12 @@ export const STACK: { label: string; items: string[] }[] = [
 export type Outside = { date: string; title: string; href: string; kind: "登壇" | "記事" };
 
 export const OUTSIDE: Outside[] = [
+  {
+    date: "2025-12-25",
+    title: "今日からはじめる知識管理：頑張らないObsidian活用術",
+    href: "https://tech-blog.optim.co.jp/entry/2025/12/25/100000",
+    kind: "記事",
+  },
   {
     date: "2025-07-25",
     title: "メモ整理が苦手な者による頑張らないObsidian活用術",
