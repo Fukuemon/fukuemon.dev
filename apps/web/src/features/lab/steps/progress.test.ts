@@ -52,6 +52,12 @@ describe("loadProgress", () => {
     expect(loadProgress("a", 5)).toEqual({ completedSteps: [0, 2], lastStep: 1 });
   });
 
+  it("lastStep が NaN なら読まなかったことにする", () => {
+    const map = stubStorage();
+    map.set("lab:x", JSON.stringify({ completedSteps: [0], lastStep: Number.NaN }));
+    expect(loadProgress("x", 3)).toBeUndefined();
+  });
+
   it("整数でない番号を取り除く", () => {
     stubStorage().set("lab:a", JSON.stringify({ completedSteps: [0, 1.5, -1], lastStep: 0 }));
     expect(loadProgress("a", 5)?.completedSteps).toEqual([0]);
