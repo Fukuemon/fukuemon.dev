@@ -39,6 +39,12 @@
   --color-tint-rust: light-dark(#f0dcd2, #33211a);
   --color-band: light-dark(#1a1714, #e7e3d8);
 
+  /* 重ねて暗くする層。配色に依らず同じ黒を重ねるので light-dark() を使わない。
+     背後を隠すための不透明度であって、面の色ではない */
+  --color-scrim: rgb(0 0 0 / 0.34); /* 狭い画面でサイドバーを開いたときの背面 */
+  --color-backdrop: rgb(0 0 0 / 0.42); /* <dialog> の ::backdrop */
+  --color-edge: rgb(0 0 0 / 0.12); /* 横スクロールできることを示す端 */
+
   /* 挿絵の 3 階調 */
   --color-wood-1: light-dark(#6f7d55, #4a5638);
   --color-wood-2: light-dark(#9aa57f, #39412c);
@@ -77,6 +83,9 @@
      `max-narrow:` が max-width: 720.98px、`max-wide:` が max-width: 1100.98px になる */
   --breakpoint-narrow: 721px;
   --breakpoint-wide: 1101px;
+
+  /* 影も配色に依らない。狭い画面で滑り出すサイドバーだけが持つ */
+  --shadow-drawer: 0 2px 10px rgb(0 0 0 / 0.14);
 }
 
 :root {

@@ -5,6 +5,34 @@ type Pagefind = { search: (q: string) => Promise<{ results: Result[] }> };
 const MAX = 12;
 const DEBOUNCE = 160;
 
+/**
+ * 実体参照を文字へ戻す。DOMParser は切り離した文書を作るので、
+ * 途中に markup があってもスクリプトは動かず、textContent は文字列にしかならない
+ */
+const decodeEntities = (s: string): string =>
+  new DOMParser().parseFromString(s, "text/html").body.textContent ?? "";
+
+/**
+ * excerpt を `<mark>` で分け、地の文はテキストとして入れる。
+ * Pagefind は `<` と `>` をエスケープするので `innerHTML` でも要素にはならない (2026-08-31 実測)。
+ * それでも要素を作らないのは、安全が Pagefind の実装に依存しない形にするためである。
+ */
+function excerptNodes(excerpt: string): Node[] {
+  const out: Node[] = [];
+  for (const [i, part] of excerpt.split(/<\/?mark>/).entries()) {
+    if (part === "") continue;
+    const text = decodeEntities(part);
+    if (i % 2 === 0) {
+      out.push(document.createTextNode(text));
+    } else {
+      const m = document.createElement("mark");
+      m.textContent = text;
+      out.push(m);
+    }
+  }
+  return out;
+}
+
 /** 読み込み口は SiteSearch.astro の is:inline な script が置く */
 type Loader = () => Promise<Pagefind>;
 const loader = (): Loader | undefined => (globalThis as { loadPagefind?: Loader }).loadPagefind;
@@ -42,13 +70,13 @@ export function mountSearch(root: ParentNode = document): void {
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.className = "search__hit";
-        a.href = h.url;
+        a.href = h.url.startsWith("/") ? h.url : "/";
         const title = document.createElement("span");
         title.className = "search__title";
         title.textContent = h.meta.title ?? h.url;
         const body = document.createElement("span");
         body.className = "meta search__excerpt";
-        body.innerHTML = h.excerpt;
+        body.append(...excerptNodes(h.excerpt));
         a.append(title, body);
         li.append(a);
         return li;

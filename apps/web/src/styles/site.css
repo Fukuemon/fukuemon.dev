@@ -48,9 +48,9 @@
     background:
       linear-gradient(to right, var(--color-code-bg) 30%, transparent) left / 40px 100% no-repeat,
       linear-gradient(to left, var(--color-code-bg) 30%, transparent) right / 40px 100% no-repeat,
-      radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.12), transparent) left / 14px 100%
+      radial-gradient(farthest-side at 0 50%, var(--color-edge), transparent) left / 14px 100%
         no-repeat,
-      radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.12), transparent) right / 14px 100%
+      radial-gradient(farthest-side at 100% 50%, var(--color-edge), transparent) right / 14px 100%
         no-repeat;
     background-attachment: local, local, scroll, scroll;
   }
@@ -181,7 +181,7 @@
 
   /* テーブルの中身。top layer なのでサイドバーの幅に縛られない */
   .sheet::backdrop {
-    background: rgb(0 0 0 / 0.42);
+    background: var(--color-backdrop);
   }
 }
 
