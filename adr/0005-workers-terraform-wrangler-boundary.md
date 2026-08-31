@@ -110,11 +110,11 @@ Terraform は secret の**名前**のみを扱う。
 - **`cloudflare_workers_custom_domain` の必須項目は `account_id` / `hostname` / `service` の 3 つである。`environment` は Optional かつ Deprecated に変わっている。** provider 5.4.0 で報告された「Wrangler で assets 付き Worker を deploy すると `environment` の不一致で 404 になる」問題 (cloudflare/terraform-provider-cloudflare#5618) は、この schema 変更により前提が解消されている。
 - **`service` は Worker 名の文字列参照である。** Pages の `cloudflare_pages_domain.project_name` と同じ構造であり、script を Terraform 管理下に置かずに custom domain だけを管理できる。
 
-### 未確認
+### 確認済み (2026-08-31 の初回 apply)
 
-- `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ実際に紐付くか (schema 上は解消済みだが実 apply が未実施)
-- R2 backend の `skip_s3_checksum` で state 書き込みが通るか。
-  HashiCorp は S3 互換ストレージを best effort とし Amazon S3 でしかテストしていない
+- **`cloudflare_workers_custom_domain` は Wrangler deploy 済みの Worker へ紐付く。** apply 後に `https://fukuemon.dev` が Worker `fukuemon-dev` を配信した。
+- **R2 backend は `skip_s3_checksum` を含む設定で state の読み書きが通る。** `use_lockfile` のロックも取れた。
+  S3 互換キーは R2 の画面から発行したものに限る (通常の API Tokens 画面の token では署名が一致しない)。
 
 ## 代替案
 

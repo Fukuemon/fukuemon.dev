@@ -17,7 +17,7 @@ governs:
   - infra/
   - apps/web/wrangler.jsonc
   - apps/web/public/_headers
-verified_commit: unverified
+verified_commit: 69f71b2
 ---
 
 # Infrastructure & Operations
@@ -130,8 +130,13 @@ infra/
 `zone.tf` の `import` ブロックが apply のたびに state へ取り込むため、手動の `terraform import` は要らない。
 ネームサーバも既に Cloudflare を向いているため、レジストラ側の設定は要らない。
 
-import 後の plan は `account.id` を sensitive として扱う差分だけを出す。
-値は変わらず、Cloudflare 側の zone 設定にも変更は入らない (2026-08-31 の初回 apply で確認)。
+**初回 apply の plan は `cloudflare_zone.site` について `account.id` を sensitive として扱う差分だけを出す。** 値は変わらず、Cloudflare 側の zone 設定にも変更は入らない。
+
+2026-08-31 に apply workflow を `mode=plan` で起動して確認した。
+全体は `Plan: 1 to import, 1 to add, 1 to change, 0 to destroy` であり、`1 to add` は custom domain、`1 to change` がこの sensitive 差分である。
+再現するには同じ workflow を `mode=plan` で起動する。
+
+**apply 後は差分が残らない。** 同じ workflow をもう一度 `mode=plan` で起動すると `No changes. Your infrastructure matches the configuration.` を返す (2026-08-31 に確認)。
 
 ## state backend
 

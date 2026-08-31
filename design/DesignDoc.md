@@ -14,7 +14,7 @@ verified_commit: 84b6c77
 # fukuemon.dev Design Doc
 
 **Document Status:** Draft
-**Development Status:** TBD
+**Development Status:** In Progress
 
 本 Design Doc は fukuemon.dev の **全体像 (system landscape)** を扱う。
 統合モードで作成しており、Why / What も本書が正本とする (`PRD.md` は作らない)。
@@ -378,9 +378,7 @@ ARIA の `tablist` は使わない。
 
 | #   | 内容                                                                             | 満たさない場合                                                                   |
 | --- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 5   | `vp run --cache` が `astro build` の入力を正しく推論すること (3 項目)            | キャッシュ無効化、または Turborepo へ切り替え                                    |
-| 6   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ紐付くこと | provider の issue を再確認し、`cloudflare_workers_route` + DNS record へ切り替え |
-| 7   | R2 backend の `skip_s3_checksum` で state 書き込みが通ること                     | state backend をローカル + 手動バックアップへ切り替える                          |
+| 5   | `vp run --cache` が `astro build` の入力を正しく推論すること (3 項目) | キャッシュ無効化、または Turborepo へ切り替え |
 
 検証を終えた前提は次のとおり。
 
@@ -388,6 +386,8 @@ ARIA の `tablist` は使わない。
 | ------------------------------------------------------------ | ------------------------------------------------------------------- |
 | `astro-expressive-code` で画面案のコードの見た目を出せること | 満たす。スタイリングは `styleOverrides` から指定する                |
 | 実行パネルを Expressive Code の枠外に置いて見た目が揃うこと  | 満たす。枠の中へ差し込む必要は無かった                              |
+| `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ紐付くこと | 満たす。2026-08-31 の初回 apply で `https://fukuemon.dev` が Worker を配信した |
+| R2 backend の `skip_s3_checksum` で state 書き込みが通ること | 満たす。同じ apply で state の読み書きと `use_lockfile` のロックが通った |
 | `pagefind` が自前ページを索引すること                        | 満たす。`data-pagefind-body` は本文の要素にだけ付ける               |
 | config の rehype plugin が Expressive Code より先に走ること  | 満たす。素の `<pre><code>` のまま拾えるので `rehype-mermaid` が効く |
 
