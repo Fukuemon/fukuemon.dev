@@ -13,6 +13,7 @@ export default defineConfig({
         "src/features/lab/steps/progress.ts",
         "src/features/lab/editor/sql-tokens.ts",
         "src/features/lab/runtime/cell.ts",
+        "src/features/lab/catalog/catalog.ts",
       ],
       thresholds: { branches: 90, functions: 90, lines: 90, statements: 90 },
       reporter: ["text-summary", "text"],
