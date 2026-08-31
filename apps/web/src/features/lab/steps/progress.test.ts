@@ -42,7 +42,7 @@ describe("loadProgress", () => {
     expect(loadProgress("a", 5)).toBeUndefined();
   });
 
-  it("手順を減らすと、範囲外の番号を落とす", () => {
+  it("手順を減らすと、範囲外の番号を取り除く", () => {
     stubStorage().set("lab:a", JSON.stringify({ completedSteps: [0, 2, 9], lastStep: 9 }));
     expect(loadProgress("a", 3)).toEqual({ completedSteps: [0, 2], lastStep: 2 });
   });
@@ -52,7 +52,7 @@ describe("loadProgress", () => {
     expect(loadProgress("a", 5)).toEqual({ completedSteps: [0, 2], lastStep: 1 });
   });
 
-  it("整数でない番号を落とす", () => {
+  it("整数でない番号を取り除く", () => {
     stubStorage().set("lab:a", JSON.stringify({ completedSteps: [0, 1.5, -1], lastStep: 0 }));
     expect(loadProgress("a", 5)?.completedSteps).toEqual([0]);
   });

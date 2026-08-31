@@ -3,7 +3,7 @@
  *
  * 依存を足さない。Shiki は gzip 70KB、TanStack Highlight は 2.9KB だが 0.0.x で、
  * どちらもこのサイトの `--c-*` とは別の色体系を持ち込む。
- * SQL の字句は単純なので、既存の `.t-*` へ直接落とす。
+ * SQL の字句は単純なので、既存の `.t-*` へ直接対応させる。
  */
 
 export type Tok = { t: "com" | "lit" | "key" | "id" | ""; v: string };
@@ -109,7 +109,7 @@ export function tokenizeSql(src: string): Tok[] {
 const ESC: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
 const escape = (s: string) => s.replace(/[&<>]/g, (c) => ESC[c] as string);
 
-/** `.t-*` を付けた HTML にする。クラスは utilities.css が --c-* へ落とす */
+/** `.t-*` を付けた HTML にする。クラスは utilities.css が --c-* へ対応させる */
 export function highlightSql(src: string): string {
   return tokenizeSql(`${src}\n`)
     .map((tok) =>

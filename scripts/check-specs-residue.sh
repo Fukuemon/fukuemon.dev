@@ -16,7 +16,7 @@ resolve_specs_dir() {
   local value=""
   if [ -f "$PROJECT_YML" ]; then
     value="$(sed -n 's/^[[:space:]]*spec_dir:[[:space:]]*\([^#]*\).*/\1/p' "$PROJECT_YML" | head -1)"
-    value="${value%%<*}"                                  # <issue-id> 以降を落とす
+    value="${value%%<*}"                                  # <issue-id> 以降を取り除く
     value="$(printf '%s' "$value" | tr -d '"'"'"' ' | sed 's:/*$::')"
   fi
   printf '%s' "${value:-specs}"

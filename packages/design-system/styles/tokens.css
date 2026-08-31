@@ -92,7 +92,7 @@
   --measure-wide: 68rem;
   --topbar: 45px; /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
   --rail: 46px; /* 縦組み見出しの列 */
-  --drawer: 306px; /* 側柱。題が 2 行に収まる幅 */
+  --drawer: 306px; /* サイドバー。題が 2 行に収まる幅 */
   --drawer-shut: 46px; /* たたんだときの幅。開閉ボタンだけが残る */
 }
 

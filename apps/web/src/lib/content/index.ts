@@ -38,7 +38,7 @@ function toRef(entry: Entry, type: ContentType): ContentRef {
 /**
  * グラフは下書きも含めて組む。
  * 除外してから組むと、下書きを指す `related` が「存在しません」で落ちる。
- * 実際には存在しており、公開されていないだけなので、表示の側で落とす。
+ * 実際には存在しており、公開されていないだけなので、表示の側で除く。
  */
 async function load(): Promise<{
   entries: { ref: ContentRef; related: string[] }[];

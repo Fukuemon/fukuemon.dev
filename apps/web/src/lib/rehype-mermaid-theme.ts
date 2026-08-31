@@ -6,7 +6,7 @@ const swap = (v: string) => v.replace(PATTERN, (m) => MERMAID_TOKENS[m.toLowerCa
 
 /**
  * mermaid が描いた SVG の色を、サイトのトークンへ置き換える。
- * `rehype-mermaid` の後に走らせる。これで 1 枚の SVG が明暗どちらの地でも成立する。
+ * `rehype-mermaid` の後に実行する。これで 1 枚の SVG が明暗どちらの背景でも成立する。
  */
 export function rehypeMermaidTheme() {
   return (tree: Root) => {

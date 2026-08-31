@@ -7,7 +7,7 @@ interface Props {
   /** 右端に何を出すか。種別か分類か */
   trailing?: "kind" | "tag";
   cap?: boolean;
-  /** 刷り上がりの段送り。ビルド時に埋める */
+  /** 順に現れるときの遅延。ビルド時に埋める */
   index?: number;
 }
 const { ref, trailing = "tag", cap = true, index = 0 } = Astro.props;

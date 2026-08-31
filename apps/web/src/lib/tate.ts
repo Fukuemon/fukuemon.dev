@@ -1,6 +1,6 @@
 export type TatePart = { text: string; upright: boolean };
 
-/** 超えると 1 マスに畳んだとき字が潰れる */
+/** 超えると 1 マスに収めたとき字が読めなくなる */
 const MAX_TCY_LENGTH = 3;
 
 /** 区切り記号をまたがない (`3.5` は 2 つの塊) */

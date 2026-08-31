@@ -114,7 +114,7 @@ export function useRunner({ key, kind = "pglite", setup, replay, onDone }: Optio
     emitRan(key);
   }, [key]);
 
-  /** Worker を落として止める。重いクエリでも即座に戻る */
+  /** Worker を終了させて止める。重いクエリでも即座に戻る */
   const cancel = useCallback(() => {
     dropRuntime(key);
     setVersion(null);

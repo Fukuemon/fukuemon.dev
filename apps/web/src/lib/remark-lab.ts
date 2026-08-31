@@ -232,7 +232,7 @@ function durationOf(node: RootContent): number | undefined {
   return m ? Number(m[1]) * 60 + Number(m[2]) : undefined;
 }
 
-/** 空白だけのノードか。前置きの有無を数えるときに落とす */
+/** 空白だけのノードか。前置きの有無を数えるときに除く */
 function isBlank(node: RootContent): boolean {
   return node.type === "text" && !node.value.trim();
 }

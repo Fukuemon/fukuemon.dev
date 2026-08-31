@@ -48,7 +48,7 @@ describe("tokenizeSql", () => {
     expect(kinds("a,b")).toEqual(["id:a", "-:,", "id:b"]);
   });
 
-  it("同じ種類が続いたら 1 つに畳む", () => {
+  it("同じ種類が続いたら 1 つにまとめる", () => {
     expect(kinds("a  b")).toEqual(["id:a", "-:  ", "id:b"]);
   });
 
@@ -72,7 +72,7 @@ describe("highlightSql", () => {
     expect(html).toContain("&lt;script&gt;");
   });
 
-  it("& を先に畳んで二重エスケープしない", () => {
+  it("& を先に変換して二重エスケープしない", () => {
     expect(highlightSql("a & b")).toContain("&amp;");
     expect(highlightSql("a & b")).not.toContain("&amp;amp;");
   });

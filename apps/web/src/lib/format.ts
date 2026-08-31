@@ -29,7 +29,7 @@ export function kindClass(type: ContentType): string {
   return type === "hands-on" ? "kind--lab" : "kind--article";
 }
 
-/** 絞り込み中は種別名を落とす */
+/** 絞り込み中は種別名を省く */
 export function kindLine(ref: ContentRef, withKind: boolean): string {
   const parts = withKind ? [KIND_LABEL[ref.type]] : [];
   return [...parts, ...ref.meta.map((m) => m.value)].join(" · ");

@@ -4,7 +4,7 @@ import type { Root, Element, ElementContent, RootContent } from "hast";
 type LabNode = RootContent | { type: "mdxjsEsm" };
 
 /**
- * ハンズオンの本文を `h2` ごとの `<section class="step">` に畳む。
+ * ハンズオンの本文を `h2` ごとの `<section class="step">` にまとめる。
  * 最初の `h2` より前は `data-step="-1"` の「はじめに」になり、手順には数えない。
  *
  * remark ではなく rehype に置くのは、`.mdx` の JSX と `.md` の生 HTML を

@@ -45,16 +45,16 @@ describe("面への畳み込み", () => {
     expect(got.map((p) => p["data-step"])).toEqual(["-1"]);
   });
 
-  it("見出しの中の装飾を落として題を取る", () => {
+  it("見出しの中の装飾を取り除いて題を取る", () => {
     expect(sections(run("## `code` と **強調**\n"))[0]?.["data-title"]).toBe("code と 強調");
   });
 
-  it("labs の外では畳まない", () => {
+  it("labs の外ではまとめない", () => {
     const tree = run("## 一\n", "/x/content/articles/a.md");
     expect(sections(tree)).toHaveLength(0);
   });
 
-  it("本文のノードを落とさない", () => {
+  it("本文のノードを取り除かない", () => {
     const tree = run("## 一\n\n本文\n\n## 二\n\n続き\n");
     const text = JSON.stringify(tree);
     expect(text).toContain("本文");
