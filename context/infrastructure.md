@@ -190,27 +190,27 @@ public repository の artifact は誰でも取得できるため、job をまた
 **分離は置き場で担保する。** apply 用の credential は `infra` environment にのみ置く。
 deploy workflow は environment を指定しないため、そこへ届かない。
 
-| 名前                     | 置き場                     | 使う経路             |
-| ------------------------ | -------------------------- | -------------------- |
-| `CLOUDFLARE_API_TOKEN`   | repository secret          | deploy workflow      |
-| `CLOUDFLARE_ACCOUNT_ID`  | repository secret          | deploy / apply の両方 |
-| `TF_CLOUDFLARE_API_TOKEN`| `infra` environment secret | apply workflow       |
-| `R2_ACCESS_KEY_ID`       | `infra` environment secret | apply workflow の state backend |
-| `R2_SECRET_ACCESS_KEY`   | `infra` environment secret | apply workflow の state backend |
-| `R2_STATE_BUCKET`        | `infra` environment secret | apply workflow の state backend |
-| `CLOUDFLARE_ZONE_ID`     | repository secret          | apply workflow (zone の import) |
-| `ZONE_NAME`              | `infra` environment variable | apply workflow     |
+| 名前                      | 置き場                       | 使う経路                        |
+| ------------------------- | ---------------------------- | ------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | repository secret            | deploy workflow                 |
+| `CLOUDFLARE_ACCOUNT_ID`   | repository secret            | deploy / apply の両方           |
+| `TF_CLOUDFLARE_API_TOKEN` | `infra` environment secret   | apply workflow                  |
+| `R2_ACCESS_KEY_ID`        | `infra` environment secret   | apply workflow の state backend |
+| `R2_SECRET_ACCESS_KEY`    | `infra` environment secret   | apply workflow の state backend |
+| `R2_STATE_BUCKET`         | `infra` environment secret   | apply workflow の state backend |
+| `CLOUDFLARE_ZONE_ID`      | repository secret            | apply workflow (zone の import) |
+| `ZONE_NAME`               | `infra` environment variable | apply workflow                  |
 
 #### token の権限
 
 権限は「スコープ / 権限グループ / アクセスレベル」の 3 段で指定する。
 
-| token                     | 使う経路                    | 権限                                                     |
-| ------------------------- | --------------------------- | -------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | deploy workflow             | Account / Workers Scripts / Edit                         |
-| `TF_CLOUDFLARE_API_TOKEN` | apply workflow              | Account / Workers Scripts / Edit、Zone / Zone / Edit     |
-| bootstrap 用 (手元のみ)   | `infra/bootstrap/` の apply | Account / Workers R2 Storage / Edit                      |
-| R2 の S3 互換キー         | state backend               | Object Read & Write。state バケットに限定する            |
+| token                     | 使う経路                    | 権限                                                 |
+| ------------------------- | --------------------------- | ---------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | deploy workflow             | Account / Workers Scripts / Edit                     |
+| `TF_CLOUDFLARE_API_TOKEN` | apply workflow              | Account / Workers Scripts / Edit、Zone / Zone / Edit |
+| bootstrap 用 (手元のみ)   | `infra/bootstrap/` の apply | Account / Workers R2 Storage / Edit                  |
+| R2 の S3 互換キー         | state backend               | Object Read & Write。state バケットに限定する        |
 
 **apply workflow の token に R2 の権限を与えない。** CI は R2 バケットを管理せず、state backend へは S3 互換キーで接続する。
 R2 バケットを作るのは手元で 1 回だけ実行する `infra/bootstrap/` であり、その token は CI へ渡さない。
@@ -305,15 +305,15 @@ isolation が要るのは `/playground/*` だけである ([ADR-0006](../adr/000
 
 ## 未確認事項
 
-| #   | 内容                                                                                                                                           | 確認時期      |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| 1   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ実際に紐付くか                                                           | 初回 apply 時 |
-| 2   | R2 backend の `skip_s3_checksum` で state 書き込みが通るか。HashiCorp は S3 互換ストレージを best effort とし Amazon S3 でしかテストしていない | 初回 apply 時 |
-| 3   | deploy 用 token を Account / Workers Scripts / Edit だけに絞って `wrangler deploy` が通るか。403 になる場合は Account Settings / Read を足す | 初回 deploy 時 |
-| 4   | apply 用 token の `Zone / Zone / Edit` 1 つで `cloudflare_zone` の作成と読み取りが通るか。`Edit` は CRUDL を含むため足りるはずである | 初回 apply 時 |
-| 5   | R2 の Object Read & Write で `use_lockfile` のロックオブジェクト削除が通るか。落ちる場合は Admin Read & Write へ上げる | 初回 apply 時 |
-| 6   | Client IP Address Filtering が IPv6 を受け付けるか、指定件数に上限があるか。Cloudflare のドキュメントに記載がない | 手元用の token を作るとき |
-| 7   | zone を import した後、`terraform plan` が差分を出さないか。`type` や `account` が実際の zone と食い違う場合は `zone.tf` を直す | 初回 import 時 |
+| #   | 内容                                                                                                                                           | 確認時期                  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 1   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ実際に紐付くか                                                           | 初回 apply 時             |
+| 2   | R2 backend の `skip_s3_checksum` で state 書き込みが通るか。HashiCorp は S3 互換ストレージを best effort とし Amazon S3 でしかテストしていない | 初回 apply 時             |
+| 3   | deploy 用 token を Account / Workers Scripts / Edit だけに絞って `wrangler deploy` が通るか。403 になる場合は Account Settings / Read を足す   | 初回 deploy 時            |
+| 4   | apply 用 token の `Zone / Zone / Edit` 1 つで `cloudflare_zone` の作成と読み取りが通るか。`Edit` は CRUDL を含むため足りるはずである           | 初回 apply 時             |
+| 5   | R2 の Object Read & Write で `use_lockfile` のロックオブジェクト削除が通るか。落ちる場合は Admin Read & Write へ上げる                         | 初回 apply 時             |
+| 6   | Client IP Address Filtering が IPv6 を受け付けるか、指定件数に上限があるか。Cloudflare のドキュメントに記載がない                              | 手元用の token を作るとき |
+| 7   | zone を import した後、`terraform plan` が差分を出さないか。`type` や `account` が実際の zone と食い違う場合は `zone.tf` を直す                | 初回 import 時            |
 
 1 は provider 5.24.0 で `environment` が Optional かつ Deprecated に変わり、schema 上の前提は解消済みである (cloudflare/terraform-provider-cloudflare#5618)。
 実 apply が未実施のため未確認として残す。

@@ -47,11 +47,11 @@
         ]
       }
     },
-    "ignoreBinaries": [
-      "terraform"
-    ],
     "ignoreUnresolved": [
       "/pagefind/pagefind.js"
+    ],
+    "ignoreBinaries": [
+      "terraform"
     ]
   }
 }
