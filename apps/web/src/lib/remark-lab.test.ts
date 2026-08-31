@@ -120,11 +120,36 @@ describe("frontmatter の読み取り", () => {
     expect(JSON.stringify(tree)).toContain("Postgres");
   });
 
-  it("setup を各パネルへ渡す", () => {
+  it("setup を frontmatter の labBoot へ渡す", () => {
     const tree = unified().use(remarkParse).parse("```sql run\nselect 1;\n```\n") as Root;
     const fm: Record<string, unknown> = { contentId: "a", setup: "create table t (i int);" };
     remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
-    expect(JSON.stringify(tree)).toContain("create table t");
+    expect((fm.labBoot as { setup?: string }).setup).toBe("create table t (i int);");
+  });
+
+  it("setup と steps を島の props へ複製しない", () => {
+    const tree = unified()
+      .use(remarkParse)
+      .parse(
+        "## 一\n\n```sql run\nselect 1;\n```\n\n## 二\n\n```sql run\nselect 2;\n```\n",
+      ) as Root;
+    const fm: Record<string, unknown> = { contentId: "a", setup: "create table t (i int);" };
+    remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
+    expect(JSON.stringify(tree)).not.toContain("create table t");
+  });
+
+  it("全手順の SQL を labBoot に 1 度だけ集める", () => {
+    const tree = unified()
+      .use(remarkParse)
+      .parse(
+        "## 一\n\n```sql run\nselect 1;\n```\n\n## 二\n\n```sql run\nselect 2;\n```\n",
+      ) as Root;
+    const fm: Record<string, unknown> = { contentId: "a" };
+    remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
+    expect((fm.labBoot as { steps: unknown[] }).steps).toStrictEqual([
+      { step: 0, sql: "select 1;" },
+      { step: 1, sql: "select 2;" },
+    ]);
   });
 });
 

@@ -2,6 +2,7 @@
 import LabLayout from "../../layouts/LabLayout.astro";
 import { getContent, isPublic, listLabEntries, renderEntry } from "../../lib/content";
 import type { Step } from "@fukuemon/content-model";
+import type { BootSpec } from "../../features/lab/steps/bootSpec";
 
 export async function getStaticPaths() {
   const entries = await listLabEntries(isPublic);
@@ -11,6 +12,7 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await renderEntry(entry);
 const steps = (remarkPluginFrontmatter.labSteps ?? []) as Step[];
+const boot = remarkPluginFrontmatter.labBoot as BootSpec | undefined;
 
 const ref = await getContent(entry.data.contentId);
 if (!ref) throw new Error(`ContentRef が見つかりません: ${entry.data.contentId}`);
@@ -25,6 +27,6 @@ const intro = remarkPluginFrontmatter.labHasIntro === true || local !== undefine
 const live = it?.level === "embedded";
 ---
 
-<LabLayout ref={ref} steps={steps} intro={intro} live={live} local={local}>
+<LabLayout ref={ref} steps={steps} intro={intro} live={live} local={local} boot={boot}>
   <Content />
 </LabLayout>
