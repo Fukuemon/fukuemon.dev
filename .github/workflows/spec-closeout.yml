@@ -32,10 +32,18 @@ permissions:
 
 jobs:
   propose-deletion:
+    # public repository では、外部ユーザが自分で立てた issue を閉じるだけでこの job を発火できる。
+    # この job は contents: write と CLOSEOUT_PR_TOKEN を持つため、起動を repository の所有者に絞る。
+    # **organization の repository では所有者が organization 名になり、この条件は常に偽になる。**
+    # その場合は github.event.issue.author_association を
+    # OWNER / MEMBER / COLLABORATOR で判定する形へ書き換える。
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.sender.login == github.repository_owner
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ github.event.repository.default_branch }}
           # push 時の認証にもこの token を使う。PAT があれば push が workflow を発火させる
