@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useRan } from "../bus";
-import { fetchColumns, fetchRows, fetchTables, type Table } from "./catalog";
+import { fetchColumnsByTable, fetchRows, fetchTables, type Table } from "./catalog";
 import ErDiagram, { type Entity } from "./ErDiagram";
 import PeekList, { rowLabel } from "./PeekList";
 import { peekRuntime } from "../runtime/runtime";
@@ -31,12 +31,14 @@ export default function DbPeek({ contentId }: Props) {
       setEr(null);
       erDialog.current?.showModal();
     }
-    const rt = peekRuntime(contentId);
-    if (!rt) return setEr([]);
-    const found = await fetchTables(rt);
-    const out: Entity[] = [];
-    for (const t of found) out.push({ name: t.name, columns: await fetchColumns(rt, t.name) });
-    setEr(out);
+    try {
+      const rt = peekRuntime(contentId);
+      if (!rt) return setEr([]);
+      const [found, byTable] = [await fetchTables(rt), await fetchColumnsByTable(rt)];
+      setEr(found.map((t) => ({ name: t.name, columns: byTable.get(t.name) ?? [] })));
+    } catch {
+      setEr([]);
+    }
   }, [contentId]);
 
   const showTable = useCallback(
@@ -51,7 +53,7 @@ export default function DbPeek({ contentId }: Props) {
       try {
         const rt = peekRuntime(contentId);
         if (!rt) return setDetail(empty);
-        const columns = await fetchColumns(rt, t.name);
+        const columns = (await fetchColumnsByTable(rt)).get(t.name) ?? [];
         const { head, rows } = await fetchRows(rt, t.name, MAX_PEEK);
         setDetail({ columns, head, rows });
       } catch {
