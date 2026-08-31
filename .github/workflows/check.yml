@@ -18,6 +18,10 @@ concurrency:
   group: check-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 依存と build script は第三者のコードを実行する。既定の書き込み権限を渡さない
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

@@ -1,7 +1,12 @@
 name: Terraform Apply
 
 # 手動起動と infra environment の protection rules を必ず通す (ADR-0005)。
-# plan と apply を別 job にして、plan の結果を見てから apply を承認できるようにする。
+# 差分の確認は mode=plan で 1 回起動して行い、納得してから mode=apply で起動し直す。
+#
+# plan と apply を 1 つの job に置く。plan file は変数の値と prior state を平文で持ち、
+# terraform show -json で復元できる。job をまたぐには artifact に上げる必要があり、
+# public repo の artifact は誰でも取得できるため、account ID と zone ID が漏れる。
+# runner のディスク上に留めれば、この経路が無くなる。
 #
 # infra/bootstrap/ は対象にしない。state をローカルに置く前提を壊すため、運用者が手元で 1 回だけ実行する。
 on:
@@ -21,7 +26,7 @@ permissions:
   contents: read
 
 jobs:
-  plan:
+  terraform:
     runs-on: ubuntu-latest
     environment: infra
     steps:
@@ -54,41 +59,9 @@ jobs:
           TF_VAR_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_zone_name: ${{ vars.ZONE_NAME }}
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: tfplan-${{ github.run_id }}
-          path: infra/cloudflare/tfplan
-          retention-days: 1
-
-  apply:
-    needs: plan
-    if: inputs.mode == 'apply'
-    runs-on: ubuntu-latest
-    environment: infra
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
-        with:
-          terraform_version: 1.14.3
-          terraform_wrapper: false
-
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: tfplan-${{ github.run_id }}
-          path: infra/cloudflare
-
-      - name: init
-        run: pnpm run infra:init -- -input=false -backend-config="bucket=${{ secrets.R2_STATE_BUCKET }}"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
-
       # 変数は plan file が持つため TF_VAR を渡さない
       - name: apply
+        if: inputs.mode == 'apply'
         run: pnpm run infra:apply -- -input=false tfplan
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.TF_CLOUDFLARE_API_TOKEN }}
