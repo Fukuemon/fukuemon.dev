@@ -97,7 +97,8 @@ pnpm run infra:apply
 zone ID は Cloudflare の Overview 画面の右側にある。
 `terraform.tfvars` と、CI 用の repository secret `CLOUDFLARE_ZONE_ID` の両方に要る。
 
-**`terraform plan` が zone に差分を出さないことを確かめてから apply する。** 差分が出る場合は、実際の zone 設定に合わせて `zone.tf` を直す。
+**plan が出す zone の差分を確かめてから apply する。** `account.id` を sensitive として扱う差分だけなら想定どおりであり、Cloudflare 側の設定は変わらない。
+`name` や `type` のように実体が変わる差分が出た場合は、実際の zone 設定に合わせて `zone.tf` を直す。
 `cloudflare_zone` には `prevent_destroy` を付けてあるため、destroy しようとすると apply が止まる。
 
 `terraform.tfvars` に書く値は次のとおり。
