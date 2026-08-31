@@ -1,7 +1,6 @@
 ---
 import AboutLinks from "./AboutLinks.astro";
 import ArtBand from "../../components/ArtBand.astro";
-import Tate from "../../components/Tate.astro";
 import { PROFILE, STACK } from "../../data/profile";
 
 const chars = [...PROFILE.name];
@@ -14,12 +13,14 @@ const chars = [...PROFILE.name];
   </div>
 
   <div class="g-rail relative my-inter-2 mx-(--gutter) py-inter-1">
-    <Tate as="h2" class="tate-head" text="about" upright />
-    <div class="flex justify-end items-baseline pb-intra-1">
+    <div
+      class="col-span-full flex justify-between items-baseline gap-intra-4 pb-intra-3 border-b-2 border-rule-strong"
+    >
+      <h2 class="mono text-[1.15rem] font-semibold tracking-[.34em]">about</h2>
       <AboutLinks />
     </div>
 
-    <div>
+    <div class="col-start-2 mt-inter-1 max-narrow:col-start-1">
       <div
         class="flex items-center gap-intra-4 mb-inter-1 max-narrow:flex-col max-narrow:items-start max-narrow:gap-intra-3"
       >
