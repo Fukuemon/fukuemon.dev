@@ -131,7 +131,7 @@
     grid-template-columns: var(--rail) minmax(0, 1fr);
     column-gap: var(--spacing-intra-4);
   }
-  /* 記事とハンズオンで同じ版面。側柱の幅と開閉のふるまいを揃える */
+  /* 記事とハンズオンで同じ版面。サイドバーの幅と開閉のふるまいを揃える */
   .g-doc {
     display: grid;
     grid-template-columns: var(--drawer) minmax(0, 1fr);
@@ -507,7 +507,7 @@
     text-overflow: ellipsis;
   }
 
-  /* 側柱を畳む。目次と柱は本文の前後へ回す */
+  /* サイドバーを閉じる。目次と柱は本文の前後へ回す */
   @media (max-width: 1100px) {
     .toc {
       display: flex;
@@ -543,7 +543,7 @@
       grid-row: auto;
       justify-self: start;
     }
-    /* 表は列を落とす。横スクロールさせない */
+    /* 表は列を隠す。横スクロールさせない */
     .tbl .c-tag {
       display: none;
     }

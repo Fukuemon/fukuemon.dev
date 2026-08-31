@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { fetchRelations, fetchTables, type Relation, type Table } from "./catalog";
 import { peekRuntime } from "../runtime/runtime";
 
-/** 実行パネルが起こしたインスタンスへ相乗りする。側柱のためだけに WASM を落とさせない */
+/** 実行パネルが起こしたインスタンスへ相乗りする。サイドバーのためだけに WASM を読み込ませない */
 export function useCatalog(contentId: string) {
   const [tables, setTables] = useState<Table[] | null>(null);
   const [relations, setRelations] = useState<Relation[]>([]);

@@ -43,7 +43,7 @@ describe("手順の導出", () => {
     expect(run("## 一\n\nDuration: 05:30\n").steps[0]?.duration).toBe(330);
   });
 
-  it("Duration の段落を本文から落とす", () => {
+  it("Duration の段落を本文から取り除く", () => {
     const { tree } = run("## 一\n\nDuration: 01:00\n\n本文\n");
     const text = JSON.stringify(tree);
     expect(text).not.toContain("Duration:");
@@ -92,7 +92,7 @@ describe("実行パネル", () => {
     expect(nodes(tree).filter((n) => n.type === "mdxjsEsm")).toHaveLength(1);
   });
 
-  it(".md に run を書いたらビルドを落とす", () => {
+  it(".md に run を書いたらビルドを失敗させる", () => {
     expect(() => run("```sql run\nselect 1;\n```\n", "/x/content/labs/a.md")).toThrow(/\.mdx/);
   });
 

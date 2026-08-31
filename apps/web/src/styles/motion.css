@@ -29,7 +29,7 @@
 }
 
 @layer components {
-  /* 一覧の行が刷り上がる。濃度だけを変え、罫は動かさない。
+  /* 一覧の行が順に現れる。濃度だけを変え、罫は動かさない。
      段送りの添字はビルド時に埋める */
   .rule-row {
     opacity: 1;
@@ -98,7 +98,7 @@
     }
   }
 
-  /* 表の行も同じ規則で刷り上がる。一覧は .rule-row ではなく tr で組む */
+  /* 表の行も同じ規則で順に現れる。一覧は .rule-row ではなく tr で組む */
   .tbl tbody tr {
     opacity: 1;
     transition: opacity 220ms ease-out calc(var(--i, 0) * 45ms);
@@ -124,7 +124,7 @@
 /* about。トップの表紙を兼ねるので、ここだけ動きを厚くする (ADR-0009 の例外)。
    規則は他と同じ。位置は動かさず、変えるのは濃度と罫の長さに限る。 */
 @layer components {
-  /* 名乗りが 1 字ずつ刷り上がる。段送りは字の添字で決める */
+  /* 名乗りが 1 字ずつ順に現れる。段送りは字の添字で決める */
   .about__char {
     opacity: 1;
     transition: opacity 320ms ease-out calc(var(--i, 0) * 55ms);
@@ -150,11 +150,11 @@
     }
   }
 
-  /* 使っているものは、画面に入ったところで行ごとに刷り上がる。
+  /* 使っているものは、画面に入ったところで行ごとに順に現れる。
      scroll-driven animation は Chrome 115+ のみ。
      対応していない環境では規則ごと無視され、最初から見えている */
   @supports (animation-timeline: view()) {
-    /* 短縮形で書くと、ビルドの圧縮が animation-timeline ごと落とす。長い形で書く */
+    /* 短縮形で書くと、ビルドの圧縮が animation-timeline ごと削除する。長い形で書く */
     .about__row {
       animation-name: ink;
       animation-timing-function: linear;

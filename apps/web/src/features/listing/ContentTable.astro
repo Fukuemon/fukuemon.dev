@@ -4,7 +4,7 @@ import { kindClass, kindLine, ymd } from "../../lib/format";
 
 interface Props {
   items: ContentRef[];
-  /** 絞り込み中は列見出しを「所要」にして、行から種別名を落とす */
+  /** 絞り込み中は列見出しを「所要」にして、行から種別名を省く */
   showKind: boolean;
 }
 const { items, showKind } = Astro.props;

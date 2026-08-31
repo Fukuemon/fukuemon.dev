@@ -17,8 +17,8 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [remarkLab],
     rehypePlugins: [
-      // 図はビルド時に SVG へ落とす。記事に mermaid 本体 (約 300 KiB) を配らない。
-      // Expressive Code より前に走るので、まだ素の <pre><code> のまま拾える
+      // 図はビルド時に SVG へ変換する。記事に mermaid 本体 (約 300 KiB) を配らない。
+      // Expressive Code より前に実行されるので、まだ素の <pre><code> のまま処理できる
       [rehypeMermaid, { strategy: "inline-svg", mermaidConfig }],
       rehypeMermaidTheme,
       rehypeScrollTable,

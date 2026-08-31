@@ -8,7 +8,7 @@ type Props = {
   children: ReactNode;
 };
 
-/** `<dialog>` は top layer に出るので、側柱の overflow に切られない */
+/** `<dialog>` は top layer に出るので、サイドバーの overflow に切られない */
 export default function Sheet({ ref, title, meta, onClose, children }: Props) {
   return (
     <dialog

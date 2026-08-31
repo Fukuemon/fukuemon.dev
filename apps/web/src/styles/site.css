@@ -40,7 +40,7 @@
     text-align: start;
     padding: 6px var(--spacing-intra-3);
     border-block-end: 1px solid var(--color-rule-soft);
-    /* nowrap だと先頭の空白が潰れ、EXPLAIN の木構造が消える */
+    /* nowrap だと先頭の空白が詰められ、EXPLAIN の木構造が消える */
     white-space: pre;
   }
   /* 右端に続きがあることを示す。overlay scrollbar では目印が出ない */
@@ -86,7 +86,7 @@
   }
 }
 
-/* 側柱。目次 / 手順 と、ほかの記事への切り替えを 1 本にまとめる。
+/* サイドバー。目次 / 手順 と、ほかの記事への切り替えを 1 本にまとめる。
    種別が増えても構造が変わらないよう、中身を差し替える形にする */
 @layer components {
   .toc {
@@ -133,7 +133,7 @@
   .drawer > .peek {
     flex: 0 0 auto;
   }
-  /* 記事の側柱。目次と他記事は溢れたら中で流す */
+  /* 記事のサイドバー。目次と他記事は溢れたら中でスクロールさせる */
   .drawer > .toc,
   .drawer > .docnav {
     flex: 0 1 auto;
@@ -179,7 +179,7 @@
     padding-block-end: var(--spacing-inter-2);
   }
 
-  /* テーブルの中身。top layer なので側柱の幅に縛られない */
+  /* テーブルの中身。top layer なのでサイドバーの幅に縛られない */
   .sheet::backdrop {
     background: rgb(0 0 0 / 0.42);
   }
@@ -219,7 +219,7 @@
   }
 }
 
-/* 狭い画面。側柱は横から滑り出すので、版面は 1 列にする */
+/* 狭い画面。サイドバーは横から滑り出すので、版面は 1 列にする */
 @layer components {
   @media (max-width: 1100px) {
     .g-doc,
@@ -247,7 +247,7 @@
   }
 }
 
-/* トップに畳んだ about。外部リンクは上下 2 箇所に置く */
+/* トップにまとめた about。外部リンクは上下 2 箇所に置く */
 @layer components {
   /* 挿絵の上に霞を掛け、文字は必ず無地の紙に載せる */
   .about__veil {
@@ -264,7 +264,7 @@
   }
 }
 
-/* playground。実行結果に幅を使い、例と DB の状態は側柱へ畳む */
+/* playground。実行結果に幅を使い、例と DB の状態はサイドバーへ寄せる */
 @layer components {
   .labmain--wide {
     max-inline-size: calc(var(--measure-wide) + 2 * var(--gutter));

@@ -1,4 +1,4 @@
-/** 側柱の開閉を `root` に取り付ける。状態は `localStorage` に置く */
+/** サイドバーの開閉を `root` に取り付ける。状態は `localStorage` に置く */
 export function mountSide(root: HTMLElement): void {
   const btn = root.querySelector<HTMLButtonElement>("[data-side]");
   if (!btn) return;
@@ -32,7 +32,7 @@ export function mountSide(root: HTMLElement): void {
   });
 }
 
-/** 狭い画面で開いている側柱を畳む。本文に覆いかぶさるため */
+/** 狭い画面で開いているサイドバーを閉じる。本文に覆いかぶさるため */
 export function shutIfNarrow(root: HTMLElement): void {
   if (wide()) return;
   root.querySelector<HTMLButtonElement>("[data-side][aria-expanded='true']")?.click();
