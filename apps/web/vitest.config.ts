@@ -11,6 +11,7 @@ export default defineConfig({
         "src/lib/remark-lab.ts",
         "src/lib/rehype-lab-steps.ts",
         "src/features/lab/steps/progress.ts",
+        "src/features/lab/steps/bootSpec.ts",
         "src/features/lab/editor/sql-tokens.ts",
         "src/features/lab/runtime/cell.ts",
         "src/features/lab/catalog/catalog.ts",

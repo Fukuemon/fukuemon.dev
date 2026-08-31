@@ -1,5 +1,6 @@
 import type { Root, Code, Paragraph, Text, RootContent } from "mdast";
 import type { Step } from "@fukuemon/content-model";
+import type { BootSpec } from "~/features/lab/steps/bootSpec";
 
 const DURATION = /^Duration:\s*(\d{1,2}):(\d{2})\s*$/;
 
@@ -63,53 +64,6 @@ const expr = (name: string, literalValue: string | number): JsxAttr => {
 };
 
 const literal = (s: string) => JSON.stringify(s);
-
-/** 配列や object を属性として渡す。estree は JSON をそのまま式にする */
-const json = (name: string, value: unknown): JsxAttr => {
-  const raw = JSON.stringify(value);
-  return {
-    type: "mdxJsxAttribute",
-    name,
-    value: {
-      type: "mdxJsxAttributeValueExpression",
-      value: raw,
-      data: {
-        estree: {
-          type: "Program",
-          sourceType: "module",
-          comments: [],
-          body: [
-            {
-              type: "ExpressionStatement",
-              expression: jsonToEstree(value),
-            },
-          ],
-        },
-      },
-    },
-  };
-};
-
-function jsonToEstree(v: unknown): Record<string, unknown> {
-  if (Array.isArray(v)) {
-    return { type: "ArrayExpression", elements: v.map(jsonToEstree) };
-  }
-  if (v !== null && typeof v === "object") {
-    return {
-      type: "ObjectExpression",
-      properties: Object.entries(v).map(([k, x]) => ({
-        type: "Property",
-        kind: "init",
-        method: false,
-        shorthand: false,
-        computed: false,
-        key: { type: "Literal", value: k, raw: JSON.stringify(k) },
-        value: jsonToEstree(x),
-      })),
-    };
-  }
-  return { type: "Literal", value: v, raw: JSON.stringify(v) };
-}
 
 /**
  * ```` ```sql run ```` のフェンスを実行パネルの JSX に差し替える。
@@ -217,6 +171,7 @@ export function remarkLab() {
     if (isLab && file.data?.astro?.frontmatter) {
       file.data.astro.frontmatter.labSteps = labSteps;
       file.data.astro.frontmatter.labHasIntro = hasIntro;
+      file.data.astro.frontmatter.labBoot = { setup, steps } satisfies BootSpec;
     }
   };
 }
@@ -279,8 +234,6 @@ function runnerNode(
   ];
   attributes.push(attr("engine", ctx.engine));
   if (ctx.kind) attributes.push(attr("kind", ctx.kind));
-  if (ctx.steps.length > 0) attributes.push(json("steps", ctx.steps));
-  if (ctx.setup) attributes.push(expr("setup", ctx.setup));
 
   return {
     type: "mdxJsxFlowElement",

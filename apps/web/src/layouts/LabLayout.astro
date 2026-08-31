@@ -9,6 +9,7 @@ import RelatedList from "../features/listing/RelatedList.astro";
 import { getRelated } from "../lib/content";
 import { KIND_INDEX, KIND_LABEL } from "../lib/format";
 import type { ContentRef, Step } from "@fukuemon/content-model";
+import { bootSpecId, encodeBootSpec, type BootSpec } from "../features/lab/steps/bootSpec";
 
 interface Props {
   ref: ContentRef;
@@ -17,6 +18,8 @@ interface Props {
   intro: boolean;
   /** 実行環境を持つときだけ true。DB の一覧をサイドバーに出す */
   live: boolean;
+  /** 実行パネルの起動材料。全パネルで 1 つを共有する */
+  boot?: BootSpec;
   /** 手元で用意する種類のときだけ渡す */
   local?: {
     repository: string;
@@ -24,7 +27,7 @@ interface Props {
     requires: { name: string; check?: string }[];
   };
 }
-const { ref, steps, intro, live, local } = Astro.props;
+const { ref, steps, intro, live, local, boot } = Astro.props;
 const related = await getRelated(ref.contentId);
 ---
 
@@ -92,3 +95,14 @@ const related = await getRelated(ref.contentId);
   const root = document.querySelector<HTMLElement>("[data-lab]");
   if (root) mountSteps(root);
 </script>
+
+  {
+    boot && (
+      <script
+        id={bootSpecId(ref.contentId)}
+        type="application/json"
+        is:inline
+        set:html={encodeBootSpec(boot)}
+      />
+    )
+  }

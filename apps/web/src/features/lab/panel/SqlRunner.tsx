@@ -1,5 +1,6 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import type { RuntimeKind } from "../runtime/runtime";
+import { readBootSpec } from "../steps/bootSpec";
 import { completeStep, loadProgress } from "../steps/progress";
 import ResultTable from "./ResultTable";
 import RunnerControls from "./RunnerControls";
@@ -13,11 +14,8 @@ type Props = {
   stepCount: number;
   stepTitle: string;
   sql: string;
-  setup?: string;
   engine?: string;
   kind?: RuntimeKind;
-  /** 全手順の SQL。再訪時に完了済みだけを順に流し直す */
-  steps?: { step: number; sql: string }[];
 };
 
 export default function SqlRunner({
@@ -26,12 +24,11 @@ export default function SqlRunner({
   stepCount,
   stepTitle,
   sql,
-  setup,
   engine = "実行環境",
   kind = "pglite",
-  steps = [],
 }: Props) {
   const [text, setText] = useState(sql);
+  const { setup, steps } = useMemo(() => readBootSpec(contentId), [contentId]);
   const editorId = useId();
   const groupId = useId();
 

@@ -1,9 +1,14 @@
 /**
  * 配色の検査。色は手で書き換えるものなので、ずれても実行時には気づけない。
  *
- * 1. `code-theme.ts` の値が `tokens.css` の `--c-*` と一致すること
- * 2. 文字に使うトークンが地に対して 4.5:1 以上であること
- * 3. コードの 5 トークンが輝度の梯子になっていること
+ * 1. 検査対象のトークンが `tokens.css` に実在すること
+ * 2. `code-theme.ts` の値が `tokens.css` の `--color-c-*` と一致すること
+ * 3. 文字に使うトークンが地に対して 4.5:1 以上であること
+ * 4. コードの 5 トークンが輝度の梯子になっていること
+ *
+ * 1 を独立した検査にしているのは、トークン名が変わったときに
+ * 2 以降が 1 件も実行されないまま通過するのを防ぐためである
+ * (`context/engineering.md` の「実行されなかったことを通ったと扱わない」)。
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -50,7 +55,22 @@ function readTokens(): { light: Map<string, string>; dark: Map<string, string> }
 }
 
 const CODE_KEYS = ["plain", "key", "ident", "lit", "com"] as const;
+
+/** 地に対して読める最低の比 (WCAG AA の本文) */
 const MIN_TEXT = 4.5;
+
+/** コードの隣り合うトークンを見分けられる最低の比 */
+const MIN_LADDER_GAP = 1.1;
+
+/** 地に対する比を検査する文字色 */
+const TEXT_KEYS = [
+  "--color-ink",
+  "--color-ink-2",
+  "--color-green",
+  "--color-blue",
+  "--color-rust",
+  "--color-rule-strong",
+] as const;
 
 export function checkContrast(): string[] {
   const errors: string[] = [];
@@ -60,43 +80,49 @@ export function checkContrast(): string[] {
     ["明", LIGHT, tokens.light],
     ["暗", DARK, tokens.dark],
   ] as const) {
-    const bg = map.get("--color-code-bg");
-    if (bg !== palette.bg) {
-      errors.push(`${name}: --code-bg が ${bg} / code-theme.ts が ${palette.bg}`);
+    const need = (key: string): string | undefined => {
+      const v = map.get(key);
+      if (v === undefined) errors.push(`${name}: ${key} が tokens.css に無い`);
+      return v;
+    };
+
+    const bg = need("--color-code-bg");
+    if (bg !== undefined && bg !== palette.bg) {
+      errors.push(`${name}: --color-code-bg が ${bg} / code-theme.ts が ${palette.bg}`);
     }
     for (const k of CODE_KEYS) {
-      const css = map.get(`--color-c-${k}`);
-      if (css !== palette[k]) {
-        errors.push(`${name}: --c-${k} が ${css} / code-theme.ts が ${palette[k]}`);
+      const key = `--color-c-${k}`;
+      const css = need(key);
+      if (css !== undefined && css !== palette[k]) {
+        errors.push(`${name}: ${key} が ${css} / code-theme.ts が ${palette[k]}`);
       }
     }
 
     for (const k of CODE_KEYS) {
       const r = contrast(palette[k], palette.bg);
-      if (r < MIN_TEXT) errors.push(`${name}: --c-${k} が ${r.toFixed(2)} (4.5 未満)`);
+      if (r < MIN_TEXT) {
+        errors.push(`${name}: --color-c-${k} が ${r.toFixed(2)} (${MIN_TEXT} 未満)`);
+      }
     }
 
-    const paper = map.get("--color-paper");
-    if (paper) {
-      for (const k of [
-        "--color-ink",
-        "--color-ink-2",
-        "--color-green",
-        "--color-blue",
-        "--color-rust",
-        "--color-rule-strong",
-      ]) {
-        const v = map.get(k);
-        if (!v) continue;
-        const r = contrast(v, paper);
-        if (r < MIN_TEXT) errors.push(`${name}: ${k} が地に対して ${r.toFixed(2)} (4.5 未満)`);
+    const paper = need("--color-paper");
+    for (const key of TEXT_KEYS) {
+      const v = need(key);
+      if (paper === undefined || v === undefined) continue;
+      const r = contrast(v, paper);
+      if (r < MIN_TEXT) {
+        errors.push(`${name}: ${key} が地に対して ${r.toFixed(2)} (${MIN_TEXT} 未満)`);
       }
     }
 
     const ladder = CODE_KEYS.map((k) => contrast(palette[k], palette.bg)).sort((a, b) => b - a);
     for (let i = 0; i < ladder.length - 1; i++) {
       const gap = (ladder[i] as number) / (ladder[i + 1] as number);
-      if (gap < 1.1) errors.push(`${name}: 隣接するトークンの比が ${gap.toFixed(2)} (1.10 未満)`);
+      if (gap < MIN_LADDER_GAP) {
+        errors.push(
+          `${name}: 隣接するトークンの比が ${gap.toFixed(2)} (${MIN_LADDER_GAP.toFixed(2)} 未満)`,
+        );
+      }
     }
   }
   return errors;
