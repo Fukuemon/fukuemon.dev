@@ -54,9 +54,7 @@ Cloudflare は新規プロジェクトへ JSONC を推奨しており、一部�
 | wrangler 設定 | `apps/web/wrangler.jsonc`                                 |
 | 配信元        | `apps/web/dist` (Astro の build 成果物 + pagefind の索引) |
 | 必要な secret | `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`          |
-
-**custom domain はまだ無い。** `infra/cloudflare/` を apply していないため、到達先は `workers.dev` のサブドメインである。
-ドメインは Cloudflare Registrar で取得済みであり、zone も存在する。
+| 到達先        | `https://fukuemon.dev` (custom domain) と `workers.dev` のサブドメイン |
 
 ## Infrastructure Contract (Terraform / Wrangler 管轄表)
 
@@ -132,6 +130,9 @@ infra/
 `zone.tf` の `import` ブロックが apply のたびに state へ取り込むため、手動の `terraform import` は要らない。
 ネームサーバも既に Cloudflare を向いているため、レジストラ側の設定は要らない。
 
+import 後の plan は `account.id` を sensitive として扱う差分だけを出す。
+値は変わらず、Cloudflare 側の zone 設定にも変更は入らない (2026-08-31 の初回 apply で確認)。
+
 ## state backend
 
 R2 は S3 互換だが AWS ではない。`s3` backend は STS / IAM / metadata API を前提にする箇所があるため検証を切る。
@@ -157,6 +158,11 @@ backend "s3" {
 
 **バケットのバージョニングは設定しない。** provider 5.24.0 の `cloudflare_r2_bucket` に versioning 引数が無く、Terraform から設定できない。
 state を失った場合は `terraform import` で回復する。
+
+**S3 互換キーは R2 の画面から発行したものに限る。** 通常の API Tokens 画面 (`dash.cloudflare.com/profile/api-tokens`) で作った token を渡すと `SignatureDoesNotMatch` で 403 になる。
+発行時に 3 つの値が出るが、使うのは `Access Key ID` と `Secret Access Key` であり、`Token value` ではない。
+
+2026-08-31 の初回 apply で、`skip_s3_checksum` を含む上の設定と `use_lockfile` が R2 上で通ることを確認した。
 
 ## Environment Strategy
 
@@ -216,6 +222,7 @@ deploy workflow は environment を指定しないため、そこへ届かない
 R2 バケットを作るのは手元で 1 回だけ実行する `infra/bootstrap/` であり、その token は CI へ渡さない。
 
 apply 用の権限名は、provider が各リソースに挙げる Accepted Permissions に対応する。
+**2026-08-31 の初回 deploy と初回 apply で、この表のとおりで通ることを確認した。** deploy 用に `Account Settings / Read` は要らない。
 
 - **zone の作成は Zone スコープの `Zone Zone Edit` である。** `POST /zones` の Accepted Permissions は `Zone Zone Edit` と `Zone DNS Edit` のいずれか 1 つであり、Account スコープに `Zone` の権限グループは存在しない。
   zone は Registrar が作成済みのため、Zone Resources は対象の zone だけに限定する。
@@ -305,21 +312,9 @@ isolation が要るのは `/playground/*` だけである ([ADR-0006](../adr/000
 
 ## 未確認事項
 
-| #   | 内容                                                                                                                                           | 確認時期                  |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| 1   | `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ実際に紐付くか                                                           | 初回 apply 時             |
-| 2   | R2 backend の `skip_s3_checksum` で state 書き込みが通るか。HashiCorp は S3 互換ストレージを best effort とし Amazon S3 でしかテストしていない | 初回 apply 時             |
-| 3   | deploy 用 token を Account / Workers Scripts / Edit だけに絞って `wrangler deploy` が通るか。403 になる場合は Account Settings / Read を足す   | 初回 deploy 時            |
-| 4   | apply 用 token の `Zone / Zone / Edit` 1 つで `cloudflare_zone` の作成と読み取りが通るか。`Edit` は CRUDL を含むため足りるはずである           | 初回 apply 時             |
-| 5   | R2 の Object Read & Write で `use_lockfile` のロックオブジェクト削除が通るか。落ちる場合は Admin Read & Write へ上げる                         | 初回 apply 時             |
-| 6   | Client IP Address Filtering が IPv6 を受け付けるか、指定件数に上限があるか。Cloudflare のドキュメントに記載がない                              | 手元用の token を作るとき |
-| 7   | zone を import した後、`terraform plan` が差分を出さないか。`type` や `account` が実際の zone と食い違う場合は `zone.tf` を直す                | 初回 import 時            |
-
-1 は provider 5.24.0 で `environment` が Optional かつ Deprecated に変わり、schema 上の前提は解消済みである (cloudflare/terraform-provider-cloudflare#5618)。
-実 apply が未実施のため未確認として残す。
-
-3 から 5 は Cloudflare のドキュメントと provider のドキュメントに最小権限の記載がないため、実行して確かめる。
-テンプレート **Edit Cloudflare Workers** を使えば 3 は確実に通るが、KV / R2 / D1 / Pages などの Edit を含み、deploy に必要な scope より広くなる。
+| #   | 内容                                                                                                             | 確認時期                  |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 1   | Client IP Address Filtering が IPv6 を受け付けるか、指定件数に上限があるか。Cloudflare のドキュメントに記載がない | 手元用の token を作るとき |
 
 ## 参照
 

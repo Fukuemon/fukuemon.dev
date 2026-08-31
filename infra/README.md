@@ -25,13 +25,12 @@ state をローカルに置く前提を壊す。
   `bootstrap/` は R2 の権限だけを使い、`cloudflare/` は zone と Workers Scripts の権限を使う。
 - R2 の S3 互換 access key。
   `cloudflare/` の state backend が使う。
-  R2 の画面の Account Details から API Tokens → Manage で発行する。
-  権限は上と同じ表に従い、state バケットに限定する。
+  **R2 のページの Account details から API Tokens → Manage で発行する。** 通常の API Tokens 画面 (`dash.cloudflare.com/profile/api-tokens`) で作った token は S3 互換キーではなく、渡すと `SignatureDoesNotMatch` で 403 になる。
+  権限は Object Read & Write を選び、state バケットに限定する。
+  発行時に 3 つの値が出る。使うのは `Access Key ID` と `Secret Access Key` であり、`Token value` ではない。
   secret access key は作成直後にしか表示されない。
 
 **deploy workflow の token と分ける。** 置き場と scope は [context/infrastructure.md](../context/infrastructure.md) の credential の表に従う。
-
-最小権限が確かめられていない点は、同じファイルの「未確認事項」の 3 から 5 に置く。
 
 変数の値は各ディレクトリの `terraform.tfvars` に置く。
 `.gitignore` が `*.tfvars` を無視するため commit されない。
@@ -117,6 +116,7 @@ apply job は plan job が保存した plan file を使うため、2 回目の�
 
 ## 現状
 
-**まだ 1 度も apply していない。** ドメインは Cloudflare Registrar で取得済みであり、zone は既に存在する。
+**3 つとも実行済みである。** 2026-08-31 に bootstrap を手元で apply し、Worker を deploy し、apply workflow から zone の import と custom domain の作成を行った。
+`https://fukuemon.dev` が Worker `fukuemon-dev` を配信している。
 
-未確認事項は [context/infrastructure.md](../context/infrastructure.md) の「未確認事項」に置く。
+残る未確認事項は [context/infrastructure.md](../context/infrastructure.md) の「未確認事項」に置く。
