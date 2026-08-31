@@ -6,7 +6,7 @@ import { listPlaygrounds } from "../../lib/content";
 const items = await listPlaygrounds();
 ---
 
-<SiteLayout title="playground — fukuemon.dev" description="手順に縛られず動かす場所。">
+<SiteLayout title="playground — fukuemon.dev" description="ブラウザ上でコードを実際に動かせる環境。">
   <section class="g-rail mt-inter-3 mx-(--gutter)">
     <Tate as="h2" class="tate-head" text="遊び場" />
     <div class="flex justify-end items-baseline pb-intra-1">
@@ -14,7 +14,8 @@ const items = await listPlaygrounds();
     </div>
     <div>
       <p class="prose mt-intra-2 mb-0 max-w-(--measure-w) text-fg-2">
-        手順に縛られず動かす場所です。ブラウザの中だけで動き、サーバーへは何も送りません。
+        ブラウザ上でコードを実際に動かせる環境<br />
+        Try X in Y minutesに影響を受けてます
       </p>
       <div class="mt-inter-1 grid grid-cols-[repeat(auto-fit,minmax(min(18rem,100%),22rem))] max-narrow:grid-cols-[minmax(0,1fr)]">
         {
