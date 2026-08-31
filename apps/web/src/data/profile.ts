@@ -1,7 +1,7 @@
 /** 書いている人の正本。本文へ直書きしない */
 
 export const PROFILE = {
-  name: "fukuemon",
+  name: "Fukuemon",
   reading: "ふくえもん",
   role: "エンジニア。",
   lead: "食と筋トレ駆動のうぇぶえんじにあ",
