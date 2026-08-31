@@ -1,5 +1,5 @@
 import { PROGRESS_EVENT, type ProgressEvent, loadProgress, saveProgress } from "./progress";
-import { mountSide, shutIfNarrow } from "../../doc/side";
+import { mountSide, shutIfNarrow } from "../../../components/side";
 
 type Refs = {
   root: HTMLElement;

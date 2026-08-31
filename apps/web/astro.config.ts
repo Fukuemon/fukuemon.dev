@@ -4,6 +4,7 @@ import expressiveCode, { ExpressiveCodeTheme } from "astro-expressive-code";
 import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import { remarkLab } from "./src/lib/remark-lab";
+import { RUNNERS } from "./src/features/lab/runners";
 import { rehypeLabSteps } from "./src/lib/rehype-lab-steps";
 import { rehypeScrollTable } from "./src/lib/rehype-scroll-table";
 import rehypeMermaid from "rehype-mermaid";
@@ -15,7 +16,7 @@ export default defineConfig({
   site: "https://fukuemon.dev",
   vite: { plugins: [tailwindcss()] },
   markdown: {
-    remarkPlugins: [remarkLab],
+    remarkPlugins: [[remarkLab, { runners: RUNNERS }]],
     rehypePlugins: [
       // 図はビルド時に SVG へ変換する。記事に mermaid 本体 (約 300 KiB) を配らない。
       // Expressive Code より前に実行されるので、まだ素の <pre><code> のまま処理できる

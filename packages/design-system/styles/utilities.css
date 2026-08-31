@@ -279,45 +279,6 @@
     font-weight: 600;
   }
 
-  /* 上部ヘッダ。ロゴは横組み */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-intra-4);
-    padding-inline: var(--gutter);
-    border-block-end: 1px solid var(--color-rule-strong);
-    position: sticky;
-    inset-block-start: 0;
-    z-index: 3;
-    background: var(--color-paper);
-  }
-  .topbar__logo {
-    font-size: 0.875rem;
-    letter-spacing: 0.18em;
-  }
-  .topbar nav {
-    display: flex;
-    gap: 4px;
-  }
-  .topbar nav a {
-    padding-inline: 14px;
-  }
-  .topbar nav a[aria-current] {
-    color: var(--color-fg);
-    box-shadow: inset 0 -2px 0 var(--color-rust);
-  }
-  /* 縮むと語の途中で折り返す。折らず、入らなければ溢れさせて気づけるようにする */
-  .topbar nav a {
-    flex: 0 0 auto;
-    white-space: nowrap;
-  }
-  @media (max-width: 720px) {
-    .topbar {
-      gap: var(--spacing-intra-2);
-    }
-  }
-
   /* 挿絵 */
   .wood,
   .art {
@@ -387,139 +348,8 @@
     font-style: italic;
   }
 
-  /* forced colors では box-shadow が消える。現在地の手掛かりを別に立てる */
-  @media (forced-colors: active) {
-    /* box-shadow と background は強制配色で消える。border で立て直す */
-    .steps__link[aria-current],
-    .docnav__item[aria-current] {
-      border-inline-start: 3px solid;
-    }
-    .toc__item[aria-current] .toc__bar,
-    .steps__mark[data-state="done"] {
-      border: 1px solid;
-    }
-    .topbar nav a[aria-current],
-    .tabs a[aria-current] {
-      border-block-end: 2px solid Highlight;
-      margin-block-end: -2px;
-    }
-  }
-
-  /* 一覧の絞り込み。tablist ではなくリンク。実体はページ遷移 */
-  .tabs {
-    display: flex;
-    align-items: stretch;
-    border-block-end: 1px solid var(--color-rule-strong);
-  }
-  .tabs a {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    white-space: nowrap;
-    min-block-size: 44px;
-    padding-inline-end: var(--spacing-intra-4);
-    margin-inline-end: var(--spacing-intra-4);
-    margin-block-end: -1px;
-    color: var(--color-ink-2);
-  }
-  .tabs a[aria-current] {
-    color: var(--color-ink);
-    box-shadow: inset 0 -2px 0 var(--color-rust);
-  }
-  .tabs a .n {
-    font-size: 0.75rem;
-    letter-spacing: 0.06em;
-    color: var(--color-ink-2);
-  }
-  .tabs a[aria-current] .n {
-    color: var(--color-rust);
-  }
-
-  /* 表。列幅は固定。自動幅だと題の列だけが伸びる */
-  .tbl {
-    inline-size: 100%;
-    max-inline-size: var(--measure-wide);
-    border-collapse: collapse;
-    text-align: start;
-    table-layout: fixed;
-  }
-  .tbl {
-    margin-block-start: var(--spacing-inter-1);
-  }
-  .tbl th {
-    padding-block: 0 var(--spacing-intra-2);
-    padding-inline: 0;
-    border-block-end: 2px solid var(--color-rule-strong);
-    text-align: start;
-    font-weight: 400;
-  }
-  /* 見出し行の直後に 1 行ぶん空ける。罫と最初の題が接して見える */
-  .tbl tbody tr:first-child td {
-    padding-block-start: var(--spacing-intra-2);
-  }
-  .tbl td {
-    padding: 0;
-    border-block-end: 1px solid var(--color-rule-soft);
-  }
-  .tbl td a {
-    display: flex;
-    align-items: center;
-    min-block-size: 46px;
-  }
-  .tbl .c-date {
-    inline-size: 100px;
-    white-space: nowrap;
-  }
-  .tbl .c-title {
-    padding-inline: 21px;
-  }
-  .tbl .c-tag {
-    inline-size: 190px;
-    white-space: nowrap;
-  }
-  .tbl .c-kind {
-    inline-size: 180px;
-    white-space: nowrap;
-    text-align: end;
-  }
-  .tbl td.c-title {
-    padding-block: var(--spacing-intra-2);
-  }
-  .tbl td.c-title a {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: block;
-  }
-  .tbl .c-desc {
-    display: block;
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    color: var(--color-fg-2);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .tbl td.c-kind,
-  .tbl td.c-tag {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   /* サイドバーを閉じる。目次と柱は本文の前後へ回す */
   @media (max-width: 1100px) {
-    .toc {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 0 var(--spacing-intra-3);
-      padding-block-end: var(--spacing-intra-3);
-      border-block-end: 1px solid var(--color-rule-strong);
-    }
-    .toc .toc__bar {
-      display: none;
-    }
     .g-doc {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -543,26 +373,6 @@
       grid-row: auto;
       justify-self: start;
     }
-    /* 表は列を隠す。横スクロールさせない */
-    .tbl .c-tag {
-      display: none;
-    }
-    .tbl td.c-title a {
-      white-space: normal;
-      line-height: 1.5;
-      padding-block: var(--spacing-intra-2);
-    }
-    .tabs {
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .tabs a {
-      padding-inline-end: var(--spacing-intra-2);
-      margin-inline-end: var(--spacing-intra-2);
-    }
-    .tbl .c-date {
-      inline-size: 84px;
-    }
     .bleed {
       margin-inline: 0;
     }
@@ -571,12 +381,6 @@
     }
     .marks > h2::before {
       inset-inline-start: -24px;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .tbl .c-kind {
-      display: none;
     }
   }
 }

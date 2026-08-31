@@ -3,9 +3,13 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import type { Root } from "mdast";
 import type { Step } from "@fukuemon/content-model";
-import { remarkLab } from "./remark-lab";
+import { remarkLab, type Runners } from "./remark-lab";
 
-/** frontmatter は Astro が別に渡す。ここでは走査の結果だけを見る */
+/** 実物の登録表に依存しない。ここで試すのは差し替えの手順であって、登録の中身ではない */
+const FIXTURE: Runners = {
+  sql: { name: "SqlRunner", path: "~/x/SqlRunner", engine: "Postgres", kind: "pglite" },
+};
+
 /** mdast の型は MDX の独自ノードを知らない。走査のためだけに広げる */
 type AnyNode = { type: string; name?: string; attributes?: { name: string; value: unknown }[] };
 const nodes = (tree: Root): AnyNode[] => tree.children as unknown as AnyNode[];
@@ -14,7 +18,7 @@ function run(md: string, path = "/x/content/labs/a.mdx") {
   const tree = unified().use(remarkParse).parse(md) as Root;
   const fm: Record<string, unknown> = { contentId: "a" };
   const file = { path, data: { astro: { frontmatter: fm } } };
-  remarkLab()(tree, file);
+  remarkLab({ runners: FIXTURE })(tree, file);
   return { tree, steps: (fm.labSteps ?? []) as Step[], intro: fm.labHasIntro === true };
 }
 
@@ -107,7 +111,9 @@ describe("実行パネル", () => {
 describe("frontmatter の読み取り", () => {
   it("frontmatter が無くても落ちない", () => {
     const tree = unified().use(remarkParse).parse("## 一\n") as Root;
-    expect(() => remarkLab()(tree, { path: "/x/content/labs/a.mdx" })).not.toThrow();
+    expect(() =>
+      remarkLab({ runners: FIXTURE })(tree, { path: "/x/content/labs/a.mdx" }),
+    ).not.toThrow();
   });
 
   it("interactive.runtime を engine の表示名に使う", () => {
@@ -116,14 +122,20 @@ describe("frontmatter の読み取り", () => {
       contentId: "a",
       interactive: { level: "embedded", runtime: "pglite" },
     };
-    remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
+    remarkLab({ runners: FIXTURE })(tree, {
+      path: "/x/content/labs/a.mdx",
+      data: { astro: { frontmatter: fm } },
+    });
     expect(JSON.stringify(tree)).toContain("Postgres");
   });
 
   it("setup を frontmatter の labBoot へ渡す", () => {
     const tree = unified().use(remarkParse).parse("```sql run\nselect 1;\n```\n") as Root;
     const fm: Record<string, unknown> = { contentId: "a", setup: "create table t (i int);" };
-    remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
+    remarkLab({ runners: FIXTURE })(tree, {
+      path: "/x/content/labs/a.mdx",
+      data: { astro: { frontmatter: fm } },
+    });
     expect((fm.labBoot as { setup?: string }).setup).toBe("create table t (i int);");
   });
 
@@ -134,7 +146,10 @@ describe("frontmatter の読み取り", () => {
         "## 一\n\n```sql run\nselect 1;\n```\n\n## 二\n\n```sql run\nselect 2;\n```\n",
       ) as Root;
     const fm: Record<string, unknown> = { contentId: "a", setup: "create table t (i int);" };
-    remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
+    remarkLab({ runners: FIXTURE })(tree, {
+      path: "/x/content/labs/a.mdx",
+      data: { astro: { frontmatter: fm } },
+    });
     expect(JSON.stringify(tree)).not.toContain("create table t");
   });
 
@@ -145,7 +160,10 @@ describe("frontmatter の読み取り", () => {
         "## 一\n\n```sql run\nselect 1;\n```\n\n## 二\n\n```sql run\nselect 2;\n```\n",
       ) as Root;
     const fm: Record<string, unknown> = { contentId: "a" };
-    remarkLab()(tree, { path: "/x/content/labs/a.mdx", data: { astro: { frontmatter: fm } } });
+    remarkLab({ runners: FIXTURE })(tree, {
+      path: "/x/content/labs/a.mdx",
+      data: { astro: { frontmatter: fm } },
+    });
     expect((fm.labBoot as { steps: unknown[] }).steps).toStrictEqual([
       { step: 0, sql: "select 1;" },
       { step: 1, sql: "select 2;" },
@@ -157,7 +175,10 @@ describe("labs の外", () => {
   it("記事では手順を渡さない", () => {
     const tree = unified().use(remarkParse).parse("## 一\n") as Root;
     const fm: Record<string, unknown> = {};
-    remarkLab()(tree, { path: "/x/content/articles/a.md", data: { astro: { frontmatter: fm } } });
+    remarkLab({ runners: FIXTURE })(tree, {
+      path: "/x/content/articles/a.md",
+      data: { astro: { frontmatter: fm } },
+    });
     expect(fm.labSteps).toBeUndefined();
   });
 });

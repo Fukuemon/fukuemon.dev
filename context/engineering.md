@@ -171,6 +171,12 @@ knip は最初の `<script>` しか読まない。
 `type="application/json"` のようなデータ置き場を足すときは、
 module の `<script>` より **後ろ** に書く。
 
+**oxlint の `overrides` は、同じ規則名を後勝ちで上書きする。** 前の entry とは合流しない。
+`features/**` の entry を足したとき、`**/*.tsx` の entry が持っていた
+`astro:content` と island の禁止が、`features/` 配下の `.tsx` で静かに消えた。
+**各 entry は、そのファイル群に必要な禁止を全て自分で持つ。**
+足したら `.oxlintrc.json` の各方向について、違反するファイルを 1 つ置いて `pnpm run lint` が落ちることを確かめる。
+
 **配色の検査は、対象が見つからないことを失敗として扱う。**
 `packages/design-system/check-contrast.ts` はトークン名で `Map` を引く。
 名前が変わったときに 1 件も検査せず通過しないよう、

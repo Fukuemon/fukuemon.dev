@@ -1,23 +1,13 @@
 import type { Root, Code, Paragraph, Text, RootContent } from "mdast";
 import type { Step } from "@fukuemon/content-model";
-import type { BootSpec } from "~/features/lab/steps/bootSpec";
 
 const DURATION = /^Duration:\s*(\d{1,2}):(\d{2})\s*$/;
 
-/**
- * フェンスの言語から部品を引く。engine を足すときはここへ 1 行足す。
- * 相対パスはサブディレクトリのコンテンツで解決できないので `~/` を使う。
- */
-type Runner = { name: string; path: string; engine: string; kind: string };
+/** 実行パネル 1 つぶんの登録。中身は `features/lab/runners.ts` が持つ */
+export type Runner = { name: string; path: string; engine: string; kind: string };
 
-const RUNNERS: Record<string, Runner> = {
-  sql: {
-    name: "SqlRunner",
-    path: "~/features/lab/panel/SqlRunner",
-    engine: "Postgres",
-    kind: "pglite",
-  },
-};
+/** フェンスの言語から実行パネルを引く表 */
+export type Runners = Record<string, Runner>;
 
 /** frontmatter の runtime から表示名を引く。フェンスの言語より優先する */
 const ENGINE: Record<string, string> = {
@@ -27,8 +17,8 @@ const ENGINE: Record<string, string> = {
   pyodide: "Python",
 };
 
-const runnerFor = (lang: string | null | undefined): Runner | undefined =>
-  lang ? RUNNERS[lang] : undefined;
+const runnerOf = (runners: Runners, lang: string | null | undefined): Runner | undefined =>
+  lang ? runners[lang] : undefined;
 
 type JsxAttr = {
   type: "mdxJsxAttribute";
@@ -69,7 +59,10 @@ const literal = (s: string) => JSON.stringify(s);
  * ```` ```sql run ```` のフェンスを実行パネルの JSX に差し替える。
  * 手順の番号・題・総数は h2 から数え、frontmatter にも JSX にも書かせない。
  */
-export function remarkLab() {
+export function remarkLab({ runners }: { runners: Runners }) {
+  const runnerFor = (lang: string | null | undefined) => runnerOf(runners, lang);
+  const isRunnable = (node: Code): boolean =>
+    runnerFor(node.lang) !== undefined && (node.meta ?? "").split(/\s+/).includes("run");
   return (
     tree: Root,
     file: {
@@ -171,7 +164,7 @@ export function remarkLab() {
     if (isLab && file.data?.astro?.frontmatter) {
       file.data.astro.frontmatter.labSteps = labSteps;
       file.data.astro.frontmatter.labHasIntro = hasIntro;
-      file.data.astro.frontmatter.labBoot = { setup, steps } satisfies BootSpec;
+      file.data.astro.frontmatter.labBoot = { setup, steps };
     }
   };
 }
@@ -190,12 +183,6 @@ function durationOf(node: RootContent): number | undefined {
 /** 空白だけのノードか。前置きの有無を数えるときに除く */
 function isBlank(node: RootContent): boolean {
   return node.type === "text" && !node.value.trim();
-}
-
-/** `run` が付いていて、対応する部品がある言語だけを実行パネルにする */
-function isRunnable(node: Code): boolean {
-  if (!runnerFor(node.lang)) return false;
-  return (node.meta ?? "").split(/\s+/).includes("run");
 }
 
 function plain(node: { children?: unknown[] }): string {
