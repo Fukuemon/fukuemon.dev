@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "lefthook install",
     "dev": "pnpm --filter @fukuemon/web dev",
     "build": "pnpm -r --sequential run build",
     "preview": "pnpm --filter @fukuemon/web exec astro preview --port 4321",
@@ -27,11 +28,19 @@
     "infra:bootstrap:apply": "terraform -chdir=infra/bootstrap apply"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "knip": "^6.32.2",
+    "lefthook": "^2.2.1",
     "oxfmt": "^0.48.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",
     "playwright": "^1.62.1",
+    "textlint": "^15.8.0",
+    "textlint-rule-no-mix-dearu-desumasu": "^6.0.4",
+    "textlint-rule-preset-ai-words-ja": "^1.2.1",
+    "textlint-rule-prh": "^6.1.0",
+    "textlint-rule-sentence-length": "^5.2.1",
     "typescript": "^5.9.0",
     "vitest": "^4.1.11"
   },

@@ -1,0 +1,4 @@
+# ツールの版。Node.js と pnpm の版は package.json の engines と packageManager にある
+[tools]
+uv = "0.12"
+"pipx:apm-cli" = "0.32.0"
