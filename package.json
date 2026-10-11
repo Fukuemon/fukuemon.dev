@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "lefthook install",
     "dev": "pnpm --filter @fukuemon/web dev",
     "build": "pnpm -r --sequential run build",
     "preview": "pnpm --filter @fukuemon/web exec astro preview --port 4321",
@@ -15,10 +16,12 @@
     "shot": "node --experimental-strip-types e2e/shoot.ts",
     "shot:diff": "node --experimental-strip-types e2e/diff.ts",
     "doctor": "npx --yes react-doctor@latest --verbose --scope changed",
+    "check:doctor": "npx --yes react-doctor@0.9.17 -y --no-score --no-supply-chain --scope changed",
+    "check:similarity": "if command -v similarity-ts >/dev/null; then similarity-ts --fail-on-duplicates apps packages; else echo 'warning: similarity-ts がないので、重複のチェックは実行されなかった' >&2; fi",
     "check:contrast": "pnpm --filter @fukuemon/design-system run check",
     "check:worker-name": "bash scripts/check-worker-name.sh",
     "check:deploy": "pnpm --filter @fukuemon/web exec wrangler deploy --dry-run",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:contrast && pnpm run check:worker-name && pnpm run test && pnpm run build && pnpm run check:deploy",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:doctor && pnpm run check:similarity && pnpm run check:contrast && pnpm run check:worker-name && pnpm run test && pnpm run build && pnpm run check:deploy",
     "infra:init": "terraform -chdir=infra/cloudflare init",
     "infra:plan": "terraform -chdir=infra/cloudflare plan",
     "infra:apply": "terraform -chdir=infra/cloudflare apply",
@@ -27,11 +30,19 @@
     "infra:bootstrap:apply": "terraform -chdir=infra/bootstrap apply"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "knip": "^6.32.2",
+    "lefthook": "^2.2.1",
     "oxfmt": "^0.48.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",
     "playwright": "^1.62.1",
+    "textlint": "^15.8.0",
+    "textlint-rule-no-mix-dearu-desumasu": "^6.0.4",
+    "textlint-rule-preset-ai-words-ja": "^1.2.1",
+    "textlint-rule-prh": "^6.1.0",
+    "textlint-rule-sentence-length": "^5.2.1",
     "typescript": "^5.9.0",
     "vitest": "^4.1.11"
   },
@@ -51,7 +62,14 @@
       "/pagefind/pagefind.js"
     ],
     "ignoreBinaries": [
-      "terraform"
+      "terraform",
+      "similarity-ts"
+    ],
+    "ignoreDependencies": [
+      "textlint-rule-no-mix-dearu-desumasu",
+      "textlint-rule-preset-ai-words-ja",
+      "textlint-rule-prh",
+      "textlint-rule-sentence-length"
     ]
   }
 }

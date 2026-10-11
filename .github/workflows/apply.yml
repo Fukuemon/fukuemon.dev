@@ -36,7 +36,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
-          # 版は infra/*/.terraform.lock.hcl と context/toolchain.md を正本にする
+          # provider の版は infra/*/.terraform.lock.hcl にある。CLI の版はこの行で固定する (context/tech-stack.md)
           terraform_version: 1.14.3
           terraform_wrapper: false
 

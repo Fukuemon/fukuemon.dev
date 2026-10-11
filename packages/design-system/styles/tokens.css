@@ -1,5 +1,5 @@
 /* Design Tokens。値の正本。
-   根拠: design/features/design-system/DesignDoc_design-system.md
+   根拠: packages/design-system/DesignDoc.md
 
    色は light-dark(明, 暗) で 1 度だけ書く。選択子を明暗で分けると同じ値を 2 度書くことになり、
    片方だけ直した事故に実行時まで気づけない。
@@ -25,7 +25,10 @@
   --color-ink-2: light-dark(#57534b, #b9b4a8); /*  7.40 /  7.26 */
 
   /* 差し色。線と文字のみ。面は --color-tint-* */
-  --color-green: light-dark(#4f6138, #9db086); /*  6.55  内部リンク / ハンズオン / 完了 */
+  --color-green: light-dark(
+    #4f6138,
+    #9db086
+  ); /*  6.55  内部リンク / ハンズオン / 完了 */
   --color-blue: light-dark(#2c4a6e, #8fb0d6); /*  8.78  外部リンク / 前提 */
   --color-rust: light-dark(#9e3a26, #e08a6c); /*  6.57  現在地 / 注意 */
 

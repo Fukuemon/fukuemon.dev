@@ -1,9 +1,8 @@
 name: Check
 
-# 品質ゲート (ADR-0007)。lint → typecheck → contrast → test → build を 1 本で通す。
+# 品質ゲート (ADR-0007)。pnpm の check を 1 本で通す。中身は package.json の check にある。
 #
-# `vp run` ではなく pnpm の script を直接叩く。toolchain.md の
-# 「`vp` の無い環境でも `pnpm -r run build` が同じことをする」規約に合わせる。
+# Vite+ はまだ入れていないので、`vp run` ではなく pnpm の script を直接実行する (context/tech-stack.md)。
 #
 # branches は "**" で受けて job 側で絞る (on ではブランチ名を動的に解決できない)。
 on:
@@ -31,16 +30,15 @@ jobs:
       github.event_name == 'pull_request' ||
       github.ref_name == github.event.repository.default_branch
     steps:
+      # react-doctor が基点のブランチとの差分を読む
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
 
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          # 版は package.json の engines と packageManager を正本にする。
-          # ここに数字を書くと二重管理になる
-          node-version-file: package.json
-          cache: pnpm
+      # Node.js の版は mise.toml にある。ここに数字を書くと二重管理になる
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4
 
       - run: pnpm install --frozen-lockfile
 
@@ -56,7 +54,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
-          # 版は infra/*/.terraform.lock.hcl と context/toolchain.md を正本にする
+          # provider の版は infra/*/.terraform.lock.hcl にある。CLI の版はこの行で固定する (context/tech-stack.md)
           terraform_version: 1.14.3
           terraform_wrapper: false
 

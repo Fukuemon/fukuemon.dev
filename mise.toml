@@ -1,0 +1,5 @@
+# ツールの版。pnpm の版は package.json の packageManager にある
+[tools]
+node = "24"
+uv = "0.12"
+"pipx:apm-cli" = "0.32.0"
