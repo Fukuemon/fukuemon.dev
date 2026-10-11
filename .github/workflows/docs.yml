@@ -51,3 +51,4 @@ jobs:
 
       # 実装が変わった文書の一覧。失敗にはしない
       - run: node .claude/hooks/docs/hooks/list-drift.mjs
+        continue-on-error: true

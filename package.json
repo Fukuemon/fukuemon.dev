@@ -62,7 +62,14 @@
       "/pagefind/pagefind.js"
     ],
     "ignoreBinaries": [
-      "terraform"
+      "terraform",
+      "similarity-ts"
+    ],
+    "ignoreDependencies": [
+      "textlint-rule-no-mix-dearu-desumasu",
+      "textlint-rule-preset-ai-words-ja",
+      "textlint-rule-prh",
+      "textlint-rule-sentence-length"
     ]
   }
 }
