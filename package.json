@@ -17,7 +17,7 @@
     "shot:diff": "node --experimental-strip-types e2e/diff.ts",
     "doctor": "npx --yes react-doctor@latest --verbose --scope changed",
     "check:doctor": "npx --yes react-doctor@0.9.17 -y --no-score --no-supply-chain --scope changed",
-    "check:similarity": "if command -v similarity-ts >/dev/null; then similarity-ts apps packages; else echo 'warning: similarity-ts がないので、重複のチェックは実行されなかった' >&2; fi",
+    "check:similarity": "if command -v similarity-ts >/dev/null; then similarity-ts --fail-on-duplicates apps packages; else echo 'warning: similarity-ts がないので、重複のチェックは実行されなかった' >&2; fi",
     "check:contrast": "pnpm --filter @fukuemon/design-system run check",
     "check:worker-name": "bash scripts/check-worker-name.sh",
     "check:deploy": "pnpm --filter @fukuemon/web exec wrangler deploy --dry-run",
