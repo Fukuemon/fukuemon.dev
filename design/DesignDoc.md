@@ -1,9 +1,8 @@
 ---
 type: design-doc
 title: fukuemon.dev Design Doc
-description: 技術記事とハンズオンを 1 つのサイトで公開する個人サイトの全体像。Why/What、C4 の 2 段、モジュール責務、設計不変量、条件つきバックログを定める。詳細は context / feature doc / ADR へ委譲する。
-status: Draft
-keywords: [技術記事, ハンズオン, Codelab, Astro, Expressive Code, Content Model, Cloudflare Workers]
+description: 技術記事とハンズオンの静的サイトの全体像。C4 の L2、モジュールの責務と依存、設計不変量、URL の構成、条件つきで足す機能の形
+status: draft
 governs:
   - apps/web/
   - packages/
@@ -13,202 +12,66 @@ verified_commit: 84b6c77
 
 # fukuemon.dev Design Doc
 
-**Document Status:** Draft
-**Development Status:** In Progress
+## Overview
 
-本 Design Doc は fukuemon.dev の **全体像 (system landscape)** を扱う。
-統合モードで作成しており、Why / What も本書が正本とする (`PRD.md` は作らない)。
+fukuemon.dev は、技術記事とハンズオンの 2 種類だけを公開する個人サイトである。  
+訪問者は記事を読み、ハンズオンでコードを動かす。著者（運営者 1 名）は Markdown を書いて push する。  
+誰のどの課題を解くかは [PRD](../PRD.md) にある。
 
-**詳細は本書に重複させない。**
-feature 単位の設計は [design/features/](features/)、技術規約は [context/](../context/)、判断とその代替案は [adr/](../adr/) を正本とする。
+実装は pnpm workspace の monorepo にし、Astro のアプリ 1 つと、Content Model と Design System の共有の package で組む。  
+ADR-0003: [monorepo と Vite+ の採否](../adr/0003-monorepo-and-vite-plus.md)
 
-## 概要 (Summary)
+記事とハンズオンの描画も、自前の Astro のページとして持つ。  
+ADR-0001: [Starlight の採否](../adr/0001-starlight-as-docs-renderer.md)
 
-fukuemon.dev は、**技術記事とハンズオンの 2 種類だけを公開する個人サイト**である。
-ハンズオンは CLaaT 形式の Codelab、つまり手順に区切られ、進捗が残り、ブラウザのなかで実際にコードが動くものを指す。
+配信は Cloudflare Workers Static Assets で行い、基盤のリソースを Terraform が、deploy を Wrangler が管理する。  
+ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)
 
-中核価値は種別の多さではない。
-**読んで分かった気になる段階と、動かして分かる段階のあいだを、同じサイトの中で埋めること**である。
-記事とハンズオンは相互に参照し合い、片方から他方へ渡れる。
+## Goals and Non-Goals
 
-実装は pnpm workspace の monorepo とし、Astro 7 のアプリ 1 つと、Content Model / Design System の共有 package で構成する。
-記事とハンズオンの描画も自前の Astro ページとして持つ。
-配信は Cloudflare Workers Static Assets とし、基盤リソースを Terraform、deploy を Wrangler が管理する。
+### Goals
 
-読者アカウントを持たず、サーバー側の永続状態も持たない。
+- すべてをビルドのときに解決し、実行時のサーバーの処理を持たない。
+- コンテンツの識別子と関係を、URL、描画のレイヤ、データソースから独立させる。
+- 手を動かす場所が求める制約（cross-origin isolation）を、その場所に閉じる。
+- 公開に関わる Cloudflare の設定を、コードで管理する。
 
----
+### Non-Goals
 
-## Why / What
+- サーバー側の永続的な状態。読者の identity を前提にする機能を作らないので、求める機能がない。
+- サイト全体の SPA 化。React は Astro の island として局所に使うだけにする。
+- 汎用の UI コンポーネントのライブラリを自作すること。共通化は Design Tokens と版面のユーティリティまでにする。
+- 設計不変量のほかに、将来のために先に作っておくもの。
 
-### 背景・課題 (Why)
+## Assumptions and Constraints
 
-技術記事を読んで理解した気になっても、手を動かすところまでは繋がらない。
-逆に、手を動かす教材は環境構築で止まる。
+### 動かせない条件
 
-| 段階                 | 現状                                 | 問題                                             |
-| -------------------- | ------------------------------------ | ------------------------------------------------ |
-| 読んで理解する       | 外部ブログサービス等に技術記事がある | 読み終えた後に試す先がない                       |
-| 手を動かして確かめる | 未作成                               | 作る置き場がない                                 |
-| その両方を行き来する | 存在しない                           | 記事と教材が別々の場所にあり、相互に参照できない |
+- 運営者は 1 名である。レビューによる職務の分離が成り立たないので、規約は自動でチェックできる形にする。
+- サーバー側の永続的な状態を持たない。動的な機能は、静的な生成で表せる範囲に限る。
+- 日本語の技術文書を主とし、本文には Latin の技術用語が頻繁に現れる。
 
-**分散していること自体が問題なのではない。**
-同じ主題について「説明を読む」と「自分で壊してみる」が地続きになっていないことが問題である。
+### Astro の制約
 
-いま解決する理由は 2 つある。
-ハンズオンをこれから作るため、置き場の設計を先に確定させる必要があること。
-コンテンツが増えてから相互参照の仕組みを後付けすると、既存全件への metadata 付与が必要になり、着手コストが単調増加すること。
+Astro 7 を採る。  
+ツールのバージョンの所在は [context/tech-stack.md](../context/tech-stack.md#toolchain) にある。
 
-### 利用者
+Astro 6 で legacy content collections が撤去され、識別子は `id` だけになった。  
+content の schema に `slug` を定義すると、ビルドが `ContentSchemaContainsSlugError` で失敗する。  
+`id` は Astro がファイルのパスから導いて占有するので、安定した識別子は `contentId` という別の名前で持つ。  
+設計は [Content Model の Design Doc](../packages/content-model/DesignDoc.md#安定識別子) にある。
 
-| 区分   | 対象          | 関心事                                                                   |
-| ------ | ------------- | ------------------------------------------------------------------------ |
-| 訪問者 | 技術者        | ある主題を読んで理解し、そのまま手を動かして確かめたい                   |
-| 著者   | 運営者 (1 名) | Markdown を 1 枚足すだけで公開でき、体裁と索引の更新に手を取られたくない |
+### 確かめた前提
 
-**読者アカウントを持つ学習者は利用者に含めない。**
-理由は [ADR-0008](../adr/0008-no-reader-identity.md)。
+- `pagefind` が自前のページを索引に入れる。`data-pagefind-body` は本文の要素にだけ付ける。
+- config の rehype plugin は、Expressive Code より先に動く。素の `<pre><code>` のまま拾えるので、`rehype-mermaid` が図に変換できる。
 
-### 提供価値 / 成功条件 (What)
+Expressive Code について確かめた前提は [Design System の Design Doc](../packages/design-system/DesignDoc.md#verification) に、基盤について確かめた前提は [基盤の Design Doc](../infra/DesignDoc.md#verification) にある。
 
-| #   | 成功条件                                                            | 測定方法                                                                                                                               |
-| --- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| S1  | 記事とハンズオンを、種別で絞り込んだ一覧から辿れる                  | `/blog`、`/blog/articles`、`/blog/labs` の 3 URL が静的に書き出され、それぞれ該当種別のみを列挙する。JavaScript を無効にしても機能する |
-| S2  | コンテンツ間の関連が、片方向の記述だけで双方向に表示される          | 記事に `related: [<handsOnId>]` を書くと、ハンズオン側にも当該記事が表示される                                                         |
-| S3  | コンテンツの追加が Markdown ファイル 1 枚の作成で完結する           | 新規追加時に変更が必要なファイルが当該 Markdown のみ。索引ページの手動更新が発生しない                                                 |
-| S4  | ハンズオンがブラウザだけで完結する                                  | 手順中のコードをページ上で実行でき、実行環境のインストールを一切要求しない。進捗が再訪時に復元される                                   |
-| S5  | 初回表示が実用速度に収まる                                          | Lighthouse Performance 90 以上、LCP 2.5 秒以内 (Moto G Power / Slow 4G 相当)                                                           |
-| S6  | 公開に関わる Cloudflare 設定が Dashboard 上の属人設定として残らない | `infra/` の Terraform が Zone / DNS / custom domain を管理し、`terraform plan` に差分が出ない                                          |
+## Architecture
 
-### スコープ
-
-#### やること
-
-- 技術記事 (Articles)
-- ハンズオン (Hands-on) — CLaaT 形式の Codelab。
-  手順の分割、進捗の保存、本文中でのコード実行
-- 記事とハンズオンの相互参照
-- 表紙 (`/`) と、種別で絞り込む一覧 (`/blog`、`/blog/articles`、`/blog/labs`)
-- `/playground` — 手順に縛られず実行環境を触れる場所
-
-- 自前 Content Model と、描画レイヤから独立した正規化レイヤ
-- Design System (Design Tokens / Typography / 版面 / 動き)
-- Cloudflare 基盤の Terraform 管理と Wrangler による deploy
-
-#### やらないこと (Non-Goals)
-
-**「まだ作らない」ではなく「作らない」ものである。**
-
-| 項目                                                          | 理由                                                                                                                                |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 登壇資料 (Slides) / 登壇実績 (Talks) の管理                   | 種別を 2 つに絞る。外部ホストの資料は About ページからリンクするに留める                                                            |
-| 制作物 (Projects) の一覧                                      | 同上。ポートフォリオを目的としない                                                                                                  |
-| Topic 交差ページ                                              | 種別が 2 つでは交差が成立しない。相互参照 (`related`) で足りる                                                                      |
-| Coverage View (分類 × 種別の網羅マトリクス)                   | 実質的に分類の索引であり、設計不変量 8 と衝突する。一覧の表が分類の列を持つため情報も重複する                                       |
-| 分類 (tag) ごとの索引ページ                                   | 分類は組み合わせで数が爆発する。絞り込みは URL パラメータで行う (設計不変量 8)                                                      |
-| 読者アカウント / 認証                                         | 個人サイトが読者の identity を獲得する動機がない ([ADR-0008](../adr/0008-no-reader-identity.md))                                    |
-| Bookmark                                                      | ブラウザのブックマークと重複し、しかも劣る                                                                                          |
-| Highlight / Annotation                                        | identity とテキストアンカーが要る。実装が重い割に利用者がいない                                                                     |
-| サーバー側の永続状態                                          | 上記を作らないため要求元がない                                                                                                      |
-| サイト全体の SPA 化                                           | React は Astro Islands として局所適用に限る                                                                                         |
-| 汎用 UI コンポーネントライブラリの自作                        | 共通化は Design Tokens と版面のユーティリティまで                                                                                   |
-| 多言語対応                                                    | 日本語単一とする                                                                                                                    |
-| 直接的な和風のモチーフ (桜 / 鳥居 / 筆文字 / 和柄 / 庭園写真) | 版画的な自然の図版と縦組みで表現する。モチーフの直輸入はしない ([design-system](features/design-system/DesignDoc_design-system.md)) |
-
----
-
-## Goal
-
-本 Design Doc は次を提供する。
-
-- Why / What と成功条件
-- C4 L1 / L2 の全体像とモジュール責務
-- **設計不変量** — 将来のために今決める唯一のもの
-- **条件つきバックログ** — 何が実在したら何を作るか
-- 詳細文書への委譲先
-
-## Non Goals
-
-- feature 単位の画面仕様 → [design/features/](features/)
-- 実装レベルの技術規約 → [context/](../context/)
-- 判断の根拠と却下した代替案 → [adr/](../adr/)
-
----
-
-## 設計上の前提
-
-### バージョン制約
-
-**Astro 7 を採る。** Node.js 22.12 以上を要求する。
-
-CSS スタイリングの基盤は Tailwind CSS v4 ([ADR-0010](../adr/0010-tailwind-as-styling-base.md))。
-preflight は読まず、トークンは `@theme static` に置く。
-
-コードブロックは `astro-expressive-code`、図は `rehype-mermaid`、全文検索の索引は `pagefind` を使う ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
-
-版の一覧は [context/toolchain.md](../context/toolchain.md) を正本とする。
-
-### Astro 6 以降の識別子制約
-
-Astro 6 で legacy content collections が撤去され、識別子は `id` に一本化された。
-**content schema に `slug` を定義するとビルドが `ContentSchemaContainsSlugError` で失敗する。**
-`id` は Astro がファイルパスから導出して占有する。
-安定識別子は `contentId` という別名で持つ ([content-model](features/content-model/DesignDoc_content-model.md))。
-
-### 前提用語
-
-| 用語        | 定義                                                                                               |
-| ----------- | -------------------------------------------------------------------------------------------------- |
-| 種別        | 記事 (`articles`) とハンズオン (`handsOn`) の 2 つ。URL の分岐単位であり、増やさない               |
-| 分類 (tag)  | 主題を示す自由語 (`postgres` / `observability` など)。索引ページを持たず、絞り込みと表示にのみ使う |
-| `contentId` | コンテンツの安定識別子。ファイルパス・URL・ストレージから独立する                                  |
-| ContentRef  | 種別の異なるコンテンツを一覧で一様に扱うための正規化済み表現                                       |
-| 手順 (step) | ハンズオンを区切る単位。見出しから導出し、進捗の保存単位になる                                     |
-
-### 制約
-
-- 運用者は 1 名。
-  **レビューによる職務分離が成立しない**ため、規約は自動検査可能な形にする
-- サーバーサイドの永続状態を持たない。
-  動的機能は静的生成で表現できる範囲に限る
-- 日本語の技術文書を主とし、本文には Latin の技術用語が高頻度で混在する
-
-### 判断優先度
-
-`context/project.yml` の `decision_priority` に反映する。
-
-1. 一貫性 (Portal UI と Docs UI で同じ規約が成り立つこと)
-2. 保守性 (1 名で維持できること)
-3. パフォーマンス
-4. 開発体験
-5. 将来拡張性
-
-**将来拡張性を最下位に置く。**
-将来を可能にしているのは下記の設計不変量であって、先行実装ではない。
-
----
-
-## アーキテクチャ概観 (Overview)
-
-### System Context (C4 L1)
-
-```mermaid
-C4Context
-    Person(reader, "訪問者", "記事を読み、ハンズオンで手を動かす")
-    Person(author, "著者", "Markdown を書いて push する")
-    System(site, "fukuemon.dev", "技術記事とハンズオンの静的サイト")
-    System_Ext(github, "GitHub", "コンテンツ原本の保管と CI/CD の起点")
-    System_Ext(cf, "Cloudflare", "Workers / DNS")
-    Rel(reader, site, "閲覧・ハンズオンの実行")
-    Rel(author, github, "push")
-    Rel(github, cf, "wrangler deploy / terraform apply")
-    Rel(cf, site, "配信")
-```
-
-**ハンズオンの実行環境は訪問者のブラウザ内で完結する。**
-実行のための外部システムを持たない。
-
-### Container (C4 L2)
+全体の L1 の図は [PRD の Landscape](../PRD.md#landscape) にある。  
+次の図は、Markdown が monorepo の中で正規化されて静的なページになり、Worker から配信されるまでを示す。
 
 ```mermaid
 flowchart TD
@@ -235,27 +98,30 @@ flowchart TD
     cfbase -.-> worker
 ```
 
-**すべてビルド時に解決する。**
-実行時のサーバーコンポーネントを持たない。
-ハンズオンのコード実行だけがクライアント側の実行時処理であり、それも WebAssembly としてブラウザ内で閉じる。
+すべてをビルドのときに解決する。  
+実行時のサーバーのコンポーネントを持たない。  
+クライアント側の実行時の処理は、ハンズオンのコードの実行だけである。それも WebAssembly としてブラウザの中で閉じる。
 
----
+## Components
 
-## モジュール責務
+モジュールごとの責務、外に見せる境界、依存先は次のとおり。
 
-| モジュール                       | 責務                                                                                 | 公開境界                                                         | 依存先                         |
-| -------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------ |
-| `@fukuemon/content-model`        | Content Model の schema、`ContentRef` 型、関係グラフの構築と検証                     | `portalBase` / `ContentRef` / `buildContentGraph()`              | `zod` のみ                     |
-| `@fukuemon/design-system`        | Design Tokens (素の CSS)、版面のユーティリティ、挿絵、コードの配色                   | CSS カスタムプロパティ名、`utilities.css` の class、`code-theme` | なし                           |
-| `@fukuemon/config`               | tsconfig の共有設定。oxlint と vitest はルートで 1 つ持つ                            | `tsconfig/base.json`                                             | なし                           |
-| `apps/web/src/content.config.ts` | 全 collection の loader と schema を結線する。**データソースを切り替える唯一の場所** | collection 名                                                    | `astro:content`, content-model |
-| `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、graph を組み立てる                 | `listContent()` / `getContent()` / `getRelated()`                | `astro:content`, content-model |
-| `apps/web/src/pages/**`          | Portal UI (about / 一覧 / playground)                                                | URL                                                              | `lib/content`, components      |
-| `apps/web/src/data/`             | 書いている人の正本。名乗り・外部リンク・使っているもの・登壇と寄稿                   | `PROFILE` / `LINKS` / `STACK` / `OUTSIDE`                        | なし                           |
-| `apps/web/src/content/**`        | 記事とハンズオンの本体 (Markdown / MDX)                                              | —                                                                | —                              |
-| `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を基に `Posts` / `Article` / `Lab` と本文の `DocShell`    | —                                                                | components                     |
-| `apps/web/src/components/**`     | 部品。`.astro` と `.tsx` を同居させる。**`.tsx` は Astro を import しない**          | props                                                            | `lib/content`                  |
-| `infra/`                         | Zone / DNS / Workers custom domain                                                   | Terraform state                                                  | Cloudflare provider            |
+| モジュール                       | 責務                                                                                                        | 外に見せる境界                                                         | 依存先                              |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
+| `@fukuemon/content-model`        | Content Model の schema、`ContentRef` の型、関係グラフの構築と検証                                          | `portalBase`、`ContentRef`、`buildContentGraph()`                      | `zod` だけ                          |
+| `@fukuemon/design-system`        | Design Tokens（素の CSS）、版面のユーティリティ、挿絵、コードの配色                                         | CSS のカスタムプロパティの名前、`utilities.css` の class、`code-theme` | なし                                |
+| `@fukuemon/config`               | tsconfig の共有の設定。oxlint と vitest の設定はルートで 1 つ持つ                                           | `tsconfig/base.json`                                                   | なし                                |
+| `apps/web/src/content.config.ts` | すべての collection の loader と schema を結ぶ。データソースを切り替える唯一の場所                          | collection の名前                                                      | `astro:content`、content-model      |
+| `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、グラフを組み立てる                                        | `listContent()`、`getContent()`、`getRelated()`                        | `astro:content`、content-model      |
+| `apps/web/src/pages/**`          | Portal UI（about、一覧、playground）                                                                        | URL                                                                    | `lib/content`、features、components |
+| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと playground の実行、一覧、本文の周り、表紙、検索）                        | props                                                                  | `lib/content`、components           |
+| `apps/web/src/data/`             | 書いている人の情報。名乗り、外部のリンク、使っているもの、登壇と寄稿                                        | `PROFILE`、`LINKS`、`STACK`、`OUTSIDE`                                 | なし                                |
+| `apps/web/src/content/**`        | 記事とハンズオンと playground の本体（Markdown と MDX）                                                     | なし                                                                   | なし                                |
+| `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を基に `Posts`、`Article`、`Lab` と、本文の `DocShell`                           | なし                                                                   | components                          |
+| `apps/web/src/components/**`     | セクションをまたぐ素のコンポーネント。`.astro` と `.tsx` を同じ場所に置き、`.tsx` は Astro を import しない | props                                                                  | `lib/content`                       |
+| `infra/`                         | Zone、DNS、Workers の custom domain                                                                         | Terraform の state                                                     | Cloudflare の provider              |
+
+次の図は、ページと Content Model が `astro:content` を直接参照しない依存の向きを示す。
 
 ```mermaid
 flowchart LR
@@ -269,213 +135,138 @@ flowchart LR
     cm -. "禁止" .-x ac
 ```
 
-依存規約の本文と検査手段は [context/architecture.md](../context/architecture.md) を正本とする。
+依存規約の本文とチェックの手段は [context/codebase.md](../context/codebase.md#dependency-rules) にある。
 
----
+記事とハンズオンは 1 つの app に置き、Portfolio を別の app に切り出さない。  
+記事とハンズオンの地続きは、両者を 1 つの一覧に載せて初めて成り立ち、app を分けると一覧が分かれるためである。  
+切り出す条件は [context/codebase.md](../context/codebase.md#module-boundaries) にある。
 
-## 設計不変量
+機能ごとの設計は次の文書にある。
 
-**将来を可能にしているのはこの 8 点であり、将来構想の記述ではない。**
-変えるときは ADR を書く。
+- [Content Model](../packages/content-model/DesignDoc.md): schema、`contentId`、相互参照のグラフ、`ContentRef` への正規化
+- [Design System](../packages/design-system/DesignDoc.md): Design Tokens、Typography、縦組み、色、版面、挿絵、動き
+- [ハンズオンと Interactive](../apps/web/src/features/lab/DesignDoc.md): 手順の分割と進捗、手を動かす場所の 4 分類、実行パネル
+- [基盤](../infra/DesignDoc.md): Terraform の構成、state backend、deploy と apply の流れ
 
-| #   | 不変量                                                                    | 何を可能にするか                                                            | 正本                                                               |
-| --- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 1   | `contentId` は発行後に変更しない                                          | URL 改名で関係が壊れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)              |
-| 2   | 関係は `contentId` から `contentId` への片方向の辺とし、逆方向は導出する  | 書き忘れによる不整合が起きない。関係テーブルへそのまま写せる                | [ADR-0002](../adr/0002-content-model-independence.md)              |
-| 3   | `pages/**` と `components/**` は `astro:content` を直接参照しない         | ページ実装がデータソースに依存しない                                        | [ADR-0002](../adr/0002-content-model-independence.md)              |
-| 4   | `@fukuemon/content-model` は Astro に依存しない                           | Astro なしで単体テストできる。別の消費者から再利用できる                    | [ADR-0002](../adr/0002-content-model-independence.md)              |
-| 5   | `tokens.css` は素の CSS で書き、ユーティリティは `@layer` に閉じる        | レイヤ外の宣言はあらゆるレイヤ内の宣言に優先する。第三者の CSS と競合しない | [design-system](features/design-system/DesignDoc_design-system.md) |
-| 6   | 1 つの Cloudflare リソースを Terraform と Wrangler の両方から管理しない   | 二重管理による差分の消し合いが起きない                                      | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md)     |
-| 7   | cross-origin isolation をサイト全体に掛けない。必要な経路にのみ掛ける     | 全体に掛けると外部埋め込みが一律で壊れる。影響範囲を局所に閉じる            | [ADR-0006](../adr/0006-interactive-content-levels.md)              |
-| 8   | 種別は URL を持つページとして分け、分類 (tag) は URL パラメータで絞り込む | 種別は 2 つで固定なので静的に書き出せる。分類は組み合わせで数が爆発する     | 本書 (下記)                                                        |
+## Interfaces
 
-**この 8 点以外に、将来のための先行投資をしない。**
+### URL の構成
 
-### URL 構成
+サイトは about、blog、playground の 3 つのセクションからなる。  
+ADR-0009: [サイトのセクションと playground](../adr/0009-site-sections-and-playground-collection.md)
 
-サイトは about / blog / playground の 3 つのセクションである ([ADR-0009](../adr/0009-site-sections-and-playground-collection.md))。
+| URL                | 中身                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `/`                | 表紙。about が兼ねる                                                                     |
+| `/blog`            | すべての一覧（表）                                                                       |
+| `/blog/articles`   | 記事だけの一覧                                                                           |
+| `/blog/labs`       | ハンズオンだけの一覧                                                                     |
+| `/articles/<path>` | 記事の本体                                                                               |
+| `/labs/<path>`     | ハンズオンの本体                                                                         |
+| `/playground`      | 遊び場の一覧                                                                             |
+| `/playground/<id>` | 1 つの遊び場。cross-origin isolation を掛ける URL として予約している（まだ掛けていない） |
+| `/rss.xml`         | RSS                                                                                      |
 
-| URL                | 中身                                                               |
-| ------------------ | ------------------------------------------------------------------ |
-| `/`                | 表紙。about が兼ねる。最近の更新、各セクションへの入口、登壇と寄稿 |
-| `/blog`            | すべての一覧 (表)                                                  |
-| `/blog/articles`   | 記事だけの一覧                                                     |
-| `/blog/labs`       | ハンズオンだけの一覧                                               |
-| `/articles/<path>` | 記事の本体                                                         |
-| `/labs/<path>`     | ハンズオンの本体                                                   |
-| `/playground`      | 遊び場の一覧                                                       |
-| `/playground/<id>` | 1 つの遊び場。cross-origin isolation を予約している (未適用)       |
-| `/rss.xml`         | RSS                                                                |
+`/articles/<path>` は本体の URL で、`/blog/articles` は一覧である。  
+描画の実装の詳細を URL に出さない。  
+ADR-0001: [Starlight の採否](../adr/0001-starlight-as-docs-renderer.md)
 
-**表紙と一覧を分ける。**
-表紙は伝える場所、一覧は探す場所であり、要求が異なる。
+URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 
-**about に独立したページを与えない。** 分量が増えないものに 1 ページを割かない。
-表紙を about が兼ねる。伝える場所に置くものが 2 つあると、どちらの印象も薄くなる。
+### 著者が書くファイル
 
-一覧のタブと本文の検索は `/blog` 以下の 3 ページにだけ出る。
-**検索を全ページの上端に置かない。** 探す気がある人は一覧まで来る。
+著者は、記事とハンズオンと遊び場を、Markdown か MDX で `apps/web/src/content/` の下に置く。  
+記事は `articles/` に、ハンズオンは `labs/` に、遊び場は `playgrounds/` に置く。  
+書き方は [context/conventions.md](../context/conventions.md#記事とハンズオンの本文) にある。
 
-`/articles/<path>` は本体の URL であり、`/blog/articles` は一覧である。
-**描画の実装詳細を URL に露出しない** ([ADR-0001](../adr/0001-starlight-as-docs-renderer.md))。
+## Cross-Cutting Concerns
 
-### 不変量 8 の補足 — 種別と分類の切り分け
+### 設計不変量
 
-一覧の切り替えは、見た目はタブだが**実体はページ遷移**である。
+将来を可能にしているのは、次の 8 点である。  
+変えるときは ADR を書く。  
+この 8 点のほかに、将来のための先行投資をしない。
+
+| #   | 不変量                                                                     | 何を可能にするか                                                                  | 根拠                                                           |
+| --- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1   | `contentId` は発行した後に変えない                                         | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 2   | 関係は `contentId` から `contentId` への片方向の辺にし、逆方向は導く       | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 3   | `pages/**` と `components/**` は `astro:content` を直接参照しない          | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 4   | `@fukuemon/content-model` は Astro に依存しない                            | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 5   | `tokens.css` は素の CSS で書き、ユーティリティは `@layer` に閉じる         | レイヤの外の宣言は、どのレイヤの中の宣言より優先される。第三者の CSS と競合しない | [Design System](../packages/design-system/DesignDoc.md)        |
+| 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
+| 7   | cross-origin isolation をサイト全体に掛けず、必要な URL にだけ掛ける       | 全体に掛けると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる              | [ADR-0006](../adr/0006-interactive-content-levels.md)          |
+| 8   | 種別は URL を持つページとして分け、分類（tag）は URL パラメータで絞り込む  | 種別は 2 つで固定なので、静的に書き出せる。分類は組み合わせで数が爆発する         | [種別と分類の切り分け](#種別と分類の切り分け)                  |
+
+### 種別と分類の切り分け
+
+一覧の切り替えは、見た目はタブだが、実体はページの遷移である。  
 ARIA の `tablist` は使わない。
 
-| 軸                                | 実現方法                                            | 理由                                                                  |
-| --------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
-| 種別 (すべて / 記事 / ハンズオン) | `/blog`、`/blog/articles`、`/blog/labs` の 3 ページ | 3 つで固定。URL が付き、共有と戻るボタンが効く。JavaScript が要らない |
-| 分類 (`postgres` など)            | URL パラメータ + クライアント側の絞り込み           | 種別 3 × 分類 n の組み合わせをページとして書き出せない                |
+| 軸                               | 実現の方法                                          | 理由                                                                    |
+| -------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------- |
+| 種別（すべて、記事、ハンズオン） | `/blog`、`/blog/articles`、`/blog/labs` の 3 ページ | 3 つで固定。URL が付き、共有と戻るボタンが使える。JavaScript が要らない |
+| 分類（`postgres` など）          | URL パラメータと、クライアント側の絞り込み          | 種別 3 つと分類 n 個の組み合わせを、ページとして書き出せない            |
 
-同一ページでの切り替えでも `history.pushState` で URL は付けられる。
-ただしそれは、3 枚の静的ページで済むことを JavaScript で再実装している状態になる。
+同じページの中で切り替えても、`history.pushState` で URL は付けられる。  
+ただし、それは 3 枚の静的なページで済むことを、JavaScript で作り直している状態になる。
 
----
+### 判断の優先順位
 
-## いま作るもの
+設計で迷ったときは、次の順に優先する。
 
-| 領域       | 内容                                                                                                                     |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------ |
-| コンテンツ | About、Articles、Hands-on                                                                                                |
-| 中核       | 種別で絞り込む一覧、記事とハンズオンの相互参照、ハンズオンの手順分割と進捗保存、本文中でのコード実行                     |
-| 基盤       | monorepo の骨格、Content Model と関係グラフ、Design Tokens とフォントの self-host、Cloudflare の Terraform 管理と deploy |
-| 品質       | 依存規約 2 本の機械検査、`content-model` の分岐カバレッジ 100%、一覧と相互参照の E2E                                     |
+1. 一貫性（Portal UI と Docs UI で同じ規約が成り立つ）
+2. 保守性（1 名で維持できる）
+3. パフォーマンス
+4. 開発体験
+5. 将来の拡張性
 
-**完了の判定**: 成功条件 S1〜S6 が測定可能な形で満たされていること。
+将来の拡張性を最も下に置く。  
+将来を可能にしているのは設計不変量であり、先に実装しておくことではない。
 
-### 既存アウトプットの移行は先送りする
+### 条件つきで足す機能の形
 
-**基盤を新規コンテンツ前提で作る。**
-既存の記事の一括登録は行わない。
+[PRD の Lower-Priority Goals](../PRD.md#lower-priority-goals) の条件が成り立ったときは、次の形で足す。
 
-理由は 2 つある。
-棚卸しは着手を止めるだけで、基盤の設計を 1 つも確定させないこと。
-**分類の粒度は既存の棚卸しより、実際に書いた数件のコンテンツから決めたほうが正確になる**こと (棚卸しは過去の分類であり、これから書くものの分類ではない)。
+- 分類での絞り込みは、URL パラメータで絞り込む React の island にする。ページと索引のページは増やさない。
+- 見せるためのコンポーネントの一覧は、`packages/<name>/` と、実物を並べる demo のページにする。別の repo も検討する。package を増やす条件は [context/codebase.md](../context/codebase.md#packages) にある。
+- 一覧から辿れなくなったときの探す手段は、React の island と shadcn/ui の Command Palette にする。
+- 本文の中で PGlite 以外の実行環境が要るときは、その実行環境の island を足す。レスポンスヘッダを変えずに載る場合に限る。
+- `SharedArrayBuffer` が要るときは、isolation を掛けた別のドキュメント（`/playground/<id>`）に置く。
+- コメントは giscus（GitHub Discussions）で足し、バックエンドを持たない。
+- 問い合わせのフォームの送信を受ける口は、同じ Worker の `/api/contact` への POST 1 本にする。
+  - データを保持するリソース（D1、KV、R2）が Terraform の管轄に加わり、binding が `wrangler.jsonc` に加わる。
+  - Terraform から Wrangler へ値を渡す方法は、[context/operations.md](../context/operations.md#terraform-と-wrangler-の管轄) の条件のとおりに定める。
+- ビルドのときに解決できない検索は、まず静的な embedding の索引と、クライアント側の検索で試す。
 
-代わりに **seed コンテンツ**を新規に作り、機構が動くことを証明する。
+ADR-0008: [読者の identity を前提とする機能を作らない](../adr/0008-no-reader-identity.md)
 
-| 種別       | seed の点数 | 目的                                                            |
-| ---------- | ----------- | --------------------------------------------------------------- |
-| `articles` | 2           | 本文の描画と `portalBase` の結線。一覧に 2 件以上並ぶ状態を作る |
-| `handsOn`  | 1           | 手順の導出、進捗の保存、コードの実行                            |
+## Repository Layout
 
-**seed は捨てないコンテンツにする。**
-ダミーテキストではなく、実際に公開する内容を書く。
-ダミーだと Design System の検証にならず (日本語の分量と技術用語の混在が本物と違う)、後で消す作業も発生する。
-
-`related` は記事とハンズオンのあいだに 1 本以上張り、成功条件 S2 (逆参照の導出) を測定できる状態にする。
-
-**分類は暫定でよい。**
-増減する前提で始め、コンテンツが 10 件を超えた時点で見直す。
-`contentId` と違い分類は改名できる (関係の主キーではないため)。
-
-### 実装中に検証すること
-
-**下記はいずれも未検証の前提である。**
-満たさない場合の代替を併記する。
-
-| #   | 内容                                                                             | 満たさない場合                                                                   |
-| --- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 5   | `vp run --cache` が `astro build` の入力を正しく推論すること (3 項目) | キャッシュ無効化、または Turborepo へ切り替え |
-
-検証を終えた前提は次のとおり。
-
-| 内容                                                         | 結果                                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------------- |
-| `astro-expressive-code` で画面案のコードの見た目を出せること | 満たす。スタイリングは `styleOverrides` から指定する                |
-| 実行パネルを Expressive Code の枠外に置いて見た目が揃うこと  | 満たす。枠の中へ差し込む必要は無かった                              |
-| `cloudflare_workers_custom_domain` が Wrangler deploy 済みの Worker へ紐付くこと | 満たす。2026-08-31 の初回 apply で `https://fukuemon.dev` が Worker を配信した |
-| R2 backend の `skip_s3_checksum` で state 書き込みが通ること | 満たす。同じ apply で state の読み書きと `use_lockfile` のロックが通った |
-| `pagefind` が自前ページを索引すること                        | 満たす。`data-pagefind-body` は本文の要素にだけ付ける               |
-| config の rehype plugin が Expressive Code より先に走ること  | 満たす。素の `<pre><code>` のまま拾えるので `rehype-mermaid` が効く |
-
----
-
-## 条件つきバックログ
-
-**時期では判断しない。
-左の条件が実在したときに作る。**
-
-| 条件                                                         | 作るもの                                                                | 設計                                                                          |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 分類での絞り込みが要ると判断したとき                         | URL パラメータによる絞り込み (React Island)。**ページは増やさない**     | 設計不変量 8                                                                  |
-| 分類が 12 を超えたとき                                       | 分類ごとの絞り込み (URL パラメータ)。**索引ページは作らない**           | 設計不変量 8                                                                  |
-| 見せるためのコンポーネント集を作りたくなったとき             | `packages/<name>/` と、実物を並べる demo ページ。**別 repo も検討する** | [context/architecture.md](../context/architecture.md) の package を増やす条件 |
-| コンテンツが増えて一覧から辿れなくなったとき                 | Command Palette (React Island + shadcn/ui)                              | —                                                                             |
-| 本文中で PGlite 以外の実行環境が要るハンズオンが実在したとき | 該当ランタイムの Island。**ヘッダを変えずに載る場合に限る**             | [interactive](features/interactive/DesignDoc_interactive.md)                  |
-| SharedArrayBuffer が要るハンズオンが実在したとき             | isolated な別ドキュメント (`/playground/<id>`)                          | [interactive](features/interactive/DesignDoc_interactive.md)                  |
-| コメントが欲しくなったとき                                   | giscus (GitHub Discussions)。**バックエンド不要**                       | [ADR-0008](../adr/0008-no-reader-identity.md)                                 |
-| Contact form の送信受け口が要るとき                          | 同一 Worker の `/api/contact` に POST 1 本                              | [context/infrastructure.md](../context/infrastructure.md)                     |
-| ビルド時に解決できない検索が要ると判明したとき               | まず静的 embedding 索引 + クライアント検索を試す                        | [ADR-0008](../adr/0008-no-reader-identity.md)                                 |
-
-**バックログに無いものは作らない。**
-読者 identity を前提とする機能と、Non-Goals に挙げた種別の追加は、バックログにも載せない。
-
----
-
-## 詳細の所在 (委譲先)
-
-### Feature 設計
-
-| Feature                  | 文書                                                                         | 状態   |
-| ------------------------ | ---------------------------------------------------------------------------- | ------ |
-| Content Model            | [features/content-model/](features/content-model/DesignDoc_content-model.md) | 未着手 |
-| Design System            | [features/design-system/](features/design-system/DesignDoc_design-system.md) | 未着手 |
-| ハンズオンと Interactive | [features/interactive/](features/interactive/DesignDoc_interactive.md)       | 未着手 |
-
-### Engineering Context
-
-プロジェクト固有値は [context/project.yml](../context/project.yml) を正本とする。
-**本 Design Doc 承認後、`context-bootstrap` skill で初期化する。**
-現時点の `project.yml` はプレースホルダである。
-
-| トピック                                                    | 文書                                                      |
-| ----------------------------------------------------------- | --------------------------------------------------------- |
-| package 境界 / 依存規約 / ディレクトリ / URL 規約           | [context/architecture.md](../context/architecture.md)     |
-| ツール構成 / Vite+ の適用範囲 / 品質ゲートの採否            | [context/toolchain.md](../context/toolchain.md)           |
-| 共有設定 / root task / quality gate / コメント規約          | [context/engineering.md](../context/engineering.md)       |
-| テスト責務 / 書き方 / カバレッジ要求                        | [context/testing.md](../context/testing.md)               |
-| Terraform / Wrangler 管轄 / bootstrap / credential / ヘッダ | [context/infrastructure.md](../context/infrastructure.md) |
-
-### Related ADRs
-
-| ADR                                                            | 決定                                                                                          |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [0001](../adr/0001-starlight-as-docs-renderer.md)              | Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む                            |
-| [0002](../adr/0002-content-model-independence.md)              | 関係を `contentId` の辺として持ち、Content Model を Astro 非依存に保つ                        |
-| [0003](../adr/0003-monorepo-and-vite-plus.md)                  | pnpm workspace の monorepo とし、Vite+ を `vp run` / `vp env` / 同梱ツールに限定して採用する  |
-| [0004](../adr/0004-typography-static-weights.md)               | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する            |
-| [0005](../adr/0005-workers-terraform-wrangler-boundary.md)     | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する    |
-| [0006](../adr/0006-interactive-content-levels.md)              | 手を動かす場所を 4 つに分け、cross-origin isolation を局所に限定する                          |
-| [0007](../adr/0007-quality-gates.md)                           | 品質ゲートに react-doctor / knip / similarity-ts を採り、mise / Bun / Biome を採らない        |
-| [0008](../adr/0008-no-reader-identity.md)                      | 読者の identity を前提とする機能を作らない。バックエンドを持たない                            |
-| [0010](../adr/0010-tailwind-as-styling-base.md)                | Tailwind CSS v4 を CSS スタイリングの基盤にし、部品の CSS を utility へ移す                   |
-| [0009](../adr/0009-site-sections-and-playground-collection.md) | サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする |
-
----
-
-## Open Questions
-
-**未決事項は各 feature doc / context に置く。**
-ここには、複数文書にまたがるものだけを残す。
-
-| #   | 論点                                           | 期限                 | 状態                                                            | 影響先                         |
-| --- | ---------------------------------------------- | -------------------- | --------------------------------------------------------------- | ------------------------------ |
-| Q1  | 既存記事の移行 (過去の記事の一括登録)          | 基盤の完成後         | **先送り。着手のブロッカーではない**。seed コンテンツで代替する | content-model                  |
-| Q2  | `status: draft` のコンテンツをビルドに含めるか | 実装着手前           | 未決                                                            | content-model / infrastructure |
-| Q3  | About ページの構成 (見開き形式を採るか)        | Design System 実装時 | 未決。画面案では別案 甲 (見開き) を候補としている               | design-system                  |
-
----
-
-## 関連ドキュメント
-
-- [context/project.yml](../context/project.yml): プロジェクト固有値の唯一の正本 (未初期化)
-- [context/architecture.md](../context/architecture.md): package 境界 / 依存規約 / URL 規約
-- [context/toolchain.md](../context/toolchain.md): ツール構成
-- [context/engineering.md](../context/engineering.md): 共有設定 / root task / quality gate
-- [context/testing.md](../context/testing.md): テスト方針
-- [context/infrastructure.md](../context/infrastructure.md): Cloudflare の管轄と運用
-- [adr/](../adr/): 確定した技術判断と却下した代替案
-- [design/features/](features/): feature 単位の設計
+```text
+.
+├── PRD.md
+├── design/DesignDoc.md          # この文書
+├── adr/                         # ADR
+├── context/                     # 規約と事実
+├── apps/web/                    # Astro のサイト
+│   └── src/
+│       ├── content/             # 記事、ハンズオン、playground の原稿
+│       ├── content.config.ts
+│       ├── pages/
+│       ├── layouts/
+│       ├── features/            # lab/DesignDoc.md を含む
+│       ├── components/
+│       ├── data/
+│       ├── lib/
+│       └── styles/
+├── packages/
+│   ├── config/                  # 共有の tsconfig
+│   ├── content-model/           # DesignDoc.md を含む
+│   └── design-system/           # DesignDoc.md を含む
+├── infra/                       # DesignDoc.md を含む
+│   ├── bootstrap/
+│   └── cloudflare/
+├── e2e/                         # 見た目の回帰のチェック
+└── scripts/
+```

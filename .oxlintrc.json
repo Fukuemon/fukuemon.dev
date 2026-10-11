@@ -10,7 +10,7 @@
             "paths": [
               {
                 "name": "astro:content",
-                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/codebase.md 規約 1)"
               }
             ]
           }
@@ -25,8 +25,13 @@
           {
             "patterns": [
               {
-                "group": ["**/features/**", "~/features/**", "**/components/**", "~/components/**"],
-                "message": "lib は features / components を知らない。必要なら引数で受ける (context/architecture.md 規約 5)"
+                "group": [
+                  "**/features/**",
+                  "~/features/**",
+                  "**/components/**",
+                  "~/components/**"
+                ],
+                "message": "lib は features / components を知らない。必要なら引数で受ける (context/codebase.md 規約 5)"
               }
             ]
           }
@@ -42,17 +47,22 @@
             "paths": [
               {
                 "name": "astro:content",
-                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/codebase.md 規約 1)"
               }
             ],
             "patterns": [
               {
                 "group": ["**/features/**", "~/features/**"],
-                "message": "components はセクションをまたぐ素の部品。features を参照しない (context/architecture.md 規約 5)"
+                "message": "components はセクションをまたぐ素の部品。features を参照しない (context/codebase.md 規約 5)"
               },
               {
-                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
-                "message": "features / components は pages / layouts を参照しない (context/architecture.md 規約 5)"
+                "group": [
+                  "**/pages/**",
+                  "~/pages/**",
+                  "**/layouts/**",
+                  "~/layouts/**"
+                ],
+                "message": "features / components は pages / layouts を参照しない (context/codebase.md 規約 5)"
               }
             ]
           }
@@ -68,13 +78,18 @@
             "paths": [
               {
                 "name": "astro:content",
-                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/codebase.md 規約 1)"
               }
             ],
             "patterns": [
               {
-                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
-                "message": "features / components は pages / layouts を参照しない (context/architecture.md 規約 5)"
+                "group": [
+                  "**/pages/**",
+                  "~/pages/**",
+                  "**/layouts/**",
+                  "~/layouts/**"
+                ],
+                "message": "features / components は pages / layouts を参照しない (context/codebase.md 規約 5)"
               }
             ]
           }
@@ -82,7 +97,11 @@
       }
     },
     {
-      "files": ["apps/web/src/**/*.tsx", "apps/web/src/**/*.jsx", "apps/web/src/**/*.vue"],
+      "files": [
+        "apps/web/src/**/*.tsx",
+        "apps/web/src/**/*.jsx",
+        "apps/web/src/**/*.vue"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -90,37 +109,42 @@
             "paths": [
               {
                 "name": "astro:content",
-                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/architecture.md 規約 1)"
+                "message": "コンテンツの参照は lib/content/ の公開関数を通す (context/codebase.md 規約 1)"
               },
               {
                 "name": "astro",
-                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+                "message": "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)"
               },
               {
                 "name": "astro:assets",
-                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+                "message": "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)"
               },
               {
                 "name": "astro:transitions",
-                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+                "message": "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)"
               },
               {
                 "name": "astro:middleware",
-                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+                "message": "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)"
               }
             ],
             "patterns": [
               {
                 "group": ["*.astro", "**/*.astro"],
-                "message": "island は Astro を import しない。素の props だけを受ける (context/architecture.md 規約 3)"
+                "message": "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)"
               },
               {
-                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
-                "message": "features / components は pages / layouts を参照しない (context/architecture.md 規約 5)"
+                "group": [
+                  "**/pages/**",
+                  "~/pages/**",
+                  "**/layouts/**",
+                  "~/layouts/**"
+                ],
+                "message": "features / components は pages / layouts を参照しない (context/codebase.md 規約 5)"
               },
               {
                 "group": ["~/features/**"],
-                "message": "components はセクションをまたぐ素の部品。features を参照しない (context/architecture.md 規約 5)"
+                "message": "components はセクションをまたぐ素の部品。features を参照しない (context/codebase.md 規約 5)"
               }
             ]
           }
@@ -136,7 +160,7 @@
             "patterns": [
               {
                 "group": ["**/apps/**", "@fukuemon/web*"],
-                "message": "packages から apps への逆依存は禁止 (context/architecture.md 規約 4)"
+                "message": "packages から apps への逆依存は禁止 (context/codebase.md 規約 4)"
               }
             ]
           }

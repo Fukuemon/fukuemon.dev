@@ -8,7 +8,7 @@
  *
  * 1 を独立した検査にしているのは、トークン名が変わったときに
  * 2 以降が 1 件も実行されないまま通過するのを防ぐためである
- * (`context/engineering.md` の「実行されなかったことを通ったと扱わない」)。
+ * (`context/conventions.md` の Check Exclusions の「チェックが実行されなかったことを、通ったとして扱わない」)。
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -37,7 +37,10 @@ export function contrast(a: string, b: string): number {
 }
 
 /** ブラウザが読むのと同じ 1 箇所を読む。明暗で値がずれない */
-function readTokens(): { light: Map<string, string>; dark: Map<string, string> } {
+function readTokens(): {
+  light: Map<string, string>;
+  dark: Map<string, string>;
+} {
   const css = readFileSync(here("./styles/tokens.css"), "utf8");
   const i = css.indexOf("@theme");
   if (i < 0) throw new Error("tokens.css に @theme が無い");
@@ -50,7 +53,8 @@ function readTokens(): { light: Map<string, string>; dark: Map<string, string> }
     light.set(m[1] as string, (m[2] as string).toLowerCase());
     dark.set(m[1] as string, (m[3] as string).toLowerCase());
   }
-  if (light.size === 0) throw new Error("tokens.css から light-dark() を 1 つも読めなかった");
+  if (light.size === 0)
+    throw new Error("tokens.css から light-dark() を 1 つも読めなかった");
   return { light, dark };
 }
 
@@ -88,20 +92,26 @@ export function checkContrast(): string[] {
 
     const bg = need("--color-code-bg");
     if (bg !== undefined && bg !== palette.bg) {
-      errors.push(`${name}: --color-code-bg が ${bg} / code-theme.ts が ${palette.bg}`);
+      errors.push(
+        `${name}: --color-code-bg が ${bg} / code-theme.ts が ${palette.bg}`,
+      );
     }
     for (const k of CODE_KEYS) {
       const key = `--color-c-${k}`;
       const css = need(key);
       if (css !== undefined && css !== palette[k]) {
-        errors.push(`${name}: ${key} が ${css} / code-theme.ts が ${palette[k]}`);
+        errors.push(
+          `${name}: ${key} が ${css} / code-theme.ts が ${palette[k]}`,
+        );
       }
     }
 
     for (const k of CODE_KEYS) {
       const r = contrast(palette[k], palette.bg);
       if (r < MIN_TEXT) {
-        errors.push(`${name}: --color-c-${k} が ${r.toFixed(2)} (${MIN_TEXT} 未満)`);
+        errors.push(
+          `${name}: --color-c-${k} が ${r.toFixed(2)} (${MIN_TEXT} 未満)`,
+        );
       }
     }
 
@@ -111,11 +121,15 @@ export function checkContrast(): string[] {
       if (paper === undefined || v === undefined) continue;
       const r = contrast(v, paper);
       if (r < MIN_TEXT) {
-        errors.push(`${name}: ${key} が地に対して ${r.toFixed(2)} (${MIN_TEXT} 未満)`);
+        errors.push(
+          `${name}: ${key} が地に対して ${r.toFixed(2)} (${MIN_TEXT} 未満)`,
+        );
       }
     }
 
-    const ladder = CODE_KEYS.map((k) => contrast(palette[k], palette.bg)).sort((a, b) => b - a);
+    const ladder = CODE_KEYS.map((k) => contrast(palette[k], palette.bg)).sort(
+      (a, b) => b - a,
+    );
     for (let i = 0; i < ladder.length - 1; i++) {
       const gap = (ladder[i] as number) / (ladder[i + 1] as number);
       if (gap < MIN_LADDER_GAP) {
