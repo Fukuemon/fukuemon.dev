@@ -6,7 +6,7 @@ status: stable
 governs:
   - packages/design-system/
   - apps/web/src/styles/
-verified_commit: unverified
+verified_commit: 3c5bf5a7636e7a13931f6a2e9a840980a6a26a0e
 ---
 
 # Design System
@@ -57,17 +57,18 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 | 見出しをほとんど大きくしない              | 階層は small-caps・letter-spacing・罫線で作る                                |
 | 状態を色だけで運ばない                    | forced colors mode では色と `box-shadow` が失われる。罫か字形を必ず併せる    |
 
-背景色を塗ってよいのは次の 3 つに限る。
-どれも輪郭に 1px 以上の罫を必須とする。
+背景色を塗ってよいのは次の表の場所に限る。
+面には、輪郭か、面が接する側の辺に 1px 以上の罫を置く。
+字の背景（検索の一致箇所、選択範囲）は面ではないので、罫を置かない。
 暗い配色では背景どうしの明度差がほとんど取れず、罫がないと境界が消える。
 
-| 背景                       | 用途                        |
-| -------------------------- | --------------------------- |
-| 反転帯 (`data-band`)       | 読みの区切りに置く強い休符  |
-| コード (`--color-code-bg`) | コードブロックとその chrome |
-| 面 (`--color-tint-*`)      | コードの強調行、実行エラー  |
-| 面 (`--color-panel`)       | 図の箱、写真の下地          |
-| 反転 (`--color-ink`)       | ボタン (`.btn`) の hover    |
+| 背景                       | 用途                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| 反転帯 (`data-band`)       | 読みの区切りに置く強い休符                                                                       |
+| コード (`--color-code-bg`) | コードブロックとその chrome                                                                      |
+| 面 (`--color-tint-*`)      | コードの強調行、実行エラー、コードの写しの完了の吹き出し。字の背景として検索の一致箇所と選択範囲 |
+| 面 (`--color-panel`)       | 図の箱、写真の下地                                                                               |
+| 反転 (`--color-ink`)       | ボタン (`.btn`、`.cmd__copy`) の hover                                                           |
 
 帯の中では semantic の変数を丸ごと差し替える。
 
@@ -187,13 +188,13 @@ ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 本書が定めるのは、トークンの**層**と**使用制約**である。
 
-| 層        | 例                                                                       | 規則                                       |
-| --------- | ------------------------------------------------------------------------ | ------------------------------------------ |
-| primitive | `--color-ink` / `--color-green` / `--color-rule-strong`                  | 色そのもの。画面から直接参照しない         |
-| semantic  | `--color-fg` / `--color-link` / `--color-now` / `--color-rule`           | 画面はここだけを参照する                   |
-| 背景      | `--color-paper` / `--color-panel` / `--color-code-bg` / `--color-tint-*` | 輪郭に 1px 以上の罫を必須とする            |
-| 帯        | `[data-band]` が差し替える 6 変数                                        | 帯専用の値。primitive のどれとも一致しない |
-| 霞        | `--color-veil-1` / `--color-veil-0`                                      | 地の色そのものを透過させる                 |
+| 層        | 例                                                                       | 規則                                     |
+| --------- | ------------------------------------------------------------------------ | ---------------------------------------- |
+| primitive | `--color-ink` / `--color-green` / `--color-rule-strong`                  | 色そのもの。画面から直接参照しない       |
+| semantic  | `--color-fg` / `--color-link` / `--color-now` / `--color-rule`           | 画面はここだけを参照する                 |
+| 背景      | `--color-paper` / `--color-panel` / `--color-code-bg` / `--color-tint-*` | 輪郭に 1px 以上の罫を必須とする          |
+| 帯        | `[data-band]` が差し替える 6 変数                                        | primitive の変数を参照せず、値を直接書く |
+| 霞        | `--color-veil-1` / `--color-veil-0`                                      | 地の色そのものを透過させる               |
 
 **反転帯に入りうる領域では semantic だけを参照する**。
 帯は `--color-ink` ではなく `--color-fg` を差し替えて成立する。
@@ -285,11 +286,11 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../adr
 
 幅の値は [tokens.css](styles/tokens.css) の `:root` が持つ。
 
-| 用途                           | トークン                            | 根拠                               |
-| ------------------------------ | ----------------------------------- | ---------------------------------- |
-| 本文 (記事 / ハンズオン)       | `--measure`（上限は `--measure-w`） | 日本語で 1 行 40 字前後            |
-| 一覧の表、playground、検索の窓 | `--measure-wide`                    | 罫線で区切るため、行長より広く取る |
-| 左右の余白                     | `--gutter`                          | 画面の幅に応じて伸び縮みさせる     |
+| 用途                       | トークン         | 根拠                               |
+| -------------------------- | ---------------- | ---------------------------------- |
+| 本文 (記事 / ハンズオン)   | `--measure-w`    | 日本語で 1 行 40 字前後            |
+| 一覧の表、遊び場、検索の窓 | `--measure-wide` | 罫線で区切るため、行長より広く取る |
+| 左右の余白                 | `--gutter`       | 画面の幅に応じて伸び縮みさせる     |
 
 **`ch` を使わない**。
 `ch` は文字 `0` の幅であり、CJK グリフの半分以下である。
@@ -324,7 +325,7 @@ markup からは `max-wide:` と `max-narrow:` で当てる。
 
 **ページを横に揺らさない**。
 `html` に `overflow-x: clip` を置き、はみ出す要素が出てもページは横に動かさない。
-はみ出しは、見た目の回帰と、狭い幅で `scrollWidth` が `clientWidth` を超えないかの計測で見つける。
+はみ出しは、見た目の回帰と、360px で開いて `scrollWidth` が `clientWidth` を超えないかを手で測って見つける。
 
 #### 一覧の切り替え
 
@@ -383,7 +384,8 @@ ARIA の `tablist` は使わない。
 
 **本文を持つ 3 つのページは同じ骨格にする**。
 サイドバーの幅と開閉のふるまいが揃うので、ページをまたいでも操作を覚え直さずに済む。
-本文は `--measure-w` で止め、右の余りは版面の中で吸収する。
+記事とハンズオンの本文は `--measure-w` で止め、右の余りは版面の中で吸収する。
+遊び場は実行結果に幅を使うので、`--measure-wide` で止める。
 
 行長は `--measure-w` で止める。
 日本語は 1 行 40〜45 字を超えると行を追いにくくなる。
@@ -439,13 +441,13 @@ class を持たない罫も同じ 3 段階に従う。
 
 #### 背景色を置く場所
 
-| 背景                       | 置く場所                    |
-| -------------------------- | --------------------------- |
-| 反転帯 (`data-band`)       | 各ページ 1 箇所まで         |
-| コード (`--color-code-bg`) | コードブロックとその chrome |
-| 面 (`--color-tint-*`)      | コードの強調行、実行エラー  |
-| 面 (`--color-panel`)       | 図の箱、写真の下地          |
-| 反転 (`--color-ink`)       | ボタン (`.btn`) の hover    |
+| 背景                       | 置く場所                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| 反転帯 (`data-band`)       | 各ページ 1 箇所まで                                                                              |
+| コード (`--color-code-bg`) | コードブロックとその chrome                                                                      |
+| 面 (`--color-tint-*`)      | コードの強調行、実行エラー、コードの写しの完了の吹き出し。字の背景として検索の一致箇所と選択範囲 |
+| 面 (`--color-panel`)       | 図の箱、写真の下地                                                                               |
+| 反転 (`--color-ink`)       | ボタン (`.btn`、`.cmd__copy`) の hover                                                           |
 
 反転帯を置いているのは、トップの「最近の更新」だけである。
 帯は本文の左右へはみ出させる。
@@ -520,8 +522,10 @@ ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sectio
 
 `animation` の短縮形で書かない。
 ビルドの CSS 圧縮が `animation-timeline` ごと削除する。長い形で書く。
+動きを止める `animation: none` だけは短縮形でよい。
 
 サイドバーの面を除く実装は [apps/web/src/styles/motion.css](../../apps/web/src/styles/motion.css) にある。
+hover で色を変える transition と、手順の進み具合の棒の伸び縮みは、状態の変化そのものなので、その要素の規則の側に置く。
 
 ### アイコン
 
@@ -612,7 +616,7 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 **utility を最後に置く**。 markup 側の 1 語がコンポーネントの規則に勝つ。
 
 **preflight を読み込まない**。
-本文の段落間隔は UA 既定の `margin-block: 1em` に依存しており、preflight はそれを 0 にする。
+要素の初期化は、utilities.css の `@layer base` と `.prose` が、要るものだけを持つ。
 ただし **border の初期化だけは `base` に自前で持つ**。
 `border-width: 0; border-style: solid` が無いと、`border-b` を当てた要素の
 他 3 辺に `medium` (3px) の枠が付く。
@@ -651,7 +655,7 @@ Expressive Code の CSS は層に属さないので、層の中からは詳細�
 
 トークンは `@theme static` に置く。
 `--color-paper` は `bg-paper` / `text-paper` を生み、同時に `var(--color-paper)` として残る。
-`--breakpoint-*` の値は「その幅から上」を指すので、`max-narrow:` は `max-width: 720.98px` になる。
+`--breakpoint-*` の値は「その幅から上」を指すので、`max-narrow:` は `not all and (width >= 721px)` になり、720px 以下に当たる。
 
 **`static` を付ける**。
 付けないと、utility から参照された変数しか出力されない。
@@ -690,7 +694,8 @@ expressiveCode({
       editorBackground: "var(--color-code-bg)",
       terminalBackground: "var(--color-code-bg)",
       terminalTitlebarBackground: "var(--color-code-bg)",
-      tooltipSuccessBackground: "var(--color-green)",
+      tooltipSuccessBackground: "var(--color-tint-green)",
+      tooltipSuccessForeground: "var(--color-fg)",
     },
     textMarkers: {
       markBackground: "var(--color-tint-green)",
