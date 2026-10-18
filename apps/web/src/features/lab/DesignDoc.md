@@ -9,7 +9,7 @@ governs:
   - apps/web/src/lib/remark-lab.ts
   - apps/web/src/lib/rehype-lab-steps.ts
   - apps/web/public/_headers
-verified_commit: unverified
+verified_commit: 01101c7
 ---
 
 # ハンズオンと Interactive
@@ -97,10 +97,9 @@ URL は `#step-<N>` で表す。
 `#step--1` が「はじめに」である。  
 `pushState` で積むので、ブラウザの戻ると進むが手順の行き来になる。
 
-手順の出し入れに React を使わない。  
-属性の付け替えだけで足りる。  
-island にすると、実行環境を持たない `local` のハンズオンにも React を配ることになる。  
-`local` のページが配るのは、切り替えの 1.5 KiB（gzip、計測した値）だけである。
+手順の出し入れに React を使わず、属性の付け替えで行う。  
+実行環境を持たない `local` のハンズオンに React を配らないためである。  
+ADR-0014: [ハンズオンのページの island の組み方](../../../../../adr/0014-lab-page-islands.md)
 
 ### 手を動かす場所の 4 分類
 
@@ -131,7 +130,7 @@ frontmatter の `interactive.level` が 1 対 1 で対応する。
 WASM は、実行のボタンを押すまで取得しない。
 
 完了のマーカーが付くのは、実行が成功した手順と、この読み込みのあいだに通り過ぎた手順だけである。  
-`localStorage` を書き換えるだけで完了を偽れないよう、現在地からは推し量らない。  
+`localStorage` の `lastStep` を書き換えるだけで完了に見せられないよう、現在地からは推し量らない。  
 `local` のハンズオンでは実行が起きないので、印は通り過ぎた分だけになる。
 
 ### cross-origin isolation の制約
@@ -192,27 +191,19 @@ flowchart TD
 ### DB を使うハンズオンの実行環境
 
 DB を使うハンズオンは、PGlite を既定にする。  
+主題が Postgres のプランナの出力そのものなので、本物の Postgres が返す `EXPLAIN ANALYZE` を見せる。  
+ADR-0013: [DB を使うハンズオンは PGlite を既定にする](../../../../../adr/0013-pglite-for-planner-output.md)
+
 ランタイムの候補と、cross-origin isolation の要否は [ADR-0006](../../../../../adr/0006-interactive-content-levels.md) にある。
-
-配信量では SQLite が勝る。  
-gzip で 0.53 MiB と 5.28 MiB の差があり、Slow 4G の待ちが 29 秒から 3 秒台になる。  
-それでも PGlite を採るのは、主題が Postgres のプランナの出力そのものだからである。  
-SQLite の `EXPLAIN QUERY PLAN` は、cost の見積もりも `Buffers:` も `Planning Time` も返さず、想定するコンテンツの 7 手順のうち 4 手順が成り立たない。
-
-主題が Postgres に固有でなくなったら、この判断は覆る。  
-汎用の SQL の入門なら SQLite を採る。
 
 PGlite は、Linux の VM を使わず、Postgres の単一ユーザーモードを WASM にしたものである。  
 単一スレッドで単一接続なので、`SharedArrayBuffer` を使わない。  
-想定するコンテンツ「RDBMS のクエリ実行を理解する」は `embedded` に収まり、ヘッダの変更も要らない。
-
-`@sqlite.org/sqlite-wasm` の `"opfs"` VFS は `SharedArrayBuffer` と `Atomics` を求めるので、COOP と COEP が要る。  
-`opfs-sahpool` とメモリの VFS は要らない。
+ハンズオン「RDBMS のクエリ実行を理解する」は `embedded` に収まり、ヘッダの変更も要らない。
 
 ### 実行環境の性質
 
 - 実行環境は、実行のボタンを押すまで取得しない。ページを開いただけでは配らない。
-- 押すと 4 ファイル、gzip で 5.28 MiB、brotli で 4.45 MiB を取得する（計測した値）。
+- 押すと 4 ファイル、gzip で 5.28 MiB を取得する（計測した値）。
 - 1 ページで 1 つのインスタンスを共有する。2 回目以降の実行は 1 秒未満で返る。
 - 保存先はメモリである。再読み込みすると、初期の状態に戻る。
 - 初回の起動は、Fast 4G で 20〜25 秒かかる。Slow 4G では 60 秒の上限に当たって失敗しうる（計測では 73 秒）。再試行すれば、キャッシュから 10 秒台で立ち上がる。
@@ -236,9 +227,7 @@ const interactive = z.discriminatedUnion("level", [
     level: z.literal("local"),
     repository: z.string().url(),
     via: z.enum(["devcontainer", "docker-compose", "manual"]),
-    requires: z
-      .array(z.object({ name: z.string(), check: z.string().optional() }))
-      .default([]),
+    requires: z.array(z.object({ name: z.string(), check: z.string().optional() })).default([]),
   }),
 ]);
 ```
@@ -284,8 +273,8 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../../
 ページを開いただけで 5 MiB を取得しないためである。
 
 中身はサイドバーではなく `<dialog>` に出す。  
-306px の列に列を並べると、日時が途中で切れ、値を読むという目的を果たせない。  
-`<dialog>` は top layer に出るので、サイドバーの `overflow` に切られない。
+306px の列に表の列を並べると、値が途中で切れて読めないためである。  
+ADR-0014: [ハンズオンのページの island の組み方](../../../../../adr/0014-lab-page-islands.md)
 
 窓は 2 種類ある。
 
@@ -351,14 +340,14 @@ React の island になるのは、実行パネル、「いまのテーブル」
 手順の一覧、画面の切り替え、サイドバーの開閉は、`controller.ts` が属性の付け替えで行う。  
 ハンズオンと playground のほかのページには載らない。
 
-`rehype-lab-steps` を remark ではなく rehype に置く。  
-remark で包むと、`.mdx` は JSX、`.md` は生の HTML と、2 通りの書き分けが要る。  
-hast まで来れば拡張子の違いが消え、1 通りで済む。
+`rehype-lab-steps` は rehype に置き、`.mdx` と `.md` を 1 通りの処理でまとめる。  
+ADR-0015: [手順の画面へのまとめを rehype のプラグインに置く](../../../../../adr/0015-lab-steps-in-rehype.md)
 
 #### island をまたぐ通知
 
-実行パネルとサイドバーは別の React root なので、props でも context でもつながらない。  
-両者が共通に触れられるのは `window` だけなので、`window` に CustomEvent を発火する。
+実行パネルとサイドバーは別の React root なので、`window` に CustomEvent を発火してつなぐ。  
+状態管理のライブラリは使わない。  
+ADR-0014: [ハンズオンのページの island の組み方](../../../../../adr/0014-lab-page-islands.md)
 
 | 事象           | 送り手                                                          | 受け手          | 用途                         |
 | -------------- | --------------------------------------------------------------- | --------------- | ---------------------------- |
@@ -366,12 +355,8 @@ hast まで来れば拡張子の違いが消え、1 通りで済む。
 | `lab:preset`   | `Presets`                                                       | `Playground`    | 入力欄へ SQL を入れる        |
 | `lab:progress` | `progress.ts` の `saveProgress`（実行パネルと `controller.ts`） | `controller.ts` | 完了の印と進捗バーを描き直す |
 
-React の側の購読は `bus.ts` を通す。  
-`lab:progress` は、React を使わない `controller.ts` も受けるので、`progress.ts` が定義する。  
-`addEventListener` をコンポーネントに置くと、事象の名前と `contentId` を確かめる処理が、使う側の数だけ重なる。
-
-状態管理のライブラリを入れない。  
-購読は `useSyncExternalStore` を経由しても本数が減らず、流しているのは値ではなく合図である。
+React の側の購読は `bus.ts` を通し、事象の名前と `contentId` を確かめる。  
+`lab:progress` は、React を使わない `controller.ts` も受けるので、`progress.ts` が定義する。
 
 ### 実行パネルは記事にも置ける
 
@@ -379,14 +364,8 @@ React の側の購読は `bus.ts` を通す。
 `.mdx` で書いた記事にも、`run` を付けたフェンスを置ける。
 
 言語の記事はこの形を採る。  
-[codapi](https://codapi.org/try/postgres/) と同じ「読む、実行する、書き換える」を、記事の中で成り立たせる。
-
-| 言語     | 実行環境                    | 状態                     |
-| -------- | --------------------------- | ------------------------ |
-| SQL      | PGlite                      | 済                       |
-| Python   | Pyodide                     | 未。WASM で完結する      |
-| TS と JS | Worker で直接               | 未。WASM も要らない      |
-| Go       | TinyGo か Go の wasm target | 未。実行できるかは未確認 |
+[codapi](https://codapi.org/try/postgres/) と同じ「読む、実行する、書き換える」を、記事の中で成り立たせる。  
+実行できる言語は、`RUNNERS` に登録した SQL（PGlite）である。
 
 ### 実行環境を足す
 
@@ -394,7 +373,7 @@ React の側の購読は `bus.ts` を通す。
 
 1. `runtime/pglite.worker.ts` と同じ `boot` と `exec` を持つ Worker を書き、`runtime/runtime.ts` の `WORKERS` に 1 行足す。
    - Vite は `new URL(..., import.meta.url)` を静的に解決するので、パスを変数にできない。表に literal で並べる。
-2. 結果が表の形なら、ここで終わる。`interactive.runtime` に値を書けば、`SqlRunner` がそのまま動く。
+2. Content Model の `interactive.runtime` の enum に値を足す。結果が表の形なら、ここで終わる。`interactive.runtime` に値を書けば、`SqlRunner` がそのまま動く。
 3. 結果が表の形でなければ、`panel/SqlRunner.tsx` と同じ props を取るコンポーネントを書く。実行の状態機械は `useRunner` を再利用する。
 4. `runners.ts` の `RUNNERS` に 1 行足す。フェンスの言語が、表を引くキーになる。
 
@@ -413,7 +392,7 @@ export const RUNNERS: Record<string, Runner> = {
 どちらの場合も、コンテンツの側の書き方は変わらない。  
 著者は、frontmatter の `runtime` か、フェンスの言語を変えるだけである。
 
-`sandbox` を足すときは、まず schema に `sandbox` の枝を戻し、`/playground/<id>` のページで iframe を出す。  
+`sandbox` を足すときは、まず schema に `sandbox` の枝を足し、`/playground/<id>` のページで iframe を出す。  
 `SqlRunner` の系統は触らない。  
 結果の形（端末の出力、プレビューの URL）が違うので、表を出すコンポーネントを再利用しない。
 
@@ -469,6 +448,7 @@ React と実行環境は配らない。
 - `apps/web/src/features/lab/runners.ts`: フェンスの言語から実行パネルを引く表
 - `apps/web/src/features/lab/runtime/`: 実行環境の Worker と、実行の状態機械
 - `apps/web/src/features/lab/panel/`: 実行パネルと playground
+- `apps/web/src/features/lab/editor/`: 実行パネルと playground の SQL の入力欄
 - `apps/web/src/features/lab/catalog/`: 「いまのテーブル」とテーブル構成
 - `apps/web/src/features/lab/steps/`: 手順の一覧、画面の切り替え、進捗、再訪したときに流し直す SQL（`bootSpec.ts`）
 - `apps/web/src/layouts/LabLayout.astro`: ハンズオンの layout。サイドバー、前後のボタン、流し直す SQL の JSON を置く
