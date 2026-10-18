@@ -286,15 +286,15 @@ select count(*) from orders where id between 1 and 20000;
 「ディスクが余っているから `VACUUM` は要らない」という判断は、この差を捨てています。
 
 ```mermaid
-flowchart TD
-  V["VACUUM orders"]
-  V --> A["死んだ領域を空きとして fsm に記録する"]
-  V --> B["索引から死んだタプルへの参照を消す"]
-  V --> C["全部生きているページに vm で印をつける"]
-  V --> D["末尾が丸ごと空なら、そこだけ切り詰める"]
-  A --> R["ファイルの大きさは変わらない<br/>次の書き込みが穴に入る"]
-  C --> S["Index Only Scan の Heap Fetches が 0 になる"]
-  D --> T["手順 08 で確かめる"]
+flowchart LR
+  V["VACUUM<br/>orders"]
+  V --> A["死んだ領域を空きとして<br/>fsm に記録する"]
+  V --> B["索引から<br/>死んだタプルへの<br/>参照を消す"]
+  V --> C["全部生きている<br/>ページに vm で<br/>印をつける"]
+  V --> D["末尾が丸ごと空なら<br/>そこだけ切り詰める"]
+  A --> R["ファイルの大きさは<br/>変わらない。次の<br/>書き込みが穴に入る"]
+  C --> S["Index Only Scan の<br/>Heap Fetches が<br/>0 になる"]
+  D --> T["手順 08 で<br/>確かめる"]
 ```
 
 ## 空きが再利用されるのを確かめる
