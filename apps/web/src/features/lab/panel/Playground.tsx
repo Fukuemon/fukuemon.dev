@@ -26,7 +26,7 @@ export default function Playground({ setup, initial, engine = "実行環境" }: 
         className="runner my-intra-3 border border-rule-strong bg-code-bg"
         data-phase={runner.phase}
       >
-        <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-[10px]">
+        <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-intra-1">
           <span>SQL</span>
           {runner.version !== null && (
             <span className="runner__engine ms-auto text-fg-2">{runner.version}</span>

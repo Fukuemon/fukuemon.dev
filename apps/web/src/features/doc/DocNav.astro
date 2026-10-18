@@ -26,7 +26,7 @@ const next = i >= 0 && i < siblings.length - 1 ? siblings[i + 1] : undefined;
       siblings.map((s) => (
         <li>
           <a
-            class="docnav__item flex flex-col gap-[2px] py-intra-1 border-t border-rule text-fg-2 aria-[current]:text-fg aria-[current]:ps-intra-2 aria-[current]:shadow-[inset_2px_0_0_var(--color-now)]"
+            class="docnav__item flex flex-col gap-intra-0 py-intra-1 border-t border-rule text-fg-2 aria-[current]:text-fg aria-[current]:ps-intra-2 aria-[current]:shadow-[inset_2px_0_0_var(--color-now)]"
             href={s.href}
             aria-current={s.contentId === current.contentId ? "page" : undefined}
           >

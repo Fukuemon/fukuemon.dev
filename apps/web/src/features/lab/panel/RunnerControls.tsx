@@ -45,7 +45,7 @@ export default function RunnerControls({
           : "";
 
   return (
-    <div className="runner__bar flex items-center gap-intra-2 border-t border-rule-strong px-intra-3 py-[10px]">
+    <div className="runner__bar flex items-center gap-intra-2 border-t border-rule-strong px-intra-3 py-intra-1">
       <button
         className={BTN}
         type="button"

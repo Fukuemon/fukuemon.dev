@@ -116,8 +116,8 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 選択子を明暗で分けて、同じ色の値を 2 度書かない。
   - システム設定用と明示指定用に同じ値を並べると、片方だけを直した誤りに、実行時まで気づけない。
   - `check-contrast.ts` は、`tokens.css` の `@theme static` の 1 箇所だけを読む。
-- 色でないもの（`mix-blend-mode` など）を明暗で分けるときだけ、選択子を 2 本並べる。
-  - `[data-theme="dark"]` と、`prefers-color-scheme: dark` の中の `:root:not([data-theme="light"])` の 2 本である。
+- 色でないもの（`mix-blend-mode` など）を明暗で分けるときだけ、`@media (prefers-color-scheme: dark)` で分ける。
+  - 配色を手で切り替える仕組みは持たないので、システム設定の 1 本だけで足りる。
 
 ### 当たり判定
 

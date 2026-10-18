@@ -166,7 +166,7 @@
   }
   /* 版面より広く出す。狭い画面では出さない (はみ出しになる) */
   .bleed {
-    margin-inline: -32px;
+    margin-inline: calc(-1 * var(--spacing-inter-1));
   }
 
   .stick {
@@ -176,9 +176,6 @@
   }
 
   /* 罫の 3 段階 */
-  .rule-section {
-    border-block-start: 2px solid var(--color-rule-strong);
-  }
   .rule-struct {
     border-block-start: 1px solid var(--color-rule-strong);
   }
@@ -203,7 +200,7 @@
   /* 見出しの目印 */
   .marks {
     position: relative;
-    padding-inline-start: 32px;
+    padding-inline-start: var(--spacing-intra-4);
   }
   .marks > h2 {
     position: relative;
@@ -211,7 +208,7 @@
   .marks > h2::before {
     content: "";
     position: absolute;
-    inset-inline-start: -28px;
+    inset-inline-start: calc(-1 * var(--spacing-intra-4));
     inset-block-start: 0.62em;
     inline-size: 7px;
     block-size: 7px;
@@ -260,27 +257,6 @@
     inset-block: calc(100% - var(--hit)) 0;
   }
 
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    min-block-size: var(--hit);
-    padding: 0 22px;
-    border: 1px solid var(--color-rule-strong);
-    background: transparent;
-    color: var(--color-fg);
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition:
-      background-color 160ms ease,
-      color 160ms ease;
-  }
-  .btn:hover {
-    background: var(--color-ink);
-    color: var(--color-paper);
-  }
-
   /* 縦組み。中身は和文に限る。ロゴなど正立必須の欧文は入れない */
   .tate {
     writing-mode: vertical-rl;
@@ -307,7 +283,6 @@
        字間 .14em は最後の文字の後ろにも入るので負の margin で相殺する。
        相殺しないと下端だけ間延びして見える */
     padding-inline-end: var(--spacing-intra-3);
-    padding-block: 2px 0;
     margin: 0 0 -0.14em;
     align-self: start;
     font-size: 1.15rem;
@@ -344,12 +319,8 @@
     mask-image: linear-gradient(to bottom, #000 0 78%, transparent 100%);
   }
   /* mix-blend-mode は色ではないので light-dark() で書けない。明暗を分ける唯一の規則 */
-  [data-theme="dark"] .wood-grain {
-    mix-blend-mode: screen;
-    opacity: 0.28;
-  }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .wood-grain {
+    .wood-grain {
       mix-blend-mode: screen;
       opacity: 0.28;
     }
@@ -413,10 +384,10 @@
       margin-inline: 0;
     }
     .marks {
-      padding-inline-start: 24px;
+      padding-inline-start: var(--spacing-intra-3);
     }
     .marks > h2::before {
-      inset-inline-start: -24px;
+      inset-inline-start: calc(-1 * var(--spacing-intra-3));
     }
   }
 }

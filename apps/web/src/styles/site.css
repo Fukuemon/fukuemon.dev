@@ -38,7 +38,7 @@
   .runner__table th,
   .runner__table td {
     text-align: start;
-    padding: 6px var(--spacing-intra-3);
+    padding: var(--spacing-intra-0) var(--spacing-intra-3);
     border-block-end: 1px solid var(--color-rule-soft);
     /* nowrap だと先頭の空白が詰められ、EXPLAIN の木構造が消える */
     white-space: pre;
@@ -95,7 +95,28 @@
   }
 }
 
+/* ボタン。枠を持ち、hover で地と字を入れ替える */
 @layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--hit);
+    padding: 0 var(--spacing-intra-3);
+    border: 1px solid var(--color-rule-strong);
+    background: transparent;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+  .btn:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
   /* disabled はフォーカスを body へ飛ばす。見た目だけ無効にする */
   .btn[aria-disabled="true"] {
     opacity: 0.55;
@@ -315,7 +336,7 @@
   .search__hit {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--spacing-intra-0);
     padding-block: var(--spacing-intra-2);
     border-block-end: 1px solid var(--color-rule);
   }
@@ -357,10 +378,10 @@
   }
   .topbar nav {
     display: flex;
-    gap: 4px;
+    gap: var(--spacing-intra-0);
   }
   .topbar nav a {
-    padding-inline: 14px;
+    padding-inline: var(--spacing-intra-2);
   }
   .topbar nav a[aria-current] {
     color: var(--color-fg);
@@ -427,7 +448,7 @@
   .tabs a {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: var(--spacing-intra-1);
     white-space: nowrap;
     min-block-size: 44px;
     padding-inline-end: var(--spacing-intra-4);
@@ -484,7 +505,7 @@
     white-space: nowrap;
   }
   .tbl .c-title {
-    padding-inline: 21px;
+    padding-inline: var(--spacing-intra-3);
   }
   .tbl .c-tag {
     inline-size: 190px;

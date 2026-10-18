@@ -72,6 +72,7 @@
   --color-focus: var(--color-ink);
 
   /* 余白。節の内側と外側で数列を分ける */
+  --spacing-intra-0: 5px; /* ボタンや一覧の行の中。字と罫、字と印 */
   --spacing-intra-1: 8px;
   --spacing-intra-2: 13px;
   --spacing-intra-3: 21px;
@@ -84,9 +85,6 @@
      `max-narrow:` が max-width: 720.98px、`max-wide:` が max-width: 1100.98px になる */
   --breakpoint-narrow: 721px;
   --breakpoint-wide: 1101px;
-
-  /* 影も配色に依らない。狭い画面で滑り出すサイドバーだけが持つ */
-  --shadow-drawer: 0 2px 10px rgb(0 0 0 / 0.14);
 }
 
 :root {
@@ -105,13 +103,6 @@
   --rail: 46px; /* 縦組み見出しの列 */
   --drawer: 306px; /* サイドバー。題が 2 行に収まる幅 */
   --drawer-shut: 46px; /* たたんだときの幅。開閉ボタンだけが残る */
-}
-
-[data-theme="light"] {
-  color-scheme: light;
-}
-[data-theme="dark"] {
-  color-scheme: dark;
 }
 
 /* 反転帯。semantic を丸ごと差し替える。値は帯専用 */
