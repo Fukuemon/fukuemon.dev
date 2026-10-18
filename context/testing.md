@@ -7,7 +7,7 @@ governs:
   - packages/content-model/
   - apps/web/vitest.config.ts
   - e2e/
-verified_commit: c02cc95
+verified_commit: 01101c7
 ---
 
 # テスト
@@ -30,7 +30,7 @@ Astro のコンポーネントは静的な HTML を出すだけで、分岐は `
 カバレッジの対象は、それぞれの package の `vitest.config.ts` に、ファイルごとに列挙する。  
 列挙し忘れたファイルは、カバレッジのチェックを受けない。
 
-`packages/content-model` には、分岐、関数、行、文のカバレッジ 100% を求める。  
+`packages/content-model` の `graph.ts` と `toc.ts` には、分岐、関数、行、文のカバレッジ 100% を求める。  
 次の 3 つは、誤っても画面が出るので目視では気づけない。分岐をすべて踏む。
 
 - 解決できない `related` の検出。誤ると、関連するコンテンツがエラーを出さずに表示されなくなる。

@@ -8,7 +8,7 @@ governs:
   - pnpm-workspace.yaml
   - mise.toml
   - .github/workflows/
-verified_commit: 5fd820d
+verified_commit: 01101c7
 ---
 
 # 技術スタック

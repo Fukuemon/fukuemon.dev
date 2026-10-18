@@ -8,35 +8,10 @@ https://fukuemon.dev
 **読んで分かった気になる段階と、動かして分かる段階のあいだを埋めることを狙う。** 読者アカウントを持たず、サーバー側の永続状態も持たない。
 誰のどの課題を解くか（Why / What）は [PRD.md](PRD.md) に、どう作るか（How）は [design/DesignDoc.md](design/DesignDoc.md) にある。
 
-## 構成
+## 構成と技術スタック
 
-pnpm workspace の monorepo。
-
-| ディレクトリ             | 中身                                                                      |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `apps/web`               | Astro のサイト本体。記事とハンズオンの描画                                |
-| `apps/web/src/content`   | 記事 (`articles`)、ハンズオン (`labs`)、playground (`playgrounds`) の原稿 |
-| `packages/content-model` | 記事とハンズオンの schema、関係グラフ、目次                               |
-| `packages/design-system` | Design Tokens、版面、配色のコントラストのチェック                         |
-| `packages/config`        | 共有 tsconfig                                                             |
-| `infra/`                 | Cloudflare の基盤定義 (Terraform)                                         |
-| `e2e/`                   | 見た目の回帰のチェック                                                    |
-
-## 技術スタック
-
-| 用途      | 採用                                     |
-| --------- | ---------------------------------------- |
-| framework | Astro                                    |
-| CSS       | Tailwind CSS                             |
-| island    | React (実行パネルとサイドバーだけに使う) |
-| 実行環境  | PGlite (ブラウザ内の Postgres)           |
-| 全文検索  | Pagefind (ビルド時に索引を作る)          |
-| 配信      | Cloudflare Workers Static Assets         |
-| 基盤      | Terraform + `cloudflare/cloudflare`      |
-
-JavaScript 側のバージョンは各 `package.json` が持つ。  
-Terraform 本体のバージョンは `.github/workflows/` が、provider のバージョンは `infra/*/.terraform.lock.hcl` が固定する。
-ツールの役割は [context/tech-stack.md](context/tech-stack.md) に、採否の理由は [adr/](adr/) にある。
+pnpm workspace の monorepo。  
+ディレクトリの構成は [design/DesignDoc.md](design/DesignDoc.md#repository-layout) に、使うツールと役割とバージョンの所在は [context/tech-stack.md](context/tech-stack.md) に、採否の理由は [adr/](adr/) にある。
 
 ## 開発
 
@@ -70,18 +45,9 @@ pnpm --filter @fukuemon/web exec playwright install chromium
 
 ## 配信
 
-既定ブランチへ merge すると Check workflow が回り、**成功したときだけ** Deploy workflow が `wrangler deploy` を実行する。
-push を直接の契機にすると、チェックの結果を待たずに配信されてしまうためである。
-
-基盤リソースは Terraform の管轄である。
-zone と custom domain は `workflow_dispatch` の手動起動と environment の承認を通す。
-**state 用の R2 バケットだけは運用者が手元で 1 回だけ apply する。** state をローカルに置く前提を CI から壊さないためである。
-
-**1 つのリソースを Terraform と Wrangler の両方から管理しない。**
-
-- 管轄の分担と credential の置き場: [context/operations.md](context/operations.md)
-- 基盤の構成と state backend: [infra/DesignDoc.md](infra/DesignDoc.md)
-- apply の手順と実行順序: [infra/README.md](infra/README.md)
+- 管轄の分担、deploy と apply の条件、credential の置き場: [context/operations.md](context/operations.md)
+- 基盤の構成と、deploy と apply の流れ: [infra/DesignDoc.md](infra/DesignDoc.md)
+- 基盤を作る手順と apply の手順: [infra/README.md](infra/README.md)
 - 判断の理由: [ADR-0005](adr/0005-workers-terraform-wrangler-boundary.md)
 
 ## 文書
@@ -95,4 +61,4 @@ zone と custom domain は `workflow_dispatch` の手動起動と environment �
 | 判断とその代替案    | [adr/](adr/)                                                                   |
 
 迷ったら Design Doc から読む。
-内容が衝突したときは Design Doc を正とする。
+内容が食い違ったときは、取り決めは context を、構成と処理の流れは Design Doc を、判断とその理由は ADR を正とする。
