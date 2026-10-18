@@ -99,6 +99,7 @@
   --measure: min(100% - 2 * var(--gutter), var(--measure-w));
   /* 一覧や実行結果など、行長より広く取る版面 */
   --measure-wide: 68rem;
+  --hit: 44px; /* 押せる要素の当たり判定の下限 */
   --topbar: 45px; /* sticky ヘッダの高さ。scroll-padding と sticky 起点の基準 */
   --rail: 46px; /* 縦組み見出しの列 */
   --drawer: 306px; /* サイドバー。題が 2 行に収まる幅 */

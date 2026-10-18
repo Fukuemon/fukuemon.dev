@@ -13,7 +13,7 @@ const max = Math.max(1, ...items.map((i) => i.weight));
   {
     items.map((i) => (
       <a
-        class="toc__item group flex flex-col items-start gap-[7px] py-intra-1"
+        class="toc__item group flex flex-col items-start gap-[7px] py-intra-1 max-wide:min-h-(--hit) max-wide:justify-center"
         href={`#${i.slug}`}
         data-toc-link={i.slug}
       >

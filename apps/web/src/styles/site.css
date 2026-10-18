@@ -301,12 +301,15 @@
 @media (hover: none) {
   /* 半透明だと下の文字が透けて、壊れた表示に見える。
      EC の同名の規則より後に効かせるため、frame を 1 段挟んで詳細度を上げる */
+  /* EC が触る端末に与える 2.5rem は 40px で、当たり判定に足りない */
   .expressive-code .frame .copy button {
     opacity: 1;
+    inline-size: var(--hit);
+    block-size: var(--hit);
   }
-  /* EC が空ける 2rem は hover 端末のボタン幅。触る端末は 2.5rem ある */
+  /* EC が空ける 2rem は hover 端末のボタン幅 */
   .expressive-code :nth-child(1 of .ec-line) .code {
-    padding-inline-end: calc(2.5rem + var(--ec-codePadInl));
+    padding-inline-end: calc(var(--hit) + var(--ec-codePadInl));
   }
 }
 
