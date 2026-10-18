@@ -38,13 +38,18 @@ jobs:
       - run: apm install --frozen
 
       # 既存の文書の指摘は残っている。pull request で変えた Markdown だけを見る
+      # サイトの原稿はですます調なので、原稿の設定を別に渡す (textlint は設定を 1 つしか読まない)
       - name: textlint
         if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          git diff --name-only --diff-filter=ACMR "origin/$BASE_REF...HEAD" -- '*.md' > changed.txt
-          if [ -s changed.txt ]; then xargs pnpm exec textlint < changed.txt; fi
+          git diff --name-only --diff-filter=ACMR "origin/$BASE_REF...HEAD" -- '*.md' ':(exclude)apps/web/src/content/' > changed.txt
+          git diff --name-only --diff-filter=ACMR "origin/$BASE_REF...HEAD" -- 'apps/web/src/content/*.md' 'apps/web/src/content/*.mdx' > changed-content.txt
+          status=0
+          if [ -s changed.txt ]; then xargs pnpm exec textlint < changed.txt || status=1; fi
+          if [ -s changed-content.txt ]; then xargs pnpm exec textlint --config apps/web/src/content/.textlintrc.json < changed-content.txt || status=1; fi
+          exit $status
       - run: node .claude/hooks/docs/hooks/check-history.mjs
       # サイトの原稿はサイト内の URL を持ち、ファイルのリンクではない
       - run: node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/

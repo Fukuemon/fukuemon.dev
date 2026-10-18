@@ -30,11 +30,13 @@ apm lifecycle trust
 
 ```sh
 pnpm exec textlint <直した Markdown>
+pnpm exec textlint --config apps/web/src/content/.textlintrc.json <直した原稿>
 node .claude/hooks/docs/hooks/check-history.mjs
 node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 ```
 
-- textlint は、`apps/` のサイトの原稿にも掛ける。リンクのチェックは、原稿（`apps/web/src/content/`）を対象にしない。原稿はサイト内の URL でリンクするためである。
+- サイトの原稿（`apps/web/src/content/` の `.md` と `.mdx`）には、原稿の設定を `--config` で渡す。原稿は `ですます` 調で書き、ルートの設定は `である` 調を求めるためである。
+- リンクのチェックは、原稿を対象にしない。原稿はサイト内の URL でリンクするためである。
 - 既存の文書には textlint の指摘が残っている。直した文書だけに掛け、CI も pull request で変えた Markdown だけを見る。
 
 `verified_commit` の後に実装が変わった文書は、`node .claude/hooks/docs/hooks/list-drift.mjs` で一覧する。実装と読み比べてから `verified_commit` を進める。
@@ -46,7 +48,7 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 - 保護するブランチへの直接のコミットと push を止める。
 - ステージしたファイルに Oxfmt を掛け、整形した結果をステージし直す。
   - Oxfmt の設定は `.oxfmtrc.jsonc` にある。
-- ステージした Markdown に textlint を掛ける。
+- ステージした Markdown に textlint を掛ける。原稿には原稿の設定を使う。
 - commit-msg のフックで、`ticket-number` が issue 番号をメッセージに足す。
   - ブランチの名前が `feature/<issue 番号>` で、1 行目に `#<issue 番号>` がないときに、1 行目の末尾へ足す。
 - commit-msg のフックで、commitlint がメッセージの形式を確かめる。規則は `commitlint.config.mjs` にある。
