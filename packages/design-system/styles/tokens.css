@@ -55,7 +55,7 @@
   --color-veil-1: light-dark(#fcfbf8, #17140f);
   --color-veil-0: light-dark(rgb(252 251 248 / 0), rgb(23 20 15 / 0));
 
-  /* コード。輝度の梯子。隣接比 最小 1.27 */
+  /* コード。輝度の梯子。隣接比の最小は明 1.27 / 暗 1.11 */
   --color-c-plain: light-dark(#1a1714, #f4f1ea); /* 15.39 / 14.86 */
   --color-c-key: light-dark(#5e1b33, #e48fa8); /* 10.78 /  7.02 */
   --color-c-ident: light-dark(#2a4470, #5a88c4); /*  8.39 /  4.59 */
@@ -82,7 +82,7 @@
   --spacing-inter-3: 89px; /* 節の間 */
 
   /* 折り返しは 2 段だけ。値は「その幅から上」を指すので、
-     `max-narrow:` が max-width: 720.98px、`max-wide:` が max-width: 1100.98px になる */
+     `max-narrow:` は 720px 以下、`max-wide:` は 1100px 以下に当たる */
   --breakpoint-narrow: 721px;
   --breakpoint-wide: 1101px;
 }
@@ -95,7 +95,6 @@
   --gutter: clamp(20px, 5vw, 56px);
   /* 本文の行長。42rem でおよそ 37 字。日本語は 40〜45 字を超えると行を追いにくい */
   --measure-w: 42rem;
-  --measure: min(100% - 2 * var(--gutter), var(--measure-w));
   /* 一覧や実行結果など、行長より広く取る版面 */
   --measure-wide: 68rem;
   --hit: 44px; /* 押せる要素の当たり判定の下限 */

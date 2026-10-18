@@ -53,7 +53,8 @@ export default defineConfig({
           editorBackground: "var(--color-code-bg)",
           terminalBackground: "var(--color-code-bg)",
           terminalTitlebarBackground: "var(--color-code-bg)",
-          tooltipSuccessBackground: "var(--color-green)",
+          tooltipSuccessBackground: "var(--color-tint-green)",
+          tooltipSuccessForeground: "var(--color-fg)",
         },
         textMarkers: {
           markBackground: "var(--color-tint-green)",

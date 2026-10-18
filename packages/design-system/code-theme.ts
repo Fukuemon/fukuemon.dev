@@ -1,9 +1,9 @@
 /**
  * コードの配色。Shiki / Expressive Code へ渡す。
  *
- * **値は tokens.css の `--c-*` と同じものである。**
+ * **値は tokens.css の `--color-c-*` と同じものである。**
  * Shiki はビルド時に色を解決するため CSS カスタムプロパティを引けない。
- * 片方を変えたらもう片方も変える。ずれは `checkCodeTheme()` が検出する。
+ * 片方を変えたらもう片方も変える。ずれは check-contrast.ts の `checkContrast()` が検出する。
  *
  * 輝度を単調な梯子に並べる。隣接比は明 1.27 / 暗 1.11 が最小。
  * 色の比が詰まったときの手掛かりとして、keyword に太字、comment に斜体を重ねる。
