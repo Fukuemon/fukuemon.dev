@@ -97,6 +97,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 | 親の状態                              | `.steps__link[aria-current] .steps__text` | 親に `group`、子に `group-aria-[current]:` |
 | 離れた祖先の `data-*` 属性            | `[data-open="false"]` の子孫              | `[[data-open=false]_&]:...`                |
 | `<dialog>` と `<details>` の `[open]` | `.sheet[open]`                            | `open:...`                                 |
+| ページの中のほかの要素の有無          | `body:has([data-side]) .foot`             | `[body:has([data-side])_&]:...`            |
 
 - `aria-current` の有無で当てるときは、`aria-[current]:` を使う。
   - 組み込みの `aria-current:` は `[aria-current="true"]` に当たり、手順の現在地の `aria-current="step"` には当たらない。
