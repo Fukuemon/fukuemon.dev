@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { useRan } from "../bus";
 import { fetchColumnsByTable, fetchRows, fetchTables, type Table } from "./catalog";
-import ErDiagram, { type Entity } from "./ErDiagram";
+import ErDiagram from "./ErDiagram";
+import type { Entity } from "./er-layout";
 import PeekList, { rowLabel } from "./PeekList";
 import { peekRuntime } from "../runtime/runtime";
 import Sheet from "./Sheet";
@@ -10,8 +11,19 @@ import { useCatalog } from "./useCatalog";
 
 const MAX_PEEK = 20;
 
+/** ER 図を 1 列に積む幅。トークンの narrow と同じ境界 */
+const NARROW = "(max-width: 720px)";
+
+const subscribeNarrow = (on: () => void) => {
+  const mq = globalThis.matchMedia?.(NARROW);
+  mq?.addEventListener("change", on);
+  return () => mq?.removeEventListener("change", on);
+};
+const isNarrow = () => globalThis.matchMedia?.(NARROW).matches ?? false;
+
 export default function DbPeek({ contentId }: { contentId: string }) {
   const { tables, relations, reload } = useCatalog(contentId);
+  const narrow = useSyncExternalStore(subscribeNarrow, isNarrow, () => false);
   const [listOpen, setListOpen] = useState(true);
 
   const [er, setEr] = useState<Entity[] | null>(null);
@@ -94,7 +106,7 @@ export default function DbPeek({ contentId }: { contentId: string }) {
           {er === null ? (
             <p className="mono meta">読み込み中…</p>
           ) : (
-            <ErDiagram entities={er} relations={relations} />
+            <ErDiagram entities={er} relations={relations} cols={narrow ? 1 : 2} />
           )}
         </div>
       </Sheet>

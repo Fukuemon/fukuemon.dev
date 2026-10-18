@@ -12,9 +12,10 @@ type Props = {
 /**
  * 重ねる 2 枚で揃える箱。
  * 折り返しと字形が一致しないと文字がずれるので、書体を含めて必ず両方に当てる。
+ * 指で触る端末では 16px にする。iOS の Safari は、16px 未満の入力欄に触れると画面を拡大する。
  */
 const OVERLAY =
-  "mono m-0 w-full overflow-auto p-intra-3 text-[0.9rem] leading-[1.7] whitespace-pre-wrap [word-break:break-word] [tab-size:2]";
+  "mono m-0 w-full overflow-auto p-intra-3 max-narrow:px-intra-2 text-[0.9rem] pointer-coarse:text-[1rem] leading-[1.7] whitespace-pre-wrap [word-break:break-word] [tab-size:2]";
 
 /**
  * 色を付けたまま編集する。

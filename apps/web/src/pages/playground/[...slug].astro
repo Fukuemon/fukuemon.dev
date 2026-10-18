@@ -39,7 +39,12 @@ const d = entry.data;
 </SiteLayout>
 
 <script>
-  import { mountSide } from "../../components/side";
+  import { mountSide, shutIfNarrow } from "../../components/side";
+  import { onPreset } from "../../features/lab/bus";
   const root = document.querySelector<HTMLElement>("[data-side-root]");
-  if (root) mountSide(root);
+  if (root) {
+    mountSide(root);
+    // 狭い画面では面が入力欄を覆う。選んだ SQL が欄に入ったことを見せる
+    onPreset("playground", () => shutIfNarrow(root));
+  }
 </script>

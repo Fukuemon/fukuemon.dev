@@ -14,9 +14,13 @@ export type TableName = string & { readonly [nameBrand]: "TableName" };
 
 export type Table = { name: TableName; rows: number };
 export type Column = { name: string; type: string; nullable: boolean; pk: boolean };
-export type Relation = { name: string; src: string; tgt: string; def: string };
+/** 外部キー。`cols` は `src` の列、`refs` は `tgt` の列で、同じ順に対応する */
+export type Relation = { name: string; src: string; tgt: string; cols: string[]; refs: string[] };
 
 const MAX_LIMIT = 1000;
+
+/** `json_agg` の結果。列の無い制約では null が返る */
+const names = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => cellText(x)) : []);
 
 const quoteIdentifier = (name: TableName) => `"${name.replaceAll('"', '""')}"`;
 
@@ -36,7 +40,8 @@ export async function fetchRelations(rt: Runtime): Promise<Relation[]> {
     name: cellText(r[0] ?? ""),
     src: cellText(r[1] ?? ""),
     tgt: cellText(r[2] ?? ""),
-    def: cellText(r[3] ?? ""),
+    cols: names(r[3]),
+    refs: names(r[4]),
   }));
 }
 
