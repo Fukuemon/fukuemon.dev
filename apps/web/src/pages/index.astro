@@ -22,7 +22,7 @@ const [all, labs, articles] = await Promise.all([
     <div class="g-rail">
       <Tate as="h2" class="tate-head text-fg" text="最近の更新" />
       <div class="flex justify-end items-baseline pb-intra-1">
-        <a class="mono meta" href="/blog">すべて見る →</a>
+        <a class="mono meta hit-up" href="/blog">すべて見る →</a>
       </div>
       <div>
         {all.slice(0, 6).map((r, i) => <ContentRow ref={r} trailing="kind" cap={false} index={i} />)}

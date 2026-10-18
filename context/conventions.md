@@ -103,6 +103,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 | 親の状態                              | `.steps__link[aria-current] .steps__text` | 親に `group`、子に `group-aria-[current]:` |
 | 離れた祖先の `data-*` 属性            | `[data-open="false"]` の子孫              | `[[data-open=false]_&]:...`                |
 | `<dialog>` と `<details>` の `[open]` | `.sheet[open]`                            | `open:...`                                 |
+| ページの中のほかの要素の有無          | `body:has([data-side]) .foot`             | `[body:has([data-side])_&]:...`            |
 
 - `aria-current` の有無で当てるときは、`aria-[current]:` を使う。
   - 組み込みの `aria-current:` は `[aria-current="true"]` に当たり、手順の現在地の `aria-current="step"` には当たらない。
@@ -117,6 +118,15 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - `check-contrast.ts` は、`tokens.css` の `@theme static` の 1 箇所だけを読む。
 - 色でないもの（`mix-blend-mode` など）を明暗で分けるときだけ、選択子を 2 本並べる。
   - `[data-theme="dark"]` と、`prefers-color-scheme: dark` の中の `:root:not([data-theme="light"])` の 2 本である。
+
+### 当たり判定
+
+規則は [Design System の Design Doc](../packages/design-system/DesignDoc.md#当たり判定と読み上げ) にある。
+
+- 触る端末だけで寸法を変えるときは、`pointer-coarse:` を使う。
+  - `hover: none` は Expressive Code の写しボタンだけに使う。EC の規則が cascade layer の外にあり、markup から当てられない。
+- `.hit-up` の当たり判定は疑似要素が持つ。
+  - `getBoundingClientRect()` は疑似要素を含めないので、測るときは `::after` の `top` と `bottom` を差し引いて足す。
 
 ## Shared Configuration
 

@@ -1,15 +1,27 @@
 ---
 import Icon from "./Icon.astro";
 import { LINKS, PROFILE } from "../data/profile";
+
+/**
+ * 狭い画面では、サイドバーの開閉ボタンが画面の左下に固定される。
+ * ボタンを持つページだけ、末尾の余白をボタンの高さと溝の分だけ足し、著作権表示と重ねない。
+ */
+const CLEAR_SIDE_TOGGLE =
+  "max-wide:[body:has([data-side])_&]:pb-[calc(var(--gutter)+3rem+var(--spacing-intra-3))]";
 ---
 
-<footer data-band class="foot flex justify-between items-baseline border-t border-rule py-inter-1 px-(--gutter)">
+<footer
+  class:list={[
+    "foot flex justify-between items-baseline border-t border-rule-strong py-inter-1 px-(--gutter)",
+    CLEAR_SIDE_TOGGLE,
+  ]}
+>
   <span class="mono meta">© 2026 {PROFILE.name} · CC BY 4.0</span>
   <span class="flex gap-intra-1">
     {
       LINKS.map((l) => (
         <a
-          class="hit justify-center w-[40px] text-fg-2 transition-colors duration-[140ms] ease-out hover:text-link"
+          class="hit justify-center w-(--hit) text-fg-2 transition-colors duration-[140ms] ease-out hover:text-link"
           href={l.href}
           aria-label={l.label}
           title={l.label}

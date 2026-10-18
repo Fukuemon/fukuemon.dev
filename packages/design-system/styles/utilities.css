@@ -17,14 +17,21 @@
     border-style: solid;
   }
 
-  /* sticky ヘッダの下へアンカー先とフォーカスが隠れるのを防ぐ */
+  /* sticky ヘッダの下へアンカー先とフォーカスが隠れるのを防ぐ。
+     横へはみ出す要素が出ても、ページを横に揺らさない */
   html {
     scroll-padding-block-start: calc(var(--topbar) + var(--spacing-intra-3));
+    overflow-x: clip;
+  }
+
+  /* 上下の端を越えて引っぱったときに出る地も、紙の色にする */
+  html,
+  body {
+    background: var(--color-paper);
   }
 
   body {
     margin: 0;
-    background: var(--color-paper);
     color: var(--color-fg);
     font-family: var(--font-serif);
     font-size: 1.05rem;
@@ -221,13 +228,24 @@
   .hit {
     display: flex;
     align-items: center;
-    min-block-size: 44px;
+    min-block-size: var(--hit);
+  }
+  /* 字の大きさと版面を変えずに、当たり判定だけを上へ広げる。
+     下へ広げると、次の行の当たり判定に重なる */
+  .hit-up {
+    position: relative;
+  }
+  .hit-up::after {
+    content: "";
+    position: absolute;
+    inset-inline: min(0px, calc(50% - var(--hit) / 2));
+    inset-block: calc(100% - var(--hit)) 0;
   }
 
   .btn {
     display: inline-flex;
     align-items: center;
-    min-block-size: 44px;
+    min-block-size: var(--hit);
     padding: 0 22px;
     border: 1px solid var(--color-rule-strong);
     background: transparent;
