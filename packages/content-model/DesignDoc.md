@@ -45,7 +45,7 @@ Astro は `id` をファイルのパスから導いて占有するので、自�
 ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model-independence.md)
 
 ```yaml
-contentId: rdbms-query-execution # 発行した後は変えない。すべての collection をまたいで一意
+contentId: rdbms-query-execution # 発行した後は変えない。記事とハンズオンのあいだで一意
 ```
 
 URL のパスは、Astro がファイルのパスから導く `id` で決まる。  
@@ -80,21 +80,28 @@ export const portalBase = z.object({
 
 読み物の種別は 2 つだけで、増やさない。
 
-| collection    | 足す属性                                                           | 描画                     |
-| ------------- | ------------------------------------------------------------------ | ------------------------ |
-| `articles`    | 持たない                                                           | `ArticleLayout`          |
-| `labs`        | `difficulty`、`duration: number`、`setup?: string`、`interactive?` | `LabLayout` と手順の一覧 |
-| `playgrounds` | `runtime`、`setup?`、`presets`、`order`                            | playground のページ      |
+| collection | 足す属性                                                                   | 描画                     |
+| ---------- | -------------------------------------------------------------------------- | ------------------------ |
+| `articles` | 持たない                                                                   | `ArticleLayout`          |
+| `labs`     | `difficulty`、`duration`（正の整数、分）、`setup?: string`、`interactive?` | `LabLayout` と手順の一覧 |
+
+遊び場（`playgrounds`）の schema は `portalBase` を拡張せず、独立に定義する。  
+持つ属性は `contentId`、`title`、`description`、`status`、`runtime`、`setup?`、`presets?`、`order?` で、`tags`、日付、`related` は持たない。  
+`presets` と `order` は省略でき、既定は空の配列と 0 である。  
+遊び場の `contentId` は `buildContentGraph()` に渡さないので、ビルドは一意であることを確かめない。  
+著者が遊び場どうしで重ならないようにする。  
+URL が `/playground/<contentId>` で記事とハンズオンとは別なので、記事とハンズオンの `contentId` と重なってもよい。
 
 遊び場の frontmatter は、次のように書く。
 
 ```yaml
 contentId: postgres
 title: Postgres
-description: 手順に縛られず、好きな SQL を投げられます。
+description: ハンズオンの手順に沿わずに、好きな SQL を実行できます。
+status: published
 runtime: pglite
 presets:
-  - label: 版と実行環境
+  - label: バージョンと実行環境
     sql: select version();
 ```
 
@@ -124,13 +131,13 @@ frontmatter に書くと本文と二重に管理することになり、手順�
 Astro の `reference()` は使わない。  
 理由は [ADR-0002](../../adr/0002-content-model-independence.md) にある。
 
-次の図は、記事とハンズオンのあいだの `related` の辺の例を示す。
+次の図は、原稿に書いてある `related` の辺を示す。
 
 ```mermaid
 flowchart LR
-    a1["Article<br/>pg-query-plan"] -->|related| h1["Hands-on<br/>rdbms-query-execution"]
-    a2["Article<br/>pg-index-not-used"] -->|related| h1
-    h1 -->|related| a3["Article<br/>btree-key-order"]
+    h1["Hands-on<br/>rdbms-query-execution"] -->|related| a1["Article<br/>index-not-used"]
+    h2["Hands-on<br/>vacuum-and-bloat"] -->|related| h1
+    a2["Article<br/>wal-and-checkpoint"] -->|related| h2
 ```
 
 `related` は、著者が明示した筋である。  
@@ -140,10 +147,12 @@ flowchart LR
 
 - `contentId` の索引を作る。重複があれば、ビルドを失敗させる。
 - `related` を解決する。解決できない参照があれば、ビルドを失敗させる。
+- 両方向を手で書いた `related` があれば、ビルドを失敗させる。
+- 自分自身への参照は辺にせず捨てる。
 - 逆参照を導く。
 
 著者は関係を片方向だけ書き、逆方向はグラフが導く。  
-両方向を手で書くと、片側の書き忘れで不整合が生じるので許さない。
+両方向を手で書くと、片側だけを消し忘れたときに関係が食い違う。
 
 解決できない参照を、警告ではなく失敗にする。  
 静的なサイトでは「関連が表示されない」形で、エラーを出さずに誤り、目視では気づけないためである。
@@ -188,10 +197,13 @@ flowchart TD
         schema["schema.ts<br/>portalBase / 種別の拡張"]
         types["types.ts<br/>ContentRef"]
         graph["graph.ts<br/>buildContentGraph()"]
+        steps["steps.ts<br/>Step"]
+        toc["toc.ts<br/>buildToc()"]
     end
     subgraph web ["apps/web"]
         config["content.config.ts<br/>loader と schema の結線"]
         adapter["lib/content/<br/>listContent / getContent / getRelated"]
+        layouts["layouts/**"]
         pages["pages/**"]
     end
     ac["astro:content"]
@@ -201,6 +213,9 @@ flowchart TD
     adapter --> graph
     adapter --> types
     pages --> adapter
+    adapter --> toc
+    layouts --> adapter
+    layouts --> steps
     graph --> types
 ```
 
