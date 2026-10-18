@@ -40,20 +40,23 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 ```mermaid
 flowchart TD
-    push["git push"] --> chk["check workflow"]
-    chk -->|"成功したときだけ"| ci["deploy workflow"]
+    push["develop への push（merge）"] --> chk["check workflow"]
+    chk -->|"develop への push で成功したときだけ"| ci["deploy workflow"]
     ci -->|"deploy 用の token"| wd["wrangler deploy"]
     wd --> worker["Worker script + assets"]
-    manual["運用者が手動で起動"] --> env["environment protection rules"]
-    env -->|"apply 用の token"| tf["terraform apply"]
+    manual["運用者が手動で起動（mode=plan、次に mode=apply）"] --> env["environment protection rules"]
+    env -->|"apply 用の token"| tf["terraform plan / apply"]
     tf --> base["Zone / custom domain"]
-    ci -. "到達しない" .-x base
+    ci -. "触らない" .-x base
 ```
 
 Worker のコードの変更は、通常の pull request に含まれ、merge で自動的に deploy される。  
 apply の workflow のような、明示的な操作を挟まない。  
 コードが app の側にあるので、repo をどう分けても、この性質は変わらない。  
 変更を止める手段は、pull request のレビューと自動のテストに頼る。  
+`develop` には branch protection を掛けていないので、pull request を通すのは慣行であり、仕組みでは強制しない。  
+deploy 用の token は Workers Scripts の権限を持つので、custom domain の apex のレコードにも届きうる。deploy の workflow がそれを触らないのは、`wrangler deploy` の振る舞いによる。  
+apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md) にある。  
 いまの Worker はハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
 
 Wrangler の設定ファイルは `wrangler.jsonc` にする。  
@@ -66,10 +69,11 @@ Cloudflare は新しいプロジェクトに JSONC を勧めており、一部�
 | `infra/bootstrap/`  | state 用の R2 のバケット         | 手元（commit しない）           | 運用者が手元で 1 回      |
 | `infra/cloudflare/` | zone と Workers の custom domain | R2（`infra/bootstrap/` が作る） | apply の workflow か手元 |
 
-`infra/bootstrap/` を CI から実行しない。state を手元に置く前提が成り立たなくなる。
+`infra/bootstrap/` を CI から apply しない。state を手元に置く前提が成り立たなくなる。  
+CI は `infra:check` で init（backend なし）と validate だけを実行する。
 
 zone は Terraform で作らない。  
-Cloudflare Registrar がドメインを取得したときに作った zone を、`zone.tf` の `import` ブロックが apply のたびに state へ取り込む。  
+Cloudflare Registrar がドメインを取得したときに作った zone を、`zone.tf` の `import` ブロックが、state にまだないときに取り込む。  
 `cloudflare_zone` には `prevent_destroy` を付ける。
 
 `cloudflare_workers_custom_domain` が apex のレコードを管理するので、DNS のレコードは書かない。
@@ -112,13 +116,18 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `infra/cloudflare/vars.tf`: `account_id`、`zone_id`、`zone_name`、`worker_name` の変数
 - `apps/web/wrangler.jsonc`: Worker の設定
 
-変数の値は、各ディレクトリの `terraform.tfvars` に置き、commit しない。
+変数の値は、手元では各ディレクトリの `terraform.tfvars` に置き、commit しない。  
+CI では、apply の workflow が `TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name` を secret と variable から渡す。  
+`worker_name` と、bootstrap の `location` は既定値を持つ。
 
 ### 実行するコマンドとチェック
 
 - `pnpm run infra:init`、`infra:plan`、`infra:apply`: `infra/cloudflare/` を対象にする
 - `pnpm run infra:bootstrap:init`、`infra:bootstrap:apply`: `infra/bootstrap/` を対象にする
 - `pnpm run infra:check`: `terraform fmt -check` と `terraform validate` を、backend を無効にして実行する。credential は要らない
+- `pnpm run check:worker-name`: `wrangler.jsonc` の `name` と、`vars.tf` の `worker_name` の既定値が一致するかを確かめる
+- `pnpm run check:deploy`: `wrangler deploy --dry-run` を実行する
+- check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 2 つを含む `pnpm run check` を実行する
 - apply の workflow（`.github/workflows/apply.yml`）と deploy の workflow（`.github/workflows/deploy.yml`）
 
 ## Verification
