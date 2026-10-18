@@ -63,7 +63,7 @@ ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-in
 ### 確かめた前提
 
 - `pagefind` が自前のページを索引に入れる。`data-pagefind-body` は本文の要素にだけ付ける。
-- config の rehype plugin は、Expressive Code より先に動く。素の `<pre><code>` のまま拾えるので、`rehype-mermaid` が図に変換できる。
+- config の rehype plugin は、Expressive Code より先に動く。素の `<pre><code>` のまま拾えるので、`apps/web/src/lib/rehype-mermaid.ts` が図に変換できる。
 
 Expressive Code について確かめた前提は [Design System の Design Doc](../packages/design-system/DesignDoc.md#verification) に、基盤について確かめた前提は [基盤の Design Doc](../infra/DesignDoc.md#verification) にある。
 

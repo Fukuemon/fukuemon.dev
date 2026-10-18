@@ -37,12 +37,6 @@ pnpm run dev
 `infra:check` は Terraform を必要とするため `pnpm run check` には含めない。
 CI の Check workflow では別の step として先に回す。
 
-図をビルド時に SVG へ変換するので、`build` には Playwright の Chromium が要る。
-
-```sh
-pnpm --filter @fukuemon/web exec playwright install chromium
-```
-
 ## 配信
 
 - 管轄の分担、deploy と apply の条件、credential の置き場: [context/operations.md](context/operations.md)
