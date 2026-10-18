@@ -44,14 +44,21 @@ WAL は、遅いランダム書き込みを後回しにして、速い追記だ�
 どちらの条件で始まっているかを、先に確かめてください。対処が変わります。
 
 ```sql
-select checkpoints_timed, checkpoints_req,
+select num_timed, num_requested,
        buffers_written, write_time, sync_time
 from pg_stat_checkpointer;
 ```
 
-`checkpoints_req` (WAL の量による要求) が `checkpoints_timed` (時間による定期) に対して多いなら、`max_wal_size` が書き込み量に対して小さすぎます。
+`num_timed` は `checkpoint_timeout` で始まった回数、`num_requested` は `max_wal_size` に達したときなど、要求で始まった回数です。
+`num_requested` が `num_timed` に対して多いなら、`max_wal_size` が書き込み量に対して小さすぎます。
 
-Postgres 17 より前は、`pg_stat_bgwriter` に同じ列があります。
+Postgres 16 までは、同じ値を `pg_stat_bgwriter` から別の列の名前で読みます。
+
+```sql
+select checkpoints_timed, checkpoints_req,
+       buffers_checkpoint, checkpoint_write_time, checkpoint_sync_time
+from pg_stat_bgwriter;
+```
 
 ## 間隔を延ばすと山が高くなる
 
@@ -84,9 +91,9 @@ Postgres は、チェックポイントの後に最初に変更されたペー�
 
 ## 見る順序
 
-1. `pg_stat_checkpointer` で `checkpoints_req` と `checkpoints_timed` の比を見る
-2. `req` が多いなら `max_wal_size` を増やす
-3. `timed` ばかりで山が高いなら `checkpoint_completion_target` を確かめる
+1. `pg_stat_checkpointer` で `num_requested` と `num_timed` の比を見る
+2. `num_requested` が多いなら `max_wal_size` を増やす
+3. `num_timed` ばかりで山が高いなら `checkpoint_completion_target` を確かめる
 4. それでも高いなら、山の原因はチェックポイントではない。VACUUM を確かめる
 
 4 つ目は [VACUUM と肥大化を自分で作る](/labs/vacuum-and-bloat) で確かめられます。
