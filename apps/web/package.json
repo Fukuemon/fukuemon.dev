@@ -40,6 +40,7 @@
     "pele": "1.6.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.0",
     "unified": "^11.0.5",

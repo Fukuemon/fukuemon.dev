@@ -8,6 +8,7 @@ import { RUNNERS } from "./src/features/lab/runners";
 import { rehypeLabSteps } from "./src/lib/rehype-lab-steps";
 import { rehypeScrollTable } from "./src/lib/rehype-scroll-table";
 import { rehypeMermaid } from "./src/lib/rehype-mermaid";
+import { subsetFonts } from "./src/lib/subset-fonts";
 import { codeThemeDark, codeThemeLight } from "@fukuemon/design-system/code-theme";
 
 export default defineConfig({
@@ -29,6 +30,7 @@ export default defineConfig({
     ],
   },
   integrations: [
+    subsetFonts("Zen Old Mincho"),
     react(),
     expressiveCode({
       // --color-c-* を写した自前のテーマ。全トークンが 4.5:1 を満たす

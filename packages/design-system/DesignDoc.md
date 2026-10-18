@@ -91,7 +91,12 @@ Fontsource の依存は `apps/web` が持ち、`@fukuemon/design-system` は依�
 ブラウザは、ページの文字に `unicode-range` が一致するスライスだけを取得する。  
 フォントのファイルはビルドで `/_astro/` に出力され、サイトと同じオリジンから配信される。  
 `apps/web/astro.config.ts` の `build.assetsInlineLimit` は、フォントを base64 で CSS に埋めない。  
-埋めると、ページで使わないスライスまで、描画を止める CSS と一緒に配ることになる。  
+埋めると、ページで使わないスライスまで、描画を止める CSS と一緒に配ることになる。
+
+Zen Old Mincho のスライスは、build の後に、サイトの HTML と JS が使う字だけを持つファイルへ作り直す。
+処理は `apps/web/src/lib/subset-fonts.ts` の Astro integration が持つ。
+スライスの分け方と `unicode-range` は Fontsource のままで、ファイルの名前だけを中身の hash で付け直す。
+検索の入力欄に、サイトで使っていない字を打つと、その字だけが `--font-serif` の次の書体で描かれる。
 ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 #### 型スケール
