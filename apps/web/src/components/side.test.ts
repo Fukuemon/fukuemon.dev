@@ -1,6 +1,6 @@
 import { runInThisContext } from "node:vm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { applySide, mountSide, shutIfNarrow } from "./side";
+import { applySide, mountSide, shutIfNarrow, tuckOnScroll } from "./side";
 
 /** DOM の代役。テスト環境に DOM は無く、side.ts が使う口だけを持たせる */
 class FakeEl {
@@ -13,6 +13,9 @@ class FakeEl {
 
   setAttribute(k: string, v: string) {
     this.attrs.set(k, v);
+  }
+  getAttribute(k: string) {
+    return this.attrs.get(k) ?? null;
   }
   closest() {
     return this.root;
@@ -61,12 +64,22 @@ function stubWidth(narrow: boolean) {
 }
 
 let keydown: ((e: Event) => void) | undefined;
+let scroll: (() => void) | undefined;
+
+/** 画面を `y` まで流したことにする */
+function scrollTo(y: number) {
+  vi.stubGlobal("scrollY", y);
+  scroll?.();
+}
 
 beforeEach(() => {
   vi.unstubAllGlobals();
   keydown = undefined;
+  scroll = undefined;
+  vi.stubGlobal("scrollY", 0);
   vi.stubGlobal("addEventListener", (type: string, fn: (e: Event) => void) => {
     if (type === "keydown") keydown = fn;
+    if (type === "scroll") scroll = fn as () => void;
   });
 });
 
@@ -217,5 +230,48 @@ describe("shutIfNarrow", () => {
     stubWidth(true);
     shutIfNarrow(el(root));
     expect(root.dataset.open).toBe("false");
+  });
+});
+
+describe("tuckOnScroll", () => {
+  function tucked() {
+    stubWidth(true);
+    const { btn, el } = build();
+    btn.setAttribute("aria-expanded", "false");
+    tuckOnScroll(el(btn));
+    return btn;
+  }
+
+  it("狭い画面で下へ流すと隠し、上へ戻すと出す", () => {
+    const btn = tucked();
+    scrollTo(300);
+    expect(btn.dataset.tuck).toBe("");
+    scrollTo(200);
+    expect(btn.dataset.tuck).toBeUndefined();
+  });
+
+  it("揺れの幅に収まる動きでは出し入れしない", () => {
+    const btn = tucked();
+    scrollTo(300);
+    scrollTo(295);
+    expect(btn.dataset.tuck).toBe("");
+  });
+
+  it("広い画面と、開いているときは隠さない", () => {
+    const btn = tucked();
+    stubWidth(false);
+    scrollTo(300);
+    expect(btn.dataset.tuck).toBeUndefined();
+    stubWidth(true);
+    btn.setAttribute("aria-expanded", "true");
+    scrollTo(600);
+    expect(btn.dataset.tuck).toBeUndefined();
+  });
+
+  it("フォーカスが来たら出す", () => {
+    const btn = tucked();
+    scrollTo(300);
+    btn.listeners.get("focus")?.();
+    expect(btn.dataset.tuck).toBeUndefined();
   });
 });
