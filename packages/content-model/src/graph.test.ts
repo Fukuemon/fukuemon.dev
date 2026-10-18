@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DanglingRelatedError,
   DuplicateContentIdError,
+  MutualRelatedError,
   buildContentGraph,
   type GraphInput,
 } from "./graph.js";
@@ -69,15 +70,15 @@ describe("buildContentGraph", () => {
     expect(g.relatedOf.get("b")).toStrictEqual(["a"]);
   });
 
+  it("両方向に書いた related は失敗する", () => {
+    expect(() => buildContentGraph([input("a", ["b"]), input("b", ["a"])])).toThrow(
+      MutualRelatedError,
+    );
+  });
+
   it("自分自身への参照は辺にしない", () => {
     const g = buildContentGraph([input("a", ["a"])]);
     expect(g.relatedOf.get("a")).toBeUndefined();
-  });
-
-  it("両側に書いても辺は重複しない", () => {
-    const g = buildContentGraph([input("a", ["b"]), input("b", ["a"])]);
-    expect(g.relatedOf.get("a")).toStrictEqual(["b"]);
-    expect(g.relatedOf.get("b")).toStrictEqual(["a"]);
   });
 
   it("同じ相手を 2 回書いても辺は 1 本になる", () => {

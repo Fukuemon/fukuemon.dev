@@ -1,7 +1,6 @@
 ---
 import ArticleLayout from "../../layouts/ArticleLayout.astro";
-import { getContent, isPublic, listArticleEntries, renderEntry } from "../../lib/content";
-import { buildToc } from "@fukuemon/content-model";
+import { getContent, isPublic, listArticleEntries, renderEntry, tocOf } from "../../lib/content";
 
 export async function getStaticPaths() {
   const entries = await listArticleEntries(isPublic);
@@ -13,7 +12,7 @@ const { Content, headings } = await renderEntry(entry);
 const ref = await getContent(entry.data.contentId);
 if (!ref) throw new Error(`ContentRef が見つかりません: ${entry.data.contentId}`);
 
-const toc = buildToc(entry.body ?? "", headings);
+const toc = tocOf(entry, headings);
 ---
 
 <ArticleLayout ref={ref} toc={toc}>

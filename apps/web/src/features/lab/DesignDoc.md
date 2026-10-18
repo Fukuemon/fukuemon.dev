@@ -9,7 +9,7 @@ governs:
   - apps/web/src/lib/remark-lab.ts
   - apps/web/src/lib/rehype-lab-steps.ts
   - apps/web/public/_headers
-verified_commit: 01101c7
+verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
 # ハンズオンと Interactive
@@ -79,9 +79,10 @@ Content Model の側の扱いは [Content Model の Design Doc](../../../../../p
 
 手順を数える場所は 1 つにする。
 
-- `remark-lab` が mdast の `h2` を数え、`remarkPluginFrontmatter.labSteps` で layout へ渡す。
+- `remark-lab` が mdast の `h2` を数え、`remarkPluginFrontmatter.labSteps` に置く。ページ（`pages/labs/[...slug].astro`）がそれを読み、props で `LabLayout` へ渡す。
 - `rehype-lab-steps` は、同じ `h2` を 1 画面にまとめるだけで、数え直さない。
 - ページの側でも本文をたどり直さない。
+  - 例外として、`controller.ts` は、`rehype-lab-steps` が出力した `.step` の `data-step` を数え、進捗バーと「n / N 手順」に使う。出力を数えるので、`labSteps` とずれない。
 - 生の Markdown を正規表現で数えると、setext の見出しやフェンスの中の `##` で、AST の側とずれる。
 
 1 つの手順を 1 画面に出す。  
@@ -151,7 +152,11 @@ isolation は、後から取り消せない方向の制約である。
 
 ### URL ごとの分離
 
-次の図は、isolation を掛けない通常のドキュメントと、`/playground/<id>` の分離を示す。
+`/playground/<id>` は遊び場のページである。  
+いまある遊び場（`postgres`）は、PGlite を `embedded` と同じ形で載せ、isolation を掛けない。  
+`sandbox` の遊び場を足すときは、その遊び場の URL にだけ isolation を掛け、ほかの遊び場には掛けない。
+
+次の図は、isolation を掛けない通常のドキュメントと、`sandbox` の遊び場の分離を示す。
 
 ```mermaid
 flowchart TD
@@ -163,7 +168,7 @@ flowchart TD
         art --- l1
         art --- lo
     end
-    subgraph isolated ["/playground/&lt;id&gt; (COOP + COEP)"]
+    subgraph isolated ["sandbox の遊び場 /playground/&lt;id&gt; (COOP + COEP)"]
         pg["sandbox: シェル / Live Preview"]
     end
     art -->|"iframe"| pg
@@ -173,12 +178,12 @@ flowchart TD
 - `embedded` は、本文と同じドキュメントに置く。MDX の中にコンポーネントとして置ける。
 - `sandbox` は、`/playground/<id>` の別のドキュメントに置き、本文からは `iframe` で埋め込む。
 - `local` は実行環境を持たない。リポジトリの URL と前提の条件だけを持ち、コマンドを出す。
-- isolation は、`apps/web/public/_headers` で `/playground/*` にだけ掛ける。
-  - isolation を求めるランタイムが実在するまで、`/playground/*` のヘッダは書かない。PGlite は素の Worker で動き、`SharedArrayBuffer` を求めないためである。
-  - 掛けるときに `/playground/*` へ書くヘッダは次のとおり。
+- isolation は、`apps/web/public/_headers` で、`sandbox` の遊び場の URL にだけ掛ける。
+  - isolation を求めるランタイムが実在するまで、ヘッダは書かない。PGlite は素の Worker で動き、`SharedArrayBuffer` を求めないためである。
+  - 掛けるときに書くヘッダは次のとおり。`<id>` は `sandbox` の遊び場の `contentId` である。
 
     ```text
-    /playground/*
+    /playground/<id>
       Cross-Origin-Opener-Policy: same-origin
       Cross-Origin-Embedder-Policy: require-corp
     ```
@@ -206,11 +211,11 @@ PGlite は、Linux の VM を使わず、Postgres の単一ユーザーモード
 - 押すと 4 ファイル、gzip で 5.28 MiB を取得する（計測した値）。
 - 1 ページで 1 つのインスタンスを共有する。2 回目以降の実行は 1 秒未満で返る。
 - 保存先はメモリである。再読み込みすると、初期の状態に戻る。
-- 初回の起動は、Fast 4G で 20〜25 秒かかる。Slow 4G では 60 秒の上限に当たって失敗しうる（計測では 73 秒）。再試行すれば、キャッシュから 10 秒台で立ち上がる。
+- 初回の起動は、Fast 4G で 20〜25 秒かかる。Slow 4G では、計測の 60 秒の上限で打ち切られた（経過は 74 秒）。実装は時間の上限を持たない。再試行すれば、キャッシュから 10 秒台で立ち上がる。
 - 結果は先頭の 200 行だけを出す。全部を描くと、ページが動かなくなる。
 - 複数の文を書いたときは、列を返した最後の文の結果を表に出す。前置きの `insert` や `analyze` ではなく、確かめたい文の結果が出る。
 - 実行中は「中断」を出す。Worker を終了させて止めるので、重いクエリでも画面は固まらない。
-- 「初めから」を押すと、`setup` を流し直す。
+- 「初めから」を押すと、実行環境を捨てる。`setup` は次の実行の起動で流し直す。
 
 ### `interactive` の型
 
@@ -245,7 +250,8 @@ const interactive = z.discriminatedUnion("level", [
 ### local の「手元で用意する」
 
 `local` のハンズオンでは、本文の前に「手元で用意する」の節が自動で入る。  
-`requires` の各行、`git clone`、`via` に応じた起動のコマンドが、コピーのボタン付きで並ぶ。
+`requires` の各行、`git clone` と `cd`、`via` に応じた起動のコマンドが並ぶ。  
+コピーのボタンは、`check` を持つ `requires` の行と、コマンドの行に付く。`#` で始まる案内の行には付けない。
 
 | `via`            | 出るもの                               |
 | ---------------- | -------------------------------------- |
@@ -255,7 +261,7 @@ const interactive = z.discriminatedUnion("level", [
 
 ### サイドバー
 
-サイドバーの中身と幅は [Design System の Design Doc](../../../../../packages/design-system/DesignDoc.md#ページごとの骨格) にある。
+サイドバーの幅と開閉は [Design System の Design Doc](../../../../../packages/design-system/DesignDoc.md#ページごとの骨格) にある。
 
 ハンズオンのサイドバーに、ほかのハンズオンへの導線は置かない。  
 読者が手順を追っているあいだ、別の記事の題は判断の材料にならない。  
@@ -264,7 +270,8 @@ const interactive = z.discriminatedUnion("level", [
 playground の「試す」は、サイドバーに置く。  
 本文の側に置くと、結果の表と例が縦に並び、どちらも幅を使えない。
 
-サイドバーの開閉の状態は `localStorage` に置く。  
+サイドバーの開閉は `apps/web/src/components/side.ts` が行い、状態を `localStorage` のキー `side:<id>` に `open` か `closed` で置く。  
+ハンズオンでは `controller.ts` が、遊び場ではページの script が、`mountSide` を呼ぶ。  
 この端末の都合であり、読者の identity を作らない。  
 ADR-0008: [読者の identity を前提とする機能を作らない](../../../../../adr/0008-no-reader-identity.md)
 
@@ -312,12 +319,14 @@ URL のパスはファイルの改名で変わるので、改名で進捗が消�
 flowchart TD
     md["labs/*.md(x) (h2 = 手順)"] --> loader["Content Layer loader"]
     loader --> remark["remark-lab<br/>h2 を数え、```lang run を JSX へ"]
-    remark -->|"remarkPluginFrontmatter.labSteps"| layout["LabLayout.astro"]
+    remark -->|"remarkPluginFrontmatter.labSteps / labBoot"| page["pages/labs/[...slug].astro"]
+    page -->|"props"| layout["LabLayout.astro"]
     remark --> rehype["rehype-lab-steps<br/>同じ h2 で section へまとめる"]
     rehype --> layout
     layout --> list["StepList.astro<br/>手順一覧 (静的)"]
-    layout --> ctl["controller.ts<br/>画面の切り替え / 開閉 / 前後"]
+    layout --> ctl["controller.ts<br/>画面の切り替え / 前後"]
     ctl --> ls["localStorage<br/>lab:&lt;contentId&gt;"]
+    ctl --> side["components/side.ts<br/>サイドバーの開閉"]
     layout --> body["手順の画面 (1 枚だけ表示)"]
     body -.->|"embedded"| runner["SqlRunner.tsx"]
     pg["Playground.tsx"] --> hook
@@ -332,13 +341,13 @@ flowchart TD
     peek --> cat["catalog.ts<br/>カタログの問い合わせ"]
     cat --> rt
     peek --> er["ErDiagram.tsx"]
-    body -.->|"sandbox"| frame["iframe → /playground/&lt;id&gt;"]
+    body -.->|"sandbox"| frame["iframe → sandbox の遊び場"]
     layout -.->|"local"| setup["LocalSetup.astro<br/>clone / 前提条件 / 起動"]
 ````
 
-React の island になるのは、実行パネル、「いまのテーブル」、「試す」だけである。  
-手順の一覧、画面の切り替え、サイドバーの開閉は、`controller.ts` が属性の付け替えで行う。  
-ハンズオンと playground のほかのページには載らない。
+React の island になるのは、実行パネル（ハンズオンと記事の `SqlRunner`、遊び場の `Playground`）、「いまのテーブル」、「試す」だけである。  
+手順の一覧と画面の切り替えは `controller.ts` が、サイドバーの開閉は `side.ts` が、属性の付け替えで行う。  
+island が載るのは、ハンズオン、遊び場、`run` を付けたフェンスを持つ記事だけである。
 
 `rehype-lab-steps` は rehype に置き、`.mdx` と `.md` を 1 通りの処理でまとめる。  
 ADR-0015: [手順の画面へのまとめを rehype のプラグインに置く](../../../../../adr/0015-lab-steps-in-rehype.md)
@@ -363,6 +372,9 @@ React の側の購読は `bus.ts` を通し、事象の名前と `contentId` を
 `remark-lab` は拡張子だけを見る。  
 `.mdx` で書いた記事にも、`run` を付けたフェンスを置ける。
 
+記事でも、`remark-lab` は `h2` から手順の番号を数える。  
+そのため、記事で実行すると、進捗が `lab:<記事の contentId>` に書かれる。記事は進捗を表示しないので、読者からは見えない。
+
 言語の記事はこの形を採る。  
 [codapi](https://codapi.org/try/postgres/) と同じ「読む、実行する、書き換える」を、記事の中で成り立たせる。  
 実行できる言語は、`RUNNERS` に登録した SQL（PGlite）である。
@@ -376,6 +388,8 @@ React の側の購読は `bus.ts` を通し、事象の名前と `contentId` を
 2. Content Model の `interactive.runtime` の enum に値を足す。結果が表の形なら、ここで終わる。`interactive.runtime` に値を書けば、`SqlRunner` がそのまま動く。
 3. 結果が表の形でなければ、`panel/SqlRunner.tsx` と同じ props を取るコンポーネントを書く。実行の状態機械は `useRunner` を再利用する。
 4. `runners.ts` の `RUNNERS` に 1 行足す。フェンスの言語が、表を引くキーになる。
+5. `remark-lab.ts` の `ENGINE` に、`runtime` の値と表示名を足す。表にない値は、`RUNNERS` の `engine` で表示する。
+6. 遊び場でも使うときは、Content Model の `playgroundSchema` の `runtime` の enum にも足す。`Playground.tsx` は今は `pglite` に固定しているので、`runtime` から実行環境を選ぶようにする。
 
 ```ts
 // apps/web/src/features/lab/runners.ts
@@ -392,7 +406,7 @@ export const RUNNERS: Record<string, Runner> = {
 どちらの場合も、コンテンツの側の書き方は変わらない。  
 著者は、frontmatter の `runtime` か、フェンスの言語を変えるだけである。
 
-`sandbox` を足すときは、まず schema に `sandbox` の枝を足し、`/playground/<id>` のページで iframe を出す。  
+`sandbox` を足すときは、まず schema に `sandbox` の枝を足し、`sandbox` の遊び場（`/playground/<id>`）のページを作って、本文から iframe で出す。  
 `SqlRunner` の系統は触らない。  
 結果の形（端末の出力、プレビューの URL）が違うので、表を出すコンポーネントを再利用しない。
 
@@ -431,11 +445,11 @@ React と実行環境は配らない。
 
 流し直す SQL は、ビルドのときに HTML に書き出す。
 
-- `remark-lab` が、手順ごとの `run` を付けたフェンスの SQL と `setup` を集め、`remarkPluginFrontmatter.labBoot` で layout へ渡す。
+- `remark-lab` が、手順ごとの `run` を付けたフェンスの SQL と `setup` を集め、`remarkPluginFrontmatter.labBoot` に置く。ページがそれを読み、props で `LabLayout` へ渡す。
 - `LabLayout` が、`bootSpec.ts` の `encodeBootSpec()` で JSON にし、`<script type="application/json">` として文書に 1 つだけ置く。
   - 実行パネルの props に入れると、パネルの数だけ同じ SQL が HTML に入る。
 - 実行パネルは、`readBootSpec()` でその JSON を読み、`localStorage` で完了になっている手順の SQL だけを、手順の順に選ぶ。
-- Worker は、`setup` を流した後に選んだ SQL を流し、流し直しに失敗した SQL の番号を返す。
+- Worker は、`setup` を流した後に選んだ SQL を流し、流し直しに失敗した SQL の、流した順の添字を返す。
   - 失敗があると、実行パネルは「初めから」で作り直せることを示す。
   - 「初めから」を押した直後の起動では、流し直さない。
 
@@ -470,5 +484,5 @@ React と実行環境は配らない。
 - `localStorage` へのアクセスは try/catch で囲む。
   - プライベートウィンドウや設定でブロックされる環境では、例外を投げる。
   - 進捗が読めなくても、ページが動き続けることを確かめる。
-- `_headers` を変えるときは、`/playground/*` の外へ isolation が漏れていないことを確かめる。
+- `_headers` を変えるときは、`sandbox` の遊び場の URL の外へ isolation が漏れていないことを確かめる。
   - 誤って全体へ広げると、第三者の埋め込みが一律に動かなくなる。

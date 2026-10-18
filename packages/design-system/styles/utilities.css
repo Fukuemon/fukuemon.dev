@@ -329,15 +329,6 @@
   .wood-band--fade {
     mask-image: linear-gradient(to bottom, transparent 0, #000 62%);
   }
-  .wood-veil {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(96deg, var(--color-veil-1) 0 26%, var(--color-veil-0) 64%);
-  }
-  .wood-band > .wood-fg {
-    position: relative;
-  }
 
   /* コード。色に字形の手掛かりを重ねる */
   .t-key {

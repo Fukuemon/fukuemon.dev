@@ -6,7 +6,7 @@ status: stable
 governs:
   - packages/design-system/art/
   - apps/web/src/components/ArtBand.astro
-verified_commit: 01101c7
+verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
 # 挿絵
@@ -45,7 +45,9 @@ SVG はパラメータから `generate.py` が組み、画像生成を経由し�
 ### 版の仕様
 
 5 つの図柄は、次の表の版の仕様を共有する。  
-数値は `generate.py` の `defs()` と、[utilities.css](../styles/utilities.css) の `.wood-grain` が持つ。
+数値は `generate.py` と [utilities.css](../styles/utilities.css) の `.wood-grain` が持つ。  
+`generate.py` の中では、`defs()` が荒れと霧と mask を、`svg()` が viewBox と `preserveAspectRatio` を、図柄ごとの関数が 3 階調の割り当てを持つ。
+竹と水面は viewBox と `preserveAspectRatio` を、図柄の関数の中に直接書く。
 
 | 要素       | 実装                                                                                    | 目的                           |
 | ---------- | --------------------------------------------------------------------------------------- | ------------------------------ |
@@ -69,7 +71,8 @@ viewBox は `0 0 1200 400` にする。
 
 `ArtBand` は、`.wood-band` の中に、下から挿絵の SVG と粒（`.wood-grain`）を重ねる。  
 帯は `position: relative` と `overflow: hidden` を持ち、SVG は `position: absolute; inset: 0` で帯を埋める。  
-帯の中に文字を重ねるときは、粒の上に霞（`.wood-veil`）を、その上に文字（`.wood-fg`）を置く。
+`ArtBand` は子の要素を受け取らないので、帯の中に文字を置けない。
+文字を重ねるときは、帯の外に霞と文字を重ねる。
 
 `ArtBand` は、SVG の `role="img"` と `aria-label` を外し、帯に `aria-hidden="true"` を付ける。  
 挿絵は装飾であり、読み上げに渡さない。
@@ -83,11 +86,11 @@ viewBox は `0 0 1200 400` にする。
 霞は横方向のグラデーション（`linear-gradient(96deg, ...)`）である。  
 挿絵が右へ寄り、文字が左に載る配置を、この霞が作る。
 
-**720px 以下では、霞を縦方向へ掛け直す**。  
-本文が版面の全幅を使うので、横方向のままだと図の枝が文字に掛かる。
-
-about は、帯の外に `.about__veil` を重ね、文字を帯の兄弟の要素に置く。  
+about は、帯と `.about__veil` を `aria-hidden` の要素に包み、文字をその要素の兄弟に置く。  
 霞の範囲は `apps/web/src/styles/site.css` の `.about__veil` が持つ。
+
+**720px 以下では、about の霞を縦方向へ掛け直す**。  
+本文が版面の全幅を使うので、横方向のままだと図の枝が文字に掛かる。
 
 ### 図柄
 
@@ -100,7 +103,7 @@ about は、帯の外に `.about__veil` を重ね、文字を帯の兄弟の要�
 | 草     | `grass.svg`                     | 穂を持つ葉。最も細かく密     | 末尾、細い帯          |
 
 挿絵の帯を置くのは次の 2 箇所。
-帯の高さは、置く側が `ArtBand` の props で決める。
+帯の高さは、置く側が `ArtBand` の props で決める。既定は 132px である。
 
 - トップの about: 木立を `fill` で about の全体に広げる（`apps/web/src/features/about/About.astro`）
 - トップの末尾: 草を `fade` で置く（`apps/web/src/pages/index.astro`）
@@ -136,7 +139,7 @@ about は、帯の外に `.about__veil` を重ね、文字を帯の兄弟の要�
 | prop     | 意味                                                         |
 | -------- | ------------------------------------------------------------ |
 | `motif`  | 図柄の名前。`woodland`、`bamboo`、`grass`、`ridge`、`ripple` |
-| `height` | 帯の高さ                                                     |
+| `height` | 帯の高さ。既定は `132px`                                     |
 | `fill`   | 親の全体に広げる。`height` を使わない                        |
 | `fade`   | 帯の上端を紙へなじませる                                     |
 
@@ -149,5 +152,6 @@ about は、帯の外に `.about__veil` を重ね、文字を帯の兄弟の要�
 
 ### チェック
 
-挿絵は、見た目の回帰のテストの対象にしない。  
-乱数による刷りのずれを含むので、画素の比較が安定しない。
+`generate.py` は乱数の種を固定するので、生成し直しても同じ SVG になる。  
+粒の `feTurbulence` も種を固定する。  
+挿絵はトップの見た目の回帰の撮影に含まれ、ほかのページと同じく画素で比べる。

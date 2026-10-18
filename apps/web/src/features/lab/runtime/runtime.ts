@@ -9,7 +9,7 @@ export type ExecResult = {
 
 export type Runtime = {
   version: string;
-  /** 流し直しに失敗した手順の番号。完了表示と DB がずれている */
+  /** 流し直しに失敗した SQL の、流した順の添字。完了表示と DB がずれている */
   replayFailed: readonly number[];
   exec: (source: string) => Promise<{ results: ExecResult[]; ms: number }>;
 };
