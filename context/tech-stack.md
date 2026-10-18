@@ -8,7 +8,7 @@ governs:
   - pnpm-workspace.yaml
   - mise.toml
   - .github/workflows/
-verified_commit: unverified
+verified_commit: 5fd820d
 ---
 
 # 技術スタック
@@ -16,7 +16,7 @@ verified_commit: unverified
 ## Toolchain
 
 npm のパッケージのバージョンは、各 package の `package.json` に書いてある。  
-Node.js、uv、apm のバージョンは、`mise.toml` に書いてある。  
+Node.js、uv、apm、similarity-ts のバージョンは、`mise.toml` に書いてある。  
 pnpm のバージョンは、ルートの `package.json` の `packageManager` に書いてある。
 
 - ADR-0011: [ツールのバージョンを mise で固定する](../adr/0011-pin-tool-versions-with-mise.md)
@@ -54,7 +54,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Terraform の CLI は、CI では `.github/workflows/check.yml` と `.github/workflows/apply.yml` の `terraform_version` に固定する。
   - provider のバージョンは `infra/*/.terraform.lock.hcl` にある。
 - react-doctor は依存に入れず、`npx` で実行する。`check` から呼ぶときは、ルートの `package.json` の `check:doctor` にバージョンを書く。
-- similarity-ts は cargo で入れる外部のバイナリで、バージョンの決め方は未定。
+- similarity-ts は、GitHub のリリースにある prebuilt のバイナリを、mise の `github` backend で入れる。npm にも mise の registry にもないため。
 
 Bun と Biome は使わない。  
 ADR-0007: [品質のチェックの採否](../adr/0007-quality-gates.md)

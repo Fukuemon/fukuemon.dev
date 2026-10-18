@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { emitRan } from "../bus";
-import { dropRuntime, getRuntime, serialize, type RuntimeKind } from "./runtime";
+import { dropRuntime, getRuntime, serialize, type ExecResult, type RuntimeKind } from "./runtime";
 
 export type Phase = "idle" | "booting" | "waiting" | "running" | "done" | "failed";
 
@@ -11,13 +11,6 @@ export type Result = {
   total: number;
   affected: number;
   ms: number;
-};
-
-type ExecResult = {
-  fields: { name: string }[];
-  rows: unknown[][];
-  total: number;
-  affectedRows: number;
 };
 
 type Options = {

@@ -7,8 +7,9 @@ governs:
   - package.json
   - lefthook.yml
   - .oxlintrc.json
+  - .oxfmtrc.jsonc
   - packages/config/
-verified_commit: unverified
+verified_commit: 5fd820d
 ---
 
 # コードと文書の規約
@@ -89,7 +90,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 | Astro の tsconfig | `apps/web/tsconfig.json`                     | `astro/tsconfigs/strict` を直接 `extends` する |
 | lint と依存規約   | ルートの `.oxlintrc.json`                    | ルートからリポジトリ全体に 1 回掛ける          |
 | 未使用の検出      | ルートの `package.json` の `knip`            | ルートから 1 回掛ける                          |
-| format            | Oxfmt の既定                                 | 設定ファイルを持たない                         |
+| format            | ルートの `.oxfmtrc.jsonc`                    | ルートからリポジトリ全体に 1 回掛ける          |
 | vitest            | 各 package の `vitest.config.ts`             | 対象の列挙が package ごとに違うので共有しない  |
 
 - `no-restricted-imports` の依存規約は、ルートの `.oxlintrc.json` だけに置く。package ごとに書くと、片方だけが更新される。
@@ -104,6 +105,8 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - `pnpm run check` が、品質のチェックをつなぐ。CI も `check` を実行する。
   - つなぐチェックと順序は、ルートの `package.json` の `check` にある。
 - lint、typecheck、test を pre-commit で実行しない。`pnpm run check` と CI が担う。
+- pre-commit は、ステージしたファイルに Oxfmt を掛ける。
+  - Oxfmt は `.astro` を扱わないので、`.astro` は整形されない。
 - 見た目の回帰のチェック（`shot` と `shot:diff`）は `check` に入れない。理由は [testing.md](testing.md#test-types-and-guarantees) にある。
 
 ### チェックのツールに合わせる書き方
@@ -123,10 +126,10 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 設定ファイルのコメントだけに残さない。
 
 - knip は、`/pagefind/pagefind.js` を解決できない import として扱わない（`ignoreUnresolved`）。Pagefind が `astro build` の後に `dist/` へ作るファイルで、ソースの時点では存在しないため。
-- knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、別に入れるコマンドであるため。
+- knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
+- Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。
-- similarity-ts は、`check` で存在を確かめ、なければ警告を出して飛ばす。cargo で入れる外部のバイナリで、CI には入っていない。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 

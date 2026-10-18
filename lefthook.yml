@@ -4,8 +4,11 @@ pre-commit:
   commands:
     protected-branch:
       run: python3 hooks/protected-branch/git_hook.py pre-commit
+    # .astro は oxfmt が扱わない。ignorePatterns で全て外れたときに失敗させないため --no-error-on-unmatched-pattern を付ける
     format:
-      run: hooks/format/run_prettier.sh
+      glob: "*.{js,cjs,mjs,jsx,ts,tsx,mts,cts,json,jsonc,yml,yaml,toml,css,md,mdx}"
+      run: pnpm exec oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
     # 文章の規則 (context/conventions.md)。経緯の混入とリンクは編集後のフックと CI が見る
     textlint:
       glob: "*.md"

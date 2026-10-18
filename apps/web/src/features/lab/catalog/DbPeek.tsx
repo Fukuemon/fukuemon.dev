@@ -8,11 +8,9 @@ import Sheet from "./Sheet";
 import TableDetail, { type Detail } from "./TableDetail";
 import { useCatalog } from "./useCatalog";
 
-type Props = { contentId: string };
-
 const MAX_PEEK = 20;
 
-export default function DbPeek({ contentId }: Props) {
+export default function DbPeek({ contentId }: { contentId: string }) {
   const { tables, relations, reload } = useCatalog(contentId);
   const [listOpen, setListOpen] = useState(true);
 
