@@ -10,7 +10,7 @@
       "rulePaths": ["../../../../prh.yml"]
     },
     "no-mix-dearu-desumasu": {
-      "preferInBody": "ですます",
+      "preferInBody": "である",
       "preferInList": "である",
       "strict": true
     },

@@ -35,7 +35,7 @@ node .claude/hooks/docs/hooks/check-history.mjs
 node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 ```
 
-- サイトの原稿（`apps/web/src/content/` の `.md` と `.mdx`）には、原稿の設定を `--config` で渡す。原稿は `ですます` 調で書き、ルートの設定は `である` 調を求めるためである。
+- サイトの原稿（`apps/web/src/content/` の `.md` と `.mdx`）には、原稿の設定を `--config` で渡す。原稿の設定は、`.mdx` を読むプラグインを持つためである。
 - リンクのチェックは、原稿を対象にしない。原稿はサイト内の URL でリンクするためである。
 - 既存の文書には textlint の指摘が残っている。直した文書だけに掛け、CI も pull request で変えた Markdown だけを見る。
 
