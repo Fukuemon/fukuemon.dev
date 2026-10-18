@@ -56,9 +56,9 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 レスポンスヘッダは `apps/web/public/_headers` に書く。
 
-- cross-origin isolation をサイト全体に掛けない。`/playground/*` だけに掛ける。
+- cross-origin isolation をサイト全体に掛けない。`/playground/*` のうち、`sandbox` の遊び場の URL だけに掛ける。
   - 全体に掛けると、CORP を返さない第三者のリソースが一律にブロックされる。
-  - `/playground/*` のヘッダは、該当する playground が実在してから書く。
+  - ヘッダは、該当する `sandbox` の遊び場が実在してから書く。PGlite の遊び場には掛けない。
   - ADR-0006: [手を動かす場所の 4 分類](../adr/0006-interactive-content-levels.md)
 - HTML に `Cache-Control` を書かない。Workers Static Assets の既定の値に任せる。
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
