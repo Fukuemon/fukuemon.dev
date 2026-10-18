@@ -96,12 +96,16 @@ select * from codes where code::text = '00000000000000000042';
 
 インデックスを使えるかどうかは、キャストの見た目では決まりません。`EXPLAIN` で確かめてください。
 
-下 3 つをインデックスで探したいなら、式そのものにインデックスを作ります。
+下の 2 つをインデックスで探したいなら、式そのものにインデックスを作ります。
 
 ```sql
-create index on events (date(at));
 create index on users (lower(name));
+create index on events (((created_at at time zone 'Asia/Tokyo')::date));
 ```
+
+`created_at` が `timestamptz` のとき、`date(created_at)` の結果は `TimeZone` の設定によって変わります。
+そのため `date(created_at)` は `IMMUTABLE` ではなく、そのままの式ではインデックスを作れません。
+上の例のようにタイムゾーンを固定した式でインデックスを作り、クエリの条件も同じ式で書きます。
 
 `date(created_at) = ...` は、範囲条件に書き換えると、`created_at` のインデックスを使えます。
 
