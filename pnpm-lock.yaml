@@ -35,6 +35,9 @@ importers:
       textlint:
         specifier: ^15.8.0
         version: 15.8.0
+      textlint-plugin-mdx:
+        specifier: 1.1.0
+        version: 1.1.0(typescript@5.9.3)
       textlint-rule-no-mix-dearu-desumasu:
         specifier: ^6.0.4
         version: 6.0.4
@@ -4777,6 +4780,11 @@ packages:
 
   text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
+
+  textlint-plugin-mdx@1.1.0:
+    resolution: {integrity: sha512-iEeQO5wW7X0TKChILS45FoPW/e9wrQp8gypAmNTg4DdgYgU3gWT+MbSIshvujD2roCFYVyh2TouZBlsckOYVAA==}
+    peerDependencies:
+      typescript: ^5.0.0
 
   textlint-rule-helper@2.5.0:
     resolution: {integrity: sha512-QIbFPtyqLy0g5BJn8mryk9iHzGYicNaFIpLFPiEnb4RXxrEGeQ2W2aARQ9yEXLIAqo+OwK4ndWBAWkbgJEPzTQ==}
@@ -10508,6 +10516,10 @@ snapshots:
   tapable@2.3.3: {}
 
   text-table@0.2.0: {}
+
+  textlint-plugin-mdx@1.1.0(typescript@5.9.3):
+    dependencies:
+      typescript: 5.9.3
 
   textlint-rule-helper@2.5.0:
     dependencies:

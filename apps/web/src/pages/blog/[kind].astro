@@ -11,8 +11,8 @@ const { type } = Astro.props;
 const items = await listContent({ type });
 const lead =
   type === "hands-on"
-    ? "ブラウザの中だけで動かせます。環境構築は要りません。"
-    : "読んで分かるところまでを書いたもの。";
+    ? "手順に沿って、コードを動かしながら進めるハンズオンの一覧です。"
+    : "調べて確かめたことを書いた技術記事の一覧です。";
 ---
 
 <PostsLayout current={type} items={items} showKind={false} lead={lead} />

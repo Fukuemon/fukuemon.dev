@@ -7,7 +7,7 @@ export async function GET(context: APIContext) {
   const items = await listContent();
   return rss({
     title: "fukuemon.dev",
-    description: "読んで、動かして、確かめる。",
+    description: "Fukuemon の技術記事と、手を動かして進めるハンズオンを公開しています。",
     site: context.site ?? "https://fukuemon.dev",
     items: items.map((r) => ({
       title: r.title,
