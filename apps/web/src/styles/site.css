@@ -522,10 +522,6 @@
 
   @media (max-width: 1100px) {
     .toc {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 0 var(--spacing-intra-3);
       padding-block-end: var(--spacing-intra-3);
       border-block-end: 1px solid var(--color-rule-strong);
     }
