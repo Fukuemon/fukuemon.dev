@@ -31,7 +31,7 @@ apm lifecycle trust
 ```sh
 pnpm exec textlint <直した Markdown>
 node .claude/hooks/docs/hooks/check-history.mjs
-git ls-files -z -- '*.md' ':!:apps/web/src/content/' | xargs -0 node .claude/hooks/docs/hooks/check-links.mjs
+node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 ```
 
 - textlint は、`apps/` のサイトの原稿にも掛ける。リンクのチェックは、原稿（`apps/web/src/content/`）を対象にしない。原稿はサイト内の URL でリンクするためである。
