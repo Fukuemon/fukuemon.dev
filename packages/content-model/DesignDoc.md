@@ -7,7 +7,7 @@ governs:
   - packages/content-model/
   - apps/web/src/content.config.ts
   - apps/web/src/lib/content/
-verified_commit: 01101c7
+verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
 # Content Model

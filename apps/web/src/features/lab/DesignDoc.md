@@ -9,7 +9,7 @@ governs:
   - apps/web/src/lib/remark-lab.ts
   - apps/web/src/lib/rehype-lab-steps.ts
   - apps/web/public/_headers
-verified_commit: 01101c7
+verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
 # ハンズオンと Interactive
