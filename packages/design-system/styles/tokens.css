@@ -12,7 +12,7 @@
 
 @theme static {
   /* ---- 書体 ---- */
-  --font-serif: "EB Garamond", "Zen Old Mincho", "Yu Mincho", serif;
+  --font-serif: "EB Garamond Variable", "Zen Old Mincho", "Yu Mincho", serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 
   /* ---- 地 ---- */
@@ -25,10 +25,7 @@
   --color-ink-2: light-dark(#57534b, #b9b4a8); /*  7.40 /  7.26 */
 
   /* 差し色。線と文字のみ。面は --color-tint-* */
-  --color-green: light-dark(
-    #4f6138,
-    #9db086
-  ); /*  6.55  内部リンク / ハンズオン / 完了 */
+  --color-green: light-dark(#4f6138, #9db086); /*  6.55  内部リンク / ハンズオン / 完了 */
   --color-blue: light-dark(#2c4a6e, #8fb0d6); /*  8.78  外部リンク / 前提 */
   --color-rust: light-dark(#9e3a26, #e08a6c); /*  6.57  現在地 / 注意 */
 
