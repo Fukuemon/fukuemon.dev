@@ -2,7 +2,8 @@ name: Check
 
 # 品質ゲート (ADR-0007)。pnpm の check を 1 本で通す。中身は package.json の check にある。
 #
-# Vite+ はまだ入れていないので、`vp run` ではなく pnpm の script を直接実行する (context/tech-stack.md)。
+# build は apps/web の build の script が devDependency の vp で `vp run` を呼ぶ。setup-vp は使わず、
+# タスクのキャッシュを run をまたいで持ち越さない (ADR-0017)。
 #
 # branches は "**" で受けて job 側で絞る (on ではブランチ名を動的に解決できない)。
 on:

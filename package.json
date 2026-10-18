@@ -43,8 +43,7 @@
     "textlint-rule-preset-ai-words-ja": "^1.2.1",
     "textlint-rule-prh": "^6.1.0",
     "textlint-rule-sentence-length": "^5.2.1",
-    "typescript": "^5.9.0",
-    "vitest": "^4.1.11"
+    "typescript": "^5.9.0"
   },
   "engines": {
     "node": ">=22.12.0"
@@ -55,6 +54,9 @@
       "apps/web": {
         "entry": [
           "src/features/lab/panel/SqlRunner.tsx"
+        ],
+        "ignoreDependencies": [
+          "pagefind"
         ]
       }
     },

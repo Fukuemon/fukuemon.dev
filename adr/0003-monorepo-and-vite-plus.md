@@ -2,7 +2,7 @@
 
 ## Status
 
-承認（Decision 2 のうち Node.js のバージョンの固定を ADR-0011 に置換）
+承認（Decision 2 の一部を ADR-0011 と ADR-0017 に、Decision 3 を ADR-0017 に置換）
 
 ## Context
 

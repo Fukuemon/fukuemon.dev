@@ -1,14 +1,16 @@
 ---
 type: context
 title: 技術スタック
-description: 採用しているツールの役割とバージョンの所在、使わないツール、Vite+ を入れるときの取り決め、バージョンの更新の確認、新しい package の作り始め。バージョンそのものと選んだ理由は書かない
+description: 採用しているツールの役割とバージョンの所在、使わないツール、Vite+ の取り決め、バージョンの更新の確認、新しい package の作り始め。バージョンそのものと選んだ理由は書かない
 status: draft
 governs:
   - package.json
   - pnpm-workspace.yaml
   - mise.toml
+  - apps/web/package.json
+  - apps/web/vite.config.ts
   - .github/workflows/
-verified_commit: ab2da87
+verified_commit: 63b37ad
 ---
 
 # 技術スタック
@@ -38,6 +40,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - `pagefind` は、全文検索の索引を `astro build` の後に作る。
 - `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
+- Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
 - 型のチェックには、`apps/web` では `astro check` を、`packages/content-model` では `tsc` を使う。
   - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
@@ -63,41 +66,46 @@ ADR-0007: [品質のチェックの採否](../adr/0007-quality-gates.md)
 
 ツールを足すときは、次の方針に従う。
 
-- 同梱のツールで足りるものを、別に入れない。
+- 同梱のツールで足りるものを、別に入れない。vite-plus の同梱のツールは例外で、[Vite+ の取り決め](#vite-の取り決め) に従う。
 - バージョンを管理する手段を 1 つにする。
 - beta のツールを採るときは、撤退の手段を書く。Vite+ に対する Turborepo がこれに当たる。
 
-### Vite+ を入れるときの取り決め
+### Vite+ の取り決め
 
-Vite+（`vp`）はまだ入れていない。  
-いまは、タスクをルートの `package.json` の scripts から実行する。  
-この節は、Vite+ を入れるときに従う取り決めである。
+Vite+（`vite-plus`）は、`apps/web` の build を `vp run` でキャッシュすることだけに使う。  
+ADR-0017: [Vite+ の適用範囲](../adr/0017-vp-run-cache-for-web-build.md)
 
-Vite+ に任せる範囲は次のとおり。
-
-- Node.js のバージョンの固定は mise が担い、`vp env` には移さない。ADR-0011 が、ADR-0003 のこの判断を置き換えた。
-- package manager の実行は `vp install` が担う。
-- monorepo のタスクの実行とキャッシュは `vp run` が担う。
-- lint、format、test、typecheck は、Vite+ に同梱の Oxlint、Oxfmt、Vitest、tsgo が担う。
+- `apps/web` の build のコマンドは、`apps/web/vite.config.ts` の `run.tasks` に置く。
+  - `apps/web/package.json` の `build` の script は、`vp run` でタスクを呼ぶだけにする。
+  - 同じ名前のタスクを `run.tasks` と package.json の scripts の両方には置けない。
+- `run.tasks` に足すのは、成果物を作るタスクだけにする。lint、typecheck、test、ほかのチェックは、package.json の scripts から pnpm で実行し、キャッシュに載せない。
+- タスクの `cache.input` から、タスク自身が書くファイルを外す。外さないと、2 回目もキャッシュが当たらない。
+- タスクの `cache.output` は、成果物のディレクトリを明示する。
+  - `astro build` では、自動の記録が `dist/_astro/` を拾わない。
 - Astro の dev と build は、Astro の CLI が担う。`vp dev` と `vp build` で Astro を置き換えない。
-- ADR-0003: [monorepo と Vite+ の採否](../adr/0003-monorepo-and-vite-plus.md)
+  - ADR-0003: [monorepo と Vite+ の採否](../adr/0003-monorepo-and-vite-plus.md)
+- `vp lint`、`vp fmt`、`vp test`、`vp check`、`vp install`、`vp env` は使わない。
+  - Oxlint、Oxfmt、Vitest は devDependencies に宣言したバージョンを実行する。vite-plus の同梱のバージョンとは別に上がる。
+  - Node.js のバージョンは mise が固定する。
+- vitest を使う package は、vitest を自分の devDependencies に宣言する。
+  - 宣言しないと、`@vitest/coverage-v8` が vite-plus の依存の vitest 5 に解決され、`test:cov` が失敗する。
+- `vp` は、`apps/web` の devDependency の `vite-plus` のものを使う。global の CLI と `voidzero-dev/setup-vp` は要らない。
+- タスクのキャッシュは `node_modules/.vite/task-cache` にある。消すときは `pnpm --filter @fukuemon/web exec vp cache clean` を実行する。
+- CI は、タスクのキャッシュを run をまたいで持ち越さない。
+- キャッシュの指紋には、環境変数も入る。ルートの `pnpm run build` と `pnpm --filter @fukuemon/web run build` は、互いのキャッシュを使わない。
 
-Vite+ を外せる状態を保つため、次を守る。
-
-- タスクのコマンドは各 package の `package.json` の scripts に置き、ルートの `vite.config.ts` の `run.tasks` には依存関係だけを宣言する。
-- 成果物を生むコマンドを `run.tasks` に書かない。
-- `oxlint`、`oxfmt`、`vitest`、`typescript` を devDependencies にも宣言する。
-- CI から各 package の script を直接実行できる状態を保つ。
+Vite+ を外す手順は、ADR-0017 の Decision 7 にある。
 
 ## Upgrade Checks
 
 - Astro のメジャーバージョンを上げるときは、`apps/web/src/lib/content/` のアダプタを直す。
   - アダプタの外に変更が広がるなら、[codebase.md](codebase.md#dependency-rules) の規約 1 か規約 3 が破られている。
-- Vite+ を入れるときは、`vp run --cache` が `astro build` の入力を正しく推論するかを、次の 3 点で確かめる。
-  1. `apps/web/src/content/` のファイルを 1 つ変えて `vp run --cache build` を実行し、キャッシュが外れる。
-  2. `packages/design-system/` のトークンを変えて、`apps/web` の build のキャッシュが外れる。
+- `vite-plus` か Astro を上げるときと、`apps/web/vite.config.ts` のタスクを変えるときは、build のキャッシュを次の 4 点で確かめる。
+  1. `apps/web/src/content/` のファイルを 1 つ変えて `pnpm --filter @fukuemon/web run build` を実行し、キャッシュが外れる。
+  2. `packages/design-system/` のトークンを変えて実行し、キャッシュが外れる。
   3. 何も変えずに 2 回目を実行し、キャッシュが当たる。
-- 3 点のどれかを満たさなければ、キャッシュを無効にするか、Turborepo へ切り替える。
+  4. `apps/web/dist/` を消して実行し、`dist/` のファイルの一覧が、キャッシュを使わない build の後と一致する。
+- 4 点のどれかを満たさなければ、キャッシュを無効にするか、Turborepo へ切り替える。
 - それ以外のツールで、バージョンを上げるときに動かなくなりやすい箇所と確認の方法は、未定。
 
 ## Scaffolding
