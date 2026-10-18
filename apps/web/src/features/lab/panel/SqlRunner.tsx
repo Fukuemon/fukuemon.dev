@@ -52,7 +52,7 @@ export default function SqlRunner({
       data-phase={runner.phase}
       aria-labelledby={groupId}
     >
-      <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-[10px]">
+      <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-intra-1">
         <span id={groupId}>{stepTitle}</span>
         {runner.version !== null && (
           <span

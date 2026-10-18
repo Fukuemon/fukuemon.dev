@@ -15,7 +15,7 @@ export default function TableDetail({ detail, limit }: { detail: Detail; limit: 
           {detail.columns.map((c) => (
             <li
               key={c.name}
-              className="grid grid-cols-[2.4em_minmax(6em,14em)_minmax(8em,1fr)_6em] items-baseline gap-intra-2 border-b border-rule py-[4px] text-[0.8125rem] max-narrow:grid-cols-[2.4em_minmax(0,1fr)]"
+              className="grid grid-cols-[2.4em_minmax(6em,14em)_minmax(8em,1fr)_6em] items-baseline gap-intra-2 border-b border-rule py-intra-0 text-[0.8125rem] max-narrow:grid-cols-[2.4em_minmax(0,1fr)]"
             >
               <span className="mono font-semibold text-now" aria-hidden="true">
                 {c.pk ? "PK" : ""}
@@ -39,7 +39,7 @@ export default function TableDetail({ detail, limit }: { detail: Detail; limit: 
                 {detail.head.map((c) => (
                   <th
                     key={c}
-                    className="mono meta border-b border-rule-strong py-[5px] ps-0 pe-intra-2 text-start whitespace-nowrap"
+                    className="mono meta border-b border-rule-strong py-intra-0 ps-0 pe-intra-2 text-start whitespace-nowrap"
                   >
                     {c}
                   </th>
@@ -52,7 +52,7 @@ export default function TableDetail({ detail, limit }: { detail: Detail; limit: 
                   {row.map((v, j) => (
                     <td
                       key={j}
-                      className="mono border-b border-rule py-[5px] ps-0 pe-intra-2 text-start whitespace-nowrap"
+                      className="mono border-b border-rule py-intra-0 ps-0 pe-intra-2 text-start whitespace-nowrap"
                     >
                       {cellText(v)}
                     </td>

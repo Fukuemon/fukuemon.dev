@@ -66,6 +66,8 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 | 反転帯 (`data-band`)       | 読みの区切りに置く強い休符  |
 | コード (`--color-code-bg`) | コードブロックとその chrome |
 | 面 (`--color-tint-*`)      | コードの強調行、実行エラー  |
+| 面 (`--color-panel`)       | 図の箱、写真の下地          |
+| 反転 (`--color-ink`)       | ボタン (`.btn`) の hover    |
 
 帯の中では semantic の変数を丸ごと差し替える。
 
@@ -213,7 +215,9 @@ ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 - `--color-green` / `--color-blue` / `--color-rust` は**線と文字にのみ使う**。
   テキスト色、罫線、下線。
-  背景を塗るときは同系の `--color-tint-*` を使う
+  背景を塗るときは同系の `--color-tint-*` を使う。
+  太さ 3px 以下の線と、一辺 9px 以下の印は線として扱う。
+  見出しの目印、手順のマーカー、進み具合の棒、一覧の題の上の短い線が該当する
 - 各色の用途を固定する。
   数で制限しない。手順を持つ画面では現在地マーカーが複数必要になる
 
@@ -263,17 +267,19 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../adr
 
 数列を 2 つに分ける。
 
-| 数列                | 用途                                 |
-| ------------------- | ------------------------------------ |
-| `--spacing-intra-*` | 節の内側。行間、ラベルと本文、列の溝 |
-| `--spacing-inter-*` | 節の外側。区画の内側、節と節のあいだ |
+| 数列                | 用途                                                                                               |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| `--spacing-intra-*` | 節の内側。行間、ラベルと本文、列の溝。`--spacing-intra-0` はボタンや一覧の行の中の、字と罫、字と印 |
+| `--spacing-inter-*` | 節の外側。区画の内側、節と節のあいだ                                                               |
 
 **2 つの数列のあいだに段階を置かない**。
 この空きが節の境界を作る。
 段階を連続させると、どこで話題が変わったかを余白から読み取れなくなる。
 
-生の px を書かない。
+余白（`margin`、`padding`、`gap`）に生の px を書かない。
 書いた時点で、その値がどちらの数列に属するかが失われる。
+罫を重ねるための負の `margin` は余白ではないので除く。
+印の大きさ、列の幅、当たり判定のような要素の寸法も対象にしない。
 
 ### 測度と Grid
 
@@ -415,11 +421,11 @@ ADR-0001: [Starlight の採否](../../adr/0001-starlight-as-docs-renderer.md)
 
 #### 罫の割り当て
 
-| class           | 太さと色                  | 割り当て                         |
-| --------------- | ------------------------- | -------------------------------- |
-| `.rule-section` | 2px `--color-rule-strong` | 節の境界                         |
-| `.rule-struct`  | 1px `--color-rule-strong` | 構造の境界、関連の節             |
-| `.rule-row`     | 1px `--color-rule`        | 行の区切り、情報を持たない区切り |
+| class          | 太さと色                  | 割り当て                         |
+| -------------- | ------------------------- | -------------------------------- |
+| (class なし)   | 2px `--color-rule-strong` | 節の境界                         |
+| `.rule-struct` | 1px `--color-rule-strong` | 構造の境界、関連の節             |
+| `.rule-row`    | 1px `--color-rule`        | 行の区切り、情報を持たない区切り |
 
 class を持たない罫も同じ 3 段階に従う。
 `.topbar` と `.tabs` の下端、表の `th` と `td`、前後ナビと footer の上端が該当する。
@@ -434,6 +440,8 @@ class を持たない罫も同じ 3 段階に従う。
 | 反転帯 (`data-band`)       | 各ページ 1 箇所まで         |
 | コード (`--color-code-bg`) | コードブロックとその chrome |
 | 面 (`--color-tint-*`)      | コードの強調行、実行エラー  |
+| 面 (`--color-panel`)       | 図の箱、写真の下地          |
+| 反転 (`--color-ink`)       | ボタン (`.btn`) の hover    |
 
 反転帯を置いているのは、トップの「最近の更新」だけである。
 帯は本文の左右へはみ出させる。
@@ -486,13 +494,19 @@ ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sectio
 | 変えるのは濃度と罫の長さ    | 版面が動かないので、読み手は待たずに読み始められる       |
 | 配る JavaScript は 0 バイト | `@starting-style` と `animation-timeline: view()` で組む |
 
-| 対象             | 動き                               |
-| ---------------- | ---------------------------------- |
-| 一覧の行         | 濃度。段送りは行の添字で決める     |
-| 縦組み見出しの罫 | 上から伸びる (`background-size`)   |
-| 挿絵の帯         | 濃度                               |
-| about の名乗り   | 1 字ずつ濃度。字はビルド時に分ける |
-| about の一覧     | 画面に入ったところで行ごとに濃度   |
+| 対象                         | 動き                               |
+| ---------------------------- | ---------------------------------- |
+| 一覧の行                     | 濃度。段送りは行の添字で決める     |
+| 縦組み見出しの罫             | 上から伸びる (`background-size`)   |
+| 挿絵の帯                     | 濃度                               |
+| about の名乗り               | 1 字ずつ濃度。字はビルド時に分ける |
+| about の一覧                 | 画面に入ったところで行ごとに濃度   |
+| サイドバーの面 (1100px 以下) | 左から滑り出す (`transform`)       |
+
+**本文の上に重なる面だけは位置を動かす**。
+面の下の本文は動かないので、読み手は待たずに読み続けられる。
+どこから出てどこへ戻るかが、開閉ボタンとの対応を示す。
+実装は `apps/web/src/components/Side.astro` が持ち、`prefers-reduced-motion: reduce` では動かさない。
 
 **退行の受け皿を必ず持つ**。
 
@@ -503,7 +517,7 @@ ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sectio
 `animation` の短縮形で書かない。
 ビルドの CSS 圧縮が `animation-timeline` ごと削除する。長い形で書く。
 
-実装は [apps/web/src/styles/motion.css](../../apps/web/src/styles/motion.css) にある。
+サイドバーの面を除く実装は [apps/web/src/styles/motion.css](../../apps/web/src/styles/motion.css) にある。
 
 ### アイコン
 
@@ -516,7 +530,7 @@ ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sectio
 - 当たり判定は 44px を保つ
 
 **ページ内の移動先には使わない**。
-「一覧」「playground」に定着したアイコンは無く、アイコンにすると語より読むのが遅くなる。
+「一覧」「遊び場」に定着したアイコンは無く、アイコンにすると語より読むのが遅くなる。
 
 ### 図
 
@@ -538,7 +552,7 @@ ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sectio
 ```mermaid
 flowchart TD
     tokens["packages/design-system/styles/tokens.css<br/>primitive / semantic"]
-    utils["packages/design-system/styles/utilities.css<br/>版面・当たり判定・縦組み"]
+    utils["packages/design-system/styles/utilities.css<br/>版面・型・当たり判定・縦組み・罫"]
     art["packages/design-system/art/<br/>挿絵の生成器"]
     theme["packages/design-system/code-theme.ts<br/>Expressive Code の配色"]
     global["apps/web/src/styles/global.css<br/>4 本を束ねる入口"]
@@ -619,11 +633,9 @@ Expressive Code の CSS は層に属さないので、層の中からは詳細�
 色は `light-dark(明, 暗)` で書き、どちらを解決するかは `color-scheme` が決める。  
 書き方の規則は [context/conventions.md](../../context/conventions.md#配色の切り替え) にある。
 
-| 選択子                 | `color-scheme` | 役割               |
-| ---------------------- | -------------- | ------------------ |
-| `:root`                | `light dark`   | システム設定に追随 |
-| `[data-theme="light"]` | `light`        | 明示切り替え       |
-| `[data-theme="dark"]`  | `dark`         | 明示切り替え       |
+| 選択子  | `color-scheme` | 役割               |
+| ------- | -------------- | ------------------ |
+| `:root` | `light dark`   | システム設定に追随 |
 
 **`color-scheme` を宣言する**。
 スクロールバーとフォームのコントロールの既定色は、この宣言でしか切り替わらない。
@@ -701,14 +713,14 @@ Shiki はビルド時に色を解決するため CSS カスタムプロパティ
 
 ### 共通化の範囲
 
-| 層                         | 内容                                                | 置き場                                                                                                                                                                                          |
-| -------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Design Tokens              | primitive / semantic                                | `packages/design-system/styles/tokens.css`                                                                                                                                                      |
-| 版面                       | `.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫        | `packages/design-system/styles/utilities.css`                                                                                                                                                   |
-| 挿絵                       | 図柄の SVG と生成器                                 | `packages/design-system/art/`                                                                                                                                                                   |
-| コードの配色               | Expressive Code のテーマと配色のチェック            | `packages/design-system/code-theme.ts`、`packages/design-system/check-contrast.ts`                                                                                                              |
-| このサイトのコンポーネント | `ContentRow` / `MetaLine` / 実行パネル / サイドバー | サイドバーは `apps/web/src/components/`、`ContentRow` と `MetaLine` は `apps/web/src/features/listing/`、実行パネルは `apps/web/src/features/lab/panel/`、CSS は `apps/web/src/styles/site.css` |
-| 動き                       | サイト全体の動きの実装                              | `apps/web/src/styles/motion.css`                                                                                                                                                                |
+| 層                         | 内容                                                         | 置き場                                                                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Design Tokens              | primitive / semantic                                         | `packages/design-system/styles/tokens.css`                                                                                                                                                      |
+| 版面                       | `.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫                 | `packages/design-system/styles/utilities.css`                                                                                                                                                   |
+| 挿絵                       | 図柄の SVG と生成器                                          | `packages/design-system/art/`                                                                                                                                                                   |
+| コードの配色               | Expressive Code のテーマと配色のチェック                     | `packages/design-system/code-theme.ts`、`packages/design-system/check-contrast.ts`                                                                                                              |
+| このサイトのコンポーネント | `ContentRow` / `MetaLine` / 実行パネル / サイドバー / `.btn` | サイドバーは `apps/web/src/components/`、`ContentRow` と `MetaLine` は `apps/web/src/features/listing/`、実行パネルは `apps/web/src/features/lab/panel/`、CSS は `apps/web/src/styles/site.css` |
+| 動き                       | サイト全体の動きの実装                                       | `apps/web/src/styles/motion.css`                                                                                                                                                                |
 
 **このサイトのコンポーネントを `packages/design-system` に入れない**。
 消費者が `apps/web` の 1 つだけであり、「2 つ以上の消費者が実在するまで package にしない」規約に従う。  
@@ -719,7 +731,7 @@ Shiki はビルド時に色を解決するため CSS カスタムプロパティ
 ### 置くファイル
 
 - `packages/design-system/styles/tokens.css`: Design Tokens（primitive と semantic）
-- `packages/design-system/styles/utilities.css`: 版面、当たり判定、縦組み、罫
+- `packages/design-system/styles/utilities.css`: 版面、型（`.prose`、`.meta` など）、当たり判定、縦組み、罫、挿絵の帯、コードの字の色
 - `packages/design-system/art/`: 挿絵の SVG と生成器。[挿絵の Design Doc](art/DesignDoc.md) がある
 - `packages/design-system/code-theme.ts`: Expressive Code のテーマ
 - `packages/design-system/check-contrast.ts`: 配色のチェック

@@ -32,7 +32,7 @@ const rows = [
       rows.map((s) => (
         <li>
           <a
-            class="steps__link hit group grid grid-cols-[9px_auto_minmax(0,1fr)] items-baseline gap-x-intra-2 gap-y-[2px] min-h-[44px] py-intra-2 pr-intra-2 pl-intra-1 border-b border-rule text-fg-2 aria-[current]:text-fg aria-[current]:bg-panel aria-[current]:shadow-[inset_2px_0_0_var(--color-now)]"
+            class="steps__link hit group grid grid-cols-[9px_auto_minmax(0,1fr)] items-baseline gap-x-intra-2 gap-y-intra-0 min-h-(--hit) py-intra-2 pr-intra-2 pl-intra-1 border-b border-rule text-fg-2 aria-[current]:text-fg aria-[current]:shadow-[inset_2px_0_0_var(--color-now)]"
             href={`#step-${s.index}`}
             data-step={s.index}
           >
