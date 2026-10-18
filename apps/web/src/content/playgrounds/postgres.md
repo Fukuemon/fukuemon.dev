@@ -1,7 +1,7 @@
 ---
 contentId: postgres
 title: Postgres
-description: ハンズオンの手順に沿わずに、好きな SQL を実行できます。
+description: ハンズオンの手順とは別に、任意の SQL を実行できる。
 status: published
 runtime: pglite
 order: 0
@@ -41,5 +41,5 @@ presets:
       where name in ('shared_buffers', 'work_mem', 'random_page_cost');
 ---
 
-`events` テーブルが 50,000 行入った状態で始まります。
-`kind` は `click` が 1/3、`view` が 2/3 です。
+`events` テーブルに 50,000 行が入った状態で始まる。
+`kind` は、行の 1/3 が `click`、2/3 が `view` である。
