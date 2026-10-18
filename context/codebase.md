@@ -8,7 +8,7 @@ governs:
   - apps/web/src/
   - packages/
   - .oxlintrc.json
-verified_commit: 01101c7
+verified_commit: ab2da87
 ---
 
 # コードベースの構造

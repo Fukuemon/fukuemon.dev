@@ -7,9 +7,7 @@ import { remarkLab } from "./src/lib/remark-lab";
 import { RUNNERS } from "./src/features/lab/runners";
 import { rehypeLabSteps } from "./src/lib/rehype-lab-steps";
 import { rehypeScrollTable } from "./src/lib/rehype-scroll-table";
-import rehypeMermaid from "rehype-mermaid";
-import { rehypeMermaidTheme } from "./src/lib/rehype-mermaid-theme";
-import { mermaidConfig } from "./src/lib/mermaid-theme";
+import { rehypeMermaid } from "./src/lib/rehype-mermaid";
 import { codeThemeDark, codeThemeLight } from "@fukuemon/design-system/code-theme";
 
 export default defineConfig({
@@ -25,8 +23,7 @@ export default defineConfig({
     rehypePlugins: [
       // 図はビルド時に SVG へ変換する。記事に mermaid 本体 (約 300 KiB) を配らない。
       // Expressive Code より前に実行されるので、まだ素の <pre><code> のまま処理できる
-      [rehypeMermaid, { strategy: "inline-svg", mermaidConfig }],
-      rehypeMermaidTheme,
+      rehypeMermaid,
       rehypeScrollTable,
       rehypeLabSteps,
     ],

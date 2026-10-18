@@ -24,7 +24,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    # PR のある枝では push と pull_request が二重に走り、chromium の取得も 2 回になる。
+    # PR のある枝では push と pull_request が二重に走る。
     # PR か、既定ブランチへの push だけを対象にする
     if: >-
       github.event_name == 'pull_request' ||
@@ -41,16 +41,6 @@ jobs:
       - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4
 
       - run: pnpm install --frozen-lockfile
-
-      # 図をビルド時に SVG へ落とすため、build に chromium が要る (ADR-0009)。
-      # 依存が入っていなければ何もしない
-      - name: playwright の chromium を入れる
-        run: |
-          if pnpm --filter @fukuemon/web exec playwright --version >/dev/null 2>&1; then
-            pnpm --filter @fukuemon/web exec playwright install --with-deps chromium
-          else
-            echo "playwright が無いので飛ばす"
-          fi
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:

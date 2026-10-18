@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision の mermaid の描画の手段を ADR-0016 に置換）
 
 ## Context
 
