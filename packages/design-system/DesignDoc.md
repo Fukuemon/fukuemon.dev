@@ -6,7 +6,7 @@ status: stable
 governs:
   - packages/design-system/
   - apps/web/src/styles/
-verified_commit: unverified
+verified_commit: 3c5bf5a7636e7a13931f6a2e9a840980a6a26a0e
 ---
 
 # Design System
