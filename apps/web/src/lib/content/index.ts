@@ -1,6 +1,7 @@
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import {
   buildContentGraph,
+  buildToc,
   type ContentGraph,
   type ContentRef,
   type ContentType,
@@ -23,11 +24,8 @@ export const isPublic = (e: { data: { status: string } }) =>
 function toRef(entry: Entry, type: ContentType): ContentRef {
   const d = entry.data;
   const meta =
-    type === "hands-on" && "duration" in d
-      ? [{ label: "所要", value: `${d.duration}分` }]
-      : [];
-  const level =
-    "interactive" in d && d.interactive ? d.interactive.level : undefined;
+    type === "hands-on" && "duration" in d ? [{ label: "所要", value: `${d.duration}分` }] : [];
+  const level = "interactive" in d && d.interactive ? d.interactive.level : undefined;
   return {
     contentId: d.contentId,
     type,
@@ -50,19 +48,14 @@ async function load(): Promise<{
   entries: { ref: ContentRef; related: string[] }[];
   publicIds: Set<string>;
 }> {
-  const [articles, labs] = await Promise.all([
-    getCollection("articles"),
-    getCollection("labs"),
-  ]);
+  const [articles, labs] = await Promise.all([getCollection("articles"), getCollection("labs")]);
   const all = [
     ...articles.map((e) => ({ e, ref: toRef(e, "article") })),
     ...labs.map((e) => ({ e, ref: toRef(e, "hands-on") })),
   ];
   return {
     entries: all.map(({ e, ref }) => ({ ref, related: e.data.related })),
-    publicIds: new Set(
-      all.filter(({ e }) => isPublic(e)).map(({ ref }) => ref.contentId),
-    ),
+    publicIds: new Set(all.filter(({ e }) => isPublic(e)).map(({ ref }) => ref.contentId)),
   };
 }
 
@@ -76,9 +69,7 @@ async function get(): Promise<{ graph: ContentGraph; publicIds: Set<string> }> {
   return cache;
 }
 
-export async function listContent(filter?: {
-  type?: ContentType;
-}): Promise<ContentRef[]> {
+export async function listContent(filter?: { type?: ContentType }): Promise<ContentRef[]> {
   const { graph, publicIds } = await get();
   return [...graph.byId.values()]
     .filter((r) => publicIds.has(r.contentId))
@@ -86,9 +77,7 @@ export async function listContent(filter?: {
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 }
 
-export async function getContent(
-  contentId: string,
-): Promise<ContentRef | undefined> {
+export async function getContent(contentId: string): Promise<ContentRef | undefined> {
   const { graph, publicIds } = await get();
   return publicIds.has(contentId) ? graph.byId.get(contentId) : undefined;
 }
@@ -100,9 +89,12 @@ export async function getContent(
  */
 export const listArticleEntries = (filter?: (e: ArticleEntry) => boolean) =>
   getCollection("articles", filter);
-export const listLabEntries = (filter?: (e: LabEntry) => boolean) =>
-  getCollection("labs", filter);
+export const listLabEntries = (filter?: (e: LabEntry) => boolean) => getCollection("labs", filter);
 export const renderEntry = (entry: Entry) => render(entry);
+
+/** 本文の目次。見出しは `renderEntry` が返す `headings` を渡す */
+export const tocOf = (entry: ArticleEntry, headings: Parameters<typeof buildToc>[1]) =>
+  buildToc(entry.body ?? "", headings);
 export const renderPlayground = (entry: PlaygroundEntry) => render(entry);
 
 /** 遊び場。`order` の昇順に並べる */
