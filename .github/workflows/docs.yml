@@ -47,7 +47,7 @@ jobs:
           if [ -s changed.txt ]; then xargs pnpm exec textlint < changed.txt; fi
       - run: node .claude/hooks/docs/hooks/check-history.mjs
       # サイトの原稿はサイト内の URL を持ち、ファイルのリンクではない
-      - run: git ls-files -z -- '*.md' ':!:apps/web/src/content/' | xargs -0 node .claude/hooks/docs/hooks/check-links.mjs
+      - run: node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 
       # 実装が変わった文書の一覧。失敗にはしない
       - run: node .claude/hooks/docs/hooks/list-drift.mjs
