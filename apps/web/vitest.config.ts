@@ -7,6 +7,7 @@ export default defineConfig({
       provider: "v8",
       // ファイル単位で明示列挙する。列挙し忘れると何もゲートしない
       include: [
+        "src/components/side.ts",
         "src/lib/tate.ts",
         "src/lib/remark-lab.ts",
         "src/lib/rehype-lab-steps.ts",

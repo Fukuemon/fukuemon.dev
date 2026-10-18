@@ -1,4 +1,6 @@
 ---
+import { applySide } from "./side";
+
 interface Props {
   /** 開閉状態の保存先を分ける鍵 */
   id: string;
@@ -6,6 +8,12 @@ interface Props {
   label: string;
 }
 const { id, label } = Astro.props;
+
+/*
+ * 版面の `data-open` は HTML に書かず、開閉ボタンの直後の inline script が面より先に当てる。
+ * 属性が無いと、CSS は広い画面で開き、狭い画面で閉じて描く。
+ * JavaScript が動かなくても、狭い画面で面が本文に覆いかぶさらない。
+ */
 
 /**
  * 開閉の起点。本文が長いので画面に貼り付ける。
@@ -74,7 +82,6 @@ const SCRIM = [
     type="button"
     class={TOGGLE}
     data-side={id}
-    aria-expanded="true"
     aria-controls={`side-${id}`}
   >
     <span
@@ -82,6 +89,7 @@ const SCRIM = [
       class="w-[14px] h-[10px] flex-none border-t-2 border-b-6 box-content"></span>
     <span class={LABEL}>{label}</span>
   </button>
+  <script is:inline set:html={`(${applySide})(document.currentScript.previousElementSibling)`} />
   <div class={PANEL} id={`side-${id}`}>
     <slot />
   </div>

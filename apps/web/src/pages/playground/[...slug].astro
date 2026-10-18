@@ -17,7 +17,7 @@ const d = entry.data;
 ---
 
 <SiteLayout title={`${d.title} — playground`} description={d.description}>
-  <div class="g-doc" data-side-root data-open="true">
+  <div class="g-doc" data-side-root>
     <Side id="pg" label="試す">
       <Presets client:idle contentId="playground" presets={d.presets} />
       <DbPeek client:idle contentId="playground" />
