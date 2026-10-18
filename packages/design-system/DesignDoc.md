@@ -478,12 +478,15 @@ ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sectio
 
 ### 図
 
-本文の `mermaid` のコードフェンスは、ビルドのときに SVG へ変換する。  
-ページに mermaid の本体（約 300 KiB）を配らない。
+本文の `mermaid` のコードフェンスは、ビルドのときに Pele で SVG へ変換する。  
+ページに描画のための JavaScript を配らない。  
+ADR-0016: [mermaid の図を、ビルドでも島でも Pele で SVG にする](../../adr/0016-render-mermaid-with-pele.md)
 
-- 図の色は、サイトのトークンへ置き換える。明暗どちらの地でも、1 枚の SVG が成り立つ。
-- 図の書体は、字幅が環境をまたいで揃う総称に固定する。
-  mermaid は箱の大きさをビルドのときに測って SVG に固定するので、本文の書体を流し込むと文字が箱からはみ出す。
+- 図の色は、`apps/web/src/styles/site.css` が Pele の CSS 変数（`--pele-fg` など）を semantic のトークンへ対応させる。
+  - 明暗どちらの地でも、1 枚の SVG が成り立つ。
+- 図の角は丸めない。`--pele-radius` を 0 にする。
+- 図の書体は、Arial と同じ字幅の総称に固定する。
+  - Pele は Node では書体を測れず、組み込みの字幅で箱の大きさを決めるので、本文の書体を流し込むと文字が箱からはみ出す。
 
 著者が図に色を指定しない規則は [context/conventions.md](../../context/conventions.md#記事とハンズオンの本文) にある。  
 ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sections-and-playground-collection.md)

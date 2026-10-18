@@ -8,7 +8,7 @@ governs:
   - pnpm-workspace.yaml
   - mise.toml
   - .github/workflows/
-verified_commit: 01101c7
+verified_commit: ab2da87
 ---
 
 # 技術スタック
@@ -32,7 +32,9 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - トークンは `@theme static` に置き、Expressive Code の `styleOverrides` から参照できる素のカスタムプロパティとして残す。
   - ADR-0010: [Tailwind CSS の採用](../adr/0010-tailwind-as-styling-base.md)
 - `astro-expressive-code` は、コードブロックの描画に使う。スタイリングは `styleOverrides` から指定する。
-- `rehype-mermaid` は、Mermaid の図をビルド時に SVG へ変換する。peer dependency として `playwright` が要る。
+- Pele（`pele`）は、Mermaid の図をビルド時に SVG へ変換する。ブラウザを使わない。
+  - バージョンは範囲で書かず、1 つに固定する。上げるときは、図の見た目を撮って比べる。
+  - ADR-0016: [mermaid の図を、ビルドでも島でも Pele で SVG にする](../adr/0016-render-mermaid-with-pele.md)
 - `pagefind` は、全文検索の索引を `astro build` の後に作る。
 - `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
