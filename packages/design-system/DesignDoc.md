@@ -78,7 +78,7 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 | Mono       | **Geist Mono Variable** | 400 / 600        | 日付・種別・duration・`contentId`・コード |
 
 ```css
---font-serif: "EB Garamond", "Zen Old Mincho", "Yu Mincho", serif;
+--font-serif: "EB Garamond Variable", "Zen Old Mincho", "Yu Mincho", serif;
 --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 /* 一覧の日付の桁を揃える */
 .mono {
@@ -89,9 +89,22 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 EB Garamond を先に置く。
 CSS は左から順にグリフを探すため、Latin は EB Garamond、和文は Zen Old Mincho が担当する。
 
-**Fontsource で self-host する。
-外部 CDN から読まない**。
-使うウェイトを 400 / 600 に絞る。  
+**Fontsource で self-host し、外部 CDN から読まない**。  
+`apps/web/src/styles/global.css` が、`tokens.css` より前に Fontsource の CSS を import する。  
+Fontsource の依存は `apps/web` が持ち、`@fukuemon/design-system` は依存を持たない。  
+読み込む CSS は次の 5 つ。
+
+- `@fontsource/zen-old-mincho/400.css`
+- `@fontsource/zen-old-mincho/600.css`
+- `@fontsource-variable/eb-garamond/wght.css`（roman）
+- `@fontsource-variable/eb-garamond/wght-italic.css`（italic）
+- `@fontsource-variable/geist-mono/wght.css`
+
+可変の EB Garamond と Geist Mono は、1 つのファイルで 400 と 600 の両方を描く。  
+ブラウザは、ページの文字に `unicode-range` が一致するスライスだけを取得する。  
+フォントのファイルはビルドで `/_astro/` に出力され、サイトと同じオリジンから配信される。  
+`apps/web/astro.config.ts` の `build.assetsInlineLimit` は、フォントを base64 で CSS に埋めない。  
+埋めると、ページで使わないスライスまで、描画を止める CSS と一緒に配ることになる。  
 ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 #### 型スケール
@@ -346,9 +359,7 @@ ARIA の `tablist` は使わない。
 溝は `--spacing-intra-4`。
 
 ```html
-<section
-  style="display: grid; grid-template-columns: var(--rail) minmax(0, 1fr)"
->
+<section style="display: grid; grid-template-columns: var(--rail) minmax(0, 1fr)">
   <h2 class="tate tate-head" style="grid-row: 1 / span 2">ハンズオン</h2>
   <div><!-- 右上: 一覧への導線 --></div>
   <div><!-- 中身 --></div>
@@ -647,6 +658,12 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+@import "@fontsource/zen-old-mincho/400.css";
+@import "@fontsource/zen-old-mincho/600.css";
+@import "@fontsource-variable/eb-garamond/wght.css";
+@import "@fontsource-variable/eb-garamond/wght-italic.css";
+@import "@fontsource-variable/geist-mono/wght.css";
+
 @import "@fukuemon/design-system/tokens.css";
 @import "@fukuemon/design-system/utilities.css";
 @import "./site.css";
@@ -747,17 +764,11 @@ Expressive Code の CSS は層に属さないので、層の中からは詳細�
 ```ts
 // apps/web/astro.config.ts
 import expressiveCode, { ExpressiveCodeTheme } from "astro-expressive-code";
-import {
-  codeThemeDark,
-  codeThemeLight,
-} from "@fukuemon/design-system/code-theme";
+import { codeThemeDark, codeThemeLight } from "@fukuemon/design-system/code-theme";
 
 expressiveCode({
   // --color-c-* を写した自前のテーマ
-  themes: [
-    new ExpressiveCodeTheme(codeThemeLight),
-    new ExpressiveCodeTheme(codeThemeDark),
-  ],
+  themes: [new ExpressiveCodeTheme(codeThemeLight), new ExpressiveCodeTheme(codeThemeDark)],
   minSyntaxHighlightingColorContrast: 0,
   styleOverrides: {
     borderColor: "var(--color-rule-strong)",

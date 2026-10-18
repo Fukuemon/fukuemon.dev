@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  // apm が配置し、書き換えるファイル。整形すると次の apm install で差分が出る
+  "ignorePatterns": [".agents/", ".claude/", ".codex/", "apm.lock.yaml"],
+}

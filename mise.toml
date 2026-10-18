@@ -3,3 +3,5 @@
 node = "24"
 uv = "0.12"
 "pipx:apm-cli" = "0.32.0"
+# similarity-ts は npm になく、GitHub のリリースの prebuilt を使う
+"github:mizchi/similarity" = "0.5.0"

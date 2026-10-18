@@ -1,7 +1,7 @@
 # 開発の準備
 
 必要なツールは mise、pnpm、python3 である。
-Node.js、uv、apm は `mise.toml` にバージョンが書いてあり、`mise install` が入れる。
+Node.js、uv、apm、similarity-ts は `mise.toml` にバージョンが書いてあり、`mise install` が入れる。
 pnpm のバージョンは `package.json` の `packageManager` にある。
 python3 は、lefthook の `protected-branch` のフックが使う。
 
@@ -44,7 +44,8 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 コミットと push の前に、lefthook が次を実行する。設定は `lefthook.yml` にある。
 
 - 保護するブランチへの直接のコミットと push を止める。
-- `lefthook.yml` の `format` が、ステージしたファイルを整形する。
+- ステージしたファイルに Oxfmt を掛け、整形した結果をステージし直す。
+  - Oxfmt の設定は `.oxfmtrc.jsonc` にある。
 - ステージした Markdown に textlint を掛ける。
 - commit-msg のフックで、`ticket-number` が issue 番号をメッセージに足す。
   - ブランチの名前が `feature/<issue 番号>` で、1 行目に `#<issue 番号>` がないときに、1 行目の末尾へ足す。
@@ -54,39 +55,32 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 
 ## ブランチとリリース
 
-<!-- 次は既定の運用。運用が違えば本文と図を書き換える -->
+ブランチは、`develop` と作業用のブランチにする。
 
-ブランチは、`main`、`develop`、issue ごとの作業用のブランチにする。
+- `develop` は GitHub の既定のブランチで、本番に配信している状態を指す。
+- 作業用のブランチは `develop` から切る。名前は `<種別>/<内容>` にする。
+  - 例: `fix/pnpm-run-args`、`docs/fix-doc-facts`、`chore/add-agent-playbooks`
+- `develop` へは pull request を通して取り込み、直接はコミットしない。
+  - lefthook のフックが、`develop` への直接のコミットと push を止める。
+- `develop` に取り込むと、check workflow が `develop` で通った後に、deploy workflow が本番へ配信する。
+- バージョンとタグは付けない。
 
-- `main` はリリース済みの状態を指す。`develop` は次のリリースに向けて変更を集める。
-- 作業用のブランチは `develop` から切る。名前は `feature/<issue 番号>` にし、不具合は `fix/<issue 番号>` にする。`develop` へは、pull request を通して取り込む。
-- リリースは、`develop` を `main` へ pull request で取り込み、`main` のコミットにタグを付ける。バージョンはセマンティック バージョニングに従う。
-- リリース後の緊急の修正は、`main` から `hotfix/<issue 番号>` を切り、`main` と `develop` の両方へ取り込む。
-- 保護するブランチは `main`、`develop` である。直接はコミットせず、pull request を通して取り込む。直接コミットを許す場面があれば、この行の下に場面と理由を書く。
-
-<!-- 次のバージョンを何から決めるか。コミットメッセージからなら release-please、変更ごとの記述からなら changesets -->
+作業用のブランチを `develop` に取り込むたびに、本番へ配信する。
 
 ```mermaid
+%%{init: {"gitGraph": {"mainBranchName": "develop"}}}%%
 gitGraph
-    commit id: "v1.0.0" tag: "v1.0.0"
-    branch develop
+    commit id: "配信 1"
+    branch "fix/pnpm-run-args"
+    checkout "fix/pnpm-run-args"
+    commit id: "fix-1"
     checkout develop
-    commit id: "dev-1"
-    branch "feature/12"
-    checkout "feature/12"
-    commit id: "12-1"
+    branch "docs/fix-doc-facts"
+    checkout "docs/fix-doc-facts"
+    commit id: "docs-1"
     checkout develop
-    branch "fix/13"
-    checkout "fix/13"
-    commit id: "13-1"
-    checkout develop
-    merge "fix/13" id: "PR #13"
-    checkout "feature/12"
-    commit id: "12-2"
-    checkout develop
-    merge "feature/12" id: "PR #12"
-    checkout main
-    merge develop id: "release" tag: "v1.1.0"
+    merge "fix/pnpm-run-args" id: "PR を取り込み、配信 2"
+    merge "docs/fix-doc-facts" id: "PR を取り込み、配信 3"
 ```
 
 ## issue と pull request

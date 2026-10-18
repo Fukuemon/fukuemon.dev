@@ -1,8 +1,0 @@
-# Prettier の対象外。
-
-# apm が配置し、書き換えるファイル。整形すると次の apm install で差分が出る
-.agents/
-.claude/
-.codex/
-apm.lock.yaml
-pnpm-lock.yaml

@@ -67,7 +67,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 ## Deployment Conditions
 
-- Worker の deploy は、check workflow が既定のブランチで成功したときだけ、deploy workflow が自動で行う。
+- Worker の deploy は、check workflow が既定のブランチ（`develop`）で成功したときだけ、deploy workflow が自動で行う。
   - Worker のコードの変更は、通常の pull request に含まれ、merge で自動的に deploy される。
 - Terraform の apply は、運用者が apply workflow を `workflow_dispatch` で手で起動したときだけ行う。
   - 起動には、`infra` environment の protection rules の承認が要る。
