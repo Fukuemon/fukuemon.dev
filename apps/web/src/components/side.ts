@@ -41,6 +41,32 @@ export function mountSide(root: HTMLElement): void {
   globalThis.addEventListener("keydown", (e: Event) => {
     if ((e as KeyboardEvent).key === "Escape" && open && !wide()) set(false);
   });
+  tuckOnScroll(btn);
+}
+
+/** 指が触れただけの揺れで出し入れしない幅 (px) */
+const JITTER = 8;
+
+/**
+ * 狭い画面で、下へ読み進める間は開閉ボタンを隠し、上へ戻すと出す。
+ * ボタンは画面の左下に固定されるので、出したままだと実行の結果や本文の左下に重なる。
+ * フォーカスが来たら出す。キーボードで隠れたボタンを押すことになるため。
+ */
+export function tuckOnScroll(btn: HTMLElement): void {
+  let last = globalThis.scrollY ?? 0;
+  globalThis.addEventListener(
+    "scroll",
+    () => {
+      const y = globalThis.scrollY;
+      if (Math.abs(y - last) < JITTER) return;
+      const down = y > last;
+      last = y;
+      if (down && !wide() && btn.getAttribute("aria-expanded") !== "true") btn.dataset.tuck = "";
+      else delete btn.dataset.tuck;
+    },
+    { passive: true },
+  );
+  btn.addEventListener("focus", () => delete btn.dataset.tuck);
 }
 
 /** 狭い画面で開いているサイドバーを閉じる。本文に覆いかぶさるため */

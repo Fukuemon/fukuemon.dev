@@ -19,6 +19,7 @@ const { id, label } = Astro.props;
  * 開閉の起点。本文が長いので画面に貼り付ける。
  * 閉じたサイドバーでは、これだけがサイドバーへの入口になる。
  * 狭い画面では画面の左下へ固定し、面が滑り出す起点にする。
+ * 固定したボタンは結果や本文に重なるので、下へ読み進める間は隠す。
  */
 const TOGGLE = [
   "col-start-1 row-start-1 z-4",
@@ -34,6 +35,8 @@ const TOGGLE = [
   "max-wide:py-intra-2 max-wide:pr-intra-3 max-wide:pl-intra-3",
   "max-wide:border max-wide:border-rule-strong max-wide:bg-paper max-wide:text-fg",
   "max-wide:[[data-open=false]_&]:flex-row",
+  "max-wide:transition-transform max-wide:duration-220 max-wide:ease-[ease] motion-reduce:transition-none!",
+  "max-wide:data-tuck:translate-y-[calc(100%+var(--gutter))]",
 ].join(" ");
 
 /** たたむと縦組みで残る文字。狭い画面ではボタンごと横倒しになるので横組みへ戻す */
