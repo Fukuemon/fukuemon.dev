@@ -10,7 +10,7 @@ governs:
   - apps/web/package.json
   - apps/web/vite.config.ts
   - .github/workflows/
-verified_commit: 8a9f8b0
+verified_commit: 63b37ad
 ---
 
 # 技術スタック

@@ -9,7 +9,7 @@ governs:
   - .oxlintrc.json
   - .oxfmtrc.jsonc
   - packages/config/
-verified_commit: 8a9f8b0
+verified_commit: 63b37ad
 ---
 
 # コードと文書の規約
