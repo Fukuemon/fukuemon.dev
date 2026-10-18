@@ -2,7 +2,7 @@
 type: context
 title: コンテンツ
 description: 記事とハンズオンに共通する、公開の状態の遷移、contentId と関連の不変条件、著者がしてはいけないこと
-status: draft
+status: stable
 ---
 
 # コンテンツ
@@ -13,8 +13,10 @@ schema と関係グラフの設計は [Content Model の Design Doc](../../packa
 
 - `draft` のコンテンツは、dev server でだけ見える。
 - `published` のコンテンツは、build が書き出す。
+- `archived` のコンテンツは、`draft` と同じく dev server でだけ見え、build は書き出さない。
 - 著者は frontmatter の `status` を `draft` から `published` に書き換えて公開する。
-- schema が受け付ける `archived` の意味と、`archived` への遷移は、未定。
+- 著者は `status` を `published` から `archived` に書き換えると、build の出力からそのコンテンツを外せる。
+- `related` が `draft` か `archived` のコンテンツを指しても、ビルドは失敗しない。build の出力の関連には出ない。
 
 ## Invariants
 

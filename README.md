@@ -40,9 +40,13 @@ Terraform 本体のバージョンは `.github/workflows/` が、provider のバ
 
 ## 開発
 
-Node.js 22.12 以上と pnpm 10 が要る。
+mise と pnpm が要る。
+Node.js は、`mise install` が `mise.toml` に書いたバージョンで入れる。
+pnpm のバージョンは `package.json` の `packageManager` にある。
+準備の手順の全体は [CONTRIBUTING.md](CONTRIBUTING.md) にある。
 
 ```sh
+mise install
 pnpm install
 pnpm run dev
 ```
@@ -54,7 +58,7 @@ pnpm run dev
 | `pnpm run check`       | 品質のチェック一式                    |
 | `pnpm run infra:check` | Terraform の書式と構文 (要 Terraform) |
 
-`check` は lint → typecheck → knip → 配色 → Worker 名 → test → build → deploy の dry-run をこの順に通す。
+`check` が通すチェックと順序は、ルートの `package.json` の `check` にある。
 `infra:check` は Terraform を必要とするため `pnpm run check` には含めない。
 CI の Check workflow では別の step として先に回す。
 

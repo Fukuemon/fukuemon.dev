@@ -6,6 +6,7 @@ status: stable
 governs:
   - package.json
   - lefthook.yml
+  - .oxlintrc.json
   - packages/config/
 verified_commit: unverified
 ---
@@ -15,7 +16,7 @@ verified_commit: unverified
 ## Naming
 
 - コンポーネントの名前は、「何の」「動作」「UI 要素」の順で組む。
-  - 例: `ContentTable`、`KindTabs`、`LabStepList`、`ArtBand`
+  - 例: `ContentTable`、`KindTabs`、`StepList`、`ArtBand`
 - 状態を名前に入れず、props で表す。`ActiveTab` も `TabActive` も使わない。
 - 識別子、型名、API 名は、原語のまま使う。
 - ユーザーに見える文字列リテラルは変えない。観測できる契約であり、テストが固定している。
@@ -37,7 +38,7 @@ verified_commit: unverified
 
 - `contentId` を Astro の `id` に載せない理由。Astro が `id` を占有し、`slug` を schema に置けない。
 - 関係に `reference()` を使わない理由。collection をまたぎ、Content Model を Astro に依存させないため。
-- `tokens.css` を素の CSS で書く理由。Expressive Code が挿す CSS はこのリポジトリのビルドを通らないため。
+- `tokens.css` のトークンを `@theme static` に置き、素のカスタムプロパティとして出力する理由。Expressive Code が挿す CSS はこのリポジトリのビルドを通らないため。
 
 Why not のコメントには、該当する ADR へのリンクを 1 行添える。
 
@@ -100,8 +101,8 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 ### チェックの実行点
 
-- `pnpm run check` が、lint、型、未使用の検出、配色、Worker 名、test、build、deploy の dry run をつなぐ。CI も `check` を実行する。
-  - 順序はルートの `package.json` の `check` にある。
+- `pnpm run check` が、品質のチェックをつなぐ。CI も `check` を実行する。
+  - つなぐチェックと順序は、ルートの `package.json` の `check` にある。
 - lint、typecheck、test を pre-commit で実行しない。`pnpm run check` と CI が担う。
 - 見た目の回帰のチェック（`shot` と `shot:diff`）は `check` に入れない。理由は [testing.md](testing.md#test-types-and-guarantees) にある。
 
@@ -121,8 +122,9 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 除外を足すときは、理由をこの節に書く。  
 設定ファイルのコメントだけに残さない。
 
-- Astro が生成する型定義（`.astro/`）は、knip の未使用の判定と型のチェックから外す。生成物であるため。
-- shadcn/ui の CLI の出力（`apps/web/src/components/ui/`）は、重複の検出と一部の lint の規則から外す。手で作らないため。
+- knip は、`/pagefind/pagefind.js` を解決できない import として扱わない（`ignoreUnresolved`）。Pagefind が `astro build` の後に `dist/` へ作るファイルで、ソースの時点では存在しないため。
+- knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、別に入れるコマンドであるため。
+- knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。
 - similarity-ts は、`check` で存在を確かめ、なければ警告を出して飛ばす。cargo で入れる外部のバイナリで、CI には入っていない。
 

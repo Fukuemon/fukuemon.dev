@@ -23,7 +23,7 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 
 持つものは次のとおり。
 
-- Design Tokens（primitive と semantic）を、素の CSS のカスタムプロパティで定義する
+- Design Tokens（primitive と semantic）を `@theme static` で定義し、`:root` の CSS カスタムプロパティとして出力する
 - Typography、縦組み、色、余白、Grid の値
 - 明るい配色と暗い配色の両方
 - 挿絵の版の仕様と、図柄を足す手順
@@ -61,11 +61,11 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 どれも輪郭に 1px 以上の罫を必須とする。
 暗い配色では背景どうしの明度差が 1.10 しか取れず、罫がないと境界が消える。
 
-| 背景                 | 用途                               |
-| -------------------- | ---------------------------------- |
-| 反転帯 (`data-band`) | 読みの区切りに置く強い休符         |
-| コード (`--code-bg`) | コードブロックとその chrome        |
-| 注記 (`--tint-*`)    | 前提 / 補足 / 注意、コードの強調行 |
+| 背景                       | 用途                               |
+| -------------------------- | ---------------------------------- |
+| 反転帯 (`data-band`)       | 読みの区切りに置く強い休符         |
+| コード (`--color-code-bg`) | コードブロックとその chrome        |
+| 注記 (`--color-tint-*`)    | 前提 / 補足 / 注意、コードの強調行 |
 
 帯の中では変数を丸ごと差し替え、地のトークンを参照できなくする。
 
@@ -172,17 +172,17 @@ ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 本書が定めるのは、トークンの**層**と**使用制約**である。
 
-| 層        | 例                                               | 規則                                       |
-| --------- | ------------------------------------------------ | ------------------------------------------ |
-| primitive | `--ink` / `--green` / `--rule-strong`            | 色そのもの。画面から直接参照しない         |
-| semantic  | `--fg` / `--link` / `--now` / `--rule`           | 画面はここだけを参照する                   |
-| 背景      | `--paper` / `--panel` / `--code-bg` / `--tint-*` | 輪郭に 1px 以上の罫を必須とする            |
-| 帯        | `[data-band]` が差し替える 7 変数                | 帯専用の値。primitive のどれとも一致しない |
-| 霞        | `--veil-1` / `--veil-0`                          | 地の色そのものを透過させる                 |
+| 層        | 例                                                                       | 規則                                       |
+| --------- | ------------------------------------------------------------------------ | ------------------------------------------ |
+| primitive | `--color-ink` / `--color-green` / `--color-rule-strong`                  | 色そのもの。画面から直接参照しない         |
+| semantic  | `--color-fg` / `--color-link` / `--color-now` / `--color-rule`           | 画面はここだけを参照する                   |
+| 背景      | `--color-paper` / `--color-panel` / `--color-code-bg` / `--color-tint-*` | 輪郭に 1px 以上の罫を必須とする            |
+| 帯        | `[data-band]` が差し替える 6 変数                                        | 帯専用の値。primitive のどれとも一致しない |
+| 霞        | `--color-veil-1` / `--color-veil-0`                                      | 地の色そのものを透過させる                 |
 
 **反転帯に入りうる領域では semantic だけを参照する**。
-帯は `--ink` ではなく `--fg` を差し替えて成立する。
-帯の中で `--ink` を直接参照した要素は、地に沈む。
+帯は `--color-ink` ではなく `--color-fg` を差し替えて成立する。
+帯の中で `--color-ink` を直接参照した要素は、地に沈む。
 
 帯に入らないことが確定している領域では primitive を直接参照してよい。
 全画面へ一律に禁じると、守られない規約が文書に残り、自動のチェックを入れられなくなる。
@@ -191,42 +191,42 @@ ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 #### コントラスト
 
-地 (`--paper`) に対して測った値である。
+地 (`--color-paper`) に対して測った値である。
 
-| トークン        | 明    | 暗    |
-| --------------- | ----- | ----- |
-| `--ink`         | 17.25 | 16.28 |
-| `--ink-2`       | 7.40  | 8.88  |
-| `--green`       | 6.55  | 7.86  |
-| `--blue`        | 8.78  | 8.18  |
-| `--rust`        | 6.57  | 7.02  |
-| `--rule-strong` | 4.60  | 4.88  |
-| `--rule-soft`   | 1.43  | 1.51  |
+| トークン              | 明    | 暗    |
+| --------------------- | ----- | ----- |
+| `--color-ink`         | 17.25 | 16.28 |
+| `--color-ink-2`       | 7.40  | 8.88  |
+| `--color-green`       | 6.55  | 7.86  |
+| `--color-blue`        | 8.78  | 8.18  |
+| `--color-rust`        | 6.57  | 7.02  |
+| `--color-rule-strong` | 4.60  | 4.88  |
+| `--color-rule-soft`   | 1.43  | 1.51  |
 
 **文字と UI 境界に使うトークンはすべて WCAG AA (4.5:1) を満たす**。
-`--rule-soft` だけが例外で、文字にも UI 境界にも使わない。
+`--color-rule-soft` だけが例外で、文字にも UI 境界にも使わない。
 
-反転帯の中では、明 3.85 / 暗 3.10 の `--rule` を除き、すべて 4.5:1 以上になる。
-`--rule` は罫専用なので、UI コンポーネントの 3:1 で足りる。
+反転帯の中では、明 3.85 / 暗 3.10 の `--color-rule` を除き、すべて 4.5:1 以上になる。
+`--color-rule` は罫専用なので、UI コンポーネントの 3:1 で足りる。
 
 #### 使用制約
 
-- `--green` / `--blue` / `--rust` は**線と文字にのみ使う**。
+- `--color-green` / `--color-blue` / `--color-rust` は**線と文字にのみ使う**。
   テキスト色、罫線、下線。
-  背景を塗るときは同系の `--tint-*` を使う
+  背景を塗るときは同系の `--color-tint-*` を使う
 - 各色の用途を固定する。
   数で制限しない。手順を持つ画面では現在地マーカーが複数必要になる
 
-  | 色        | semantic     | 用途                                             |
-  | --------- | ------------ | ------------------------------------------------ |
-  | `--green` | `--link`     | 内部リンク、ハンズオンであること、完了と正常状態 |
-  | `--blue`  | `--link-ext` | 外部リンク、前提の注記                           |
-  | `--rust`  | `--now`      | 現在地 (ヘッダ / タブ / 手順 / 目次)、注意       |
+  | 色              | semantic           | 用途                                             |
+  | --------------- | ------------------ | ------------------------------------------------ |
+  | `--color-green` | `--color-link`     | 内部リンク、ハンズオンであること、完了と正常状態 |
+  | `--color-blue`  | `--color-link-ext` | 外部リンク、前提の注記                           |
+  | `--color-rust`  | `--color-now`      | 現在地 (ヘッダ / タブ / 手順 / 目次)、注意       |
 
   外部リンクの判定は `a[href^="http"]` で行う。
   内部リンクは相対パスなので、絶対 URL だけが外を指す。
 
-- `--rule-soft` は**情報を持たない区切りにのみ使う**。
+- `--color-rule-soft` は**情報を持たない区切りにのみ使う**。
   地に対して明 1.43 / 暗 1.51 しかなく、UI 境界としては見えない。
   一覧の行の区切りのように、消えても情報が失われない場所に限る
 
@@ -234,13 +234,13 @@ ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 
 **5 トークンに絞り、輝度を単調な梯子に並べる**。
 
-| トークン    | 明    | 暗    | 装飾 |
-| ----------- | ----- | ----- | ---- |
-| `--c-plain` | 15.39 | 14.86 | —    |
-| `--c-key`   | 10.78 | 7.02  | 太字 |
-| `--c-ident` | 8.39  | 4.59  | —    |
-| `--c-lit`   | 6.43  | 9.85  | —    |
-| `--c-com`   | 5.06  | 5.08  | 斜体 |
+| トークン          | 明    | 暗    | 装飾 |
+| ----------------- | ----- | ----- | ---- |
+| `--color-c-plain` | 15.39 | 14.86 | —    |
+| `--color-c-key`   | 10.78 | 7.02  | 太字 |
+| `--color-c-ident` | 8.39  | 4.59  | —    |
+| `--color-c-lit`   | 6.43  | 9.85  | —    |
+| `--color-c-com`   | 5.06  | 5.08  | 斜体 |
 
 **装飾を色に重ねる**。
 太字と斜体は、色の比が詰まったときの唯一の手掛かりになる。
@@ -269,10 +269,10 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../adr
 
 数列を 2 つに分ける。
 
-| 数列            | 用途                                 |
-| --------------- | ------------------------------------ |
-| `--gap-intra-*` | 節の内側。行間、ラベルと本文、列の溝 |
-| `--gap-inter-*` | 節の外側。区画の内側、節と節のあいだ |
+| 数列                | 用途                                 |
+| ------------------- | ------------------------------------ |
+| `--spacing-intra-*` | 節の内側。行間、ラベルと本文、列の溝 |
+| `--spacing-inter-*` | 節の外側。区画の内側、節と節のあいだ |
 
 **2 つの数列のあいだに段階を置かない**。
 この空きが節の境界を作る。
@@ -283,12 +283,11 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../adr
 
 ### 測度と Grid
 
-| 用途                     | 幅                                     | 根拠                         |
-| ------------------------ | -------------------------------------- | ---------------------------- |
-| 本文 (記事 / ハンズオン) | `min(100% - 2 * var(--gutter), 42rem)` | 日本語で 1 行 40 字前後      |
-| 図版を含む本文           | `min(100% - 2 * var(--gutter), 52rem)` | 図と表が読める最小           |
-| 一覧の 1 行              | フレーム幅いっぱい                     | 罫線で区切るため幅を絞らない |
-| 左右の余白 (`--gutter`)  | `clamp(20px, 5vw, 56px)`               | —                            |
+| 用途                           | 幅                                                                                     | 根拠                               |
+| ------------------------------ | -------------------------------------------------------------------------------------- | ---------------------------------- |
+| 本文 (記事 / ハンズオン)       | `--measure`: `min(100% - 2 * var(--gutter), var(--measure-w))`、`--measure-w` は 42rem | 日本語で 1 行 40 字前後            |
+| 一覧の表、playground、検索の窓 | `--measure-wide`: 68rem                                                                | 罫線で区切るため、行長より広く取る |
+| 左右の余白 (`--gutter`)        | `clamp(20px, 5vw, 56px)`                                                               | —                                  |
 
 **`ch` を使わない**。
 `ch` は文字 `0` の幅であり、CJK グリフの半分以下である。
@@ -297,13 +296,16 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../adr
 
 #### 折り返し
 
-段階を 3 つだけ持つ。
+トークンが持つ折り返しは 2 段だけにする。
+`--breakpoint-wide` は 1101px、`--breakpoint-narrow` は 721px で、markup からは `max-wide:` と `max-narrow:` で当てる。
+一覧の表と実行パネルだけは、`apps/web/src/styles/site.css` に、それぞれ専用の折り返しの幅を持つ。
 
-| 幅     | 変わること                                                                 |
-| ------ | -------------------------------------------------------------------------- |
-| 1100px | サイドバーをまとめる。記事の目次と柱、ハンズオンの手順一覧を本文の上へ回す |
-| 720px  | 縦組みの見出しを横へ倒す。表から分類の列を隠す                             |
-| 520px  | 表から種類の列を隠す                                                       |
+| 幅          | トークン              | 変わること                                                                 |
+| ----------- | --------------------- | -------------------------------------------------------------------------- |
+| 1100px 以下 | `--breakpoint-wide`   | サイドバーをまとめる。記事の目次と柱、ハンズオンの手順一覧を本文の上へ回す |
+| 720px 以下  | `--breakpoint-narrow` | 縦組みの見出しを横へ倒す。表から分類の列を隠す                             |
+| 520px 以下  | なし                  | 表から種類の列を隠す                                                       |
+| 1200px 以上 | なし                  | 記事とハンズオンの実行パネルを本文より右へ広く出す                         |
 
 **表を横スクロールさせない**。
 列を隠す。
@@ -324,7 +326,7 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../../adr
 ARIA の `tablist` は使わない。
 根拠は [Design Doc](../../design/DesignDoc.md#種別と分類の切り分け) の設計不変量 8。
 
-- 現在地はヘッダと同じ `--rust` の 2px 下線で示す
+- 現在地はヘッダと同じ `--color-rust` の 2px 下線で示す
 - タブに件数を添える。
   押す前に結果の量が分かる
 - 絞り込み中は列の中身を変える。
@@ -341,7 +343,7 @@ ARIA の `tablist` は使わない。
 
 節は 2 列にする。
 左が縦組みの見出し (`--rail`)、右が中身。
-溝は `--gap-intra-4`。
+溝は `--spacing-intra-4`。
 
 ```html
 <section
@@ -378,7 +380,7 @@ ARIA の `tablist` は使わない。
 42rem でおよそ 37 字である。
 
 記事の目次は**罫の長さで章の分量を示す**。
-現在地の章だけ 2px の `--rust`、他は 1px の `--rule-strong`。
+現在地の章だけ 2px の `--color-rust`、他は 1px の `--color-rule-strong`。
 
 **サイドバーはたためる**。
 `--drawer` (306px) と `--drawer-shut` (46px) を `[data-open]` で切り替える。
@@ -395,7 +397,7 @@ ARIA の `tablist` は使わない。
 ADR-0001: [Starlight の採否](../../adr/0001-starlight-as-docs-renderer.md)
 
 ハンズオンの手順一覧は進捗バーと手順マーカーを持つ。
-マーカーは完了 `--green` / 現在 `--rust` + `outline` / 未着手 `inset` の罫。
+マーカーは完了 `--color-green` / 現在 `--color-rust` + `outline` / 未着手 `inset` の罫。
 **色だけで運ばない**。 状態を `.sr` で読み上げに渡す。
 
 sticky の起点は上部ヘッダの高さに揃える。
@@ -406,11 +408,11 @@ sticky の起点は上部ヘッダの高さに揃える。
 
 #### 罫の割り当て
 
-| class           | 太さと色            | 割り当て                         |
-| --------------- | ------------------- | -------------------------------- |
-| `.rule-section` | 2px `--rule-strong` | 節の境界、ハンズオンの手順見出し |
-| `.rule-struct`  | 1px `--rule-strong` | 構造の境界、記事末尾の前後ナビ   |
-| `.rule-row`     | 1px `--rule-soft`   | 一覧の行、情報を持たない区切り   |
+| class           | 太さと色                  | 割り当て                         |
+| --------------- | ------------------------- | -------------------------------- |
+| `.rule-section` | 2px `--color-rule-strong` | 節の境界、ハンズオンの手順見出し |
+| `.rule-struct`  | 1px `--color-rule-strong` | 構造の境界、記事末尾の前後ナビ   |
+| `.rule-row`     | 1px `--color-rule-soft`   | 一覧の行、情報を持たない区切り   |
 
 class を持たない罫も同じ 3 段階に従う。
 `.topbar` と `.tabs` の下端、表の `th` と `td`、記事の柱とハンズオン本文の縦罫が該当する。
@@ -420,11 +422,11 @@ class を持たない罫も同じ 3 段階に従う。
 
 #### 背景色を置く場所
 
-| 背景                 | 置く場所                                          |
-| -------------------- | ------------------------------------------------- |
-| 反転帯 (`data-band`) | **全ページの footer**。 加えて各ページ 1 箇所まで |
-| コード (`--code-bg`) | コードブロックとその chrome                       |
-| 注記 (`--tint-*`)    | 前提 / 補足 / 注意、コードの強調行                |
+| 背景                       | 置く場所                                          |
+| -------------------------- | ------------------------------------------------- |
+| 反転帯 (`data-band`)       | **全ページの footer**。 加えて各ページ 1 箇所まで |
+| コード (`--color-code-bg`) | コードブロックとその chrome                       |
+| 注記 (`--color-tint-*`)    | 前提 / 補足 / 注意、コードの強調行                |
 
 **footer が常に帯であることが、ページ末尾の共通の合図になる**。
 
@@ -433,7 +435,7 @@ class を持たない罫も同じ 3 段階に従う。
 中身より広い帯が休符になる。
 
 注記の型を固定する。
-2px の左罫 (差し色) + `--tint-*` の地 + `.mono .meta` のラベル + 本文。
+2px の左罫 (差し色) + `--color-tint-*` の地 + `.mono .meta` のラベル + 本文。
 
 #### 挿絵の重ね順
 
@@ -460,7 +462,7 @@ viewBox は図柄によらず `0 0 1200 400` に固定する。
 - `html` に `scroll-padding-block-start` を置く。
   sticky ヘッダの下へアンカー先とフォーカスが隠れる (WCAG 2.4.11)
 - 色だけで運んでいる情報 (完了 / 現在地 / 未着手) は `.sr` で補う
-- フォーカスリングは `--focus`。
+- フォーカスリングは `--color-focus`。
   帯と暗い配色で反転する
 - `prefers-reduced-motion: reduce` は `::before` / `::after` も含め、`scroll-behavior` も止める
 - `forced-colors: active` で現在地の手掛かりを罫として取得し直す。
@@ -470,7 +472,7 @@ viewBox は図柄によらず `0 0 1200 400` に固定する。
 ### 挿絵
 
 **外部の画像ファイルを持たない**。
-すべてその場で描く SVG とし、3 階調を `--wood-1` / `--wood-2` / `--wood-3` から参照する。
+すべてその場で描く SVG とし、3 階調を `--color-wood-1` / `--color-wood-2` / `--color-wood-3` から参照する。
 配色を切り替えると挿絵の色も一緒に変わる。
 
 #### 版の仕様
@@ -482,11 +484,11 @@ viewBox は図柄によらず `0 0 1200 400` に固定する。
 | 輪郭の荒れ | `feTurbulence` (`baseFrequency` 0.045 0.09、`numOctaves` 3) + `feDisplacementMap` (`scale` 7)。水面のみ 3 | 刷りのずれ。刷ったものに見せる |
 | 霧         | 縦グラデーションを `mask` に掛ける。下端 1.0 / 45% で 0.80 / 上端 0.10 の 3 停止点                        | 上端で紙へなじませる           |
 | 粒         | CSS 層の turbulence タイル (160px) を `mix-blend-mode: multiply` で重ねる。不透明度 明 .34 / 暗 .28       | 紙の目                         |
-| 3 階調     | 遠景 `--wood-3` / 中景 `--wood-2` / 近景 `--wood-1`                                                       | 奥行き                         |
+| 3 階調     | 遠景 `--color-wood-3` / 中景 `--color-wood-2` / 近景 `--color-wood-1`                                     | 奥行き                         |
 | 断ち落とし | `preserveAspectRatio="xMidYMax slice"`                                                                    | 帯の高さに関わらず下端を保つ   |
 
 **粒を SVG フィルタで作らない**。
-`feFlood flood-color="var(--wood-1)"` は CSS カスタムプロパティを解決しない。
+`feFlood flood-color="var(--color-wood-1)"` は CSS カスタムプロパティを解決しない。
 CSS 層に置く。
 
 **帯の下端で粒に継ぎ目が出る**。
@@ -495,7 +497,7 @@ CSS 層に置く。
 #### 文字を重ねるとき
 
 挿絵の上に文字を直接置かない。
-**地の色そのものを透過させた霞 (`--veil-1` → `--veil-0`) を挟み、文字は必ず無地の紙の上に載せる**。
+**地の色そのものを透過させた霞 (`--color-veil-1` → `--color-veil-0`) を挟み、文字は必ず無地の紙の上に載せる**。
 
 挿絵の濃さに関わらずコントラストが固定される (明 17.25:1 / 暗 16.28:1)。
 
@@ -710,7 +712,7 @@ Expressive Code の CSS は層に属さないので、層の中からは詳細�
 
 選択子を明暗で分けて値を 2 度書かない。
 システム設定用と明示指定用に同じ値を並べると、片方だけを直した誤りに、実行時まで気づけない。
-`check-contrast.ts` はブラウザが読むのと同じ `:root` の 1 箇所を読む。
+`check-contrast.ts` は、ブラウザが読むのと同じ `tokens.css` の `@theme static` の 1 箇所を読む。
 
 **色でないものは `light-dark()` で書けない**。
 `mix-blend-mode` のように色以外を明暗で分ける規則は、選択子を 2 本並べる。
@@ -743,16 +745,39 @@ Expressive Code の CSS は層に属さないので、層の中からは詳細�
 スタイリングは class を上書きせず、`styleOverrides` から指定する。
 
 ```ts
-// astro.config.ts
+// apps/web/astro.config.ts
+import expressiveCode, { ExpressiveCodeTheme } from "astro-expressive-code";
+import {
+  codeThemeDark,
+  codeThemeLight,
+} from "@fukuemon/design-system/code-theme";
+
 expressiveCode({
-  themes: [lightTheme, darkTheme], // --c-* を写した VS Code 互換の JSON
+  // --color-c-* を写した自前のテーマ
+  themes: [
+    new ExpressiveCodeTheme(codeThemeLight),
+    new ExpressiveCodeTheme(codeThemeDark),
+  ],
+  minSyntaxHighlightingColorContrast: 0,
   styleOverrides: {
-    borderColor: "var(--rule-strong)",
-    codeBackground: "var(--code-bg)",
-    frames: { frameBoxShadowCssValue: "none" },
+    borderColor: "var(--color-rule-strong)",
+    borderRadius: "0",
+    codeBackground: "var(--color-code-bg)",
+    codeFontFamily: "var(--font-mono)",
+    frames: {
+      frameBoxShadowCssValue: "none",
+      editorTabBarBackground: "var(--color-code-bg)",
+      editorActiveTabBackground: "var(--color-code-bg)",
+      editorActiveTabIndicatorTopColor: "var(--color-green)",
+      editorActiveTabBorderColor: "var(--color-rule-strong)",
+      editorBackground: "var(--color-code-bg)",
+      terminalBackground: "var(--color-code-bg)",
+      terminalTitlebarBackground: "var(--color-code-bg)",
+      tooltipSuccessBackground: "var(--color-green)",
+    },
     textMarkers: {
-      markBackground: "var(--tint-green)",
-      markBorderColor: "var(--green)",
+      markBackground: "var(--color-tint-green)",
+      markBorderColor: "var(--color-green)",
       lineMarkerAccentWidth: "2px",
     },
   },
@@ -760,11 +785,11 @@ expressiveCode({
 ```
 
 **テーマは自前で持つ**。
-既製のテーマを使うと、地を `--code-bg` へ差し替えたときに比が崩れる。
+既製のテーマを使うと、地を `--color-code-bg` へ差し替えたときに比が崩れる。
 GitHub のテーマで測ったところ、コメントが明 4.15 / 暗 3.48、`const` が明 3.95 で AA を下回った。
 
 実装は [packages/design-system/code-theme.ts](code-theme.ts) にある。
-**値は `tokens.css` の `--c-*` と同じである**。
+**値は `tokens.css` の `--color-c-*` と同じである**。
 Shiki はビルド時に色を解決するため CSS カスタムプロパティを参照できない。
 片方を変えたらもう片方も変える。
 
@@ -776,14 +801,14 @@ Shiki はビルド時に色を解決するため CSS カスタムプロパティ
 
 ### 共通化の範囲
 
-| 層                         | 内容                                                | 置き場                                          |
-| -------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| Design Tokens              | primitive / semantic                                | `packages/design-system/styles/tokens.css`      |
-| 版面                       | `.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫        | `packages/design-system/styles/utilities.css`   |
-| 挿絵                       | 版の実装と図柄の生成器                              | `packages/design-system/art/`                   |
-| コードの配色               | Expressive Code のテーマと配色のチェック            | `packages/design-system/code-theme.ts`          |
-| このサイトのコンポーネント | `ContentRow` / `MetaLine` / 実行パネル / サイドバー | `apps/web/src/components/` と `styles/site.css` |
-| 動き                       | サイト全体の動きの実装                              | `apps/web/src/styles/motion.css`                |
+| 層                         | 内容                                                | 置き場                                                                                                                                                                                          |
+| -------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Design Tokens              | primitive / semantic                                | `packages/design-system/styles/tokens.css`                                                                                                                                                      |
+| 版面                       | `.g-rail` / `.g-doc` / `.tate` / `.hit` / 罫        | `packages/design-system/styles/utilities.css`                                                                                                                                                   |
+| 挿絵                       | 版の実装と図柄の生成器                              | `packages/design-system/art/`                                                                                                                                                                   |
+| コードの配色               | Expressive Code のテーマと配色のチェック            | `packages/design-system/code-theme.ts`                                                                                                                                                          |
+| このサイトのコンポーネント | `ContentRow` / `MetaLine` / 実行パネル / サイドバー | サイドバーは `apps/web/src/components/`、`ContentRow` と `MetaLine` は `apps/web/src/features/listing/`、実行パネルは `apps/web/src/features/lab/panel/`、CSS は `apps/web/src/styles/site.css` |
+| 動き                       | サイト全体の動きの実装                              | `apps/web/src/styles/motion.css`                                                                                                                                                                |
 
 **このサイトのコンポーネントを `packages/design-system` に入れない**。
 消費者が `apps/web` の 1 つだけであり、「2 つ以上の消費者が実在するまで package にしない」規約に従う。  
@@ -811,7 +836,7 @@ package の外へは、`package.json` の `exports` にある `tokens.css`、`ut
 - Design Tokens に単体テストを書かない。分岐を持たないためである。
 - コントラスト比は、`pnpm run check:contrast` が自動でチェックする。
   - 地とテキスト、地と罫線、コードの 5 トークンの隣接比を、明暗の両方の配色で計算して閾値と比べる。値を手で書き換えたときに気づけない種類の劣化である。
-  - `code-theme.ts` と `tokens.css` の `--c-*` の値の一致、4.5:1、輝度の梯子もチェックする。
+  - `code-theme.ts` と `tokens.css` の `--color-c-*` の値の一致、4.5:1、輝度の梯子もチェックする。
 - `react-doctor design` の指摘のうち、この Design System の規則と衝突するものは無効にし、理由を [context/conventions.md](../../context/conventions.md#check-exclusions) に記録する。
   - 「カードを使わない」「見出しを大きくしない」は、汎用の規則に反する可能性がある。
 - 挿絵は、見た目の回帰のテストの対象にしない。乱数による刷りのずれを含むので、画素の比較が安定しない。

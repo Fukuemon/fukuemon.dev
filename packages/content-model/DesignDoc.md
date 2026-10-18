@@ -7,7 +7,7 @@ governs:
   - packages/content-model/
   - apps/web/src/content.config.ts
   - apps/web/src/lib/content/
-verified_commit: unverified
+verified_commit: c02cc95
 ---
 
 # Content Model
@@ -47,8 +47,10 @@ Astro は `id` をファイルのパスから導いて占有する。
 
 ```yaml
 contentId: rdbms-query-execution # 発行した後は変えない。すべての collection をまたいで一意
-path: labs/rdbms-query-execution # URL のパス。改名してよい
 ```
+
+URL のパスは、Astro がファイルのパスから導く `id` で決まる。  
+ファイルを改名すると URL は変わり、`contentId` は変わらない。
 
 `contentId` は `^[a-z0-9][a-z0-9-]*$` に合わせて発行する。  
 内容を表す語をハイフンでつなぐ。  
@@ -81,11 +83,11 @@ export const portalBase = z.object({
 
 読み物の種別は 2 つだけで、増やさない。
 
-| collection    | 足す属性                                                                            | 描画                     |
-| ------------- | ----------------------------------------------------------------------------------- | ------------------------ |
-| `articles`    | 持たない                                                                            | `ArticleLayout`          |
-| `labs`        | `difficulty`、`duration: number`、`setup?: string`、`interactive?: InteractiveSpec` | `LabLayout` と手順の一覧 |
-| `playgrounds` | `runtime`、`setup?`、`presets`、`order`                                             | playground のページ      |
+| collection    | 足す属性                                                           | 描画                     |
+| ------------- | ------------------------------------------------------------------ | ------------------------ |
+| `articles`    | 持たない                                                           | `ArticleLayout`          |
+| `labs`        | `difficulty`、`duration: number`、`setup?: string`、`interactive?` | `LabLayout` と手順の一覧 |
+| `playgrounds` | `runtime`、`setup?`、`presets`、`order`                            | playground のページ      |
 
 遊び場の frontmatter は、次のように書く。
 
@@ -158,6 +160,7 @@ flowchart LR
 export type ContentRef = {
   contentId: string;
   type: "article" | "hands-on";
+  level?: "embedded" | "local"; // ハンズオンだけが持つ。`interactive.level` を写す
   title: string;
   description: string;
   href: string; // 種別ごとの URL の規則を吸収した最終の URL
@@ -173,10 +176,10 @@ export type ContentRef = {
 
 `meta` の中身は、一覧の「種類」の列に出る文字列に対応する。
 
-| 種別       | `meta` の例                                                               |
-| ---------- | ------------------------------------------------------------------------- |
-| `article`  | `[{ label: "所要", value: "12分" }]`                                      |
-| `hands-on` | `[{ label: "所要", value: "60分" }, { label: "手順", value: "全 9 歩" }]` |
+| 種別       | `meta` の例                          |
+| ---------- | ------------------------------------ |
+| `article`  | `[]`                                 |
+| `hands-on` | `[{ label: "所要", value: "52分" }]` |
 
 ### コンポーネントの構成
 
@@ -243,7 +246,9 @@ collection を種別ごとに分ける。
 
 ### コンテンツを 1 本足すときの流れ
 
-1. 著者が `apps/web/src/content/labs/<name>.md` を作り、frontmatter に `contentId`、`title`、`description`、`tags`、`publishedAt` を書く。
+1. 著者が `apps/web/src/content/labs/<name>.mdx` を作り、frontmatter を書く。
+   - 書くキーは、`contentId`、`title`、`description`、`tags`、`publishedAt`、`difficulty`、`duration` の 7 つ。
+   - `status` を省くと `draft` になり、build は書き出さない。公開するときは `status: published` を書く。
 2. 関連があれば、`related` に相手の `contentId` を書く（片方向だけ）。
 3. ビルドが、`contentId` が一意であることと、`related` が解決できることを確かめる。
 4. 該当する一覧（ハンズオンなら `/blog` と `/blog/labs`）と、相手の側の関連するコンテンツに、自動で現れる。
@@ -257,18 +262,27 @@ collection を種別ごとに分ける。
 - `packages/content-model/src/schema.ts`: `portalBase`、種別ごとの schema、`playgroundSchema`
 - `packages/content-model/src/types.ts`: `ContentRef`
 - `packages/content-model/src/graph.ts`: `buildContentGraph()`
+- `packages/content-model/src/steps.ts`: 手順の型 `Step`
+- `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
 - `apps/web/src/content.config.ts`: collection の定義
-- `apps/web/src/lib/content/`: `listContent()`、`getContent()`、`getRelated()`
+- `apps/web/src/lib/content/index.ts`: ページが `astro:content` の代わりに呼ぶ関数
+  - `ContentRef` を返す `listContent()`、`getContent()`、`getRelated()`
+  - entry を返す `listArticleEntries()`、`listLabEntries()`、`listPlaygrounds()`
+  - 本文を描画する `renderEntry()`、`renderPlayground()`
+  - 公開するかを判定する `isPublic()`
+
+`isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
+一覧の関数と、詳細のページの `getStaticPaths()` は、同じ `isPublic()` で絞る。  
+`buildContentGraph()` には、下書きも含めたすべてのコンテンツを渡す。  
+下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。  
+公開しないコンテンツは、`listContent()`、`getContent()`、`getRelated()` が結果から除く。
 
 ### チェック
 
 テストの共通の規約は [context/testing.md](../../context/testing.md) にある。  
 この機能に固有の観点は次のとおり。
 
-- `packages/content-model` には、分岐カバレッジ 100% を求める。
+- `graph.ts` と `toc.ts` には、分岐カバレッジ 100% を求める。
 - 解決できない参照の検出、逆参照の導出、`contentId` の重複の検出は、分岐をすべて踏む。
-- 逆参照は「A → B を書いたとき、B の関連に A が出る」を、1 つのテストと 1 つの `expect` で確かめる。
-- `ContentRef` の生成は、`toStrictEqual` で全体を比べる。フィールドごとに比べない。
-- `listContent({ type })` は、種別ごとの件数と、新しい順の並びを確かめる。
 
 Content Model が Astro に依存しないことのチェックは、[context/codebase.md](../../context/codebase.md#dependency-rules) の規約 2 にある。

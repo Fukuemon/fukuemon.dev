@@ -8,7 +8,7 @@ governs:
   - apps/web/src/
   - packages/
   - .oxlintrc.json
-verified_commit: unverified
+verified_commit: c02cc95
 ---
 
 # コードベースの構造
@@ -19,9 +19,9 @@ verified_commit: unverified
 
 package の責務は次のとおり。
 
-- `@fukuemon/config` は、tsconfig の共有の設定を持つ。oxlint と vitest の設定はルートが持つ。
-- `@fukuemon/content-model` は、Content Model の zod の schema、`ContentRef` の型、関係グラフの構築と検証を持つ。
-- `@fukuemon/design-system` は、Design Tokens（素の CSS）、版面のユーティリティ、挿絵、コードの配色を持つ。
+- `@fukuemon/config` は、tsconfig の共有の設定を持つ。oxlint の設定はルートが、vitest の設定は各 package が持つ。
+- `@fukuemon/content-model` は、Content Model の zod の schema、`ContentRef` と手順の型、関係グラフの構築と検証、本文の目次の組み立てを持つ。
+- `@fukuemon/design-system` は、Design Tokens（Tailwind CSS の `@theme static`）、版面のユーティリティ、挿絵、コードの配色、配色のコントラストのチェックを持つ。
 - `apps/web` は、Astro のアプリで、全画面を描画する。
 - `infra/` は、Terraform のコードを持つ。どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
 
@@ -39,6 +39,7 @@ package の責務は次のとおり。
 - `components/` は、セクションをまたぐ素のコンポーネントが何かに答える。ほとんど増えない。
 - `data/` は、書いている人の情報がどこにあるかに答える。増えない。
 - `lib/` は、このデータがどこから来るかに答える。ほとんど増えない。
+- `styles/` は、サイト全体に掛かるスタイリングが何かに答える。
 
 `features/` の中も、同じ軸で分ける。
 
@@ -59,7 +60,7 @@ package の責務は次のとおり。
 
 layout は、記事とハンズオンで分ける。  
 サイドバーの中身（目次か手順か）と、本文の出し方（通しか 1 画面 1 手順か）が違うためである。  
-版面とサイドバーのスタイリングは、共通の class（`.g-doc` と `.side`）で揃える。
+版面は共通の class `.g-doc` で、サイドバーは共通のコンポーネント `components/Side.astro` で揃える。
 
 次の変更は、それぞれの場所の中で閉じるように保つ。
 
@@ -79,7 +80,7 @@ Oxlint のチェックは、ルートの `.oxlintrc.json` の `no-restricted-imp
 entry を足すときの注意は [conventions.md](conventions.md#shared-configuration) にある。
 
 - 規約 1: `apps/web/src/` の `pages/`、`features/`、`components/`、`layouts/` は、`astro:content` を直接 import しない。
-  - コンテンツは、`apps/web/src/lib/content/` の公開関数 `listContent()`、`getContent()`、`getRelated()` を通して参照する。
+  - コンテンツは、`apps/web/src/lib/content/index.ts` が export する関数を通して参照する。
   - チェックは Oxlint が行う。
 - 規約 2: `@fukuemon/content-model` は Astro に依存しない。
   - `astro` と `astro:content` を、`dependencies` にも `devDependencies` にも入れない。
@@ -97,7 +98,7 @@ entry を足すときの注意は [conventions.md](conventions.md#shared-configu
   - `features/` は、`components/`、`lib/`、同じ feature の中を参照してよい。
   - `components/` は、`lib/` を参照してよい。
   - `lib/` は、`packages/` だけを参照してよい。
-  - チェックは Oxlint が行う。
+  - チェックは Oxlint が行う。`lib/` から `pages/` と `layouts/` への参照と、feature どうしの参照は、Oxlint が止めない。
 
 規約 5 を守るため、次のように書く。
 
@@ -111,7 +112,8 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/config` は、どこにも依存しない。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/design-system` は、どこにも依存しない。
-- `apps/web` は、上の 3 つの package に依存する。
+- `apps/web` は、`@fukuemon/content-model` と `@fukuemon/design-system` に依存する。
+  - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `infra/` は、どこにも依存しない。
 
 island の framework は 1 つに絞る。  
@@ -128,8 +130,9 @@ Expressive Code の規則は cascade layer に属さないので、上書きす�
   - ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)
 - サーバー側の永続的な状態を持たない。読者の identity を前提にする機能を作らない。
   - ADR-0008: [読者の identity を持たない](../adr/0008-no-reader-identity.md)
-- クライアント側の状態は `localStorage` に置き、ハンズオンの進捗だけを持つ。
-  - キーは `contentId` と手順の index から作る。
+- クライアント側の状態は `localStorage` に置き、ハンズオンの進捗とサイドバーの開閉だけを持つ。
+  - 進捗のキーは `lab:<contentId>` にし、値に完了した手順の index の一覧と最後に開いた手順を持つ。
+  - サイドバーの開閉のキーは、`components/Side.astro` の props の `id` から `side:<id>` にする。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の種別の切り替えは URL（ページ）で、分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [design/DesignDoc.md](../design/DesignDoc.md#設計不変量)
@@ -187,4 +190,3 @@ URL の一覧は [design/DesignDoc.md](../design/DesignDoc.md#url-の構成) に
 - `/api/*` は予約し、[PRD の Lower-Priority Goals](../PRD.md#lower-priority-goals) の条件が成り立つまで使わない。
 - `/playground/<id>` は、cross-origin isolation を掛ける URL として予約する。
   - ADR-0006: [手を動かす場所の 4 分類](../adr/0006-interactive-content-levels.md)
-- 404 のページは `src/pages/404.astro` に置く。
