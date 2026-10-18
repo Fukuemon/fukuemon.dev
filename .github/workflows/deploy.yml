@@ -34,10 +34,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # build が図を SVG へ落とすため chromium が要る (ADR-0009)
-      - name: playwright の chromium を入れる
-        run: pnpm --filter @fukuemon/web exec playwright install --with-deps chromium
-
       - run: pnpm --filter @fukuemon/web run build
 
       - name: Cloudflare へ配信する
