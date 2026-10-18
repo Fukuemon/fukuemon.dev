@@ -127,6 +127,7 @@ Expressive Code の規則は cascade layer に属さないので、上書きす�
 - クライアント側の状態は `localStorage` に置き、ハンズオンの進捗とサイドバーの開閉だけを持つ。
   - 進捗のキーは `lab:<contentId>` にし、値に完了した手順の index の一覧と最後に開いた手順を持つ。
   - サイドバーの開閉のキーは、`components/Side.astro` の props の `id` から `side:<id>` にする。
+  - サイドバーの開閉は、`components/Side.astro` の inline script が描画の前に同期で読む。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の種別の切り替えは URL（ページ）で、分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [design/DesignDoc.md](../design/DesignDoc.md#設計不変量)

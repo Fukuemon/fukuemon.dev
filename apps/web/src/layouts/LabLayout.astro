@@ -32,7 +32,7 @@ const related = await getRelated(ref.contentId);
 ---
 
 <SiteLayout title={`${ref.title} — fukuemon.dev`} description={ref.description}>
-  <div class="g-doc" data-lab data-content-id={ref.contentId} data-open="true">
+  <div class="g-doc" data-lab data-content-id={ref.contentId}>
     <Side id="lab" label="手順">
       <StepList steps={steps} intro={intro} />
       {live && <DbPeek client:idle contentId={ref.contentId} />}
