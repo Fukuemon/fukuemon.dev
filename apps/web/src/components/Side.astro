@@ -48,6 +48,7 @@ const LABEL = [
  * サイドバー本体。広い画面では列の中に納め、狭い画面では横から滑り出す。
  * 上に積むと手順を読むたびに本文へ下りることになる。
  * `side__panel` は狭い画面で他記事を隠す規則の、`drawer` は中身の伸縮の適用先。
+ * 狭い画面では `stick` の `align-self: start` を戻す。fixed の面が中身の高さに縮み、画面の下まで届かなくなる。
  */
 const PANEL = [
   "side__panel drawer stick",
@@ -58,6 +59,7 @@ const PANEL = [
   "border-e border-rule-strong",
   "[[data-open=false]_&]:hidden",
   "max-wide:block max-wide:fixed max-wide:top-(--topbar) max-wide:bottom-0 max-wide:start-0 max-wide:z-5",
+  "max-wide:self-auto",
   "max-wide:w-[min(86vw,320px)] max-wide:max-h-none max-wide:overflow-y-auto",
   "max-wide:pt-inter-1 max-wide:pr-(--gutter) max-wide:pb-inter-1 max-wide:pl-(--gutter)",
   "max-wide:bg-paper",
