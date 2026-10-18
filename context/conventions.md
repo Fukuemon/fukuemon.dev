@@ -9,7 +9,7 @@ governs:
   - .oxlintrc.json
   - .oxfmtrc.jsonc
   - packages/config/
-verified_commit: 01101c7
+verified_commit: 8a9f8b0
 ---
 
 # コードと文書の規約
@@ -130,6 +130,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 依存規約をチェックするために、独自の oxlint プラグインを作らない。
   - 層が増えて `no-restricted-imports` の列挙が読めなくなったら作る。
 - package ごとに変わるコマンドは、その package の `package.json` の scripts に置く。ルートは `pnpm -r` で束ねるだけにする。
+  - `apps/web` の build のコマンドは例外で、`vp run` でキャッシュするため `apps/web/vite.config.ts` に置く。取り決めは [tech-stack.md](tech-stack.md#vite-の取り決め) にある。
 - ルートの script へ引数を渡すときに、`--` を挟まない。
   - pnpm は `--` を取り除かずにコマンドへ渡す。`pnpm run infra:init -- -input=false` は `Too many command line arguments` で失敗する。
 
@@ -137,6 +138,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 - `pnpm run check` が、品質のチェックをつなぐ。CI も `check` を実行する。
   - つなぐチェックと順序は、ルートの `package.json` の `check` にある。
+  - `check` のうち `vp run` のキャッシュを使うのは build だけで、ほかのチェックは毎回実行する。
 - lint、typecheck、test を pre-commit で実行しない。`pnpm run check` と CI が担う。
 - pre-commit は、ステージしたファイルに Oxfmt を掛ける。
   - Oxfmt は `.astro` を扱わないので、`.astro` は整形されない。
@@ -160,6 +162,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 - knip は、`/pagefind/pagefind.js` を解決できない import として扱わない（`ignoreUnresolved`）。Pagefind が `astro build` の後に `dist/` へ作るファイルで、ソースの時点では存在しないため。
 - knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
+- knip は、`apps/web` の `pagefind` を未使用の依存として扱わない（`ignoreDependencies`）。knip は `vite.config.ts` の `run.tasks` のコマンドから knip が知るコマンドだけを読み、`pagefind` を読まないため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。

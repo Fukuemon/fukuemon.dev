@@ -7,7 +7,7 @@ governs:
   - apps/web/
   - packages/
   - infra/
-verified_commit: 01101c7
+verified_commit: 8a9f8b0
 ---
 
 # fukuemon.dev Design Doc
