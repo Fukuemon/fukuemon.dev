@@ -233,17 +233,22 @@
   }
 }
 
-/* mermaid の図。色はビルド時にトークンへ置き換え済み */
+/* mermaid の図。Pele が描いた SVG の色を、Pele の変数からトークンへ対応させる */
 @layer components {
-  .prose svg.figure {
+  .prose svg.pele {
+    --pele-bg: var(--color-paper);
+    --pele-fg: var(--color-fg);
+    --pele-muted: var(--color-fg-2);
+    --pele-line: var(--color-rule-strong);
+    --pele-surface: var(--color-panel);
+    /* 枠の中は地を通す。面を重ねると節の地と見分けにくい */
+    --pele-surface-alt: var(--color-paper);
+    --pele-border: var(--color-rule-strong);
+    --pele-accent: var(--color-now);
+    --pele-critical: var(--color-now);
+    --pele-radius: 0;
     display: block;
-    inline-size: 100%;
-    block-size: auto;
     margin-block: var(--spacing-inter-1);
-  }
-  /* 図の中の背景は敷かない。紙の地をそのまま通す */
-  .prose svg.figure rect[fill="var(--color-panel)"] {
-    fill: transparent;
   }
 }
 

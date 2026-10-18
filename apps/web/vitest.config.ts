@@ -10,6 +10,7 @@ export default defineConfig({
         "src/lib/tate.ts",
         "src/lib/remark-lab.ts",
         "src/lib/rehype-lab-steps.ts",
+        "src/lib/rehype-mermaid.ts",
         "src/features/lab/steps/progress.ts",
         "src/features/lab/steps/bootSpec.ts",
         "src/features/lab/editor/sql-tokens.ts",
