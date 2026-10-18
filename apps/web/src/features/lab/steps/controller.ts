@@ -151,7 +151,7 @@ function paint(refs: Refs, seen: ReadonlySet<number>, relayed?: readonly number[
     bar.setAttribute("aria-valuenow", String(reached));
   }
   const label = refs.root.querySelector(".steps__count");
-  if (label) label.textContent = `${reached} / ${refs.count} 歩`;
+  if (label) label.textContent = `${reached} / ${refs.count} 手順`;
 
   const first = refs.order[0] ?? 0;
   const last = refs.order.at(-1) ?? 0;
