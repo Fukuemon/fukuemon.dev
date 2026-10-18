@@ -12,7 +12,13 @@ pre-commit:
     # 文章の規則 (context/conventions.md)。経緯の混入とリンクは編集後のフックと CI が見る
     textlint:
       glob: "*.md"
+      exclude:
+        - "apps/web/src/content/**"
       run: pnpm exec textlint {staged_files}
+    # サイトの原稿はですます調で、.mdx も含む。textlint は設定を 1 つしか読まないので、原稿の設定を別に渡す
+    textlint-content:
+      glob: "apps/web/src/content/**/*.{md,mdx}"
+      run: pnpm exec textlint --config apps/web/src/content/.textlintrc.json {staged_files}
 
 pre-push:
   commands:

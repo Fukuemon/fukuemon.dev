@@ -1,0 +1,21 @@
+{
+  "plugins": ["mdx"],
+  "rules": {
+    "preset-ai-words-ja": {
+      "no-ai-words": {
+        "allows": ["実測", "走ら"]
+      }
+    },
+    "prh": {
+      "rulePaths": ["../../../../prh.yml"]
+    },
+    "no-mix-dearu-desumasu": {
+      "preferInBody": "ですます",
+      "preferInList": "である",
+      "strict": true
+    },
+    "sentence-length": {
+      "max": 120
+    }
+  }
+}

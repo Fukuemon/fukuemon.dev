@@ -90,7 +90,7 @@ export function mountSearch(root: ParentNode = document): void {
 
     const pf = engine ?? (await load());
     if (mine !== seq) return;
-    if (!pf) return say("検索はビルドした版でだけ使えます");
+    if (!pf) return say("検索は、ビルドしたサイトでだけ使えます");
 
     const { results } = await pf.search(q);
     if (mine !== seq) return;

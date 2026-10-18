@@ -5,7 +5,6 @@ import ArtBand from "../components/ArtBand.astro";
 import Tate from "../components/Tate.astro";
 import KindSection from "../features/listing/KindSection.astro";
 import About from "../features/about/About.astro";
-import AboutLinks from "../features/about/AboutLinks.astro";
 import OutsideList from "../features/about/OutsideList.astro";
 import { listContent } from "../lib/content";
 
@@ -16,7 +15,7 @@ const [all, labs, articles] = await Promise.all([
 ]);
 ---
 
-<SiteLayout title="fukuemon.dev" description="読んで、動かして、確かめる。">
+<SiteLayout title="fukuemon.dev" description="Fukuemon の技術記事と、手を動かして進めるハンズオンを公開しています。">
   <About />
 
   <section data-band class="py-inter-2 px-(--gutter) border-y border-rule">
@@ -34,17 +33,13 @@ const [all, labs, articles] = await Promise.all([
   <KindSection
     heading="ハンズオン"
     items={labs}
-    lead={`ハンズオン形式で整理するコンテンツ
-    Try X in Y minutes に影響を受けてます`}
+    lead={`手順に沿って、コードを動かしながら進めます。
+    Try X in Y minutes に影響を受けています。`}
   />
 
-  <KindSection heading="記事" items={articles} lead="調べたことや思ったことをつらつらと" />
+  <KindSection heading="記事" items={articles} lead="調べて確かめたことを書いています。" />
 
   <OutsideList />
-
-  <section class="section--flush about__foot mx-(--gutter)">
-    <AboutLinks />
-  </section>
 
   <ArtBand motif="grass" height="200px" fade />
 </SiteLayout>
