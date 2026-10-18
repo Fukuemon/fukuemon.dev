@@ -14,6 +14,15 @@ export function emitPreset(contentId: string, sql: string): void {
   globalThis.dispatchEvent(new CustomEvent(PRESET, { detail: { contentId, sql } }));
 }
 
+/** island の外 (ページの script) から例の選択を受け取る。戻り値で受け取りをやめる */
+export function onPreset(contentId: string, on: () => void): () => void {
+  const handle = (e: Event) => {
+    if ((e as CustomEvent<PresetDetail>).detail.contentId === contentId) on();
+  };
+  globalThis.addEventListener(PRESET, handle);
+  return () => globalThis.removeEventListener(PRESET, handle);
+}
+
 function useBus<T extends Detail>(type: string, contentId: string, on: (detail: T) => void): void {
   const latest = useRef(on);
   useEffect(() => {

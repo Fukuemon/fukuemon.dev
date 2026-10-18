@@ -1,8 +1,22 @@
 import { cellText } from "../runtime/cell";
 import type { Result } from "../runtime/useRunner";
 
+/** EXPLAIN の結果。1 行が計画の 1 行なので、表の罫で区切らずに 1 枚の文として出す */
+const isPlan = (result: Result) =>
+  result.columns.length === 1 && result.columns[0] === "QUERY PLAN";
+
 export default function ResultTable({ result }: { result: Result }) {
   if (result.columns.length === 0) return null;
+  if (isPlan(result)) {
+    return (
+      <div className="runner__scroll overflow-x-auto border-t border-rule-strong">
+        <p className="mono meta m-0 px-intra-3 pt-intra-2 max-narrow:px-intra-2">QUERY PLAN</p>
+        <pre className="runner__plan mono m-0 w-max min-w-full px-intra-3 py-intra-2 max-narrow:px-intra-2">
+          {result.rows.map((row) => cellText(row[0])).join("\n")}
+        </pre>
+      </div>
+    );
+  }
   return (
     <>
       <div className="runner__scroll overflow-x-auto border-t border-rule-strong">

@@ -39,6 +39,7 @@
   .runner__table td {
     text-align: start;
     padding: var(--spacing-intra-0) var(--spacing-intra-3);
+    line-height: 1.5;
     border-block-end: 1px solid var(--color-rule-soft);
     /* nowrap だと先頭の空白が詰められ、EXPLAIN の木構造が消える */
     white-space: pre;
@@ -65,6 +66,16 @@
   .runner__table th {
     font-weight: 600;
     color: var(--color-ink-2);
+  }
+  .runner__plan {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  @media (max-width: 720px) {
+    .runner__table th,
+    .runner__table td {
+      padding-inline: var(--spacing-intra-2);
+    }
   }
 }
 

@@ -1,40 +1,18 @@
-import type { Column, Relation } from "./catalog";
+import type { Relation } from "./catalog";
+import { BOX_W, HEAD_H, ROW_H, layoutEr, type Entity } from "./er-layout";
 
-export type Entity = { name: string; columns: Column[] };
-
-type Props = { entities: Entity[]; relations: Relation[] };
-
-const BOX_W = 210;
-const ROW_H = 19;
-const HEAD_H = 26;
-const GAP_X = 90;
-const GAP_Y = 34;
-const PAD = 12;
+type Props = { entities: Entity[]; relations: Relation[]; cols: 1 | 2 };
 
 /**
  * ER 図。SVG を自前で描く。
  * mermaid はクライアントで描くと約 300 KiB を配ることになる (ADR-0009)。
  * 実体と外部キーを出すだけなので、箱と線で足りる。
+ * 狭い画面では 1 列に積む。2 列を縮めて収めると、文字が読めない大きさになる。
  */
-export default function ErDiagram({ entities, relations }: Props) {
+export default function ErDiagram({ entities, relations, cols }: Props) {
   if (entities.length === 0) return <p className="mono meta">まだテーブルがありません</p>;
 
-  const cols = entities.length === 1 ? 1 : 2;
-  const placed = entities.map((e, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const above = entities.filter((_, j) => j % cols === col && Math.floor(j / cols) < row);
-    return {
-      ...e,
-      x: PAD + col * (BOX_W + GAP_X),
-      y: PAD + above.reduce((n, a) => n + HEAD_H + a.columns.length * ROW_H + GAP_Y, 0),
-    };
-  });
-
-  const at = new Map(placed.map((e) => [e.name, e]));
-  const width = PAD * 2 + cols * BOX_W + (cols - 1) * GAP_X;
-  const height =
-    PAD * 2 + Math.max(...placed.map((e) => e.y + HEAD_H + e.columns.length * ROW_H)) - PAD;
+  const { placed, edges, width, height, fk } = layoutEr(entities, relations, cols);
 
   return (
     <svg
@@ -43,27 +21,12 @@ export default function ErDiagram({ entities, relations }: Props) {
       role="img"
       aria-label="テーブル構成"
     >
-      {relations.map((r) => {
-        const a = at.get(r.src);
-        const b = at.get(r.tgt);
-        if (!a || !b) return null;
-        const ay = a.y + HEAD_H + (a.columns.length * ROW_H) / 2;
-        const by = b.y + HEAD_H + (b.columns.length * ROW_H) / 2;
-        const right = a.x < b.x;
-        const x1 = right ? a.x + BOX_W : a.x;
-        const x2 = right ? b.x : b.x + BOX_W;
-        const mid = (x1 + x2) / 2;
-        return (
-          <g key={r.name}>
-            <path
-              d={`M ${x1} ${ay} C ${mid} ${ay}, ${mid} ${by}, ${x2} ${by}`}
-              fill="none"
-              stroke="var(--color-rule-strong)"
-            />
-            <circle cx={x2} cy={by} r="3" fill="var(--color-now)" />
-          </g>
-        );
-      })}
+      {edges.map((e) => (
+        <g key={e.key}>
+          <path d={e.d} fill="none" stroke="var(--color-rule-strong)" />
+          <circle cx={e.dot.x} cy={e.dot.y} r="3" fill="var(--color-now)" />
+        </g>
+      ))}
 
       {placed.map((e) => (
         <g key={e.name}>
@@ -72,7 +35,7 @@ export default function ErDiagram({ entities, relations }: Props) {
             y={e.y}
             width={BOX_W}
             height={HEAD_H + e.columns.length * ROW_H}
-            fill="none"
+            fill="var(--color-paper)"
             stroke="var(--color-rule-strong)"
           />
           <line
@@ -85,30 +48,37 @@ export default function ErDiagram({ entities, relations }: Props) {
           <text x={e.x + 10} y={e.y + 18} className="fill-fg text-[13px] font-semibold">
             {e.name}
           </text>
-          {e.columns.map((c, i) => (
-            <g key={c.name}>
-              {c.pk && (
+          {e.columns.map((c, i) => {
+            const mark = c.pk ? "PK" : fk.has(`${e.name}.${c.name}`) ? "FK" : "";
+            return (
+              <g key={c.name}>
+                {mark && (
+                  <text
+                    x={e.x + 10}
+                    y={e.y + HEAD_H + i * ROW_H + 14}
+                    className={`text-[9px] font-semibold ${c.pk ? "fill-now" : "fill-fg-2"}`}
+                  >
+                    {mark}
+                  </text>
+                )}
                 <text
-                  x={e.x + 10}
+                  x={e.x + 34}
                   y={e.y + HEAD_H + i * ROW_H + 14}
-                  className="fill-now text-[9px] font-semibold"
+                  className="fill-fg text-[11px]"
                 >
-                  PK
+                  {c.name}
                 </text>
-              )}
-              <text x={e.x + 34} y={e.y + HEAD_H + i * ROW_H + 14} className="fill-fg text-[11px]">
-                {c.name}
-              </text>
-              <text
-                x={e.x + BOX_W - 10}
-                y={e.y + HEAD_H + i * ROW_H + 14}
-                className="fill-fg-2 text-[10px]"
-                textAnchor="end"
-              >
-                {short(c.type)}
-              </text>
-            </g>
-          ))}
+                <text
+                  x={e.x + BOX_W - 10}
+                  y={e.y + HEAD_H + i * ROW_H + 14}
+                  className="fill-fg-2 text-[10px]"
+                  textAnchor="end"
+                >
+                  {short(c.type)}
+                </text>
+              </g>
+            );
+          })}
         </g>
       ))}
     </svg>

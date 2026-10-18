@@ -61,7 +61,8 @@ export default function PeekList({
                       key={r.name}
                       className="mono meta pb-intra-1 ps-intra-3 text-[0.75rem] text-fg-2"
                     >
-                      <span aria-hidden="true">└→</span> {r.tgt}
+                      {r.cols.join(", ")} <span aria-hidden="true">→</span>
+                      <span className="sr">が参照する先は</span> {r.tgt}
                     </p>
                   ))}
               </li>

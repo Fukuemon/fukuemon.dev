@@ -52,11 +52,11 @@ export default function SqlRunner({
       data-phase={runner.phase}
       aria-labelledby={groupId}
     >
-      <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-intra-1">
+      <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-intra-1 max-narrow:px-intra-2">
         <span id={groupId}>{stepTitle}</span>
         {runner.version !== null && (
           <span
-            className="runner__engine ms-auto text-fg-2"
+            className="runner__engine ms-auto min-w-0 truncate text-fg-2"
             title="この端末のブラウザ内で動いています"
           >
             {runner.version}

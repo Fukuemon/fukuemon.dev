@@ -17,8 +17,12 @@ export default function Sheet({ ref, title, meta, onClose, children }: Props) {
       onClose={onClose}
     >
       <header className="sheet__head flex flex-wrap items-baseline gap-x-intra-3 gap-y-intra-2 border-b-2 border-rule-strong pb-intra-2">
-        <span className="mono text-[1.05rem] font-semibold whitespace-nowrap">{title}</span>
-        {meta !== undefined && <span className="mono meta">{meta}</span>}
+        <span className="mono min-w-0 text-[1.05rem] font-semibold [overflow-wrap:anywhere]">
+          {title}
+        </span>
+        {meta !== undefined && (
+          <span className="mono meta max-narrow:order-last max-narrow:basis-full">{meta}</span>
+        )}
         <button
           type="button"
           className="btn sheet__close ms-auto flex-none whitespace-nowrap"

@@ -8,6 +8,7 @@ export default function Presets({ contentId, presets }: Props) {
   if (presets.length === 0) return null;
   return (
     <section className="pt-intra-2" aria-label="試す">
+      <p className="mono meta mt-0 mb-intra-2">押すと SQL の欄に入ります</p>
       <ul className="list-none m-0 p-0">
         {presets.map((p) => (
           <li key={p.label}>

@@ -68,17 +68,17 @@ describe("fetchTables", () => {
 });
 
 describe("fetchRelations", () => {
-  it("外部キーの 4 つ組を写す", async () => {
-    const { rt } = stub([["items_order_fk", "items", "orders", "FOREIGN KEY (order_id)"]]);
+  it("外部キーの名前、両端のテーブル、対応する列を写す", async () => {
+    const { rt } = stub([["items_order_fk", "items", "orders", ["order_id"], ["id"]]]);
     await expect(fetchRelations(rt)).resolves.toStrictEqual([
-      { name: "items_order_fk", src: "items", tgt: "orders", def: "FOREIGN KEY (order_id)" },
+      { name: "items_order_fk", src: "items", tgt: "orders", cols: ["order_id"], refs: ["id"] },
     ]);
   });
 
-  it("欠けたセルを空文字にする", async () => {
-    const { rt } = stub([[undefined, undefined, undefined, undefined]]);
+  it("欠けたセルを空文字と空の列にする", async () => {
+    const { rt } = stub([[undefined, undefined, undefined, undefined, undefined]]);
     await expect(fetchRelations(rt)).resolves.toStrictEqual([
-      { name: "", src: "", tgt: "", def: "" },
+      { name: "", src: "", tgt: "", cols: [], refs: [] },
     ]);
   });
 });

@@ -10,6 +10,7 @@ export const PAGES = [
   "/labs/rdbms-query-execution/",
   "/labs/vacuum-and-bloat/",
   "/playground/postgres/",
+  "/playground/shop/",
 ] as const;
 
 export const THEMES = ["light", "dark"] as const;
