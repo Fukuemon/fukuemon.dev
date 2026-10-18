@@ -7,7 +7,7 @@ governs:
   - packages/content-model/
   - apps/web/src/content.config.ts
   - apps/web/src/lib/content/
-verified_commit: c02cc95
+verified_commit: 01101c7
 ---
 
 # Content Model
@@ -41,9 +41,8 @@ ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model
 
 ### 安定識別子
 
-Astro は `id` をファイルのパスから導いて占有する。  
-`slug` を schema に定義すると、ビルドが `ContentSchemaContainsSlugError` で失敗する。  
-自前の安定した識別子は `contentId` として持つ。
+Astro は `id` をファイルのパスから導いて占有するので、自前の安定した識別子は `contentId` として持つ。  
+ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model-independence.md)
 
 ```yaml
 contentId: rdbms-query-execution # 発行した後は変えない。すべての collection をまたいで一意
@@ -69,9 +68,7 @@ export const portalBase = z.object({
   publishedAt: z.coerce.date(),
   updatedAt: z.coerce.date().optional(),
   related: z.array(z.string()).default([]), // ほかのコンテンツの contentId
-  repository: z
-    .object({ url: z.string().url(), path: z.string().optional() })
-    .optional(),
+  repository: z.object({ url: z.string().url(), path: z.string().optional() }).optional(),
 });
 ```
 
@@ -171,7 +168,7 @@ export type ContentRef = {
 ```
 
 種別が 2 つでも、`ContentRef` は残す。  
-理由は種別の多さではなく、設計不変量 3（`pages/**` は `astro:content` を直接参照しない）を成り立たせることにある。  
+理由は種別の多さではなく、設計不変量 3（`pages/`、`features/`、`components/`、`layouts/` は `astro:content` を直接参照しない）を成り立たせることにある。  
 `href` と `meta` が違いを吸収するので、URL の規則や描画のレイヤを変えるときに変わるのは、`href` を算出する規則だけである。
 
 `meta` の中身は、一覧の「種類」の列に出る文字列に対応する。
@@ -220,8 +217,7 @@ listContent({ type: "hands-on" }); // ハンズオン → /blog/labs
 
 ```ts
 // apps/web/src/content.config.ts
-const loader = (dir: string) =>
-  glob({ base: `./src/content/${dir}`, pattern: "**/*.{md,mdx}" });
+const loader = (dir: string) => glob({ base: `./src/content/${dir}`, pattern: "**/*.{md,mdx}" });
 
 // データソースを差し替える点。schema は種別ごとに持つ
 export const collections = {
@@ -238,7 +234,8 @@ export const collections = {
 ```
 
 collection を種別ごとに分ける。  
-種別は collection の名前そのもので、frontmatter にもディレクトリの判定にも依存しない。
+`src/content/` の直下のディレクトリと collection は 1 対 1 なので、種別はコンテンツを置いたディレクトリで決まる。  
+frontmatter は種別を持たない。
 
 種別ごとに schema が違う。  
 `articles` は `difficulty` や `duration` を持たない。  
@@ -279,10 +276,6 @@ collection を種別ごとに分ける。
 
 ### チェック
 
-テストの共通の規約は [context/testing.md](../../context/testing.md) にある。  
-この機能に固有の観点は次のとおり。
-
-- `graph.ts` と `toc.ts` には、分岐カバレッジ 100% を求める。
-- 解決できない参照の検出、逆参照の導出、`contentId` の重複の検出は、分岐をすべて踏む。
+`graph.ts` と `toc.ts` に求めるカバレッジと、分岐をすべて踏む検出は [context/testing.md](../../context/testing.md#test-types-and-guarantees) にある。
 
 Content Model が Astro に依存しないことのチェックは、[context/codebase.md](../../context/codebase.md#dependency-rules) の規約 2 にある。

@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision 2 のうち Node.js のバージョンの固定を ADR-0011 に置換）
 
 ## Context
 
@@ -65,8 +65,6 @@ package として分ければ、境界違反は依存解決の失敗として現
 | monorepo のタスク実行とキャッシュ | `vp run`                                   |
 | lint / format / test / typecheck  | Oxlint / Oxfmt / Vitest / tsgo (`vp` 同梱) |
 | **Astro の dev / build**          | **Astro CLI (package.json script)**        |
-
-ADR-0011: [ツールのバージョンを mise で固定する](0011-pin-tool-versions-with-mise.md) が、Node.js のバージョンの固定についてこの判断を置き換えた。
 
 **`vp dev` / `vp build` で Astro を置き換えない。**  
 Vite+ の `dev` / `build` は素の Vite アプリを対象とし、Astro を外側から駆動する方法は存在しない。  

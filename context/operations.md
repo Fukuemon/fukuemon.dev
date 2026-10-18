@@ -7,14 +7,12 @@ governs:
   - infra/
   - apps/web/wrangler.jsonc
   - apps/web/public/_headers
-verified_commit: c02cc95
+verified_commit: 01101c7
 ---
 
 # 基盤と運用
 
-基盤は Cloudflare Workers Static Assets で、Worker はハンドラを持たず静的アセットだけを配信する。  
-ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)  
-手元で apply する手順は [infra/README.md](../infra/README.md) にある。
+基盤の構成と deploy と apply の流れは [infra/DesignDoc.md](../infra/DesignDoc.md) に、基盤を作る手順と apply の手順は [infra/README.md](../infra/README.md) にある。
 
 ## Environments
 
@@ -29,6 +27,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 基盤の設定は Terraform が、アプリの deploy と runtime の設定は Wrangler が管理する。  
 1 つのリソースを両方から管理しない。  
+ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)  
 管轄はこの表で決め、リソースが増減したら表を直す。
 
 | リソース                                                    | 管轄                            | 使うか   |
@@ -68,21 +67,13 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 ## Deployment Conditions
 
 - Worker の deploy は、check workflow が既定のブランチ（`develop`）で成功したときだけ、deploy workflow が自動で行う。
-  - Worker のコードの変更は、通常の pull request に含まれ、merge で自動的に deploy される。
 - Terraform の apply は、運用者が apply workflow を `workflow_dispatch` で手で起動したときだけ行う。
   - 起動には、`infra` environment の protection rules の承認が要る。
   - 差分は 2 回の起動で確かめる。`mode=plan` で起動して plan を読み、納得してから `mode=apply` で起動し直す。
-  - plan と apply は 1 つの job に置き、plan file を artifact に上げない。
+  - plan と apply は 1 つの job に置き、plan file を artifact に上げない。public のリポジトリの artifact から account ID と zone ID が漏れるため。
 - zone の plan に `account.id` を sensitive として扱う差分だけが出るなら、想定どおりとして apply してよい。
   - `name` や `type` のように実体が変わる差分が出たら、`zone.tf` を実際の zone の設定に合わせて直す。
-- zone は Terraform で作らない。Cloudflare Registrar がドメインを取得したときに作ったものを、`zone.tf` の `import` ブロックで取り込む。
-
-初めて基盤を作るときは、次の順に進める。  
-`cloudflare_workers_custom_domain` は Worker の存在を前提にするので、順序を誤ると 3 が失敗する。
-
-1. `infra/bootstrap/` を apply し、state 用の R2 バケットを作る。この段の state は手元に置き、commit しない。
-2. `wrangler deploy` で Worker script と静的アセットを作る。
-3. `infra/cloudflare/` で zone を import してから apply し、custom domain を作る。
+- 初めて基盤を作るときは、[infra/README.md](../infra/README.md#初めて基盤を作る) の順に進める。
 
 ## Health and Monitoring
 

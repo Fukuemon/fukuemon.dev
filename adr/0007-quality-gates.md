@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（mise を採らない判断を ADR-0011 に置換）
 
 ## Context
 
@@ -48,8 +48,6 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 | **Bun**                   | pnpm workspace を基盤とする決定 (ADR-0003) と衝突する                                     |
 | **Biome**                 | Oxlint / Oxfmt と役割が重複する                                                           |
 | **`.claude/rules/` 方式** | 本 repo の AI 設定は sdd-template からの symlink 配布であり、消費 repo では commit しない |
-
-ADR-0011: [ツールのバージョンを mise で固定する](0011-pin-tool-versions-with-mise.md) が、mise を採らないとしたこの判断を置き換えた。
 
 ### react-doctor はスコアを gate にせずに始める
 

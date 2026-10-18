@@ -8,7 +8,7 @@ governs:
   - apps/web/src/
   - packages/
   - .oxlintrc.json
-verified_commit: c02cc95
+verified_commit: 01101c7
 ---
 
 # コードベースの構造
@@ -17,16 +17,10 @@ verified_commit: c02cc95
 
 ## Module Boundaries
 
-package の責務は次のとおり。
+- 共有の設定は、tsconfig を `@fukuemon/config` に、oxlint の設定をルートに、vitest の設定を各 package に置く。
+- `infra/` は、どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
 
-- `@fukuemon/config` は、tsconfig の共有の設定を持つ。oxlint の設定はルートが、vitest の設定は各 package が持つ。
-- `@fukuemon/content-model` は、Content Model の zod の schema、`ContentRef` と手順の型、関係グラフの構築と検証、本文の目次の組み立てを持つ。
-- `@fukuemon/design-system` は、Design Tokens（Tailwind CSS の `@theme static`）、版面のユーティリティ、挿絵、コードの配色、配色のコントラストのチェックを持つ。
-- `apps/web` は、Astro のアプリで、全画面を描画する。
-- `infra/` は、Terraform のコードを持つ。どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
-
-記事とハンズオンは 1 つの app に置き、Portfolio を別の app に切り出さない。  
-切り出すのは、次のどちらかが起きたときである。
+Portfolio を記事とハンズオンと別の app に切り出すのは、次のどちらかが起きたときだけにする。
 
 - 別のドメインで公開する必要が生じた。
 - Portfolio と Content の deploy の頻度が分かれ、互いに待たされるようになった。

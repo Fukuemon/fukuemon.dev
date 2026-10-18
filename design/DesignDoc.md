@@ -7,7 +7,7 @@ governs:
   - apps/web/
   - packages/
   - infra/
-verified_commit: unverified
+verified_commit: 01101c7
 ---
 
 # fukuemon.dev Design Doc
@@ -56,9 +56,8 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 Astro 7 を採る。  
 ツールのバージョンの所在は [context/tech-stack.md](../context/tech-stack.md#toolchain) にある。
 
-Astro 6 で legacy content collections が撤去され、識別子は `id` だけになった。  
-content の schema に `slug` を定義すると、ビルドが `ContentSchemaContainsSlugError` で失敗する。  
 `id` は Astro がファイルのパスから導いて占有するので、安定した識別子は `contentId` という別の名前で持つ。  
+ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-independence.md)  
 設計は [Content Model の Design Doc](../packages/content-model/DesignDoc.md#安定識別子) にある。
 
 ### 確かめた前提
@@ -104,38 +103,42 @@ flowchart TD
 
 ## Components
 
-モジュールごとの責務、外に見せる境界、依存先は次のとおり。
+モジュールごとの責務は次のとおり。
 
-| モジュール                       | 責務                                                                                                                            | 外に見せる境界                                                         | 依存先                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
-| `@fukuemon/content-model`        | Content Model の schema、`ContentRef` の型、関係グラフの構築と検証                                                              | `portalBase`、`ContentRef`、`buildContentGraph()`                      | `zod` だけ                          |
-| `@fukuemon/design-system`        | Design Tokens（`@theme static` から `:root` の CSS カスタムプロパティとして出力する）、版面のユーティリティ、挿絵、コードの配色 | CSS のカスタムプロパティの名前、`utilities.css` の class、`code-theme` | なし                                |
-| `@fukuemon/config`               | tsconfig の共有の設定。oxlint の設定はルートで 1 つ持ち、vitest の設定は `apps/web` と `packages/content-model` がそれぞれ持つ  | `tsconfig/base.json`                                                   | なし                                |
-| `apps/web/src/content.config.ts` | すべての collection の loader と schema を結ぶ。データソースを切り替える唯一の場所                                              | collection の名前                                                      | `astro:content`、content-model      |
-| `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、グラフを組み立てる                                                            | `listContent()`、`getContent()`、`getRelated()`                        | `astro:content`、content-model      |
-| `apps/web/src/pages/**`          | Portal UI（about、一覧、playground）                                                                                            | URL                                                                    | `lib/content`、features、components |
-| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと playground の実行、一覧、本文の周り、表紙、検索）                                            | props                                                                  | `lib/content`、components           |
-| `apps/web/src/data/`             | 書いている人の情報。名乗り、外部のリンク、使っているもの、登壇と寄稿                                                            | `PROFILE`、`LINKS`、`STACK`、`OUTSIDE`                                 | なし                                |
-| `apps/web/src/content/**`        | 記事とハンズオンと playground の本体（Markdown と MDX）                                                                         | なし                                                                   | なし                                |
-| `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を基に `Posts`、`Article`、`Lab` と、本文の `DocShell`                                               | なし                                                                   | components                          |
-| `apps/web/src/components/**`     | セクションをまたぐ素のコンポーネント。`.astro` と `.tsx` を同じ場所に置き、`.tsx` は Astro を import しない                     | props                                                                  | `lib/content`                       |
-| `infra/`                         | Zone、DNS、Workers の custom domain                                                                                             | Terraform の state                                                     | Cloudflare の provider              |
+| モジュール                       | 責務                                                                                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@fukuemon/content-model`        | Content Model の schema、`ContentRef` と手順の型、関係グラフの構築と検証、本文の目次の組み立て                                                                |
+| `@fukuemon/design-system`        | Design Tokens（`@theme static` から `:root` の CSS カスタムプロパティとして出力する）、版面のユーティリティ、挿絵、コードの配色、配色のコントラストのチェック |
+| `@fukuemon/config`               | tsconfig の共有の設定                                                                                                                                         |
+| `apps/web/src/content.config.ts` | すべての collection の loader と schema を結ぶ。データソースを切り替える唯一の場所                                                                            |
+| `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、グラフを組み立てる                                                                                          |
+| `apps/web/src/pages/**`          | Portal UI（about、一覧、playground）と、記事とハンズオンの本体のページ                                                                                        |
+| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと playground の実行、一覧、本文の周り、表紙、検索）                                                                          |
+| `apps/web/src/data/`             | 書いている人の情報。名乗り、外部のリンク、使っているもの、登壇と寄稿                                                                                          |
+| `apps/web/src/content/**`        | 記事とハンズオンと playground の本体（Markdown と MDX）                                                                                                       |
+| `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を基に `Posts`、`Article`、`Lab` と、本文の `DocShell`                                                                             |
+| `apps/web/src/components/**`     | セクションをまたぐ素のコンポーネント                                                                                                                          |
+| `infra/`                         | Zone、Workers の custom domain、Terraform の state を置く R2 のバケット                                                                                       |
 
-次の図は、ページと Content Model が `astro:content` を直接参照しない依存の向きを示す。
+次の図は、画面の側がコンテンツを `lib/content/` を通して読み、`astro:content` に触れるのが `lib/content/` と `content.config.ts` だけであることを示す。
 
 ```mermaid
-flowchart LR
-    pages["pages/**"] --> adapter["lib/content/"]
+flowchart TD
+    pages["pages/** / layouts/**"] --> features["features/**"]
+    pages --> components["components/**"]
+    features --> components
+    pages --> adapter["lib/content/"]
     adapter --> cm["@fukuemon/content-model"]
     adapter --> ac["astro:content"]
-    config --> ac
+    config["content.config.ts"] --> ac
     config --> cm
-    pages --> ds["@fukuemon/design-system"]
-    pages -. "禁止" .-x ac
-    cm -. "禁止" .-x ac
+    pages -. "型だけ" .-> cm
+    features -. "型だけ" .-> cm
+    styles["styles/"] --> ds["@fukuemon/design-system"]
+    components --> ds
 ```
 
-依存規約の本文とチェックの手段は [context/codebase.md](../context/codebase.md#dependency-rules) にある。
+依存してよい向き、禁止する依存、チェックの手段は [context/codebase.md](../context/codebase.md#dependency-rules) にある。
 
 記事とハンズオンは 1 つの app に置き、Portfolio を別の app に切り出さない。  
 記事とハンズオンの地続きは、両者を 1 つの一覧に載せて初めて成り立ち、app を分けると一覧が分かれるためである。  
@@ -184,15 +187,16 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 ### 設計不変量
 
 将来を可能にしているのは、次の 8 点である。  
+依存規約の本文は [context/codebase.md](../context/codebase.md#dependency-rules) にある。  
 変えるときは ADR を書く。  
 この 8 点のほかに、将来のための先行投資をしない。
 
 | #   | 不変量                                                                                                                  | 何を可能にするか                                                                  | 根拠                                                           |
 | --- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | `contentId` は発行した後に変えない                                                                                      | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 2   | 関係は `contentId` から `contentId` への片方向の辺にし、逆方向は導く                                                    | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 3   | `pages/**` と `components/**` は `astro:content` を直接参照しない                                                       | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 4   | `@fukuemon/content-model` は Astro に依存しない                                                                         | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 1   | `contentId` の不変。[context/domain/content.md](../context/domain/content.md#prohibitions) の取り決め                   | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 2   | 関連の片方向の辺。[context/domain/content.md](../context/domain/content.md#invariants) の取り決め                       | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 3   | 依存規約 1。`pages/`、`features/`、`components/`、`layouts/` は `astro:content` を直接参照しない                        | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                                             | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
 | 5   | Design Tokens は `@theme static` から `:root` の CSS カスタムプロパティとして出力し、ユーティリティは `@layer` に閉じる | レイヤの外の宣言は、どのレイヤの中の宣言より優先される。第三者の CSS と競合しない | [Design System](../packages/design-system/DesignDoc.md)        |
 | 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                                              | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
 | 7   | cross-origin isolation をサイト全体に掛けず、必要な URL にだけ掛ける                                                    | 全体に掛けると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる              | [ADR-0006](../adr/0006-interactive-content-levels.md)          |
@@ -229,7 +233,7 @@ ARIA の `tablist` は使わない。
 [PRD の Lower-Priority Goals](../PRD.md#lower-priority-goals) の条件が成り立ったときは、次の形で足す。
 
 - 分類での絞り込みは、URL パラメータで絞り込む React の island にする。ページと索引のページは増やさない。
-- 見せるためのコンポーネントの一覧は、`packages/<name>/` と、実物を並べる demo のページにする。別の repo も検討する。package を増やす条件は [context/codebase.md](../context/codebase.md#packages) にある。
+- 見せるためのコンポーネントの一覧は、`packages/<name>/` と、実物を並べる demo のページにする。package を増やす条件は [context/codebase.md](../context/codebase.md#packages) にある。
 - 一覧から辿れなくなったときの探す手段は、React の island と shadcn/ui の Command Palette にする。
 - 本文の中で PGlite 以外の実行環境が要るときは、その実行環境の island を足す。レスポンスヘッダを変えずに載る場合に限る。
 - `SharedArrayBuffer` が要るときは、isolation を掛けた別のドキュメント（`/playground/<id>`）に置く。

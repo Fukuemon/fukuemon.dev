@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision 5 の根拠を ADR-0013 に置換）
 
 ## Context
 

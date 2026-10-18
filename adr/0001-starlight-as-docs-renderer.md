@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision 3 の一部を ADR-0012 に置換）
 
 ## Context
 

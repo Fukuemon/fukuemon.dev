@@ -6,7 +6,7 @@ status: stable
 governs:
   - infra/
   - apps/web/wrangler.jsonc
-verified_commit: c02cc95
+verified_commit: 01101c7
 ---
 
 # 基盤
