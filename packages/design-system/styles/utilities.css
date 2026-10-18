@@ -120,8 +120,26 @@
     color: var(--color-fg-2);
   }
   .prose {
-    letter-spacing: 0.05em;
+    line-height: 1.75;
+    letter-spacing: 0.02em;
     overflow-wrap: anywhere;
+  }
+  /* 段落の間は行の間より広く、見出しの上は下より広く取る。
+     見出しが下の段落と組に見え、段落の切れ目が行の切れ目と見分けられる */
+  .prose :where(p, ul, ol, blockquote, figure, details, h2, h3) {
+    margin-block: 0;
+  }
+  .prose :where(*) + :where(p, ul, ol, blockquote, figure, details, .scroll-x, .expressive-code) {
+    margin-block-start: var(--spacing-intra-3);
+  }
+  .prose :where(*) + :where(h2) {
+    margin-block-start: var(--spacing-inter-2);
+  }
+  .prose :where(*) + :where(h3) {
+    margin-block-start: var(--spacing-inter-1);
+  }
+  .prose :where(h2, h3) + :where(*) {
+    margin-block-start: var(--spacing-intra-2);
   }
   .display {
     font-size: clamp(1.75rem, 4.4vw, 2.75rem);

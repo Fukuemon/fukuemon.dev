@@ -80,6 +80,8 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 書体の並びは `tokens.css` の `--font-serif` と `--font-mono` が持つ。  
 `--font-serif` は EB Garamond を先に置く。
 CSS は左から順にグリフを探すため、Latin は EB Garamond、和文は Zen Old Mincho が担当する。  
+`--font-mono` も Geist Mono の次に Zen Old Mincho を置く。
+Geist Mono は和文の字を持たないので、置かないと Mono の中の和文だけが OS のゴシックで描かれる。  
 `.mono` は `font-variant-numeric: tabular-nums` で一覧の日付の桁を揃える。
 
 **Fontsource で self-host し、外部 CDN から読まない**。  
@@ -106,7 +108,16 @@ ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
 見出しには `font-feature-settings: "palt" 1` と `line-break: strict` を掛ける。
 和文の詰めを適用し、禁則を厳格な側にする。
 
-本文を両端揃え（`text-align: justify`）にしない。字間 `.05em` と `overflow-wrap: anywhere` で組む。
+本文を両端揃え（`text-align: justify`）にしない。`.prose` は、行の高さ 1.75、字間 `.02em`、`overflow-wrap: anywhere` で組む。
+字間を広げると、狭い画面で 1 行に入る字が減り、語のまとまりが読み取りにくくなる。
+
+`.prose` の中の段落、リスト、表、コードの間は `--spacing-intra-3` を空ける。
+行と行の間（約 12px）より広いので、段落の切れ目が行の切れ目と見分けられる。
+`h2` の上は `--spacing-inter-2`、`h3` の上は `--spacing-inter-1` を空け、見出しの下は `--spacing-intra-2` だけにする。
+見出しは下の段落と組に見える。
+
+原稿は 1 文 1 行で書くので、和文の間の改行が HTML では空白になる。
+`apps/web/src/lib/rehype-ja-linebreak.ts` が、build のときにこの改行を消す。
 
 ### 縦組み
 
