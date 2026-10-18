@@ -8,6 +8,7 @@ import { RUNNERS } from "./src/features/lab/runners";
 import { rehypeLabSteps } from "./src/lib/rehype-lab-steps";
 import { rehypeScrollTable } from "./src/lib/rehype-scroll-table";
 import { rehypeMermaid } from "./src/lib/rehype-mermaid";
+import { rehypeJaLinebreak } from "./src/lib/rehype-ja-linebreak";
 import { subsetFonts } from "./src/lib/subset-fonts";
 import { codeThemeDark, codeThemeLight } from "@fukuemon/design-system/code-theme";
 
@@ -27,6 +28,7 @@ export default defineConfig({
       rehypeMermaid,
       rehypeScrollTable,
       rehypeLabSteps,
+      rehypeJaLinebreak,
     ],
   },
   integrations: [
