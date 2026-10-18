@@ -366,14 +366,37 @@
     color: var(--color-fg);
     box-shadow: inset 0 -2px 0 var(--color-rust);
   }
-  /* 縮むと語の途中で折り返す。折らず、入らなければ溢れさせて気づけるようにする */
+  /* 縮むと語の途中で折り返すので折らない。入らないことには、見た目の回帰と幅ごとの計測で気づく */
   .topbar nav a {
     flex: 0 0 auto;
     white-space: nowrap;
   }
+  /* 字の大きさを保ったまま 360px に収める。
+     320px では字だけで 261px を占め、余白を詰めても入らないので、ナビの中を横に流す */
   @media (max-width: 720px) {
     .topbar {
-      gap: var(--spacing-intra-2);
+      gap: var(--spacing-intra-1);
+    }
+    .topbar__logo {
+      flex: 0 0 auto;
+      letter-spacing: 0.04em;
+    }
+    .topbar nav {
+      gap: 0;
+      min-inline-size: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      letter-spacing: 0.06em;
+    }
+    .topbar nav a {
+      padding-inline: var(--spacing-intra-1);
+    }
+    .topbar nav a:last-child {
+      padding-inline-end: 0;
+    }
+    /* 流す器は外へ出た outline を切り取る */
+    .topbar nav a:focus-visible {
+      outline-offset: -2px;
     }
   }
 

@@ -17,9 +17,11 @@
     border-style: solid;
   }
 
-  /* sticky ヘッダの下へアンカー先とフォーカスが隠れるのを防ぐ */
+  /* sticky ヘッダの下へアンカー先とフォーカスが隠れるのを防ぐ。
+     横へはみ出す要素が出ても、ページを横に揺らさない */
   html {
     scroll-padding-block-start: calc(var(--topbar) + var(--spacing-intra-3));
+    overflow-x: clip;
   }
 
   body {
