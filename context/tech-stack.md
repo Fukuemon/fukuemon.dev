@@ -6,6 +6,8 @@ status: draft
 governs:
   - package.json
   - pnpm-workspace.yaml
+  - mise.toml
+  - .github/workflows/
 verified_commit: unverified
 ---
 
@@ -14,7 +16,7 @@ verified_commit: unverified
 ## Toolchain
 
 npm のパッケージのバージョンは、各 package の `package.json` に書いてある。  
-Node.js と apm のバージョンは、`mise.toml` に書いてある。  
+Node.js、uv、apm のバージョンは、`mise.toml` に書いてある。  
 pnpm のバージョンは、ルートの `package.json` の `packageManager` に書いてある。
 
 - ADR-0011: [ツールのバージョンを mise で固定する](../adr/0011-pin-tool-versions-with-mise.md)
@@ -35,9 +37,12 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
-- `astro check` と tsgo は、型のチェックに使う。
+- 型のチェックには、`apps/web` では `astro check` を、`packages/content-model` では `tsc` を使う。
+  - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
 - knip は、未使用の export、依存、ファイルの検出に使う。
-- Vitest は unit test に、Playwright は e2e に使う。
+- Vitest は unit test に使う。
+- Playwright は、見た目の回帰のチェック（`e2e/`）で画面を撮るのに使う。
+- textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
 - Wrangler は、Worker の deploy に使う。
 - 品質のチェックには、react-doctor、knip、similarity-ts、Lefthook を使う。

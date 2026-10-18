@@ -4,8 +4,8 @@ title: ハンズオンと Interactive
 description: ハンズオンの形式（手順の分割、進捗、本文の中の実行）、手を動かす場所の 4 分類、cross-origin isolation の URL ごとの分離、実行環境の性質と足し方
 status: stable
 governs:
-  - apps/web/src/content/labs/
   - apps/web/src/features/lab/
+  - apps/web/src/layouts/LabLayout.astro
   - apps/web/src/lib/remark-lab.ts
   - apps/web/src/lib/rehype-lab-steps.ts
   - apps/web/public/_headers
@@ -307,7 +307,7 @@ value: { completedSteps: number[], lastStep: number }
 ```
 
 キーを `contentId` と手順の index にする。  
-`path` は改名されうるので、改名で進捗が消えないようにする。
+URL のパスはファイルの改名で変わるので、改名で進捗が消えないようにする。
 
 `localStorage` は端末をまたげない。  
 ハンズオンは 1 台で通すのが普通なので、許す。
@@ -336,6 +336,7 @@ flowchart TD
     hook --> rt["runtime.ts<br/>Session / WORKERS / serialize"]
     rt --> w["pglite.worker.ts"]
     hook -.->|"lab:ran"| bus["bus.ts<br/>島をまたぐ通知"]
+    runner -.->|"lab:progress"| ctl
     preset["Presets.tsx"] -.->|"lab:preset"| bus
     bus -.-> pg
     bus -.-> peek["DbPeek.tsx"]
@@ -357,14 +358,16 @@ hast まで来れば拡張子の違いが消え、1 通りで済む。
 #### island をまたぐ通知
 
 実行パネルとサイドバーは別の React root なので、props でも context でもつながらない。  
-両者が共通に触れられるのは `document` だけなので、CustomEvent を通す。
+両者が共通に触れられるのは `window` だけなので、`window` に CustomEvent を発火する。
 
-| 事象         | 送り手      | 受け手       | 用途                  |
-| ------------ | ----------- | ------------ | --------------------- |
-| `lab:ran`    | `useRunner` | `DbPeek`     | DB を取得し直す       |
-| `lab:preset` | `Presets`   | `Playground` | 入力欄へ SQL を入れる |
+| 事象           | 送り手                                                          | 受け手          | 用途                         |
+| -------------- | --------------------------------------------------------------- | --------------- | ---------------------------- |
+| `lab:ran`      | `useRunner`                                                     | `DbPeek`        | DB を取得し直す              |
+| `lab:preset`   | `Presets`                                                       | `Playground`    | 入力欄へ SQL を入れる        |
+| `lab:progress` | `progress.ts` の `saveProgress`（実行パネルと `controller.ts`） | `controller.ts` | 完了の印と進捗バーを描き直す |
 
-購読は `bus.ts` を通す。  
+React の側の購読は `bus.ts` を通す。  
+`lab:progress` は、React を使わない `controller.ts` も受けるので、`progress.ts` が定義する。  
 `addEventListener` をコンポーネントに置くと、事象の名前と `contentId` を確かめる処理が、使う側の数だけ重なる。
 
 状態管理のライブラリを入れない。  
@@ -431,12 +434,13 @@ export const RUNNERS: Record<string, Runner> = {
 
 #### 読者が手元に環境を作る（`local`）
 
-1. `/labs/otel-collector-local` を開く。
+1. `local` のハンズオンの `/labs/<path>` を開く。
 2. 本文の前に「手元で用意する」が出る。前提の条件、`git clone`、起動のコマンドが、コピーのボタン付きで並ぶ。
 3. 読者は、自分の端末で Dev Container を開き、本文の手順を追う。
-4. サイドバーは手順の一覧だけを出す。実行の完了の印は出さない。
+4. サイドバーは手順の一覧だけを出す。完了の印は、この読み込みのあいだに通り過ぎた手順にだけ付く。
 
-ページは JavaScript を配らない。
+ページが配る JavaScript は、手順の切り替えだけである。  
+React と実行環境は配らない。
 
 #### 読者がハンズオンを中断して再開する
 
@@ -445,6 +449,16 @@ export const RUNNERS: Record<string, Runner> = {
 3. 同じ端末で再訪すると、手順 4 の画面から再開できる。
 4. DB は初期の状態に戻っている。保存先がメモリのためである。次の実行で、完了した手順の SQL を順に流し直してから実行する。
 5. 別の端末では、最初からになる。これを許す。
+
+流し直す SQL は、ビルドのときに HTML に書き出す。
+
+- `remark-lab` が、手順ごとの `run` を付けたフェンスの SQL と `setup` を集め、`remarkPluginFrontmatter.labBoot` で layout へ渡す。
+- `LabLayout` が、`bootSpec.ts` の `encodeBootSpec()` で JSON にし、`<script type="application/json">` として文書に 1 つだけ置く。
+  - 実行パネルの props に入れると、パネルの数だけ同じ SQL が HTML に入る。
+- 実行パネルは、`readBootSpec()` でその JSON を読み、`localStorage` で完了になっている手順の SQL だけを、手順の順に選ぶ。
+- Worker は、`setup` を流した後に選んだ SQL を流し、流し直しに失敗した SQL の番号を返す。
+  - 失敗があると、実行パネルは「初めから」で作り直せることを示す。
+  - 「初めから」を押した直後の起動では、流し直さない。
 
 ## Interface
 
@@ -456,7 +470,8 @@ export const RUNNERS: Record<string, Runner> = {
 - `apps/web/src/features/lab/runtime/`: 実行環境の Worker と、実行の状態機械
 - `apps/web/src/features/lab/panel/`: 実行パネルと playground
 - `apps/web/src/features/lab/catalog/`: 「いまのテーブル」とテーブル構成
-- `apps/web/src/features/lab/steps/`: 手順の一覧、画面の切り替え、進捗
+- `apps/web/src/features/lab/steps/`: 手順の一覧、画面の切り替え、進捗、再訪したときに流し直す SQL（`bootSpec.ts`）
+- `apps/web/src/layouts/LabLayout.astro`: ハンズオンの layout。サイドバー、前後のボタン、流し直す SQL の JSON を置く
 - `apps/web/src/features/lab/local/`: `local` の「手元で用意する」
 - `apps/web/src/features/lab/bus.ts`: island をまたぐ通知
 - `apps/web/public/_headers`: レスポンスヘッダ

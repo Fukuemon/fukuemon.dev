@@ -1,6 +1,9 @@
 # 開発の準備
 
-必要なものは Node.js、pnpm、mise である。Node.js と pnpm のバージョンは `package.json` の `engines` と `packageManager` に、apm のバージョンは `mise.toml` にある。
+必要なツールは mise、pnpm、python3 である。
+Node.js、uv、apm は `mise.toml` にバージョンが書いてあり、`mise install` が入れる。
+pnpm のバージョンは `package.json` の `packageManager` にある。
+python3 は、lefthook の `protected-branch` のフックが使う。
 
 ```sh
 mise install
@@ -38,10 +41,13 @@ git ls-files -z -- '*.md' ':!:apps/web/src/content/' | xargs -0 node .claude/hoo
 
 ## コミットするとき
 
-コミットの前に、lefthook が次を確かめる。設定は `lefthook.yml` にある。
+コミットと push の前に、lefthook が次を実行する。設定は `lefthook.yml` にある。
 
 - 保護するブランチへの直接のコミットと push を止める。
+- `lefthook.yml` の `format` が、ステージしたファイルを整形する。
 - ステージした Markdown に textlint を掛ける。
+- commit-msg のフックで、`ticket-number` が issue 番号をメッセージに足す。
+  - ブランチの名前が `feature/<issue 番号>` で、1 行目に `#<issue 番号>` がないときに、1 行目の末尾へ足す。
 - commit-msg のフックで、commitlint がメッセージの形式を確かめる。規則は `commitlint.config.mjs` にある。
 
 - 変更の分け方とメッセージの書き方は、スキル write-commit に従う。

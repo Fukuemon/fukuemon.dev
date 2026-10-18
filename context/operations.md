@@ -7,7 +7,7 @@ governs:
   - infra/
   - apps/web/wrangler.jsonc
   - apps/web/public/_headers
-verified_commit: 69f71b2
+verified_commit: c02cc95
 ---
 
 # 基盤と運用

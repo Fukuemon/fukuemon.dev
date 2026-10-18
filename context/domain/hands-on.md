@@ -25,7 +25,7 @@ status: stable
 
 - `interactive.level` が、ページに置くものを決める。
   - `embedded` は実行パネルを置き、本文は `.mdx` で書く。
-  - `local` は clone と起動の手順を置き、本文は `.md` で書く。ページに JavaScript を配らない。
+  - `local` は clone と起動の手順を置き、本文は `.md` で書く。ページは手順の切り替えの JavaScript だけを配り、React と実行環境を配らない。
 - `run` を付けたフェンスを `.md` に書くと、ビルドが失敗する。
 - schema は、実装した `interactive.runtime` の値だけを受け付ける。`sandbox` も受け付けない。
   - 先に受け付けると、ビルドを通ったコンテンツが、読者が押したときに初めて失敗する。

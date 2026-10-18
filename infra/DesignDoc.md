@@ -6,7 +6,7 @@ status: stable
 governs:
   - infra/
   - apps/web/wrangler.jsonc
-verified_commit: 8615b12
+verified_commit: c02cc95
 ---
 
 # 基盤
@@ -46,7 +46,7 @@ flowchart TD
     wd --> worker["Worker script + assets"]
     manual["運用者が手動で起動"] --> env["environment protection rules"]
     env -->|"apply 用の token"| tf["terraform apply"]
-    tf --> base["Zone / DNS / custom domain / R2"]
+    tf --> base["Zone / custom domain"]
     ci -. "到達しない" .-x base
 ```
 

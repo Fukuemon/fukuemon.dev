@@ -2,7 +2,7 @@
 type: context
 title: 業務の知識
 description: コンテンツ、種別、contentId、関連、手順、実行パネルなどの用語と、コードの識別子との対応。状態と不変条件は概念ごとに domain/ に置く
-status: draft
+status: stable
 ---
 
 # 業務の知識
