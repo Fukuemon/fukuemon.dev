@@ -18,8 +18,11 @@ fukuemon.dev は、技術記事とハンズオンの 2 種類だけを公開す�
 訪問者は記事を読み、ハンズオンでコードを動かす。著者（運営者 1 名）は Markdown を書いて push する。  
 誰のどの課題を解くかは [PRD](../PRD.md) にある。
 
-実装は pnpm workspace の monorepo にし、Astro のアプリ 1 つと、Content Model と Design System の共有の package で組む。  
+実装は pnpm workspace の monorepo にし、Astro のアプリ 1 つと、Content Model、Design System、共有の設定（`@fukuemon/config`）の 3 つの package で組む。  
 ADR-0003: [monorepo と Vite+ の採否](../adr/0003-monorepo-and-vite-plus.md)
+
+Vite+ は、`apps/web` の build を 2 つのタスクに分けてキャッシュする `vp run` にだけ使う。  
+ADR-0017: [apps/web の build を vp run でキャッシュする](../adr/0017-vp-run-cache-for-web-build.md)
 
 記事とハンズオンの描画も、自前の Astro のページとして持つ。  
 ADR-0001: [Starlight の採否](../adr/0001-starlight-as-docs-renderer.md)
@@ -63,7 +66,8 @@ ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-in
 ### 確かめた前提
 
 - `pagefind` が自前のページを索引に入れる。`data-pagefind-body` は本文の要素にだけ付ける。
-- config の rehype plugin は、Expressive Code より先に動く。素の `<pre><code>` のまま拾えるので、`apps/web/src/lib/rehype-mermaid.ts` が図に変換できる。
+- config の rehype plugin は、Expressive Code より先に動く。素の `<pre><code>` のまま拾えるので、`apps/web/src/lib/rehype-mermaid.ts` が Pele で図を SVG に変換できる。
+  ADR-0016: [mermaid を Pele でビルド時に描く](../adr/0016-render-mermaid-with-pele.md)
 
 Expressive Code について確かめた前提は [Design System の Design Doc](../packages/design-system/DesignDoc.md#verification) に、基盤について確かめた前提は [基盤の Design Doc](../infra/DesignDoc.md#verification) にある。
 
@@ -90,16 +94,26 @@ flowchart TD
     adapter --> cm
     adapter --> pages["Portal UI (一覧 / About)"]
     adapter --> doc["Doc UI (記事 / ハンズオンの本体)"]
-    pages --> dist["dist/"]
-    doc --> dist
+    pages --> build["astro build（vp run build:site）"]
+    doc --> build
+    build --> fonts["和文の書体を使う字だけに作り直す"]
+    fonts --> search["Pagefind の索引（vp run build:search）"]
+    search --> dist["dist/"]
     dist -->|"wrangler deploy"| worker
-    infra -->|"terraform apply"| cfbase["Zone / DNS / custom domain"]
+    infra -->|"terraform apply"| cfbase["Zone / custom domain"]
     cfbase -.-> worker
 ```
 
 すべてをビルドのときに解決する。  
 実行時のサーバーのコンポーネントを持たない。  
-クライアント側の実行時の処理は、ハンズオンのコードの実行だけである。それも WebAssembly としてブラウザの中で閉じる。
+クライアント側で動く処理は、次の 4 つ。どれもブラウザの中で閉じ、サーバーへ問い合わせない。
+
+- ハンズオンと遊び場のコードの実行。WebAssembly の PGlite で動かす
+- 一覧の検索。Pagefind がビルドのときに作った索引を読む
+- ハンズオンの手順の切り替え。`history.pushState` で URL を付ける
+- サイドバーの開閉
+
+原稿の改行のうち、和文の間にあるものは、ビルドのときに `apps/web/src/lib/rehype-ja-linebreak.ts` が消す。
 
 ## Components
 
@@ -111,16 +125,17 @@ flowchart TD
 | `@fukuemon/design-system`        | Design Tokens（`@theme static` から `:root` の CSS カスタムプロパティとして出力する）、版面のユーティリティ、挿絵、コードの配色、配色のコントラストのチェック |
 | `@fukuemon/config`               | tsconfig の共有の設定                                                                                                                                         |
 | `apps/web/src/content.config.ts` | すべての collection の loader と schema を結ぶ。データソースを切り替える唯一の場所                                                                            |
-| `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、グラフを組み立てる                                                                                          |
-| `apps/web/src/pages/**`          | Portal UI（about、一覧、playground）と、記事とハンズオンの本体のページ                                                                                        |
-| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと playground の実行、一覧、本文の周り、表紙、検索）                                                                          |
+| `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、グラフを組み立てる。ページへエントリと、描画の関数（`renderEntry`、`tocOf`）を渡す                          |
+| `apps/web/src/pages/**`          | Portal UI（about、一覧、遊び場）と、記事とハンズオンの本体のページ                                                                                            |
+| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと遊び場の実行、一覧、本文の周り、表紙、検索）                                                                                |
 | `apps/web/src/data/`             | 書いている人の情報。名乗り、外部のリンク、使っているもの、登壇と寄稿                                                                                          |
-| `apps/web/src/content/**`        | 記事とハンズオンと playground の本体（Markdown と MDX）                                                                                                       |
+| `apps/web/src/content/**`        | 記事とハンズオンと遊び場の本体（Markdown と MDX）                                                                                                             |
 | `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を基に `Posts`、`Article`、`Lab` と、本文の `DocShell`                                                                             |
 | `apps/web/src/components/**`     | セクションをまたぐ素のコンポーネント                                                                                                                          |
 | `infra/`                         | Zone、Workers の custom domain、Terraform の state を置く R2 のバケット                                                                                       |
 
-次の図は、画面の側がコンテンツを `lib/content/` を通して読み、`astro:content` に触れるのが `lib/content/` と `content.config.ts` だけであることを示す。
+次の図は、画面の側がコンテンツを `lib/content/` を通して読み、`astro:content` に触れるのが `lib/content/` と `content.config.ts` だけであることを示す。  
+`lib/` のうち content 以外（書式、縦組み、rehype のプラグイン）と、`astro.config.ts` が読む `code-theme` は省く。
 
 ```mermaid
 flowchart TD
@@ -158,17 +173,17 @@ flowchart TD
 サイトは about、blog、playground の 3 つのセクションからなる。  
 ADR-0009: [サイトのセクションと playground](../adr/0009-site-sections-and-playground-collection.md)
 
-| URL                | 中身                                                                                     |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| `/`                | 表紙。about が兼ねる                                                                     |
-| `/blog`            | すべての一覧（表）                                                                       |
-| `/blog/articles`   | 記事だけの一覧                                                                           |
-| `/blog/labs`       | ハンズオンだけの一覧                                                                     |
-| `/articles/<path>` | 記事の本体                                                                               |
-| `/labs/<path>`     | ハンズオンの本体                                                                         |
-| `/playground`      | 遊び場の一覧                                                                             |
-| `/playground/<id>` | 1 つの遊び場。cross-origin isolation を掛ける URL として予約している（まだ掛けていない） |
-| `/rss.xml`         | RSS                                                                                      |
+| URL                | 中身                                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| `/`                | 表紙。about が兼ねる                                                                          |
+| `/blog`            | すべての一覧（表と検索）                                                                      |
+| `/blog/articles`   | 記事だけの一覧                                                                                |
+| `/blog/labs`       | ハンズオンだけの一覧                                                                          |
+| `/articles/<path>` | 記事の本体                                                                                    |
+| `/labs/<path>`     | ハンズオンの本体                                                                              |
+| `/playground`      | 遊び場の一覧（表）                                                                            |
+| `/playground/<id>` | 1 つの遊び場。`sandbox` の遊び場を足すときは、その URL にだけ cross-origin isolation を掛ける |
+| `/rss.xml`         | RSS                                                                                           |
 
 `/articles/<path>` は本体の URL で、`/blog/articles` は一覧である。  
 描画の実装の詳細を URL に出さない。  
@@ -200,17 +215,17 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 | 5   | Design Tokens は `@theme static` から `:root` の CSS カスタムプロパティとして出力し、ユーティリティは `@layer` に閉じる | レイヤの外の宣言は、どのレイヤの中の宣言より優先される。第三者の CSS と競合しない | [Design System](../packages/design-system/DesignDoc.md)        |
 | 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                                              | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
 | 7   | cross-origin isolation をサイト全体に掛けず、必要な URL にだけ掛ける                                                    | 全体に掛けると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる              | [ADR-0006](../adr/0006-interactive-content-levels.md)          |
-| 8   | 種別は URL を持つページとして分け、分類（tag）は URL パラメータで絞り込む                                               | 種別は 2 つで固定なので、静的に書き出せる。分類は組み合わせで数が爆発する         | [種別と分類の切り分け](#種別と分類の切り分け)                  |
+| 8   | 種別は URL を持つページとして分け、分類（tag）で絞り込むときは URL パラメータにする                                     | 種別は 2 つで固定なので、静的に書き出せる。分類は組み合わせで数が爆発する         | [種別と分類の切り分け](#種別と分類の切り分け)                  |
 
 ### 種別と分類の切り分け
 
 一覧の切り替えは、見た目はタブだが、実体はページの遷移である。  
 ARIA の `tablist` は使わない。
 
-| 軸                               | 実現の方法                                          | 理由                                                                    |
-| -------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------- |
-| 種別（すべて、記事、ハンズオン） | `/blog`、`/blog/articles`、`/blog/labs` の 3 ページ | 3 つで固定。URL が付き、共有と戻るボタンが使える。JavaScript が要らない |
-| 分類（`postgres` など）          | URL パラメータと、クライアント側の絞り込み          | 種別 3 つと分類 n 個の組み合わせを、ページとして書き出せない            |
+| 軸                               | 実現の方法                                                                              | 理由                                                                    |
+| -------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 種別（すべて、記事、ハンズオン） | `/blog`、`/blog/articles`、`/blog/labs` の 3 ページ                                     | 3 つで固定。URL が付き、共有と戻るボタンが使える。JavaScript が要らない |
+| 分類（`postgres` など）          | 今は絞り込まず、表に出すだけ。足すときは URL パラメータとクライアント側の絞り込みにする | 種別 3 つと分類 n 個の組み合わせを、ページとして書き出せない            |
 
 同じページの中で切り替えても、`history.pushState` で URL は付けられる。  
 ただし、それは 3 枚の静的なページで済むことを、JavaScript で作り直している状態になる。
@@ -234,9 +249,10 @@ ARIA の `tablist` は使わない。
 
 - 分類での絞り込みは、URL パラメータで絞り込む React の island にする。ページと索引のページは増やさない。
 - 見せるためのコンポーネントの一覧は、`packages/<name>/` と、実物を並べる demo のページにする。package を増やす条件は [context/codebase.md](../context/codebase.md#packages) にある。
-- 一覧から辿れなくなったときの探す手段は、React の island と shadcn/ui の Command Palette にする。
+- 一覧の 3 ページには、Pagefind の索引を引く検索の `<dialog>` がすでにある。ADR-0012: [一覧に置く検索の窓](../adr/0012-search-dialog-on-listing.md)
+- 検索の窓でも辿れなくなったときの探す手段は、React の island と shadcn/ui の Command Palette にする。
 - 本文の中で PGlite 以外の実行環境が要るときは、その実行環境の island を足す。レスポンスヘッダを変えずに載る場合に限る。
-- `SharedArrayBuffer` が要るときは、isolation を掛けた別のドキュメント（`/playground/<id>`）に置く。
+- `SharedArrayBuffer` が要るときは、isolation を掛けた別のドキュメント（`sandbox` の遊び場の `/playground/<id>`）に置く。
 - コメントは giscus（GitHub Discussions）で足し、バックエンドを持たない。
 - 問い合わせのフォームの送信を受ける口は、同じ Worker の `/api/contact` への POST 1 本にする。
   - データを保持するリソース（D1、KV、R2）が Terraform の管轄に加わり、binding が `wrangler.jsonc` に加わる。
@@ -255,7 +271,7 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 ├── context/                     # 規約と事実
 ├── apps/web/                    # Astro のサイト
 │   └── src/
-│       ├── content/             # 記事、ハンズオン、playground の原稿
+│       ├── content/             # 記事、ハンズオン、遊び場の原稿
 │       ├── content.config.ts
 │       ├── pages/
 │       ├── layouts/
@@ -272,5 +288,7 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 │   ├── bootstrap/
 │   └── cloudflare/
 ├── e2e/                         # 見た目の回帰のチェック
+├── hooks/                       # Git のフック（commit-msg、protected-branch）
+├── .github/                     # CI の workflow と issue の雛形
 └── scripts/
 ```
