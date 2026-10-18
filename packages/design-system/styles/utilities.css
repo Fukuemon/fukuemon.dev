@@ -24,9 +24,14 @@
     overflow-x: clip;
   }
 
+  /* 上下の端を越えて引っぱったときに出る地も、紙の色にする */
+  html,
+  body {
+    background: var(--color-paper);
+  }
+
   body {
     margin: 0;
-    background: var(--color-paper);
     color: var(--color-fg);
     font-family: var(--font-serif);
     font-size: 1.05rem;
