@@ -3,7 +3,7 @@ import { parseFaces, parseRanges, rename } from "./subset-fonts";
 
 const CSS =
   '@font-face{font-family:Zen Old Mincho;font-weight:400;src:url(/_astro/zen-old-mincho-2-400-normal.BODdGfVy.woff2)format("woff2"),url(/_astro/zen-old-mincho-2-400-normal.Cg5S6LfO.woff)format("woff");unicode-range:U+3001-3003,U+FF01}' +
-  '@font-face{font-family:EB Garamond Variable;src:url(/_astro/eb-garamond-latin-wght-normal.Ab3_xY-9.woff2)format("woff2");unicode-range:U+0000-00FF}';
+  '@font-face{font-family:STIX Two Text Variable;src:url(/_astro/stix-two-text-latin-wght-normal.Ab3_xY-9.woff2)format("woff2");unicode-range:U+0000-00FF}';
 
 describe("@font-face の読み取り", () => {
   it("指定の書体の woff2 と unicode-range だけを取り出す", () => {

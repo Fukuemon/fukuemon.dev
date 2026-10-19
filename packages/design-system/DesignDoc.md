@@ -77,12 +77,12 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 | 役割       | 書体                    | ウェイト         | 用途                                      |
 | ---------- | ----------------------- | ---------------- | ----------------------------------------- |
 | 和文 Serif | **Zen Old Mincho**      | 400 / 600 (静的) | 本文・見出し・UI のすべて                 |
-| 欧文 Serif | **EB Garamond**         | 400 / 600 (可変) | 和文と同じ位置。Latin グリフを担当        |
+| 欧文 Serif | **STIX Two Text**       | 400 / 600 (可変) | 和文と同じ位置。Latin グリフを担当        |
 | Mono       | **Geist Mono Variable** | 400 / 600        | 日付・種別・duration・`contentId`・コード |
 
 書体の並びは `tokens.css` の `--font-serif` と `--font-mono` が持つ。  
-`--font-serif` は EB Garamond を先に置く。
-CSS は左から順にグリフを探すため、Latin は EB Garamond、和文は Zen Old Mincho が担当する。  
+`--font-serif` は STIX Two Text を先に置く。
+CSS は左から順にグリフを探すため、Latin は STIX Two Text、和文は Zen Old Mincho が担当する。  
 `--font-mono` も Geist Mono の次に Zen Old Mincho を置く。
 Geist Mono は和文の字を持たないので、置かないと Mono の中の和文だけが OS のゴシックで描かれる。  
 `.mono` は `font-variant-numeric: tabular-nums` で一覧の日付の桁を揃える。
@@ -90,9 +90,9 @@ Geist Mono は和文の字を持たないので、置かないと Mono の中の
 **Fontsource で self-host し、外部 CDN から読まない**。  
 `apps/web/src/styles/global.css` が、`tokens.css` より前に Fontsource の CSS を import する。  
 Fontsource の依存は `apps/web` が持ち、`@fukuemon/design-system` は依存を持たない。  
-読み込む CSS は、和文の 400 と 600、EB Garamond の roman と italic、Geist Mono の 5 つである。
+読み込む CSS は、和文の 400 と 600、STIX Two Text の roman と italic、Geist Mono の 5 つである。
 
-可変の EB Garamond と Geist Mono は、1 つのファイルで 400 と 600 の両方を描く。  
+可変の STIX Two Text と Geist Mono は、1 つのファイルで 400 と 600 の両方を描く。  
 ブラウザは、ページの文字に `unicode-range` が一致するスライスだけを取得する。  
 フォントのファイルはビルドで `/_astro/` に出力され、サイトと同じオリジンから配信される。  
 `apps/web/astro.config.ts` の `build.assetsInlineLimit` は、フォントを base64 で CSS に埋めない。  
@@ -102,7 +102,8 @@ Zen Old Mincho のスライスは、build の後に、サイトの HTML と JS �
 処理は `apps/web/src/lib/subset-fonts.ts` の Astro integration が持つ。
 スライスの分け方と `unicode-range` は Fontsource のままで、ファイルの名前だけを中身の hash で付け直す。
 検索の入力欄に、サイトで使っていない字を打つと、その字だけが `--font-serif` の次の書体で描かれる。
-ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)
+ADR-0004: [Typography の判断](../../adr/0004-typography-static-weights.md)  
+ADR-0019: [欧文の書体](../../adr/0019-latin-font-stix-two-text.md)
 
 #### 型スケール
 
@@ -597,8 +598,8 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 
 @import "@fontsource/zen-old-mincho/400.css";
 @import "@fontsource/zen-old-mincho/600.css";
-@import "@fontsource-variable/eb-garamond/wght.css";
-@import "@fontsource-variable/eb-garamond/wght-italic.css";
+@import "@fontsource-variable/stix-two-text/wght.css";
+@import "@fontsource-variable/stix-two-text/wght-italic.css";
 @import "@fontsource-variable/geist-mono/wght.css";
 
 @import "@fukuemon/design-system/tokens.css";
