@@ -107,9 +107,11 @@
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
+  /* 件数や所要時間が変わっても幅が動かないよう、数字の幅を揃える */
   .meta {
     font-size: 0.8125rem;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
     color: var(--color-fg-2);
   }
   .label {

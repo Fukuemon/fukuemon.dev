@@ -16,7 +16,7 @@ const chars = [...PROFILE.name];
     <div
       class="col-span-full flex justify-between items-baseline gap-intra-4 pb-intra-3 border-b-2 border-rule-strong"
     >
-      <h2 class="mono text-[1.15rem] font-semibold tracking-[.34em]">about</h2>
+      <h2 class="label text-[1.15rem] font-semibold text-fg">about</h2>
       <AboutLinks />
     </div>
 
@@ -33,7 +33,7 @@ const chars = [...PROFILE.name];
         />
         <div>
           <h1
-            class="display font-mono leading-[1.1] tracking-[.04em]"
+            class="display leading-[1.1] tracking-[.04em]"
             aria-label={PROFILE.name}
           >
             {
@@ -44,7 +44,7 @@ const chars = [...PROFILE.name];
               ))
             }
           </h1>
-          <p class="about__reading mono meta mt-intra-1 mb-0">{PROFILE.reading}</p>
+          <p class="about__reading meta mt-intra-1 mb-0">{PROFILE.reading}</p>
           <p class="about__role prose mt-intra-2 mb-0 max-w-(--measure-w)">{PROFILE.role}</p>
         </div>
       </div>
@@ -58,8 +58,8 @@ const chars = [...PROFILE.name];
               class="about__row grid grid-cols-[6.5em_minmax(0,1fr)] items-baseline gap-intra-3 py-intra-2 border-b border-rule max-narrow:grid-cols-[minmax(0,1fr)] max-narrow:gap-1"
               style={`--i:${i}`}
             >
-              <dt class="mono meta m-0">{row.label}</dt>
-              <dd class="mono m-0 text-[0.85rem]">{row.items.join(" · ")}</dd>
+              <dt class="meta m-0">{row.label}</dt>
+              <dd class="m-0 text-[0.9rem]">{row.items.join(" · ")}</dd>
             </div>
           ))
         }

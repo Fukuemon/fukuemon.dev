@@ -15,7 +15,7 @@ const related = await getRelated(ref.contentId);
 ---
 
 <article class:list={["marks", "prose", "doc-body", extra ?? "w-full"]} data-pagefind-body>
-  <p class="mono meta flex gap-intra-2 items-baseline">
+  <p class="meta flex gap-intra-2 items-baseline">
     <a class="hit-up" href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
     <span aria-hidden="true">/</span>
     <span>{ref.tags[0]}</span>

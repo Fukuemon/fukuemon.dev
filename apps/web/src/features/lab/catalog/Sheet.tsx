@@ -21,7 +21,7 @@ export default function Sheet({ ref, title, meta, onClose, children }: Props) {
           {title}
         </span>
         {meta !== undefined && (
-          <span className="mono meta max-narrow:order-last max-narrow:basis-full">{meta}</span>
+          <span className="meta max-narrow:order-last max-narrow:basis-full">{meta}</span>
         )}
         <button
           type="button"

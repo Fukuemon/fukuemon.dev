@@ -74,11 +74,11 @@ ADR-0010: [Tailwind CSS の採用](../../adr/0010-tailwind-as-styling-base.md)
 
 ### Typography
 
-| 役割       | 書体                    | ウェイト         | 用途                                      |
-| ---------- | ----------------------- | ---------------- | ----------------------------------------- |
-| 和文 Serif | **Zen Old Mincho**      | 400 / 600 (静的) | 本文・見出し・UI のすべて                 |
-| 欧文 Serif | **STIX Two Text**       | 400 / 600 (可変) | 和文と同じ位置。Latin グリフを担当        |
-| Mono       | **Geist Mono Variable** | 400 / 600        | 日付・種別・duration・`contentId`・コード |
+| 役割       | 書体                    | ウェイト         | 用途                               |
+| ---------- | ----------------------- | ---------------- | ---------------------------------- |
+| 和文 Serif | **Zen Old Mincho**      | 400 / 600 (静的) | 本文・見出し・UI のすべて          |
+| 欧文 Serif | **STIX Two Text**       | 400 / 600 (可変) | 和文と同じ位置。Latin グリフを担当 |
+| Mono       | **Geist Mono Variable** | 400 / 600        | コード・日付・識別子               |
 
 書体の並びは `tokens.css` の `--font-serif` と `--font-mono` が持つ。  
 `--font-serif` は STIX Two Text を先に置く。
@@ -86,6 +86,12 @@ CSS は左から順にグリフを探すため、Latin は STIX Two Text、和�
 `--font-mono` も Geist Mono の次に Zen Old Mincho を置く。
 Geist Mono は和文の字を持たないので、置かないと Mono の中の和文だけが OS のゴシックで描かれる。  
 `.mono` は `font-variant-numeric: tabular-nums` で一覧の日付の桁を揃える。
+
+**Mono を使うのは、コード、日付、識別子（SQL の列名や型、テーブル名、実行環境の名前）だけにする**。
+和文を含むラベル、ロゴ、名乗り、ボタンは Serif で組む。
+Mono の要素に和文が入ると、その字だけが Zen Old Mincho で描かれ、1 行の中で字幅と字間が揃わなくなるためである。
+`52分` や `0 / 10 手順` のように数字と和文を並べたラベルも Serif にする。
+`.meta` は `font-variant-numeric: tabular-nums` を持ち、Serif のままで数字の幅を揃える。
 
 **Fontsource で self-host し、外部 CDN から読まない**。  
 `apps/web/src/styles/global.css` が、`tokens.css` より前に Fontsource の CSS を import する。  
@@ -111,7 +117,7 @@ ADR-0019: [欧文の書体](../../adr/0019-latin-font-stix-two-text.md)
 
 - 大きくするのは表紙の 1 行（`.display`）だけにする。
 - `h3` は本文と同じ大きさにし、太さで区別する。
-- 日付や種別のような metadata は Mono で小さく組む。
+- 日付と識別子は Mono で、それ以外の metadata は Serif で、`.meta` の大きさに組む。
 - 節のラベルは small-caps と letter-spacing で区別する。
 
 見出しには `font-feature-settings: "palt" 1` と `line-break: strict` を掛ける。

@@ -24,7 +24,7 @@ export default function PeekList({
     <section className="peek border-t border-rule-strong pt-inter-1" aria-label="いまのテーブル">
       <button
         type="button"
-        className="hit group mono meta flex w-full cursor-pointer items-center gap-intra-2 border-b border-rule-strong bg-transparent py-intra-1 text-start text-fg-2 [font:inherit]"
+        className="hit group meta flex w-full cursor-pointer items-center gap-intra-2 border-b border-rule-strong bg-transparent py-intra-1 text-start text-fg-2 [font:inherit]"
         aria-expanded={open}
         onClick={onToggle}
       >
@@ -37,7 +37,7 @@ export default function PeekList({
       </button>
       {open && (
         <>
-          {tables.length === 0 && <p className="mono meta mt-intra-2 mb-0">まだありません</p>}
+          {tables.length === 0 && <p className="meta mt-intra-2 mb-0">まだありません</p>}
           {tables.length > 0 && (
             <button type="button" className="btn w-full my-intra-2" onClick={onShowEr}>
               テーブル構成
@@ -52,7 +52,7 @@ export default function PeekList({
                   onClick={() => onShowTable(t)}
                 >
                   <span className="mono text-[0.8125rem]">{t.name}</span>
-                  <span className="mono meta">{rowLabel(t.rows)}</span>
+                  <span className="meta">{rowLabel(t.rows)}</span>
                 </button>
                 {relations
                   .filter((r) => r.src === t.name)

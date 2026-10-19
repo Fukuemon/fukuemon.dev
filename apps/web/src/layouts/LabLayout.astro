@@ -40,7 +40,7 @@ const related = await getRelated(ref.contentId);
 
     <div class="labmain">
       <header class="labhead">
-        <p class="mono meta flex gap-intra-2 items-baseline">
+        <p class="meta flex gap-intra-2 items-baseline">
           <a class="hit-up" href={KIND_INDEX[ref.type]}>{KIND_LABEL[ref.type]}</a>
           <span aria-hidden="true">/</span>
           <span>{ref.tags[0]}</span>
@@ -72,7 +72,7 @@ const related = await getRelated(ref.contentId);
         >
           ← 前へ
         </button>
-        <span class="mono meta labnav__now flex-auto text-center"></span>
+        <span class="meta labnav__now flex-auto text-center"></span>
         <button
           type="button"
           class="btn aria-disabled:opacity-35 aria-disabled:cursor-default"

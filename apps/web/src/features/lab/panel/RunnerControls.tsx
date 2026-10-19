@@ -64,7 +64,7 @@ export default function RunnerControls({
           初めから
         </button>
       )}
-      <p className="mono meta runner__count ms-auto" role="status">
+      <p className="meta runner__count ms-auto" role="status">
         {status}
       </p>
     </div>
