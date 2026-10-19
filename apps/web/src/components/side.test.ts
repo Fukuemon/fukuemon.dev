@@ -91,7 +91,7 @@ describe("applySide", () => {
     expect(applySide(el(btn))).toBe(true);
     expect(root.dataset.open).toBe("true");
     expect(btn.attrs.get("aria-expanded")).toBe("true");
-    expect(btn.title).toBe("たたむ");
+    expect(btn.title).toBe("閉じる");
   });
 
   it("保存が無ければ、狭い画面で閉じる", () => {
@@ -101,7 +101,7 @@ describe("applySide", () => {
     expect(applySide(el(btn))).toBe(false);
     expect(root.dataset.open).toBe("false");
     expect(btn.attrs.get("aria-expanded")).toBe("false");
-    expect(btn.title).toBe("ひらく");
+    expect(btn.title).toBe("開く");
   });
 
   it("保存した状態を画面の幅より優先し、鍵を id で分ける", () => {

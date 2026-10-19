@@ -18,7 +18,7 @@ export function applySide(btn: HTMLElement, open?: boolean): boolean {
   const root = btn.closest<HTMLElement>(".g-doc");
   if (root) root.dataset.open = String(open);
   btn.setAttribute("aria-expanded", String(open));
-  btn.title = open ? "たたむ" : "ひらく";
+  btn.title = open ? "閉じる" : "開く";
   return open;
 }
 
