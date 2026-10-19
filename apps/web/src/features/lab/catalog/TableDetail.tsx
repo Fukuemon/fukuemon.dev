@@ -10,7 +10,7 @@ export default function TableDetail({ detail, limit }: { detail: Detail; limit: 
         className="min-h-0 flex-initial overflow-y-auto py-intra-2 leading-[1.6] text-fg-2 max-narrow:flex-none max-narrow:overflow-visible"
         aria-label="列"
       >
-        <p className="mono meta py-intra-2">列</p>
+        <p className="meta py-intra-2">列</p>
         <ul className="m-0 list-none border-t border-rule-strong p-0">
           {detail.columns.map((c) => (
             <li
@@ -22,7 +22,7 @@ export default function TableDetail({ detail, limit }: { detail: Detail; limit: 
               </span>
               <span className="mono font-semibold max-narrow:col-span-2">{c.name}</span>
               <span className="mono meta max-narrow:col-start-2">{c.type}</span>
-              <span className="mono meta">{c.nullable ? "null 可" : "not null"}</span>
+              <span className="meta">{c.nullable ? "null 可" : "not null"}</span>
             </li>
           ))}
         </ul>
@@ -32,7 +32,7 @@ export default function TableDetail({ detail, limit }: { detail: Detail; limit: 
         className="flex min-h-0 flex-auto flex-col max-narrow:flex-none"
         aria-label="先頭の行"
       >
-        <p className="mono meta py-intra-2">先頭 {limit} 行</p>
+        <p className="meta py-intra-2">先頭 {limit} 行</p>
         <div className="min-h-0 flex-auto overflow-auto">
           <table className="w-full border-collapse text-[0.8125rem]">
             <thead>

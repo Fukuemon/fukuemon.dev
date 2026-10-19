@@ -8,7 +8,7 @@ const ymd = (iso: string) => iso.replaceAll("-", ".");
 <section class="g-rail mt-inter-3 mx-(--gutter)">
   <Tate as="h2" class="tate-head" text="外部での発信" />
   <div class="flex justify-end items-baseline pb-intra-1">
-    <a class="mono meta hit-up" href="https://zenn.dev/fukuemon">Zenn の記事すべて →</a>
+    <a class="meta hit-up" href="https://zenn.dev/fukuemon">Zenn の記事すべて →</a>
   </div>
   <ul class="list-none m-0 p-0">
     {
@@ -22,7 +22,7 @@ const ymd = (iso: string) => iso.replaceAll("-", ".");
             <span class="group-hover:underline group-hover:underline-offset-[.2em] max-narrow:col-span-full max-narrow:row-start-2">
               {o.title}
             </span>
-            <span class="mono meta text-end whitespace-nowrap">{o.kind}</span>
+            <span class="meta text-end whitespace-nowrap">{o.kind}</span>
           </a>
         </li>
       ))

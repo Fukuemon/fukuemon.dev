@@ -52,11 +52,11 @@ export default function SqlRunner({
       data-phase={runner.phase}
       aria-labelledby={groupId}
     >
-      <div className="runner__bar mono meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-intra-1 max-narrow:px-intra-2">
+      <div className="runner__bar meta flex items-center gap-intra-2 border-b border-rule-strong px-intra-3 py-intra-1 max-narrow:px-intra-2">
         <span id={groupId}>{stepTitle}</span>
         {runner.version !== null && (
           <span
-            className="runner__engine ms-auto min-w-0 truncate text-fg-2"
+            className="runner__engine mono ms-auto min-w-0 truncate text-fg-2"
             title="この端末のブラウザ内で動いています"
           >
             {runner.version}
@@ -86,7 +86,7 @@ export default function SqlRunner({
       />
 
       {runner.stale && (
-        <p className="runner__note mono meta border-t border-rule px-intra-3 py-intra-2 text-now">
+        <p className="runner__note meta border-t border-rule px-intra-3 py-intra-2 text-now">
           前回の続きを再現できなかった手順があります。「初めから」で作り直せます
         </p>
       )}

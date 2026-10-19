@@ -24,7 +24,7 @@ const start = START[via];
 ---
 
 <section class="my-inter-1 pt-intra-3" aria-labelledby="local-setup">
-  <h2 class="mono meta mb-intra-2" id="local-setup">手元で用意する</h2>
+  <h2 class="meta mb-intra-2" id="local-setup">手元で用意する</h2>
 
   <p class="prose mt-0 mb-intra-3 text-fg-2">
     このハンズオンはブラウザの中では動きません。リポジトリを手元に clone して進めます。
@@ -33,7 +33,7 @@ const start = START[via];
   {
     requires.length > 0 && (
       <div class="mb-intra-3">
-        <p class="mono meta mb-intra-1">必要なもの</p>
+        <p class="meta mb-intra-1">必要なもの</p>
         <ul class="list-none m-0 p-0">
           {requires.map((r) => (
             <li class="mb-intra-1">
@@ -47,13 +47,13 @@ const start = START[via];
   }
 
   <div class="mb-intra-3">
-    <p class="mono meta mb-intra-1">取得する</p>
+    <p class="meta mb-intra-1">取得する</p>
     <CopyLine text={`git clone ${repository}`} />
     <CopyLine text={`cd ${dir}`} />
   </div>
 
   <div class="mb-intra-3">
-    <p class="mono meta mb-intra-1">{start.label}</p>
+    <p class="meta mb-intra-1">{start.label}</p>
     {start.lines.map((l) => <CopyLine text={l} />)}
   </div>
 

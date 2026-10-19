@@ -10,7 +10,7 @@ type Props = { entities: Entity[]; relations: Relation[]; cols: 1 | 2 };
  * 狭い画面では 1 列に積む。2 列を縮めて収めると、文字が読めない大きさになる。
  */
 export default function ErDiagram({ entities, relations, cols }: Props) {
-  if (entities.length === 0) return <p className="mono meta">まだテーブルがありません</p>;
+  if (entities.length === 0) return <p className="meta">まだテーブルがありません</p>;
 
   const { placed, edges, width, height, fk } = layoutEr(entities, relations, cols);
 

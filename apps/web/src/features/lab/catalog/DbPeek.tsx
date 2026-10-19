@@ -104,7 +104,7 @@ export default function DbPeek({ contentId }: { contentId: string }) {
       >
         <div className="min-h-0 flex-auto overflow-auto">
           {er === null ? (
-            <p className="mono meta">読み込み中…</p>
+            <p className="meta">読み込み中…</p>
           ) : (
             <ErDiagram entities={er} relations={relations} cols={narrow ? 1 : 2} />
           )}
@@ -121,7 +121,7 @@ export default function DbPeek({ contentId }: { contentId: string }) {
         }}
       >
         {detail === null ? (
-          <p className="mono meta">読み込み中…</p>
+          <p className="meta">読み込み中…</p>
         ) : (
           <TableDetail detail={detail} limit={MAX_PEEK} />
         )}
