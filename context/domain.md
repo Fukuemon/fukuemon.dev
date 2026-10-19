@@ -14,7 +14,8 @@ status: stable
 - 種別: 記事とハンズオンの 2 つ。URL を分ける単位で、増やさない。
   - 記事はディレクトリ `articles/` と URL `/articles/<path>`、schema `articleSchema` に対応する。
   - ハンズオンはディレクトリ `labs/` と URL `/labs/<path>`、schema `handsOnSchema` に対応する。
-- playground: 遊び場。ディレクトリ `playgrounds/` と URL `/playground/<id>` に対応する。
+- playground: 手順に沿わずにコードを動かせる場所。ディレクトリ `playgrounds/<分類>/` と URL `/playground/<path>` に対応する。
+  - 分類は、Postgres や言語の単位で、`playgrounds/` の直下のディレクトリ名で決まる。
 - セクション: サイトを分ける about、blog、playground の 3 つ。
 - 分類: 主題を示す自由な語。frontmatter の `tags` に書き、索引のページを持たない。
 - `contentId`: コンテンツの安定した識別子。ファイルのパス、URL、ストレージから独立する。

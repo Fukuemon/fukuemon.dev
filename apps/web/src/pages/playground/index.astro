@@ -1,38 +1,45 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
-import { listPlaygrounds } from "../../lib/content";
+import { listPlaygroundGroups } from "../../lib/content";
 
-const items = await listPlaygrounds();
+const groups = await listPlaygroundGroups();
 const lead = "手順に沿わずに、ブラウザの中でコードを動かせる場所の一覧です。";
 ---
 
-<SiteLayout title="遊び場 — fukuemon.dev" description={lead} current="playground">
+<SiteLayout title="Playground — fukuemon.dev" description={lead} current="playground">
   <div class="pt-inter-1 px-(--gutter) max-w-[calc(var(--measure-wide)_+_2_*_var(--gutter))]">
-    <h1 class="sr">遊び場</h1>
+    <h1 class="sr">Playground</h1>
     <p class="prose m-0 pb-intra-2 text-fg-2 text-[0.95rem]">{lead}</p>
-    <table class="tbl">
-      <thead>
-        <tr class="mono meta">
-          <th scope="col" class="c-title ps-0">題</th>
-          <th scope="col" class="c-kind">実行環境</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          items.map((p, i) => (
-            <tr style={`--i:${Math.min(i, 12)}`}>
-              <td class="c-title ps-0">
-                <a href={`/playground/${p.data.contentId}`}>{p.data.title}</a>
-                <span class="c-desc">{p.data.description}</span>
-              </td>
-              <td class="c-kind">
-                <span class="mono meta">{p.data.runtime}</span>
-              </td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
+    {
+      groups.map(({ group, items }) => (
+        <section class="mt-inter-1" id={group} aria-labelledby={`g-${group}`}>
+          <h2 class="mono meta mb-intra-2" id={`g-${group}`}>
+            {group}
+          </h2>
+          <table class="tbl">
+            <thead>
+              <tr class="mono meta">
+                <th scope="col" class="c-title ps-0">タイトル</th>
+                <th scope="col" class="c-kind">実行環境</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((p, i) => (
+                <tr style={`--i:${Math.min(i, 12)}`}>
+                  <td class="c-title ps-0">
+                    <a href={`/playground/${p.id}`}>{p.data.title}</a>
+                    <span class="c-desc">{p.data.description}</span>
+                  </td>
+                  <td class="c-kind">
+                    <span class="mono meta">{p.data.runtime}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))
+    }
   </div>
 
   <div class="h-inter-3"></div>

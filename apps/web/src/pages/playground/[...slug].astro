@@ -4,19 +4,20 @@ import Playground from "../../features/lab/panel/Playground";
 import DbPeek from "../../features/lab/catalog/DbPeek";
 import Presets from "../../features/lab/panel/Presets";
 import Side from "../../components/Side.astro";
-import { listPlaygrounds, renderPlayground } from "../../lib/content";
+import { groupOf, listPlaygrounds, renderPlayground } from "../../lib/content";
 
 export async function getStaticPaths() {
   const items = await listPlaygrounds();
-  return items.map((entry) => ({ params: { slug: entry.data.contentId }, props: { entry } }));
+  return items.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
 const { Content } = await renderPlayground(entry);
 const d = entry.data;
+const group = groupOf(entry);
 ---
 
-<SiteLayout title={`${d.title} — playground`} description={d.description}>
+<SiteLayout title={`${d.title} — Playground`} description={d.description}>
   <div class="g-doc" data-side-root>
     <Side id="pg" label="試す">
       <Presets client:idle contentId="playground" presets={d.presets} />
@@ -25,9 +26,9 @@ const d = entry.data;
     <div class="labmain labmain--wide">
       <header class="labhead">
         <p class="mono meta flex gap-intra-2 items-baseline">
-          <a class="hit-up" href="/playground">遊び場</a>
+          <a class="hit-up" href="/playground">Playground</a>
           <span aria-hidden="true">/</span>
-          <span>{d.runtime}</span>
+          <a class="hit-up" href={`/playground#${group}`}>{group}</a>
         </p>
         <h1 class="display labhead__title">{d.title}</h1>
       </header>

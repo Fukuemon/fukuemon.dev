@@ -9,8 +9,8 @@ export const PAGES = [
   "/articles/wal-and-checkpoint/",
   "/labs/rdbms-query-execution/",
   "/labs/vacuum-and-bloat/",
-  "/playground/postgres/",
-  "/playground/shop/",
+  "/playground/postgres/events/",
+  "/playground/postgres/shop/",
 ] as const;
 
 export const THEMES = ["light", "dark"] as const;
