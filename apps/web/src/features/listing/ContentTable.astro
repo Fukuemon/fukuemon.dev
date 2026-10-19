@@ -4,7 +4,7 @@ import { kindClass, kindLine, ymd } from "../../lib/format";
 
 interface Props {
   items: ContentRef[];
-  /** 絞り込み中は列見出しを「所要」にして、行から種別名を省く */
+  /** 絞り込み中は列見出しを「所要時間」にして、行から種別名を省く */
   showKind: boolean;
 }
 const { items, showKind } = Astro.props;
@@ -14,9 +14,9 @@ const { items, showKind } = Astro.props;
   <thead>
     <tr class="mono meta">
       <th scope="col" class="c-date">日付</th>
-      <th scope="col" class="c-title">題</th>
+      <th scope="col" class="c-title">タイトル</th>
       <th scope="col" class="c-tag">分類</th>
-      <th scope="col" class="c-kind">{showKind ? "種類" : "所要"}</th>
+      <th scope="col" class="c-kind">{showKind ? "種類" : "所要時間"}</th>
     </tr>
   </thead>
   <tbody>

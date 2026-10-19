@@ -97,10 +97,21 @@ export const tocOf = (entry: ArticleEntry, headings: Parameters<typeof buildToc>
   buildToc(entry.body ?? "", headings);
 export const renderPlayground = (entry: PlaygroundEntry) => render(entry);
 
-/** 遊び場。`order` の昇順に並べる */
+/** playground。`order` の昇順に並べる */
 export async function listPlaygrounds(): Promise<PlaygroundEntry[]> {
   const found = await getCollection("playgrounds", isPublic);
   return [...found].sort((a, b) => a.data.order - b.data.order);
+}
+
+/** playground の分類。`playgrounds/` の直下のディレクトリ名で、Postgres や言語の単位になる */
+export const groupOf = (entry: PlaygroundEntry) => entry.id.split("/")[0];
+
+/** 分類ごとに束ねる。分類の順は、各分類の先頭の `order` で決まる */
+export async function listPlaygroundGroups(): Promise<
+  { group: string; items: PlaygroundEntry[] }[]
+> {
+  const groups = Map.groupBy(await listPlaygrounds(), groupOf);
+  return [...groups].map(([group, items]) => ({ group, items }));
 }
 
 /** 片方向に書かれた related から、双方向に導出した関連を返す。下書きは出さない */

@@ -3,9 +3,8 @@
 export const PROFILE = {
   name: "Fukuemon",
   reading: "ふくえもん",
-  role: "エンジニア。",
+  role: "エンジニア",
   lead: "食と筋トレ駆動のうぇぶえんじにあ",
-  note: "フロントエンド、バックエンド、インフラなど浅く広く....深みをつけたい",
 } as const;
 
 /** ここ以外に URL を書かない */
@@ -19,7 +18,7 @@ export const LINKS = [
 /** 直近 1 年で動かした公開リポジトリから採る。最終確認 2026-08-30 */
 export const STACK: { label: string; items: string[] }[] = [
   { label: "言語", items: ["Go", "TypeScript", "Java", "Python"] },
-  { label: "基盤", items: ["Terraform", "AWS", "Google Cloud"] },
+  { label: "インフラ", items: ["Terraform", "AWS", "Google Cloud"] },
 ];
 
 export type Outside = { date: string; title: string; href: string; kind: "登壇" | "記事" };

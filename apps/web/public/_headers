@@ -1,4 +1,4 @@
-# isolation (COOP / COEP) は書かない。要るのは sandbox の遊び場の URL だけで、まだ実在しない (ADR-0006)
+# isolation (COOP / COEP) は書かない。要るのは sandbox の playground の URL だけで、まだ実在しない (ADR-0006)
 
 /*
   X-Content-Type-Options: nosniff

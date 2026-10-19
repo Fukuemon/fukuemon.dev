@@ -86,7 +86,7 @@ export function mountSearch(root: ParentNode = document): void {
 
   const run = async (q: string) => {
     const mine = ++seq;
-    if (q.trim() === "") return say("語を入れてください");
+    if (q.trim() === "") return say("検索語を入力してください");
 
     const pf = engine ?? (await load());
     if (mine !== seq) return;

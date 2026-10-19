@@ -43,7 +43,7 @@ export default function ResultTable({ result }: { result: Result }) {
       </div>
       {result.total > result.rows.length && (
         <p className="mono meta runner__more m-0 px-intra-3 py-intra-2">
-          先頭 {result.rows.length} 行だけを出しています (全 {result.total} 行)
+          先頭の {result.rows.length} 行を表示しています（全 {result.total} 行）
         </p>
       )}
     </>

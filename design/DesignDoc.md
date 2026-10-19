@@ -108,7 +108,7 @@ flowchart TD
 実行時のサーバーのコンポーネントを持たない。  
 クライアント側で動く処理は、次の 4 つ。どれもブラウザの中で閉じ、サーバーへ問い合わせない。
 
-- ハンズオンと遊び場のコードの実行。WebAssembly の PGlite で動かす
+- ハンズオンと playground のコードの実行。WebAssembly の PGlite で動かす
 - 一覧の検索。Pagefind がビルドのときに作った索引を読む
 - ハンズオンの手順の切り替え。`history.pushState` で URL を付ける
 - サイドバーの開閉
@@ -126,10 +126,10 @@ flowchart TD
 | `@fukuemon/config`               | tsconfig の共有の設定                                                                                                                                         |
 | `apps/web/src/content.config.ts` | すべての collection の loader と schema を結ぶ。データソースを切り替える唯一の場所                                                                            |
 | `apps/web/src/lib/content/`      | `astro:content` のエントリを `ContentRef` へ写し、グラフを組み立てる。ページへエントリと、描画の関数（`renderEntry`、`tocOf`）を渡す                          |
-| `apps/web/src/pages/**`          | Portal UI（about、一覧、遊び場）と、記事とハンズオンの本体のページ                                                                                            |
-| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと遊び場の実行、一覧、本文の周り、表紙、検索）                                                                                |
-| `apps/web/src/data/`             | 書いている人の情報。名乗り、外部のリンク、使っているもの、登壇と寄稿                                                                                          |
-| `apps/web/src/content/**`        | 記事とハンズオンと遊び場の本体（Markdown と MDX）                                                                                                             |
+| `apps/web/src/pages/**`          | Portal UI（about、一覧、playground）と、記事とハンズオンの本体のページ                                                                                        |
+| `apps/web/src/features/**`       | セクションごとの機能（ハンズオンと playground の実行、一覧、本文の周り、表紙、検索）                                                                          |
+| `apps/web/src/data/`             | 書いている人の情報。名乗り、外部のリンク、使っているもの、外部での登壇と記事                                                                                  |
+| `apps/web/src/content/**`        | 記事とハンズオンと playground の本体（Markdown と MDX）                                                                                                       |
 | `apps/web/src/layouts/**`        | ページの外枠。`SiteLayout` を基に `Posts`、`Article`、`Lab` と、本文の `DocShell`                                                                             |
 | `apps/web/src/components/**`     | セクションをまたぐ素のコンポーネント                                                                                                                          |
 | `infra/`                         | Zone、Workers の custom domain、Terraform の state を置く R2 のバケット                                                                                       |
@@ -173,17 +173,17 @@ flowchart TD
 サイトは about、blog、playground の 3 つのセクションからなる。  
 ADR-0009: [サイトのセクションと playground](../adr/0009-site-sections-and-playground-collection.md)
 
-| URL                | 中身                                                                                          |
-| ------------------ | --------------------------------------------------------------------------------------------- |
-| `/`                | 表紙。about が兼ねる                                                                          |
-| `/blog`            | すべての一覧（表と検索）                                                                      |
-| `/blog/articles`   | 記事だけの一覧                                                                                |
-| `/blog/labs`       | ハンズオンだけの一覧                                                                          |
-| `/articles/<path>` | 記事の本体                                                                                    |
-| `/labs/<path>`     | ハンズオンの本体                                                                              |
-| `/playground`      | 遊び場の一覧（表）                                                                            |
-| `/playground/<id>` | 1 つの遊び場。`sandbox` の遊び場を足すときは、その URL にだけ cross-origin isolation を掛ける |
-| `/rss.xml`         | RSS                                                                                           |
+| URL                  | 中身                                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `/`                  | 表紙。about が兼ねる                                                                                     |
+| `/blog`              | すべての一覧（表と検索）                                                                                 |
+| `/blog/articles`     | 記事だけの一覧                                                                                           |
+| `/blog/labs`         | ハンズオンだけの一覧                                                                                     |
+| `/articles/<path>`   | 記事の本体                                                                                               |
+| `/labs/<path>`       | ハンズオンの本体                                                                                         |
+| `/playground`        | playground の一覧（表）                                                                                  |
+| `/playground/<path>` | 1 つの playground。`sandbox` の playground を足すときは、その URL にだけ cross-origin isolation を掛ける |
+| `/rss.xml`           | RSS                                                                                                      |
 
 `/articles/<path>` は本体の URL で、`/blog/articles` は一覧である。  
 描画の実装の詳細を URL に出さない。  
@@ -193,8 +193,8 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 
 ### 著者が書くファイル
 
-著者は、記事とハンズオンと遊び場を、Markdown か MDX で `apps/web/src/content/` の下に置く。  
-記事は `articles/` に、ハンズオンは `labs/` に、遊び場は `playgrounds/` に置く。  
+著者は、記事とハンズオンと playground を、Markdown か MDX で `apps/web/src/content/` の下に置く。  
+記事は `articles/` に、ハンズオンは `labs/` に、playground は `playgrounds/` に置く。  
 書き方は [context/conventions.md](../context/conventions.md#記事とハンズオンの本文) にある。
 
 ## Cross-Cutting Concerns
@@ -252,7 +252,7 @@ ARIA の `tablist` は使わない。
 - 一覧の 3 ページには、Pagefind の索引を引く検索の `<dialog>` がすでにある。ADR-0012: [一覧に置く検索の窓](../adr/0012-search-dialog-on-listing.md)
 - 検索の窓でも辿れなくなったときの探す手段は、React の island と shadcn/ui の Command Palette にする。
 - 本文の中で PGlite 以外の実行環境が要るときは、その実行環境の island を足す。レスポンスヘッダを変えずに載る場合に限る。
-- `SharedArrayBuffer` が要るときは、isolation を掛けた別のドキュメント（`sandbox` の遊び場の `/playground/<id>`）に置く。
+- `SharedArrayBuffer` が要るときは、isolation を掛けた別のドキュメント（`sandbox` の playground の `/playground/<path>`）に置く。
 - コメントは giscus（GitHub Discussions）で足し、バックエンドを持たない。
 - 問い合わせのフォームの送信を受ける口は、同じ Worker の `/api/contact` への POST 1 本にする。
   - データを保持するリソース（D1、KV、R2）が Terraform の管轄に加わり、binding が `wrangler.jsonc` に加わる。
@@ -271,7 +271,7 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 ├── context/                     # 規約と事実
 ├── apps/web/                    # Astro のサイト
 │   └── src/
-│       ├── content/             # 記事、ハンズオン、遊び場の原稿
+│       ├── content/             # 記事、ハンズオン、playground の原稿
 │       ├── content.config.ts
 │       ├── pages/
 │       ├── layouts/

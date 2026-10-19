@@ -107,12 +107,12 @@ ADR-0014: [ハンズオンのページの island の組み方](../../../../../ad
 分ける軸は、読者がどこで実行するかである。  
 frontmatter の `interactive.level` が 1 対 1 で対応する。
 
-| `level`      | 実行するもの                            | cross-origin isolation         | 置き場                                |
-| ------------ | --------------------------------------- | ------------------------------ | ------------------------------------- |
-| （項目なし） | 実行しない。コードは表示だけ            | 要らない                       | 本文                                  |
-| `embedded`   | 単一のランタイムを WASM で埋め込む      | 要らない                       | 本文と同じドキュメント                |
-| `sandbox`    | プロジェクト一式とシェルと Live Preview | 要る                           | `/playground/<id>` の別のドキュメント |
-| `local`      | ポートやプロセスを使う一式              | 要らない（こちらで実行しない） | 読者の端末                            |
+| `level`      | 実行するもの                            | cross-origin isolation         | 置き場                                  |
+| ------------ | --------------------------------------- | ------------------------------ | --------------------------------------- |
+| （項目なし） | 実行しない。コードは表示だけ            | 要らない                       | 本文                                    |
+| `embedded`   | 単一のランタイムを WASM で埋め込む      | 要らない                       | 本文と同じドキュメント                  |
+| `sandbox`    | プロジェクト一式とシェルと Live Preview | 要る                           | `/playground/<path>` の別のドキュメント |
+| `local`      | ポートやプロセスを使う一式              | 要らない（こちらで実行しない） | 読者の端末                              |
 
 上下の関係を持たせない。  
 `embedded` は `sandbox` の準備の段階ではなく、それ自体で完結する。  
@@ -152,11 +152,11 @@ isolation は、後から取り消せない方向の制約である。
 
 ### URL ごとの分離
 
-`/playground/<id>` は遊び場のページである。  
-いまある遊び場（`postgres`）は、PGlite を `embedded` と同じ形で載せ、isolation を掛けない。  
-`sandbox` の遊び場を足すときは、その遊び場の URL にだけ isolation を掛け、ほかの遊び場には掛けない。
+`/playground/<path>` は playground のページである。  
+いまある playground（`postgres`）は、PGlite を `embedded` と同じ形で載せ、isolation を掛けない。  
+`sandbox` の playground を足すときは、その playground の URL にだけ isolation を掛け、ほかの playground には掛けない。
 
-次の図は、isolation を掛けない通常のドキュメントと、`sandbox` の遊び場の分離を示す。
+次の図は、isolation を掛けない通常のドキュメントと、`sandbox` の playground の分離を示す。
 
 ```mermaid
 flowchart TD
@@ -168,7 +168,7 @@ flowchart TD
         art --- l1
         art --- lo
     end
-    subgraph isolated ["sandbox の遊び場 /playground/&lt;id&gt; (COOP + COEP)"]
+    subgraph isolated ["sandbox の playground /playground/&lt;path&gt; (COOP + COEP)"]
         pg["sandbox: シェル / Live Preview"]
     end
     art -->|"iframe"| pg
@@ -176,14 +176,14 @@ flowchart TD
 ```
 
 - `embedded` は、本文と同じドキュメントに置く。MDX の中にコンポーネントとして置ける。
-- `sandbox` は、`/playground/<id>` の別のドキュメントに置き、本文からは `iframe` で埋め込む。
+- `sandbox` は、`/playground/<path>` の別のドキュメントに置き、本文からは `iframe` で埋め込む。
 - `local` は実行環境を持たない。リポジトリの URL と前提の条件だけを持ち、コマンドを出す。
-- isolation は、`apps/web/public/_headers` で、`sandbox` の遊び場の URL にだけ掛ける。
+- isolation は、`apps/web/public/_headers` で、`sandbox` の playground の URL にだけ掛ける。
   - isolation を求めるランタイムが実在するまで、ヘッダは書かない。PGlite は素の Worker で動き、`SharedArrayBuffer` を求めないためである。
-  - 掛けるときに書くヘッダは次のとおり。`<id>` は `sandbox` の遊び場の `contentId` である。
+  - 掛けるときに書くヘッダは次のとおり。`<path>` は `sandbox` の playground のパスである。
 
     ```text
-    /playground/<id>
+    /playground/<path>
       Cross-Origin-Opener-Policy: same-origin
       Cross-Origin-Embedder-Policy: require-corp
     ```
@@ -271,7 +271,7 @@ playground の「試す」は、サイドバーに置く。
 本文の側に置くと、結果の表と例が縦に並び、どちらも幅を使えない。
 
 サイドバーの開閉は `apps/web/src/components/side.ts` が行い、状態を `localStorage` のキー `side:<id>` に `open` か `closed` で置く。  
-ハンズオンでは `controller.ts` が、遊び場ではページの script が、`mountSide` を呼ぶ。  
+ハンズオンでは `controller.ts` が、playground ではページの script が、`mountSide` を呼ぶ。  
 この端末の都合であり、読者の identity を作らない。  
 ADR-0008: [読者の identity を前提とする機能を作らない](../../../../../adr/0008-no-reader-identity.md)
 
@@ -344,13 +344,13 @@ flowchart TD
     peek --> cat["catalog.ts<br/>カタログの問い合わせ"]
     cat --> rt
     peek --> er["ErDiagram.tsx"]
-    body -.->|"sandbox"| frame["iframe → sandbox の遊び場"]
+    body -.->|"sandbox"| frame["iframe → sandbox の playground"]
     layout -.->|"local"| setup["LocalSetup.astro<br/>clone / 前提条件 / 起動"]
 ````
 
-React の island になるのは、実行パネル（ハンズオンと記事の `SqlRunner`、遊び場の `Playground`）、「いまのテーブル」、「試す」だけである。  
+React の island になるのは、実行パネル（ハンズオンと記事の `SqlRunner`、playground の `Playground`）、「いまのテーブル」、「試す」だけである。  
 手順の一覧と画面の切り替えは `controller.ts` が、サイドバーの開閉は `side.ts` が、属性の付け替えで行う。  
-island が載るのは、ハンズオン、遊び場、`run` を付けたフェンスを持つ記事だけである。
+island が載るのは、ハンズオン、playground、`run` を付けたフェンスを持つ記事だけである。
 
 `rehype-lab-steps` は rehype に置き、`.mdx` と `.md` を 1 通りの処理でまとめる。  
 ADR-0015: [手順の画面へのまとめを rehype のプラグインに置く](../../../../../adr/0015-lab-steps-in-rehype.md)
@@ -361,11 +361,11 @@ ADR-0015: [手順の画面へのまとめを rehype のプラグインに置く]
 状態管理のライブラリは使わない。  
 ADR-0014: [ハンズオンのページの island の組み方](../../../../../adr/0014-lab-page-islands.md)
 
-| 事象           | 送り手                                                          | 受け手                                 | 用途                                                  |
-| -------------- | --------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- |
-| `lab:ran`      | `useRunner`                                                     | `DbPeek`                               | DB を取得し直す                                       |
-| `lab:preset`   | `Presets`                                                       | `Playground` と遊び場のページの script | 入力欄へ SQL を入れる。狭い画面ではサイドバーを閉じる |
-| `lab:progress` | `progress.ts` の `saveProgress`（実行パネルと `controller.ts`） | `controller.ts`                        | 完了の印と進捗バーを描き直す                          |
+| 事象           | 送り手                                                          | 受け手                                       | 用途                                                  |
+| -------------- | --------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| `lab:ran`      | `useRunner`                                                     | `DbPeek`                                     | DB を取得し直す                                       |
+| `lab:preset`   | `Presets`                                                       | `Playground` と playground のページの script | 入力欄へ SQL を入れる。狭い画面ではサイドバーを閉じる |
+| `lab:progress` | `progress.ts` の `saveProgress`（実行パネルと `controller.ts`） | `controller.ts`                              | 完了の印と進捗バーを描き直す                          |
 
 React の側の購読は `bus.ts` を通し、事象の名前と `contentId` を確かめる。  
 `lab:progress` は、React を使わない `controller.ts` も受けるので、`progress.ts` が定義する。  
@@ -393,7 +393,7 @@ React の外で `lab:preset` を受けるときは、`bus.ts` の `onPreset` を
 3. 結果が表の形でなければ、`panel/SqlRunner.tsx` と同じ props を取るコンポーネントを書く。実行の状態機械は `useRunner` を再利用する。
 4. `runners.ts` の `RUNNERS` に 1 行足す。フェンスの言語が、表を引くキーになる。
 5. `remark-lab.ts` の `ENGINE` に、`runtime` の値と表示名を足す。表にない値は、`RUNNERS` の `engine` で表示する。
-6. 遊び場でも使うときは、Content Model の `playgroundSchema` の `runtime` の enum にも足す。`Playground.tsx` は今は `pglite` に固定しているので、`runtime` から実行環境を選ぶようにする。
+6. playground でも使うときは、Content Model の `playgroundSchema` の `runtime` の enum にも足す。`Playground.tsx` は今は `pglite` に固定しているので、`runtime` から実行環境を選ぶようにする。
 
 ```ts
 // apps/web/src/features/lab/runners.ts
@@ -410,7 +410,7 @@ export const RUNNERS: Record<string, Runner> = {
 どちらの場合も、コンテンツの側の書き方は変わらない。  
 著者は、frontmatter の `runtime` か、フェンスの言語を変えるだけである。
 
-`sandbox` を足すときは、まず schema に `sandbox` の枝を足し、`sandbox` の遊び場（`/playground/<id>`）のページを作って、本文から iframe で出す。  
+`sandbox` を足すときは、まず schema に `sandbox` の枝を足し、`sandbox` の playground（`/playground/<path>`）のページを作って、本文から iframe で出す。  
 `SqlRunner` の系統は触らない。  
 結果の形（端末の出力、プレビューの URL）が違うので、表を出すコンポーネントを再利用しない。
 
@@ -488,5 +488,5 @@ React と実行環境は配らない。
 - `localStorage` へのアクセスは try/catch で囲む。
   - プライベートウィンドウや設定でブロックされる環境では、例外を投げる。
   - 進捗が読めなくても、ページが動き続けることを確かめる。
-- `_headers` を変えるときは、`sandbox` の遊び場の URL の外へ isolation が漏れていないことを確かめる。
+- `_headers` を変えるときは、`sandbox` の playground の URL の外へ isolation が漏れていないことを確かめる。
   - 誤って全体へ広げると、第三者の埋め込みが一律に動かなくなる。

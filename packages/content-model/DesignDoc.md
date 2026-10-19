@@ -85,19 +85,21 @@ export const portalBase = z.object({
 | `articles` | 持たない                                                                   | `ArticleLayout`          |
 | `labs`     | `difficulty`、`duration`（正の整数、分）、`setup?: string`、`interactive?` | `LabLayout` と手順の一覧 |
 
-遊び場（`playgrounds`）の schema は `portalBase` を拡張せず、独立に定義する。  
+playground（`playgrounds`）の schema は `portalBase` を拡張せず、独立に定義する。  
 持つ属性は `contentId`、`title`、`description`、`status`、`runtime`、`setup?`、`presets?`、`order?` で、`tags`、日付、`related` は持たない。  
 `presets` と `order` は省略でき、既定は空の配列と 0 である。  
-遊び場の `contentId` は `buildContentGraph()` に渡さないので、ビルドは一意であることを確かめない。  
-著者が遊び場どうしで重ならないようにする。  
-URL が `/playground/<contentId>` で記事とハンズオンとは別なので、記事とハンズオンの `contentId` と重なってもよい。
+playground の `contentId` は `buildContentGraph()` に渡さないので、ビルドは一意であることを確かめない。  
+著者が playground どうしで重ならないようにする。  
+URL は `/playground/<path>` で `contentId` を含まないので、記事とハンズオンの `contentId` と重なってもよい。  
+`playgrounds/` の直下のディレクトリが分類になり、`<path>` は `postgres/shop` のように分類を含む。  
+ADR-0018: [playground の分類と URL](../../adr/0018-playground-groups-by-directory.md)
 
-遊び場の frontmatter は、次のように書く。
+playground の frontmatter は、次のように書く。
 
 ```yaml
 contentId: postgres
-title: Postgres
-description: ハンズオンの手順に沿わずに、好きな SQL を実行できます。
+title: イベントの記録
+description: 1 テーブル 50,000 行で、実行計画、索引、統計情報、設定を見る。
 status: published
 runtime: pglite
 presets:
@@ -107,7 +109,7 @@ presets:
 
 `playgrounds` は種別ではない。  
 一覧のタブにも RSS にも出ず、`ContentRef` にも写さない。  
-collection にするのは、遊び場を足す手順を、記事と同じ「Markdown 1 枚」に保つためである。  
+collection にするのは、playground を足す手順を、記事と同じ「Markdown 1 枚」に保つためである。  
 ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sections-and-playground-collection.md)
 
 記事は固有の属性を持たず、読了時間を出さない。  

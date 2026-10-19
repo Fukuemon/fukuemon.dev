@@ -33,7 +33,7 @@ const start = START[via];
   {
     requires.length > 0 && (
       <div class="mb-intra-3">
-        <p class="mono meta mb-intra-1">要るもの</p>
+        <p class="mono meta mb-intra-1">必要なもの</p>
         <ul class="list-none m-0 p-0">
           {requires.map((r) => (
             <li class="mb-intra-1">
@@ -47,7 +47,7 @@ const start = START[via];
   }
 
   <div class="mb-intra-3">
-    <p class="mono meta mb-intra-1">取ってくる</p>
+    <p class="mono meta mb-intra-1">取得する</p>
     <CopyLine text={`git clone ${repository}`} />
     <CopyLine text={`cd ${dir}`} />
   </div>

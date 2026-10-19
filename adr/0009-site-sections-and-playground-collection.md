@@ -2,7 +2,7 @@
 
 ## Status
 
-承認（Decision の mermaid の描画の手段を ADR-0016 に置換）
+承認（Decision の mermaid の描画の手段を ADR-0016 に、playground の URL を ADR-0018 に置換）
 
 ## Context
 

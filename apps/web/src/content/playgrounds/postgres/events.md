@@ -1,7 +1,7 @@
 ---
 contentId: postgres
-title: Postgres
-description: ハンズオンの手順とは別に、任意の SQL を実行できる。
+title: イベントの記録
+description: 1 テーブル 50,000 行で、実行計画、索引、統計情報、設定を見る。
 status: published
 runtime: pglite
 order: 0

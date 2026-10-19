@@ -183,5 +183,5 @@ URL の一覧は [design/DesignDoc.md](../design/DesignDoc.md#url-の構成) に
   - 揃えると、`/blog/articles` が一覧と本文の両方を指す。
 - コンテンツの `path` に `api` と `playground` を使わない。
 - `/api/*` は予約し、[PRD の Lower-Priority Goals](../PRD.md#lower-priority-goals) の条件が成り立つまで使わない。
-- `/playground/<id>` は遊び場のページに使う。`sandbox` の遊び場を足すときは、その URL にだけ cross-origin isolation を掛ける。
+- `/playground/<path>` は playground のページに使う。`sandbox` の playground を足すときは、その URL にだけ cross-origin isolation を掛ける。
   - ADR-0006: [手を動かす場所の 4 分類](../adr/0006-interactive-content-levels.md)
