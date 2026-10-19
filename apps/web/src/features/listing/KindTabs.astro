@@ -19,7 +19,7 @@ const tabs = [
     tabs.map((t) => (
       <a href={t.href} aria-current={current === t.key ? "page" : undefined}>
         {t.label}
-        <span class="n mono">{counts[t.key]}</span>
+        <span class="n">{counts[t.key]}</span>
       </a>
     ))
   }

@@ -473,6 +473,7 @@
   }
   .tabs a .n {
     font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
     letter-spacing: 0.06em;
     color: var(--color-ink-2);
   }

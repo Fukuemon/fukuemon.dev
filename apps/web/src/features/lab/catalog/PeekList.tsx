@@ -33,7 +33,7 @@ export default function PeekList({
           className="h-0 w-0 flex-none border-x-4 border-t-5 border-x-transparent border-t-current group-aria-[expanded=false]:border-t-4 group-aria-[expanded=false]:border-b-4 group-aria-[expanded=false]:border-s-5 group-aria-[expanded=false]:border-e-0 group-aria-[expanded=false]:border-t-transparent group-aria-[expanded=false]:border-b-transparent group-aria-[expanded=false]:border-s-current"
         />
         いまのテーブル
-        <span className="mono meta ms-auto">{tables.length}</span>
+        <span className="meta ms-auto">{tables.length}</span>
       </button>
       {open && (
         <>
