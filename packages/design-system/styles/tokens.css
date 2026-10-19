@@ -12,7 +12,7 @@
 
 @theme static {
   /* ---- 書体 ---- */
-  --font-serif: "EB Garamond Variable", "Zen Old Mincho", "Yu Mincho", serif;
+  --font-serif: "STIX Two Text Variable", "Zen Old Mincho", "Yu Mincho", serif;
   /* 和文の字は Geist Mono に無い。明朝を続けないと、OS のゴシックで描かれる */
   --font-mono: "Geist Mono Variable", "Zen Old Mincho", ui-monospace, monospace;
 
