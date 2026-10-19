@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision 1 の欧文の書体を ADR-0019 に置換）
 
 ## Context
 
