@@ -26,7 +26,7 @@ apm lifecycle trust
 
 ## 文書を直すとき
 
-文章の規則は textlint で、経緯の混入とリンクは docs のスクリプトで確かめる。指摘された語は言い換え、`--fix` は使わない。
+文章の規則は textlint で、経緯の混入とリンクは docs のスクリプトで確認する。指摘された語は言い換え、`--fix` は使わない。
 
 ```sh
 pnpm exec textlint <直した Markdown>
@@ -51,7 +51,7 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 - ステージした Markdown に textlint を掛ける。原稿には原稿の設定を使う。
 - commit-msg のフックで、`ticket-number` が issue 番号をメッセージに足す。
   - ブランチの名前が `feature/<issue 番号>` で、1 行目に `#<issue 番号>` がないときに、1 行目の末尾へ足す。
-- commit-msg のフックで、commitlint がメッセージの形式を確かめる。規則は `commitlint.config.mjs` にある。
+- commit-msg のフックで、commitlint がメッセージの形式を確認する。規則は `commitlint.config.mjs` にある。
 
 - 変更の分け方とメッセージの書き方は、スキル write-commit に従う。
 
@@ -59,15 +59,15 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 
 ブランチは、`develop` と作業用のブランチにする。
 
-- `develop` は GitHub の既定のブランチで、本番に配信している状態を指す。
+- `develop` は GitHub のデフォルトのブランチで、本番に配信している状態を指す。
 - 作業用のブランチは `develop` から切る。名前は `<種別>/<内容>` にする。
   - 例: `fix/pnpm-run-args`、`docs/fix-doc-facts`、`chore/add-agent-playbooks`
-- `develop` へは pull request を通して取り込み、直接はコミットしない。
+- `develop` へは pull request を通してマージし、直接はコミットしない。
   - lefthook のフックが、`develop` への直接のコミットと push を止める。
-- `develop` に取り込むと、check workflow が `develop` で通った後に、deploy workflow が本番へ配信する。
+- `develop` にマージすると、check workflow が `develop` で通った後に、deploy workflow が本番へ配信する。
 - バージョンとタグは付けない。
 
-作業用のブランチを `develop` に取り込むたびに、本番へ配信する。
+作業用のブランチを `develop` にマージするたびに、本番へ配信する。
 
 ```mermaid
 %%{init: {"gitGraph": {"mainBranchName": "develop"}}}%%
@@ -81,13 +81,24 @@ gitGraph
     checkout "docs/fix-doc-facts"
     commit id: "docs-1"
     checkout develop
-    merge "fix/pnpm-run-args" id: "PR を取り込み、配信 2"
-    merge "docs/fix-doc-facts" id: "PR を取り込み、配信 3"
+    merge "fix/pnpm-run-args" id: "PR をマージし、配信 2"
+    merge "docs/fix-doc-facts" id: "PR をマージし、配信 3"
 ```
 
 ## issue と pull request
 
-<!-- issue の種類とラベル、pull request との対応 -->
-
 - 作業は issue から始める。pull request は 1 つの issue に対応させる。
+  - issue は、issue テンプレートの要求、不具合と、設計、実装、検証、文書の 4 つのタスクから選ぶ。
+  - 要求は、テンプレートの「種別」で、`context/project.yml` の `process.presets` の種別を 1 つ選ぶ。種別で、行うプロセスと、子のタスクの種類が決まる。
+- 種類のラベルは、テンプレートが付ける。
+
+  | 種類         | ラベル              |
+  | ------------ | ------------------- |
+  | 要求         | `type:requirements` |
+  | 不具合       | `type:bug`          |
+  | 設計のタスク | `type:design`       |
+  | 実装のタスク | `type:impl`         |
+  | 検証のタスク | `type:verify`       |
+  | 文書のタスク | `type:docs`         |
+
 - 題と本文の書き方は、スキル write-issue-pr に従う。
