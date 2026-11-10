@@ -73,3 +73,7 @@ apm_modules/
 /.agents/skills/run-session/
 /.claude/skills/review-by-viewpoints/
 /.claude/skills/run-session/
+/.agents/skills/setup-design-system/
+/.agents/skills/write-design-system/
+/.claude/skills/setup-design-system/
+/.claude/skills/write-design-system/
