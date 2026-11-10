@@ -1,7 +1,7 @@
 import { clsx } from "clsx";
 import { type ComponentPropsWithRef, useId } from "react";
 
-export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id"> & {
+export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "className" | "style"> & {
   /** 欄の見出し。`<label>` で欄に結ぶ。 */
   label: string;
   /** 見出しの下に出す補足。`aria-describedby` で欄に結ぶ。 */
@@ -14,21 +14,14 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id"> & {
  * 1 行の文字の入力欄。見出し、補足、誤りの文を欄に結ぶ。
  * 欄の高さは 48px で、押せる領域は 44px より大きい。
  */
-export function TextField({
-  label,
-  description,
-  error,
-  required,
-  className,
-  ...props
-}: TextFieldProps) {
+export function TextField({ label, description, error, required, ...props }: TextFieldProps) {
   const id = useId();
   const descriptionId = description === undefined ? undefined : `${id}-description`;
   const errorId = error === undefined ? undefined : `${id}-error`;
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className={clsx("flex flex-col gap-2", className)}>
+    <div className="flex flex-col gap-2">
       <label className="text-label text-text" htmlFor={id}>
         {label}
         {required && <span className="ml-2 text-caption text-danger">必須</span>}

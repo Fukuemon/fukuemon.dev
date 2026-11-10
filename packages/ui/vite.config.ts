@@ -14,6 +14,8 @@ const browser = () => ({
 
 export default defineConfig({
   plugins: [tailwindcss(), viteReact()],
+  // テストの途中で最適化すると Vite がテストを読み直し、CI の初回の実行が失敗する
+  optimizeDeps: { include: ["react-dom/server"] },
   test: {
     projects: [
       {
