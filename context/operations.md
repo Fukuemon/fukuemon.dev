@@ -60,16 +60,16 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
   - 全体に掛けると、CORP を返さない第三者のリソースが一律にブロックされる。
   - ヘッダは、該当する `sandbox` の playground が実在してから書く。PGlite の playground には掛けない。
   - ADR-0006: [手を動かす場所の 4 分類](../adr/0006-interactive-content-levels.md)
-- HTML に `Cache-Control` を書かない。Workers Static Assets の既定の値に任せる。
+- HTML に `Cache-Control` を書かない。Workers Static Assets のデフォルト値に任せる。
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
 - HSTS に `includeSubDomains` を付ける。HTTP で公開するサブドメインが要るときは外す。
 
 ## Deployment Conditions
 
-- Worker の deploy は、check workflow が既定のブランチ（`develop`）で成功したときだけ、deploy workflow が自動で行う。
+- Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
 - Terraform の apply は、運用者が apply workflow を `workflow_dispatch` で手で起動したときだけ行う。
   - 起動には、`infra` environment の protection rules の承認が要る。
-  - 差分は 2 回の起動で確かめる。`mode=plan` で起動して plan を読み、納得してから `mode=apply` で起動し直す。
+  - 差分は 2 回の起動で確認する。`mode=plan` で起動して plan を読み、納得してから `mode=apply` で起動し直す。
   - plan と apply は 1 つの job に置き、plan file を artifact に上げない。public のリポジトリの artifact から account ID と zone ID が漏れるため。
 - zone の plan に `account.id` を sensitive として扱う差分だけが出るなら、想定どおりとして apply してよい。
   - `name` や `type` のように実体が変わる差分が出たら、`zone.tf` を実際の zone の設定に合わせて直す。
@@ -126,7 +126,7 @@ token の権限は、スコープ、権限グループ、アクセスレベル�
 - GitHub Actions から使う token に、Client IP Address Filtering を掛けない。
   - runner の IP は多数の CIDR に散らばり、GitHub の側で変わる。
   - 手元から使う bootstrap 用の token は、固定 IP の回線なら絞ってよい。動的 IP なら掛けない。
-  - Client IP Address Filtering が IPv6 を受け付けるかと、件数に上限があるかは、未確認。手元用の token を作るときに確かめる。
+  - Client IP Address Filtering が IPv6 を受け付けるかと、件数に上限があるかは、未確認。手元用の token を作るときに確認する。
 
 secret を Terraform の state に載せない。
 
