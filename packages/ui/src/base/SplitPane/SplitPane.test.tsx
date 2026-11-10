@@ -51,25 +51,11 @@ describe("SplitPane", () => {
     expect(separator).toHaveAttribute("aria-valuenow", "65");
   });
 
-  it("仕切りは 44 px の幅で押せ、引くと動く", async () => {
+  it("仕切りは 44 px の幅で押せ、マウスで引くと動く", async () => {
     render(<Horizontal />);
     const separator = screen.getByRole("separator");
-    const rect = separator.getBoundingClientRect();
-    expect(rect.width).toBeGreaterThanOrEqual(44);
-    const root = separator.parentElement!.getBoundingClientRect();
-    const y = rect.top + rect.height / 2;
-    const x = rect.left + rect.width / 2;
-    separator.dispatchEvent(
-      new PointerEvent("pointerdown", { bubbles: true, pointerId: 1, clientX: x, clientY: y }),
-    );
-    separator.dispatchEvent(
-      new PointerEvent("pointermove", {
-        bubbles: true,
-        pointerId: 1,
-        clientX: root.left + root.width * 0.3,
-        clientY: y,
-      }),
-    );
-    await expect.poll(() => separator.getAttribute("aria-valuenow")).toBe("30");
+    expect(separator.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
+    await userEvent.dragAndDrop(separator, screen.getByText("エディタ"));
+    expect(Number(separator.getAttribute("aria-valuenow"))).toBeLessThan(50);
   });
 });

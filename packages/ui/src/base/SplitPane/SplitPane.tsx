@@ -95,7 +95,7 @@ export function SplitPane({
         onKeyDown={handleKeyDown}
         onPointerDown={(event) => {
           isDraggingRef.current = true;
-          if (event.isTrusted) event.currentTarget.setPointerCapture(event.pointerId);
+          event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={handlePointerMove}
         onPointerUp={() => {
