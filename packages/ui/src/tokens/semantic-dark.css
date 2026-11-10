@@ -29,6 +29,7 @@
     --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
 
     --fd-color-danger: var(--fd-primitive-color-red-300);
+    --fd-color-danger-hover: var(--fd-primitive-color-red-200);
     --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
     --fd-color-warning: var(--fd-primitive-color-orange-300);
     --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
@@ -101,6 +102,7 @@
   --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
 
   --fd-color-danger: var(--fd-primitive-color-red-300);
+  --fd-color-danger-hover: var(--fd-primitive-color-red-200);
   --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
   --fd-color-warning: var(--fd-primitive-color-orange-300);
   --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);

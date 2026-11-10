@@ -66,6 +66,7 @@
   --fd-primitive-color-orange-1000: #8b3200;
   --fd-primitive-color-orange-1200: #541e00;
   --fd-primitive-color-red-50: #fdeeee;
+  --fd-primitive-color-red-200: #ffbbbb;
   --fd-primitive-color-red-300: #ff9696;
   --fd-primitive-color-red-400: #ff7171;
   --fd-primitive-color-red-900: #ce0000;
@@ -157,6 +158,7 @@
 
   /* 状態: 文字の色と、同じ系統の薄い面の組 */
   --fd-color-danger: var(--fd-primitive-color-red-900);
+  --fd-color-danger-hover: var(--fd-primitive-color-red-1000);
   --fd-color-danger-surface: var(--fd-primitive-color-red-50);
   --fd-color-warning: var(--fd-primitive-color-orange-900);
   --fd-color-warning-surface: var(--fd-primitive-color-orange-50);
@@ -238,6 +240,7 @@
     --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
 
     --fd-color-danger: var(--fd-primitive-color-red-300);
+    --fd-color-danger-hover: var(--fd-primitive-color-red-200);
     --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
     --fd-color-warning: var(--fd-primitive-color-orange-300);
     --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
@@ -310,6 +313,7 @@
   --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
 
   --fd-color-danger: var(--fd-primitive-color-red-300);
+  --fd-color-danger-hover: var(--fd-primitive-color-red-200);
   --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
   --fd-color-warning: var(--fd-primitive-color-orange-300);
   --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);

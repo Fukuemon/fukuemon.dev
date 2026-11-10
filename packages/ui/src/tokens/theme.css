@@ -44,6 +44,7 @@
   --color-focus-halo: var(--fd-color-focus-halo);
 
   --color-danger: var(--fd-color-danger);
+  --color-danger-hover: var(--fd-color-danger-hover);
   --color-danger-surface: var(--fd-color-danger-surface);
   --color-warning: var(--fd-color-warning);
   --color-warning-surface: var(--fd-color-warning-surface);

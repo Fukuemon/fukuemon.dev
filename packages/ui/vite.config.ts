@@ -22,6 +22,7 @@ export default defineConfig({
         test: {
           name: "component",
           include: ["src/**/*.test.tsx"],
+          setupFiles: ["src/test/setup.ts"],
           browser: browser(),
         },
       },
