@@ -52,5 +52,8 @@ jobs:
       # terraform は pnpm の外にあるため check とは別に回す
       - run: pnpm run infra:check
 
+      # packages/ui のテストは、Vitest のブラウザのモードで chromium を使う
+      - run: pnpm --filter @fukuemon/ui exec playwright install --with-deps chromium
+
       # knip は check に含む。無指摘の状態から始めるので、増えたら落とす
       - run: pnpm run check

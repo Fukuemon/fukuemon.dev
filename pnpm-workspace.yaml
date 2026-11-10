@@ -1,3 +1,14 @@
 packages:
   - apps/*
   - packages/*
+# vite は vite-plus の core に置き換え、vite-plus と同じ版を 1 か所で持つ
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vite-plus: 1.4.0
+overrides:
+  vite@*: "catalog:"
+peerDependencyRules:
+  allowAny:
+    - vite
+  allowedVersions:
+    vite: "*"

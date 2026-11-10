@@ -15,8 +15,8 @@ status: draft
 トークンの層とコンポーネントの分け方は、buddy の `packages/ui` と同じ形にする。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
-- ADR-0020: [トークンを、DADS の値をコピーしたプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、ライトとダークをセマンティックトークンで切り替える](../../../adr/0020-design-tokens-from-dads.md)
-- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../../adr/0021-ui-components-and-catalog.md)
+- ADR-0020: [トークンを、DADS の値をコピーしたプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、ライトとダークをセマンティックトークンで切り替える](../../adr/0020-design-tokens-from-dads.md)
+- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../adr/0021-ui-components-and-catalog.md)
 
 ## Scope
 
@@ -73,7 +73,7 @@ status: draft
 リンクは DADS のリンクの色を使い、訪問済みのリンクを別の色にする。
 
 - 出典: [DADS の色](https://design.digital.go.jp/dads/foundations/color/)
-- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、挿絵を作り替え、主の色を緑にする](../../../adr/0023-keep-art-and-key-color.md)
+- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、挿絵を作り替え、主の色を緑にする](../../adr/0023-keep-art-and-key-color.md)
 
 文字と面の組は、WCAG 2.2 の AA を満たす。  
 文字は 4.5:1 以上、入力欄と押せるものの枠とフォーカスの表示は 3:1 以上にする。
@@ -86,7 +86,7 @@ status: draft
 - Zen Old Mincho は、ビルドで見出しに使う字だけのファイルにする。
 - 等幅の和文の字を受ける書体は、M PLUS 1 Code と BIZ UDGothic から T2 で選ぶ。
 - どの書体も `font-display: swap` にし、和文の分割は preload しない。
-- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、挿絵を作り替え、主の色を緑にする](../../../adr/0023-keep-art-and-key-color.md)
+- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、挿絵を作り替え、主の色を緑にする](../../adr/0023-keep-art-and-key-color.md)
 
 テーマ変数には、DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。
 
@@ -133,7 +133,7 @@ OS で動きを減らす設定にした訪問者には、位置、大きさ、�
 コードの色は、セマンティックトークンのコードの種類に置き、テーマごとに参照先を替える。  
 記事のコードブロック、エディタ、端末は、同じトークンから作ったテーマを使う。
 
-- ADR-0022: [コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る](../../../adr/0022-code-colors-from-tokens.md)
+- ADR-0022: [コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る](../../adr/0022-code-colors-from-tokens.md)
 
 | トークン        | 当てる字句                                                              |
 | --------------- | ----------------------------------------------------------------------- |
