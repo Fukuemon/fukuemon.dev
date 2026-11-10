@@ -1,1 +1,9 @@
 @import "tailwindcss";
+@import "../src/tokens/fonts.css";
+@import "../src/tokens/theme.css";
+
+body {
+  background-color: var(--fd-color-surface);
+  color: var(--fd-color-text);
+  font-family: var(--font-sans);
+}

@@ -15,8 +15,6 @@ const browser = () => ({
 export default defineConfig({
   plugins: [tailwindcss(), viteReact()],
   test: {
-    // コンポーネントと story を足すまでは、テストのファイルが無くても通す
-    passWithNoTests: true,
     projects: [
       {
         // 押せる領域の大きさとフォーカスの移り方は、描画とブラウザのキーの操作がないと確認できない

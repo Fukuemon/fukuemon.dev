@@ -1,0 +1,127 @@
+/*
+ * fukuemon.dev のテーマ変数。Tailwind CSS のユーティリティの名前を、セマンティックトークンとプリミティブトークンに結ぶ。
+ * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（adr/0020-design-tokens-from-dads.md）。
+ * 余白と動きは、Tailwind のデフォルトの段をそのまま使う。
+ */
+
+@import "./semantic.css";
+@import "./semantic-dark.css";
+
+@theme inline {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --breakpoint-*: initial;
+  --font-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-surface: var(--fd-color-surface);
+  --color-surface-subtle: var(--fd-color-surface-subtle);
+  --color-surface-disabled: var(--fd-color-surface-disabled);
+  --color-overlay: var(--fd-color-overlay);
+
+  --color-text: var(--fd-color-text);
+  --color-text-secondary: var(--fd-color-text-secondary);
+  --color-text-disabled: var(--fd-color-text-disabled);
+  --color-text-inverse: var(--fd-color-text-inverse);
+
+  --color-border: var(--fd-color-border);
+  --color-border-field: var(--fd-color-border-field);
+
+  --color-primary: var(--fd-color-primary);
+  --color-primary-hover: var(--fd-color-primary-hover);
+  --color-primary-surface: var(--fd-color-primary-surface);
+  --color-link: var(--fd-color-link);
+  --color-link-visited: var(--fd-color-link-visited);
+
+  --color-focus-outline: var(--fd-color-focus-outline);
+  --color-focus-halo: var(--fd-color-focus-halo);
+
+  --color-danger: var(--fd-color-danger);
+  --color-danger-surface: var(--fd-color-danger-surface);
+  --color-warning: var(--fd-color-warning);
+  --color-warning-surface: var(--fd-color-warning-surface);
+  --color-success: var(--fd-color-success);
+  --color-success-surface: var(--fd-color-success-surface);
+  --color-info: var(--fd-color-info);
+  --color-info-surface: var(--fd-color-info-surface);
+
+  --color-categorical-1: var(--fd-color-categorical-1);
+  --color-categorical-2: var(--fd-color-categorical-2);
+  --color-categorical-3: var(--fd-color-categorical-3);
+  --color-categorical-4: var(--fd-color-categorical-4);
+  --color-categorical-5: var(--fd-color-categorical-5);
+  --color-categorical-6: var(--fd-color-categorical-6);
+
+  /* 書体: 本文はゴシック、記事の題と見出しは明朝、コードは等幅（adr/0023-keep-art-and-key-color.md） */
+  --font-sans: var(--fd-primitive-font-family-sans);
+  --font-heading: "Zen Old Mincho", var(--fd-primitive-font-family-sans);
+  /* 等幅の和文の字は BIZ UDGothic で受ける */
+  --font-mono: "Noto Sans Mono", "BIZ UDGothic", monospace;
+
+  /* 文字: DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。14px より小さい文字を置かない */
+  --text-caption: var(--fd-primitive-font-size-14);
+  --text-caption--line-height: var(--fd-primitive-line-height-130);
+  --text-body-dense: var(--fd-primitive-font-size-16);
+  --text-body-dense--line-height: var(--fd-primitive-line-height-130);
+  --text-body: var(--fd-primitive-font-size-16);
+  --text-body--line-height: var(--fd-primitive-line-height-170);
+  --text-label: var(--fd-primitive-font-size-16);
+  --text-label--line-height: var(--fd-primitive-line-height-100);
+  --text-label--font-weight: var(--fd-primitive-font-weight-700);
+  --text-heading-sm: var(--fd-primitive-font-size-18);
+  --text-heading-sm--line-height: var(--fd-primitive-line-height-160);
+  --text-heading-md: var(--fd-primitive-font-size-20);
+  --text-heading-md--line-height: var(--fd-primitive-line-height-150);
+  --text-heading-lg: var(--fd-primitive-font-size-28);
+  --text-heading-lg--line-height: var(--fd-primitive-line-height-150);
+  /* 等幅: DADS は等幅のテキストスタイルを持たないので、同じ大きさの本文のスタイルの行高を使う */
+  --text-code: var(--fd-primitive-font-size-16);
+  --text-code--line-height: var(--fd-primitive-line-height-170);
+  --text-code-dense: var(--fd-primitive-font-size-14);
+  --text-code-dense--line-height: var(--fd-primitive-line-height-130);
+
+  --font-weight-normal: var(--fd-primitive-font-weight-400);
+  --font-weight-bold: var(--fd-primitive-font-weight-700);
+  /* 見出しの明朝は 600 の 1 つだけを読み込む */
+  --font-weight-semibold: 600;
+
+  --radius-sm: var(--fd-primitive-border-radius-4);
+  --radius-md: var(--fd-primitive-border-radius-8);
+  --radius-lg: var(--fd-primitive-border-radius-12);
+  --radius-full: var(--fd-primitive-border-radius-full);
+
+  --shadow-1: var(--fd-primitive-elevation-1);
+  --shadow-2: var(--fd-primitive-elevation-2);
+  --shadow-3: var(--fd-primitive-elevation-3);
+
+  /* DADS の設定の例の 1 つ */
+  --breakpoint-md: 48rem;
+
+  /* 記事の本文の幅。16px の全角で 40 字 */
+  --container-prose: 40rem;
+}
+
+/* フォーカスの表示は、このユーティリティだけで書く。黄色の輪が要素に接し、その外に黒の枠を置く */
+@utility focus-ring {
+  outline: 4px solid var(--fd-color-focus-outline);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--fd-color-focus-halo);
+}
+
+/* OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

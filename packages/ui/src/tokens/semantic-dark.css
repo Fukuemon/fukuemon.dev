@@ -1,0 +1,85 @@
+/*
+ * fukuemon.dev のセマンティックトークンのダークの値。semantic.css と同じ名前の参照先を替える。
+ * OS の設定がダークのときと、Storybook のツールバーでダークにしたとき（[data-theme="dark"]）に効く。Storybook のツールバーでライトにしたとき（[data-theme="light"]）は、OS の設定がダークでもライトの値にする。2 つのブロックの値は同じにする。
+ * ライトの値と別のファイルに置くのは、コントラストのチェックがライトとダークを別々に読むためである。
+ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --fd-color-surface: var(--fd-primitive-color-neutral-solid-gray-900);
+    --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-800);
+    --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-700);
+    --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-700);
+
+    --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-50);
+    --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-300);
+    --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-500);
+    --fd-color-text-inverse: var(--fd-primitive-color-neutral-solid-gray-900);
+
+    --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-700);
+    --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-400);
+
+    --fd-color-primary: var(--fd-primitive-color-green-400);
+    --fd-color-primary-hover: var(--fd-primitive-color-green-300);
+    --fd-color-primary-surface: var(--fd-primitive-color-green-1100);
+    --fd-color-link: var(--fd-primitive-color-light-blue-400);
+    --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
+
+    --fd-color-danger: var(--fd-primitive-color-red-300);
+    --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
+    --fd-color-warning: var(--fd-primitive-color-orange-300);
+    --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
+    --fd-color-success: var(--fd-primitive-color-green-400);
+    --fd-color-success-surface: var(--fd-primitive-color-green-1100);
+    --fd-color-info: var(--fd-primitive-color-blue-300);
+    --fd-color-info-surface: var(--fd-primitive-color-blue-1200);
+
+    --fd-color-categorical-1: var(--fd-primitive-color-purple-300);
+    --fd-color-categorical-2: var(--fd-primitive-color-cyan-400);
+    --fd-color-categorical-3: var(--fd-primitive-color-magenta-300);
+    --fd-color-categorical-4: var(--fd-primitive-color-lime-400);
+    --fd-color-categorical-5: var(--fd-primitive-color-yellow-400);
+    --fd-color-categorical-6: var(--fd-primitive-color-blue-300);
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --fd-color-surface: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-800);
+  --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-700);
+  --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-700);
+
+  --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-50);
+  --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-300);
+  --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-500);
+  --fd-color-text-inverse: var(--fd-primitive-color-neutral-solid-gray-900);
+
+  --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-700);
+  --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-400);
+
+  --fd-color-primary: var(--fd-primitive-color-green-400);
+  --fd-color-primary-hover: var(--fd-primitive-color-green-300);
+  --fd-color-primary-surface: var(--fd-primitive-color-green-1100);
+  --fd-color-link: var(--fd-primitive-color-light-blue-400);
+  --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
+
+  --fd-color-danger: var(--fd-primitive-color-red-300);
+  --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
+  --fd-color-warning: var(--fd-primitive-color-orange-300);
+  --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
+  --fd-color-success: var(--fd-primitive-color-green-400);
+  --fd-color-success-surface: var(--fd-primitive-color-green-1100);
+  --fd-color-info: var(--fd-primitive-color-blue-300);
+  --fd-color-info-surface: var(--fd-primitive-color-blue-1200);
+
+  --fd-color-categorical-1: var(--fd-primitive-color-purple-300);
+  --fd-color-categorical-2: var(--fd-primitive-color-cyan-400);
+  --fd-color-categorical-3: var(--fd-primitive-color-magenta-300);
+  --fd-color-categorical-4: var(--fd-primitive-color-lime-400);
+  --fd-color-categorical-5: var(--fd-primitive-color-yellow-400);
+  --fd-color-categorical-6: var(--fd-primitive-color-blue-300);
+}
