@@ -13,7 +13,7 @@
 
 ## Design Doc
 
-- [fukuemon.dev PRD](../PRD.md) — 技術記事とハンズオンを 1 つのサイトで公開し、読んで理解する段階と手を動かして確かめる段階を同じサイトの中でつなぐ（draft）
+- [fukuemon.dev PRD](../PRD.md) — 技術記事とハンズオンを 1 つのサイトで公開し、読んで理解する段階と手を動かして確認する段階を同じサイトの中でつなぐ（draft）
 - [ハンズオンと Interactive](../apps/web/src/features/lab/DesignDoc.md) — ハンズオンの形式（手順の分割、進捗、本文の中の実行）、手を動かす場所の 4 分類、cross-origin isolation の URL ごとの分離、実行環境の性質と足し方
 - [fukuemon.dev Design Doc](../design/DesignDoc.md) — 技術記事とハンズオンの静的サイトの全体像。C4 の L2、モジュールの責務と依存、設計不変量、URL の構成、条件つきで足す機能の形（draft）
 - [基盤](../infra/DesignDoc.md) — Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ

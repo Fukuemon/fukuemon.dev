@@ -18,7 +18,7 @@
 
 ## Verification
 
-任意の節。確かめた結果があるときだけ、Decision の直後に置く。ないときは節ごと消す。
+任意の節。確認した結果があるときだけ、Decision の直後に置く。ないときは節ごと消す。
 
 ## Considered Options
 
