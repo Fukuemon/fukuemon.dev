@@ -41,6 +41,7 @@
 
   /* 状態: 文字の色と、同じ系統の薄い面の組 */
   --fd-color-danger: var(--fd-primitive-color-red-900);
+  --fd-color-danger-hover: var(--fd-primitive-color-red-1000);
   --fd-color-danger-surface: var(--fd-primitive-color-red-50);
   --fd-color-warning: var(--fd-primitive-color-orange-900);
   --fd-color-warning-surface: var(--fd-primitive-color-orange-50);

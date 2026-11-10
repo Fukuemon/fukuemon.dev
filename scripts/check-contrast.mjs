@@ -43,6 +43,7 @@ const TEXT_PAIRS = [
   ["text-inverse", "primary"],
   ["text-inverse", "primary-hover"],
   ["text-inverse", "danger"],
+  ["text-inverse", "danger-hover"],
   ...STATES.flatMap((state) => [
     ...SURFACES.map((bg) => [state, bg]),
     [state, `${state}-surface`],
