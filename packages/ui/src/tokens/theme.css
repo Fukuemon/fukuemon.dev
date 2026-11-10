@@ -59,6 +59,32 @@
   --color-categorical-5: var(--fd-color-categorical-5);
   --color-categorical-6: var(--fd-color-categorical-6);
 
+  /* コード: 記事のコードブロック、エディタ、端末。エンジンに渡すテーマは code-theme.gen.json から作る */
+  --color-code-surface: var(--fd-color-code-surface);
+  --color-code-text: var(--fd-color-code-text);
+  --color-code-comment: var(--fd-color-code-comment);
+  --color-code-keyword: var(--fd-color-code-keyword);
+  --color-code-string: var(--fd-color-code-string);
+  --color-code-number: var(--fd-color-code-number);
+  --color-code-function: var(--fd-color-code-function);
+  --color-code-type: var(--fd-color-code-type);
+  --color-code-ansi-black: var(--fd-color-code-ansi-black);
+  --color-code-ansi-bright-black: var(--fd-color-code-ansi-bright-black);
+  --color-code-ansi-red: var(--fd-color-code-ansi-red);
+  --color-code-ansi-bright-red: var(--fd-color-code-ansi-bright-red);
+  --color-code-ansi-green: var(--fd-color-code-ansi-green);
+  --color-code-ansi-bright-green: var(--fd-color-code-ansi-bright-green);
+  --color-code-ansi-yellow: var(--fd-color-code-ansi-yellow);
+  --color-code-ansi-bright-yellow: var(--fd-color-code-ansi-bright-yellow);
+  --color-code-ansi-blue: var(--fd-color-code-ansi-blue);
+  --color-code-ansi-bright-blue: var(--fd-color-code-ansi-bright-blue);
+  --color-code-ansi-magenta: var(--fd-color-code-ansi-magenta);
+  --color-code-ansi-bright-magenta: var(--fd-color-code-ansi-bright-magenta);
+  --color-code-ansi-cyan: var(--fd-color-code-ansi-cyan);
+  --color-code-ansi-bright-cyan: var(--fd-color-code-ansi-bright-cyan);
+  --color-code-ansi-white: var(--fd-color-code-ansi-white);
+  --color-code-ansi-bright-white: var(--fd-color-code-ansi-bright-white);
+
   /* 書体: 本文はゴシック、記事の題と見出しは明朝、コードは等幅（adr/0023-keep-art-and-key-color.md） */
   --font-sans: var(--fd-primitive-font-family-sans);
   --font-heading: "Zen Old Mincho", var(--fd-primitive-font-family-sans);
