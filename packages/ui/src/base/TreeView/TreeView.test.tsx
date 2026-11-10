@@ -1,0 +1,67 @@
+import { composeStories } from "@storybook/react-vite";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vite-plus/test";
+import { userEvent } from "vite-plus/test/browser/context";
+
+import * as stories from "./TreeView.stories";
+
+const { Collapsed, Expanded } = composeStories(stories);
+
+const item = (name: string) => screen.getByRole("treeitem", { name });
+
+describe("TreeView", () => {
+  it("右の矢印のキーで、閉じた枝を開き、開いた枝では最初の子へ移る", async () => {
+    render(<Collapsed />);
+    await userEvent.tab();
+    expect(item("src")).toHaveFocus();
+    expect(item("src")).toHaveAttribute("aria-expanded", "false");
+    await userEvent.keyboard("{ArrowRight}");
+    expect(item("src")).toHaveAttribute("aria-expanded", "true");
+    expect(item("src")).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(item("index.ts")).toHaveFocus();
+  });
+
+  it("左の矢印のキーで、子から親へ移り、開いた枝を閉じる", async () => {
+    render(<Expanded />);
+    await userEvent.tab();
+    expect(item("token.ts")).toHaveFocus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(item("routes")).toHaveFocus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(item("routes")).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("treeitem", { name: "token.ts" })).toBeNull();
+  });
+
+  it("上下の矢印と Home と End で見えている項目の間を移り、フォーカスの移動では選ばない", async () => {
+    render(<Expanded />);
+    await userEvent.tab();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(item("package.json")).toHaveFocus();
+    expect(item("token.ts")).toHaveAttribute("aria-selected", "true");
+    await userEvent.keyboard("{Home}");
+    expect(item("src")).toHaveFocus();
+    await userEvent.keyboard("{End}");
+    expect(item("README.md")).toHaveFocus();
+    await userEvent.keyboard("{ArrowUp}");
+    expect(item("package.json")).toHaveFocus();
+  });
+
+  it("Enter のキーで項目を選び、Tab のキーの順に入るのは 1 つの項目だけにする", async () => {
+    render(<Expanded />);
+    await userEvent.tab();
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    expect(item("package.json")).toHaveAttribute("aria-selected", "true");
+    expect(item("token.ts")).toHaveAttribute("aria-selected", "false");
+    const tabStops = screen.getAllByRole("treeitem").filter((el) => el.tabIndex === 0);
+    expect(tabStops).toEqual([item("package.json")]);
+  });
+
+  it("項目は 44 px の高さで押せ、枝を押すと開閉する", async () => {
+    render(<Collapsed />);
+    expect(item("src").getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await userEvent.click(item("src"));
+    expect(item("src")).toHaveAttribute("aria-expanded", "true");
+    expect(item("index.ts")).toBeInTheDocument();
+  });
+});

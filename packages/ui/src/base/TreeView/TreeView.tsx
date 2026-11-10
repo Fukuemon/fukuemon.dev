@@ -1,0 +1,155 @@
+import { clsx } from "clsx";
+import { type KeyboardEvent, useRef, useState } from "react";
+
+/** 木の 1 つの項目。children を持つ項目は枝で、開閉できる。 */
+export type TreeNode = {
+  id: string;
+  label: string;
+  children?: readonly TreeNode[];
+};
+
+export type TreeViewProps = {
+  /** 木の読み上げる名前。 */
+  label: string;
+  items: readonly TreeNode[];
+  /** 選んだ項目。フォーカスの移動では変わらず、Enter のキーかクリックで onSelect を呼ぶ。 */
+  selectedId?: string;
+  onSelect?: (id: string) => void;
+  defaultExpandedIds?: readonly string[];
+};
+
+type VisibleNode = {
+  node: TreeNode;
+  level: number;
+  parentId: string | undefined;
+  setSize: number;
+  posInSet: number;
+};
+
+const flatten = (
+  nodes: readonly TreeNode[],
+  expanded: ReadonlySet<string>,
+  level = 1,
+  parentId: string | undefined = undefined,
+): VisibleNode[] =>
+  nodes.flatMap((node, index) => [
+    { node, level, parentId, setSize: nodes.length, posInSet: index + 1 },
+    ...(node.children && expanded.has(node.id)
+      ? flatten(node.children, expanded, level + 1, node.id)
+      : []),
+  ]);
+
+/**
+ * 項目を階層で並べる木。WAI-ARIA APG の Tree View のキーボードの操作に従う。
+ * 上下の矢印のキーで見えている項目の間を移り、Home と End で端へ移る。
+ * 右の矢印のキーは、閉じた枝を開き、開いた枝では最初の子へ移る。左の矢印のキーは、開いた枝を閉じ、それ以外では親へ移る。
+ * 見えている項目を `aria-level` 付きで平らに並べる。`group` で入れ子にすると、フォーカスの枠が子の項目まで囲むためである。
+ */
+export function TreeView({
+  label,
+  items,
+  selectedId,
+  onSelect,
+  defaultExpandedIds = [],
+}: TreeViewProps) {
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
+  const visible = flatten(items, expanded);
+  const [focusedId, setFocusedId] = useState<string | undefined>(undefined);
+  const tabStopId = visible.some((v) => v.node.id === focusedId)
+    ? focusedId
+    : (visible.find((v) => v.node.id === selectedId) ?? visible[0])?.node.id;
+  const itemRefs = useRef(new Map<string, HTMLLIElement>());
+
+  const focus = (id: string | undefined) => {
+    if (id === undefined) return;
+    setFocusedId(id);
+    itemRefs.current.get(id)?.focus();
+  };
+
+  const setOpen = (id: string, isOpen: boolean) => {
+    const next = new Set(expanded);
+    if (isOpen) next.add(id);
+    else next.delete(id);
+    setExpanded(next);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>, index: number) => {
+    const current = visible[index];
+    if (!current) return;
+    const { node } = current;
+    const isBranch = node.children !== undefined;
+    const isOpen = expanded.has(node.id);
+    const keys: Record<string, () => void> = {
+      ArrowDown: () => focus(visible[index + 1]?.node.id),
+      ArrowUp: () => focus(visible[index - 1]?.node.id),
+      Home: () => focus(visible[0]?.node.id),
+      End: () => focus(visible.at(-1)?.node.id),
+      ArrowRight: () => {
+        if (!isBranch) return;
+        if (isOpen) focus(node.children?.[0]?.id);
+        else setOpen(node.id, true);
+      },
+      ArrowLeft: () => {
+        if (isBranch && isOpen) setOpen(node.id, false);
+        else focus(current.parentId);
+      },
+      Enter: () => onSelect?.(node.id),
+    };
+    const action = keys[event.key];
+    if (!action) return;
+    event.preventDefault();
+    action();
+  };
+
+  return (
+    <ul aria-label={label} className="flex flex-col text-body-dense text-text" role="tree">
+      {visible.map(({ node, level, setSize, posInSet }, index) => {
+        const isBranch = node.children !== undefined;
+        const isOpen = expanded.has(node.id);
+        return (
+          <li
+            aria-expanded={isBranch ? isOpen : undefined}
+            aria-level={level}
+            aria-posinset={posInSet}
+            aria-selected={onSelect ? node.id === selectedId : undefined}
+            aria-setsize={setSize}
+            className={clsx(
+              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 hover:bg-surface-subtle focus-visible:focus-ring",
+              "aria-selected:bg-primary-surface aria-selected:font-bold",
+            )}
+            key={node.id}
+            onClick={() => {
+              setFocusedId(node.id);
+              if (isBranch) setOpen(node.id, !isOpen);
+              onSelect?.(node.id);
+            }}
+            onKeyDown={(event) => handleKeyDown(event, index)}
+            ref={(element) => {
+              if (element) itemRefs.current.set(node.id, element);
+              else itemRefs.current.delete(node.id);
+            }}
+            role="treeitem"
+            // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
+            style={{ paddingInlineStart: `${(level - 1) * 1.5 + 0.5}rem` }}
+            tabIndex={node.id === tabStopId ? 0 : -1}
+          >
+            <svg
+              aria-hidden="true"
+              className={clsx(
+                "shrink-0 transition-transform",
+                isOpen && "rotate-90",
+                !isBranch && "invisible",
+              )}
+              height="16"
+              viewBox="0 0 16 16"
+              width="16"
+            >
+              <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+            {node.label}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
