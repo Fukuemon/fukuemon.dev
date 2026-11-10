@@ -36,6 +36,7 @@ const EXTENSIONS = [
   ".astro",
   ".html",
   ".mdx",
+  ".svg",
 ];
 const ALLOW_MARK = "design-system-allow";
 // 違反の行に出す、デザインシステムの文書の原則の ID
