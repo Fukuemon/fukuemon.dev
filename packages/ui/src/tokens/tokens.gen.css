@@ -1,0 +1,358 @@
+/*
+ * 生成物。手で直さない。次のコマンドで作り直す。
+ * node scripts/build-static-tokens.mjs --out packages/ui/src/tokens/tokens.gen.css ./packages/ui/src/tokens/primitive.css ./packages/ui/src/tokens/semantic.css ./packages/ui/src/tokens/semantic-dark.css
+ */
+
+/*
+ * fukuemon.dev のプリミティブトークン。セマンティックトークン（semantic.css）とテーマ変数（theme.css）が参照する値だけを持つ。
+ * 値は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の dist/tokens.css からコピーし、名前を --fd-primitive- で始まる形にした（adr/0020-design-tokens-from-dads.md）。
+ *   DADS の --color-primitive-<色> は --fd-primitive-color-<色> に、ほかの --<名前> は --fd-primitive-<名前> にした。
+ *   新しい値が要るときは、DADS の同じバージョンから同じ規則の名前で足す。
+ * 出典: https://github.com/digital-go-jp/design-tokens
+ *
+ * MIT License
+ *
+ * Copyright (c) 2023 デジタル庁
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+:root {
+  --fd-primitive-color-blue-50: #e8f1fe;
+  --fd-primitive-color-blue-200: #c5d7fb;
+  --fd-primitive-color-blue-300: #9db7f9;
+  --fd-primitive-color-blue-800: #0031d8;
+  --fd-primitive-color-blue-900: #0017c1;
+  --fd-primitive-color-blue-1000: #00118f;
+  --fd-primitive-color-blue-1200: #000060;
+  --fd-primitive-color-light-blue-400: #57b8ff;
+  --fd-primitive-color-cyan-300: #79e2f2;
+  --fd-primitive-color-cyan-400: #2bc8e4;
+  --fd-primitive-color-cyan-900: #006f83;
+  --fd-primitive-color-cyan-1000: #006173;
+  --fd-primitive-color-cyan-1100: #004c59;
+  --fd-primitive-color-green-50: #e6f5ec;
+  --fd-primitive-color-green-300: #71c598;
+  --fd-primitive-color-green-400: #51b883;
+  --fd-primitive-color-green-800: #197a4b;
+  --fd-primitive-color-green-900: #115a36;
+  --fd-primitive-color-green-1100: #08351f;
+  --fd-primitive-color-lime-400: #9ddd15;
+  --fd-primitive-color-lime-900: #507500;
+  --fd-primitive-color-yellow-200: #ffe380;
+  --fd-primitive-color-yellow-300: #ffd43d;
+  --fd-primitive-color-yellow-400: #ffc700;
+  --fd-primitive-color-yellow-1000: #806300;
+  --fd-primitive-color-yellow-1100: #6e5600;
+  --fd-primitive-color-orange-50: #ffeee2;
+  --fd-primitive-color-orange-300: #ffa66d;
+  --fd-primitive-color-orange-900: #ac3e00;
+  --fd-primitive-color-orange-1000: #8b3200;
+  --fd-primitive-color-orange-1200: #541e00;
+  --fd-primitive-color-red-50: #fdeeee;
+  --fd-primitive-color-red-300: #ff9696;
+  --fd-primitive-color-red-400: #ff7171;
+  --fd-primitive-color-red-900: #ce0000;
+  --fd-primitive-color-red-1000: #a90000;
+  --fd-primitive-color-red-1200: #620000;
+  --fd-primitive-color-magenta-300: #ff8eff;
+  --fd-primitive-color-magenta-400: #f661f6;
+  --fd-primitive-color-magenta-800: #aa00aa;
+  --fd-primitive-color-magenta-900: #8b008b;
+  --fd-primitive-color-magenta-1000: #6c006c;
+  --fd-primitive-color-purple-300: #cda6ff;
+  --fd-primitive-color-purple-800: #5c10be;
+  --fd-primitive-color-neutral-white: #ffffff;
+  --fd-primitive-color-neutral-black: #000000;
+  --fd-primitive-color-neutral-solid-gray-50: #f2f2f2;
+  --fd-primitive-color-neutral-solid-gray-100: #e6e6e6;
+  --fd-primitive-color-neutral-solid-gray-200: #cccccc;
+  --fd-primitive-color-neutral-solid-gray-300: #b3b3b3;
+  --fd-primitive-color-neutral-solid-gray-400: #999999;
+  --fd-primitive-color-neutral-solid-gray-420: #949494;
+  --fd-primitive-color-neutral-solid-gray-500: #7f7f7f;
+  --fd-primitive-color-neutral-solid-gray-600: #666666;
+  --fd-primitive-color-neutral-solid-gray-700: #4d4d4d;
+  --fd-primitive-color-neutral-solid-gray-800: #333333;
+  --fd-primitive-color-neutral-solid-gray-900: #1a1a1a;
+  --fd-primitive-color-neutral-opacity-gray-500: rgba(0, 0, 0, 0.5);
+  --fd-primitive-color-neutral-opacity-gray-700: rgba(0, 0, 0, 0.7);
+  --fd-primitive-font-weight-400: 400;
+  --fd-primitive-font-weight-700: 700;
+  --fd-primitive-font-family-sans: "Noto Sans JP", sans-serif;
+  --fd-primitive-font-size-14: 0.875rem;
+  --fd-primitive-font-size-16: 1rem;
+  --fd-primitive-font-size-18: 1.125rem;
+  --fd-primitive-font-size-20: 1.25rem;
+  --fd-primitive-font-size-28: 1.75rem;
+  --fd-primitive-line-height-100: 1;
+  --fd-primitive-line-height-130: 1.3;
+  --fd-primitive-line-height-150: 1.5;
+  --fd-primitive-line-height-160: 1.6;
+  --fd-primitive-line-height-170: 1.7;
+  --fd-primitive-border-radius-4: 0.25rem;
+  --fd-primitive-border-radius-8: 0.5rem;
+  --fd-primitive-border-radius-12: 0.75rem;
+  --fd-primitive-border-radius-full: 624.9375rem;
+  --fd-primitive-elevation-1: 0 2px 8px 1px rgba(0, 0, 0, 0.1), 0 1px 5px 0 rgba(0, 0, 0, 0.3);
+  --fd-primitive-elevation-2: 0 2px 12px 2px rgba(0, 0, 0, 0.1), 0 1px 6px 0 rgba(0, 0, 0, 0.3);
+  --fd-primitive-elevation-3: 0 4px 16px 3px rgba(0, 0, 0, 0.1), 0 1px 6px 0 rgba(0, 0, 0, 0.3);
+}
+
+/*
+ * fukuemon.dev のセマンティックトークン。値は持たず、プリミティブトークン（primitive.css）を参照するだけにする。
+ * テーマごとに参照先を替える。このファイルはライトの値を持ち、ダークの値は semantic-dark.css にある。
+ * DADS はダークの値を決めていないので、ダークの値も DADS の階調から選び、組み合わせをコントラストのチェックで確かめる（adr/0020-design-tokens-from-dads.md）。
+ * コンポーネントと画面は、この層を Tailwind のユーティリティ（theme.css）を通して使い、プリミティブトークンの名前を直に書かない。
+ */
+
+
+:root {
+  color-scheme: light;
+
+  /* 面 */
+  --fd-color-surface: var(--fd-primitive-color-neutral-white);
+  --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-50);
+  --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-100);
+  /* ダイアログ、メニューのように、面の上に重なる面 */
+  --fd-color-surface-raised: var(--fd-primitive-color-neutral-white);
+  --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-500);
+
+  /* 文字: 面の上で 4.5:1 以上。disabled だけは WCAG 1.4.3 の対象外 */
+  --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-600);
+  --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-420);
+  --fd-color-text-inverse: var(--fd-primitive-color-neutral-white);
+
+  /* 枠: field は入力欄と押せるものの境界で 3:1 以上。border は飾りの区切り */
+  --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-100);
+  --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-600);
+
+  /* 操作: 主の色は DADS の緑の階調（adr/0023-keep-art-and-key-color.md）。リンクは DADS のリンクの色 */
+  --fd-color-primary: var(--fd-primitive-color-green-800);
+  --fd-color-primary-hover: var(--fd-primitive-color-green-900);
+  --fd-color-primary-surface: var(--fd-primitive-color-green-50);
+  --fd-color-link: var(--fd-primitive-color-blue-1000);
+  --fd-color-link-visited: var(--fd-primitive-color-magenta-900);
+
+  /* フォーカス: DADS の 2 重の表示。要素に接する黄色の輪と、その外の黒の枠。ダークでも替えない */
+  --fd-color-focus-outline: var(--fd-primitive-color-neutral-black);
+  --fd-color-focus-halo: var(--fd-primitive-color-yellow-300);
+
+  /* 状態: 文字の色と、同じ系統の薄い面の組 */
+  --fd-color-danger: var(--fd-primitive-color-red-900);
+  --fd-color-danger-surface: var(--fd-primitive-color-red-50);
+  --fd-color-warning: var(--fd-primitive-color-orange-900);
+  --fd-color-warning-surface: var(--fd-primitive-color-orange-50);
+  --fd-color-success: var(--fd-primitive-color-green-800);
+  --fd-color-success-surface: var(--fd-primitive-color-green-50);
+  --fd-color-info: var(--fd-primitive-color-blue-800);
+  --fd-color-info-surface: var(--fd-primitive-color-blue-50);
+
+  /* 区別: HTTP の流れの者のように、意味を持たない並びを色で分ける。面の上の文字として 4.5:1 以上
+     状態の色に近い緑、赤、橙を入れない */
+  --fd-color-categorical-1: var(--fd-primitive-color-purple-800);
+  --fd-color-categorical-2: var(--fd-primitive-color-cyan-900);
+  --fd-color-categorical-3: var(--fd-primitive-color-magenta-800);
+  --fd-color-categorical-4: var(--fd-primitive-color-lime-900);
+  --fd-color-categorical-5: var(--fd-primitive-color-yellow-1000);
+  --fd-color-categorical-6: var(--fd-primitive-color-blue-800);
+
+  /* コード: 記事のコードブロック、エディタ、端末の字句。どの色も code-surface の上で 4.5:1 以上（adr/0022-code-colors-from-tokens.md）
+     端末の bright の色は、ライトの面で読めるよう、通常の色より暗い階調にする */
+  --fd-color-code-surface: var(--fd-primitive-color-neutral-solid-gray-50);
+  --fd-color-code-text: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-code-comment: var(--fd-primitive-color-neutral-solid-gray-600);
+  --fd-color-code-keyword: var(--fd-primitive-color-magenta-900);
+  --fd-color-code-string: var(--fd-primitive-color-green-900);
+  --fd-color-code-number: var(--fd-primitive-color-orange-1000);
+  --fd-color-code-function: var(--fd-primitive-color-blue-900);
+  --fd-color-code-type: var(--fd-primitive-color-cyan-1000);
+  --fd-color-code-ansi-black: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-code-ansi-red: var(--fd-primitive-color-red-900);
+  --fd-color-code-ansi-green: var(--fd-primitive-color-green-800);
+  --fd-color-code-ansi-yellow: var(--fd-primitive-color-yellow-1000);
+  --fd-color-code-ansi-blue: var(--fd-primitive-color-blue-800);
+  --fd-color-code-ansi-magenta: var(--fd-primitive-color-magenta-800);
+  --fd-color-code-ansi-cyan: var(--fd-primitive-color-cyan-900);
+  --fd-color-code-ansi-white: var(--fd-primitive-color-neutral-solid-gray-600);
+  --fd-color-code-ansi-bright-black: var(--fd-primitive-color-neutral-solid-gray-700);
+  --fd-color-code-ansi-bright-red: var(--fd-primitive-color-red-1000);
+  --fd-color-code-ansi-bright-green: var(--fd-primitive-color-green-900);
+  --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-yellow-1100);
+  --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-blue-1000);
+  --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-1000);
+  --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-1100);
+  --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-solid-gray-800);
+
+  /* 重なり: ライトは DADS の影で示す */
+  --fd-shadow-1: var(--fd-primitive-elevation-1);
+  --fd-shadow-2: var(--fd-primitive-elevation-2);
+  --fd-shadow-3: var(--fd-primitive-elevation-3);
+}
+
+/*
+ * fukuemon.dev のセマンティックトークンのダークの値。semantic.css と同じ名前の参照先を替える。
+ * OS の設定がダークのときと、Storybook のツールバーでダークにしたとき（[data-theme="dark"]）に効く。Storybook のツールバーでライトにしたとき（[data-theme="light"]）は、OS の設定がダークでもライトの値にする。2 つのブロックの値は同じにする。
+ * ライトの値と別のファイルに置くのは、コントラストのチェックがライトとダークを別々に読むためである。
+ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --fd-color-surface: var(--fd-primitive-color-neutral-solid-gray-900);
+    --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-800);
+    --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-700);
+    --fd-color-surface-raised: var(--fd-primitive-color-neutral-solid-gray-800);
+    --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-700);
+
+    --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-50);
+    --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-300);
+    --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-500);
+    --fd-color-text-inverse: var(--fd-primitive-color-neutral-solid-gray-900);
+
+    --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-700);
+    --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-400);
+
+    --fd-color-primary: var(--fd-primitive-color-green-400);
+    --fd-color-primary-hover: var(--fd-primitive-color-green-300);
+    --fd-color-primary-surface: var(--fd-primitive-color-green-1100);
+    --fd-color-link: var(--fd-primitive-color-light-blue-400);
+    --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
+
+    --fd-color-danger: var(--fd-primitive-color-red-300);
+    --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
+    --fd-color-warning: var(--fd-primitive-color-orange-300);
+    --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
+    --fd-color-success: var(--fd-primitive-color-green-400);
+    --fd-color-success-surface: var(--fd-primitive-color-green-1100);
+    --fd-color-info: var(--fd-primitive-color-blue-300);
+    --fd-color-info-surface: var(--fd-primitive-color-blue-1200);
+
+    --fd-color-categorical-1: var(--fd-primitive-color-purple-300);
+    --fd-color-categorical-2: var(--fd-primitive-color-cyan-400);
+    --fd-color-categorical-3: var(--fd-primitive-color-magenta-300);
+    --fd-color-categorical-4: var(--fd-primitive-color-lime-400);
+    --fd-color-categorical-5: var(--fd-primitive-color-yellow-400);
+    --fd-color-categorical-6: var(--fd-primitive-color-blue-300);
+
+    /* コード: ダークのコードの面は黒にし、ページの面と分ける */
+    --fd-color-code-surface: var(--fd-primitive-color-neutral-black);
+    --fd-color-code-text: var(--fd-primitive-color-neutral-solid-gray-50);
+    --fd-color-code-comment: var(--fd-primitive-color-neutral-solid-gray-400);
+    --fd-color-code-keyword: var(--fd-primitive-color-magenta-300);
+    --fd-color-code-string: var(--fd-primitive-color-green-300);
+    --fd-color-code-number: var(--fd-primitive-color-orange-300);
+    --fd-color-code-function: var(--fd-primitive-color-light-blue-400);
+    --fd-color-code-type: var(--fd-primitive-color-cyan-300);
+    --fd-color-code-ansi-black: var(--fd-primitive-color-neutral-solid-gray-500);
+    --fd-color-code-ansi-red: var(--fd-primitive-color-red-400);
+    --fd-color-code-ansi-green: var(--fd-primitive-color-green-400);
+    --fd-color-code-ansi-yellow: var(--fd-primitive-color-yellow-400);
+    --fd-color-code-ansi-blue: var(--fd-primitive-color-blue-300);
+    --fd-color-code-ansi-magenta: var(--fd-primitive-color-magenta-400);
+    --fd-color-code-ansi-cyan: var(--fd-primitive-color-cyan-400);
+    --fd-color-code-ansi-white: var(--fd-primitive-color-neutral-solid-gray-200);
+    --fd-color-code-ansi-bright-black: var(--fd-primitive-color-neutral-solid-gray-400);
+    --fd-color-code-ansi-bright-red: var(--fd-primitive-color-red-300);
+    --fd-color-code-ansi-bright-green: var(--fd-primitive-color-green-300);
+    --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-yellow-200);
+    --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-blue-200);
+    --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-300);
+    --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
+    --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
+
+    /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
+    --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
+    --fd-shadow-2: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
+    --fd-shadow-3: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --fd-color-surface: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-800);
+  --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-700);
+  --fd-color-surface-raised: var(--fd-primitive-color-neutral-solid-gray-800);
+  --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-700);
+
+  --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-50);
+  --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-300);
+  --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-500);
+  --fd-color-text-inverse: var(--fd-primitive-color-neutral-solid-gray-900);
+
+  --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-700);
+  --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-400);
+
+  --fd-color-primary: var(--fd-primitive-color-green-400);
+  --fd-color-primary-hover: var(--fd-primitive-color-green-300);
+  --fd-color-primary-surface: var(--fd-primitive-color-green-1100);
+  --fd-color-link: var(--fd-primitive-color-light-blue-400);
+  --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
+
+  --fd-color-danger: var(--fd-primitive-color-red-300);
+  --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
+  --fd-color-warning: var(--fd-primitive-color-orange-300);
+  --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
+  --fd-color-success: var(--fd-primitive-color-green-400);
+  --fd-color-success-surface: var(--fd-primitive-color-green-1100);
+  --fd-color-info: var(--fd-primitive-color-blue-300);
+  --fd-color-info-surface: var(--fd-primitive-color-blue-1200);
+
+  --fd-color-categorical-1: var(--fd-primitive-color-purple-300);
+  --fd-color-categorical-2: var(--fd-primitive-color-cyan-400);
+  --fd-color-categorical-3: var(--fd-primitive-color-magenta-300);
+  --fd-color-categorical-4: var(--fd-primitive-color-lime-400);
+  --fd-color-categorical-5: var(--fd-primitive-color-yellow-400);
+  --fd-color-categorical-6: var(--fd-primitive-color-blue-300);
+
+  /* コード: ダークのコードの面は黒にし、ページの面と分ける */
+  --fd-color-code-surface: var(--fd-primitive-color-neutral-black);
+  --fd-color-code-text: var(--fd-primitive-color-neutral-solid-gray-50);
+  --fd-color-code-comment: var(--fd-primitive-color-neutral-solid-gray-400);
+  --fd-color-code-keyword: var(--fd-primitive-color-magenta-300);
+  --fd-color-code-string: var(--fd-primitive-color-green-300);
+  --fd-color-code-number: var(--fd-primitive-color-orange-300);
+  --fd-color-code-function: var(--fd-primitive-color-light-blue-400);
+  --fd-color-code-type: var(--fd-primitive-color-cyan-300);
+  --fd-color-code-ansi-black: var(--fd-primitive-color-neutral-solid-gray-500);
+  --fd-color-code-ansi-red: var(--fd-primitive-color-red-400);
+  --fd-color-code-ansi-green: var(--fd-primitive-color-green-400);
+  --fd-color-code-ansi-yellow: var(--fd-primitive-color-yellow-400);
+  --fd-color-code-ansi-blue: var(--fd-primitive-color-blue-300);
+  --fd-color-code-ansi-magenta: var(--fd-primitive-color-magenta-400);
+  --fd-color-code-ansi-cyan: var(--fd-primitive-color-cyan-400);
+  --fd-color-code-ansi-white: var(--fd-primitive-color-neutral-solid-gray-200);
+  --fd-color-code-ansi-bright-black: var(--fd-primitive-color-neutral-solid-gray-400);
+  --fd-color-code-ansi-bright-red: var(--fd-primitive-color-red-300);
+  --fd-color-code-ansi-bright-green: var(--fd-primitive-color-green-300);
+  --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-yellow-200);
+  --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-blue-200);
+  --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-300);
+  --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
+  --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
+
+  /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
+  --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
+  --fd-shadow-2: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
+  --fd-shadow-3: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
+}

@@ -163,6 +163,11 @@ OS で動きを減らす設定にした訪問者には、位置、大きさ、�
 Expressive Code、エディタ、端末のテーマは、この JSON から作る。  
 CSS の変数を読める描画（CodeMirror のクラスで当てる色）は、CSS の変数を直に使う。
 
+- `src/tokens/code-theme.ts` の `toVsCodeTheme` が、JSON から VS Code の形式のテーマを作る。Expressive Code と Shiki は、このテーマを読む。
+- ダークのコードの面は黒にし、ページの面（gray-900）と分ける。
+- 端末の bright の色は、ライトでは通常の色より暗い階調にする。ライトのコードの面の上で 4.5:1 を保つためである。
+- 生成のスクリプトは `scripts/build-code-theme.mjs` で、`pnpm run check:tokens` が生成物のずれを見つける。
+
 ### HTTP の流れの色
 
 HTTP の流れの表示には、新しい色のトークンを作らず、状態の色と区別の色に当てる。
