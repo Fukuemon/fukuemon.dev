@@ -59,20 +59,20 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 
 ブランチは、`develop` と作業用のブランチにする。
 
-- `develop` は GitHub のデフォルトのブランチで、本番に配信している状態を指す。
+- `develop` は GitHub のデフォルトのブランチである。
 - 作業用のブランチは `develop` から切る。名前は `<種別>/<内容>` にする。
   - 例: `fix/pnpm-run-args`、`docs/fix-doc-facts`、`chore/add-agent-playbooks`
 - `develop` へは pull request を通してマージし、直接はコミットしない。
   - lefthook のフックが、`develop` への直接のコミットと push を止める。
-- `develop` にマージすると、check workflow が `develop` で通った後に、deploy workflow が本番へ配信する。
+- サイトを作り直す間は、`develop` にマージしても本番へ配信しない。運用者が deploy workflow を `workflow_dispatch` で `develop` から手で起動したときだけ配信する。
 - バージョンとタグは付けない。
 
-作業用のブランチを `develop` にマージするたびに、本番へ配信する。
+作業用のブランチは、pull request を通して `develop` にマージする。
 
 ```mermaid
 %%{init: {"gitGraph": {"mainBranchName": "develop"}}}%%
 gitGraph
-    commit id: "配信 1"
+    commit id: "develop"
     branch "fix/pnpm-run-args"
     checkout "fix/pnpm-run-args"
     commit id: "fix-1"
@@ -81,8 +81,8 @@ gitGraph
     checkout "docs/fix-doc-facts"
     commit id: "docs-1"
     checkout develop
-    merge "fix/pnpm-run-args" id: "PR をマージし、配信 2"
-    merge "docs/fix-doc-facts" id: "PR をマージし、配信 3"
+    merge "fix/pnpm-run-args" id: "PR をマージ 1"
+    merge "docs/fix-doc-facts" id: "PR をマージ 2"
 ```
 
 ## issue と pull request

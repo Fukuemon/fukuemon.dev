@@ -19,4 +19,5 @@
 - [基盤](../infra/DesignDoc.md) — Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 - [Content Model](../packages/content-model/DesignDoc.md) — 記事とハンズオンに共通する schema、安定識別子 contentId、相互参照のグラフ、ContentRef への正規化、loader との結線
 - [Design System](../packages/design-system/DesignDoc.md) — Design Tokens の層と使用制約、Typography、縦組み、色、余白と測度、版面、動き、アイコン、Tailwind の層と Expressive Code への橋渡し。挿絵は art/ の Design Doc が持つ
+- [デザインシステム（packages/ui）](../design/features/ui/DesignDoc.md) — DADS を元にしたトークンの層とテーマ、コードと HTTP の流れの色、Base と Case のコンポーネントの範囲、Storybook のカタログ、DADS から外れる点（draft）
 - [挿絵](../packages/design-system/art/DesignDoc.md) — 版画風の挿絵の版の仕様、図柄と向く場所、帯の重ね順と上端、文字を重ねるときの霞、生成器と ArtBand の使い方

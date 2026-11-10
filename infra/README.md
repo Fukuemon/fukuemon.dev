@@ -23,7 +23,7 @@ Cloudflare の基盤を Terraform で作り、変える手順。
 
 ### 1. state 用の R2 バケットを作る
 
-初回に 1 回だけ、手元で実行する。
+初回に 1 回だけ、ローカル環境で実行する。
 state を失ったときの戻し方は [context/operations.md](../context/operations.md#rollback) にある。
 
 実行は repo root から root script で行う。
@@ -46,7 +46,7 @@ state_bucket_name = "<バケット名>"
 `wrangler deploy` が Worker script と静的アセットを作る。
 事前に Worker を手で作る必要はない。
 
-既定ブランチへ merge すれば deploy workflow が実行する。
+deploy workflow は、運用者がデフォルトのブランチから手で起動したときだけ実行する。
 手元から実行する場合は次のとおり。
 
 ```sh
