@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -30,7 +30,7 @@ Domain のコンポーネントは、`apps/web` の `features/<機能>/component
 - story は、Vitest のブラウザのテストとして動かし、a11y のアドオンの違反をテストの失敗にする。
 - ページは、はじめに、トークン、コンポーネント、パターン、画面の 5 つに分ける。
 - カタログは、サイトとは別の Cloudflare の Worker に、静的なアセットとして公開する。
-  - Worker のドメインは、`infra/cloudflare/` の Terraform で持つ。
+  - ドメインは `design.fukuemon.dev` にし、`infra/cloudflare/` の Terraform で持つ。
   - develop で check の workflow が通ったときに出す。サイトの自動のデプロイを止めている間も、カタログは出せる。
 
 ## Considered Options
