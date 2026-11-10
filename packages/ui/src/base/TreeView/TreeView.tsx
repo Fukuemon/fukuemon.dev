@@ -30,7 +30,7 @@ const flatten = (
   nodes: readonly TreeNode[],
   expanded: ReadonlySet<string>,
   level = 1,
-  parentId: string | undefined = undefined,
+  parentId?: string,
 ): VisibleNode[] =>
   nodes.flatMap((node, index) => [
     { node, level, parentId, setSize: nodes.length, posInSet: index + 1 },
