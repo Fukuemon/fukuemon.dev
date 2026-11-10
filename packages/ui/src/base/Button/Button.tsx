@@ -36,7 +36,7 @@ export const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyle
     sizeClassName[size],
   );
 
-export type ButtonProps = ComponentPropsWithRef<"button"> &
+export type ButtonProps = Omit<ComponentPropsWithRef<"button">, "className" | "style"> &
   ButtonStyleOptions & {
     /** true の間は子の上に回転する印を重ね、クリックを無視する。子の文はボタンの名前として残す。 */
     isLoading?: boolean;
@@ -50,7 +50,6 @@ export function Button({
   variant,
   size,
   isLoading = false,
-  className,
   children,
   onClick,
   type = "button",
@@ -70,7 +69,7 @@ export function Button({
       {...props}
       aria-busy={isLoading || undefined}
       aria-disabled={disabled || undefined}
-      className={clsx(buttonClassName({ variant, size }), className)}
+      className={buttonClassName({ variant, size })}
       onClick={handleClick}
       type={type}
     >

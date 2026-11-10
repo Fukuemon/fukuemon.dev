@@ -198,6 +198,8 @@ HTTP の流れの表示には、新しい色のトークンを作らず、状態
 | Domain   | `apps/web/src/features/<機能>/components/` | サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置 |
 
 コンポーネントは React で書く。  
+クラスは clsx だけで組み、shadcn、Base UI、class-variance-authority、tailwind-merge を使わない。  
+見た目は `variant` のような props で変え、呼び出す側から `className` で上書きさせない。  
 Astro のページは、`client:*` を付けずに React のコンポーネントを置き、静的な HTML として描く。  
 操作に JavaScript が要るコンポーネントだけを、island として `client:*` で読み込む。
 
