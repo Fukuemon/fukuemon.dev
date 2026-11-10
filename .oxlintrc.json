@@ -25,12 +25,7 @@
           {
             "patterns": [
               {
-                "group": [
-                  "**/features/**",
-                  "~/features/**",
-                  "**/components/**",
-                  "~/components/**"
-                ],
+                "group": ["**/features/**", "~/features/**", "**/components/**", "~/components/**"],
                 "message": "lib は features / components を知らない。必要なら引数で受ける (context/codebase.md 規約 5)"
               }
             ]
@@ -56,12 +51,7 @@
                 "message": "components はセクションをまたぐ素の部品。features を参照しない (context/codebase.md 規約 5)"
               },
               {
-                "group": [
-                  "**/pages/**",
-                  "~/pages/**",
-                  "**/layouts/**",
-                  "~/layouts/**"
-                ],
+                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
                 "message": "features / components は pages / layouts を参照しない (context/codebase.md 規約 5)"
               }
             ]
@@ -83,12 +73,7 @@
             ],
             "patterns": [
               {
-                "group": [
-                  "**/pages/**",
-                  "~/pages/**",
-                  "**/layouts/**",
-                  "~/layouts/**"
-                ],
+                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
                 "message": "features / components は pages / layouts を参照しない (context/codebase.md 規約 5)"
               }
             ]
@@ -97,11 +82,7 @@
       }
     },
     {
-      "files": [
-        "apps/web/src/**/*.tsx",
-        "apps/web/src/**/*.jsx",
-        "apps/web/src/**/*.vue"
-      ],
+      "files": ["apps/web/src/**/*.tsx", "apps/web/src/**/*.jsx", "apps/web/src/**/*.vue"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -134,12 +115,7 @@
                 "message": "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)"
               },
               {
-                "group": [
-                  "**/pages/**",
-                  "~/pages/**",
-                  "**/layouts/**",
-                  "~/layouts/**"
-                ],
+                "group": ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
                 "message": "features / components は pages / layouts を参照しない (context/codebase.md 規約 5)"
               },
               {
@@ -166,6 +142,29 @@
           }
         ]
       }
+    },
+    {
+      "files": ["packages/ui/src/**/*.tsx", "packages/ui/src/**/*.ts"],
+      "rules": {
+        "better-tailwindcss/no-unknown-classes": "error",
+        "better-tailwindcss/no-restricted-classes": [
+          "error",
+          {
+            "restrict": [
+              {
+                "pattern": "[\\[(]",
+                "message": "任意の値のクラスを書かない。テーマ変数のユーティリティを使う（adr/0020-design-tokens-from-dads.md）"
+              }
+            ]
+          }
+        ]
+      }
     }
-  ]
+  ],
+  "jsPlugins": ["eslint-plugin-better-tailwindcss"],
+  "settings": {
+    "better-tailwindcss": {
+      "entryPoint": "packages/ui/.storybook/preview.css"
+    }
+  }
 }
