@@ -51,8 +51,8 @@ function defs(id, { rough, mistTop }) {
   ].join("\n");
 }
 
-const open = (extra = "") =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice"${extra}>`;
+const open = () =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMax slice">`;
 
 // sky は霧だけを掛け、荒れを掛けない。荒れで上端の辺がずれ、空に筋が出るため
 function plate(id, inner, opts, sky = []) {
