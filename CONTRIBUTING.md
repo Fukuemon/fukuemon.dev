@@ -49,6 +49,7 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 pnpm run check:contrast
 pnpm run check:raw-values
 pnpm run check:utilities
+pnpm run check:tokens
 pnpm run lint
 pnpm run test:ui
 ```
@@ -56,6 +57,9 @@ pnpm run test:ui
 - `check:contrast` は、セマンティックトークンの組のコントラスト比を、ライト、OS の設定のダーク、Storybook のダークの 3 つの条件で確認する。
 - `check:raw-values` は、`packages/ui/src` に色の値とプリミティブトークンの名前がないかを確認する。
 - `check:utilities` は、`packages/ui/DESIGN.md` の原則に反するユーティリティ（14px より小さい文字、余白の任意値など）がないかを確認する。
+- `check:tokens` は、2 つの生成物がトークンと一致するかを確認する。トークンを直したら `pnpm run build:tokens` で作り直し、同じコミットに入れる。
+  - `packages/ui/src/tokens/tokens.gen.css`: 静的なファイルが読むトークンの CSS。`context/project.yml` の `design_system.tokens_css`
+  - `packages/ui/src/tokens/code-theme.gen.json`: テーマごとに色の値まで解決したコードの色。Expressive Code、エディタ、端末のテーマの元
 - `lint` は、`packages/ui/src` のテーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）をエラーにする。
 - プリミティブトークンの値は、DADS の `@digital-go-jp/design-tokens` 2.1.0 からコピーする。値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足す。
 
