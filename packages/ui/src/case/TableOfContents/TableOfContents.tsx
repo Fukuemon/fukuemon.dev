@@ -32,7 +32,7 @@ const toSections = (items: readonly TableOfContentsItem[]): Section[] => {
 const READING_LINE = 0.3;
 const OBSERVED_ABOVE_PX = 1_000_000;
 
-/** 読んでいる見出しの id。画面の上の線より上にある見出しのうち、最後のものを返す。 */
+/** 読んでいる見出しの id。画面の上の線より上にある見出しのうち、最後のものを返す。ページの末尾までスクロールしたら、最後の見出しを返す。 */
 const useCurrentHeadingId = (ids: readonly string[]) => {
   const [currentId, setCurrentId] = useState<string | undefined>(undefined);
   const idsKey = ids.join(" ");
@@ -43,13 +43,29 @@ const useCurrentHeadingId = (ids: readonly string[]) => {
       .map((id) => document.getElementById(id))
       .filter((element) => element !== null);
     if (headings.length === 0) return;
+    // スクロールしないページでは、末尾にいても読み始めたばかりなので、最後の見出しにしない
+    const isAtEnd = () =>
+      window.scrollY > 0 &&
+      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
+    const update = () => {
+      if (isAtEnd()) {
+        setCurrentId(headings.at(-1)?.id);
+        return;
+      }
+      const line = window.innerHeight * READING_LINE;
+      const passed = headings.filter((heading) => heading.getBoundingClientRect().top < line);
+      setCurrentId(passed.at(-1)?.id);
+    };
+    // 短いページの最後の見出しは線を越えないので、末尾に届いたかと離れたかは scroll で拾う
+    let wasAtEnd = isAtEnd();
+    const handleScroll = () => {
+      if (isAtEnd() === wasAtEnd) return;
+      wasAtEnd = !wasAtEnd;
+      update();
+    };
     // 観察の結果は変わった見出しの分しか届かないので、どれかが線を越えるたびに全ての見出しの位置から決め直す
     const observer = new IntersectionObserver(
-      () => {
-        const line = window.innerHeight * READING_LINE;
-        const passed = headings.filter((heading) => heading.getBoundingClientRect().top < line);
-        setCurrentId(passed.at(-1)?.id);
-      },
+      update,
       // 上の端を画面の外へ大きく広げ、線より上を全て交わる範囲にする。
       // 線の下から画面の上の外へ一度に飛んだ見出しも、交わる範囲に入るので通知が届く。
       // root を document にするのは、iframe の中（カタログ）でも iframe の表示の領域で切らずに広げた範囲を使うためである
@@ -59,7 +75,11 @@ const useCurrentHeadingId = (ids: readonly string[]) => {
       },
     );
     for (const heading of headings) observer.observe(heading);
-    return () => observer.disconnect();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, [idsKey]);
 
   return currentId;

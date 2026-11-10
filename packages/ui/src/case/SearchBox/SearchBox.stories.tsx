@@ -35,6 +35,9 @@ export const Empty: Story = { name: "空" };
 export const WithSuggestions: Story = {
   name: "候補あり",
   args: { defaultQuery: "認可", suggestions: SUGGESTIONS },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("combobox"));
+  },
 };
 export const SuggestionSelected: Story = {
   name: "候補を選んだ状態",
@@ -42,5 +45,12 @@ export const SuggestionSelected: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole("combobox"));
     await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+  },
+};
+export const NoSuggestions: Story = {
+  name: "候補なし",
+  args: { defaultQuery: "存在しない語", emptyMessage: "合う記事がありません" },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("combobox"));
   },
 };

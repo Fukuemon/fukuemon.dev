@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./SearchBox.stories";
 
-const { Empty, WithSuggestions } = composeStories(stories);
+const { Empty, WithSuggestions, NoSuggestions } = composeStories(stories);
 
 const option = (name: string) => screen.getByRole("option", { name });
 
@@ -22,6 +22,41 @@ describe("SearchBox", () => {
     expect(html).toContain('method="get"');
     expect(html).toContain('name="q"');
     expect(html).toContain("記事を検索");
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>.*検索.*<\/button>/);
+  });
+
+  it("「検索」のボタンは 44 px 以上の高さで、押すと form を送る", async () => {
+    render(<Empty />);
+    const submitted = vi.fn((event: SubmitEvent) => event.preventDefault());
+    screen.getByRole("search").addEventListener("submit", submitted);
+    const button = screen.getByRole("button", { name: "検索" });
+    expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await userEvent.click(button);
+    expect(submitted).toHaveBeenCalledOnce();
+  });
+
+  it("候補があっても、欄にフォーカスするまでは一覧を開かない", async () => {
+    render(<WithSuggestions />);
+    const input = screen.getByRole("combobox");
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("listbox")).toBeNull();
+    await userEvent.click(input);
+    expect(screen.getByRole("listbox")).toBeVisible();
+  });
+
+  it("語を入れたのに候補が 0 件なら、live の領域に emptyMessage の文を入れる", async () => {
+    const { container } = render(<NoSuggestions />);
+    const live = container.querySelector('[aria-live="polite"]');
+    expect(live?.textContent).toBe("");
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(live).toHaveTextContent("合う記事がありません");
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("emptyMessage を渡さなければ、候補が 0 件でも live の領域は空のままにする", async () => {
+    const { container } = render(<NoSuggestions emptyMessage={undefined} />);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(container.querySelector('[aria-live="polite"]')?.textContent).toBe("");
   });
 
   it("候補が無ければ閉じていて、欄は 44 px 以上の高さで押せる。語を変えると外に知らせる", async () => {

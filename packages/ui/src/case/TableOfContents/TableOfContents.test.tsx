@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TableOfContents.stories";
 
-const { Default, Reading } = composeStories(stories);
+const { Default, Reading, ReadToEnd } = composeStories(stories);
 
 const link = (name: string) => screen.getByRole("link", { name });
 
@@ -78,5 +78,20 @@ describe("TableOfContents", () => {
     expect(
       screen.getAllByRole("link").filter((el) => el.hasAttribute("aria-current")),
     ).toHaveLength(1);
+  });
+
+  it("最後の節が短くても、末尾までスクロールすると最後の見出しを読んでいる見出しにし、離れると戻す", async () => {
+    render(<ReadToEnd />);
+    screen.getByRole("heading", { name: "トークンと引き換える" }).scrollIntoView();
+    await expect
+      .poll(() => link("トークンと引き換える").getAttribute("aria-current"))
+      .toBe("location");
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await expect.poll(() => link("まとめ").getAttribute("aria-current")).toBe("location");
+    expect(link("トークンと引き換える")).not.toHaveAttribute("aria-current");
+    window.scrollBy(0, -window.innerHeight * 0.1);
+    await expect
+      .poll(() => link("トークンと引き換える").getAttribute("aria-current"))
+      .toBe("location");
   });
 });

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { clsx } from "clsx";
 
 import { type TableOfContentsItem, TableOfContents } from "./TableOfContents";
 
@@ -11,18 +12,28 @@ const ITEMS: TableOfContentsItem[] = [
   { id: "summary", label: "まとめ", level: 2 },
 ];
 
-/** 目次と、目次が指す見出しを並べた記事の例。見出しの間を画面の高さだけ空け、読んでいる見出しが移るようにする。 */
-function ArticleExample({ items }: { items: TableOfContentsItem[] }) {
+/**
+ * 目次と、目次が指す見出しを並べた記事の例。見出しの間を画面の高さだけ空け、読んでいる見出しが移るようにする。
+ * isLastShort のときは最後の節を短くし、末尾までスクロールしても最後の見出しが線を越えないようにする。
+ */
+function ArticleExample({
+  items,
+  isLastShort = false,
+}: {
+  items: TableOfContentsItem[];
+  isLastShort?: boolean;
+}) {
   return (
     <div className="flex gap-8 p-4">
       <div className="sticky top-0 w-64 shrink-0 self-start">
         <TableOfContents headings={items} />
       </div>
-      <article className="flex-1 pb-96">
-        {items.map((item) => {
+      <article className={clsx("flex-1", !isLastShort && "pb-96")}>
+        {items.map((item, index) => {
           const Heading = item.level === 2 ? "h2" : "h3";
+          const isShort = isLastShort && index === items.length - 1;
           return (
-            <section className="min-h-screen" key={item.id}>
+            <section className={clsx(!isShort && "min-h-screen")} key={item.id}>
               <Heading
                 className={item.level === 2 ? "text-heading-md" : "text-heading-sm"}
                 id={item.id}
@@ -54,5 +65,13 @@ export const Reading: Story = {
   render: (args) => <ArticleExample items={[...args.headings]} />,
   play: async ({ canvasElement }) => {
     canvasElement.ownerDocument.getElementById("state")?.scrollIntoView();
+  },
+};
+export const ReadToEnd: Story = {
+  name: "最後まで読んだ状態",
+  render: (args) => <ArticleExample isLastShort items={[...args.headings]} />,
+  play: async ({ canvasElement }) => {
+    const { documentElement } = canvasElement.ownerDocument;
+    documentElement.scrollTop = documentElement.scrollHeight;
   },
 };
