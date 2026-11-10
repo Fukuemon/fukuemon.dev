@@ -3,3 +3,7 @@
 __screenshots__
 storybook-static
 *storybook.log
+
+# Playwright の E2E と撮影の出力
+e2e/evidence
+test-results

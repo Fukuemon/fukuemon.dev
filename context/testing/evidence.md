@@ -19,9 +19,27 @@ status: draft
 
 <!-- 撮影の手段。ブラウザを操作するツール、録画と字幕を重ねる仕組み（写した撮影の config と字幕の関数の置き場）、見本の spec、spec の配置先と名前、撮るコマンドと project、viewport。pull request の動作確認の spec を下書きの根から流す方法（撮影の config のテストのディレクトリ、型のチェックと lint の対象）と、そこから字幕の関数とモックを import するパス。回帰の E2E が張るモックの関数 -->
 
+カタログ（packages/ui の Storybook）は、Playwright の録画と字幕で撮る。
+仕組みはスキル playwright-capture から写した。
+
+| もの          | 置き場                                          |
+| ------------- | ----------------------------------------------- |
+| E2E の config | `packages/ui/e2e/playwright.config.ts`          |
+| 撮影の config | `packages/ui/e2e/playwright.capture.config.ts`  |
+| 字幕の関数    | `packages/ui/e2e/fixtures/caption.ts`           |
+| 見本の spec   | `packages/ui/e2e/specs/catalog.spec.ts`         |
+| 撮影の出力    | `packages/ui/e2e/evidence/`（Git で追跡しない） |
+
+- 撮るコマンドは `pnpm --filter @fukuemon/ui capture` で、project は chromium の 1 つである。
+- spec は story の画面（`iframe.html?id=<story の id>&viewMode=story`）を開く。テーマは URL の `&globals=theme:dark` で選ぶ。
+- pull request の動作確認の spec は、下書きの置き場のディレクトリを環境変数 `SPECS_DIR` に渡して流す。
+
 ## Capture Environment
 
 <!-- 撮るときに起動するもの。起動と停止のコマンド、ポート、URL と環境変数、テストと分けるための設定、改修前と改修後を並べて起動する方法。pull request の head を配信した URL を E2E の config の baseURL に渡す方法と、base を配信した URL を渡す環境変数 BASE_URL。検証環境があれば、その URL と呼び名 -->
+
+- E2E の config は、Storybook を静的にビルドし、`vite preview` でポート 6126 に配信してから流す。
+- 環境変数 `BASE_URL` を渡すと、配信を立てずに、その URL のカタログを撮る。改修前のカタログは、別の worktree でビルドして別のポートで配信し、その URL を渡す。
 
 ## Login and Test Data
 
