@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice">
+<defs>
+<radialGradient id="fd-art-kasumi-motion-edge">
+<stop offset="0" stop-opacity="1"/>
+<stop offset="0.55" stop-opacity="0.9"/>
+<stop offset="1" stop-opacity="0"/>
+</radialGradient>
+<mask id="fd-art-kasumi-motion-mask" mask-type="alpha" maskContentUnits="objectBoundingBox">
+<rect width="1" height="1" fill="url(#fd-art-kasumi-motion-edge)"/>
+</mask>
+</defs>
+<rect x="-160" y="180" width="520" height="34" fill="var(--fd-color-surface)" mask="url(#fd-art-kasumi-motion-mask)"/>
+<rect x="540" y="200" width="560" height="34" fill="var(--fd-color-surface)" mask="url(#fd-art-kasumi-motion-mask)"/>
+<rect x="60" y="246" width="480" height="34" fill="var(--fd-color-surface)" mask="url(#fd-art-kasumi-motion-mask)"/>
+<rect x="680" y="256" width="520" height="34" fill="var(--fd-color-surface)" mask="url(#fd-art-kasumi-motion-mask)"/>
+</svg>
