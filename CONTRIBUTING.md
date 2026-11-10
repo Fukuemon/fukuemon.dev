@@ -41,6 +41,24 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 
 `verified_commit` の後に実装が変わった文書は、`node .claude/hooks/docs/hooks/list-drift.mjs` で一覧する。実装と読み比べてから `verified_commit` を進める。
 
+## デザインシステムを直すとき
+
+`packages/ui` のトークンとコンポーネントを直したら、次を流す。どれも `pnpm run check` に入っており、CI も流す。
+
+```sh
+pnpm run check:contrast
+pnpm run check:raw-values
+pnpm run check:utilities
+pnpm run lint
+pnpm run test:ui
+```
+
+- `check:contrast` は、セマンティックトークンの組のコントラスト比を、ライト、OS の設定のダーク、Storybook のダークの 3 つの条件で確認する。
+- `check:raw-values` は、`packages/ui/src` に色の値とプリミティブトークンの名前がないかを確認する。
+- `check:utilities` は、`packages/ui/DESIGN.md` の原則に反するユーティリティ（14px より小さい文字、余白の任意値など）がないかを確認する。
+- `lint` は、`packages/ui/src` のテーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）をエラーにする。
+- プリミティブトークンの値は、DADS の `@digital-go-jp/design-tokens` 2.1.0 からコピーする。値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足す。
+
 ## コミットするとき
 
 コミットと push の前に、lefthook が次を実行する。設定は `lefthook.yml` にある。

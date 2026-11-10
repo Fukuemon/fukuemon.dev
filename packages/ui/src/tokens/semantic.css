@@ -1,0 +1,65 @@
+/*
+ * fukuemon.dev のセマンティックトークン。値は持たず、プリミティブトークン（primitive.css）を参照するだけにする。
+ * テーマごとに参照先を替える。このファイルはライトの値を持ち、ダークの値は semantic-dark.css にある。
+ * DADS はダークの値を決めていないので、ダークの値も DADS の階調から選び、組み合わせをコントラストのチェックで確かめる（adr/0020-design-tokens-from-dads.md）。
+ * コンポーネントと画面は、この層を Tailwind のユーティリティ（theme.css）を通して使い、プリミティブトークンの名前を直に書かない。
+ */
+
+@import "./primitive.css";
+
+:root {
+  color-scheme: light;
+
+  /* 面 */
+  --fd-color-surface: var(--fd-primitive-color-neutral-white);
+  --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-50);
+  --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-100);
+  /* ダイアログ、メニューのように、面の上に重なる面 */
+  --fd-color-surface-raised: var(--fd-primitive-color-neutral-white);
+  --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-500);
+
+  /* 文字: 面の上で 4.5:1 以上。disabled だけは WCAG 1.4.3 の対象外 */
+  --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-600);
+  --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-420);
+  --fd-color-text-inverse: var(--fd-primitive-color-neutral-white);
+
+  /* 枠: field は入力欄と押せるものの境界で 3:1 以上。border は飾りの区切り */
+  --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-100);
+  --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-600);
+
+  /* 操作: 主の色は DADS の緑の階調（adr/0023-keep-art-and-key-color.md）。リンクは DADS のリンクの色 */
+  --fd-color-primary: var(--fd-primitive-color-green-800);
+  --fd-color-primary-hover: var(--fd-primitive-color-green-900);
+  --fd-color-primary-surface: var(--fd-primitive-color-green-50);
+  --fd-color-link: var(--fd-primitive-color-blue-1000);
+  --fd-color-link-visited: var(--fd-primitive-color-magenta-900);
+
+  /* フォーカス: DADS の 2 重の表示。要素に接する黄色の輪と、その外の黒の枠。ダークでも替えない */
+  --fd-color-focus-outline: var(--fd-primitive-color-neutral-black);
+  --fd-color-focus-halo: var(--fd-primitive-color-yellow-300);
+
+  /* 状態: 文字の色と、同じ系統の薄い面の組 */
+  --fd-color-danger: var(--fd-primitive-color-red-900);
+  --fd-color-danger-surface: var(--fd-primitive-color-red-50);
+  --fd-color-warning: var(--fd-primitive-color-orange-900);
+  --fd-color-warning-surface: var(--fd-primitive-color-orange-50);
+  --fd-color-success: var(--fd-primitive-color-green-800);
+  --fd-color-success-surface: var(--fd-primitive-color-green-50);
+  --fd-color-info: var(--fd-primitive-color-blue-800);
+  --fd-color-info-surface: var(--fd-primitive-color-blue-50);
+
+  /* 区別: HTTP の流れの者のように、意味を持たない並びを色で分ける。面の上の文字として 4.5:1 以上
+     状態の色に近い緑、赤、橙を入れない */
+  --fd-color-categorical-1: var(--fd-primitive-color-purple-800);
+  --fd-color-categorical-2: var(--fd-primitive-color-cyan-900);
+  --fd-color-categorical-3: var(--fd-primitive-color-magenta-800);
+  --fd-color-categorical-4: var(--fd-primitive-color-lime-900);
+  --fd-color-categorical-5: var(--fd-primitive-color-yellow-1000);
+  --fd-color-categorical-6: var(--fd-primitive-color-blue-800);
+
+  /* 重なり: ライトは DADS の影で示す */
+  --fd-shadow-1: var(--fd-primitive-elevation-1);
+  --fd-shadow-2: var(--fd-primitive-elevation-2);
+  --fd-shadow-3: var(--fd-primitive-elevation-3);
+}
