@@ -23,10 +23,12 @@
     "check:contrast:legacy": "pnpm --filter @fukuemon/design-system run check",
     "check:raw-values": "node scripts/check-raw-values.mjs",
     "check:utilities": "node scripts/check-utilities.mjs --doc packages/ui/DESIGN.md",
+    "build:tokens": "node scripts/build-static-tokens.mjs --out ./packages/ui/src/tokens/tokens.gen.css ./packages/ui/src/tokens/primitive.css ./packages/ui/src/tokens/semantic.css ./packages/ui/src/tokens/semantic-dark.css && node scripts/build-code-theme.mjs",
+    "check:tokens": "node scripts/build-static-tokens.mjs --check --out ./packages/ui/src/tokens/tokens.gen.css ./packages/ui/src/tokens/primitive.css ./packages/ui/src/tokens/semantic.css ./packages/ui/src/tokens/semantic-dark.css && node scripts/build-code-theme.mjs --check",
     "check:worker-name": "bash scripts/check-worker-name.sh",
     "check:deploy": "pnpm --filter @fukuemon/web exec wrangler deploy --dry-run",
     "build:storybook": "pnpm --filter @fukuemon/ui build-storybook",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:doctor && pnpm run check:similarity && pnpm run check:contrast && pnpm run check:contrast:legacy && pnpm run check:raw-values && pnpm run check:utilities && pnpm run check:worker-name && pnpm run test && pnpm run test:ui && pnpm run build && pnpm run build:storybook && pnpm run check:deploy",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:doctor && pnpm run check:similarity && pnpm run check:contrast && pnpm run check:contrast:legacy && pnpm run check:raw-values && pnpm run check:utilities && pnpm run check:tokens && pnpm run check:worker-name && pnpm run test && pnpm run test:ui && pnpm run build && pnpm run build:storybook && pnpm run check:deploy",
     "infra:init": "terraform -chdir=infra/cloudflare init",
     "infra:plan": "terraform -chdir=infra/cloudflare plan",
     "infra:apply": "terraform -chdir=infra/cloudflare apply",
@@ -70,6 +72,11 @@
         ],
         "ignoreDependencies": [
           "pagefind"
+        ]
+      },
+      "packages/ui": {
+        "entry": [
+          "src/tokens/tokens.gen.css"
         ]
       }
     },

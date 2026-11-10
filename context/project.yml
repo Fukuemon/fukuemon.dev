@@ -91,3 +91,7 @@ process:
       review: [design]
       tasks: []
   additional: []
+
+# デザインシステムが読む
+design_system:
+  tokens_css: packages/ui/src/tokens/tokens.gen.css

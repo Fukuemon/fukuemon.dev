@@ -1,0 +1,59 @@
+{
+  "$comment": "生成物。node scripts/build-code-theme.mjs で作り直す。手で直さない",
+  "light": {
+    "surface": "#f2f2f2",
+    "text": "#1a1a1a",
+    "comment": "#666666",
+    "keyword": "#8b008b",
+    "string": "#115a36",
+    "number": "#8b3200",
+    "function": "#0017c1",
+    "type": "#006173",
+    "ansi": {
+      "black": "#1a1a1a",
+      "brightBlack": "#4d4d4d",
+      "red": "#ce0000",
+      "brightRed": "#a90000",
+      "green": "#197a4b",
+      "brightGreen": "#115a36",
+      "yellow": "#806300",
+      "brightYellow": "#6e5600",
+      "blue": "#0031d8",
+      "brightBlue": "#00118f",
+      "magenta": "#aa00aa",
+      "brightMagenta": "#6c006c",
+      "cyan": "#006f83",
+      "brightCyan": "#004c59",
+      "white": "#666666",
+      "brightWhite": "#333333"
+    }
+  },
+  "dark": {
+    "surface": "#000000",
+    "text": "#f2f2f2",
+    "comment": "#999999",
+    "keyword": "#ff8eff",
+    "string": "#71c598",
+    "number": "#ffa66d",
+    "function": "#57b8ff",
+    "type": "#79e2f2",
+    "ansi": {
+      "black": "#7f7f7f",
+      "brightBlack": "#999999",
+      "red": "#ff7171",
+      "brightRed": "#ff9696",
+      "green": "#51b883",
+      "brightGreen": "#71c598",
+      "yellow": "#ffc700",
+      "brightYellow": "#ffe380",
+      "blue": "#9db7f9",
+      "brightBlue": "#c5d7fb",
+      "magenta": "#f661f6",
+      "brightMagenta": "#ff8eff",
+      "cyan": "#2bc8e4",
+      "brightCyan": "#79e2f2",
+      "white": "#cccccc",
+      "brightWhite": "#ffffff"
+    }
+  }
+}
