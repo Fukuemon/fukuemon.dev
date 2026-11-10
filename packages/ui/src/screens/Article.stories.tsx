@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 
 const SUGGESTIONS = [
   { title: "認可コードフローを手で追う", url: "#article" },
-  { title: "PKCE の値を作る", url: "#article" },
+  { title: "PKCE の値を作る", url: "#pkce" },
 ];
 
 function SiteHeader() {
