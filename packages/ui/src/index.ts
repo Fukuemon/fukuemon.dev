@@ -1,5 +1,7 @@
 export { ActionMenu } from "./base/ActionMenu/ActionMenu";
 export type { ActionMenuItem, ActionMenuProps } from "./base/ActionMenu/ActionMenu";
+export { ArtBand } from "./base/ArtBand/ArtBand";
+export type { ArtBandLayout, ArtBandProps, ArtMotif } from "./base/ArtBand/ArtBand";
 export { Breadcrumb } from "./base/Breadcrumb/Breadcrumb";
 export type { BreadcrumbItem, BreadcrumbProps } from "./base/Breadcrumb/Breadcrumb";
 export { Button } from "./base/Button/Button";
@@ -28,5 +30,14 @@ export { TextField } from "./base/TextField/TextField";
 export type { TextFieldProps } from "./base/TextField/TextField";
 export { TreeView } from "./base/TreeView/TreeView";
 export type { TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
+export { SearchBox } from "./case/SearchBox/SearchBox";
+export type { SearchBoxProps, SearchSuggestion } from "./case/SearchBox/SearchBox";
+export { SeriesPager } from "./case/SeriesPager/SeriesPager";
+export type { SeriesPagerLink, SeriesPagerProps } from "./case/SeriesPager/SeriesPager";
+export { TableOfContents } from "./case/TableOfContents/TableOfContents";
+export type {
+  TableOfContentsItem,
+  TableOfContentsProps,
+} from "./case/TableOfContents/TableOfContents";
 export { toVsCodeTheme } from "./tokens/code-theme";
 export type { CodeThemeName, VsCodeTheme } from "./tokens/code-theme";
