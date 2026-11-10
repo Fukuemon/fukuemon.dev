@@ -7,7 +7,7 @@ export type ButtonVariant = "primary" | "secondary" | "danger";
 export type ButtonSize = "S" | "M";
 
 /** ボタンの見た目の指定。 */
-export type ButtonStyleOptions = {
+type ButtonStyleOptions = {
   variant?: ButtonVariant;
   size?: ButtonSize;
 };
@@ -23,11 +23,7 @@ const sizeClassName: Record<ButtonSize, string> = {
   M: "h-12 min-w-11 px-5",
 };
 
-/**
- * Button と同じ見た目のクラス名を返す。リンクのように button でない要素をボタンの見た目にするときに使う。
- * 無効の見た目は `aria-disabled="true"` の要素に付く。
- */
-export const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
+const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
   clsx(
     "relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-md text-label",
     "focus-visible:focus-ring",

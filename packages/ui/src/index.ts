@@ -2,13 +2,8 @@ export { ActionMenu } from "./base/ActionMenu/ActionMenu";
 export type { ActionMenuItem, ActionMenuProps } from "./base/ActionMenu/ActionMenu";
 export { Breadcrumb } from "./base/Breadcrumb/Breadcrumb";
 export type { BreadcrumbItem, BreadcrumbProps } from "./base/Breadcrumb/Breadcrumb";
-export { Button, buttonClassName } from "./base/Button/Button";
-export type {
-  ButtonProps,
-  ButtonSize,
-  ButtonStyleOptions,
-  ButtonVariant,
-} from "./base/Button/Button";
+export { Button } from "./base/Button/Button";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "./base/Button/Button";
 export { Dialog } from "./base/Dialog/Dialog";
 export type { DialogProps } from "./base/Dialog/Dialog";
 export { Disclosure } from "./base/Disclosure/Disclosure";
