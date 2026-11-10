@@ -10,7 +10,7 @@ export type TableOfContentsItem = {
 
 export type TableOfContentsProps = {
   /** ページの見出しの順に並べる。level 3 の項目は、直前の level 2 の項目の下に入れる。 */
-  items: readonly TableOfContentsItem[];
+  headings: readonly TableOfContentsItem[];
 };
 
 type Section = {
@@ -70,8 +70,8 @@ const useCurrentHeadingId = (ids: readonly string[]) => {
  * JavaScript が動くときは、読んでいる見出しのリンクに `aria-current="location"` を付け、太字と左の線で示す。
  * 静的に描いた HTML では、見出しへのリンクだけが働く。
  */
-export function TableOfContents({ items }: TableOfContentsProps) {
-  const currentId = useCurrentHeadingId(items.map((item) => item.id));
+export function TableOfContents({ headings }: TableOfContentsProps) {
+  const currentId = useCurrentHeadingId(headings.map((item) => item.id));
 
   const renderLink = (item: TableOfContentsItem) => {
     const isCurrent = item.id === currentId;
@@ -93,7 +93,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   return (
     <nav aria-label="目次">
       <ol className="flex flex-col">
-        {toSections(items).map(({ item, children }) => (
+        {toSections(headings).map(({ item, children }) => (
           <li key={item.id}>
             {renderLink(item)}
             {children.length > 0 && (

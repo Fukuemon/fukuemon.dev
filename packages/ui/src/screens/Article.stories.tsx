@@ -19,8 +19,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const SUGGESTIONS = [
-  { label: "認可コードフローを手で追う", href: "#article" },
-  { label: "PKCE の値を作る", href: "#article" },
+  { title: "認可コードフローを手で追う", url: "#article" },
+  { title: "PKCE の値を作る", url: "#article" },
 ];
 
 function SiteHeader() {
@@ -143,7 +143,7 @@ export const Article: Story = {
           />
         </article>
         <aside className="sticky top-0 hidden w-64 shrink-0 self-start md:block">
-          <TableOfContents items={HEADINGS} />
+          <TableOfContents headings={HEADINGS} />
         </aside>
       </div>
     </div>

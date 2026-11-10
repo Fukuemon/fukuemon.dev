@@ -3,10 +3,10 @@ import { type KeyboardEvent, useId, useRef, useState } from "react";
 
 import { TextField } from "../../base/TextField/TextField";
 
-/** 検索の候補の 1 件。選ぶと href へ移る。 */
+/** 検索の候補の 1 件。選ぶと url へ移る。Pagefind の結果の title と url の名前に合わせる。 */
 export type SearchSuggestion = {
-  label: string;
-  href: string;
+  title: string;
+  url: string;
 };
 
 export type SearchBoxProps = {
@@ -124,16 +124,16 @@ export function SearchBox({
                   "flex min-h-11 items-center px-4 text-body-dense text-text hover:bg-surface-subtle",
                   "aria-selected:bg-primary-surface aria-selected:font-bold",
                 )}
-                href={suggestion.href}
+                href={suggestion.url}
                 id={optionId(index)}
-                key={suggestion.href}
+                key={suggestion.url}
                 ref={(node) => {
                   if (node) optionRefs.current[index] = node;
                 }}
                 role="option"
                 tabIndex={-1}
               >
-                {suggestion.label}
+                {suggestion.title}
               </a>
             ))}
           </div>

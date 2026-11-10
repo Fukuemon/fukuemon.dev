@@ -26,9 +26,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const SUGGESTIONS = [
-  { label: "認可コードフローを手で追う", href: "#authorization-code" },
-  { label: "PKCE の code_verifier を作る", href: "#pkce" },
-  { label: "リフレッシュトークンを回す", href: "#refresh-token" },
+  { title: "認可コードフローを手で追う", url: "#authorization-code" },
+  { title: "PKCE の code_verifier を作る", url: "#pkce" },
+  { title: "リフレッシュトークンを回す", url: "#refresh-token" },
 ];
 
 export const Empty: Story = { name: "空" };

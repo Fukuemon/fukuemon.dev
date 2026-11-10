@@ -16,7 +16,7 @@ function ArticleExample({ items }: { items: TableOfContentsItem[] }) {
   return (
     <div className="flex gap-8 p-4">
       <div className="sticky top-0 w-64 shrink-0 self-start">
-        <TableOfContents items={items} />
+        <TableOfContents headings={items} />
       </div>
       <article className="flex-1 pb-96">
         {items.map((item) => {
@@ -41,7 +41,7 @@ function ArticleExample({ items }: { items: TableOfContentsItem[] }) {
 const meta = {
   title: "コンポーネント/Case/TableOfContents",
   component: TableOfContents,
-  args: { items: ITEMS },
+  args: { headings: ITEMS },
 } satisfies Meta<typeof TableOfContents>;
 
 export default meta;
@@ -51,7 +51,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = { name: "デフォルト" };
 export const Reading: Story = {
   name: "読んでいる見出しあり",
-  render: (args) => <ArticleExample items={[...args.items]} />,
+  render: (args) => <ArticleExample items={[...args.headings]} />,
   play: async ({ canvasElement }) => {
     canvasElement.ownerDocument.getElementById("state")?.scrollIntoView();
   },
