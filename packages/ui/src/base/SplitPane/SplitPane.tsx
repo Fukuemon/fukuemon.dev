@@ -30,7 +30,7 @@ const clamp = (value: number) => Math.min(MAX, Math.max(MIN, value));
 /**
  * 2 つの領域と、その間で動かせる仕切り。WAI-ARIA APG の Window Splitter のキーボードの操作に従う。
  * 仕切りにフォーカスがあるとき、左右に並べたら左右の矢印のキー、上下に並べたら上下の矢印のキーで 5% ずつ動き、Home と End で最小と最大へ動く。
- * 仕切りは押せる領域を 44 px にし、両側の領域に重ねる。見た目の線は 1 px である。
+ * 仕切りは押せる幅を 44 px 取り、見た目の線は 1 px にする。両側の領域に重ねると、領域のスクロールバーを押せなくなるためである。
  */
 export function SplitPane({
   label,
@@ -89,8 +89,8 @@ export function SplitPane({
         aria-valuemin={MIN}
         aria-valuenow={size}
         className={clsx(
-          "relative z-10 flex shrink-0 touch-none justify-center focus-visible:focus-ring",
-          isHorizontal ? "-mx-5 w-11 cursor-col-resize" : "-my-5 h-11 cursor-row-resize flex-col",
+          "flex shrink-0 touch-none justify-center focus-visible:focus-ring",
+          isHorizontal ? "w-11 cursor-col-resize" : "h-11 cursor-row-resize flex-col",
         )}
         onKeyDown={handleKeyDown}
         onPointerDown={(event) => {

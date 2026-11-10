@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./SplitPane.stories";
 
-const { Horizontal, Vertical } = composeStories(stories);
+const { Horizontal, Scroll, Vertical } = composeStories(stories);
 
 const widths = () => ({
   primary: screen.getByText("エディタ").parentElement!.getBoundingClientRect().width,
@@ -57,5 +57,19 @@ describe("SplitPane", () => {
     expect(separator.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
     await userEvent.dragAndDrop(separator, screen.getByText("エディタ"));
     expect(Number(separator.getAttribute("aria-valuenow"))).toBeLessThan(50);
+  });
+
+  it("仕切りは両側の領域に重ならず、両側の領域の端の点は領域が受ける", () => {
+    render(<Scroll />);
+    const separator = screen.getByRole("separator").getBoundingClientRect();
+    const primary = screen.getByRole("list", { name: "エディタ" }).parentElement!;
+    const secondary = screen.getByRole("list", { name: "プレビュー" }).parentElement!;
+    const p = primary.getBoundingClientRect();
+    const s = secondary.getBoundingClientRect();
+    expect(p.right).toBeLessThanOrEqual(separator.left);
+    expect(s.left).toBeGreaterThanOrEqual(separator.right);
+    const y = p.top + p.height / 2;
+    expect(primary.contains(document.elementFromPoint(p.right - 2, y))).toBe(true);
+    expect(secondary.contains(document.elementFromPoint(s.left + 2, y))).toBe(true);
   });
 });

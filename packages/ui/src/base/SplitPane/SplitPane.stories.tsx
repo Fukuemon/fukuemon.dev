@@ -34,3 +34,17 @@ export const Vertical: Story = {
   },
 };
 export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };
+
+const LINES = Array.from({ length: 60 }, (_, i) => `${i + 1} 行目`);
+const Lines = ({ name }: { name: string }) => (
+  // エディタと端末のように、送る領域の中身はフォーカスを受ける
+  <ol aria-label={name} className="p-4 text-code text-text focus-visible:focus-ring" tabIndex={0}>
+    {LINES.map((line) => (
+      <li key={line}>{line}</li>
+    ))}
+  </ol>
+);
+export const Scroll: Story = {
+  name: "中身を送る",
+  args: { primary: <Lines name="エディタ" />, secondary: <Lines name="プレビュー" /> },
+};
