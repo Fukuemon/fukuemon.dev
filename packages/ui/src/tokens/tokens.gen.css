@@ -203,6 +203,13 @@
   --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-1100);
   --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-solid-gray-800);
 
+  /* 挿絵: 色は text と surface だけを使い、層の濃さを不透明度で決める。色ではないので、コントラストのチェックは読まない
+     ライトは墨を紙に刷る向きで、近景ほど濃い */
+  --fd-art-far: 0.2;
+  --fd-art-mid: 0.32;
+  --fd-art-near: 0.55;
+  --fd-art-moon: 0;
+
   /* 重なり: ライトは DADS の影で示す */
   --fd-shadow-1: var(--fd-primitive-elevation-1);
   --fd-shadow-2: var(--fd-primitive-elevation-2);
@@ -282,6 +289,12 @@
     --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
     --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
 
+    /* 挿絵: ダークは明るい空に山の影が並ぶ向きで、近景ほど地の色に近い。月だけを明るくする */
+    --fd-art-far: 0.32;
+    --fd-art-mid: 0.2;
+    --fd-art-near: 0.1;
+    --fd-art-moon: 0.85;
+
     /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
     --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
     --fd-shadow-2: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
@@ -354,6 +367,12 @@
   --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-300);
   --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
   --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
+
+  /* 挿絵: ダークは明るい空に山の影が並ぶ向きで、近景ほど地の色に近い。月だけを明るくする */
+  --fd-art-far: 0.32;
+  --fd-art-mid: 0.2;
+  --fd-art-near: 0.1;
+  --fd-art-moon: 0.85;
 
   /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
   --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);

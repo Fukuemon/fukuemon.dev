@@ -86,6 +86,13 @@
   --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-1100);
   --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-solid-gray-800);
 
+  /* 挿絵: 色は text と surface だけを使い、層の濃さを不透明度で決める。色ではないので、コントラストのチェックは読まない
+     ライトは墨を紙に刷る向きで、近景ほど濃い */
+  --fd-art-far: 0.2;
+  --fd-art-mid: 0.32;
+  --fd-art-near: 0.55;
+  --fd-art-moon: 0;
+
   /* 重なり: ライトは DADS の影で示す */
   --fd-shadow-1: var(--fd-primitive-elevation-1);
   --fd-shadow-2: var(--fd-primitive-elevation-2);

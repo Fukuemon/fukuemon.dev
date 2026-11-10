@@ -71,6 +71,12 @@
     --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
     --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
 
+    /* 挿絵: ダークは明るい空に山の影が並ぶ向きで、近景ほど地の色に近い。月だけを明るくする */
+    --fd-art-far: 0.32;
+    --fd-art-mid: 0.2;
+    --fd-art-near: 0.1;
+    --fd-art-moon: 0.85;
+
     /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
     --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
     --fd-shadow-2: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
@@ -143,6 +149,12 @@
   --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-300);
   --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
   --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
+
+  /* 挿絵: ダークは明るい空に山の影が並ぶ向きで、近景ほど地の色に近い。月だけを明るくする */
+  --fd-art-far: 0.32;
+  --fd-art-mid: 0.2;
+  --fd-art-near: 0.1;
+  --fd-art-moon: 0.85;
 
   /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
   --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
