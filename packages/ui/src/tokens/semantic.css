@@ -14,6 +14,8 @@
   --fd-color-surface: var(--fd-primitive-color-neutral-white);
   --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-50);
   --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-100);
+  /* ダイアログ、メニューのように、面の上に重なる面 */
+  --fd-color-surface-raised: var(--fd-primitive-color-neutral-white);
   --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-500);
 
   /* 文字: 面の上で 4.5:1 以上。disabled だけは WCAG 1.4.3 の対象外 */
@@ -55,4 +57,9 @@
   --fd-color-categorical-4: var(--fd-primitive-color-lime-900);
   --fd-color-categorical-5: var(--fd-primitive-color-yellow-1000);
   --fd-color-categorical-6: var(--fd-primitive-color-blue-800);
+
+  /* 重なり: ライトは DADS の影で示す */
+  --fd-shadow-1: var(--fd-primitive-elevation-1);
+  --fd-shadow-2: var(--fd-primitive-elevation-2);
+  --fd-shadow-3: var(--fd-primitive-elevation-3);
 }

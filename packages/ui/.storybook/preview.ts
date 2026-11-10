@@ -7,8 +7,9 @@ const preview: Preview = {
   // ツールバーでテーマを切り替える。ダークは semantic-dark.css の [data-theme="dark"] のブロックが効く
   decorators: [
     withThemeByDataAttribute({
-      themes: { ライト: "light", ダーク: "dark" },
-      defaultTheme: "ライト",
+      // デフォルトは OS の設定に従う。data-theme が light でも dark でもないとき、semantic-dark.css の @media のブロックが効く
+      themes: { "OS の設定": "system", ライト: "light", ダーク: "dark" },
+      defaultTheme: "OS の設定",
       attributeName: "data-theme",
     }),
   ],

@@ -21,7 +21,7 @@ const SOURCES = ["./packages/ui/src/tokens/primitive.css", "./packages/ui/src/to
 // セマンティックトークンの接頭辞。組の名前に付けて CSS の変数の名前にする
 const PREFIX = "--fd-color-";
 
-const SURFACES = ["surface", "surface-subtle"];
+const SURFACES = ["surface", "surface-subtle", "surface-raised"];
 const STATES = ["danger", "warning", "success", "info"];
 // --root でダークのブロックを渡したときは、ダークの値を読む
 const DARK = process.argv.some((a) => a.includes("dark"));

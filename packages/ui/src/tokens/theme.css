@@ -23,6 +23,7 @@
   --color-surface: var(--fd-color-surface);
   --color-surface-subtle: var(--fd-color-surface-subtle);
   --color-surface-disabled: var(--fd-color-surface-disabled);
+  --color-surface-raised: var(--fd-color-surface-raised);
   --color-overlay: var(--fd-color-overlay);
 
   --color-text: var(--fd-color-text);
@@ -96,9 +97,10 @@
   --radius-lg: var(--fd-primitive-border-radius-12);
   --radius-full: var(--fd-primitive-border-radius-full);
 
-  --shadow-1: var(--fd-primitive-elevation-1);
-  --shadow-2: var(--fd-primitive-elevation-2);
-  --shadow-3: var(--fd-primitive-elevation-3);
+  /* 重なり。ライトは DADS の影、ダークは 1px の枠になる（semantic-dark.css）。重なる面は bg-surface-raised と組にする */
+  --shadow-1: var(--fd-shadow-1);
+  --shadow-2: var(--fd-shadow-2);
+  --shadow-3: var(--fd-shadow-3);
 
   /* DADS の設定の例の 1 つ */
   --breakpoint-md: 48rem;

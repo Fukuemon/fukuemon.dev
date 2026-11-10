@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const GROUPS: { title: string; tokens: string[] }[] = [
-  { title: "面", tokens: ["surface", "surface-subtle", "surface-disabled", "overlay"] },
+  {
+    title: "面",
+    tokens: ["surface", "surface-subtle", "surface-raised", "surface-disabled", "overlay"],
+  },
   { title: "文字", tokens: ["text", "text-secondary", "text-disabled", "text-inverse"] },
   { title: "枠", tokens: ["border", "border-field"] },
   {
