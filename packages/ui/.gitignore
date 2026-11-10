@@ -1,0 +1,5 @@
+# Vitest のブラウザのテストが失敗したときのスクリーンショット
+.vitest
+__screenshots__
+storybook-static
+*storybook.log
