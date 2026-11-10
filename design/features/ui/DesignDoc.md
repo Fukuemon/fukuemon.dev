@@ -240,6 +240,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 - story は、コンポーネントの状態ごとに 1 つ置く。
 - 全ての story で、Storybook の a11y のアドオン（axe）を動かし、違反をテストの失敗にする。
 - カタログに載せるのは、コンポーネントとダミーデータだけにする。
+- カタログは、サイトとは別の Worker に公開する。Worker のドメインは `infra/cloudflare/` の Terraform で持ち、develop で check の workflow が通ったときに出す。
 
 ### DADS から外れる点
 
