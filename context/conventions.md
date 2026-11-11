@@ -68,7 +68,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 - 原稿の本文は、`である` 調で書く。frontmatter の `description` も同じである。
   - 箇条書きと表のセルは、体言止めか終止形で書く。
-  - 手順の指示は「〜する」「〜を確かめる」と書き、「〜してください」と書かない。
+  - 手順の指示は「〜する」「〜を確認する」と書き、「〜してください」と書かない。
   - リポジトリの文書（context、PRD、Design Doc、ADR など）も、`である` 調で書く。
 - サイトの UI の文言（ボタン、状態の表示、空の状態の案内）は、`ですます` 調で書く。
 - 原稿の textlint の設定は `apps/web/src/content/.textlintrc.json` に置く。
@@ -85,9 +85,12 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 図は `mermaid` のコードフェンスで書き、色を指定しない。
   - `style` や `classDef` で色を書くと、暗い地で読めなくなる。
 
-書いた記事とハンズオンは、`pnpm --filter @fukuemon/web dev` で確かめる。
+書いた記事とハンズオンは、`pnpm --filter @fukuemon/web dev` で確認する。
 
 ## Styling
+
+`packages/ui` のコンポーネントと、`packages/ui` で組む画面は、[packages/ui/DESIGN.md](../packages/ui/DESIGN.md) と、そこから指す 3 つの文書の規則に従う。  
+この節の規則は、今のサイト（`apps/web` と `packages/design-system`）のスタイリングに当たる。
 
 層の順とトークンの層は [Design System の Design Doc](../packages/design-system/DesignDoc.md#配布と層) にある。
 
@@ -110,7 +113,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - `aria-current` の有無で当てるときは、`aria-[current]:` を使う。
   - 組み込みの `aria-current:` は `[aria-current="true"]` に当たり、手順の現在地の `aria-current="step"` には当たらない。
 - `<dialog>` に `display` を当てるときは、`[open]` に限定する。
-  - UA 既定の `dialog:not([open]) { display: none }` に勝ち、閉じている窓が画面に出る。
+  - UA のデフォルトの `dialog:not([open]) { display: none }` に勝ち、閉じている窓が画面に出る。
 
 ### 配色の切り替え
 
@@ -169,7 +172,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - `type="application/json"` のようなデータの置き場を足すときは、module の `<script>` より後ろに書く。
 - `.oxlintrc.json` の `overrides` の各 entry は、そのファイル群に要る禁止をすべて自分で持つ。
   - `overrides` は同じ規則名を後勝ちで上書きし、前の entry と合流しない。
-  - entry を足したら、各方向について違反するファイルを 1 つ置き、`pnpm run lint` が失敗することを確かめる。
+  - entry を足したら、各方向について違反するファイルを 1 つ置き、`pnpm run lint` が失敗することを確認する。
 - 配色のチェックは、対象のトークンが見つからないことを失敗として扱う。
   - `packages/design-system/check-contrast.ts` は、存在しないトークンを `errors` に積む。
 

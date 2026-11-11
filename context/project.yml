@@ -95,3 +95,4 @@ process:
 # デザインシステムが読む
 design_system:
   tokens_css: packages/ui/src/tokens/tokens.gen.css
+  catalog_url: https://design.fukuemon.dev

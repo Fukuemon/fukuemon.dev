@@ -106,7 +106,8 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/config` は、どこにも依存しない。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/design-system` は、どこにも依存しない。
-- `apps/web` は、`@fukuemon/content-model` と `@fukuemon/design-system` に依存する。
+- `@fukuemon/ui` は、workspace のどの package にも依存しない。
+- `apps/web` は、`@fukuemon/content-model` と `@fukuemon/design-system` に依存する。`@fukuemon/ui` には、まだ依存しない。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `infra/` は、どこにも依存しない。
 
@@ -159,6 +160,17 @@ package を切り出すのは、次のどちらかが成り立つときである
 `ContentTable`、`KindTabs`、ハンズオンの `StepList` がこれに当たる。
 
 `tokens.css` と `code-theme.ts` は、Expressive Code の `styleOverrides` からも参照するので、`packages/design-system` に置く。
+
+### packages/ui
+
+`packages/ui` は、新しい画面が使うデザインシステムで、今のサイトの `packages/design-system` と並んで置く。
+
+- デザインシステムの文書は、`packages/ui/DESIGN.md` と、`packages/ui/design/` の `tokens.md`、`components.md`、`catalog.md` の 4 つに置く。
+- トークンの 3 つの層は、`packages/ui/src/tokens/` の `primitive.css`、`semantic.css` と `semantic-dark.css`、`theme.css` に置く。
+- コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に、パターンを `packages/ui/src/patterns/` に置く。
+  - story とテストは、コンポーネントと同じディレクトリに置く。
+  - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/components/` に置く。
+- カタログの Worker の設定は `packages/ui/wrangler.jsonc` に、カタログが返すレスポンスヘッダは `packages/ui/.storybook/public/_headers` に置く。
 
 ### infra
 

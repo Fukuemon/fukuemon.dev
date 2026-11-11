@@ -6,6 +6,7 @@ status: stable
 governs:
   - infra/
   - apps/web/wrangler.jsonc
+  - packages/ui/wrangler.jsonc
 verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
@@ -43,10 +44,14 @@ flowchart TD
     dmanual["運用者が develop から手動で起動"] --> ci["deploy workflow"]
     ci -->|"deploy 用の token"| wd["wrangler deploy"]
     wd --> worker["Worker script + assets"]
+    check["develop の check workflow の成功"] --> cci["deploy-catalog workflow"]
+    cci -->|"deploy 用の token"| cwd["wrangler deploy（packages/ui）"]
+    cwd --> catalog["カタログの Worker + assets"]
     manual["運用者が手動で起動（mode=plan、次に mode=apply）"] --> env["environment protection rules"]
     env -->|"apply 用の token"| tf["terraform plan / apply"]
     tf --> base["Zone / custom domain"]
     ci -. "触らない" .-x base
+    cci -. "触らない" .-x base
 ```
 
 Worker のコードの変更は、通常の pull request に含まれる。  
@@ -55,7 +60,8 @@ Worker のコードの変更は、通常の pull request に含まれる。
 `develop` には branch protection を掛けていないので、pull request を通すのは慣行であり、仕組みでは強制しない。  
 deploy 用の token は Workers Scripts の権限を持つので、custom domain の apex のレコードにも届きうる。deploy の workflow がそれを触らないのは、`wrangler deploy` の振る舞いによる。  
 apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md) にある。  
-いまの Worker はハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
+カタログの Worker は、develop の check workflow が通るたびに deploy-catalog workflow が出す。初回と出し直しは、運用者が `develop` から手で起動する。  
+どちらの Worker もハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
 
 Wrangler の設定ファイルは `wrangler.jsonc` にする。  
 Cloudflare は新しいプロジェクトに JSONC を勧めており、一部の新しい機能は JSON の形式でしか使えない。
@@ -74,7 +80,7 @@ zone は Terraform で作らない。
 Cloudflare Registrar がドメインを取得したときに作った zone を、`zone.tf` の `import` ブロックが、state にまだないときに取り込む。  
 `cloudflare_zone` には `prevent_destroy` を付ける。
 
-`cloudflare_workers_custom_domain` が apex のレコードを管理するので、DNS のレコードは書かない。
+`cloudflare_workers_custom_domain` が、サイトの apex とカタログの `design` のレコードを管理するので、DNS のレコードは書かない。
 
 ### state backend
 
@@ -110,23 +116,28 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `infra/bootstrap/provider.tf`、`r2_state_bucket.tf`、`vars.tf`: state 用のバケット
 - `infra/cloudflare/provider.tf`: provider と state backend
 - `infra/cloudflare/zone.tf`: zone の取り込み
-- `infra/cloudflare/workers_domain.tf`: Workers の custom domain
-- `infra/cloudflare/vars.tf`: `account_id`、`zone_id`、`zone_name`、`worker_name` の変数
-- `apps/web/wrangler.jsonc`: Worker の設定
+- `infra/cloudflare/workers_domain.tf`: Workers の custom domain。サイトの apex（`site`）とカタログの `design.<zone>`（`catalog`）
+- `infra/cloudflare/vars.tf`: `account_id`、`zone_id`、`zone_name`、`worker_name`、`catalog_worker_name` の変数
+- `apps/web/wrangler.jsonc`: サイトの Worker の設定
+- `packages/ui/wrangler.jsonc`: カタログの Worker の設定。`workers_dev` と `preview_urls` を切り、`design.<zone>` だけで公開する
 
 変数の値は、手元では各ディレクトリの `terraform.tfvars` に置き、commit しない。  
 CI では、apply の workflow が `TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name` を secret と variable から渡す。  
-`worker_name` と、bootstrap の `location` はデフォルト値を持つ。
+`worker_name`、`catalog_worker_name` と、bootstrap の `location` はデフォルト値を持つ。
 
 ### 実行するコマンドとチェック
 
 - `pnpm run infra:init`、`infra:plan`、`infra:apply`: `infra/cloudflare/` を対象にする
 - `pnpm run infra:bootstrap:init`、`infra:bootstrap:apply`: `infra/bootstrap/` を対象にする
 - `pnpm run infra:check`: `terraform fmt -check` と `terraform validate` を、backend を無効にして実行する。credential は要らない
-- `pnpm run check:worker-name`: `wrangler.jsonc` の `name` と、`vars.tf` の `worker_name` のデフォルト値が一致するかを確認する
-- `pnpm run check:deploy`: `wrangler deploy --dry-run` を実行する
+- `pnpm run check:worker-name`: 2 つの Worker の名前が、`wrangler.jsonc` と `vars.tf` で一致するかを確認する。
+  - `apps/web/wrangler.jsonc` の `name` と `worker_name` のデフォルト値、`packages/ui/wrangler.jsonc` の `name` と `catalog_worker_name` のデフォルト値を比べる
+- `pnpm run check:deploy`: サイトとカタログの `wrangler deploy --dry-run` を実行する。カタログは `pnpm run build:storybook` の出力を読む
 - check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 2 つを含む `pnpm run check` を実行する
-- apply の workflow（`.github/workflows/apply.yml`）と deploy の workflow（`.github/workflows/deploy.yml`）
+- workflow は次の 3 つ
+  - apply: `.github/workflows/apply.yml`
+  - deploy: `.github/workflows/deploy.yml`
+  - deploy-catalog: `.github/workflows/deploy-catalog.yml`
 
 ## Verification
 

@@ -54,6 +54,14 @@ pnpm --filter @fukuemon/web run build
 pnpm --filter @fukuemon/web run deploy
 ```
 
+カタログの Worker も、3 の前に作る。
+deploy-catalog workflow を `develop` から手で起動するか、手元から次を実行する。
+
+```sh
+pnpm run build:storybook
+pnpm --filter @fukuemon/ui run deploy
+```
+
 ### 3. zone を取り込み、custom domain を作る
 
 `zone.tf` の `import` ブロックが zone を state へ取り込むので、手で `terraform import` を実行しない。
