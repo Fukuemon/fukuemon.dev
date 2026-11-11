@@ -37,7 +37,7 @@ function HeaderTable({ caption, headers }: { caption: string; headers: readonly 
         {headers.map((header, index) => (
           <Table.Row key={`${header.name}-${index}`}>
             <Table.HeaderCell scope="row">
-              <span className="font-mono text-code-dense break-all">{header.name}</span>
+              <span className="font-mono text-code-dense break-words">{header.name}</span>
             </Table.HeaderCell>
             <Table.Cell>
               <span className="font-mono text-code-dense break-all">{header.value}</span>
