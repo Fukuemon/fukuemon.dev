@@ -66,13 +66,13 @@ export function FileIcon({ kind, name = "", isOpen = false }: FileIconProps) {
       className={clsx("shrink-0", kind === "directory" ? "text-text-secondary" : COLOR[fileKind])}
       data-icon={kind === "directory" ? (isOpen ? "directory-open" : "directory") : fileKind}
       fill="none"
-      height="16"
+      height="20"
       stroke="currentColor"
       strokeLinecap="square"
       strokeLinejoin="miter"
       strokeWidth="1.25"
       viewBox="0 0 16 16"
-      width="16"
+      width="20"
     >
       {kind === "directory" ? (
         <path
