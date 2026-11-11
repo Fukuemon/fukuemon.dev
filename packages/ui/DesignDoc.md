@@ -2,7 +2,10 @@
 type: feature-design
 title: デザインシステム（packages/ui）
 description: 自前の値のトークンの層とテーマ、コードと HTTP の流れの色、Base と Case のコンポーネントの範囲、Storybook のカタログ、DADS から外れる点
-status: draft
+status: stable
+governs:
+  - packages/ui/
+verified_commit: unverified
 ---
 
 # デザインシステム（packages/ui）
@@ -327,7 +330,8 @@ DADS から外れる点と理由は次のとおり。
 | `packages/ui/design/catalog.md`                       | カタログのページと title の規則                                                                                 |
 | `packages/ui/src/tokens/`                             | 3 つの層の CSS、書体の読み込み、生成したコードのテーマ                                                          |
 | `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト                                                                                 |
-| `packages/ui/.storybook/`                             | Storybook の設定                                                                                                |
+| `packages/ui/.storybook/`                             | Storybook の設定と、カタログが返すレスポンスヘッダ（`public/_headers`）                                         |
+| `packages/ui/wrangler.jsonc`                          | カタログを `design.fukuemon.dev` へ配信する Worker の設定                                                       |
 | `scripts/`                                            | トークンの CSS の生成、コントラストのチェック、色の値のチェック、ユーティリティのチェック、コードのテーマの生成 |
 
 チェックは、パッケージ design-system の手順で入れ、CI で流す。
