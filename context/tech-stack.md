@@ -116,6 +116,6 @@ Vite+ を外す手順は、ADR-0017 の Decision 7 にある。
 
 - 新しい package を作るときは、`packages/config` の共有の設定を参照する。設定を package ごとに複製しない。
   - 共有の設定の置き場は [conventions.md](conventions.md#shared-configuration) にある。
-- shadcn/ui は、Command Palette や Dialog のような対話的なコンポーネントが要るようになってから入れる。
-  - 出力先は `apps/web/src/components/ui/` にし、shadcn/ui のコンポーネントを手で作らない。
+- shadcn/ui は使わない。対話的なコンポーネント（`Dialog`、`ActionMenu` など）は、`packages/ui` の Base に React と clsx で書く。
+  - クラスを組むときに使わないライブラリの一覧は、[packages/ui/DesignDoc.md](../packages/ui/DesignDoc.md#コンポーネントの分類と置き場) にある。
 - 新しい package を切り出す条件は [codebase.md](codebase.md#placement-rules) にある。
