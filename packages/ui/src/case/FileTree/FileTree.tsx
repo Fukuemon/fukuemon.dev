@@ -16,6 +16,8 @@ export type FileTreeProps = {
   defaultExpandedIds?: readonly string[];
   /** 渡すと、新しいファイルのボタンを出す。parentId は、選んだディレクトリか、選んだファイルのディレクトリである。 */
   onCreate?: (name: string, parentId: string | undefined) => void;
+  /** 渡すと、新しいディレクトリのボタンを出す。parentId は onCreate と同じ決め方である。 */
+  onCreateDirectory?: (name: string, parentId: string | undefined) => void;
   /** 渡すと、選んだ項目の操作のメニューに、名前の変更を足す。 */
   onRename?: (id: string, name: string) => void;
   /** 渡すと、選んだ項目の操作のメニューに、削除を足す。確認は呼ぶ側が行う。 */
@@ -24,7 +26,13 @@ export type FileTreeProps = {
   state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
 };
 
-type Editing = { kind: "create" } | { kind: "rename"; node: TreeNode };
+type Editing = { kind: "file" } | { kind: "directory" } | { kind: "rename"; node: TreeNode };
+
+const FIELD_LABEL: Record<Editing["kind"], string> = {
+  file: "新しいファイルの名前",
+  directory: "新しいディレクトリの名前",
+  rename: "新しい名前",
+};
 
 type Found = { node: TreeNode; parent: TreeNode | undefined };
 
@@ -38,7 +46,7 @@ const find = (nodes: readonly TreeNode[], id: string, parent?: TreeNode): Found 
 };
 
 /**
- * ファイルとディレクトリの一覧と、作成、名前の変更、削除の操作。TreeView、ActionMenu、TextField を組む。
+ * ファイルとディレクトリの一覧と、ファイルとディレクトリの作成、名前の変更、削除の操作。TreeView、ActionMenu、TextField を組む。
  * 操作は、題の右のボタンとメニューから、選んだ項目に対して行う。木の行の中に操作を置かないのは、treeitem の中に押せるものを入れられないためである。
  * 名前の欄は Enter のキーで確定し、Esc のキーでやめる。
  */
@@ -49,6 +57,7 @@ export function FileTree({
   onSelect,
   defaultExpandedIds,
   onCreate,
+  onCreateDirectory,
   onRename,
   onDelete,
   state,
@@ -78,12 +87,10 @@ export function FileTree({
     const value = new FormData(event.currentTarget).get("name");
     const name = typeof value === "string" ? value.trim() : "";
     if (name === "" || editing === undefined) return;
-    if (editing.kind === "create") {
-      const parent = selected?.node.children ? selected.node : selected?.parent;
-      onCreate?.(name, parent?.id);
-    } else {
-      onRename?.(editing.node.id, name);
-    }
+    const parentId = (selected?.node.children ? selected.node : selected?.parent)?.id;
+    if (editing.kind === "file") onCreate?.(name, parentId);
+    else if (editing.kind === "directory") onCreateDirectory?.(name, parentId);
+    else onRename?.(editing.node.id, name);
     setEditing(undefined);
   };
 
@@ -107,7 +114,23 @@ export function FileTree({
                 </svg>
               }
               label="新しいファイル"
-              onClick={() => setEditing({ kind: "create" })}
+              onClick={() => setEditing({ kind: "file" })}
+            />
+          )}
+          {onCreateDirectory !== undefined && (
+            <IconButton
+              icon={
+                <svg aria-hidden="true" height="20" viewBox="0 0 20 20" width="20">
+                  <path
+                    d="M2.5 5.5h5l1.5 2h8.5v8h-15zM10 9.5v4M8 11.5h4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              }
+              label="新しいディレクトリ"
+              onClick={() => setEditing({ kind: "directory" })}
             />
           )}
           {menuItems.length > 0 && selected && (
@@ -121,7 +144,7 @@ export function FileTree({
         editing && (
           <form
             className="flex items-end gap-2 border-b border-border p-2"
-            key={editing.kind === "rename" ? editing.node.id : "create"}
+            key={editing.kind === "rename" ? editing.node.id : editing.kind}
             onSubmit={handleSubmit}
           >
             <div className="min-w-0 flex-1">
@@ -129,7 +152,7 @@ export function FileTree({
                 // 欄は、ボタンかメニューで開いた直後に入力するためのものなので、開いたときにフォーカスを移す
                 autoFocus
                 defaultValue={editing.kind === "rename" ? editing.node.label : ""}
-                label={editing.kind === "rename" ? "新しい名前" : "新しいファイルの名前"}
+                label={FIELD_LABEL[editing.kind]}
                 name="name"
                 onKeyDown={handleKeyDown}
               />

@@ -17,10 +17,76 @@ const FILES: TreeNode[] = [
   { id: "package.json", label: "package.json" },
 ];
 
-/** 選んだ項目を state で持つ例。 */
+const insert = (nodes: readonly TreeNode[], parentId: string | undefined, node: TreeNode) =>
+  parentId === undefined
+    ? [...nodes, node]
+    : nodes.map(
+        (n): TreeNode =>
+          n.id === parentId
+            ? { ...n, children: [...(n.children ?? []), node] }
+            : n.children
+              ? { ...n, children: insert(n.children, parentId, node) }
+              : n,
+      );
+
+const update = (
+  nodes: readonly TreeNode[],
+  id: string,
+  change: (node: TreeNode) => TreeNode | undefined,
+): TreeNode[] =>
+  nodes.flatMap((n) => {
+    if (n.id === id) {
+      const next = change(n);
+      return next ? [next] : [];
+    }
+    return [n.children ? { ...n, children: update(n.children, id, change) } : n];
+  });
+
+/** 木と選んだ項目を state で持ち、作成、名前の変更、削除で木を書き換える例。渡した spy も呼ぶ。 */
 function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
+  const [items, setItems] = useState(props.items);
   const [selectedId, setSelectedId] = useState(props.selectedId);
-  return <FileTree {...props} onSelect={setSelectedId} selectedId={selectedId} />;
+  const childId = (parentId: string | undefined, name: string) =>
+    parentId === undefined ? name : `${parentId}/${name}`;
+  return (
+    <FileTree
+      {...props}
+      items={items}
+      onCreate={
+        props.onCreate &&
+        ((name, parentId) => {
+          props.onCreate?.(name, parentId);
+          setItems(insert(items, parentId, { id: childId(parentId, name), label: name }));
+        })
+      }
+      onCreateDirectory={
+        props.onCreateDirectory &&
+        ((name, parentId) => {
+          props.onCreateDirectory?.(name, parentId);
+          setItems(
+            insert(items, parentId, { id: childId(parentId, name), label: name, children: [] }),
+          );
+        })
+      }
+      onDelete={
+        props.onDelete &&
+        ((id) => {
+          props.onDelete?.(id);
+          setItems(update(items, id, () => undefined));
+          setSelectedId(undefined);
+        })
+      }
+      onRename={
+        props.onRename &&
+        ((id, name) => {
+          props.onRename?.(id, name);
+          setItems(update(items, id, (node) => ({ ...node, label: name })));
+        })
+      }
+      onSelect={setSelectedId}
+      selectedId={selectedId}
+    />
+  );
 }
 
 const meta = {
@@ -31,6 +97,7 @@ const meta = {
     defaultExpandedIds: ["src"],
     selectedId: "src/server.js",
     onCreate: fn(),
+    onCreateDirectory: fn(),
     onRename: fn(),
     onDelete: fn(),
   },
@@ -48,6 +115,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { name: "選んでいる" };
+export const NoSelection: Story = { name: "選んでいない", args: { selectedId: undefined } };
 export const Creating: Story = {
   name: "新しいファイルの名前を入れている",
   play: async ({ canvas, userEvent }) => {
@@ -62,7 +130,12 @@ export const Menu: Story = {
 };
 export const ReadOnly: Story = {
   name: "操作なし",
-  args: { onCreate: undefined, onRename: undefined, onDelete: undefined },
+  args: {
+    onCreate: undefined,
+    onCreateDirectory: undefined,
+    onRename: undefined,
+    onDelete: undefined,
+  },
 };
 export const Empty: Story = { name: "空", args: { items: [], selectedId: undefined } };
 export const Loading: Story = {

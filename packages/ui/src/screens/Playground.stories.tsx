@@ -55,6 +55,7 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
             defaultExpandedIds={["src"]}
             items={FILES}
             onCreate={() => {}}
+            onCreateDirectory={() => {}}
             onDelete={() => {}}
             onRename={() => {}}
             onSelect={setFileId}
