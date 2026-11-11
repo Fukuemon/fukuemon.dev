@@ -62,6 +62,7 @@ export function EditorFrame({
           label="開いたファイル"
           onClose={onClose}
           onSelect={onSelect}
+          panel="flush"
           selectedId={selected.id}
         />
       )}

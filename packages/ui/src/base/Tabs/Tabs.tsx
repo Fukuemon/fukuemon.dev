@@ -17,6 +17,11 @@ export type TabsProps = {
   onSelect: (id: string) => void;
   /** 閉じるボタンか、選んだタブで Delete のキーを押したときに呼ぶ。 */
   onClose?: (id: string) => void;
+  /**
+   * パネルの形。`padded` は 16px の余白を取り、パネル自身を Tab のキーの順に入れる。
+   * `flush` は余白とフォーカスを持たず、中身が自分でフォーカスを受けるときに使う（エディタのエンジン）。
+   */
+  panel?: "padded" | "flush";
 };
 
 /**
@@ -26,7 +31,7 @@ export type TabsProps = {
  * 閉じるボタンはマウスで押すためのもので、タブの隣に置き、読み上げと Tab のキーの順から外す。タブの並びの中にタブ以外の操作を置けないためである。
  * キーボードと読み上げでは、選んだタブで Delete のキーを押して閉じる。閉じられるタブは `aria-keyshortcuts` でこのキーを示す。
  */
-export function Tabs({ label, items, selectedId, onSelect, onClose }: TabsProps) {
+export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "padded" }: TabsProps) {
   const baseId = useId();
   const tabRefs = useRef(new Map<string, HTMLButtonElement>());
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
@@ -118,10 +123,10 @@ export function Tabs({ label, items, selectedId, onSelect, onClose }: TabsProps)
       {selected && (
         <div
           aria-labelledby={`${baseId}-tab-${selected.id}`}
-          className="p-4 focus-visible:focus-ring"
+          className={panel === "padded" ? "p-4 focus-visible:focus-ring" : undefined}
           id={`${baseId}-panel-${selected.id}`}
           role="tabpanel"
-          tabIndex={0}
+          tabIndex={panel === "padded" ? 0 : undefined}
         >
           {selected.content}
         </div>

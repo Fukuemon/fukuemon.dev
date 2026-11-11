@@ -14,6 +14,13 @@ describe("EditorFrame", () => {
     expect(engine).toHaveAttribute("data-code-theme", "dark");
   });
 
+  it("タブの次の Tab のキーで、パネルを飛ばしてエンジンへ移る", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("tab", { name: "server.js" }));
+    await userEvent.tab();
+    expect(screen.getByRole("region", { name: "server.js のコード" })).toHaveFocus();
+  });
+
   it("タブを押すと、そのファイルのエンジンに替わる", async () => {
     render(<Default />);
     await userEvent.click(screen.getByRole("tab", { name: "package.json" }));
