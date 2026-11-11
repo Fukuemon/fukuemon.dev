@@ -11,7 +11,9 @@ const FILES: EditorFile[] = [
 
 /** 開いたファイルと選んだファイルを state で持つ例。 */
 function EditorFrameExample(
-  props: Pick<EditorFrameProps, "files" | "state" | "themeName"> & { isClosable?: boolean },
+  props: Pick<EditorFrameProps, "files" | "state" | "status" | "themeName"> & {
+    isClosable?: boolean;
+  },
 ) {
   const [files, setFiles] = useState(props.files);
   const [selectedId, setSelectedId] = useState(props.files[0]?.id);
@@ -26,10 +28,16 @@ function EditorFrameExample(
       onSelect={setSelectedId}
       selectedId={selectedId}
       state={props.state}
+      status={props.status}
       themeName={props.themeName}
     >
       {(theme, file) => (
-        <DummyEngine label={`${file.label} のコード`} lines={SOURCE_LINES} theme={theme} />
+        <DummyEngine
+          label={`${file.label} のコード`}
+          lines={SOURCE_LINES}
+          theme={theme}
+          variant="source"
+        />
       )}
     </EditorFrame>
   );

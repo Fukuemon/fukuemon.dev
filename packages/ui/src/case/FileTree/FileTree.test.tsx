@@ -104,6 +104,20 @@ describe("FileTree", () => {
     }
   });
 
+  it("ディレクトリの印は開閉で形が変わり、ファイルの印は拡張子の系統で変わる", async () => {
+    render(<Default />);
+    const iconOf = (name: string) =>
+      screen
+        .getByRole("treeitem", { name })
+        .querySelector("[data-icon]")
+        ?.getAttribute("data-icon");
+    expect(iconOf("src")).toBe("directory-open");
+    expect(iconOf("server.js")).toBe("code");
+    expect(iconOf("package.json")).toBe("data");
+    await userEvent.click(screen.getByRole("treeitem", { name: "src" }));
+    expect(iconOf("src")).toBe("directory");
+  });
+
   it("操作の props を渡さないときは、操作を出さない", () => {
     render(<ReadOnly />);
     expect(screen.queryByRole("button")).toBeNull();

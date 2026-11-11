@@ -1,11 +1,13 @@
 import { clsx } from "clsx";
-import { type KeyboardEvent, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useRef, useState } from "react";
 
 /** 木の 1 つの項目。children を持つ項目は枝で、開閉できる。 */
 export type TreeNode = {
   id: string;
   label: string;
   children?: readonly TreeNode[];
+  /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
+  icon?: (isOpen: boolean) => ReactNode;
 };
 
 export type TreeViewProps = {
@@ -114,7 +116,7 @@ export function TreeView({
             aria-selected={onSelect ? node.id === selectedId : undefined}
             aria-setsize={setSize}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 hover:bg-surface-subtle focus-visible:focus-ring",
+              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
             )}
             key={node.id}
@@ -146,6 +148,7 @@ export function TreeView({
             >
               <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
             </svg>
+            {node.icon?.(isOpen)}
             {node.label}
           </li>
         );

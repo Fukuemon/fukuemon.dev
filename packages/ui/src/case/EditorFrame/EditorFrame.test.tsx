@@ -37,6 +37,31 @@ describe("EditorFrame", () => {
     expect(screen.queryByRole("tab", { name: "server.js" })).toBeNull();
   });
 
+  it("コードの字句を 6 種以上の色で分け、長い行の右に 16px の余白を残す", () => {
+    render(<Default />);
+    const engine = screen.getByRole("region", { name: "server.js のコード" });
+    const colors = new Set(
+      [...engine.querySelectorAll("code span span")].map((span) => getComputedStyle(span).color),
+    );
+    expect(colors.size).toBeGreaterThanOrEqual(6);
+    const code = engine.querySelector("code");
+    expect(code && getComputedStyle(code).paddingRight).toBe("16px");
+  });
+
+  it("選んだタブの下の罫を引く動きと、ファイルの印を出し、status を下の帯に出す", () => {
+    render(<Default status="JavaScript" />);
+    const tab = screen.getByRole("tab", { name: "server.js" });
+    const underline = tab.parentElement?.querySelector("span[aria-hidden]");
+    expect(underline && getComputedStyle(underline).animationName).toBe("fd-draw-stroke");
+    expect(tab.querySelector("[data-icon]")).toHaveAttribute("data-icon", "code");
+    expect(screen.getByText("JavaScript")).toBeInTheDocument();
+    expect(
+      screen
+        .getByRole("tab", { name: "package.json" })
+        .parentElement?.querySelector("span[aria-hidden]"),
+    ).toBeNull();
+  });
+
   it("ファイルが無いときは案内を出し、エラーではエンジンを描かない", () => {
     const { unmount } = render(<Empty />);
     expect(screen.getByText("ファイルを選ぶと、ここに開きます。")).toBeInTheDocument();

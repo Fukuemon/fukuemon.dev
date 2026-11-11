@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { FileIcon } from "../../base/FileIcon/FileIcon";
 import { type TabItem, Tabs } from "../../base/Tabs/Tabs";
 import { type CodeThemeName, type VsCodeTheme, toVsCodeTheme } from "../../tokens/code-theme";
 import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
@@ -14,6 +15,8 @@ export type EditorFrameProps = {
   onSelect: (id: string) => void;
   /** 渡すと、ファイルのタブに閉じるボタンを付ける。 */
   onClose?: (id: string) => void;
+  /** 渡すと、エディタの下の帯に出す（カーソルの位置、言語）。 */
+  status?: ReactNode;
   /** エンジンに渡すコードの色のテーマ。どちらにするかは呼ぶ側が決める。 */
   themeName?: CodeThemeName;
   /** 渡すと、エンジンの代わりに読み込み中かエラーを出す。 */
@@ -32,6 +35,7 @@ export function EditorFrame({
   selectedId,
   onSelect,
   onClose,
+  status,
   themeName = "light",
   state,
   children,
@@ -45,16 +49,17 @@ export function EditorFrame({
   const theme = toVsCodeTheme(themeName);
 
   return (
-    <ToolPane state={paneState} title={title}>
+    <ToolPane footer={status} state={paneState} title={title}>
       {selected !== undefined && (
         <Tabs
           items={files.map((file) => ({
             id: file.id,
             label: file.label,
             closable: onClose !== undefined,
+            icon: <FileIcon kind="file" name={file.label} />,
             content: (
               // スクロールはエンジンが持つ。枠でもスクロールさせると、スクロールバーが 2 重になる
-              <div className="flex min-h-48 min-w-0 flex-col overflow-hidden bg-code-surface font-mono text-code text-code-text">
+              <div className="flex min-h-48 min-w-0 flex-1 flex-col overflow-hidden bg-code-surface font-mono text-code text-code-text">
                 {file.id === selected.id && children(theme, file)}
               </div>
             ),

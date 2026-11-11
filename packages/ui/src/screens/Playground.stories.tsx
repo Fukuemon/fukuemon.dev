@@ -50,7 +50,7 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
         </div>
       </header>
       <main className="flex flex-col gap-4 p-4 md:flex-row">
-        <div className="flex flex-col md:w-64 md:shrink-0">
+        <div className="grid md:w-64 md:shrink-0">
           <FileTree
             defaultExpandedIds={["src"]}
             items={FILES}
@@ -63,11 +63,28 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <EditorFrame files={OPEN_FILES} onSelect={setFileId} selectedId={fileId}>
-            {(theme, file) => (
-              <DummyEngine label={`${file.label} のコード`} lines={SOURCE_LINES} theme={theme} />
-            )}
-          </EditorFrame>
+          <div className="grid flex-1">
+            <EditorFrame
+              files={OPEN_FILES}
+              onSelect={setFileId}
+              selectedId={fileId}
+              status={
+                <>
+                  <span>JavaScript</span>
+                  <span>UTF-8 · 行 4、列 12</span>
+                </>
+              }
+            >
+              {(theme, file) => (
+                <DummyEngine
+                  label={`${file.label} のコード`}
+                  lines={SOURCE_LINES}
+                  theme={theme}
+                  variant="source"
+                />
+              )}
+            </EditorFrame>
+          </div>
           <TerminalFrame>
             {(theme) => <DummyEngine label="端末の出力" lines={TERMINAL_LINES} theme={theme} />}
           </TerminalFrame>

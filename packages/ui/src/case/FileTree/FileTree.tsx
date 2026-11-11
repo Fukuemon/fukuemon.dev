@@ -2,6 +2,7 @@ import { type FormEvent, type KeyboardEvent, useState } from "react";
 
 import { ActionMenu, type ActionMenuItem } from "../../base/ActionMenu/ActionMenu";
 import { Button } from "../../base/Button/Button";
+import { FileIcon } from "../../base/FileIcon/FileIcon";
 import { IconButton } from "../../base/IconButton/IconButton";
 import { TextField } from "../../base/TextField/TextField";
 import { type TreeNode, TreeView } from "../../base/TreeView/TreeView";
@@ -44,6 +45,17 @@ const find = (nodes: readonly TreeNode[], id: string, parent?: TreeNode): Found 
   }
   return undefined;
 };
+
+const withIcons = (nodes: readonly TreeNode[]): TreeNode[] =>
+  nodes.map((node) => ({
+    ...node,
+    icon:
+      node.icon ??
+      ((isOpen) => (
+        <FileIcon isOpen={isOpen} kind={node.children ? "directory" : "file"} name={node.label} />
+      )),
+    children: node.children && withIcons(node.children),
+  }));
 
 /**
  * ファイルとディレクトリの一覧と、ファイルとディレクトリの作成、名前の変更、削除の操作。TreeView、ActionMenu、TextField を組む。
@@ -167,7 +179,7 @@ export function FileTree({
       <div className="py-1">
         <TreeView
           defaultExpandedIds={defaultExpandedIds}
-          items={items}
+          items={withIcons(items)}
           label={title}
           onSelect={onSelect}
           selectedId={selectedId}

@@ -18,6 +18,8 @@ export type ToolPaneProps = {
   actions?: ReactNode;
   /** 題の下、中身の上に置く帯（ファイルのタブ、URL の欄）。 */
   toolbar?: ReactNode;
+  /** 中身の下に置く 1 行の帯（カーソルの位置、言語）。ready のときだけ出す。 */
+  footer?: ReactNode;
   state?: ToolPaneState;
   /** code はコードの面の色と等幅の文字で中身を描く。エディタと端末のエンジンを置く領域に使う。 */
   surface?: "plain" | "code";
@@ -32,6 +34,7 @@ export function ToolPane({
   title,
   actions,
   toolbar,
+  footer,
   state = { kind: "ready" },
   surface = "plain",
   children,
@@ -74,6 +77,11 @@ export function ToolPane({
           </div>
         )}
       </div>
+      {state.kind === "ready" && footer !== undefined && (
+        <div className="flex min-h-8 items-center justify-between gap-4 border-t border-border px-4 text-caption text-text-secondary">
+          {footer}
+        </div>
+      )}
     </section>
   );
 }

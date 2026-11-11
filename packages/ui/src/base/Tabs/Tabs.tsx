@@ -7,6 +7,8 @@ export type TabItem = {
   label: string;
   content: ReactNode;
   closable?: boolean;
+  /** ラベルの左に描く印。`aria-hidden` にする。 */
+  icon?: ReactNode;
 };
 
 export type TabsProps = {
@@ -60,7 +62,7 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
   };
 
   return (
-    <div className="flex flex-col">
+    <div className={clsx("flex flex-col", panel === "flush" && "min-h-0 flex-1")}>
       <div
         aria-label={label}
         className="flex overflow-x-auto border-b border-border"
@@ -69,19 +71,19 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
         {items.map((item, index) => {
           const isSelected = item.id === selected?.id;
           return (
-            <div
-              className={clsx(
-                "flex shrink-0 items-center border-b-2",
-                isSelected ? "border-primary" : "border-transparent",
+            <div className="relative flex shrink-0 items-center" key={item.id}>
+              {isSelected && (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-0 bottom-0 h-0.5 animate-stroke bg-primary"
+                />
               )}
-              key={item.id}
-            >
               <button
                 aria-controls={`${baseId}-panel-${item.id}`}
                 aria-keyshortcuts={item.closable ? "Delete" : undefined}
                 aria-selected={isSelected}
                 className={clsx(
-                  "h-11 cursor-pointer px-4 text-label focus-visible:focus-ring",
+                  "flex h-11 cursor-pointer items-center gap-2 px-4 text-label transition-colors focus-visible:focus-ring",
                   isSelected ? "text-text" : "text-text-secondary hover:text-text",
                 )}
                 id={`${baseId}-tab-${item.id}`}
@@ -95,13 +97,14 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
                 tabIndex={isSelected ? 0 : -1}
                 type="button"
               >
+                {item.icon}
                 {item.label}
               </button>
               {item.closable && (
                 <button
                   aria-hidden="true"
                   aria-label={`${item.label} を閉じる`}
-                  className="inline-grid size-11 cursor-pointer place-items-center text-text-secondary hover:text-text focus-visible:focus-ring"
+                  className="inline-grid size-11 cursor-pointer place-items-center text-text-secondary transition-colors hover:text-text focus-visible:focus-ring"
                   onClick={() => onClose?.(item.id)}
                   tabIndex={-1}
                   type="button"
@@ -123,7 +126,9 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
       {selected && (
         <div
           aria-labelledby={`${baseId}-tab-${selected.id}`}
-          className={panel === "padded" ? "p-4 focus-visible:focus-ring" : undefined}
+          className={
+            panel === "padded" ? "p-4 focus-visible:focus-ring" : "flex min-h-0 flex-1 flex-col"
+          }
           id={`${baseId}-panel-${selected.id}`}
           role="tabpanel"
           tabIndex={panel === "padded" ? 0 : undefined}

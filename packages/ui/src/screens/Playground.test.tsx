@@ -36,4 +36,11 @@ describe("コードを動かす画面", () => {
       expect(rectOf("エディタ").right).toBeLessThanOrEqual(rectOf("プレビュー").left);
     },
   );
+
+  it("幅 1280px では、ファイルの枠が端末の下端まで伸び、エディタが端末の上に余白なく続く", async () => {
+    await page.viewport(1280, 900);
+    render(<LongData />);
+    expect(Math.abs(rectOf("ファイル").bottom - rectOf("端末").bottom)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rectOf("エディタ").bottom + 16 - rectOf("端末").top)).toBeLessThanOrEqual(1);
+  });
 });
