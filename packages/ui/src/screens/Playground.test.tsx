@@ -43,4 +43,11 @@ describe("コードを動かす画面", () => {
     expect(Math.abs(rectOf("ファイル").bottom - rectOf("端末").bottom)).toBeLessThanOrEqual(1);
     expect(Math.abs(rectOf("エディタ").bottom + 16 - rectOf("端末").top)).toBeLessThanOrEqual(1);
   });
+
+  it("幅 1280px、高さ 900px では、右の列が長くても、端末が最初の画面に収まる", async () => {
+    await page.viewport(1280, 900);
+    render(<LongData />);
+    expect(rectOf("端末").bottom).toBeLessThanOrEqual(900);
+    expect(rectOf("エディタ").height).toBeLessThan(450);
+  });
 });

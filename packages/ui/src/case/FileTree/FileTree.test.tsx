@@ -79,6 +79,31 @@ describe("FileTree", () => {
     expect(labels()).not.toContain("app.js");
   });
 
+  it("木の項目で F2 のキーを押すと、その項目の名前を変える欄が開く。Delete のキーでは消さない", async () => {
+    render(<Default />);
+    const item = screen.getByRole("treeitem", { name: "package.json" });
+    expect(item).toHaveAttribute("aria-keyshortcuts", "F2");
+    item.focus();
+    await userEvent.keyboard("{Delete}");
+    expect(Default.args.onDelete).not.toHaveBeenCalled();
+    await userEvent.keyboard("{F2}");
+    const field = screen.getByRole("textbox", { name: "新しい名前" });
+    expect(field).toHaveFocus();
+    expect(field).toHaveValue("package.json");
+    await userEvent.clear(field);
+    await userEvent.type(field, "pkg.json{Enter}");
+    expect(Default.args.onRename).toHaveBeenCalledWith("package.json", "pkg.json");
+  });
+
+  it("onRename を渡さないときは、F2 のキーで欄を開かない", async () => {
+    render(<ReadOnly />);
+    const [item] = screen.getAllByRole("treeitem");
+    expect(item).not.toHaveAttribute("aria-keyshortcuts");
+    item!.focus();
+    await userEvent.keyboard("{F2}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
   it("何も選んでいないときは、操作のメニューを出さず、いちばん上の段に作る", async () => {
     render(<NoSelection />);
     expect(screen.queryByRole("button", { name: /の操作$/ })).toBeNull();

@@ -31,6 +31,7 @@ export type TabsProps = {
  * 左右の矢印のキーで隣のタブへ移って選び、Home と End で端へ移る。Tab のキーはパネルへ移る。
  * エディタのファイルのタブのために、閉じるボタンを足している。DADS のタブに無い要素である（packages/ui/DesignDoc.md の「DADS から外れる点」）。
  * 閉じるボタンはマウスで押すためのもので、タブの隣に置き、読み上げと Tab のキーの順から外す。タブの並びの中にタブ以外の操作を置けないためである。
+ * 閉じられるタブは、マウスの中ボタンでも閉じる。
  * キーボードと読み上げでは、選んだタブで Delete のキーを押して閉じる。閉じられるタブは `aria-keyshortcuts` でこのキーを示す。
  */
 export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "padded" }: TabsProps) {
@@ -87,7 +88,16 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
                   isSelected ? "text-text" : "text-text-secondary hover:text-text",
                 )}
                 id={`${baseId}-tab-${item.id}`}
+                onAuxClick={(event) => {
+                  if (event.button !== 1 || !item.closable) return;
+                  event.preventDefault();
+                  onClose?.(item.id);
+                }}
                 onClick={() => onSelect(item.id)}
+                // 中ボタンの押下で始まる自動スクロールを止める
+                onMouseDown={(event) => {
+                  if (event.button === 1 && item.closable) event.preventDefault();
+                }}
                 onKeyDown={(event) => handleKeyDown(event, index, item)}
                 ref={(node) => {
                   if (node) tabRefs.current.set(item.id, node);

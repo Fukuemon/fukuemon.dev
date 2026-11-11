@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
+import { DummyPreview } from "../ToolPane/fixtures";
 import { PreviewFrame } from "./PreviewFrame";
 
 const meta = {
@@ -9,7 +10,7 @@ const meta = {
   args: {
     url: "https://client.example:3000/",
     onReload: fn(),
-    children: <iframe srcDoc="<p>ダミーのプレビュー</p>" title="プレビューの画面" />,
+    children: <DummyPreview />,
   },
   decorators: [
     (Story) => (

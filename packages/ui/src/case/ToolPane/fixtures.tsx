@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import type { VsCodeTheme } from "../../tokens/code-theme";
 
@@ -97,6 +97,30 @@ export function DummyEngine({
         lines.join("\n")
       )}
     </pre>
+  );
+}
+
+const readPageColors = () => {
+  const style = getComputedStyle(document.body);
+  return { background: style.backgroundColor, text: style.color };
+};
+
+/**
+ * カタログでプレビューの iframe に入れるダミーの中身。iframe の中はテーマの CSS の変数を継がないので、
+ * 開いている画面の地の色と文字の色を読み、テーマを切り替えたときも読み直して、中身の色をテーマにそろえる。
+ */
+export function DummyPreview() {
+  const [colors, setColors] = useState(readPageColors);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setColors(readPageColors()));
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <iframe
+      srcDoc={`<style>body{margin:16px;background:${colors.background};color:${colors.text};font-family:sans-serif}</style><p>ダミーのプレビュー</p>`}
+      title="プレビューの画面"
+    />
   );
 }
 

@@ -16,6 +16,22 @@ describe("PreviewFrame", () => {
     expect(screen.getByTitle("プレビューの画面")).toBeInTheDocument();
   });
 
+  it("ダミーの中身の色は、開いている画面のテーマの地の色と文字の色にそろう", () => {
+    const srcDocOf = () => screen.getByTitle("プレビューの画面").getAttribute("srcdoc") ?? "";
+    const { unmount } = render(<Default />);
+    const light = srcDocOf();
+    expect(light).toContain(getComputedStyle(document.body).backgroundColor);
+    unmount();
+    document.documentElement.setAttribute("data-theme", "dark");
+    try {
+      render(<Default />);
+      expect(srcDocOf()).toContain(getComputedStyle(document.body).backgroundColor);
+      expect(srcDocOf()).not.toBe(light);
+    } finally {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  });
+
   it("再読み込みのボタンは 44 px 四方以上で押せ、押すと onReload を呼ぶ", async () => {
     render(<Default />);
     const button = screen.getByRole("button", { name: "再読み込み" });

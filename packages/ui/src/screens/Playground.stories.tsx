@@ -9,7 +9,7 @@ import { HttpExchangeList, type HttpExchange } from "../case/HttpExchangeList/Ht
 import { ACTORS, EXCHANGES, LONG_EXCHANGE } from "../case/HttpExchangeList/fixtures";
 import { PreviewFrame } from "../case/PreviewFrame/PreviewFrame";
 import { TerminalFrame } from "../case/TerminalFrame/TerminalFrame";
-import { DummyEngine, SOURCE_LINES, TERMINAL_LINES } from "../case/ToolPane/fixtures";
+import { DummyEngine, DummyPreview, SOURCE_LINES, TERMINAL_LINES } from "../case/ToolPane/fixtures";
 
 const meta = {
   title: "画面/コードを動かす画面",
@@ -49,21 +49,22 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
           <h1 className="font-heading text-heading-md font-semibold">認可コードを受け取る</h1>
         </div>
       </header>
-      <main className="flex flex-col gap-4 p-4 md:flex-row">
-        <div className="grid md:w-64 md:shrink-0">
-          <FileTree
-            defaultExpandedIds={["src"]}
-            items={FILES}
-            onCreate={() => {}}
-            onCreateDirectory={() => {}}
-            onDelete={() => {}}
-            onRename={() => {}}
-            onSelect={setFileId}
-            selectedId={fileId}
-          />
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="grid flex-1">
+      <main className="flex flex-col gap-4 p-4 md:flex-row md:items-start">
+        {/* 左の 2 列は、右の列の高さに伸びず、自分の中身の高さで止める。伸ばすと、エディタが伸びて端末が最初の画面の外へ出る */}
+        <div className="flex min-w-0 flex-col gap-4 md:flex-2 md:flex-row">
+          <div className="grid md:w-64 md:shrink-0">
+            <FileTree
+              defaultExpandedIds={["src"]}
+              items={FILES}
+              onCreate={() => {}}
+              onCreateDirectory={() => {}}
+              onDelete={() => {}}
+              onRename={() => {}}
+              onSelect={setFileId}
+              selectedId={fileId}
+            />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
             <EditorFrame
               files={OPEN_FILES}
               onSelect={setFileId}
@@ -84,14 +85,14 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
                 />
               )}
             </EditorFrame>
+            <TerminalFrame>
+              {(theme) => <DummyEngine label="端末の出力" lines={TERMINAL_LINES} theme={theme} />}
+            </TerminalFrame>
           </div>
-          <TerminalFrame>
-            {(theme) => <DummyEngine label="端末の出力" lines={TERMINAL_LINES} theme={theme} />}
-          </TerminalFrame>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <PreviewFrame onReload={() => {}} url="https://client.example:3000/">
-            <iframe srcDoc="<p>ダミーのプレビュー</p>" title="プレビューの画面" />
+            <DummyPreview />
           </PreviewFrame>
           <HttpExchangeList
             actors={ACTORS}
