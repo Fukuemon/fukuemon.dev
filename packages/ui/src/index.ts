@@ -30,6 +30,25 @@ export { TextField } from "./base/TextField/TextField";
 export type { TextFieldProps } from "./base/TextField/TextField";
 export { TreeView } from "./base/TreeView/TreeView";
 export type { TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
+export { EditorFrame } from "./case/EditorFrame/EditorFrame";
+export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFrame";
+export { FileTree } from "./case/FileTree/FileTree";
+export type { FileTreeProps } from "./case/FileTree/FileTree";
+export { HttpExchangeDetail } from "./case/HttpExchangeDetail/HttpExchangeDetail";
+export type { HttpExchangeDetailProps } from "./case/HttpExchangeDetail/HttpExchangeDetail";
+export { HttpExchangeList } from "./case/HttpExchangeList/HttpExchangeList";
+export type {
+  HttpActor,
+  HttpExchange,
+  HttpExchangeListProps,
+  HttpHeader,
+  HttpMessage,
+} from "./case/HttpExchangeList/HttpExchangeList";
+export { PreviewFrame } from "./case/PreviewFrame/PreviewFrame";
+export type { PreviewFrameProps } from "./case/PreviewFrame/PreviewFrame";
+export { TerminalFrame } from "./case/TerminalFrame/TerminalFrame";
+export type { TerminalFrameProps } from "./case/TerminalFrame/TerminalFrame";
+export type { ToolPaneState } from "./case/ToolPane/ToolPane";
 export { SearchBox } from "./case/SearchBox/SearchBox";
 export type { SearchBoxProps, SearchSuggestion } from "./case/SearchBox/SearchBox";
 export { SeriesPager } from "./case/SeriesPager/SeriesPager";
