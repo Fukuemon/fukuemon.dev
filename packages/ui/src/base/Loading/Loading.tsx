@@ -12,7 +12,7 @@ export function Loading({ label }: LoadingProps) {
     <div className="inline-flex items-center gap-3 text-body-dense text-text" role="status">
       <span
         aria-hidden="true"
-        className="size-6 shrink-0 animate-spin rounded-full border-4 border-surface-disabled border-t-primary"
+        className="size-6 shrink-0 animate-spin border-4 border-surface-disabled border-t-primary"
       />
       {label}
     </div>

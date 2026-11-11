@@ -101,7 +101,9 @@ export function TableOfContents({ headings }: TableOfContentsProps) {
         className={clsx(
           "flex min-h-11 items-center border-l-2 py-2 pr-2 text-body-dense underline-offset-4 hover:underline focus-visible:focus-ring",
           item.level === 3 ? "pl-8" : "pl-4",
-          isCurrent ? "border-primary font-bold text-text" : "border-border text-text-secondary",
+          isCurrent
+            ? "border-current-page font-bold text-current-page"
+            : "border-border text-text-secondary",
         )}
         href={`#${item.id}`}
       >

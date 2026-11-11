@@ -32,7 +32,7 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
     <dialog
       aria-labelledby={titleId}
       className={clsx(
-        "m-auto w-full max-w-lg rounded-lg bg-surface-raised p-0 text-text shadow-3",
+        "m-auto w-full max-w-lg bg-surface-raised p-0 text-text border border-border-field",
         "backdrop:bg-overlay",
       )}
       // Esc のキーでは、ブラウザが自分で閉じるのを止め、閉じるかを呼び出す側の isOpen に任せる
@@ -53,7 +53,7 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
           </h2>
           <button
             aria-label="閉じる"
-            className="-m-2 inline-grid size-11 shrink-0 cursor-pointer place-items-center rounded-md hover:bg-surface-subtle focus-visible:focus-ring"
+            className="-m-2 inline-grid size-11 shrink-0 cursor-pointer place-items-center hover:bg-surface-subtle focus-visible:focus-ring"
             onClick={onClose}
             type="button"
           >

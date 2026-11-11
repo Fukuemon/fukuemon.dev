@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import type { ComponentPropsWithRef } from "react";
 
 export type LinkProps = Omit<ComponentPropsWithRef<"a">, "className" | "style"> & {
@@ -7,14 +8,17 @@ export type LinkProps = Omit<ComponentPropsWithRef<"a">, "className" | "style"> 
 };
 
 /**
- * 文中のリンク。DADS のリンクの色で下線を引き、訪問済みのリンクを別の色にする。
+ * 文中のリンク。下線を引き、内部のリンクは link、外部のリンクは link-external の色にする。訪問済みのリンクは色で分けない。
  * JavaScript なしで動く `<a>` だけを出す。
  */
 export function Link({ isExternal = false, children, ...props }: LinkProps) {
   return (
     <a
       {...props}
-      className="rounded-sm text-link underline underline-offset-4 visited:text-link-visited hover:decoration-2 focus-visible:focus-ring"
+      className={clsx(
+        "underline underline-offset-4 hover:decoration-2 focus-visible:focus-ring",
+        isExternal ? "text-link-external" : "text-link visited:text-link-visited",
+      )}
       rel={isExternal ? "noopener noreferrer" : props.rel}
       target={isExternal ? "_blank" : props.target}
     >

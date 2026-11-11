@@ -25,7 +25,7 @@ const sizeClassName: Record<ButtonSize, string> = {
 
 const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
   clsx(
-    "relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-md text-label",
+    "relative inline-flex cursor-pointer items-center justify-center gap-2 text-label",
     "focus-visible:focus-ring",
     "aria-disabled:cursor-not-allowed aria-disabled:bg-surface-disabled aria-disabled:text-text-disabled aria-disabled:ring-0",
     variantClassName[variant],
@@ -73,7 +73,7 @@ export function Button({
       {isLoading && (
         <span
           aria-hidden
-          className="absolute size-5 animate-spin rounded-full border-2 border-surface-disabled border-t-text-secondary"
+          className="absolute size-5 animate-spin border-2 border-surface-disabled border-t-text-secondary"
         />
       )}
     </button>

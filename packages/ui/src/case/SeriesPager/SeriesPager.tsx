@@ -19,7 +19,7 @@ export type SeriesPagerProps = {
 };
 
 const linkClassName =
-  "flex min-h-11 flex-col gap-1 rounded-md p-4 ring-1 ring-border ring-inset hover:bg-surface-subtle focus-visible:focus-ring";
+  "flex min-h-11 flex-col gap-1 border-t border-border px-2 py-4 hover:bg-surface-subtle focus-visible:focus-ring";
 
 /**
  * シリーズの中の位置と、前と次の記事へのリンク。

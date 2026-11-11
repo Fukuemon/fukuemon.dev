@@ -11,7 +11,7 @@ export type SearchSuggestion = {
 };
 
 export type SearchBoxProps = {
-  /** 欄の見出し。 */
+  /** 欄の見出し。画面には出さず、読み上げにだけ渡す。欄の役割は「検索」のボタンで示す。 */
   label: string;
   /** 語を送る先。JavaScript が無くても、`<form method="get">` でこの URL に語を送る。 */
   action: string;
@@ -94,7 +94,7 @@ export function SearchBox({
   };
 
   return (
-    <form action={action} className="flex items-end gap-2" method="get" role="search">
+    <form action={action} className="flex items-center gap-2" method="get" role="search">
       <div className="relative min-w-0 flex-1">
         <TextField
           aria-activedescendant={isOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined}
@@ -103,7 +103,9 @@ export function SearchBox({
           aria-expanded={isOpen}
           autoComplete="off"
           defaultValue={defaultQuery}
+          appearance="underline"
           enterKeyHint="search"
+          isLabelHidden
           label={label}
           name={name}
           onBlur={() => {
@@ -127,7 +129,7 @@ export function SearchBox({
         {isOpen && (
           <div
             aria-label={`${label}の候補`}
-            className="absolute inset-x-0 top-full z-10 mt-1 flex flex-col rounded-md bg-surface-raised py-1 shadow-2"
+            className="absolute inset-x-0 top-full z-10 mt-1 flex flex-col border border-border-field bg-surface-raised py-1"
             id={listboxId}
             // 候補を押す間に欄からフォーカスが外れると、blur で候補が閉じて押せなくなる
             onMouseDown={(event) => event.preventDefault()}
@@ -138,7 +140,7 @@ export function SearchBox({
                 aria-selected={index === activeIndex}
                 className={clsx(
                   "flex min-h-11 items-center px-4 text-body-dense text-text hover:bg-surface-subtle",
-                  "aria-selected:bg-primary-surface aria-selected:font-bold",
+                  "border-l-2 border-transparent aria-selected:border-primary aria-selected:bg-primary-surface aria-selected:font-bold",
                 )}
                 href={suggestion.url}
                 id={optionId(index)}
@@ -157,7 +159,7 @@ export function SearchBox({
         {/* 中身を変える前から置いておかないと、読み上げの道具が変化を拾わない */}
         <p
           aria-live="polite"
-          className="absolute inset-x-0 top-full z-10 mt-1 rounded-md bg-surface-raised px-4 py-3 text-body-dense text-text-secondary shadow-2 empty:hidden"
+          className="absolute inset-x-0 top-full z-10 mt-1 bg-surface-raised px-4 py-3 text-body-dense border border-border-field text-text-secondary empty:hidden"
         >
           {isEmpty ? emptyMessage : undefined}
         </p>
