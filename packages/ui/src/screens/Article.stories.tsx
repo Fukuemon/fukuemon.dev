@@ -25,10 +25,12 @@ const SUGGESTIONS = [
 
 function SiteHeader() {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border px-6 py-4">
-      <p className="font-heading text-heading-md font-semibold text-text">fukuemon.dev</p>
-      <div className="w-80">
-        <SearchBox action="#search" label="記事を検索" suggestions={SUGGESTIONS} />
+    <header className="border-b-2 border-text px-6">
+      <div className="mx-auto flex min-h-16 max-w-page flex-wrap items-center justify-between gap-4">
+        <p className="font-heading text-heading-md font-semibold text-text">fukuemon.dev</p>
+        <div className="w-96">
+          <SearchBox action="#search" label="記事を検索" suggestions={SUGGESTIONS} />
+        </div>
       </div>
     </header>
   );
@@ -46,12 +48,15 @@ export const List: Story = {
   render: () => (
     <div className="min-h-screen bg-surface text-text">
       <SiteHeader />
-      <main className="mx-auto flex max-w-prose flex-col gap-4 px-6 py-8">
+      <main className="mx-auto flex max-w-page flex-col gap-4 px-6 py-8">
         <h1 className="font-heading text-heading-lg font-semibold">記事</h1>
         <ArtBand layout="band" motif="seigaiha" />
-        <ul className="flex flex-col gap-4">
+        <ul className="flex max-w-prose flex-col">
           {ARTICLES.map((article) => (
-            <li className="flex flex-col gap-1" key={article.title}>
+            <li
+              className="flex items-baseline justify-between gap-4 border-b border-border py-3"
+              key={article.title}
+            >
               <Link href="#article">{article.title}</Link>
               <span className="text-caption text-text-secondary">{article.date}</span>
             </li>
@@ -121,7 +126,7 @@ export const Article: Story = {
   render: () => (
     <div className="min-h-screen bg-surface text-text">
       <SiteHeader />
-      <div className="mx-auto flex max-w-5xl gap-8 px-6 py-8">
+      <div className="mx-auto flex max-w-page justify-between gap-8 px-6 py-8">
         <article className="flex max-w-prose min-w-0 flex-1 flex-col gap-8">
           <Breadcrumb
             items={[
