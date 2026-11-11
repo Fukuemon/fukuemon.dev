@@ -17,6 +17,8 @@ export default defineConfig(base, {
   // E2E の config の metadata は丸ごと置き換わるので、重ねて残す
   metadata: { ...base.metadata, capture: true, variant: VARIANT },
   use: {
+    // 録画の大きさと同じにする。既定の 1280x720 で描くと、動画の右と下に余白が出る
+    viewport: { width: 1600, height: 900 },
     video: {
       mode: "on",
       size: { width: 1600, height: 900 },
