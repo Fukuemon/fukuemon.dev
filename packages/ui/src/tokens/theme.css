@@ -1,7 +1,7 @@
 /*
  * fukuemon.dev のテーマ変数。Tailwind CSS のユーティリティの名前を、セマンティックトークンとプリミティブトークンに結ぶ。
- * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（adr/0020-design-tokens-from-dads.md）。
- * 余白と動きは、Tailwind のデフォルトの段をそのまま使う。
+ * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（adr/0024-tokens-of-fukuemon-dev.md）。
+ * 余白と動きの時間と緩急は、Tailwind のデフォルトの段をそのまま使う。デフォルトで組めない動きだけを、ここに animation として足す。
  */
 
 @import "./semantic.css";
@@ -39,6 +39,8 @@
   --color-primary-surface: var(--fd-color-primary-surface);
   --color-link: var(--fd-color-link);
   --color-link-visited: var(--fd-color-link-visited);
+  --color-link-external: var(--fd-color-link-external);
+  --color-current-page: var(--fd-color-current-page);
 
   --color-focus-outline: var(--fd-color-focus-outline);
   --color-focus-halo: var(--fd-color-focus-halo);
@@ -92,7 +94,7 @@
   /* 等幅の和文の字は BIZ UDGothic で受ける */
   --font-mono: "Noto Sans Mono", "BIZ UDGothic", monospace;
 
-  /* 文字: DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。14px より小さい文字を置かない */
+  /* 文字: 用途の名前で置く。14px より小さい文字を置かない */
   --text-caption: var(--fd-primitive-font-size-14);
   --text-caption--line-height: var(--fd-primitive-line-height-130);
   --text-body-dense: var(--fd-primitive-font-size-16);
@@ -108,7 +110,7 @@
   --text-heading-md--line-height: var(--fd-primitive-line-height-150);
   --text-heading-lg: var(--fd-primitive-font-size-28);
   --text-heading-lg--line-height: var(--fd-primitive-line-height-150);
-  /* 等幅: DADS は等幅のテキストスタイルを持たないので、同じ大きさの本文のスタイルの行高を使う */
+  /* 等幅: 同じ大きさの本文のスタイルの行高を使う */
   --text-code: var(--fd-primitive-font-size-16);
   --text-code--line-height: var(--fd-primitive-line-height-170);
   --text-code-dense: var(--fd-primitive-font-size-14);
@@ -119,21 +121,37 @@
   /* 見出しの明朝は 600 の 1 つだけを読み込む */
   --font-weight-semibold: 600;
 
-  --radius-sm: var(--fd-primitive-border-radius-4);
-  --radius-md: var(--fd-primitive-border-radius-8);
-  --radius-lg: var(--fd-primitive-border-radius-12);
-  --radius-full: var(--fd-primitive-border-radius-full);
-
-  /* 重なり。ライトは DADS の影、ダークは 1px の枠になる（semantic-dark.css）。重なる面は bg-surface-raised と組にする */
-  --shadow-1: var(--fd-shadow-1);
-  --shadow-2: var(--fd-shadow-2);
-  --shadow-3: var(--fd-shadow-3);
-
-  /* DADS の設定の例の 1 つ */
   --breakpoint-md: 48rem;
 
   /* 記事の本文の幅。16px の全角で 40 字 */
   --container-prose: 40rem;
+  /* ヘッダーと本文の外枠の幅。一覧と記事の列はこの中に置き、文字の列は prose に抑える */
+  --container-page: 68rem;
+
+  /* 読み込み中の印。罫が左から伸びて右へ抜ける。1 周 1600ms */
+  --animate-loading: fd-loading-stroke 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  /* 検索の欄のフォーカスの罫。緑の罫が左から 1 回引かれる */
+  --animate-stroke: fd-draw-stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 終わりの形を書かず、要素の元のスタイル（全長の罫）で止める。動きを減らす設定でも、罫は全長で残る */
+@keyframes fd-draw-stroke {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+/* 止めた後は元のスタイルの全長の罫に戻す。fill-mode を forwards にすると、動きを減らす設定で罫が消える */
+@keyframes fd-loading-stroke {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  50% {
+    clip-path: inset(0);
+  }
+  100% {
+    clip-path: inset(0 0 0 100%);
+  }
 }
 
 /* フォーカスの表示は、このユーティリティだけで書く。黄色の輪が要素に接し、その外に黒の枠を置く */

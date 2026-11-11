@@ -22,7 +22,7 @@ export function StatusBadge({ tone = "neutral", label }: StatusBadgeProps) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center rounded-sm border px-2 text-caption whitespace-nowrap text-text",
+        "inline-flex items-center border px-2 text-caption whitespace-nowrap text-text",
         toneClassName[tone],
       )}
     >

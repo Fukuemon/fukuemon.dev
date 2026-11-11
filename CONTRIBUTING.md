@@ -61,7 +61,7 @@ pnpm run test:ui
   - `packages/ui/src/tokens/tokens.gen.css`: 静的なファイルが読むトークンの CSS。`context/project.yml` の `design_system.tokens_css`
   - `packages/ui/src/tokens/code-theme.gen.json`: テーマごとに色の値まで解決したコードの色。Expressive Code、エディタ、端末のテーマの元
 - `lint` は、`packages/ui/src` のテーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）をエラーにする。
-- プリミティブトークンの値は、DADS の `@digital-go-jp/design-tokens` 2.1.0 からコピーする。値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足す。
+- プリミティブトークンの値は fukuemon.dev が決める（`adr/0024-tokens-of-fukuemon-dev.md`）。値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足し、`pnpm run check:contrast` で組み合わせを確認する。
 
 ## コミットするとき
 

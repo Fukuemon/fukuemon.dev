@@ -27,7 +27,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
               ) : (
                 <>
                   <a
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm text-link underline underline-offset-4 visited:text-link-visited hover:decoration-2 focus-visible:focus-ring"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-link underline underline-offset-4 visited:text-link-visited hover:decoration-2 focus-visible:focus-ring"
                     href={item.href}
                   >
                     {item.label}

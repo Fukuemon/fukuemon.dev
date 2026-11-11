@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading, Small } = composeStories(stories);
+const { Primary, PrimaryDisabled, Loading, SecondaryLoading, Small } = composeStories(stories);
 
 describe("Button", () => {
   it("押すと onClick を呼ぶ。Enter と Space でも押せる", async () => {
@@ -38,6 +38,17 @@ describe("Button", () => {
     expect(button).toHaveAttribute("aria-busy", "true");
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("読み込み中の印の罫は、ボタンの文の色で動く", () => {
+    for (const Story of [Loading, SecondaryLoading]) {
+      const { unmount } = render(<Story />);
+      const button = screen.getByRole("button", { name: "保存" });
+      const stroke = getComputedStyle(button.querySelector("[aria-hidden]")!, "::after");
+      expect(stroke.animationName).toBe("fd-loading-stroke");
+      expect(stroke.backgroundColor).toBe(getComputedStyle(button).color);
+      unmount();
+    }
   });
 
   it("S のボタンは、見た目の外まで 44×44 px 以上を押せる", () => {

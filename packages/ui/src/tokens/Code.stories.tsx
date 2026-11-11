@@ -61,7 +61,7 @@ function AnsiColors({ theme }: { theme: "light" | "dark" }) {
   const ansi = codeTheme[theme].ansi;
   return (
     <ul
-      className="grid grid-cols-2 gap-2 rounded-md p-4 font-mono text-code-dense md:grid-cols-4"
+      className="grid grid-cols-2 gap-2 p-4 font-mono text-code-dense md:grid-cols-4"
       style={{ backgroundColor: codeTheme[theme].surface }}
     >
       {Object.entries(ansi).map(([name, color]) => (

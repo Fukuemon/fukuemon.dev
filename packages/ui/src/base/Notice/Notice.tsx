@@ -40,7 +40,7 @@ const ICON_PATH: Record<NoticeTone, string> = {
 export function Notice({ tone = "info", title, children, isAlert = false }: NoticeProps) {
   return (
     <div
-      className={clsx("flex gap-3 rounded-md border-l-4 p-4 text-text", toneClassName[tone])}
+      className={clsx("flex gap-3 border-l-2 p-4 text-text", toneClassName[tone])}
       role={isAlert ? "alert" : undefined}
     >
       <svg

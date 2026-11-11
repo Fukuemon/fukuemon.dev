@@ -1,10 +1,10 @@
 export type LoadingProps = {
-  /** 待っていることを表す文。回転の印が止まっていても伝わるよう、必ず渡して画面に出す。 */
+  /** 待っていることを表す文。印が止まっていても伝わるよう、必ず渡して画面に出す。 */
   label: string;
 };
 
 /**
- * 終わりの見えない待ちを示す、回転の印と文。DADS のプログレスインジケーターを元にする。
+ * 終わりの見えない待ちを示す、罫の印と文。薄い罫の上を、主の色の罫が左から伸びて右へ抜ける。DADS のプログレスインジケーターを元にする。
  * 文は `role="status"` に入れ、読み上げの対象にする。
  */
 export function Loading({ label }: LoadingProps) {
@@ -12,7 +12,7 @@ export function Loading({ label }: LoadingProps) {
     <div className="inline-flex items-center gap-3 text-body-dense text-text" role="status">
       <span
         aria-hidden="true"
-        className="size-6 shrink-0 animate-spin rounded-full border-4 border-surface-disabled border-t-primary"
+        className="relative h-0.5 w-6 shrink-0 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-primary"
       />
       {label}
     </div>

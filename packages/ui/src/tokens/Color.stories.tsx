@@ -9,7 +9,15 @@ const GROUPS: { title: string; tokens: string[] }[] = [
   { title: "枠", tokens: ["border", "border-field"] },
   {
     title: "操作",
-    tokens: ["primary", "primary-hover", "primary-surface", "link", "link-visited"],
+    tokens: [
+      "primary",
+      "primary-hover",
+      "primary-surface",
+      "link",
+      "link-visited",
+      "link-external",
+      "current-page",
+    ],
   },
   { title: "フォーカス", tokens: ["focus-outline", "focus-halo"] },
   {
@@ -43,7 +51,7 @@ function ColorTokens() {
               <li key={token} className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="size-10 shrink-0 rounded-md border border-border-field"
+                  className="size-10 shrink-0 border border-border-field"
                   style={{ backgroundColor: `var(--fd-color-${token})` }}
                 />
                 <code className="font-mono text-code-dense">{token}</code>

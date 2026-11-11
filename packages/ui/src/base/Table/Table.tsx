@@ -30,7 +30,7 @@ export function Table({ caption, children }: TableProps) {
 }
 
 function TableHeader({ children }: { children: ReactNode }) {
-  return <thead className="bg-surface-subtle">{children}</thead>;
+  return <thead className="border-t-2 border-text *:border-text">{children}</thead>;
 }
 
 function TableBody({ children }: { children: ReactNode }) {

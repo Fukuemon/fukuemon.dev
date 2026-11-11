@@ -7,10 +7,27 @@ import * as stories from "./Loading.stories";
 const { Default } = composeStories(stories);
 
 describe("Loading", () => {
-  it("待っていることを status の文で示し、回転の印は読み上げない", () => {
+  it("待っていることを status の文で示し、罫の印は読み上げない", () => {
     render(<Default />);
     const status = screen.getByRole("status");
     expect(status).toHaveTextContent("実行環境を起動しています");
     expect(status.querySelector("[aria-hidden]")).not.toBeNull();
+  });
+
+  it("印は、border の色の罫の上で、主の色の罫を animate-loading で動かす", () => {
+    render(
+      <>
+        <Default />
+        <span className="bg-primary" data-testid="primary" />
+      </>,
+    );
+    const mark = screen.getByRole("status").querySelector("[aria-hidden]")!;
+    const stroke = getComputedStyle(mark, "::after");
+    expect(stroke.animationName).toBe("fd-loading-stroke");
+    expect(stroke.animationFillMode).toBe("none");
+    expect(stroke.backgroundColor).toBe(
+      getComputedStyle(screen.getByTestId("primary")).backgroundColor,
+    );
+    expect(mark.getBoundingClientRect().height).toBe(2);
   });
 });
