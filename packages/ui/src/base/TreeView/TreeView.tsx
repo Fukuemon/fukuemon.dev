@@ -1,11 +1,13 @@
 import { clsx } from "clsx";
-import { type KeyboardEvent, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
 /** 木の 1 つの項目。children を持つ項目は枝で、開閉できる。 */
 export type TreeNode = {
   id: string;
   label: string;
   children?: readonly TreeNode[];
+  /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
+  icon?: (isOpen: boolean) => ReactNode;
 };
 
 export type TreeViewProps = {
@@ -16,7 +18,12 @@ export type TreeViewProps = {
   selectedId?: string;
   onSelect?: (id: string) => void;
   defaultExpandedIds?: readonly string[];
+  /** 渡すと、項目で F2 のキーを押したときに呼ぶ。名前を変える欄を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
+  onRequestRename?: (id: string) => void;
 };
+
+/** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
+const TYPEAHEAD_RESET_MS = 500;
 
 type VisibleNode = {
   node: TreeNode;
@@ -43,6 +50,7 @@ const flatten = (
  * 項目を階層で並べる木。WAI-ARIA APG の Tree View のキーボードの操作に従う。
  * 上下の矢印のキーで見えている項目の間を移り、Home と End で端へ移る。
  * 右の矢印のキーは、閉じた枝を開き、開いた枝では最初の子へ移る。左の矢印のキーは、開いた枝を閉じ、それ以外では親へ移る。
+ * 文字を打つと、その文字で始まるラベルの項目へ移る（タイプアヘッド）。続けて打つと、打った文字の並びで探す。同じ文字だけを繰り返すと、その文字で始まる項目を順に巡る。
  * 見えている項目を `aria-level` 付きで平らに並べる。`group` で入れ子にすると、フォーカスの枠が子の項目まで囲むためである。
  */
 export function TreeView({
@@ -51,6 +59,7 @@ export function TreeView({
   selectedId,
   onSelect,
   defaultExpandedIds = [],
+  onRequestRename,
 }: TreeViewProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
   const visible = flatten(items, expanded);
@@ -59,6 +68,26 @@ export function TreeView({
     ? focusedId
     : (visible.find((v) => v.node.id === selectedId) ?? visible[0])?.node.id;
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
+  const typed = useRef({ text: "", timer: 0 });
+
+  useEffect(() => {
+    const current = typed.current;
+    return () => window.clearTimeout(current.timer);
+  }, []);
+
+  const typeAhead = (char: string, index: number) => {
+    const state = typed.current;
+    window.clearTimeout(state.timer);
+    state.text += char.toLowerCase();
+    state.timer = window.setTimeout(() => {
+      state.text = "";
+    }, TYPEAHEAD_RESET_MS);
+    const isRepeat = [...state.text].every((c) => c === state.text[0]);
+    const query = isRepeat ? state.text.slice(0, 1) : state.text;
+    const start = isRepeat ? index + 1 : index;
+    const ordered = [...visible.slice(start), ...visible.slice(0, start)];
+    focus(ordered.find((v) => v.node.label.toLowerCase().startsWith(query))?.node.id);
+  };
 
   const focus = (id: string | undefined) => {
     if (id === undefined) return;
@@ -94,7 +123,16 @@ export function TreeView({
         else focus(current.parentId);
       },
       Enter: () => onSelect?.(node.id),
+      F2: () => onRequestRename?.(node.id),
     };
+    const isChar = event.key.length === 1 && event.key !== " ";
+    if (isChar && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      typeAhead(event.key, index);
+      return;
+    }
+    typed.current.text = "";
+    if (event.key === "F2" && !onRequestRename) return;
     const action = keys[event.key];
     if (!action) return;
     event.preventDefault();
@@ -109,12 +147,13 @@ export function TreeView({
         return (
           <li
             aria-expanded={isBranch ? isOpen : undefined}
+            aria-keyshortcuts={onRequestRename ? "F2" : undefined}
             aria-level={level}
             aria-posinset={posInSet}
             aria-selected={onSelect ? node.id === selectedId : undefined}
             aria-setsize={setSize}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 hover:bg-surface-subtle focus-visible:focus-ring",
+              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
             )}
             key={node.id}
@@ -146,6 +185,7 @@ export function TreeView({
             >
               <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
             </svg>
+            {node.icon?.(isOpen)}
             {node.label}
           </li>
         );

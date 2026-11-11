@@ -5,9 +5,26 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Tabs.stories";
 
-const { Closable, Fixed } = composeStories(stories);
+const { Closable, Fixed, Flush } = composeStories(stories);
 
 describe("Tabs", () => {
+  it("flush のパネルは Tab のキーの順に入らず、タブの次に中身へ移る", async () => {
+    render(<Flush />);
+    const panel = screen.getByRole("tabpanel");
+    expect(panel).not.toHaveAttribute("tabindex");
+    expect(panel).not.toHaveClass("p-4");
+    await userEvent.click(screen.getByRole("tab", { name: "index.ts" }));
+    await userEvent.tab();
+    expect(screen.getByRole("textbox", { name: "index.ts の中身" })).toHaveFocus();
+  });
+
+  it("padded のパネルは Tab のキーの順に入る", async () => {
+    render(<Fixed />);
+    await userEvent.click(screen.getByRole("tab", { name: "ヘッダ" }));
+    await userEvent.tab();
+    expect(screen.getByRole("tabpanel")).toHaveFocus();
+  });
+
   it("左右の矢印のキーで隣のタブへ移って選び、端から反対の端へ回る", async () => {
     render(<Fixed />);
     await userEvent.click(screen.getByRole("tab", { name: "ヘッダ" }));
@@ -40,6 +57,17 @@ describe("Tabs", () => {
     await userEvent.keyboard("{Delete}");
     expect(screen.queryByRole("tab", { name: "index.ts" })).toBeNull();
     expect(screen.getByRole("tab", { name: "server.ts" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("閉じられるタブは、中ボタンのクリックで閉じ、閉じられないタブは閉じない", async () => {
+    const { unmount } = render(<Closable />);
+    await userEvent.click(screen.getByRole("tab", { name: "index.ts" }), { button: "middle" });
+    expect(screen.queryByRole("tab", { name: "index.ts" })).toBeNull();
+    unmount();
+    render(<Fixed />);
+    const [first] = screen.getAllByRole("tab");
+    await userEvent.click(first!, { button: "middle" });
+    expect(screen.getAllByRole("tab").length).toBeGreaterThan(0);
   });
 
   it("閉じるボタンを押すとタブを閉じる。タブと閉じるボタンは 44 px の高さで押せる", async () => {

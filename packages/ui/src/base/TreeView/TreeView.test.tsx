@@ -47,6 +47,23 @@ describe("TreeView", () => {
     expect(item("package.json")).toHaveFocus();
   });
 
+  it("文字を打つと、その文字で始まる項目へ移り、続けて打つと並びで探す。同じ文字の繰り返しは巡る", async () => {
+    render(<Expanded />);
+    await userEvent.tab();
+    await userEvent.keyboard("p");
+    expect(item("package.json")).toHaveFocus();
+    expect(item("token.ts")).toHaveAttribute("aria-selected", "true");
+    await userEvent.keyboard("{Home}to");
+    expect(item("token.ts")).toHaveFocus();
+    await userEvent.keyboard("{End}");
+    await userEvent.keyboard("zzz");
+    expect(item("README.md")).toHaveFocus();
+    await userEvent.keyboard("{Home}r");
+    expect(item("routes")).toHaveFocus();
+    await userEvent.keyboard("r");
+    expect(item("README.md")).toHaveFocus();
+  });
+
   it("Enter のキーで項目を選び、Tab のキーの順に入るのは 1 つの項目だけにする", async () => {
     render(<Expanded />);
     await userEvent.tab();

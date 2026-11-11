@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
-import { type TabItem, Tabs } from "./Tabs";
+import { TextField } from "../TextField/TextField";
+import { type TabItem, Tabs, type TabsProps } from "./Tabs";
 
 const FILES: TabItem[] = [
   { id: "index", label: "index.ts", content: "index.ts の中身", closable: true },
@@ -10,7 +11,7 @@ const FILES: TabItem[] = [
 ];
 
 /** 選んだタブと開いているタブを state で持つ例。 */
-function TabsExample({ items }: { items: TabItem[] }) {
+function TabsExample({ items, panel }: { items: TabItem[]; panel?: TabsProps["panel"] }) {
   const [open, setOpen] = useState(items);
   const [selectedId, setSelectedId] = useState(items[0]?.id ?? "");
   return (
@@ -23,6 +24,7 @@ function TabsExample({ items }: { items: TabItem[] }) {
         if (id === selectedId) setSelectedId(rest[0]?.id ?? "");
       }}
       onSelect={setSelectedId}
+      panel={panel}
       selectedId={selectedId}
     />
   );
@@ -46,5 +48,15 @@ export const Fixed: Story = {
       { id: "body", label: "本文", content: "本文" },
       { id: "cookies", label: "Cookie", content: "Cookie の一覧" },
     ],
+  },
+};
+export const Flush: Story = {
+  name: "余白とフォーカスを持たないパネル",
+  args: {
+    panel: "flush",
+    items: FILES.map((item) => ({
+      ...item,
+      content: <TextField label={`${item.label} の中身`} />,
+    })),
   },
 };
