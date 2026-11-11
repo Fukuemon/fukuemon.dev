@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
+import { HttpExchangeList } from "./HttpExchangeList";
 import * as stories from "./HttpExchangeList.stories";
 
 const { Default, Empty, Loading, Error } = composeStories(stories);
@@ -42,6 +43,20 @@ describe("HttpExchangeList", () => {
     await userEvent.click(rows()[0] as HTMLElement);
     expect(rows()[0]).toHaveAttribute("aria-current", "true");
     expect(rows()[2]).not.toHaveAttribute("aria-current");
+  });
+
+  it("200 未満の状態コードは灰の印にし、actors に無い者は id を 1 つ目の区別の色で出す", () => {
+    render(
+      <HttpExchangeList
+        actors={[{ id: "browser", name: "ブラウザ" }]}
+        exchanges={[
+          { id: "1", fromId: "browser", toId: "worker", method: "GET", url: "/", status: 101 },
+        ]}
+        onSelect={() => {}}
+      />,
+    );
+    expect(screen.getByText("101")).toHaveClass("border-border");
+    expect(screen.getByText("worker")).toHaveClass("text-categorical-1");
   });
 
   it("空、読み込み中、エラーでは、行の代わりに文を出す", () => {

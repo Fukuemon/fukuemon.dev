@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { page } from "vite-plus/test/browser/context";
 
+import { HttpExchangeDetail } from "./HttpExchangeDetail";
 import * as stories from "./HttpExchangeDetail.stories";
 
 const { Default, WithCookie, Unreached, Empty, LongUrlAndHeaders } = composeStories(stories);
@@ -24,6 +25,26 @@ describe("HttpExchangeDetail", () => {
     expect(screen.getByRole("table", { name: "レスポンスのヘッダ" })).not.toHaveTextContent(
       "Set-Cookie",
     );
+  });
+
+  it("Cookie のほかにヘッダが無いメッセージでは、表の代わりに文を出す", () => {
+    render(
+      <HttpExchangeDetail
+        actors={[]}
+        exchange={{
+          id: "1",
+          fromId: "browser",
+          toId: "client",
+          method: "GET",
+          url: "https://client.example/",
+          status: 204,
+          request: { headers: [{ name: "Cookie", value: "session=dummy" }] },
+          response: { headers: [] },
+        }}
+      />,
+    );
+    expect(screen.getAllByText("ヘッダはありません。")).toHaveLength(2);
+    expect(screen.getByRole("table", { name: "Cookie のヘッダ" })).toHaveTextContent("session");
   });
 
   it("届かなかったリクエストでは、レスポンスの側を出さない", () => {
