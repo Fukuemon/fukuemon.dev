@@ -16,9 +16,12 @@ export default defineConfig(base, {
   ],
   // E2E の config の metadata は丸ごと置き換わるので、重ねて残す
   metadata: { ...base.metadata, capture: true, variant: VARIANT },
+  // project の use が config の use より優先され、devices の 1280x720 が効くので、project にも viewport を足す
+  projects: base.projects?.map((project) => ({
+    ...project,
+    use: { ...project.use, viewport: { width: 1600, height: 900 } },
+  })),
   use: {
-    // 録画の大きさと同じにする。既定の 1280x720 で描くと、動画の右と下に余白が出る
-    viewport: { width: 1600, height: 900 },
     video: {
       mode: "on",
       size: { width: 1600, height: 900 },
