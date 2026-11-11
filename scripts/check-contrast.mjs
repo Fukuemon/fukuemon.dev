@@ -37,6 +37,8 @@ const TEXT_PAIRS = [
     ["primary-hover", bg],
     ["link", bg],
     ["link-visited", bg],
+    ["link-external", bg],
+    ["current-page", bg],
   ]),
   ["primary", "primary-surface"],
   // 主の操作のボタンは、主の色の面に反転の文字を載せる

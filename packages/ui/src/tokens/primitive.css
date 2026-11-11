@@ -1,8 +1,8 @@
 /*
  * fukuemon.dev のプリミティブトークン。セマンティックトークン（semantic.css）とテーマ変数（theme.css）が参照する値だけを持つ。
- * 値は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の dist/tokens.css からコピーし、名前を --fd-primitive- で始まる形にした（adr/0020-design-tokens-from-dads.md）。
- *   DADS の --color-primitive-<色> は --fd-primitive-color-<色> に、ほかの --<名前> は --fd-primitive-<名前> にした。
- *   新しい値が要るときは、DADS の同じバージョンから同じ規則の名前で足す。
+ * 値は fukuemon.dev が決める。地と罫と差し色は旧サイトの値で、生成りの紙に墨で刷る向きの温かい灰と、くすんだ緑、藍、錆を持つ（adr/0024-tokens-of-fukuemon-dev.md）。
+ * 名前は --fd-primitive-color-<色>-<段> にする。段は、数が大きいほど暗い。
+ * フォーカスの色、書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
  * 出典: https://github.com/digital-go-jp/design-tokens
  *
  * MIT License
@@ -29,66 +29,94 @@
  */
 
 :root {
-  --fd-primitive-color-blue-50: #e8f1fe;
-  --fd-primitive-color-blue-200: #c5d7fb;
-  --fd-primitive-color-blue-300: #9db7f9;
-  --fd-primitive-color-blue-800: #0031d8;
-  --fd-primitive-color-blue-900: #0017c1;
-  --fd-primitive-color-blue-1000: #00118f;
-  --fd-primitive-color-blue-1200: #000060;
-  --fd-primitive-color-light-blue-400: #57b8ff;
-  --fd-primitive-color-cyan-300: #79e2f2;
-  --fd-primitive-color-cyan-400: #2bc8e4;
-  --fd-primitive-color-cyan-900: #006f83;
-  --fd-primitive-color-cyan-1000: #006173;
-  --fd-primitive-color-cyan-1100: #004c59;
-  --fd-primitive-color-green-50: #e6f5ec;
-  --fd-primitive-color-green-300: #71c598;
-  --fd-primitive-color-green-400: #51b883;
-  --fd-primitive-color-green-800: #197a4b;
-  --fd-primitive-color-green-900: #115a36;
-  --fd-primitive-color-green-1100: #08351f;
-  --fd-primitive-color-lime-400: #9ddd15;
-  --fd-primitive-color-lime-900: #507500;
-  --fd-primitive-color-yellow-200: #ffe380;
+  /* 地と墨: 温かい灰の階調 */
+  --fd-primitive-color-sumi-0: #fcfbf8;
+  --fd-primitive-color-sumi-25: #f4f1ea;
+  --fd-primitive-color-sumi-50: #f4f2ec;
+  --fd-primitive-color-sumi-75: #f1eee6;
+  --fd-primitive-color-sumi-100: #e8e4da;
+  --fd-primitive-color-sumi-200: #d9d4c8;
+  --fd-primitive-color-sumi-300: #b9b4a8;
+  --fd-primitive-color-sumi-350: #9a948a;
+  --fd-primitive-color-sumi-400: #938d80;
+  --fd-primitive-color-sumi-450: #8a8375;
+  --fd-primitive-color-sumi-500: #78726a;
+  --fd-primitive-color-sumi-550: #6f695e;
+  --fd-primitive-color-sumi-600: #6a6459;
+  --fd-primitive-color-sumi-650: #57534b;
+  --fd-primitive-color-sumi-700: #3a352d;
+  --fd-primitive-color-sumi-750: #2e2921;
+  --fd-primitive-color-sumi-800: #211d17;
+  --fd-primitive-color-sumi-900: #1a1714;
+  --fd-primitive-color-sumi-950: #17140f;
+  --fd-primitive-color-sumi-1000: #0d0b08;
+  --fd-primitive-color-scrim-light: rgb(26 23 20 / 0.45);
+  --fd-primitive-color-scrim-dark: rgb(0 0 0 / 0.65);
+
+  /* 差し色: くすんだ緑 */
+  --fd-primitive-color-green-100: #dfe4d3;
+  --fd-primitive-color-green-200: #b4c4a0;
+  --fd-primitive-color-green-300: #9db086;
+  --fd-primitive-color-green-700: #4f6138;
+  --fd-primitive-color-green-800: #3d4b2b;
+  --fd-primitive-color-green-900: #262e1d;
+
+  /* 差し色: 藍 */
+  --fd-primitive-color-indigo-100: #d9e1ea;
+  --fd-primitive-color-indigo-200: #b2c9e6;
+  --fd-primitive-color-indigo-300: #8fb0d6;
+  --fd-primitive-color-indigo-700: #2c4a6e;
+  --fd-primitive-color-indigo-800: #1f3858;
+  --fd-primitive-color-indigo-900: #1e2833;
+
+  /* 差し色: 錆 */
+  --fd-primitive-color-rust-100: #f0dcd2;
+  --fd-primitive-color-rust-300: #e08a6c;
+  --fd-primitive-color-rust-700: #9e3a26;
+  --fd-primitive-color-rust-900: #33211a;
+
+  /* 状態: エラーの紅と、成功の青みの緑 */
+  --fd-primitive-color-crimson-100: #f5dde0;
+  --fd-primitive-color-crimson-200: #f5aabb;
+  --fd-primitive-color-crimson-300: #f08aa0;
+  --fd-primitive-color-crimson-700: #a81f3d;
+  --fd-primitive-color-crimson-800: #861830;
+  --fd-primitive-color-crimson-900: #3a1a20;
+  --fd-primitive-color-jade-100: #dcebe0;
+  --fd-primitive-color-jade-200: #aed8bb;
+  --fd-primitive-color-jade-300: #8cc6a0;
+  --fd-primitive-color-jade-700: #2e6a46;
+  --fd-primitive-color-jade-800: #22533a;
+  --fd-primitive-color-jade-900: #1b2e22;
+
+  /* 区別とコードの字句の色 */
+  --fd-primitive-color-purple-300: #c3a6e8;
+  --fd-primitive-color-purple-700: #5b3a8c;
+  --fd-primitive-color-teal-200: #a6dbe1;
+  --fd-primitive-color-teal-300: #7fc7cf;
+  --fd-primitive-color-teal-700: #1f6670;
+  --fd-primitive-color-teal-800: #184f57;
+  --fd-primitive-color-plum-200: #efbde0;
+  --fd-primitive-color-plum-300: #e59ccc;
+  --fd-primitive-color-plum-700: #8a2f6e;
+  --fd-primitive-color-plum-800: #6e2558;
+  --fd-primitive-color-wine-300: #e48fa8;
+  --fd-primitive-color-wine-800: #5e1b33;
+  --fd-primitive-color-olive-300: #c9c46a;
+  --fd-primitive-color-olive-700: #5f5a14;
+  --fd-primitive-color-ochre-200: #ecd08f;
+  --fd-primitive-color-ochre-300: #e0bb62;
+  --fd-primitive-color-ochre-700: #6e5a10;
+  --fd-primitive-color-ochre-800: #5a4a0c;
+  --fd-primitive-color-brown-200: #e8c08a;
+  --fd-primitive-color-brown-700: #7a4a12;
+  --fd-primitive-color-blue-300: #9fb4e8;
+  --fd-primitive-color-blue-700: #34508f;
+
+  /* フォーカス: DADS の黄色と黒 */
   --fd-primitive-color-yellow-300: #ffd43d;
-  --fd-primitive-color-yellow-400: #ffc700;
-  --fd-primitive-color-yellow-1000: #806300;
-  --fd-primitive-color-yellow-1100: #6e5600;
-  --fd-primitive-color-orange-50: #ffeee2;
-  --fd-primitive-color-orange-300: #ffa66d;
-  --fd-primitive-color-orange-900: #ac3e00;
-  --fd-primitive-color-orange-1000: #8b3200;
-  --fd-primitive-color-orange-1200: #541e00;
-  --fd-primitive-color-red-50: #fdeeee;
-  --fd-primitive-color-red-200: #ffbbbb;
-  --fd-primitive-color-red-300: #ff9696;
-  --fd-primitive-color-red-400: #ff7171;
-  --fd-primitive-color-red-900: #ce0000;
-  --fd-primitive-color-red-1000: #a90000;
-  --fd-primitive-color-red-1200: #620000;
-  --fd-primitive-color-magenta-300: #ff8eff;
-  --fd-primitive-color-magenta-400: #f661f6;
-  --fd-primitive-color-magenta-800: #aa00aa;
-  --fd-primitive-color-magenta-900: #8b008b;
-  --fd-primitive-color-magenta-1000: #6c006c;
-  --fd-primitive-color-purple-300: #cda6ff;
-  --fd-primitive-color-purple-800: #5c10be;
-  --fd-primitive-color-neutral-white: #ffffff;
-  --fd-primitive-color-neutral-black: #000000;
-  --fd-primitive-color-neutral-solid-gray-50: #f2f2f2;
-  --fd-primitive-color-neutral-solid-gray-100: #e6e6e6;
-  --fd-primitive-color-neutral-solid-gray-200: #cccccc;
-  --fd-primitive-color-neutral-solid-gray-300: #b3b3b3;
-  --fd-primitive-color-neutral-solid-gray-400: #999999;
-  --fd-primitive-color-neutral-solid-gray-420: #949494;
-  --fd-primitive-color-neutral-solid-gray-500: #7f7f7f;
-  --fd-primitive-color-neutral-solid-gray-600: #666666;
-  --fd-primitive-color-neutral-solid-gray-700: #4d4d4d;
-  --fd-primitive-color-neutral-solid-gray-800: #333333;
-  --fd-primitive-color-neutral-solid-gray-900: #1a1a1a;
-  --fd-primitive-color-neutral-opacity-gray-500: rgba(0, 0, 0, 0.5);
-  --fd-primitive-color-neutral-opacity-gray-700: rgba(0, 0, 0, 0.7);
+  --fd-primitive-color-black: #000000;
+
   --fd-primitive-font-weight-400: 400;
   --fd-primitive-font-weight-700: 700;
   --fd-primitive-font-family-sans: "Noto Sans JP", sans-serif;
@@ -102,11 +130,4 @@
   --fd-primitive-line-height-150: 1.5;
   --fd-primitive-line-height-160: 1.6;
   --fd-primitive-line-height-170: 1.7;
-  --fd-primitive-border-radius-4: 0.25rem;
-  --fd-primitive-border-radius-8: 0.5rem;
-  --fd-primitive-border-radius-12: 0.75rem;
-  --fd-primitive-border-radius-full: 624.9375rem;
-  --fd-primitive-elevation-1: 0 2px 8px 1px rgba(0, 0, 0, 0.1), 0 1px 5px 0 rgba(0, 0, 0, 0.3);
-  --fd-primitive-elevation-2: 0 2px 12px 2px rgba(0, 0, 0, 0.1), 0 1px 6px 0 rgba(0, 0, 0, 0.3);
-  --fd-primitive-elevation-3: 0 4px 16px 3px rgba(0, 0, 0, 0.1), 0 1px 6px 0 rgba(0, 0, 0, 0.3);
 }

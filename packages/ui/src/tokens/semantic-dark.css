@@ -8,156 +8,150 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --fd-color-surface: var(--fd-primitive-color-neutral-solid-gray-900);
-    --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-800);
-    --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-700);
-    --fd-color-surface-raised: var(--fd-primitive-color-neutral-solid-gray-800);
-    --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-700);
+    --fd-color-surface: var(--fd-primitive-color-sumi-950);
+    --fd-color-surface-subtle: var(--fd-primitive-color-sumi-800);
+    --fd-color-surface-disabled: var(--fd-primitive-color-sumi-750);
+    --fd-color-surface-raised: var(--fd-primitive-color-sumi-800);
+    --fd-color-overlay: var(--fd-primitive-color-scrim-dark);
 
-    --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-50);
-    --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-300);
-    --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-500);
-    --fd-color-text-inverse: var(--fd-primitive-color-neutral-solid-gray-900);
+    --fd-color-text: var(--fd-primitive-color-sumi-25);
+    --fd-color-text-secondary: var(--fd-primitive-color-sumi-300);
+    --fd-color-text-disabled: var(--fd-primitive-color-sumi-550);
+    --fd-color-text-inverse: var(--fd-primitive-color-sumi-950);
 
-    --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-700);
-    --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-400);
+    --fd-color-border: var(--fd-primitive-color-sumi-700);
+    --fd-color-border-field: var(--fd-primitive-color-sumi-450);
 
-    --fd-color-primary: var(--fd-primitive-color-green-400);
-    --fd-color-primary-hover: var(--fd-primitive-color-green-300);
-    --fd-color-primary-surface: var(--fd-primitive-color-green-1100);
-    --fd-color-link: var(--fd-primitive-color-light-blue-400);
-    --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
+    --fd-color-primary: var(--fd-primitive-color-green-300);
+    --fd-color-primary-hover: var(--fd-primitive-color-green-200);
+    --fd-color-primary-surface: var(--fd-primitive-color-green-900);
+    --fd-color-link: var(--fd-primitive-color-green-300);
+    --fd-color-link-visited: var(--fd-primitive-color-green-300);
+    --fd-color-link-external: var(--fd-primitive-color-indigo-300);
+    --fd-color-current-page: var(--fd-primitive-color-rust-300);
 
-    --fd-color-danger: var(--fd-primitive-color-red-300);
-    --fd-color-danger-hover: var(--fd-primitive-color-red-200);
-    --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
-    --fd-color-warning: var(--fd-primitive-color-orange-300);
-    --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
-    --fd-color-success: var(--fd-primitive-color-green-400);
-    --fd-color-success-surface: var(--fd-primitive-color-green-1100);
-    --fd-color-info: var(--fd-primitive-color-blue-300);
-    --fd-color-info-surface: var(--fd-primitive-color-blue-1200);
+    --fd-color-danger: var(--fd-primitive-color-crimson-300);
+    --fd-color-danger-hover: var(--fd-primitive-color-crimson-200);
+    --fd-color-danger-surface: var(--fd-primitive-color-crimson-900);
+    --fd-color-warning: var(--fd-primitive-color-rust-300);
+    --fd-color-warning-surface: var(--fd-primitive-color-rust-900);
+    --fd-color-success: var(--fd-primitive-color-jade-300);
+    --fd-color-success-surface: var(--fd-primitive-color-jade-900);
+    --fd-color-info: var(--fd-primitive-color-indigo-300);
+    --fd-color-info-surface: var(--fd-primitive-color-indigo-900);
 
     --fd-color-categorical-1: var(--fd-primitive-color-purple-300);
-    --fd-color-categorical-2: var(--fd-primitive-color-cyan-400);
-    --fd-color-categorical-3: var(--fd-primitive-color-magenta-300);
-    --fd-color-categorical-4: var(--fd-primitive-color-lime-400);
-    --fd-color-categorical-5: var(--fd-primitive-color-yellow-400);
+    --fd-color-categorical-2: var(--fd-primitive-color-teal-300);
+    --fd-color-categorical-3: var(--fd-primitive-color-plum-300);
+    --fd-color-categorical-4: var(--fd-primitive-color-olive-300);
+    --fd-color-categorical-5: var(--fd-primitive-color-ochre-300);
     --fd-color-categorical-6: var(--fd-primitive-color-blue-300);
 
-    /* コード: ダークのコードの面は黒にし、ページの面と分ける */
-    --fd-color-code-surface: var(--fd-primitive-color-neutral-black);
-    --fd-color-code-text: var(--fd-primitive-color-neutral-solid-gray-50);
-    --fd-color-code-comment: var(--fd-primitive-color-neutral-solid-gray-400);
-    --fd-color-code-keyword: var(--fd-primitive-color-magenta-300);
-    --fd-color-code-string: var(--fd-primitive-color-green-300);
-    --fd-color-code-number: var(--fd-primitive-color-orange-300);
-    --fd-color-code-function: var(--fd-primitive-color-light-blue-400);
-    --fd-color-code-type: var(--fd-primitive-color-cyan-300);
-    --fd-color-code-ansi-black: var(--fd-primitive-color-neutral-solid-gray-500);
-    --fd-color-code-ansi-red: var(--fd-primitive-color-red-400);
-    --fd-color-code-ansi-green: var(--fd-primitive-color-green-400);
-    --fd-color-code-ansi-yellow: var(--fd-primitive-color-yellow-400);
-    --fd-color-code-ansi-blue: var(--fd-primitive-color-blue-300);
-    --fd-color-code-ansi-magenta: var(--fd-primitive-color-magenta-400);
-    --fd-color-code-ansi-cyan: var(--fd-primitive-color-cyan-400);
-    --fd-color-code-ansi-white: var(--fd-primitive-color-neutral-solid-gray-200);
-    --fd-color-code-ansi-bright-black: var(--fd-primitive-color-neutral-solid-gray-400);
-    --fd-color-code-ansi-bright-red: var(--fd-primitive-color-red-300);
-    --fd-color-code-ansi-bright-green: var(--fd-primitive-color-green-300);
-    --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-yellow-200);
-    --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-blue-200);
-    --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-300);
-    --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
-    --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
+    /* コード: ダークのコードの面は地より暗くし、ページの面と分ける */
+    --fd-color-code-surface: var(--fd-primitive-color-sumi-1000);
+    --fd-color-code-text: var(--fd-primitive-color-sumi-25);
+    --fd-color-code-comment: var(--fd-primitive-color-sumi-400);
+    --fd-color-code-keyword: var(--fd-primitive-color-wine-300);
+    --fd-color-code-string: var(--fd-primitive-color-green-200);
+    --fd-color-code-number: var(--fd-primitive-color-brown-200);
+    --fd-color-code-function: var(--fd-primitive-color-indigo-300);
+    --fd-color-code-type: var(--fd-primitive-color-teal-300);
+    --fd-color-code-ansi-black: var(--fd-primitive-color-sumi-450);
+    --fd-color-code-ansi-red: var(--fd-primitive-color-crimson-300);
+    --fd-color-code-ansi-green: var(--fd-primitive-color-jade-300);
+    --fd-color-code-ansi-yellow: var(--fd-primitive-color-ochre-300);
+    --fd-color-code-ansi-blue: var(--fd-primitive-color-indigo-300);
+    --fd-color-code-ansi-magenta: var(--fd-primitive-color-plum-300);
+    --fd-color-code-ansi-cyan: var(--fd-primitive-color-teal-300);
+    --fd-color-code-ansi-white: var(--fd-primitive-color-sumi-200);
+    --fd-color-code-ansi-bright-black: var(--fd-primitive-color-sumi-300);
+    --fd-color-code-ansi-bright-red: var(--fd-primitive-color-crimson-200);
+    --fd-color-code-ansi-bright-green: var(--fd-primitive-color-jade-200);
+    --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-ochre-200);
+    --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-indigo-200);
+    --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-plum-200);
+    --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-teal-200);
+    --fd-color-code-ansi-bright-white: var(--fd-primitive-color-sumi-0);
 
     /* 挿絵: ダークは明るい空に山の影が並ぶ向きで、近景ほど地の色に近い。月だけを明るくする */
     --fd-art-far: 0.32;
     --fd-art-mid: 0.2;
     --fd-art-near: 0.1;
     --fd-art-moon: 0.85;
-
-    /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
-    --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
-    --fd-shadow-2: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
-    --fd-shadow-3: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
   }
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --fd-color-surface: var(--fd-primitive-color-neutral-solid-gray-900);
-  --fd-color-surface-subtle: var(--fd-primitive-color-neutral-solid-gray-800);
-  --fd-color-surface-disabled: var(--fd-primitive-color-neutral-solid-gray-700);
-  --fd-color-surface-raised: var(--fd-primitive-color-neutral-solid-gray-800);
-  --fd-color-overlay: var(--fd-primitive-color-neutral-opacity-gray-700);
+  --fd-color-surface: var(--fd-primitive-color-sumi-950);
+  --fd-color-surface-subtle: var(--fd-primitive-color-sumi-800);
+  --fd-color-surface-disabled: var(--fd-primitive-color-sumi-750);
+  --fd-color-surface-raised: var(--fd-primitive-color-sumi-800);
+  --fd-color-overlay: var(--fd-primitive-color-scrim-dark);
 
-  --fd-color-text: var(--fd-primitive-color-neutral-solid-gray-50);
-  --fd-color-text-secondary: var(--fd-primitive-color-neutral-solid-gray-300);
-  --fd-color-text-disabled: var(--fd-primitive-color-neutral-solid-gray-500);
-  --fd-color-text-inverse: var(--fd-primitive-color-neutral-solid-gray-900);
+  --fd-color-text: var(--fd-primitive-color-sumi-25);
+  --fd-color-text-secondary: var(--fd-primitive-color-sumi-300);
+  --fd-color-text-disabled: var(--fd-primitive-color-sumi-550);
+  --fd-color-text-inverse: var(--fd-primitive-color-sumi-950);
 
-  --fd-color-border: var(--fd-primitive-color-neutral-solid-gray-700);
-  --fd-color-border-field: var(--fd-primitive-color-neutral-solid-gray-400);
+  --fd-color-border: var(--fd-primitive-color-sumi-700);
+  --fd-color-border-field: var(--fd-primitive-color-sumi-450);
 
-  --fd-color-primary: var(--fd-primitive-color-green-400);
-  --fd-color-primary-hover: var(--fd-primitive-color-green-300);
-  --fd-color-primary-surface: var(--fd-primitive-color-green-1100);
-  --fd-color-link: var(--fd-primitive-color-light-blue-400);
-  --fd-color-link-visited: var(--fd-primitive-color-magenta-300);
+  --fd-color-primary: var(--fd-primitive-color-green-300);
+  --fd-color-primary-hover: var(--fd-primitive-color-green-200);
+  --fd-color-primary-surface: var(--fd-primitive-color-green-900);
+  --fd-color-link: var(--fd-primitive-color-green-300);
+  --fd-color-link-visited: var(--fd-primitive-color-green-300);
+  --fd-color-link-external: var(--fd-primitive-color-indigo-300);
+  --fd-color-current-page: var(--fd-primitive-color-rust-300);
 
-  --fd-color-danger: var(--fd-primitive-color-red-300);
-  --fd-color-danger-hover: var(--fd-primitive-color-red-200);
-  --fd-color-danger-surface: var(--fd-primitive-color-red-1200);
-  --fd-color-warning: var(--fd-primitive-color-orange-300);
-  --fd-color-warning-surface: var(--fd-primitive-color-orange-1200);
-  --fd-color-success: var(--fd-primitive-color-green-400);
-  --fd-color-success-surface: var(--fd-primitive-color-green-1100);
-  --fd-color-info: var(--fd-primitive-color-blue-300);
-  --fd-color-info-surface: var(--fd-primitive-color-blue-1200);
+  --fd-color-danger: var(--fd-primitive-color-crimson-300);
+  --fd-color-danger-hover: var(--fd-primitive-color-crimson-200);
+  --fd-color-danger-surface: var(--fd-primitive-color-crimson-900);
+  --fd-color-warning: var(--fd-primitive-color-rust-300);
+  --fd-color-warning-surface: var(--fd-primitive-color-rust-900);
+  --fd-color-success: var(--fd-primitive-color-jade-300);
+  --fd-color-success-surface: var(--fd-primitive-color-jade-900);
+  --fd-color-info: var(--fd-primitive-color-indigo-300);
+  --fd-color-info-surface: var(--fd-primitive-color-indigo-900);
 
   --fd-color-categorical-1: var(--fd-primitive-color-purple-300);
-  --fd-color-categorical-2: var(--fd-primitive-color-cyan-400);
-  --fd-color-categorical-3: var(--fd-primitive-color-magenta-300);
-  --fd-color-categorical-4: var(--fd-primitive-color-lime-400);
-  --fd-color-categorical-5: var(--fd-primitive-color-yellow-400);
+  --fd-color-categorical-2: var(--fd-primitive-color-teal-300);
+  --fd-color-categorical-3: var(--fd-primitive-color-plum-300);
+  --fd-color-categorical-4: var(--fd-primitive-color-olive-300);
+  --fd-color-categorical-5: var(--fd-primitive-color-ochre-300);
   --fd-color-categorical-6: var(--fd-primitive-color-blue-300);
 
-  /* コード: ダークのコードの面は黒にし、ページの面と分ける */
-  --fd-color-code-surface: var(--fd-primitive-color-neutral-black);
-  --fd-color-code-text: var(--fd-primitive-color-neutral-solid-gray-50);
-  --fd-color-code-comment: var(--fd-primitive-color-neutral-solid-gray-400);
-  --fd-color-code-keyword: var(--fd-primitive-color-magenta-300);
-  --fd-color-code-string: var(--fd-primitive-color-green-300);
-  --fd-color-code-number: var(--fd-primitive-color-orange-300);
-  --fd-color-code-function: var(--fd-primitive-color-light-blue-400);
-  --fd-color-code-type: var(--fd-primitive-color-cyan-300);
-  --fd-color-code-ansi-black: var(--fd-primitive-color-neutral-solid-gray-500);
-  --fd-color-code-ansi-red: var(--fd-primitive-color-red-400);
-  --fd-color-code-ansi-green: var(--fd-primitive-color-green-400);
-  --fd-color-code-ansi-yellow: var(--fd-primitive-color-yellow-400);
-  --fd-color-code-ansi-blue: var(--fd-primitive-color-blue-300);
-  --fd-color-code-ansi-magenta: var(--fd-primitive-color-magenta-400);
-  --fd-color-code-ansi-cyan: var(--fd-primitive-color-cyan-400);
-  --fd-color-code-ansi-white: var(--fd-primitive-color-neutral-solid-gray-200);
-  --fd-color-code-ansi-bright-black: var(--fd-primitive-color-neutral-solid-gray-400);
-  --fd-color-code-ansi-bright-red: var(--fd-primitive-color-red-300);
-  --fd-color-code-ansi-bright-green: var(--fd-primitive-color-green-300);
-  --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-yellow-200);
-  --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-blue-200);
-  --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-magenta-300);
-  --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-cyan-300);
-  --fd-color-code-ansi-bright-white: var(--fd-primitive-color-neutral-white);
+  /* コード: ダークのコードの面は地より暗くし、ページの面と分ける */
+  --fd-color-code-surface: var(--fd-primitive-color-sumi-1000);
+  --fd-color-code-text: var(--fd-primitive-color-sumi-25);
+  --fd-color-code-comment: var(--fd-primitive-color-sumi-400);
+  --fd-color-code-keyword: var(--fd-primitive-color-wine-300);
+  --fd-color-code-string: var(--fd-primitive-color-green-200);
+  --fd-color-code-number: var(--fd-primitive-color-brown-200);
+  --fd-color-code-function: var(--fd-primitive-color-indigo-300);
+  --fd-color-code-type: var(--fd-primitive-color-teal-300);
+  --fd-color-code-ansi-black: var(--fd-primitive-color-sumi-450);
+  --fd-color-code-ansi-red: var(--fd-primitive-color-crimson-300);
+  --fd-color-code-ansi-green: var(--fd-primitive-color-jade-300);
+  --fd-color-code-ansi-yellow: var(--fd-primitive-color-ochre-300);
+  --fd-color-code-ansi-blue: var(--fd-primitive-color-indigo-300);
+  --fd-color-code-ansi-magenta: var(--fd-primitive-color-plum-300);
+  --fd-color-code-ansi-cyan: var(--fd-primitive-color-teal-300);
+  --fd-color-code-ansi-white: var(--fd-primitive-color-sumi-200);
+  --fd-color-code-ansi-bright-black: var(--fd-primitive-color-sumi-300);
+  --fd-color-code-ansi-bright-red: var(--fd-primitive-color-crimson-200);
+  --fd-color-code-ansi-bright-green: var(--fd-primitive-color-jade-200);
+  --fd-color-code-ansi-bright-yellow: var(--fd-primitive-color-ochre-200);
+  --fd-color-code-ansi-bright-blue: var(--fd-primitive-color-indigo-200);
+  --fd-color-code-ansi-bright-magenta: var(--fd-primitive-color-plum-200);
+  --fd-color-code-ansi-bright-cyan: var(--fd-primitive-color-teal-200);
+  --fd-color-code-ansi-bright-white: var(--fd-primitive-color-sumi-0);
 
   /* 挿絵: ダークは明るい空に山の影が並ぶ向きで、近景ほど地の色に近い。月だけを明るくする */
   --fd-art-far: 0.32;
   --fd-art-mid: 0.2;
   --fd-art-near: 0.1;
   --fd-art-moon: 0.85;
-
-  /* 重なり: DADS の影は黒なので、ダークの面では見えない。影の代わりに、明るい面（surface-raised）と 1px の枠で示す */
-  --fd-shadow-1: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
-  --fd-shadow-2: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
-  --fd-shadow-3: 0 0 0 1px var(--fd-primitive-color-neutral-solid-gray-600);
 }
