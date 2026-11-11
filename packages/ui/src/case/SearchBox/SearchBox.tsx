@@ -1,7 +1,6 @@
 import { clsx } from "clsx";
 import { type KeyboardEvent, useId, useRef, useState } from "react";
 
-import { Button } from "../../base/Button/Button";
 import { TextField } from "../../base/TextField/TextField";
 
 /** 検索の候補の 1 件。選ぶと url へ移る。Pagefind の結果の title と url の名前に合わせる。 */
@@ -11,9 +10,9 @@ export type SearchSuggestion = {
 };
 
 export type SearchBoxProps = {
-  /** 欄の見出し。画面には出さず、読み上げにだけ渡す。欄の役割は「検索」のボタンで示す。 */
+  /** 欄の見出し。読み上げに渡し、画面には案内の文（placeholder）として明朝で出す。欄の役割は、案内の文と虫眼鏡の印で示す。 */
   label: string;
-  /** 語を送る先。JavaScript が無くても、`<form method="get">` でこの URL に語を送る。 */
+  /** 語を送る先。送るボタンは置かない。欄が 1 つの `<form method="get">` なので、JavaScript が無くても Enter のキーでこの URL に語を送る。 */
   action: string;
   /** 語を送るときのクエリの名前。 */
   name?: string;
@@ -30,7 +29,7 @@ export type SearchBoxProps = {
  * 記事の検索の語の欄と候補。WAI-ARIA APG の Combobox（list autocomplete）のキーボードの操作に従う。
  * 下と上の矢印のキーで候補の間を移り、端から反対の端へ回る。Enter のキーで選んだ候補へ移り、Esc のキーで候補を閉じる。
  * フォーカスは欄に置いたまま、選んだ候補を `aria-activedescendant` で示す。
- * 候補を選んでいないときの Enter のキーと「検索」のボタンは、form の送信に任せる。
+ * 候補を選んでいないときの Enter のキーは、form の送信に任せる。
  * 候補の一覧は、欄にフォーカスがある間だけ開く。
  */
 export function SearchBox({
@@ -94,8 +93,8 @@ export function SearchBox({
   };
 
   return (
-    <form action={action} className="flex items-center gap-2" method="get" role="search">
-      <div className="relative min-w-0 flex-1">
+    <form action={action} method="get" role="search">
+      <div className="relative min-w-0">
         <TextField
           aria-activedescendant={isOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined}
           aria-autocomplete="list"
@@ -107,7 +106,22 @@ export function SearchBox({
           enterKeyHint="search"
           isLabelHidden
           label={label}
+          leading={
+            <svg
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              strokeLinecap="square"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              width="20"
+            >
+              <circle cx="10" cy="10" r="6" />
+              <path d="M15 15l5 5" />
+            </svg>
+          }
           name={name}
+          placeholder={label}
           onBlur={() => {
             setFocused(false);
             close();
@@ -164,9 +178,6 @@ export function SearchBox({
           {isEmpty ? emptyMessage : undefined}
         </p>
       </div>
-      <Button type="submit" variant="secondary">
-        検索
-      </Button>
     </form>
   );
 }

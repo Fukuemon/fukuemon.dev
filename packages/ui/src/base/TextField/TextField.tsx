@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { type ComponentPropsWithRef, useId } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId } from "react";
 
 export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "className" | "style"> & {
   /** 欄の見出し。`<label>` で欄に結ぶ。 */
@@ -8,10 +8,16 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
   description?: string;
   /** 誤りの文。渡すと欄を `aria-invalid` にし、`aria-describedby` で欄に結ぶ。`role="alert"` は付けない。 */
   error?: string;
-  /** true のときは見出しを画面に出さず、読み上げにだけ渡す。欄の役割を、隣のボタンの文か置き場で示せるときだけに使う。 */
+  /** true のときは見出しを画面に出さず、読み上げにだけ渡す。欄の役割を、案内の文（placeholder）と印か、置き場で示せるときだけに使う。 */
   isLabelHidden?: boolean;
-  /** 欄の形。`underline` は下の 1 辺だけに枠を引き、ヘッダーのように面の上に溶け込ませる欄に使う。 */
+  /**
+   * 欄の形。`underline` は墨の下罫だけを引き、ヘッダーのように面の上に溶け込ませる欄に使う。
+   * 案内の文（placeholder）は明朝になる。hover で罫が 2px になり、フォーカスすると緑の罫が左から引かれる。
+   * フォーカスの表示は、標準の `focus-ring` の代わりにこの緑の罫が担う（DesignDoc の「フォーカスの表示」の例外）。
+   */
   appearance?: "boxed" | "underline";
+  /** `underline` の欄の左に置く印。装飾なので読み上げから外す。 */
+  leading?: ReactNode;
 };
 
 /**
@@ -25,6 +31,7 @@ export function TextField({
   required,
   isLabelHidden = false,
   appearance = "boxed",
+  leading,
   ...props
 }: TextFieldProps) {
   const id = useId();
@@ -43,24 +50,51 @@ export function TextField({
           {description}
         </p>
       )}
-      <input
-        {...props}
-        aria-describedby={describedBy}
-        aria-invalid={error === undefined ? undefined : true}
-        className={clsx(
-          "h-12 bg-surface text-body-dense text-text",
-          appearance === "boxed"
-            ? "px-4 ring-1 ring-border-field ring-inset"
-            : "border-b border-border-field px-1",
-          "focus-visible:focus-ring",
-          appearance === "boxed"
-            ? "aria-invalid:ring-2 aria-invalid:ring-danger"
-            : "aria-invalid:border-b-2 aria-invalid:border-danger",
-          "disabled:bg-surface-disabled disabled:text-text-disabled",
-        )}
-        id={id}
-        required={required}
-      />
+      {appearance === "boxed" ? (
+        <input
+          {...props}
+          aria-describedby={describedBy}
+          aria-invalid={error === undefined ? undefined : true}
+          className={clsx(
+            "h-12 bg-surface px-4 text-body-dense text-text ring-1 ring-border-field ring-inset",
+            "focus-visible:focus-ring aria-invalid:ring-2 aria-invalid:ring-danger",
+            "disabled:bg-surface-disabled disabled:text-text-disabled",
+          )}
+          id={id}
+          required={required}
+        />
+      ) : (
+        <div className="group relative flex items-center gap-2">
+          {leading !== undefined && (
+            <span
+              aria-hidden
+              className="flex shrink-0 pl-1 text-text-secondary group-focus-within:text-primary"
+            >
+              {leading}
+            </span>
+          )}
+          <input
+            {...props}
+            aria-describedby={describedBy}
+            aria-invalid={error === undefined ? undefined : true}
+            className={clsx(
+              "peer h-12 min-w-0 flex-1 bg-surface px-1 text-body-dense text-text outline-none",
+              "placeholder:font-heading placeholder:font-semibold placeholder:text-text-secondary",
+              "disabled:bg-surface-disabled disabled:text-text-disabled",
+            )}
+            id={id}
+            required={required}
+          />
+          <span
+            aria-hidden
+            className="absolute inset-x-0 bottom-0 h-px bg-text group-hover:h-0.5 peer-aria-invalid:h-0.5 peer-aria-invalid:bg-danger"
+          />
+          <span
+            aria-hidden
+            className="invisible absolute inset-x-0 bottom-0 h-0.5 bg-primary peer-focus:visible peer-focus:animate-stroke"
+          />
+        </div>
+      )}
       {error !== undefined && (
         <p className="flex items-center gap-1 text-caption text-danger" id={errorId}>
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" width="16">

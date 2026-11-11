@@ -22,24 +22,25 @@ describe("SearchBox", () => {
     expect(html).toContain('method="get"');
     expect(html).toContain('name="q"');
     expect(html).toContain("記事を検索");
-    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>.*検索.*<\/button>/);
+    expect(html).toContain('placeholder="記事を検索"');
+    expect(html).not.toContain("<button");
   });
 
-  it("欄の見出しは読み上げにだけ渡し、画面に出さない。欄は下の 1 辺だけに枠を引く", () => {
-    render(<Empty />);
+  it("欄の見出しは読み上げにだけ渡し、画面には案内の文と虫眼鏡の印を出す。送るボタンは置かない", () => {
+    const { container } = render(<Empty />);
     const input = screen.getByRole("combobox", { name: "記事を検索" });
+    expect(input).toHaveAttribute("placeholder", "記事を検索");
     expect(screen.getByText("記事を検索").getBoundingClientRect().width).toBeLessThanOrEqual(1);
-    expect(getComputedStyle(input).borderTopWidth).toBe("0px");
-    expect(getComputedStyle(input).borderBottomWidth).toBe("1px");
+    expect(container.querySelector('[aria-hidden="true"] svg')).toBeVisible();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(getComputedStyle(input).borderBottomWidth).toBe("0px");
   });
 
-  it("「検索」のボタンは 44 px 以上の高さで、押すと form を送る", async () => {
+  it("欄にフォーカスして Enter のキーを押すと form を送る", async () => {
     render(<Empty />);
     const submitted = vi.fn((event: SubmitEvent) => event.preventDefault());
     screen.getByRole("search").addEventListener("submit", submitted);
-    const button = screen.getByRole("button", { name: "検索" });
-    expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-    await userEvent.click(button);
+    await userEvent.type(screen.getByRole("combobox"), "oauth{Enter}");
     expect(submitted).toHaveBeenCalledOnce();
   });
 

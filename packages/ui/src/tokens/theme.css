@@ -130,6 +130,15 @@
 
   /* 読み込み中の印。罫が左から伸びて右へ抜ける。1 周 1600ms */
   --animate-loading: fd-loading-stroke 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  /* 検索の欄のフォーカスの罫。緑の罫が左から 1 回引かれる */
+  --animate-stroke: fd-draw-stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 終わりの形を書かず、要素の元のスタイル（全長の罫）で止める。動きを減らす設定でも、罫は全長で残る */
+@keyframes fd-draw-stroke {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
 }
 
 /* 止めた後は元のスタイルの全長の罫に戻す。fill-mode を forwards にすると、動きを減らす設定で罫が消える */

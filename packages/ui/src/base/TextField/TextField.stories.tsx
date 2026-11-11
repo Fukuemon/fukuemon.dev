@@ -29,4 +29,4 @@ export const Error: Story = {
 };
 export const Disabled: Story = { args: { disabled: true, defaultValue: "https://example.com/cb" } };
 export const LabelHidden: Story = { args: { isLabelHidden: true } };
-export const Underline: Story = { args: { appearance: "underline" } };
+export const Underline: Story = { args: { appearance: "underline", placeholder: "記事を検索" } };
