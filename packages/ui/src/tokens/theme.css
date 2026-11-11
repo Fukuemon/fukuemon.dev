@@ -1,7 +1,7 @@
 /*
  * fukuemon.dev のテーマ変数。Tailwind CSS のユーティリティの名前を、セマンティックトークンとプリミティブトークンに結ぶ。
  * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（adr/0024-tokens-of-fukuemon-dev.md）。
- * 余白と動きは、Tailwind のデフォルトの段をそのまま使う。
+ * 余白と動きの時間と緩急は、Tailwind のデフォルトの段をそのまま使う。デフォルトで組めない動きだけを、ここに animation として足す。
  */
 
 @import "./semantic.css";
@@ -127,6 +127,22 @@
   --container-prose: 40rem;
   /* ヘッダーと本文の外枠の幅。一覧と記事の列はこの中に置き、文字の列は prose に抑える */
   --container-page: 68rem;
+
+  /* 読み込み中の印。罫が左から伸びて右へ抜ける。1 周 1600ms */
+  --animate-loading: fd-loading-stroke 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* 止めた後は元のスタイルの全長の罫に戻す。fill-mode を forwards にすると、動きを減らす設定で罫が消える */
+@keyframes fd-loading-stroke {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  50% {
+    clip-path: inset(0);
+  }
+  100% {
+    clip-path: inset(0 0 0 100%);
+  }
 }
 
 /* フォーカスの表示は、このユーティリティだけで書く。黄色の輪が要素に接し、その外に黒の枠を置く */
