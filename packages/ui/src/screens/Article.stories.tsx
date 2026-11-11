@@ -48,20 +48,22 @@ export const List: Story = {
   render: () => (
     <div className="min-h-screen bg-surface text-text">
       <SiteHeader />
-      <main className="mx-auto flex max-w-page flex-col gap-4 px-6 py-8">
-        <h1 className="font-heading text-heading-lg font-semibold">記事</h1>
-        <ArtBand layout="band" motif="seigaiha" />
-        <ul className="flex max-w-prose flex-col">
-          {ARTICLES.map((article) => (
-            <li
-              className="flex items-baseline justify-between gap-4 border-b border-border py-3"
-              key={article.title}
-            >
-              <Link href="#article">{article.title}</Link>
-              <span className="text-caption text-text-secondary">{article.date}</span>
-            </li>
-          ))}
-        </ul>
+      <main className="px-6 py-8">
+        <div className="mx-auto flex max-w-page flex-col gap-4">
+          <h1 className="font-heading text-heading-lg font-semibold">記事</h1>
+          <ArtBand layout="band" motif="seigaiha" />
+          <ul className="flex flex-col">
+            {ARTICLES.map((article) => (
+              <li
+                className="flex items-baseline justify-between gap-4 border-b border-border py-3"
+                key={article.title}
+              >
+                <Link href="#article">{article.title}</Link>
+                <span className="text-caption text-text-secondary">{article.date}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </main>
     </div>
   ),
@@ -126,30 +128,34 @@ export const Article: Story = {
   render: () => (
     <div className="min-h-screen bg-surface text-text">
       <SiteHeader />
-      <div className="mx-auto flex max-w-page justify-between gap-8 px-6 py-8">
-        <article className="flex max-w-prose min-w-0 flex-1 flex-col gap-8">
-          <Breadcrumb
-            items={[
-              { label: "記事", href: "#articles" },
-              { label: "OAuth を手で追う", href: "#series" },
-              { label: "認可コードフローを手で追う", href: "#article" },
-            ]}
-          />
-          <h1 className="font-heading text-heading-lg font-semibold">認可コードフローを手で追う</h1>
-          {HEADINGS.map((item) => (
-            <Section item={item} key={item.id} />
-          ))}
-          <SeriesPager
-            next={{ title: "PKCE の値を作る", href: "#next" }}
-            position={2}
-            prev={{ title: "OAuth の登場人物", href: "#prev" }}
-            series="OAuth を手で追う"
-            total={5}
-          />
-        </article>
-        <aside className="sticky top-0 hidden w-64 shrink-0 self-start md:block">
-          <TableOfContents headings={HEADINGS} />
-        </aside>
+      <div className="px-6 py-8">
+        <div className="mx-auto flex max-w-page justify-between gap-8">
+          <article className="flex max-w-prose min-w-0 flex-1 flex-col gap-8">
+            <Breadcrumb
+              items={[
+                { label: "記事", href: "#articles" },
+                { label: "OAuth を手で追う", href: "#series" },
+                { label: "認可コードフローを手で追う", href: "#article" },
+              ]}
+            />
+            <h1 className="font-heading text-heading-lg font-semibold">
+              認可コードフローを手で追う
+            </h1>
+            {HEADINGS.map((item) => (
+              <Section item={item} key={item.id} />
+            ))}
+            <SeriesPager
+              next={{ title: "PKCE の値を作る", href: "#next" }}
+              position={2}
+              prev={{ title: "OAuth の登場人物", href: "#prev" }}
+              series="OAuth を手で追う"
+              total={5}
+            />
+          </article>
+          <aside className="sticky top-0 hidden w-64 shrink-0 self-start md:block">
+            <TableOfContents headings={HEADINGS} />
+          </aside>
+        </div>
       </div>
     </div>
   ),
