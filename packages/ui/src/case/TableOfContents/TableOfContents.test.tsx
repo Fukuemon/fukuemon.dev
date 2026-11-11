@@ -55,6 +55,24 @@ describe("TableOfContents", () => {
     expect(link("PKCE の値を付ける")).not.toHaveAttribute("aria-current");
   });
 
+  it("読んでいる見出しのリンクは、current-page の色の文字と左の線で示す", async () => {
+    render(
+      <>
+        <Reading />
+        <span className="text-current-page" data-testid="current-page" />
+      </>,
+    );
+    await userEvent.click(link("トークンと引き換える"));
+    await expect
+      .poll(() => link("トークンと引き換える").getAttribute("aria-current"))
+      .toBe("location");
+    const expected = getComputedStyle(screen.getByTestId("current-page")).color;
+    const current = getComputedStyle(link("トークンと引き換える"));
+    expect(current.color).toBe(expected);
+    expect(current.borderLeftColor).toBe(expected);
+    expect(getComputedStyle(link("PKCE の値を付ける")).color).not.toBe(expected);
+  });
+
   it("見出しを一度に飛び越えて移っても、読んでいる見出しが追う", async () => {
     render(<Reading />);
     window.scrollTo(0, window.innerHeight * 1.5);

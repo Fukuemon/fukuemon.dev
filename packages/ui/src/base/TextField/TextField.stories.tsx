@@ -28,3 +28,5 @@ export const Error: Story = {
   args: { defaultValue: "example.com", error: "https:// で始まる URL を入れる" },
 };
 export const Disabled: Story = { args: { disabled: true, defaultValue: "https://example.com/cb" } };
+export const LabelHidden: Story = { args: { isLabelHidden: true } };
+export const Underline: Story = { args: { appearance: "underline" } };

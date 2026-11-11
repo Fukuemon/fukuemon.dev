@@ -25,6 +25,14 @@ describe("SearchBox", () => {
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*>.*検索.*<\/button>/);
   });
 
+  it("欄の見出しは読み上げにだけ渡し、画面に出さない。欄は下の 1 辺だけに枠を引く", () => {
+    render(<Empty />);
+    const input = screen.getByRole("combobox", { name: "記事を検索" });
+    expect(screen.getByText("記事を検索").getBoundingClientRect().width).toBeLessThanOrEqual(1);
+    expect(getComputedStyle(input).borderTopWidth).toBe("0px");
+    expect(getComputedStyle(input).borderBottomWidth).toBe("1px");
+  });
+
   it("「検索」のボタンは 44 px 以上の高さで、押すと form を送る", async () => {
     render(<Empty />);
     const submitted = vi.fn((event: SubmitEvent) => event.preventDefault());
