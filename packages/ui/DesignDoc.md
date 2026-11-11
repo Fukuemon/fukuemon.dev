@@ -5,7 +5,7 @@ description: 自前の値のトークンの層とテーマ、コードと HTTP �
 status: stable
 governs:
   - packages/ui/
-verified_commit: 8ac34710512ad69d6e809b063ef0e83c05060da0
+verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 ---
 
 # デザインシステム（packages/ui）
