@@ -1,6 +1,10 @@
 {
   "rules": {
-    "preset-ai-words-ja": true,
+    "preset-ai-words-ja": {
+      "no-ai-words": {
+        "allows": ["門"]
+      }
+    },
     "prh": {
       "rulePaths": ["./prh.yml"]
     },
