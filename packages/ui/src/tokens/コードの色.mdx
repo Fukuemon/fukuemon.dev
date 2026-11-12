@@ -1,0 +1,26 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Code.stories";
+
+<Meta of={Stories} />
+
+# コードの色
+
+記事のコードブロック、エディタ、端末が字句に当てるコードの色を、見本のコードと端末の 16 色で並べる。
+
+- 使う場面: `packages/ui/design/tokens.md` の「色」の「コード」の行
+- 当てる字句と決まり: `packages/ui/DesignDoc.md` の「コードの色」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `COLOR-TOKEN`、`STATE-NOT-COLOR-ONLY`
+- 値: `src/tokens/semantic.css`（ライト）と `src/tokens/semantic-dark.css`（ダーク）のコードの種類のトークン、生成した `src/tokens/code-theme.gen.json`
+
+## ライト
+
+ライトのテーマのコードの色。
+
+<Canvas of={Stories.Light} story={{ inline: false, height: "700px" }} />
+
+## ダーク
+
+ダークのテーマのコードの色。
+
+<Canvas of={Stories.Dark} story={{ inline: false, height: "700px" }} />
