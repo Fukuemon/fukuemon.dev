@@ -7,3 +7,31 @@ body {
   color: var(--fd-color-text);
   font-family: var(--font-sans);
 }
+
+/*
+ * addon-docs は Docs のページの背景と文字を固定の色で描くので、ツールバーのテーマに合わせて上書きする。
+ * story の中（.docs-story の子孫）は、コンポーネントのクラスのままにする。
+ */
+.sbdocs.sbdocs-wrapper,
+.sbdocs.sbdocs-preview,
+.docblock-argstable.docblock-argstable :is(thead, tbody) > tr > :is(td, th) {
+  background-color: var(--fd-color-surface);
+  border-color: var(--fd-color-border);
+  color: var(--fd-color-text);
+}
+
+.sbdocs-content :is(h1, h2, h3, h4, h5, h6, p, li, a, span, div):not(.docs-story, .docs-story *) {
+  border-color: var(--fd-color-border);
+  color: var(--fd-color-text);
+}
+
+.docblock-argstable.docblock-argstable :is(td, th) :is(span, div, p) {
+  color: var(--fd-color-text);
+}
+
+.sbdocs-content code:not(.docs-story *),
+.docblock-argstable.docblock-argstable code {
+  background-color: var(--fd-color-surface-subtle);
+  border-color: var(--fd-color-border);
+  color: var(--fd-color-text);
+}
