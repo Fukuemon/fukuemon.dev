@@ -20,6 +20,8 @@ export type TreeViewProps = {
   defaultExpandedIds?: readonly string[];
   /** 渡すと、項目で F2 のキーを押したときに呼ぶ。名前を変える欄を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
   onRequestRename?: (id: string) => void;
+  /** 渡すと、項目で Delete のキーを押したときに呼ぶ。削除の確認を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
+  onRequestDelete?: (id: string) => void;
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -60,6 +62,7 @@ export function TreeView({
   onSelect,
   defaultExpandedIds = [],
   onRequestRename,
+  onRequestDelete,
 }: TreeViewProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
   const visible = flatten(items, expanded);
@@ -124,6 +127,7 @@ export function TreeView({
       },
       Enter: () => onSelect?.(node.id),
       F2: () => onRequestRename?.(node.id),
+      Delete: () => onRequestDelete?.(node.id),
     };
     const isChar = event.key.length === 1 && event.key !== " ";
     if (isChar && !event.ctrlKey && !event.metaKey && !event.altKey) {
@@ -133,11 +137,15 @@ export function TreeView({
     }
     typed.current.text = "";
     if (event.key === "F2" && !onRequestRename) return;
+    if (event.key === "Delete" && !onRequestDelete) return;
     const action = keys[event.key];
     if (!action) return;
     event.preventDefault();
     action();
   };
+
+  const shortcuts =
+    [onRequestRename && "F2", onRequestDelete && "Delete"].filter(Boolean).join(" ") || undefined;
 
   return (
     <ul aria-label={label} className="flex flex-col text-body-dense text-text" role="tree">
@@ -147,7 +155,7 @@ export function TreeView({
         return (
           <li
             aria-expanded={isBranch ? isOpen : undefined}
-            aria-keyshortcuts={onRequestRename ? "F2" : undefined}
+            aria-keyshortcuts={shortcuts}
             aria-level={level}
             aria-posinset={posInSet}
             aria-selected={onSelect ? node.id === selectedId : undefined}
