@@ -15,7 +15,7 @@ fukuemon.dev のドメインの下に、サイトのほかに、複数のアプ�
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](0021-ui-components-and-catalog.md)
 - 訪問者のアカウントを持たないので、サイトが持つ訪問者のデータは、訪問者のブラウザに保存したデータだけである。
   - ADR-0008: [読者の identity を前提とする機能を作らず、バックエンドを持たない](0008-no-reader-identity.md)
-- プレイグラウンドは、訪問者がブラウザの中で使うツールの集まりである。最初のツールは、コードと SQL の実行環境である。キャンバスとスライドのエディタを、後から追加する。訪問者が作ったファイル、図、スライドは、訪問者のブラウザに保存する。
+- プレイグラウンドは、訪問者がブラウザの中で使う複数のツール（コードと SQL の実行環境、キャンバス、スライドのエディタ）を提供する。最初のツールは、コードと SQL の実行環境である。キャンバスとスライドのエディタを、後から追加する。訪問者が作ったファイル、図、スライドは、訪問者のブラウザに保存する。
   - 出典: [PRD](../PRD.md#実行環境とプレイグラウンド)
 - 実行環境の方式は、実行環境の要求の prototype で決める。候補の WebContainers は、cross-origin isolation（`COOP: same-origin` と `COEP: require-corp`）を求める。
   - 出典: [WebContainers: Configuring Headers](https://webcontainers.io/guides/configuring-headers)
