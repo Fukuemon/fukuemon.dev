@@ -154,9 +154,10 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 状態: 枝の開閉、選択、hover、フォーカス。
 - 内容の制約: `label` を木の名前に渡す。
 - キーボード: APG の Tree View に従う。上下の矢印のキーで項目を移り、右の矢印のキーで枝を開いて子へ、左の矢印のキーで枝を閉じて親へ移る。Home と End で端の項目へ移り、Enter で選ぶ。
-  - APG が必須にしない操作を 2 つ足す。
+  - APG が必須にしない操作を 3 つ足す。
   - 文字を打つと、その文字で始まる項目へ移る（タイプアヘッド）。長い木で目的の項目へ早く移るためである。
-  - `onRequestRename` を渡すと、項目で F2 のキーを押して名前の変更を呼べる。項目は `aria-keyshortcuts="F2"` を持つ。Delete のキーでの削除は割り当てない。確認のダイアログが無く、誤って消すのを防げないためである。
+  - `onRequestRename` を渡すと、項目で F2 のキーを押して名前の変更を呼べる。項目は `aria-keyshortcuts="F2"` を持つ。
+  - `onRequestDelete` を渡すと、項目で Delete のキーを押して削除の確認を呼べる。項目は `aria-keyshortcuts="Delete"` を持つ。両方を渡すと、`aria-keyshortcuts` は `"F2 Delete"` になる。
 
 ### SplitPane
 
@@ -221,7 +222,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 変種: 渡す操作（作成、ディレクトリの作成、名前の変更、削除）ごとに、題の右の操作とメニューの項目が出る。
 - 状態: 選んだ項目あり、選んだ項目なし、作成中と名前の変更中の欄、メニューを開いている、空、読み込み中、エラー。削除は `ActionMenu` の `isDanger` の項目にする。
 - 内容の制約: 空や空白だけの名前は確定しない。
-- キーボード: `TreeView` の操作を継ぐ。F2 で名前の欄を開き、Enter で確定し、Esc で取り消す。Delete のキーは割り当てない。
+- キーボード: `TreeView` の操作を継ぐ。F2 で名前の欄を開き、Enter で確定し、Esc で取り消す。Delete で、選んだ項目の削除（`onDelete`）を呼ぶ。確認のダイアログは呼ぶ側が `ConfirmDialog` で開く。
 
 ### ConfirmDialog
 

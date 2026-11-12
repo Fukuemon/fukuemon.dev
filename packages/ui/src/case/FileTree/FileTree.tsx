@@ -21,7 +21,7 @@ export type FileTreeProps = {
   onCreateDirectory?: (name: string, parentId: string | undefined) => void;
   /** 渡すと、選んだ項目の操作のメニューに、名前の変更を足す。 */
   onRename?: (id: string, name: string) => void;
-  /** 渡すと、選んだ項目の操作のメニューに、削除を足す。確認は呼ぶ側が行う。 */
+  /** 渡すと、選んだ項目の操作のメニューに、削除を足し、木の項目の Delete のキーでも呼ぶ。確認は呼ぶ側が行う。 */
   onDelete?: (id: string) => void;
   /** 渡すと、木の代わりに読み込み中かエラーを出す。 */
   state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
@@ -60,7 +60,7 @@ const withIcons = (nodes: readonly TreeNode[]): TreeNode[] =>
 /**
  * ファイルとディレクトリの一覧と、ファイルとディレクトリの作成、名前の変更、削除の操作。TreeView、ActionMenu、TextField を組む。
  * 操作は、題の右のボタンとメニューから、選んだ項目に対して行う。木の行の中に操作を置かないのは、treeitem の中に押せるものを入れられないためである。
- * 木の項目で F2 のキーを押すと、その項目の名前を変える欄を開く（onRename を渡したとき）。削除のキーは足さない。確認のダイアログがないため、誤って消すのを防げない。
+ * 木の項目で F2 のキーを押すと、その項目の名前を変える欄を開く（onRename を渡したとき）。Delete のキーを押すと、その項目で onDelete を呼ぶ（onDelete を渡したとき）。確認のダイアログは呼ぶ側が開く。
  * 名前の欄は Enter のキーで確定し、Esc のキーでやめる。
  */
 export function FileTree({
@@ -190,6 +190,7 @@ export function FileTree({
                 }
               : undefined
           }
+          onRequestDelete={onDelete}
           onSelect={onSelect}
           selectedId={selectedId}
         />
