@@ -1,0 +1,92 @@
+import { Canvas, Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Text.stories";
+
+<Meta of={Stories} />
+
+# 文字
+
+画面のコードが文字を書くときの、テーマ変数の文字のユーティリティを、1 段ずつ見本と使う場面で並べる。
+
+- 使う場面と規則、DADS のスタイルとの対応: `packages/ui/design/tokens.md` の「文字」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `TEXT-MIN-SIZE`、`COLOR-TOKEN`
+- 値: `src/tokens/primitive.css` と `src/tokens/theme.css`
+
+## 見出し
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
+    {[
+      ["text-heading-lg", "font-heading font-semibold text-heading-lg", "記事の題"],
+      ["text-heading-md", "font-heading font-semibold text-heading-md", "記事の見出し"],
+      [
+        "text-heading-sm",
+        "font-heading font-semibold text-heading-sm",
+        "記事の小見出し、ダイアログの題",
+      ],
+    ].map(([name, cls, use]) => (
+      <div key={name} className="flex flex-col gap-1">
+        <p className={cls}>記事を読み、コードを動かす。Read the article.</p>
+        <p className="font-mono text-code-dense text-text-secondary">
+          {name}: {use}
+        </p>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+## 本文とラベル
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
+    {[
+      ["text-body", "font-sans text-body", "記事の本文"],
+      [
+        "text-body-dense",
+        "font-sans text-body-dense",
+        "表のセル、入力欄の値、ファイルのツリーの行",
+      ],
+      ["text-label", "font-sans text-label", "ボタン、タブ"],
+      ["text-caption", "font-sans text-caption", "補足、図の説明、時刻"],
+    ].map(([name, cls, use]) => (
+      <div key={name} className="flex flex-col gap-1">
+        <p className={cls}>記事を読み、コードを動かす。Read the article.</p>
+        <p className="font-mono text-code-dense text-text-secondary">
+          {name}: {use}
+        </p>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+## 等幅
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
+    {[
+      [
+        "text-code",
+        "font-mono text-code",
+        "コードブロック、エディタ、端末",
+        'const 値 = fetch("/api");',
+      ],
+      [
+        "text-code-dense",
+        "font-mono text-code-dense",
+        "HTTP のヘッダと本文、端末の狭い表示",
+        "content-type: application/json",
+      ],
+    ].map(([name, cls, use, sample]) => (
+      <div key={name} className="flex flex-col gap-1">
+        <p className={cls}>{sample}</p>
+        <p className="font-mono text-code-dense text-text-secondary">
+          {name}: {use}
+        </p>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+## story の見本
+
+<Canvas of={Stories.Overview} />

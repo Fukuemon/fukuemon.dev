@@ -1,0 +1,52 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { TextField } from "./TextField";
+import * as Stories from "./TextField.stories";
+
+<Meta of={Stories} />
+
+# TextField
+
+1 行の文字を入れる欄。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「TextField」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の次の ID
+  - `FOCUS-ONE`
+
+## 状態
+
+### デフォルト
+
+<Canvas of={Stories.Default} />
+
+### 補足の文あり
+
+<Canvas of={Stories.WithDescription} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+### エラー
+
+<Canvas of={Stories.Error} />
+
+### 無効
+
+<Canvas of={Stories.Disabled} />
+
+### 見出しを読み上げだけに渡す
+
+<Canvas of={Stories.LabelHidden} />
+
+### underline
+
+<Canvas of={Stories.Underline} />
+
+## props
+
+<ArgTypes of={TextField} />

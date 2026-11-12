@@ -1,0 +1,38 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { SplitPane } from "./SplitPane";
+import * as Stories from "./SplitPane.stories";
+
+<Meta of={Stories} />
+
+# SplitPane
+
+2 つの領域を並べ、境界を動かして大きさを変える枠。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「SplitPane」
+
+## 状態
+
+### 左右に並べる
+
+<Canvas of={Stories.Horizontal} />
+
+### 上下に並べる
+
+<Canvas of={Stories.Vertical} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+### 中身を送る
+
+<Canvas of={Stories.Scroll} />
+
+## props
+
+<ArgTypes of={SplitPane} />

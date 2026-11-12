@@ -1,0 +1,231 @@
+import { Canvas, ColorItem, ColorPalette, Meta } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Color.stories";
+
+<Meta of={Stories} />
+
+# 色
+
+画面のコードが色を書くときのセマンティックトークンを、1 色ずつ使う場面と並べる。
+見本は、ツールバーで選んだテーマの色で描く。
+
+- 使う場面と規則: `packages/ui/design/tokens.md` の「色」
+- テーマを切り替える条件: `packages/ui/design/tokens.md` の「テーマ」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `COLOR-TOKEN`、`STATE-NOT-COLOR-ONLY`
+- 値: `src/tokens/semantic.css`（ライト）と `src/tokens/semantic-dark.css`（ダーク）
+
+## 面
+
+<ColorPalette>
+  <ColorItem
+    title="surface"
+    subtitle="ページの背景"
+    colors={{ surface: "var(--fd-color-surface)" }}
+  />
+  <ColorItem
+    title="surface-subtle"
+    subtitle="押せる行とボタンの hover の面、neutral の状態のラベルの面、HTTP の流れの一覧の選んだ行の面"
+    colors={{ "surface-subtle": "var(--fd-color-surface-subtle)" }}
+  />
+  <ColorItem
+    title="surface-disabled"
+    subtitle="無効の入力欄とボタンの面"
+    colors={{ "surface-disabled": "var(--fd-color-surface-disabled)" }}
+  />
+  <ColorItem
+    title="surface-raised"
+    subtitle="面の上に重なる面（ダイアログ、メニュー、候補の一覧）。border-field の 1px の枠と組にする"
+    colors={{ "surface-raised": "var(--fd-color-surface-raised)" }}
+  />
+  <ColorItem
+    title="overlay"
+    subtitle="ダイアログの後ろの幕"
+    colors={{ overlay: "var(--fd-color-overlay)" }}
+  />
+</ColorPalette>
+
+## 文字
+
+<ColorPalette>
+  <ColorItem
+    title="text"
+    subtitle="本文、見出し、操作のラベル"
+    colors={{ text: "var(--fd-color-text)" }}
+  />
+  <ColorItem
+    title="text-secondary"
+    subtitle="補足、日付、図の説明"
+    colors={{ "text-secondary": "var(--fd-color-text-secondary)" }}
+  />
+  <ColorItem
+    title="text-disabled"
+    subtitle="無効の操作のラベル。WCAG 1.4.3 の対象外なので、読ませたい文に使わない"
+    colors={{ "text-disabled": "var(--fd-color-text-disabled)" }}
+  />
+  <ColorItem
+    title="text-inverse"
+    subtitle="primary と danger の面の上の文字"
+    colors={{ "text-inverse": "var(--fd-color-text-inverse)" }}
+  />
+</ColorPalette>
+
+## 枠
+
+<ColorPalette>
+  <ColorItem
+    title="border"
+    subtitle="飾りの区切りの罫。押せるものと入力欄の境界には使わない"
+    colors={{ border: "var(--fd-color-border)" }}
+  />
+  <ColorItem
+    title="border-field"
+    subtitle="入力欄と押せるものの境界、重なる面の枠。面に対して 3:1 以上"
+    colors={{ "border-field": "var(--fd-color-border-field)" }}
+  />
+</ColorPalette>
+
+## 操作
+
+<ColorPalette>
+  <ColorItem
+    title="primary"
+    subtitle="主のボタンの面、選んだタブと選んだ行の罫、検索の欄のフォーカスの罫、読み込み中の印の罫"
+    colors={{ primary: "var(--fd-color-primary)" }}
+  />
+  <ColorItem
+    title="primary-hover"
+    subtitle="主のボタンの hover の面"
+    colors={{ "primary-hover": "var(--fd-color-primary-hover)" }}
+  />
+  <ColorItem
+    title="primary-surface"
+    subtitle="木の選んだ項目と、検索の候補の選んだ項目の面"
+    colors={{ "primary-surface": "var(--fd-color-primary-surface)" }}
+  />
+  <ColorItem title="link" subtitle="内部のリンク" colors={{ link: "var(--fd-color-link)" }} />
+  <ColorItem
+    title="link-visited"
+    subtitle="訪問済みのリンク。link と同じ色を指す"
+    colors={{ "link-visited": "var(--fd-color-link-visited)" }}
+  />
+  <ColorItem
+    title="link-external"
+    subtitle="外部のリンク"
+    colors={{ "link-external": "var(--fd-color-link-external)" }}
+  />
+  <ColorItem
+    title="current-page"
+    subtitle="目次の現在地"
+    colors={{ "current-page": "var(--fd-color-current-page)" }}
+  />
+</ColorPalette>
+
+## フォーカス
+
+<ColorPalette>
+  <ColorItem
+    title="focus-outline"
+    subtitle="フォーカスの表示の外側の枠。画面のコードは focus-ring のユーティリティで書き、この名前を直に使わない"
+    colors={{ "focus-outline": "var(--fd-color-focus-outline)" }}
+  />
+  <ColorItem
+    title="focus-halo"
+    subtitle="フォーカスの表示の、要素に接する輪。focus-ring のユーティリティが使う"
+    colors={{ "focus-halo": "var(--fd-color-focus-halo)" }}
+  />
+</ColorPalette>
+
+## 状態
+
+<ColorPalette>
+  <ColorItem
+    title="danger"
+    subtitle="エラーの文と印、データを失う操作のボタンの面"
+    colors={{ danger: "var(--fd-color-danger)" }}
+  />
+  <ColorItem
+    title="danger-hover"
+    subtitle="danger のボタンの hover の面"
+    colors={{ "danger-hover": "var(--fd-color-danger-hover)" }}
+  />
+  <ColorItem
+    title="danger-surface"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    colors={{ "danger-surface": "var(--fd-color-danger-surface)" }}
+  />
+  <ColorItem
+    title="warning"
+    subtitle="注意の文と印"
+    colors={{ warning: "var(--fd-color-warning)" }}
+  />
+  <ColorItem
+    title="warning-surface"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    colors={{ "warning-surface": "var(--fd-color-warning-surface)" }}
+  />
+  <ColorItem
+    title="success"
+    subtitle="成功の文と印"
+    colors={{ success: "var(--fd-color-success)" }}
+  />
+  <ColorItem
+    title="success-surface"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    colors={{ "success-surface": "var(--fd-color-success-surface)" }}
+  />
+  <ColorItem
+    title="info"
+    subtitle="情報の文と印、コードの系統のファイルの印"
+    colors={{ info: "var(--fd-color-info)" }}
+  />
+  <ColorItem
+    title="info-surface"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    colors={{ "info-surface": "var(--fd-color-info-surface)" }}
+  />
+</ColorPalette>
+
+## 区別
+
+<ColorPalette>
+  <ColorItem
+    title="categorical-1"
+    subtitle="意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる"
+    colors={{ "categorical-1": "var(--fd-color-categorical-1)" }}
+  />
+  <ColorItem
+    title="categorical-2"
+    subtitle="意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる"
+    colors={{ "categorical-2": "var(--fd-color-categorical-2)" }}
+  />
+  <ColorItem
+    title="categorical-3"
+    subtitle="意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる"
+    colors={{ "categorical-3": "var(--fd-color-categorical-3)" }}
+  />
+  <ColorItem
+    title="categorical-4"
+    subtitle="意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる"
+    colors={{ "categorical-4": "var(--fd-color-categorical-4)" }}
+  />
+  <ColorItem
+    title="categorical-5"
+    subtitle="意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる"
+    colors={{ "categorical-5": "var(--fd-color-categorical-5)" }}
+  />
+  <ColorItem
+    title="categorical-6"
+    subtitle="意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる"
+    colors={{ "categorical-6": "var(--fd-color-categorical-6)" }}
+  />
+</ColorPalette>
+
+## ライトとダークを並べた見本
+
+ライトのテーマの色。
+
+<Canvas of={Stories.Light} story={{ inline: false, height: "1080px" }} />
+
+ダークのテーマの色。
+
+<Canvas of={Stories.Dark} story={{ inline: false, height: "1080px" }} />

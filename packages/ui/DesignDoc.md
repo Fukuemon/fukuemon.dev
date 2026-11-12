@@ -292,6 +292,11 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 ページは、はじめに、トークン、コンポーネント、パターン、画面の 5 つに分ける。
 
 - story は、コンポーネントの状態ごとに 1 つ置く。
+- トークンとコンポーネントのページは、story に説明の MDX を付ける。
+  - MDX のページの構成は、カタログの文書（`design/catalog.md`）の「カタログのページ」にある。
+- MDX のページの背景と文字と、ページに iframe で埋めた story は、ツールバーで選んだテーマで描く。
+  - Storybook の Docs のページは固定の色で描かれ、iframe の story はツールバーのテーマを受け取らないためである。
+  - 描き方は `.storybook/preview.ts` と `.storybook/preview.css` にある。
 - 全ての story で、Storybook の a11y のアドオン（axe）を動かし、違反をテストの失敗にする。
 - カタログに載せるのは、コンポーネントとダミーデータだけにする。
 - カタログは、サイトとは別の Worker に、`design.fukuemon.dev` で公開する。ドメインは `infra/cloudflare/` の Terraform で持ち、develop で check の workflow が通ったときに出す。

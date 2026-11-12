@@ -1,0 +1,61 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { Button } from "./Button";
+import * as Stories from "./Button.stories";
+
+<Meta of={Stories} />
+
+# Button
+
+画面の中で何かを起こす操作のボタン。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「Button」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の次の ID
+  - `PRIMARY-ACTION-ONE`
+  - `TARGET-SIZE`
+
+## 状態
+
+### primary
+
+<Canvas of={Stories.Primary} />
+
+### primary の hover
+
+<Canvas of={Stories.PrimaryHover} />
+
+### primary のフォーカス
+
+<Canvas of={Stories.PrimaryFocus} />
+
+### primary の無効
+
+<Canvas of={Stories.PrimaryDisabled} />
+
+### secondary
+
+<Canvas of={Stories.Secondary} />
+
+### danger
+
+<Canvas of={Stories.Danger} />
+
+### 読み込み中
+
+<Canvas of={Stories.Loading} />
+
+### secondary の読み込み中
+
+<Canvas of={Stories.SecondaryLoading} />
+
+### S
+
+<Canvas of={Stories.Small} />
+
+## props
+
+<ArgTypes of={Button} />

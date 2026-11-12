@@ -1,0 +1,34 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { IconButton } from "./IconButton";
+import * as Stories from "./IconButton.stories";
+
+<Meta of={Stories} />
+
+# IconButton
+
+文字を持たず、印だけで示す小さな操作のボタン。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「IconButton」
+
+## 状態
+
+### デフォルト
+
+<Canvas of={Stories.Default} />
+
+### hover
+
+<Canvas of={Stories.Hover} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+## props
+
+<ArgTypes of={IconButton} />
