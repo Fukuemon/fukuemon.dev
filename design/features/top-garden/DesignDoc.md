@@ -34,7 +34,7 @@ status: draft
 持たないもの。
 
 - 版画風の挿絵の版の仕様。[挿絵の Design Doc](../../../packages/design-system/art/DesignDoc.md) が持つ。
-- 紙と墨の色のトークン。[Design System の Design Doc](../../../packages/design-system/DesignDoc.md) と `packages/ui` が持つ。
+- 紙と墨の色のトークン。[デザインシステム（packages/ui）の Design Doc](../../../packages/ui/DesignDoc.md) が持つ。
 - 動きの規則と、トップの庭の例外。[Design System の Design Doc の「動き」](../../../packages/design-system/DesignDoc.md#動き) が持つ。
 
 ## Design
