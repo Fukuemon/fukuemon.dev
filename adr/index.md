@@ -63,6 +63,19 @@ ADR-0020（[トークンを、DADS の値をコピーしたプリミティブト
 
 ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り替える](0025-woodblock-art.md)）は、ADR-0026 に置換した。
 
+## 提案の ADR
+
+承認の前の ADR を並べる。  
+承認したら、上の話題の表へ移し、置換する ADR の Status と、下の依存の図を直す。
+
+| ADR                                                    | 題                                                                                                                 | 承認したら置換する ADR |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| [ADR-0033](0033-webcontainers-for-node.md)             | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                            | 無い                   |
+| [ADR-0034](0034-playground-origin-and-embedding.md)    | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す | 無い                   |
+| [ADR-0035](0035-record-http-and-console-in-runtime.md) | HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する                       | 無い                   |
+| [ADR-0036](0036-pglite-standalone-and-http-bridge.md)  | DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う             | 無い                   |
+| [ADR-0037](0037-go-with-yaegi.md)                      | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                | 無い                   |
+
 ## ADR の間の依存
 
 矢印は、ADR から、その ADR の Context が前提にした ADR へ向く。
