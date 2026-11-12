@@ -1,6 +1,6 @@
 name: Docs
 
-# 文書のチェック (CONTRIBUTING.md の「文書を直すとき」)。
+# 文書のチェック (CONTRIBUTING.md の Editing Documents)。
 # branches は "**" で受けて job 側で絞る (on ではブランチ名を動的に解決できない)。
 on:
   push:
