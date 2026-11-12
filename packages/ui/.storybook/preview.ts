@@ -7,15 +7,27 @@ import "./preview.css";
 
 const THEMES: Record<string, string> = { "OS の設定": "system", ライト: "light", ダーク: "dark" };
 
+type PreviewWindow = Window & {
+  __STORYBOOK_PREVIEW__?: {
+    storyStoreValue?: { userGlobals?: { get: () => Record<string, unknown> } };
+  };
+};
+
 /**
  * withThemeByDataAttribute は story を描くときに data-theme を書くので、inline の story が無い Docs のページ
  * （story を全て iframe で描くページ）には data-theme が付かない。globals の変更を受けて、ページにも書く。
+ * 通知の中身は使わず、ツールバーで選んだ値（userGlobals）を読む。iframe で埋めた story が出す通知もこのページに届き、
+ * その story の globals（「ダーク」の見本の theme など）で上書きしてしまうためである。
  */
-function applyThemeGlobal({ globals }: { globals: Record<string, unknown> }) {
-  const theme = THEMES[String(globals.theme)];
+function applyThemeGlobal() {
+  const userGlobals = (
+    window as PreviewWindow
+  ).__STORYBOOK_PREVIEW__?.storyStoreValue?.userGlobals?.get();
+  const theme = THEMES[String(userGlobals?.theme || "OS の設定")];
   if (theme) document.documentElement.dataset.theme = theme;
 }
-if (addons.hasChannel()) {
+// iframe で埋めた story の中では、followDocsTheme が埋めた側のページに合わせる
+if (addons.hasChannel() && window.parent === window.top) {
   addons.getChannel().on(SET_GLOBALS, applyThemeGlobal);
   addons.getChannel().on(GLOBALS_UPDATED, applyThemeGlobal);
 }
