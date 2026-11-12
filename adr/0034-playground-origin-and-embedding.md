@@ -16,20 +16,20 @@ Node の実行環境を置く origin と、記事に出す形と、cross-origin 
   - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
 - レスポンスヘッダは、Workers Static Assets の `_headers` でパスごとに指定する。
   - ADR-0005: [Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する](0005-workers-terraform-wrangler-boundary.md)
-- `COEP: require-corp` のページでは、CORP を返さない別の origin の画像がブロックされる。`COEP` を返さない別の origin の文書は、iframe に読み込まれない。
+- `COEP: require-corp` のページでは、CORP を返さない別の origin の画像がブロックされる。`COEP` を返さない別の origin のドキュメントは、iframe に読み込まれない。
 - プレイグラウンドには、コードの実行環境のほかに、キャンバスとスライドのエディタを置く見込みがある。キャンバスの候補の draw.io Embed Mode（`embed.diagrams.net`）は、`COEP` と `CORP` を返さない。
-- AI のエージェントがツールを操作する API（WebMCP）を、後で足す見込みがある。ツールを登録する文書がトップレベルである必要があるかは、未確認である。
+- AI のエージェントがツールを操作する API（WebMCP）を、後で足す見込みがある。ツールを登録するドキュメントがトップレベルである必要があるかは、未確認である。
 
 ## Decision
 
 ### 1. origin
 
-コードの実行環境、キャンバス、スライドのエディタを、プレイグラウンドという 1 つのアプリとして、1 つのサブドメインに置く。  
+コードの実行環境と、後で追加するツールを、プレイグラウンドという 1 つのアプリとして、1 つのサブドメインに置く。  
 ツールは、サブドメインの中のパスで分ける。
 
 - 訪問者のコードと、訪問者が作ったファイルが、fukuemon.dev が保存した値に届かない。
-- 訪問者が作ったファイル、図、スライドを、同じ origin の保存先にまとめられる。
-- どのツールも、トップレベルで開ける URL を持つ。fukuemon.dev の `/playground` の一覧からリンクする。AI のエージェントが操作する APIを足すときに、トップレベルの文書から登録できる。
+- 訪問者が複数のツールで作ったファイルを、同じ origin の保存先にまとめられる。
+- どのツールも、トップレベルで開ける URL を持つ。fukuemon.dev の `/playground` の一覧からリンクする。AI のエージェントが操作する API を追加するときに、トップレベルのドキュメントから登録できる。
 
 ### 2. サブドメインのヘッダ
 
@@ -40,7 +40,7 @@ Node の実行環境を置く origin と、記事に出す形と、cross-origin 
 - `Cross-Origin-Resource-Policy: cross-origin`
 
 ほかのツールのパスには返さない。  
-サブドメインの全体に返すと、`COEP` を返さない別の origin の文書を使うツールが、同じサブドメインで動かないためである。
+サブドメインの全体に返すと、`COEP` を返さない別の origin のドキュメントを使うツールが、同じサブドメインで動かないためである。
 
 ### 3. 記事への埋め込み
 
@@ -76,7 +76,7 @@ iframe の側は、どの場合も `COOP: same-origin`、`COEP`、`CORP: cross-o
 - 親が `require-corp` で iframe に `allow="cross-origin-isolated"` を付けた形で、iframe の中の認可コードフローが、Chromium と WebKit で最後まで通った。
 - 記事の形のページで、ボタンを押してから iframe を作ると、開いた直後のリクエストは 1 つ、転送量は 2.9 KB で、実行環境なしのページと同じだった。押してから `boot` が終わるまでは 1.6 秒だった（Chromium）。
 - 最初から iframe を作ると、転送量が 6.27 MB 増え、CLS が 0.027 になった（Lighthouse 13.6.0、mobile）。
-- `COEP: require-corp` のページに、`COEP` を返さない文書を iframe で入れた場合は、描画して確認していない。
+- `COEP: require-corp` のページに、`COEP` を返さないドキュメントを iframe で入れた場合は、描画して確認していない。
 
 ## Considered Options
 
@@ -85,7 +85,7 @@ iframe の側は、どの場合も `COOP: same-origin`、`COEP`、`CORP: cross-o
 | **採用:** ツールを 1 つのサブドメインに置き、ヘッダを Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す | 記事の中で動かせる。埋め込まない記事と、ほかのツールのパスにヘッダが掛からない。訪問者のファイルが、サイトの保存した値と分かれる | Node の実行環境を埋め込む記事では、CORP を返さない外部の画像と埋め込みを使えない。ビルドのときに、埋め込む記事の URL を集める処理が要る。Worker が 1 つ増える |
 | 記事にはリンクかボタンだけを置き、実行環境を別のページで開く                                                       | 記事のページにヘッダが要らない。外部の画像と埋め込みを、どの記事でも使える                                                       | 記事の中で動かせない。記事の文と実行環境を、並べて読めない                                                                                                    |
 | isolation を求めない方式（Nodebox、almostnode）を埋め込む                                                          | 記事のページにヘッダが要らない                                                                                                   | Cookie を使うフローが通らない                                                                                                                                 |
-| サブドメインの全体に isolation のヘッダを返す                                                                      | `_headers` をパスで書き分けない                                                                                                  | `COEP` を返さない別の origin の文書を使うツールが、同じサブドメインで動かない                                                                                 |
+| サブドメインの全体に isolation のヘッダを返す                                                                      | `_headers` をパスで書き分けない                                                                                                  | `COEP` を返さない別の origin のドキュメントを使うツールが、同じサブドメインで動かない                                                                         |
 | ツールごとに、別のサブドメインに置く                                                                               | ツールごとに、ヘッダとデプロイのタイミングを分けられる                                                                           | 訪問者が作ったファイル、図、スライドの保存先が、origin ごとに分かれる。Worker と custom domain が、ツールの数だけ増える                                       |
 | fukuemon.dev の `/playground/*` に置く                                                                             | Worker が増えない                                                                                                                | 訪問者のファイルと、サイトが保存する値が、同じ origin に入る                                                                                                  |
 

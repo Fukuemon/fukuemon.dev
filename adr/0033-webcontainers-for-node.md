@@ -17,8 +17,9 @@
   - ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
 - Sandpack が Node を動かす実行環境の本体（Nodebox）のライセンスは、Sustainable Use License 1.0 である。非営利と個人の利用を許している。
   - 出典: [nodebox-runtime LICENSE](https://github.com/Sandpack/nodebox-runtime/blob/main/LICENSE)
-- WebContainers のライセンスについて、StackBlitz の 2 つの文書の文が食い違う。
-  - 利用規約の 1.5(c) は、本番か商用での利用に、プランか書面のライセンスを求める。原文は「Use in a production or commercial setting [...] requires an active plan or separate written license」である。
+- WebContainers のライセンスについて、StackBlitz の 2 つのページの記述が食い違う。
+  - 利用規約の 1.5(c) は、本番か商用での利用に、プランか書面のライセンスを求める。
+    - 「Use in a production or commercial setting [...] requires an active plan or separate written license that includes it」
     - 出典: [StackBlitz Terms of Service](https://stackblitz.com/terms-of-service)
   - Commercial Usage のページは「Licensing is required for production usage of the API in a commercial, for-profit setting.」と書く。
     - 出典: [WebContainers: Commercial Usage](https://webcontainers.io/enterprise)
@@ -73,15 +74,15 @@ StackBlitz が「ライセンスが要る」と答えたときと、返事が無
 端末は Apple M2、ブラウザは Playwright 1.65.0 の Chromium、WebKit、Firefox（headless）、配信は `localhost` である。  
 実機の Safari と Firefox、モバイルの端末、本番の HTTPS のドメインは未確認である。
 
-| 項目                           | WebContainers 1.6.4              | Nodebox 0.1.9                            | almostnode 0.2.14              |
-| ------------------------------ | -------------------------------- | ---------------------------------------- | ------------------------------ |
-| 認可コードフロー               | 最後まで通る（Chromium、WebKit） | 止まる（3 つのブラウザ）                 | 止まる（Chromium）             |
-| `Set-Cookie` の保存と送信      | 通る                             | 届かない。`SameSite=None; Secure` も同じ | 届かない                       |
-| サーバーの間の `fetch`         | 通る                             | 未確認                                   | 実際のネットワークへ出て、失敗 |
-| 2 つのサーバーの分離           | 別のプロセス                     | 別のシェル                               | `process.env` と `http` を共有 |
-| 起動（Chromium）               | 1 回目 3.6 秒、2 回目 1.2 秒     | 0.15 秒                                  | 0.01 秒                        |
-| `npm install`（`cookie` 1 つ） | 2.0 秒                           | サーバーの待ち受けまで 1.0 秒に含む      | 1.9〜4.1 秒                    |
-| フローの終わりまでの転送量     | 4.19 MB                          | 0.32 MB（iframe の中の本体は未計上）     | 2.96 MB（非圧縮）              |
+| 項目                           | WebContainers 1.6.4              | Nodebox 0.1.9                                            | almostnode 0.2.14              |
+| ------------------------------ | -------------------------------- | -------------------------------------------------------- | ------------------------------ |
+| 認可コードフロー               | 最後まで通る（Chromium、WebKit） | 止まる（3 つのブラウザ）                                 | 止まる（Chromium）             |
+| `Set-Cookie` の保存と送信      | 通る                             | 届かない。`SameSite=None; Secure` も同じ                 | 届かない                       |
+| サーバーの間の `fetch`         | 通る                             | 未確認                                                   | 実際のネットワークへ出て、失敗 |
+| 2 つのサーバーの分離           | 別のプロセス                     | 別のシェル                                               | `process.env` と `http` を共有 |
+| 起動（Chromium）               | 1 回目 3.6 秒、2 回目 1.2 秒     | 0.15 秒                                                  | 0.01 秒                        |
+| `npm install`（`cookie` 1 つ） | 2.0 秒                           | サーバーの待ち受けまで 1.0 秒に含む                      | 1.9〜4.1 秒                    |
+| フローの終わりまでの転送量     | 4.19 MB                          | 0.32 MB（iframe の中の本体は入っていない見込み。未確認） | 2.96 MB（非圧縮）              |
 
 - Firefox では、WebContainers の `boot`、`npm install`、サーバーの待ち受けまで通ったが、プレビューの iframe にページが出なかった。
 - WebContainers は、サーバーが返した Cookie をブラウザの Cookie の保存場所に入れず、次のリクエストに付けた。`SameSite`、`Secure`、`Domain` の属性の扱いは未確認である。

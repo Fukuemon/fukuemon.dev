@@ -10,7 +10,7 @@
 
 - DB を使う実行環境の選び方は、有効な決定が無い。
   - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
-- Postgres のプランナの出力を見せるために、PGlite を採っていた。PGlite は、cross-origin isolation を求めない。
+- DB を使う実行環境には、Postgres のプランナの出力を見せるために PGlite を採る決定がある。PGlite は、cross-origin isolation を求めない。
   - ADR-0013: [DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする](0013-pglite-for-planner-output.md)
 - Node と npm の実行に WebContainers を採る。
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
@@ -27,7 +27,7 @@ SQL だけを動かす記事は、Node の実行環境を使わず、PGlite を�
 
 - PGlite を動かすページは、プレイグラウンドのサブドメインの、isolation のヘッダを返さないパスに置く。
 - SQL だけを動かす記事には、isolation のヘッダが掛からない。外部の画像と埋め込みを使える。
-- 実行計画は、`EXPLAIN (ANALYZE, BUFFERS)` の文字と、`FORMAT JSON` の構造の両方を使える。
+- 実行計画は、`EXPLAIN (ANALYZE, BUFFERS)` のテキストと、`FORMAT JSON` の構造の両方を使える。
 
 ### 2. Node から同じ DB を使う記事
 
