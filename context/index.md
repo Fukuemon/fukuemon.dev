@@ -22,4 +22,5 @@
 - [Content Model](../packages/content-model/DesignDoc.md) — 記事とハンズオンに共通する schema、安定識別子 contentId、相互参照のグラフ、ContentRef への正規化、loader との結線
 - [Design System](../packages/design-system/DesignDoc.md) — Design Tokens の層と使用制約、Typography、縦組み、色、余白と測度、版面、動き、アイコン、Tailwind の層と Expressive Code への橋渡し。挿絵は art/ の Design Doc が持つ
 - [デザインシステム（packages/ui）](../packages/ui/DesignDoc.md) — 自前の値のトークンの層とテーマ、コードと HTTP の流れの色、Base と Case のコンポーネントの範囲、Storybook のカタログ、DADS から外れる点
+- [トップの水墨の門と立体の庭](../design/features/top-garden/DesignDoc.md) — トップの最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル（draft）
 - [挿絵](../packages/design-system/art/DesignDoc.md) — 版画風の挿絵の版の仕様、図柄と向く場所、帯の重ね順と上端、文字を重ねるときの霞、生成器と ArtBand の使い方
