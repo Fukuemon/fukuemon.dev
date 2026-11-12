@@ -1,0 +1,139 @@
+:root {
+  color-scheme: light dark;
+  --fd-primitive-color-sumi-0: #fcfbf8;
+  --fd-primitive-color-sumi-25: #f4f1ea;
+  --fd-primitive-color-sumi-50: #f4f2ec;
+  --fd-primitive-color-sumi-100: #e8e4da;
+  --fd-primitive-color-sumi-200: #d9d4c8;
+  --fd-primitive-color-sumi-300: #b9b4a8;
+  --fd-primitive-color-sumi-450: #8a8375;
+  --fd-primitive-color-sumi-500: #78726a;
+  --fd-primitive-color-sumi-650: #57534b;
+  --fd-primitive-color-sumi-700: #3a352d;
+  --fd-primitive-color-sumi-800: #211d17;
+  --fd-primitive-color-sumi-900: #1a1714;
+  --fd-primitive-color-sumi-950: #17140f;
+  --fd-primitive-color-green-100: #dfe4d3;
+  --fd-primitive-color-green-300: #9db086;
+  --fd-primitive-color-green-700: #4f6138;
+  --fd-primitive-color-green-800: #3d4b2b;
+  --fd-primitive-color-green-900: #262e1d;
+  --fd-primitive-color-indigo-300: #8fb0d6;
+  --fd-primitive-color-indigo-700: #2c4a6e;
+  --fd-primitive-color-indigo-800: #1f3858;
+  --fd-primitive-color-indigo-900: #1e2833;
+  --fd-primitive-color-rust-300: #e08a6c;
+  --fd-primitive-color-rust-700: #9e3a26;
+  --fd-primitive-color-ochre-200: #ecd08f;
+  --fd-primitive-color-yellow-300: #ffd43d;
+  --fd-primitive-color-black: #000000;
+  /* ADR-0024 にない値。場面の中だけで使う彼岸花の赤 */
+  --fd-primitive-color-higan-700: #b3261e;
+  --fd-primitive-color-higan-300: #f07a66;
+
+  --fd-color-surface: var(--fd-primitive-color-sumi-0);
+  --fd-color-surface-subtle: var(--fd-primitive-color-sumi-50);
+  --fd-color-text: var(--fd-primitive-color-sumi-900);
+  --fd-color-text-secondary: var(--fd-primitive-color-sumi-650);
+  --fd-color-border: var(--fd-primitive-color-sumi-200);
+  --fd-color-border-field: var(--fd-primitive-color-sumi-500);
+  --fd-color-link: var(--fd-primitive-color-green-700);
+  --fd-color-current-page: var(--fd-primitive-color-rust-700);
+  --fd-color-focus-outline: var(--fd-primitive-color-black);
+  --fd-color-focus-halo: var(--fd-primitive-color-yellow-300);
+
+  --font-mincho: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-sans: "Noto Sans JP", "Hiragino Sans", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fd-color-surface: var(--fd-primitive-color-sumi-950);
+    --fd-color-surface-subtle: var(--fd-primitive-color-sumi-800);
+    --fd-color-text: var(--fd-primitive-color-sumi-25);
+    --fd-color-text-secondary: var(--fd-primitive-color-sumi-300);
+    --fd-color-border: var(--fd-primitive-color-sumi-700);
+    --fd-color-border-field: var(--fd-primitive-color-sumi-450);
+    --fd-color-link: var(--fd-primitive-color-green-300);
+    --fd-color-current-page: var(--fd-primitive-color-rust-300);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--fd-color-surface);
+  color: var(--fd-color-text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+a { color: var(--fd-color-link); }
+:focus-visible {
+  outline: 4px solid var(--fd-color-focus-outline);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px var(--fd-color-focus-halo);
+}
+.vh {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+html[data-view="cover"] .page,
+html[data-view="page"] .cover { display: none; }
+
+/* 行き先の画面。ADR-0024 のセマンティックトークンだけで組む */
+.page { min-height: 100%; background: var(--fd-color-surface); }
+.site-header {
+  display: flex; align-items: baseline; gap: 2rem; flex-wrap: wrap;
+  padding: 1rem 2rem; border-bottom: 1px solid var(--fd-color-border);
+}
+.site-header .logo svg { display: block; }
+.site-header .logo {
+  font-family: var(--font-mincho); font-weight: 600; font-size: 1.25rem;
+  color: var(--fd-color-text); text-decoration: none;
+}
+.site-header ul { display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; }
+.site-header nav a { color: var(--fd-color-text); text-decoration: none; padding: 0.5rem 0; display: inline-block; }
+.site-header nav a[aria-current="page"] {
+  color: var(--fd-color-current-page);
+  border-bottom: 2px solid var(--fd-color-current-page);
+}
+.page main { max-width: 44rem; margin: 0 auto; padding: 3rem 2rem 6rem; }
+.page h1 {
+  font-family: var(--font-mincho); font-weight: 600; font-size: 1.75rem; line-height: 1.5;
+  margin: 0 0 0.5rem; outline: none;
+}
+.page .lead { color: var(--fd-color-text-secondary); margin: 0 0 2rem; }
+.page .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--fd-color-border); }
+.page .list li { border-bottom: 1px solid var(--fd-color-border); padding: 1.25rem 0; }
+.page .list time { display: block; font-size: 0.875rem; color: var(--fd-color-text-secondary); }
+.page .list a { font-family: var(--font-mincho); font-weight: 600; font-size: 1.25rem; text-decoration: none; }
+.page .list p { margin: 0.25rem 0 0; color: var(--fd-color-text-secondary); }
+.page section[data-route] { display: none; }
+html[data-route="articles"] .page section[data-route="articles"],
+html[data-route="hands-on"] .page section[data-route="hands-on"],
+html[data-route="about"] .page section[data-route="about"] { display: block; }
+
+/* 表紙の共通の形 */
+.cover { position: relative; height: 100vh; height: 100svh; min-height: 34rem; overflow: hidden; }
+.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.skip-intro {
+  display: none; position: absolute; right: 1.5rem; bottom: 1.5rem; z-index: 30;
+  font: inherit; font-size: 0.875rem; padding: 0.5rem 1rem; cursor: pointer;
+  color: var(--sc-ui-text); background: var(--sc-ui-ground); border: 1px solid var(--sc-ui-text);
+}
+html.intro .skip-intro { display: block; }
+
+.door { position: fixed; inset: 0; z-index: 50; pointer-events: none; overflow: hidden; }
+.door i { position: absolute; top: 0; bottom: 0; width: 50.5%; display: block; }
+.door .l { left: 0; transform: translateX(-102%); }
+.door .r { right: 0; transform: translateX(102%); }
+html.door-close .door i { transform: none; transition: transform var(--door-close-ms) cubic-bezier(0.3, 0, 0.2, 1); }
+html.door-open .door .l { transform: translateX(-102%); transition: transform var(--door-open-ms) cubic-bezier(0.5, 0, 0.2, 1); }
+html.door-open .door .r { transform: translateX(102%); transition: transform var(--door-open-ms) cubic-bezier(0.5, 0, 0.2, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .door, .skip-intro { display: none !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

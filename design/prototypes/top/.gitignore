@@ -1,0 +1,7 @@
+# README の手順で作る束と、録画と測定の出力
+vendor/
+checks/
+frames/
+shots/
+webm/
+*.mp4
