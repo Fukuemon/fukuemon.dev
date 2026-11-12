@@ -14,7 +14,7 @@ Go の HTTP サーバーを立てることは、対象にしない。
 - 実行環境の選び方は、有効な決定が無い。
   - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
 - 訪問者が書いたコードを動かすツールは、プレイグラウンドのサブドメインに置く。cross-origin isolation のヘッダは、Node の実行環境のパスにだけ返す。
-  - ADR-0034: [プレイグラウンドのツールを 1 つのサブドメインに置き、cross-origin isolation のヘッダを Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す](0034-playground-origin-and-embedding.md)
+  - ADR-0034: [cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す](0034-playground-origin-and-embedding.md)
 - TinyGo の公式の playground は、サーバーでコンパイルする。TinyGo のコンパイラは、LLVM に依存する。
   - 出典: [tinygo-org/playground](https://github.com/tinygo-org/playground)
   - 出典: [TinyGo: Build from source](https://tinygo.org/docs/guides/build/)

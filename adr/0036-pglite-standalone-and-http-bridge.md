@@ -15,7 +15,7 @@
 - Node と npm の実行に WebContainers を採る。
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
 - cross-origin isolation のヘッダは、Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す。訪問者が書いたコードを動かすツールは、サブドメインに置く。
-  - ADR-0034: [プレイグラウンドのツールを 1 つのサブドメインに置き、cross-origin isolation のヘッダを Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す](0034-playground-origin-and-embedding.md)
+  - ADR-0034: [cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す](0034-playground-origin-and-embedding.md)
 - PGlite は、単一の接続で動く。
   - 出典: [PGlite](https://pglite.dev/docs/about)
 
