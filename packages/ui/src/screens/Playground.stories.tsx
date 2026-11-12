@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
 import type { TreeNode } from "../base/TreeView/TreeView";
+import { ConfirmDialog } from "../case/ConfirmDialog/ConfirmDialog";
 import { type EditorFile, EditorFrame } from "../case/EditorFrame/EditorFrame";
 import { FileTree } from "../case/FileTree/FileTree";
 import { HttpExchangeDetail } from "../case/HttpExchangeDetail/HttpExchangeDetail";
@@ -37,9 +38,27 @@ const OPEN_FILES: EditorFile[] = [
   { id: "src/callback.js", label: "callback.js" },
 ];
 
+const findNode = (nodes: readonly TreeNode[], id: string): TreeNode | undefined => {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    const found = node.children && findNode(node.children, id);
+    if (found) return found;
+  }
+  return undefined;
+};
+
+const removeNode = (nodes: readonly TreeNode[], id: string): TreeNode[] =>
+  nodes
+    .filter((node) => node.id !== id)
+    .map((node) => (node.children ? { ...node, children: removeNode(node.children, id) } : node));
+
 /** ファイルのツリー、エディタ、端末、プレビュー、HTTP の流れを並べた画面。幅 48rem 未満では、領域を縦に積む。 */
 function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
-  const [fileId, setFileId] = useState("src/server.js");
+  const [files, setFiles] = useState<readonly TreeNode[]>(FILES);
+  const [fileId, setFileId] = useState<string | undefined>("src/server.js");
+  const [deletingId, setDeletingId] = useState<string | undefined>(undefined);
+  const deleting = deletingId === undefined ? undefined : findNode(files, deletingId);
+  const openFiles = OPEN_FILES.filter((file) => findNode(files, file.id) !== undefined);
   const [exchangeId, setExchangeId] = useState(exchanges.at(-1)?.id);
   const exchange = exchanges.find((e) => e.id === exchangeId);
   return (
@@ -55,18 +74,36 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
           <div className="grid md:w-64 md:shrink-0">
             <FileTree
               defaultExpandedIds={["src"]}
-              items={FILES}
+              items={files}
               onCreate={() => {}}
               onCreateDirectory={() => {}}
-              onDelete={() => {}}
+              onDelete={setDeletingId}
               onRename={() => {}}
               onSelect={setFileId}
               selectedId={fileId}
             />
+            <ConfirmDialog
+              confirmLabel="削除する"
+              isOpen={deleting !== undefined}
+              onCancel={() => setDeletingId(undefined)}
+              onConfirm={() => {
+                if (deletingId === undefined) return;
+                setFiles(removeNode(files, deletingId));
+                if (fileId === deletingId || fileId?.startsWith(`${deletingId}/`))
+                  setFileId(undefined);
+                setDeletingId(undefined);
+              }}
+              title={`${deleting?.label ?? ""} を削除する`}
+            >
+              {deleting?.children
+                ? `${deleting.label} と、中のファイルを全て削除する。`
+                : `${deletingId} を削除する。`}
+              削除したファイルは戻せない。
+            </ConfirmDialog>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-4">
             <EditorFrame
-              files={OPEN_FILES}
+              files={openFiles}
               onSelect={setFileId}
               selectedId={fileId}
               status={
