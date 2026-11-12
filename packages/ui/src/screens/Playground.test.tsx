@@ -63,6 +63,7 @@ describe("コードを動かす画面", () => {
     const dialog = screen.getByRole("dialog", { name: "server.js を削除する" });
     expect(dialog).toHaveTextContent("src/server.js を削除する。");
     await userEvent.click(screen.getByRole("button", { name: "やめる" }));
+    expect(screen.getByRole("button", { name: "server.js の操作" })).toHaveFocus();
     expect(screen.getByRole("treeitem", { name: "server.js" })).toBeVisible();
 
     await openMenu();

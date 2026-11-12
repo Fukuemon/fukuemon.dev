@@ -89,8 +89,7 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
               onConfirm={() => {
                 if (deletingId === undefined) return;
                 setFiles(removeNode(files, deletingId));
-                if (fileId === deletingId || fileId?.startsWith(`${deletingId}/`))
-                  setFileId(undefined);
+                if (fileId === deletingId) setFileId(undefined);
                 setDeletingId(undefined);
               }}
               title={`${deleting?.label ?? ""} を削除する`}

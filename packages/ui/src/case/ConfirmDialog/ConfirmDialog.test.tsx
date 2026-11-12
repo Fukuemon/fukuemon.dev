@@ -49,7 +49,7 @@ describe("ConfirmDialog", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it("確定の処理中は、確定のボタンを押しても確定の処理を呼ばず、Esc のキーとやめるのボタンで閉じない", async () => {
+  it("確定の処理中は、確定のボタンを押しても確定の処理を呼ばず、Esc のキー、やめるのボタン、閉じるボタンで閉じない", async () => {
     const onConfirm = fn();
     render(<Confirming onConfirm={onConfirm} />);
     const confirm = screen.getByRole("button", { name: "削除する" });
@@ -59,6 +59,7 @@ describe("ConfirmDialog", () => {
     // Playwright は aria-disabled の要素を押せないものとして待つので、force で押す
     await userEvent.click(screen.getByRole("button", { name: "やめる" }), { force: true });
     await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "閉じる" }));
     expect(screen.getByRole("dialog")).toBeVisible();
   });
 
