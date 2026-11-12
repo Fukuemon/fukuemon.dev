@@ -10,7 +10,7 @@ status: draft
 ## Overview
 
 fukuemon.dev は、訪問者がコードを書いて動かしながら、技術の仕組みを体系的に学べる個人の技術サイトである。  
-訪問者は、シリーズにまとまった記事を読む。著者（運営者 1 名）は、Markdown を書いて push する。  
+訪問者は、シリーズにまとまった記事を読む。運営者（1 名）は、Markdown を書いて push する。  
 誰のどの課題を解くかは [PRD](../PRD.md) にある。
 
 実装は pnpm workspace の monorepo にし、Astro のサイト、文書のサイト、UI、Content Model、E2E を package に分ける。  
@@ -63,7 +63,7 @@ ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-in
 ```mermaid
 flowchart TD
     reader["訪問者 (Browser)"] --> site["Worker: fukuemon.dev<br/>Static Assets"]
-    dev["開発者 (Browser)"] --> catalog["Worker: design.fukuemon.dev<br/>Static Assets"]
+    dev["運営者 (Browser)"] --> catalog["Worker: design.fukuemon.dev<br/>Static Assets"]
     dev --> access["Cloudflare Access"]
     access --> docsw["Worker: docs.fukuemon.dev<br/>Static Assets"]
     e2e["packages/e2e (Playwright)"] --> preview["Worker: プレビュー<br/>workers.dev の URL"]
@@ -164,9 +164,9 @@ ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-serie
 描画の実装の詳細を URL に出さない。  
 URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 
-### 著者が書くファイル
+### 運営者が書くファイル
 
-著者は、記事を Markdown で `apps/web/src/content/articles/` の下に置く。
+運営者は、記事を Markdown で `apps/web/src/content/articles/` の下に置く。
 
 - `articles/<series>/` のディレクトリが、1 つのシリーズになる。題と説明は、ディレクトリの `index.md` に書く。
 - 読む順は、記事の frontmatter の `order` で決まる。
@@ -244,7 +244,7 @@ deploy と apply の条件は [context/operations.md](../context/operations.md#d
 [PRD の Lower-Priority Goals](../PRD.md#lower-priority-goals) の条件が成り立ったときは、次の形で足す。
 
 - 手順の形式の記事は、記事の形式の値を足して作る。種別と URL を増やさない。
-- スライドと drawio の図は、種別を増やさずに足す。
+- キャンバスの図とスライドは、種別を増やさずに足す。
 - 記事のあいだの関連の表示は、Content Model の関係グラフから出す。
 - 分類での絞り込みは、URL パラメータで絞り込む island にする。ページと索引のページは増やさない。
 - 本文の検索は、ビルドのときに作る索引と、クライアントの検索にする。
