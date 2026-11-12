@@ -3,15 +3,17 @@
 Cloudflare の基盤を Terraform で作り、変える手順。  
 構成は [infra/DesignDoc.md](DesignDoc.md) に、管轄と apply の条件と credential の置き場は [context/operations.md](../context/operations.md) に、判断の理由は [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) にある。
 
-## 前提
+## Prerequisites
 
 - Terraform 1.11 以上。
   `backend "s3"` の `use_lockfile` を使うため。
 - apply 用の API token。
   権限は [context/operations.md](../context/operations.md#secrets) の token の権限の表に従う。
 - R2 の S3 互換 access key。
-  発行元と使う値は [context/operations.md](../context/operations.md#secrets) に従う。
+  発行元の決まりは [context/operations.md](../context/operations.md#secrets) にある。
   secret access key は作成直後にしか表示されない。
+  - 通常の API Tokens の画面で作った token では、`SignatureDoesNotMatch` の 403 になる。
+  - 発行時に出る 3 つの値のうち、`Access Key ID` と `Secret Access Key` を使い、`Token value` は使わない。
 
 変数の値は各ディレクトリの `terraform.tfvars` に置く。
 `.gitignore` が `*.tfvars` を無視するため commit されない。
@@ -55,12 +57,7 @@ pnpm --filter @fukuemon/web run deploy
 ```
 
 カタログの Worker も、3 の前に作る。
-deploy-catalog workflow を `develop` から手で起動するか、手元から次を実行する。
-
-```sh
-pnpm run build:storybook
-pnpm --filter @fukuemon/ui run deploy
-```
+作り方は [packages/ui/README.md](../packages/ui/README.md#deployment) にある。
 
 ### 3. zone を取り込み、custom domain を作る
 

@@ -124,8 +124,7 @@ token の権限は、スコープ、権限グループ、アクセスレベル�
 - DNS の権限は要らない。custom domain が作るレコード（サイトの apex とカタログの `design`）は `Workers Scripts` の配下にある。
 - `Zone / Zone / Edit` の Zone Resources は、対象の zone だけに限る。
 - R2 の S3 互換キーは、R2 の画面から発行したものだけを使う。
-  - 通常の API Tokens の画面で作った token では、`SignatureDoesNotMatch` の 403 になる。
-  - 発行時に出る 3 つの値のうち、`Access Key ID` と `Secret Access Key` を使い、`Token value` は使わない。
+  - ほかの画面で作った token で起きるエラーと、発行時に出る値のどれを使うかは、[infra/README.md](../infra/README.md#prerequisites) にある。
 - GitHub Actions から使う token に、Client IP Address Filtering を掛けない。
   - runner の IP は多数の CIDR に散らばり、GitHub の側で変わる。
   - 手元から使う bootstrap 用の token は、固定 IP の回線なら絞ってよい。動的 IP なら掛けない。

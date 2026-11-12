@@ -1,9 +1,17 @@
-# 開発の準備
+# Contributing
+
+変更をマージするまでの手順を書く。
+基盤の apply、Storybook の起動と公開、トークンの生成は、それぞれのディレクトリの `README.md` にある。
+README の一覧は [ディレクトリごとの手順](#ディレクトリごとの手順) にある。
+
+## Prerequisites
 
 必要なツールは mise、pnpm、python3 である。
 Node.js、uv、apm、similarity-ts は `mise.toml` にバージョンが書いてあり、`mise install` が入れる。
 pnpm のバージョンは `package.json` の `packageManager` にある。
 python3 は、lefthook の `protected-branch` のフックが使う。
+
+## Setup
 
 ```sh
 mise install
@@ -24,9 +32,9 @@ apm install --frozen
 apm lifecycle trust
 ```
 
-## 文書を直すとき
+## Editing Documents
 
-文章の規則は textlint で、経緯の混入とリンクは docs のスクリプトで確認する。指摘された語は言い換え、`--fix` は使わない。
+文章の規則は textlint で、変更の経緯が書かれていないかとリンク切れは docs のスクリプトで確認する。指摘された語は言い換え、`--fix` は使わない。
 
 ```sh
 pnpm exec textlint <直した Markdown>
@@ -41,29 +49,7 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 
 `verified_commit` の後に実装が変わった文書は、`node .claude/hooks/docs/hooks/list-drift.mjs` で一覧する。実装と読み比べてから `verified_commit` を進める。
 
-## デザインシステムを直すとき
-
-`packages/ui` のトークンとコンポーネントを直したら、次を流す。どれも `pnpm run check` に入っており、CI も流す。
-
-```sh
-pnpm run check:contrast
-pnpm run check:raw-values
-pnpm run check:utilities
-pnpm run check:tokens
-pnpm run lint
-pnpm run test:ui
-```
-
-- `check:contrast` は、セマンティックトークンの組のコントラスト比を、ライト、OS の設定のダーク、Storybook のダークの 3 つの条件で確認する。
-- `check:raw-values` は、`packages/ui/src` に色の値とプリミティブトークンの名前がないかを確認する。
-- `check:utilities` は、`packages/ui/DESIGN.md` の原則に反するユーティリティ（14px より小さい文字、余白の任意値など）がないかを確認する。
-- `check:tokens` は、2 つの生成物がトークンと一致するかを確認する。トークンを直したら `pnpm run build:tokens` で作り直し、同じコミットに入れる。
-  - `packages/ui/src/tokens/tokens.gen.css`: 静的なファイルが読むトークンの CSS。`context/project.yml` の `design_system.tokens_css`
-  - `packages/ui/src/tokens/code-theme.gen.json`: テーマごとに色の値まで解決したコードの色。Expressive Code、エディタ、端末のテーマの元
-- `lint` は、`packages/ui/src` のテーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）をエラーにする。
-- プリミティブトークンの値は fukuemon.dev が決める（`adr/0024-tokens-of-fukuemon-dev.md`）。値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足し、`pnpm run check:contrast` で組み合わせを確認する。
-
-## コミットするとき
+## Commits
 
 コミットと push の前に、lefthook が次を実行する。設定は `lefthook.yml` にある。
 
@@ -77,7 +63,7 @@ pnpm run test:ui
 
 - 変更の分け方とメッセージの書き方は、スキル write-commit に従う。
 
-## ブランチとリリース
+## Branches and Releases
 
 ブランチは、`develop` と作業用のブランチにする。
 
@@ -86,7 +72,7 @@ pnpm run test:ui
   - 例: `fix/pnpm-run-args`、`docs/fix-doc-facts`、`chore/add-agent-playbooks`
 - `develop` へは pull request を通してマージし、直接はコミットしない。
   - lefthook のフックが、`develop` への直接のコミットと push を止める。
-- サイトを作り直す間は、`develop` にマージしても本番へ配信しない。運用者が deploy workflow を `workflow_dispatch` で `develop` から手で起動したときだけ配信する。
+- `develop` にマージしたときに本番へ配信するかは、[context/operations.md](context/operations.md#deployment-conditions) の条件で決まる。
 - バージョンとタグは付けない。
 
 作業用のブランチは、pull request を通して `develop` にマージする。
@@ -107,7 +93,7 @@ gitGraph
     merge "docs/fix-doc-facts" id: "PR をマージ 2"
 ```
 
-## issue と pull request
+## Issues and Pull Requests
 
 - 作業は issue から始める。pull request は 1 つの issue に対応させる。
   - issue は、issue テンプレートの要求、不具合と、設計、実装、検証、文書の 4 つのタスクから選ぶ。
@@ -124,3 +110,13 @@ gitGraph
   | 文書のタスク | `type:docs`         |
 
 - 題と本文の書き方は、スキル write-issue-pr に従う。
+
+## ディレクトリごとの手順
+
+ディレクトリの中のコードを直す手順と、そのディレクトリのものを配信する手順は、ディレクトリの `README.md` にある。
+
+- [infra/README.md](infra/README.md): Terraform で Cloudflare の基盤を作る手順と、apply の手順
+- [packages/ui/README.md](packages/ui/README.md): Storybook の起動、デザインシステムのチェック、トークンの生成、カタログの配信
+- [design/prototypes/top/README.md](design/prototypes/top/README.md): トップの試作を開く手順と、録画と測定を作り直す手順
+
+配信してよい条件と、credential の置き場は、[context/operations.md](context/operations.md) にある。
