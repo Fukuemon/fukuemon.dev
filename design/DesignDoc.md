@@ -29,7 +29,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - 記事の全てをビルドのときに解決し、実行時のサーバーの処理を持たない。
 - 記事の識別子と関係を、URL、描画のレイヤ、データソースから独立させる。
 - 1 つのアプリを、1 つの Worker と 1 つのホスト名に閉じる。
-- 実行環境が求める制約（cross-origin isolation）を、記事のページに広げない。
+- 実行環境が求める制約（cross-origin isolation）を、実行環境を埋め込む記事のほかに広げない。
 - 公開に関わる Cloudflare の設定を、コードで管理する。
 
 ### Non-Goals
@@ -189,16 +189,16 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 変えるときは ADR を書く。  
 この 8 点のほかに、将来のための先行投資をしない。
 
-| #   | 不変量                                                                                                | 何を可能にするか                                                                  | 根拠                                                           |
-| --- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | `contentId` の不変。[context/domain/content.md](../context/domain/content.md#prohibitions) の取り決め | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 2   | 関連の片方向の辺。[context/domain/content.md](../context/domain/content.md#invariants) の取り決め     | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 3   | 依存規約 1。ページとコンポーネントは `astro:content` を直接参照しない                                 | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                           | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 5   | 画面の色、字、余白は、`@fukuemon/ui` のトークンから取る。画面のコードに値を直接書かない               | 配色と版面を、トークンの変更だけで変えられる                                      | [ADR-0024](../adr/0024-tokens-of-fukuemon-dev.md)              |
-| 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                            | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
-| 7   | `fukuemon.dev` のページに、cross-origin isolation のヘッダを書かない                                  | 全体に適用すると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる            | [ADR-0031](../adr/0031-subdomains-and-workers.md)              |
-| 8   | 種別を増やさない。構成は記事の形式で、分類での絞り込みは URL パラメータで表す                         | 一覧と URL が種別の数に応じて増えない。分類の組み合わせをページとして書き出さない | [ADR-0030](../adr/0030-articles-format-and-series.md)          |
+| #   | 不変量                                                                                                                                    | 何を可能にするか                                                                  | 根拠                                                           |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1   | `contentId` の不変。[context/domain/content.md](../context/domain/content.md#prohibitions) の取り決め                                     | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 2   | 関連の片方向の辺。[context/domain/content.md](../context/domain/content.md#invariants) の取り決め                                         | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 3   | 依存規約 1。ページとコンポーネントは `astro:content` を直接参照しない                                                                     | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                                                               | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 5   | 画面の色、字、余白は、`@fukuemon/ui` のトークンから取る。画面のコードに値を直接書かない                                                   | 配色と版面を、トークンの変更だけで変えられる                                      | [ADR-0024](../adr/0024-tokens-of-fukuemon-dev.md)              |
+| 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                                                                | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
+| 7   | `fukuemon.dev` の全体には、cross-origin isolation のヘッダを返さない。返すのは、isolation を求める実行環境を埋め込む記事の URL だけにする | 全体に適用すると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる            | [ADR-0031](../adr/0031-subdomains-and-workers.md)              |
+| 8   | 種別を増やさない。構成は記事の形式で、分類での絞り込みは URL パラメータで表す                                                             | 一覧と URL が種別の数に応じて増えない。分類の組み合わせをページとして書き出さない | [ADR-0030](../adr/0030-articles-format-and-series.md)          |
 
 ### 種別と分類の切り分け
 
