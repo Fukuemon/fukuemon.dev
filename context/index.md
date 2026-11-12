@@ -21,6 +21,6 @@
 - [トップの水墨の門と立体の庭](../design/features/top-garden/DesignDoc.md) — トップの最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル（draft）
 - [基盤](../infra/DesignDoc.md) — Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 - [Content Model](../packages/content-model/DesignDoc.md) — 記事とハンズオンに共通する schema、安定識別子 contentId、相互参照のグラフ、ContentRef への正規化、loader との結線
-- [Design System](../packages/design-system/DesignDoc.md) — サイト全体の動きの規則とトップの庭の例外、トークンとコンポーネントと挿絵とページの骨格の所在
+- [Design System](../packages/design-system/DesignDoc.md) — サイト全体の動きの規則とトップの庭の例外、記事の図を SVG にする方針、トークンとコンポーネントと挿絵とページの骨格の所在
 - [挿絵](../packages/design-system/art/DesignDoc.md) — 挿絵を置く場所、版画風の挿絵の図柄と版の仕様、色と濃さのトークン、動きの層、生成器と ArtBand の使い方
 - [デザインシステム（packages/ui）](../packages/ui/DesignDoc.md) — 自前の値のトークンの層とテーマ、コードと HTTP の流れの色、Base と Case のコンポーネントの範囲、Storybook のカタログ、DADS から外れる点
