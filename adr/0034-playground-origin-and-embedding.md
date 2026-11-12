@@ -10,7 +10,7 @@
 
 - Node と npm の実行に WebContainers を採る。WebContainers は、cross-origin isolation を求める。
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
-- プレイグラウンドの全てのツールを、1 つのサブドメインの 1 つの Worker に置き、ツールごとにパスを分ける。isolation のヘッダは、isolation を求めるツールのパスにだけ返す。fukuemon.dev のページには、isolation のヘッダを書かない。サブドメインの名前と、ヘッダを返す URL は、実行環境の方式を決める ADR が決める。
+- プレイグラウンドの全てのツールを、1 つのサブドメインの 1 つの Worker に置き、ツールごとにパスを分ける。isolation のヘッダは、isolation を求めるツールのパスにだけ返す。fukuemon.dev の全体には、isolation のヘッダを返さない。例外は、isolation を求める実行環境を埋め込む記事の URL である。サブドメインの名前と、ヘッダを返すパスと、どの記事の URL に返すかは、実行環境の方式を決める ADR が決める。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
 - 実行環境の埋め込み方は、有効な決定が無い。プレイグラウンドの一覧は、fukuemon.dev の `/playground` に置く。
   - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
@@ -56,7 +56,6 @@ AI のエージェントが操作する API を追加するときに、トップ
 
 ## 承認の条件
 
-- サブドメインに分ける規則の ADR と、全体の Design Doc の設計不変量が、Node の実行環境を埋め込む記事の URL を、「fukuemon.dev のページに isolation のヘッダを書かない」の例外にすること。
 - 記事に埋め込んだ iframe と、トップレベルで開いたページが、同じ保存先（IndexedDB）を読むこと。
 
 ## Verification
