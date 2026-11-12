@@ -1,0 +1,42 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { TerminalFrame } from "./TerminalFrame";
+import * as Stories from "./TerminalFrame.stories";
+
+<Meta of={Stories} />
+
+# TerminalFrame
+
+端末の題と、端末のエンジンを置く枠。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「TerminalFrame」
+
+## 状態
+
+### 動いている
+
+<Canvas of={Stories.Default} />
+
+### 題の右の操作
+
+<Canvas of={Stories.WithActions} />
+
+### 空
+
+<Canvas of={Stories.Empty} />
+
+### 読み込み中
+
+<Canvas of={Stories.Loading} />
+
+### エラー
+
+<Canvas of={Stories.Error} />
+
+## props
+
+<ArgTypes of={TerminalFrame} />

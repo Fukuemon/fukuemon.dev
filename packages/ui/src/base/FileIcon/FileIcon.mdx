@@ -1,0 +1,50 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { FileIcon } from "./FileIcon";
+import * as Stories from "./FileIcon.stories";
+
+<Meta of={Stories} />
+
+# FileIcon
+
+ファイルの木とエディタのタブに出す、ファイルの種類の印。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「FileIcon」
+
+## 状態
+
+### コード
+
+<Canvas of={Stories.Code} />
+
+### 文書
+
+<Canvas of={Stories.Document} />
+
+### データ
+
+<Canvas of={Stories.Data} />
+
+### そのほか
+
+<Canvas of={Stories.Other} />
+
+### ディレクトリ
+
+<Canvas of={Stories.Directory} />
+
+### 開いたディレクトリ
+
+<Canvas of={Stories.DirectoryOpen} />
+
+### 一覧
+
+<Canvas of={Stories.All} />
+
+## props
+
+<ArgTypes of={FileIcon} />

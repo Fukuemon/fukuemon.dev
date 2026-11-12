@@ -1,0 +1,38 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { Disclosure } from "./Disclosure";
+import * as Stories from "./Disclosure.stories";
+
+<Meta of={Stories} />
+
+# Disclosure
+
+要約を押して中身を開いて閉じる領域。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「Disclosure」
+
+## 状態
+
+### 閉じている
+
+<Canvas of={Stories.Closed} />
+
+### 開いている
+
+<Canvas of={Stories.Open} />
+
+### hover
+
+<Canvas of={Stories.Hover} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+## props
+
+<ArgTypes of={Disclosure} />
