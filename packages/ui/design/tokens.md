@@ -89,7 +89,7 @@ fukuemon.dev はダークを持つ。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
 
-ADR-0023: [個性として和の感じを残し、見出しを明朝にし、挿絵を作り替え、主の色を緑にする](../../../adr/0023-keep-art-and-key-color.md)
+ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../adr/0023-keep-art-and-key-color.md)
 
 ## レイアウト、区切り、重なり、動き
 

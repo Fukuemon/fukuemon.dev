@@ -1,157 +1,143 @@
 ---
 type: feature-design
 title: 挿絵
-description: 版画風の挿絵の版の仕様、図柄と向く場所、帯の重ね順と上端、文字を重ねるときの霞、生成器と ArtBand の使い方
+description: 挿絵を置く場所、版画風の挿絵の図柄と版の仕様、色と濃さのトークン、動きの層、生成器と ArtBand の使い方
 status: stable
 governs:
-  - packages/design-system/art/
-  - apps/web/src/components/ArtBand.astro
-verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
+  - packages/ui/src/art/
+  - packages/ui/src/base/ArtBand/
+  - scripts/build-art.mjs
+verified_commit: unverified
 ---
 
 # 挿絵
 
 ## Overview
 
-挿絵は、技術資料の版面に足す、版画風の自然の図版である。  
-装飾を担うのは挿絵と差し色だけで、挿絵は情報を運ばない。  
-Design System の全体は [Design System の Design Doc](../DesignDoc.md) にある。
+挿絵は、版面に足す和の感じの絵で、情報を運ばない。  
+トップには水墨の門の絵と立体の庭を置き、記事の一覧の冒頭には、トークンの色で描く版画風の図柄を置く。  
+画面のトークンとコンポーネントの全体は [デザインシステム（packages/ui）の Design Doc](../../ui/DesignDoc.md) にある。
+
+ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../../../adr/0026-sumi-gate-and-garden-on-top.md)
 
 ## Scope
 
 持つものは次のとおり。
 
-- 5 つの図柄に共通する版の仕様
-- 図柄と、それぞれが向く場所
-- 帯の重ね順と、帯の上端の処理
-- 挿絵の上に文字を重ねるときの霞
+- 挿絵を置く場所と、置かない場所
+- 版画風の挿絵の図柄、版の仕様、色と濃さの決め方
+- 版画風の挿絵の動きの層
+- 生成器と `ArtBand` の使い方
 
 持たないものは次のとおり。
 
-- 色の値。`--color-wood-*` と `--color-veil-*` の値は [tokens.css](../styles/tokens.css) が持つ。
-- 帯が現れるときの動き。規則は [Design System の Design Doc](../DesignDoc.md#動き) にある。
-- 配色を切り替える書き方の規則。[context/conventions.md](../../../context/conventions.md#配色の切り替え) にある。
+- 水墨の門の絵と立体の庭の時間、色、配置。[トップの水墨の門と立体の庭の Design Doc](../../../design/features/top-garden/DesignDoc.md) が持つ。
+- 挿絵の濃さのトークンの値。`packages/ui/src/tokens/semantic.css` と `semantic-dark.css` が持つ。
+- 動きの規則と、トップの庭の例外。[Design System の Design Doc の「動き」](../DesignDoc.md#動き) が持つ。
 
 ## Design
 
-### 外部の画像ファイルを持たない
+### 置く場所
 
-挿絵は、`art/` の SVG をビルドのときにページへ埋め込む。  
-3 階調は `--color-wood-1`、`--color-wood-2`、`--color-wood-3` を `fill` と `stroke` から参照する。  
-配色を切り替えると、挿絵の色も一緒に変わる。
+| 場所                     | 挿絵                         |
+| ------------------------ | ---------------------------- |
+| トップの庭               | 水墨の門の絵と、立体の庭     |
+| 庭を出さないときのトップ | 帯の位置に、止まった水墨の絵 |
+| 記事の一覧の冒頭         | 版画風の図柄                 |
 
-SVG はパラメータから `generate.py` が組み、画像生成を経由しない。
+挿絵は、記事の本文、コードを動かす画面、フッターには置かない。  
+水墨の絵と庭の絵は、[トップの水墨の門と立体の庭の Design Doc](../../../design/features/top-garden/DesignDoc.md) にある。
+
+### 色と濃さ
+
+版画風の挿絵は、文字の色（`--fd-color-text`）と面の色（`--fd-color-surface`）の 2 色だけで塗る。  
+濃さは、層ごとの不透明度のトークン（`--fd-art-*`）で決める。  
+テーマを替えると、色と濃さが一緒に替わる。
+
+| トークン        | 層   |
+| --------------- | ---- |
+| `--fd-art-far`  | 遠景 |
+| `--fd-art-mid`  | 中景 |
+| `--fd-art-near` | 近景 |
+| `--fd-art-moon` | 月   |
+
+- ライトは近景ほど濃く、ダークは近景ほど面の色に近い。
+- 層は、面の色で下を隠してから、文字の色を重ねる。後ろの層が透けないので、ダークで近景を薄くしても奥の稜線が出ない。
+- SVG に色の値を書かない。`mask` は alpha で読み、白の色の値を書かない。
 
 ### 版の仕様
 
-5 つの図柄は、次の表の版の仕様を共有する。  
-数値は `generate.py` と [utilities.css](../styles/utilities.css) の `.wood-grain` が持つ。  
-`generate.py` の中では、`defs()` が荒れと霧と mask を、`svg()` が viewBox と `preserveAspectRatio` を、図柄ごとの関数が 3 階調の割り当てを持つ。
-竹と水面は viewBox と `preserveAspectRatio` を、図柄の関数の中に直接書く。
+図柄は、次の表の版の仕様を共有する。  
+数値は `scripts/build-art.mjs` が持つ。
 
-| 要素       | 実装                                                                                    | 目的                           |
-| ---------- | --------------------------------------------------------------------------------------- | ------------------------------ |
-| 輪郭の荒れ | `feTurbulence` と `feDisplacementMap`。水面だけ変位を小さくする                         | 刷りのずれ。刷ったものに見せる |
-| 霧         | 縦のグラデーションを `mask` に掛ける。下端が濃く、上端で紙へなじむ                      | 上端で紙へなじませる           |
-| 粒         | CSS の層に置いた turbulence のタイル。明るい配色で multiply、暗い配色で screen で重ねる | 紙の目                         |
-| 3 階調     | 遠景 `--color-wood-3`、中景 `--color-wood-2`、近景 `--color-wood-1`                     | 奥行き                         |
-| 断ち落とし | `preserveAspectRatio="xMidYMax slice"`                                                  | 帯の高さに関わらず下端を保つ   |
-
-viewBox は `0 0 1200 400` にする。  
-縦長のパネルに使う竹（`bamboo_tall.svg`）だけは、縦長の viewBox を持つ。
-
-**粒を SVG フィルタで作らない**。  
-`feFlood flood-color="var(--color-wood-1)"` は CSS カスタムプロパティを解決しない。  
-粒は CSS の層に置く。
-
-**帯の下端では、粒に継ぎ目が出る**。  
-`.wood-grain` は `mask-image` で下端の粒を消す。
-
-### 帯の重ね順
-
-`ArtBand` は、`.wood-band` の中に、下から挿絵の SVG と粒（`.wood-grain`）を重ねる。  
-帯は `position: relative` と `overflow: hidden` を持ち、SVG は `position: absolute; inset: 0` で帯を埋める。  
-`ArtBand` は子の要素を受け取らないので、帯の中に文字を置けない。
-文字を重ねるときは、帯の外に霞と文字を重ねる。
-
-`ArtBand` は、SVG の `role="img"` と `aria-label` を外し、帯に `aria-hidden="true"` を付ける。  
-挿絵は装飾であり、読み上げに渡さない。
-
-### 文字を重ねるとき
-
-挿絵の上に文字を直接置かない。  
-**地の色そのものを透過させた霞（`--color-veil-1` から `--color-veil-0`）を挟み、文字は必ず無地の紙の上に載せる**。  
-挿絵の濃さに関わらず、文字のコントラストは `--color-ink` と `--color-paper` の比に固定される。
-
-霞は横方向のグラデーション（`linear-gradient(96deg, ...)`）である。  
-挿絵が右へ寄り、文字が左に載る配置を、この霞が作る。
-
-about は、帯と `.about__veil` を `aria-hidden` の要素に包み、文字をその要素の兄弟に置く。  
-霞の範囲は `apps/web/src/styles/site.css` の `.about__veil` が持つ。
-
-**720px 以下では、about の霞を縦方向へ掛け直す**。  
-本文が版面の全幅を使うので、横方向のままだと図の枝が文字に掛かる。
+| 要素       | 実装                                                                   | 目的                                       |
+| ---------- | ---------------------------------------------------------------------- | ------------------------------------------ |
+| 輪郭の荒れ | `feTurbulence` と `feDisplacementMap`。図柄ごとに変位の大きさを替える  | 刷りのずれ。刷ったものに見せる             |
+| 霧         | 縦のグラデーションを `mask` に掛ける。下端が濃く、上端で面の色へなじむ | 上端で面へなじませる                       |
+| 空         | 上端から下へ薄れる帯（一文字ぼかし）。霧だけを掛け、荒れを掛けない     | 荒れで上端の辺がずれ、空に筋が出るのを防ぐ |
+| 断ち落とし | viewBox `0 0 1200 400` と `preserveAspectRatio="xMidYMax slice"`       | 帯の高さに関わらず下端を保つ               |
 
 ### 図柄
 
-| 名前   | ファイル                        | 特徴                         | 向く場所              |
-| ------ | ------------------------------- | ---------------------------- | --------------------- |
-| 木立   | `woodland.svg`                  | 幹と枝。手前を斜面が横切る   | about（トップの表紙） |
-| 竹     | `bamboo.svg`、`bamboo_tall.svg` | 節を地の色で切る。縦に強い   | 縦長のパネル          |
-| 水面   | `ripple.svg`                    | 同心の波紋の群れと、浮かぶ葉 | 章の切れ目            |
-| 遠い山 | `ridge.svg`                     | 稜線の重なり。最も静か       | 静かな表紙            |
-| 草     | `grass.svg`                     | 穂を持つ葉。最も細かく密     | 末尾、細い帯          |
+| 名前       | ファイル                                | 特徴                                                                     |
+| ---------- | --------------------------------------- | ------------------------------------------------------------------------ |
+| `seigaiha` | `seigaiha.svg`                          | 青海波。同心の弧の段を重ね、下の段ほど濃い。密なので低い帯でも幅を埋める |
+| `kasumi`   | `kasumi.svg`、`kasumi-motion.svg`       | 霞の山並み。3 層の稜線と、動きの層の霞の帯                               |
+| `moonPine` | `moon-pine.svg`、`moon-pine-motion.svg` | 月と松。空の一文字ぼかし、遠い稜線、右下から入る松の枝と、動きの層の月   |
 
-挿絵の帯を置くのは次の 2 箇所。
-帯の高さは、置く側が `ArtBand` の props で決める。既定は 132px である。
+記事の一覧の冒頭には `seigaiha` を置く。
 
-- トップの about: 木立を `fill` で about の全体に広げる（`apps/web/src/features/about/About.astro`）
-- トップの末尾: 草を `fade` で置く（`apps/web/src/pages/index.astro`）
+### 動きの層
 
-**140px 以下の細い帯には密な図柄を使う**。  
-`xMidYMax slice` は下端の付近だけを残す。  
-木立のように要素が縦に伸びる図柄は、細い帯では幹の根元しか映らず、左右に空白ができる。  
-草は、どの高さで断っても幅いっぱいが埋まる。
+図柄は、版の層の上に、動きの層を 1 枚持てる。  
+動きの層は、読み込んだ直後に 1 回だけ動いて止まり、5 秒を超えない。
 
-### 帯の上端
+| 図柄       | 動き                                 |
+| ---------- | ------------------------------------ |
+| `kasumi`   | 霞の帯が、4 秒で左から右へ 4rem 動く |
+| `moonPine` | 月が、3 秒で濃度を上げて出る         |
+| `seigaiha` | 動きの層を持たない                   |
 
-図の霧（`mask`）は viewBox の全体に掛かる。  
-**帯が低いと霧の範囲が映らず、切り口が直線で出る**。  
-直線の切り口は、絵ではなく区切りに見える。  
-低い帯では、帯の側でも上端を紙へなじませる（`ArtBand` の `fade`）。
+霞の帯は、面の色の帯の縁を、放射のグラデーションで四方にぼかす。  
+荒れを掛けると端が棒に見えるので、版の層に入れない。
 
-低い帯で霧を見せようとして、図の停止点を動かさない。  
-動かすと、`fill` で使ったときに図が全体に薄くなる。
+### 帯と文字
+
+`ArtBand` は、版の層と動きの層を重ねた帯を描く。  
+帯は `aria-hidden="true"` を持ち、SVG に読み上げの名前を付けない。挿絵は装飾であり、読み上げに渡さない。
+
+- `ArtBand` は子の要素を受け取らないので、帯の中に文字を置けない。文字を重ねるときは、帯の外に霞と文字を重ねる。
+- `band` の帯は高さが 120px で、上端の半分を面の色へなじませる（`mask-t-from-50%`）。
+- `fill` の帯は、`relative` を持つ親の全体に広げる。
 
 ## Interface
 
 ### 置くファイル
 
-- `packages/design-system/art/<図柄>.svg`: 図柄ごとの SVG
-- `packages/design-system/art/generate.py`: 版の仕様を共有して SVG を組む生成器
-- `apps/web/src/components/ArtBand.astro`: SVG を帯として描くコンポーネント
+| パス                                       | 持つもの                            |
+| ------------------------------------------ | ----------------------------------- |
+| `packages/ui/src/art/<図柄>.svg`           | 図柄ごとの版の層の SVG              |
+| `packages/ui/src/art/<図柄>-motion.svg`    | 図柄ごとの動きの層の SVG            |
+| `packages/ui/src/base/ArtBand/ArtBand.tsx` | SVG を帯として描くコンポーネント    |
+| `scripts/build-art.mjs`                    | 版の仕様を共有して SVG を組む生成器 |
 
-`@fukuemon/design-system` は、`package.json` の `exports` の `./art/*` で SVG を出す。  
+`@fukuemon/ui` は、パッケージの `.` から `ArtBand` と、型の `ArtBandProps`、`ArtBandLayout`、`ArtMotif` を出す。  
 `ArtBand` は `?raw` で SVG を文字列として読み込む。
 
 ### ArtBand の props
 
-| prop     | 意味                                                         |
-| -------- | ------------------------------------------------------------ |
-| `motif`  | 図柄の名前。`woodland`、`bamboo`、`grass`、`ridge`、`ripple` |
-| `height` | 帯の高さ。既定は `132px`                                     |
-| `fill`   | 親の全体に広げる。`height` を使わない                        |
-| `fade`   | 帯の上端を紙へなじませる                                     |
-
-`motif` の `bamboo` は、縦長の `bamboo_tall.svg` を描く。
+| prop     | 意味                                         |
+| -------- | -------------------------------------------- |
+| `motif`  | 図柄の名前。`kasumi`、`seigaiha`、`moonPine` |
+| `layout` | 置き方。`band`（デフォルト）か `fill`        |
 
 ### 生成器
 
-`generate.py` は、実行したディレクトリに図柄ごとの `_art_<図柄>.svg.frag` を書き出す。  
-`art/` の SVG は、その出力を図柄の名前で置いたものである。
+`pnpm run build:art` は、`scripts/build-art.mjs` で `packages/ui/src/art/` に SVG を書き出す。  
+生成器は乱数の種を固定するので、生成し直しても同じ SVG になる。  
+SVG を手で直さず、生成器を直して書き出し、一緒にコミットする。
 
 ### チェック
 
-`generate.py` は乱数の種を固定するので、生成し直しても同じ SVG になる。  
-粒の `feTurbulence` も種を固定する。  
-挿絵はトップの見た目の回帰の撮影に含まれ、ほかのページと同じく画素で比べる。
+- `pnpm run check:art` は、書き出すはずの中身と今の SVG を比べ、食い違うかファイルがないと終了コード 1 にする。`pnpm run check` に入っている。
+- `ArtBand.test.tsx` は、帯を読み上げから外すこと、`band` が 120px の帯を埋めること、動きの層が 5 秒以内の 1 回だけの遷移で動くことを確認する。

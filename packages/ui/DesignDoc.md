@@ -94,7 +94,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - 等幅の和文の字は、BIZ UDGothic の 400 と 700 で受ける。M PLUS 1 Code と比べて、見出しの字に絞ったときのファイルが小さく（400 字で約 70 KB と約 150 KB）、Fontsource に静的なウェイトがあるためである。
 - 見出しの明朝のウェイトは、テーマ変数の `font-semibold`（600）で書く。
 - どの書体も `font-display: swap` にし、和文の分割は preload しない。
-- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、挿絵を作り替え、主の色を緑にする](../../adr/0023-keep-art-and-key-color.md)
+- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../adr/0023-keep-art-and-key-color.md)
 
 テーマ変数には、DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。
 
