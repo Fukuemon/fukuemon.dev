@@ -11,7 +11,7 @@ export type ArtMotif = "kasumi" | "seigaiha" | "moonPine";
 export type ArtBandLayout = "fill" | "band";
 
 export type ArtBandProps = {
-  /** 図柄。トップは `kasumi`、記事の一覧の冒頭は `seigaiha`、about は `moonPine` を置く。 */
+  /** 図柄。記事の一覧の冒頭は `seigaiha` を置く。トップは水墨の門の絵と立体の庭で、ArtBand を使わない（ADR-0026）。 */
   motif: ArtMotif;
   /**
    * `fill` は、`relative` を持つ親の全体に広げる。
