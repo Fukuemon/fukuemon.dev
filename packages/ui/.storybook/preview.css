@@ -10,7 +10,8 @@ body {
 
 /*
  * addon-docs は Docs のページの背景と文字を固定の色で描くので、ツールバーのテーマに合わせて上書きする。
- * story の中（.docs-story の子孫）はコンポーネントのクラスのまま、Show code のソース（pre とその親）は addon-docs の色のままにする。
+ * story の中（.docs-story の子孫）と、MDX に書いたトークンの見本（.fd-sample の子孫）はユーティリティのクラスのまま、
+ * Show code のソース（pre とその親）は addon-docs の色のままにする。
  */
 .sbdocs.sbdocs-wrapper,
 .sbdocs.sbdocs-preview,
@@ -24,6 +25,8 @@ body {
   :is(h1, h2, h3, h4, h5, h6, p, li, a, span, div):not(
     .docs-story,
     .docs-story *,
+    .fd-sample,
+    .fd-sample *,
     :has(pre),
     pre *
   ) {
@@ -35,7 +38,7 @@ body {
   color: var(--fd-color-text);
 }
 
-.sbdocs-content code:not(.docs-story *),
+.sbdocs-content code:not(.docs-story *, .fd-sample *),
 .docblock-argstable.docblock-argstable code {
   background-color: var(--fd-color-surface-subtle);
   border-color: var(--fd-color-border);

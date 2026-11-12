@@ -1,4 +1,4 @@
-import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Canvas, ColorItem, ColorPalette, Meta } from "@storybook/addon-docs/blocks";
 
 import * as Stories from "./Code.stories";
 
@@ -6,20 +6,102 @@ import * as Stories from "./Code.stories";
 
 # コードの色
 
-記事のコードブロック、エディタ、端末が字句に当てるコードの色を、見本のコードと端末の 16 色で並べる。
+記事のコードブロック、エディタ、端末が字句に当てるコードの色を、1 色ずつ並べる。
+見本は、ツールバーで選んだテーマの色で描く。
 
 - 使う場面: `packages/ui/design/tokens.md` の「色」の「コード」の行
 - 当てる字句と決まり: `packages/ui/DesignDoc.md` の「コードの色」
 - 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `COLOR-TOKEN`、`STATE-NOT-COLOR-ONLY`
 - 値: `src/tokens/semantic.css`（ライト）と `src/tokens/semantic-dark.css`（ダーク）のコードの種類のトークン、生成した `src/tokens/code-theme.gen.json`
 
-## ライト
+## 字句
+
+<ColorPalette>
+  <ColorItem
+    title="code-surface"
+    subtitle="記事のコードブロック、エディタ、端末の字句"
+    colors={{ "code-surface": "var(--fd-color-code-surface)" }}
+  />
+  <ColorItem title="code-text" colors={{ "code-text": "var(--fd-color-code-text)" }} />
+  <ColorItem title="code-comment" colors={{ "code-comment": "var(--fd-color-code-comment)" }} />
+  <ColorItem title="code-keyword" colors={{ "code-keyword": "var(--fd-color-code-keyword)" }} />
+  <ColorItem title="code-string" colors={{ "code-string": "var(--fd-color-code-string)" }} />
+  <ColorItem title="code-number" colors={{ "code-number": "var(--fd-color-code-number)" }} />
+  <ColorItem title="code-function" colors={{ "code-function": "var(--fd-color-code-function)" }} />
+  <ColorItem title="code-type" colors={{ "code-type": "var(--fd-color-code-type)" }} />
+</ColorPalette>
+
+## 端末の 16 色
+
+<ColorPalette>
+  <ColorItem
+    title="code-ansi-black"
+    colors={{ "code-ansi-black": "var(--fd-color-code-ansi-black)" }}
+  />
+  <ColorItem title="code-ansi-red" colors={{ "code-ansi-red": "var(--fd-color-code-ansi-red)" }} />
+  <ColorItem
+    title="code-ansi-green"
+    colors={{ "code-ansi-green": "var(--fd-color-code-ansi-green)" }}
+  />
+  <ColorItem
+    title="code-ansi-yellow"
+    colors={{ "code-ansi-yellow": "var(--fd-color-code-ansi-yellow)" }}
+  />
+  <ColorItem
+    title="code-ansi-blue"
+    colors={{ "code-ansi-blue": "var(--fd-color-code-ansi-blue)" }}
+  />
+  <ColorItem
+    title="code-ansi-magenta"
+    colors={{ "code-ansi-magenta": "var(--fd-color-code-ansi-magenta)" }}
+  />
+  <ColorItem
+    title="code-ansi-cyan"
+    colors={{ "code-ansi-cyan": "var(--fd-color-code-ansi-cyan)" }}
+  />
+  <ColorItem
+    title="code-ansi-white"
+    colors={{ "code-ansi-white": "var(--fd-color-code-ansi-white)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-black"
+    colors={{ "code-ansi-bright-black": "var(--fd-color-code-ansi-bright-black)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-red"
+    colors={{ "code-ansi-bright-red": "var(--fd-color-code-ansi-bright-red)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-green"
+    colors={{ "code-ansi-bright-green": "var(--fd-color-code-ansi-bright-green)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-yellow"
+    colors={{ "code-ansi-bright-yellow": "var(--fd-color-code-ansi-bright-yellow)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-blue"
+    colors={{ "code-ansi-bright-blue": "var(--fd-color-code-ansi-bright-blue)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-magenta"
+    colors={{ "code-ansi-bright-magenta": "var(--fd-color-code-ansi-bright-magenta)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-cyan"
+    colors={{ "code-ansi-bright-cyan": "var(--fd-color-code-ansi-bright-cyan)" }}
+  />
+  <ColorItem
+    title="code-ansi-bright-white"
+    colors={{ "code-ansi-bright-white": "var(--fd-color-code-ansi-bright-white)" }}
+  />
+</ColorPalette>
+
+## ライトとダークを並べた見本
 
 ライトのテーマのコードの色。
 
 <Canvas of={Stories.Light} story={{ inline: false, height: "700px" }} />
-
-## ダーク
 
 ダークのテーマのコードの色。
 
