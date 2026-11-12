@@ -13,9 +13,7 @@
   - ADR-0008: [読者の identity を前提とする機能を作らず、バックエンドを持たない](0008-no-reader-identity.md)
 - 実行環境の選び方は、有効な決定が無い。
   - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
-- WebContainers の採用は保留している。保留の決定は、ライセンスが要るときに Sandpack（Apache-2.0）を採ると書いている。
-  - ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
-- Sandpack が Node を動かす実行環境の本体（Nodebox）のライセンスは、Sustainable Use License 1.0 である。非営利と個人の利用を許している。
+- Sandpack のパッケージは Apache-2.0 だが、Sandpack が Node を動かす実行環境の本体（Nodebox）のライセンスは、Sustainable Use License 1.0 である。非営利と個人の利用を許している。
   - 出典: [nodebox-runtime LICENSE](https://github.com/Sandpack/nodebox-runtime/blob/main/LICENSE)
 - WebContainers のライセンスについて、StackBlitz の 2 つのページの記述が食い違う。
   - 利用規約の 1.5(c) は、本番か商用での利用に、プランか書面のライセンスを求める。

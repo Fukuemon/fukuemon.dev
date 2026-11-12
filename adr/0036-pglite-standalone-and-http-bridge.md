@@ -10,8 +10,7 @@
 
 - DB を使う実行環境の選び方は、有効な決定が無い。
   - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
-- DB を使う実行環境には、Postgres のプランナの出力を見せるために PGlite を採る決定がある。PGlite は、cross-origin isolation を求めない。
-  - ADR-0013: [DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする](0013-pglite-for-planner-output.md)
+- DB の記事の主題は、Postgres のプランナの出力である。PGlite は、Postgres を WASM にしたもので、本物の Postgres と同じ `EXPLAIN ANALYZE` を返す。cross-origin isolation を求めない。
 - Node と npm の実行に WebContainers を採る。
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
 - cross-origin isolation のヘッダは、Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す。訪問者が書いたコードを動かすツールは、サブドメインに置く。
