@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -42,14 +42,11 @@ HTTP の流れは、実行環境の中の Node の preload で記録する。
 - コンソールの行のコンポーネント（ログレベルのアイコン、オブジェクトのツリー、ログレベルでのフィルタ）を、`packages/ui` に追加する。
 - 式を評価する入力欄は、最初の公開に入れない。
 
-## 承認の条件
-
-- 実行環境が、訪問者のコマンドを変えずに preload を追加できること。`NODE_OPTIONS` で追加する形を見込むが、WebContainers で動くかは確認していない。
-
 ## Verification
 
 WebContainers 1.6.4 の中で、`node -r ./trace.cjs` の形で preload を追加し、認可コードフローを流した（Playwright 1.65.0 の Chromium、`localhost`）。
 
+- 訪問者のコマンドを変えずに preload を追加する形（`NODE_OPTIONS`）が、WebContainers で動くかは未確認である。
 - preload は、ブラウザからサーバー、サーバーからサーバーの 8 件のやり取りを、順に記録した。`Cookie` と `Set-Cookie` を含む。
 - 記録の形は、`HttpExchange` の項目（`fromId`、`toId`、`method`、`url`、`status`、`request`、`response`）にそのままマッピングできた。
 - プレビューのスクリプトで `fetch` をラップする形は、プレビューのページが出した `fetch` の URL とステータスコードだけを取れた。ページの移動、リダイレクトの途中のレスポンス、`HttpOnly` の Cookie、サーバーの間の通信は取れなかった。

@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -54,10 +54,6 @@ Node の実行環境を埋め込む記事では、CORP を返さない外部の�
 fukuemon.dev の `/playground` の一覧からリンクする。  
 AI のエージェントが操作する API を追加するときに、トップレベルのドキュメントから登録できる。
 
-## 承認の条件
-
-- 記事に埋め込んだ iframe と、トップレベルで開いたページが、同じ保存先（IndexedDB）を読むこと。
-
 ## Verification
 
 端末は Apple M2、ブラウザは Playwright 1.65.0 の Chromium、WebKit、Firefox（headless）、配信は `localhost` である。  
@@ -84,6 +80,7 @@ Firefox は、測定が時間内に終わらず、未確認である。
 - ヘッダを返さないパスで、draw.io Embed Mode（`embed.diagrams.net`）の iframe が、初期化のメッセージを返した。
 - ヘッダを返すパスに置いた draw.io Embed Mode の iframe は、初期化のメッセージを返さなかった。
 - ヘッダを返さないパスで IndexedDB に書いた値を、ヘッダを返すパスで読めた。
+- 記事に埋め込んだ iframe と、トップレベルで開いたページが、同じ IndexedDB を読むかは未確認である。
 
 WebContainers は、訪問者のコードを `webcontainer-api.io` の origin で動かした。  
 訪問者の Node のコードは、`play.fukuemon.dev` に保存したデータに届かない。

@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -74,10 +74,6 @@ WebContainers は、サーバーごとに、実行のたびに変わる origin �
 記事のコードには、`redirect_uri` のような URL を固定の値で書かない。  
 実行環境が、待ち受けたポートごとの URL をファイルに書き、訪問者のコードはそのファイルを読む。
 
-## 承認の条件
-
-- 本番の HTTPS のドメインで、API キーなしで `WebContainer.boot()` が動くこと。
-
 ## Verification
 
 同じファイル（3001 番のモックの認可サーバー、3000 番のクライアント、`cookie` パッケージ）を 3 つの方式に置き、プレビューの iframe で認可コードフローを流した。  
@@ -97,7 +93,7 @@ WebContainers は、サーバーごとに、実行のたびに変わる origin �
 - Firefox では、WebContainers の `boot`、`npm install`、サーバーの待ち受けまで通ったが、プレビューの iframe にページが出なかった。
 - WebContainers は、サーバーが返した Cookie をブラウザの Cookie の保存場所に入れず、次のリクエストに付けた。`SameSite`、`Secure`、`Domain` の属性の扱いは未確認である。
 - StackBlitz の iframe が、`stackblitz.com` の Cookie を訪問者のブラウザに置いた。
-- `localhost` では、API キーなしで `WebContainer.boot()` が動いた。
+- `localhost` では、API キーなしで `WebContainer.boot()` が動いた。本番の HTTPS のドメインで、API キーなしで動くかは未確認である。
 
 ## Considered Options
 
