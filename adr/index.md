@@ -71,7 +71,7 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 | [ADR-0029](0029-repository-layout-like-buddy.md) | リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く  | ADR-0001 の Decision 4、ADR-0003 の Decision 1 の構成の一覧                                                       |
 | [ADR-0030](0030-articles-format-and-series.md)   | 種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す             | ADR-0001 の Decision 3、ADR-0006 の Decision 2 のほか、ADR-0009、ADR-0012、ADR-0013、ADR-0014、ADR-0015、ADR-0018 |
 | [ADR-0031](0031-subdomains-and-workers.md)       | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる | ADR-0006 の Decision 2                                                                                            |
-| [ADR-0032](0032-docs-site-behind-access.md)      | 文書のサイトを Zensical で組み、Cloudflare Access を Terraform で掛ける             | 無い                                                                                                              |
+| [ADR-0032](0032-docs-site-behind-access.md)      | ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する | 無い                                                                                                              |
 
 ## ADR の間の依存
 

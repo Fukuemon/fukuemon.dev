@@ -1,7 +1,7 @@
 ---
 type: design-doc
 title: fukuemon.dev Design Doc
-description: 記事とシリーズの静的サイト、カタログ、文書のサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、条件つきで足す機能の形
+description: 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、条件つきで足す機能の形
 status: draft
 ---
 
@@ -13,7 +13,7 @@ fukuemon.dev は、訪問者がコードを書いて動かしながら、技術�
 訪問者は、シリーズにまとまった記事を読む。運営者（1 名）は、Markdown を書いて push する。  
 誰のどの課題を解くかは [PRD](../PRD.md) にある。
 
-実装は pnpm workspace の monorepo にし、Astro のサイト、文書のサイト、UI、Content Model、E2E を package に分ける。  
+実装は pnpm workspace の monorepo にし、Astro のサイト、ドキュメントサイト、UI、Content Model、E2E を package に分ける。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../adr/0029-repository-layout-like-buddy.md)
 
 記事は静的なページとして配信し、React は island として局所に使う。  
@@ -37,7 +37,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - サーバー側の永続的な状態。訪問者の identity を前提にする機能を作らないので、求める機能がない。
 - サイト全体の SPA 化。
 - 設計不変量のほかに、将来のために先に作っておくもの。
-- 実行環境の方式と置き場。実行環境の方式を決める ADR と、その Design Doc が持つ。
+- 実行環境の方式と、プレイグラウンドのツールの設計。実行環境の方式を決める ADR と、その Design Doc が持つ。
 
 ## Assumptions and Constraints
 
@@ -46,7 +46,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - 運営者は 1 名である。レビューによる職務の分離が成り立たないので、規約は自動でチェックできる形にする。
 - サーバー側の永続的な状態を持たない。動的な機能は、静的な生成と、ブラウザの中の処理で表せる範囲に限る。
 - 日本語の技術文書を主とし、本文には Latin の技術用語が頻繁に現れる。
-- リポジトリは公開である。許すメールアドレス、account ID、zone ID を、文書とコードに書かない。
+- リポジトリは公開である。許可するメールアドレス、account ID、zone ID を、文書とコードに書かない。
 
 ### Astro の制約
 
@@ -63,6 +63,7 @@ ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-in
 ```mermaid
 flowchart TD
     reader["訪問者 (Browser)"] --> site["Worker: fukuemon.dev<br/>Static Assets"]
+    reader --> play["Worker: プレイグラウンドのサブドメイン<br/>Static Assets"]
     dev["運営者 (Browser)"] --> catalog["Worker: design.fukuemon.dev<br/>Static Assets"]
     dev --> access["Cloudflare Access"]
     access --> docsw["Worker: docs.fukuemon.dev<br/>Static Assets"]
@@ -100,15 +101,15 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 
 モジュールごとの責務は次のとおり。
 
-| モジュール                | 責務                                                                                           | 持たないもの                      |
-| ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------- |
-| `apps/web`                | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化          | トークンとコンポーネントの定義    |
-| `apps/docs-site`          | `docs/` を組み立てた文書のサイトの設定と Worker                                                | 文書の原本                        |
-| `@fukuemon/ui`            | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                          | ページと原稿                      |
-| `@fukuemon/content-model` | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証          | Astro への依存                    |
-| `@fukuemon/config`        | tsconfig の共有の設定                                                                          | 無い                              |
-| `@fukuemon/e2e`           | 配信したサイトを操作する E2E のテストと、エビデンス                                            | サイトのコードへの依存            |
-| `infra/`                  | Zone、Workers の custom domain、文書のサイトの Access、Terraform の state を置く R2 のバケット | Worker の script と静的なアセット |
+| モジュール                | 責務                                                                                                 | 持たないもの                      |
+| ------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `apps/web`                | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化                | トークンとコンポーネントの定義    |
+| `apps/docs-site`          | `docs/` をビルドしたドキュメントサイトの設定と Worker                                                | 文書の原本                        |
+| `@fukuemon/ui`            | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                | ページと原稿                      |
+| `@fukuemon/content-model` | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                | Astro への依存                    |
+| `@fukuemon/config`        | tsconfig の共有の設定                                                                                | 無い                              |
+| `@fukuemon/e2e`           | 配信したサイトを操作する E2E のテストと、エビデンス                                                  | サイトのコードへの依存            |
+| `infra/`                  | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット | Worker の script と静的なアセット |
 
 次の図は、package の間の依存の向きを示す。
 
@@ -136,30 +137,34 @@ flowchart TD
 1 つのアプリを、1 つの Worker と 1 つのホスト名に割り当てる。  
 ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-workers.md)
 
-| ホスト名              | 置くもの                                       | 開ける人               |
-| --------------------- | ---------------------------------------------- | ---------------------- |
-| `fukuemon.dev`        | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                 |
-| `design.fukuemon.dev` | カタログ                                       | 誰でも                 |
-| `docs.fukuemon.dev`   | 文書のサイト                                   | 運営者が許可した人     |
-| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索に載せない |
+プレイグラウンドは 1 つのアプリで、全てのツールを 1 つのサブドメインに置く。  
+サブドメインの名前と、cross-origin isolation のヘッダを返すパスは、実行環境の方式を決める ADR が決める。
 
-文書のサイトの組み方と、アクセスの認証は、次の ADR にある。  
-ADR-0032: [文書のサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)
+| ホスト名                       | 置くもの                                       | アクセスできる人                           |
+| ------------------------------ | ---------------------------------------------- | ------------------------------------------ |
+| `fukuemon.dev`                 | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                     |
+| プレイグラウンドのサブドメイン | プレイグラウンドの全てのツール                 | 誰でも                                     |
+| `design.fukuemon.dev`          | カタログ                                       | 誰でも                                     |
+| `docs.fukuemon.dev`            | ドキュメントサイト                             | 運営者が許可した人                         |
+| workers.dev の URL             | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない |
+
+ドキュメントサイトのビルドの方法と、アクセスの認証は、次の ADR にある。  
+ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)
 
 ### URL の構成
 
 `fukuemon.dev` の URL は次のとおり。  
 ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-series.md)
 
-| URL                         | 中身                                           |
-| --------------------------- | ---------------------------------------------- |
-| `/`                         | トップ。プロフィールを兼ねる                   |
-| `/articles`                 | 記事の一覧                                     |
-| `/articles/<slug>`          | シリーズに入れない記事                         |
-| `/articles/<series>/<slug>` | シリーズの中の記事                             |
-| `/series/<series>`          | シリーズのページ。題、説明、読む順の記事の一覧 |
-| `/playground`               | プレイグラウンド。実行環境の要求が作る         |
-| `/rss.xml`                  | RSS                                            |
+| URL                         | 中身                                                                   |
+| --------------------------- | ---------------------------------------------------------------------- |
+| `/`                         | トップ。プロフィールを兼ねる                                           |
+| `/articles`                 | 記事の一覧                                                             |
+| `/articles/<slug>`          | シリーズに入れない記事                                                 |
+| `/articles/<series>/<slug>` | シリーズの中の記事                                                     |
+| `/series/<series>`          | シリーズのページ。タイトル、説明、読む順の記事の一覧                   |
+| `/playground`               | プレイグラウンドの一覧。ツールは、プレイグラウンドのサブドメインに置く |
+| `/rss.xml`                  | RSS                                                                    |
 
 描画の実装の詳細を URL に出さない。  
 URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
@@ -168,7 +173,7 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 
 運営者は、記事を Markdown で `apps/web/src/content/articles/` の下に置く。
 
-- `articles/<series>/` のディレクトリが、1 つのシリーズになる。題と説明は、ディレクトリの `index.md` に書く。
+- `articles/<series>/` のディレクトリが、1 つのシリーズになる。タイトルと説明は、ディレクトリの `index.md` に書く。
 - 読む順は、記事の frontmatter の `order` で決まる。
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
@@ -192,7 +197,7 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 | 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                           | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
 | 5   | 画面の色、字、余白は、`@fukuemon/ui` のトークンから取る。画面のコードに値を直接書かない               | 配色と版面を、トークンの変更だけで変えられる                                      | [ADR-0024](../adr/0024-tokens-of-fukuemon-dev.md)              |
 | 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                            | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
-| 7   | `fukuemon.dev` のページに、cross-origin isolation のヘッダを書かない                                  | 全体に掛けると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる              | [ADR-0031](../adr/0031-subdomains-and-workers.md)              |
+| 7   | `fukuemon.dev` のページに、cross-origin isolation のヘッダを書かない                                  | 全体に適用すると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる            | [ADR-0031](../adr/0031-subdomains-and-workers.md)              |
 | 8   | 種別を増やさない。構成は記事の形式で、分類での絞り込みは URL パラメータで表す                         | 一覧と URL が種別の数に応じて増えない。分類の組み合わせをページとして書き出さない | [ADR-0030](../adr/0030-articles-format-and-series.md)          |
 
 ### 種別と分類の切り分け
@@ -200,7 +205,7 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 | 軸                      | 実現の方法                                                                              | 理由                                            |
 | ----------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | 種別                    | 記事の 1 つ。一覧は `/articles` の 1 ページ                                             | 一覧と URL が 1 つで済む。JavaScript が要らない |
-| 形式（1 ページ、手順）  | 記事の frontmatter に書く。一覧では、手順の記事に印を付ける                             | 1 つのシリーズに、両方の形式の記事を並べられる  |
+| 形式（1 ページ、手順）  | 記事の frontmatter に書く。一覧では、手順の記事にラベルを付ける                         | 1 つのシリーズに、両方の形式の記事を並べられる  |
 | 分類（`postgres` など） | 今は絞り込まず、一覧に出すだけ。足すときは URL パラメータとクライアントの絞り込みにする | 分類の組み合わせを、ページとして書き出せない    |
 
 ### 判断の優先順位
@@ -227,9 +232,9 @@ island は、読むことに要らない機能にだけ使う。
 
 ### 配信
 
-- `fukuemon.dev` の Worker への deploy は、運用者が手で起動したときだけ行う。
-- 新しいサイトは、プレビューの Worker に、develop への push で check が通ったときに出す。
-- カタログと文書のサイトは、develop への push で check が通ったときに出す。
+- `fukuemon.dev` の Worker への deploy は、運用者が手動で実行したときだけ行う。
+- 新しいサイトは、プレビューの Worker に、develop への push で check が通ったときにデプロイする。
+- カタログとドキュメントサイトは、develop への push で check が通ったときにデプロイする。
 
 deploy と apply の条件は [context/operations.md](../context/operations.md#deployment-conditions) にある。
 
@@ -245,6 +250,8 @@ deploy と apply の条件は [context/operations.md](../context/operations.md#d
 
 - 手順の形式の記事は、記事の形式の値を足して作る。種別と URL を増やさない。
 - キャンバスの図とスライドは、種別を増やさずに足す。
+- キャンバスとスライドのエディタは、プレイグラウンドのツールとして、プレイグラウンドのサブドメインに足す。Worker とホスト名を増やさない。
+  - ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-workers.md)
 - 記事のあいだの関連の表示は、Content Model の関係グラフから出す。
 - 分類での絞り込みは、URL パラメータで絞り込む island にする。ページと索引のページは増やさない。
 - 本文の検索は、ビルドのときに作る索引と、クライアントの検索にする。
@@ -270,7 +277,7 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 ├── apps/
 │   ├── web/                     # Astro のサイト
 │   │   └── src/content/articles/  # 記事の原稿
-│   └── docs-site/               # 文書のサイト
+│   └── docs-site/               # ドキュメントサイト
 ├── packages/
 │   ├── config/                  # 共有の tsconfig
 │   ├── content-model/           # DesignDoc.md を含む
