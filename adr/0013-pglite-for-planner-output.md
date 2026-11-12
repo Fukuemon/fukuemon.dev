@@ -1,4 +1,4 @@
-# ADR-0013: DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite を既定にする
+# ADR-0013: DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする
 
 ## Status
 
@@ -7,7 +7,7 @@
 ## Context
 
 ADR-0006 の Decision 5 は、DB を使うハンズオンの実行環境を PGlite にすると決めた。  
-理由は、cross-origin isolation を要求しないと確かめたのが PGlite だけだったことにある。  
+理由は、cross-origin isolation を要求しないと確認したのが PGlite だけだったことにある。  
 ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
 
 SQLite WASM も、VFS を選べば cross-origin isolation を要求しない。  
@@ -29,11 +29,11 @@ SQLite の `EXPLAIN QUERY PLAN` は、cost の見積もりも `Buffers:` も `Pl
 
 ## Decision
 
-DB を使うハンズオンの実行環境は、PGlite を既定にする。  
+DB を使うハンズオンの実行環境は、PGlite をデフォルトにする。  
 主題が Postgres のプランナの出力なので、本物の Postgres が返す `EXPLAIN ANALYZE` を読者に見せる必要がある。
 
-PGlite を既定にする結論と、`embedded` に収まりヘッダを変えないことは、ADR-0006 と変わらない。  
-この決定は、ADR-0006 の Decision 5 の根拠（isolation が要らないと確かめたのは PGlite だけ）を置き換える。
+PGlite をデフォルトにする結論と、`embedded` に収まりヘッダを変えないことは、ADR-0006 と変わらない。  
+この決定は、ADR-0006 の Decision 5 の根拠（isolation が要らないと確認したのは PGlite だけ）を置き換える。
 
 主題が Postgres に固有でないコンテンツには、この判断を当てはめない。  
 汎用の SQL の入門なら、SQLite を採る。
