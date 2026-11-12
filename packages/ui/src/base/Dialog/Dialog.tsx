@@ -32,8 +32,8 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
     <dialog
       aria-labelledby={titleId}
       className={clsx(
-        "m-auto w-full max-w-lg bg-surface-raised p-0 text-text border border-border-field",
-        "backdrop:bg-overlay",
+        "m-auto w-full max-w-lg rounded-control border border-border-field bg-surface-raised p-0 text-text shadow-raised",
+        "open:animate-fade-in backdrop:animate-fade-in backdrop:bg-overlay",
       )}
       // Esc のキーでは、ブラウザが自分で閉じるのを止め、閉じるかを呼び出す側の isOpen に任せる
       onCancel={(event) => {
@@ -46,6 +46,7 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
       }}
       ref={ref}
     >
+      <span aria-hidden="true" className="block h-1 animate-stroke bg-text stroke-brush" />
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-start justify-between gap-4">
           <h2 className="font-heading text-heading-sm font-semibold" id={titleId}>
@@ -53,7 +54,7 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
           </h2>
           <button
             aria-label="閉じる"
-            className="-m-2 inline-grid size-11 shrink-0 cursor-pointer place-items-center hover:bg-surface-subtle focus-visible:focus-ring"
+            className="-m-2 inline-grid size-11 shrink-0 cursor-pointer place-items-center rounded-control hover:bg-surface-subtle focus-visible:focus-ring"
             onClick={onClose}
             type="button"
           >

@@ -25,7 +25,8 @@ const sizeClassName: Record<ButtonSize, string> = {
 
 const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
   clsx(
-    "relative inline-flex cursor-pointer items-center justify-center gap-2 text-label",
+    "relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-control text-label ink-press",
+    "not-aria-disabled:not-aria-busy:active:brightness-90",
     "focus-visible:focus-ring",
     "aria-disabled:cursor-not-allowed aria-disabled:bg-surface-disabled aria-disabled:text-text-disabled aria-disabled:ring-0",
     variantClassName[variant],
@@ -34,7 +35,7 @@ const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions
 
 export type ButtonProps = Omit<ComponentPropsWithRef<"button">, "className" | "style"> &
   ButtonStyleOptions & {
-    /** true の間は子の文を隠して罫の印を重ね、クリックを無視する。子の文はボタンの名前として残す。 */
+    /** true の間は子の文を隠して 3 つの点の印を重ね、クリックを無視する。子の文はボタンの名前として残す。 */
     isLoading?: boolean;
   };
 
@@ -71,10 +72,11 @@ export function Button({
     >
       <span className={clsx(isLoading && "opacity-0")}>{children}</span>
       {isLoading && (
-        <span
-          aria-hidden
-          className="absolute h-0.5 w-6 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-current"
-        />
+        <span aria-hidden className="absolute loading-dots">
+          <span />
+          <span />
+          <span />
+        </span>
       )}
     </button>
   );

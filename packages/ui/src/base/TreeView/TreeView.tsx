@@ -153,7 +153,7 @@ export function TreeView({
             aria-selected={onSelect ? node.id === selectedId : undefined}
             aria-setsize={setSize}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
+              "flex min-h-11 cursor-pointer items-center gap-1 rounded-control pr-2 transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
             )}
             key={node.id}

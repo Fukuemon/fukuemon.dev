@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /**
  * 区切りと重なりとフォーカスの表示を、見本で並べる。余白は Tailwind のデフォルトの段（1 段 4px）を使う。
- * 箱の角は丸めず、影を使わない。区切りは罫線と余白で、重なる面は bg-surface-raised と 1px の枠で示す。
+ * 区切りは罫線と余白で示す。操作するものと重なる面の角は rounded-control で丸め、重なる面は 1px の枠と shadow-raised の影で示す。
  */
 function ShapeTokens() {
   return (
@@ -26,9 +26,23 @@ function ShapeTokens() {
           <li className="flex flex-col items-center gap-3">
             <span
               aria-hidden="true"
-              className="size-16 border border-border-field bg-surface-raised"
+              className="size-16 rounded-control border border-border-field bg-surface-raised shadow-raised"
             />
-            <code className="font-mono text-code-dense">border-border-field bg-surface-raised</code>
+            <code className="font-mono text-code-dense">
+              rounded-control border-border-field bg-surface-raised shadow-raised
+            </code>
+          </li>
+        </ul>
+      </section>
+      <section className="flex flex-col gap-3">
+        <h2 className="font-heading text-heading-md font-semibold">角</h2>
+        <ul className="flex flex-wrap gap-8">
+          <li className="flex flex-col items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-12 w-32 rounded-control bg-surface ring-1 ring-border-field ring-inset"
+            />
+            <code className="font-mono text-code-dense">rounded-control</code>
           </li>
         </ul>
       </section>
@@ -36,7 +50,7 @@ function ShapeTokens() {
         <h2 className="font-heading text-heading-md font-semibold">フォーカス</h2>
         <button
           type="button"
-          className="focus-ring w-fit bg-primary px-4 py-3 text-label text-text-inverse"
+          className="focus-ring w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
         >
           フォーカスの表示
         </button>

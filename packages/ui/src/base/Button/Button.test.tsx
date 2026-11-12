@@ -40,15 +40,26 @@ describe("Button", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("読み込み中の印の罫は、ボタンの文の色で動く", () => {
+  it("読み込み中の印の 3 つの点は、ボタンの文の色で動く", () => {
     for (const Story of [Loading, SecondaryLoading]) {
       const { unmount } = render(<Story />);
       const button = screen.getByRole("button", { name: "保存" });
-      const stroke = getComputedStyle(button.querySelector("[aria-hidden]")!, "::after");
-      expect(stroke.animationName).toBe("fd-loading-stroke");
-      expect(stroke.backgroundColor).toBe(getComputedStyle(button).color);
+      const dots = button.querySelectorAll("[aria-hidden] > span");
+      expect(dots).toHaveLength(3);
+      for (const dot of dots) {
+        const style = getComputedStyle(dot);
+        expect(style.animationName).toBe("fd-loading-dot");
+        expect(style.backgroundColor).toBe(getComputedStyle(button).color);
+      }
       unmount();
     }
+  });
+
+  it("墨のにじみの面は、押す前は見えず、クリックを受けない", () => {
+    render(<Primary />);
+    const ink = getComputedStyle(screen.getByRole("button", { name: "保存" }), "::before");
+    expect(ink.opacity).toBe("0");
+    expect(ink.pointerEvents).toBe("none");
   });
 
   it("S のボタンは、見た目の外まで 44×44 px 以上を押せる", () => {
