@@ -23,7 +23,8 @@ function applyThemeGlobal() {
   const userGlobals = (
     window as PreviewWindow
   ).__STORYBOOK_PREVIEW__?.storyStoreValue?.userGlobals?.get();
-  const theme = THEMES[String(userGlobals?.theme || "OS の設定")];
+  const selected = userGlobals?.theme;
+  const theme = THEMES[typeof selected === "string" && selected !== "" ? selected : "OS の設定"];
   if (theme) document.documentElement.dataset.theme = theme;
 }
 // iframe で埋めた story の中では、followDocsTheme が埋めた側のページに合わせる
