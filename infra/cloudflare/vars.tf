@@ -21,3 +21,9 @@ variable "worker_name" {
   type        = string
   default     = "fukuemon-dev"
 }
+
+variable "catalog_worker_name" {
+  description = "カタログを配信する Worker の名前 (packages/ui/wrangler.jsonc の name と一致させる)"
+  type        = string
+  default     = "fukuemon-dev-design"
+}

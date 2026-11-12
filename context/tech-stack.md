@@ -33,6 +33,10 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - preflight は読まない。
   - トークンは `@theme static` に置き、Expressive Code の `styleOverrides` から参照できる素のカスタムプロパティとして残す。
   - ADR-0010: [Tailwind CSS の採用](../adr/0010-tailwind-as-styling-base.md)
+  - `packages/ui` は、トークンを `@theme inline` のテーマ変数に置き、Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す。層の分け方は [packages/ui/DesignDoc.md](../packages/ui/DesignDoc.md#トークンの層) にある。
+- Storybook は、`packages/ui` のカタログに使う。a11y、docs、vitest、themes のアドオンと、hover の見た目を出す `storybook-addon-pseudo-states` を使う。
+  - story は、Vitest のブラウザのモードでテストとして動かす。ブラウザは Playwright の chromium を使う。
+  - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../adr/0021-ui-components-and-catalog.md)
 - `astro-expressive-code` は、コードブロックの描画に使う。スタイリングは `styleOverrides` から指定する。
 - Pele（`pele`）は、Mermaid の図をビルド時に SVG へ変換する。ブラウザを使わない。
   - バージョンは範囲で書かず、1 つに固定する。上げるときは、図の見た目を撮って比べる。
@@ -49,7 +53,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Playwright は、見た目の回帰のチェック（`e2e/`）で画面を撮るのに使う。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
-- Wrangler は、Worker の deploy に使う。
+- Wrangler は、サイトの Worker（`apps/web`）とカタログの Worker（`packages/ui`）の deploy に使う。
 - 品質のチェックには、react-doctor、knip、similarity-ts、Lefthook を使う。
   - 各ツールをチェックのどこで実行するかは [conventions.md](conventions.md#shared-configuration) にある。
   - ADR-0007: [品質のチェックの採否](../adr/0007-quality-gates.md)
@@ -100,7 +104,7 @@ Vite+ を外す手順は、ADR-0017 の Decision 7 にある。
 
 - Astro のメジャーバージョンを上げるときは、`apps/web/src/lib/content/` のアダプタを直す。
   - アダプタの外に変更が広がるなら、[codebase.md](codebase.md#dependency-rules) の規約 1 か規約 3 が破られている。
-- `vite-plus` か Astro を上げるときと、`apps/web/vite.config.ts` のタスクを変えるときは、build のキャッシュを次の 4 点で確かめる。
+- `vite-plus` か Astro を上げるときと、`apps/web/vite.config.ts` のタスクを変えるときは、build のキャッシュを次の 4 点で確認する。
   1. `apps/web/src/content/` のファイルを 1 つ変えて `pnpm --filter @fukuemon/web run build` を実行し、キャッシュが外れる。
   2. `packages/design-system/` のトークンを変えて実行し、キャッシュが外れる。
   3. 何も変えずに 2 回目を実行し、キャッシュが当たる。
@@ -112,6 +116,6 @@ Vite+ を外す手順は、ADR-0017 の Decision 7 にある。
 
 - 新しい package を作るときは、`packages/config` の共有の設定を参照する。設定を package ごとに複製しない。
   - 共有の設定の置き場は [conventions.md](conventions.md#shared-configuration) にある。
-- shadcn/ui は、Command Palette や Dialog のような対話的なコンポーネントが要るようになってから入れる。
-  - 出力先は `apps/web/src/components/ui/` にし、shadcn/ui のコンポーネントを手で作らない。
+- shadcn/ui は使わない。対話的なコンポーネント（`Dialog`、`ActionMenu` など）は、`packages/ui` の Base に React と clsx で書く。
+  - クラスを組むときに使わないライブラリの一覧は、[packages/ui/DesignDoc.md](../packages/ui/DesignDoc.md#コンポーネントの分類と置き場) にある。
 - 新しい package を切り出す条件は [codebase.md](codebase.md#placement-rules) にある。

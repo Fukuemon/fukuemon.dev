@@ -12,6 +12,8 @@ const config: StorybookConfig = {
     "storybook-addon-pseudo-states",
   ],
   framework: "@storybook/react-vite",
+  // _headers を storybook-static の直下に置き、Workers Static Assets に読ませる
+  staticDirs: ["./public"],
 };
 
 export default config;

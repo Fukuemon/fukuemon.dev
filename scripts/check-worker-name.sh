@@ -4,22 +4,28 @@
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
-WRANGLER="$ROOT/apps/web/wrangler.jsonc"
 VARS="$ROOT/infra/cloudflare/vars.tf"
 
-w=$(grep -oE '"name"[[:space:]]*:[[:space:]]*"[^"]+"' "$WRANGLER" | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
-t=$(awk '/variable "worker_name"/,/^}/' "$VARS" | grep 'default' | sed 's/.*"\([^"]*\)".*/\1/')
+# 引数: wrangler.jsonc の repo root からのパス、vars.tf の変数名
+check() {
+  local wrangler="$ROOT/$1" var="$2" w t
+  w=$(grep -oE '"name"[[:space:]]*:[[:space:]]*"[^"]+"' "$wrangler" | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+  t=$(awk "/variable \"$var\"/,/^}/" "$VARS" | grep 'default' | sed 's/.*"\([^"]*\)".*/\1/')
 
-if [ -z "$w" ] || [ -z "$t" ]; then
-  echo "Worker 名を読み取れませんでした (wrangler.jsonc='$w' vars.tf='$t')" >&2
-  exit 1
-fi
+  if [ -z "$w" ] || [ -z "$t" ]; then
+    echo "Worker 名を読み取れませんでした ($1='$w' vars.tf の $var='$t')" >&2
+    return 1
+  fi
 
-if [ "$w" != "$t" ]; then
-  echo "Worker 名が食い違っています。" >&2
-  echo "  apps/web/wrangler.jsonc: $w" >&2
-  echo "  infra/cloudflare/vars.tf: $t" >&2
-  exit 1
-fi
+  if [ "$w" != "$t" ]; then
+    echo "Worker 名が食い違っています。" >&2
+    echo "  $1: $w" >&2
+    echo "  infra/cloudflare/vars.tf の $var: $t" >&2
+    return 1
+  fi
 
-echo "Worker 名は一致しています ($w)"
+  echo "Worker 名は一致しています ($w)"
+}
+
+check apps/web/wrangler.jsonc worker_name
+check packages/ui/wrangler.jsonc catalog_worker_name

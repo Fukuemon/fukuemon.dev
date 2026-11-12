@@ -2,7 +2,10 @@
 type: feature-design
 title: デザインシステム（packages/ui）
 description: 自前の値のトークンの層とテーマ、コードと HTTP の流れの色、Base と Case のコンポーネントの範囲、Storybook のカタログ、DADS から外れる点
-status: draft
+status: stable
+governs:
+  - packages/ui/
+verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 ---
 
 # デザインシステム（packages/ui）
@@ -224,6 +227,10 @@ HTTP の流れの表示には、新しい色のトークンを作らず、状態
 | パターン | `packages/ui/src/patterns/`                | 確認のダイアログ                                         |
 | Domain   | `apps/web/src/features/<機能>/components/` | サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置 |
 
+パターンは、コンポーネントの組み合わせが 2 つ以上の画面に出たときに、`src/patterns/` に置く。  
+表の確認のダイアログは、パターンにする組み合わせの例である。  
+`src/patterns/` には、まだパターンが無い。
+
 コンポーネントは React で書く。  
 クラスは clsx だけで組み、shadcn、Base UI、class-variance-authority、tailwind-merge を使わない。  
 見た目は `variant` のような props で変え、呼び出す側から `className` で上書きさせない。  
@@ -326,8 +333,9 @@ DADS から外れる点と理由は次のとおり。
 | `packages/ui/design/components.md`                    | コンポーネントの選び方と、コンポーネントごとの規則                                                              |
 | `packages/ui/design/catalog.md`                       | カタログのページと title の規則                                                                                 |
 | `packages/ui/src/tokens/`                             | 3 つの層の CSS、書体の読み込み、生成したコードのテーマ                                                          |
-| `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト                                                                                 |
-| `packages/ui/.storybook/`                             | Storybook の設定                                                                                                |
+| `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト。`src/patterns/` は、パターンを置くときに作る                                   |
+| `packages/ui/.storybook/`                             | Storybook の設定と、カタログが返すレスポンスヘッダ（`public/_headers`）                                         |
+| `packages/ui/wrangler.jsonc`                          | カタログを `design.fukuemon.dev` へ配信する Worker の設定                                                       |
 | `scripts/`                                            | トークンの CSS の生成、コントラストのチェック、色の値のチェック、ユーティリティのチェック、コードのテーマの生成 |
 
 チェックは、パッケージ design-system の手順で入れ、CI で流す。

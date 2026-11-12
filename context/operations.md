@@ -6,6 +6,7 @@ status: draft
 governs:
   - infra/
   - apps/web/wrangler.jsonc
+  - packages/ui/wrangler.jsonc
   - apps/web/public/_headers
 verified_commit: 01101c7
 ---
@@ -66,7 +67,9 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 ## Deployment Conditions
 
-- Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
+- サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
+- カタログの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-catalog workflow が行う。初回の deploy と出し直しは、運用者が deploy-catalog workflow を `workflow_dispatch` で `develop` から手で起動する。
+  - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../adr/0021-ui-components-and-catalog.md)
 - Terraform の apply は、運用者が apply workflow を `workflow_dispatch` で手で起動したときだけ行う。
   - 起動には、`infra` environment の protection rules の承認が要る。
   - 差分は 2 回の起動で確認する。`mode=plan` で起動して plan を読み、納得してから `mode=apply` で起動し直す。
@@ -95,30 +98,30 @@ credential は、deploy workflow 用と apply workflow 用の 2 系統に分け�
 apply 用の credential は `infra` environment だけに置く。  
 deploy workflow は environment を指定しないので、apply 用の credential に届かない。
 
-| 名前                      | 置き場                          | 使う場面                          |
-| ------------------------- | ------------------------------- | --------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | repository secret               | deploy workflow                   |
-| `CLOUDFLARE_ACCOUNT_ID`   | repository secret               | deploy workflow と apply workflow |
-| `TF_CLOUDFLARE_API_TOKEN` | `infra` environment の secret   | apply workflow                    |
-| `R2_ACCESS_KEY_ID`        | `infra` environment の secret   | apply workflow の state backend   |
-| `R2_SECRET_ACCESS_KEY`    | `infra` environment の secret   | apply workflow の state backend   |
-| `R2_STATE_BUCKET`         | `infra` environment の secret   | apply workflow の state backend   |
-| `CLOUDFLARE_ZONE_ID`      | repository secret               | apply workflow（zone の import）  |
-| `ZONE_NAME`               | `infra` environment の variable | apply workflow                    |
+| 名前                      | 置き場                          | 使う場面                                                 |
+| ------------------------- | ------------------------------- | -------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | repository secret               | deploy workflow と deploy-catalog workflow               |
+| `CLOUDFLARE_ACCOUNT_ID`   | repository secret               | deploy workflow、deploy-catalog workflow、apply workflow |
+| `TF_CLOUDFLARE_API_TOKEN` | `infra` environment の secret   | apply workflow                                           |
+| `R2_ACCESS_KEY_ID`        | `infra` environment の secret   | apply workflow の state backend                          |
+| `R2_SECRET_ACCESS_KEY`    | `infra` environment の secret   | apply workflow の state backend                          |
+| `R2_STATE_BUCKET`         | `infra` environment の secret   | apply workflow の state backend                          |
+| `CLOUDFLARE_ZONE_ID`      | repository secret               | apply workflow（zone の import）                         |
+| `ZONE_NAME`               | `infra` environment の variable | apply workflow                                           |
 
 token の権限は、スコープ、権限グループ、アクセスレベルの 3 段で指定する。
 
-| token                     | 使う場面                    | 権限                                                 |
-| ------------------------- | --------------------------- | ---------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | deploy workflow             | Account / Workers Scripts / Edit                     |
-| `TF_CLOUDFLARE_API_TOKEN` | apply workflow              | Account / Workers Scripts / Edit、Zone / Zone / Edit |
-| bootstrap 用（手元だけ）  | `infra/bootstrap/` の apply | Account / Workers R2 Storage / Edit                  |
-| R2 の S3 互換キー         | state backend               | Object Read & Write。state のバケットに限る          |
+| token                     | 使う場面                                   | 権限                                                 |
+| ------------------------- | ------------------------------------------ | ---------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | deploy workflow と deploy-catalog workflow | Account / Workers Scripts / Edit                     |
+| `TF_CLOUDFLARE_API_TOKEN` | apply workflow                             | Account / Workers Scripts / Edit、Zone / Zone / Edit |
+| bootstrap 用（手元だけ）  | `infra/bootstrap/` の apply                | Account / Workers R2 Storage / Edit                  |
+| R2 の S3 互換キー         | state backend                              | Object Read & Write。state のバケットに限る          |
 
 - apply workflow の token に R2 の権限を与えない。CI は state backend へ S3 互換キーで接続する。
 - bootstrap 用の token を CI へ渡さない。
-- deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy workflow は custom domain を触らない。
-- DNS の権限は要らない。custom domain が作る apex のレコードは `Workers Scripts` の配下にある。
+- deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy workflow と deploy-catalog workflow は custom domain を触らない。
+- DNS の権限は要らない。custom domain が作るレコード（サイトの apex とカタログの `design`）は `Workers Scripts` の配下にある。
 - `Zone / Zone / Edit` の Zone Resources は、対象の zone だけに限る。
 - R2 の S3 互換キーは、R2 の画面から発行したものだけを使う。
   - 通常の API Tokens の画面で作った token では、`SignatureDoesNotMatch` の 403 になる。

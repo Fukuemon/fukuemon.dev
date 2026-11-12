@@ -8,7 +8,8 @@ fukuemon.dev の画面を作る人が、画面を作る前に読むカタログ�
 `packages/ui` のトークンとコンポーネントの使い方を、story で示す。
 値は fukuemon.dev が決め、アクセシビリティ、タイポグラフィ、配色、レイアウトの指標と参考に、デジタル庁デザインシステム（DADS）を使う。
 
-- 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
+規則の本文は、`packages/ui` の `DESIGN.md` と、`design/` の 3 つの文書（`tokens.md`、`components.md`、`catalog.md`）にある。
+画面とコンポーネントのコードを書く前に、4 つの文書を全て読む。
 
 ## カタログのページ
 
@@ -17,3 +18,30 @@ fukuemon.dev の画面を作る人が、画面を作る前に読むカタログ�
 - **コンポーネント**: `packages/ui` の Base と Case のコンポーネント
 - **パターン**: コンポーネントを組み合わせた形
 - **画面**: 記事の画面とコードを動かす画面の例
+
+## 画面を作るときの原則
+
+原則の本文と確認の方法は、`DESIGN.md` の「画面を作るときの原則」にある。
+
+- `COLOR-TOKEN`
+- `STATE-NOT-COLOR-ONLY`
+- `TEXT-MIN-SIZE`
+- `PRIMARY-ACTION-ONE`
+- `FOCUS-ONE`
+- `TARGET-SIZE`
+- `SPACING-SCALE`
+- `LAYOUT-OVERFLOW`
+- `MOTION-TOKEN`
+- `MOTION-REDUCE`
+
+## アクセシビリティ
+
+基準と確認の方法は、`DESIGN.md` の「アクセシビリティ」にある。
+
+- 文字のコントラスト
+- 文字でないもののコントラスト
+- フォーカスの見え方
+- ターゲットの大きさ
+- キーボードの操作
+- 入力の誤りの伝え方
+- 動きを減らす設定
