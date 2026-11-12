@@ -47,3 +47,7 @@ pnpm workspace の monorepo。
 
 迷ったら Design Doc から読む。
 内容が食い違ったときは、取り決めは context を、構成と処理の流れは Design Doc を、判断とその理由は ADR を正とする。
+
+## License
+
+コードと記事の本文は、どちらも [MIT License](LICENSE) で公開する。
