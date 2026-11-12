@@ -87,7 +87,7 @@ Firefox は、測定が時間内に終わらず、未確認である。
 - ヘッダを返さないパスで IndexedDB に書いた値を、ヘッダを返すパスで読めた。
 
 WebContainers は、訪問者のコードを `webcontainer-api.io` の origin で動かした。  
-訪問者の Node のコードは、`play.fukuemon.dev` に保存した値に届かない。
+訪問者の Node のコードは、`play.fukuemon.dev` に保存したデータに届かない。
 
 ## Considered Options
 
