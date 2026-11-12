@@ -224,11 +224,10 @@ HTTP の流れの表示には、新しい色のトークンを作らず、状態
 | -------- | ------------------------------------------ | -------------------------------------------------------- |
 | Base     | `packages/ui/src/base/<名前>/`             | `Button`、`Tabs`、`TreeView`                             |
 | Case     | `packages/ui/src/case/<名前>/`             | `SearchBox`、`FileTree`、`HttpExchangeList`              |
-| パターン | `packages/ui/src/patterns/`                | 確認のダイアログ                                         |
+| パターン | `packages/ui/src/patterns/`                | まだ無い                                                 |
 | Domain   | `apps/web/src/features/<機能>/components/` | サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置 |
 
 パターンは、コンポーネントの組み合わせが 2 つ以上の画面に出たときに、`src/patterns/` に置く。  
-表の確認のダイアログは、パターンにする組み合わせの例である。  
 `src/patterns/` には、まだパターンが無い。
 
 コンポーネントは React で書く。  
@@ -254,7 +253,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `Button`、`IconButton` | コードの写し、実行、ファイルの操作               | DADS のボタン                                   |
 | `Link`                 | 本文の内部と外部のリンク                         | DADS のリンク                                   |
 | `Tabs`                 | 記事の中の例の切り替え、エディタのファイルのタブ | DADS のタブ。エディタのために閉じるボタンを足す |
-| `Dialog`               | 検索、ファイルの削除の確認                       | DADS のモーダルダイアログ                       |
+| `Dialog`               | 検索、`ConfirmDialog` が組む確認                 | DADS のモーダルダイアログ                       |
 | `ActionMenu`           | ファイルとディレクトリの操作のメニュー           | DADS のメニューリスト                           |
 | `TextField`            | 検索の語、ファイルの名前の入力                   | DADS のインプットテキスト                       |
 | `Table`                | 記事の表、SQL の結果、HTTP のヘッダ              | DADS のテーブル                                 |
@@ -285,6 +284,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `PreviewFrame`       | プレビューの URL の欄と、iframe を置く枠                                                           |
 | `HttpExchangeList`   | 行き来したリクエストとレスポンスを順に並べた一覧。者、メソッド、URL、状態コードを出す              |
 | `HttpExchangeDetail` | 1 つの行き来のヘッダ、Cookie、本文                                                                 |
+| `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む            |
 
 ### カタログ
 

@@ -30,6 +30,8 @@ export { TextField } from "./base/TextField/TextField";
 export type { TextFieldProps } from "./base/TextField/TextField";
 export { TreeView } from "./base/TreeView/TreeView";
 export type { TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
+export { ConfirmDialog } from "./case/ConfirmDialog/ConfirmDialog";
+export type { ConfirmDialogProps } from "./case/ConfirmDialog/ConfirmDialog";
 export { EditorFrame } from "./case/EditorFrame/EditorFrame";
 export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFrame";
 export { FileTree } from "./case/FileTree/FileTree";

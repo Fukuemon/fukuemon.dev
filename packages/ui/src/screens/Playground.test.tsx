@@ -1,11 +1,11 @@
 import { composeStories } from "@storybook/react-vite";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
-import { page } from "vite-plus/test/browser/context";
+import { page, userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Playground.stories";
 
-const { LongData } = composeStories(stories);
+const { Default, LongData } = composeStories(stories);
 
 const rectOf = (name: string) => screen.getByRole("region", { name }).getBoundingClientRect();
 
@@ -49,5 +49,27 @@ describe("コードを動かす画面", () => {
     render(<LongData />);
     expect(rectOf("端末").bottom).toBeLessThanOrEqual(900);
     expect(rectOf("エディタ").height).toBeLessThan(450);
+  });
+
+  it("ファイルの削除を選ぶと確認のダイアログを出し、やめると木に残り、確定すると木から消える", async () => {
+    await page.viewport(1280, 900);
+    render(<Default />);
+    const tree = screen.getByRole("tree");
+    const openMenu = () =>
+      userEvent.click(screen.getByRole("button", { name: "server.js の操作" }));
+
+    await openMenu();
+    await userEvent.click(screen.getByRole("menuitem", { name: "削除" }));
+    const dialog = screen.getByRole("dialog", { name: "server.js を削除する" });
+    expect(dialog).toHaveTextContent("src/server.js を削除する。");
+    await userEvent.click(screen.getByRole("button", { name: "やめる" }));
+    expect(screen.getByRole("button", { name: "server.js の操作" })).toHaveFocus();
+    expect(screen.getByRole("treeitem", { name: "server.js" })).toBeVisible();
+
+    await openMenu();
+    await userEvent.click(screen.getByRole("menuitem", { name: "削除" }));
+    await userEvent.click(screen.getByRole("button", { name: "削除する" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(tree).not.toHaveTextContent("server.js");
   });
 });
