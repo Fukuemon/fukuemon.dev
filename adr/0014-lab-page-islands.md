@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+ADR-0030 に置換
 
 ## Context
 
@@ -30,7 +30,7 @@ lab の Design Doc の計測では、`local` のページが配る JavaScript �
 ### 2. island をまたぐ通知は `window` の CustomEvent にし、状態管理のライブラリを入れない
 
 別の root の island が共通に触れられるのは `window` だけなので、`window` に CustomEvent を発火して伝える。  
-React の側の購読は `bus.ts` にまとめ、事象の名前と `contentId` を確かめる処理を、使う側ごとに書かない。
+React の側の購読は `bus.ts` にまとめ、事象の名前と `contentId` を確認する処理を、使う側ごとに書かない。
 
 状態管理のライブラリは入れない。  
 流しているのは値ではなく「実行した」「例を選んだ」「完了した」という合図で、`useSyncExternalStore` を経由しても購読の本数は減らない。  
@@ -60,5 +60,5 @@ React の側の購読は `bus.ts` にまとめ、事象の名前と `contentId` 
 
 ### Negative
 
-- CustomEvent の中身の型は、送り手と受け手の間で、型が一致するかを TypeScript が確かめない。発火と購読を `bus.ts` と `progress.ts` に寄せて揃える。
+- CustomEvent の中身の型は、送り手と受け手の間で、型が一致するかを TypeScript が確認しない。発火と購読を `bus.ts` と `progress.ts` に寄せて揃える。
 - 「いまのテーブル」の中身を見るには、`<dialog>` を開く操作が要る。

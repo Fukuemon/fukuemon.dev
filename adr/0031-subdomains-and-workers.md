@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -94,7 +94,7 @@ fukuemon.dev の全体には、cross-origin isolation のヘッダを返さな�
 
 ## 承認の条件
 
-次の 3 つを確認する。1 つ目と 3 つ目は実行環境の要求の prototype で、2 つ目はキャンバスの要求の prototype で確認する。
+実装の中で、次の 3 つを確認する。1 つ目と 3 つ目は実行環境の要求の prototype で、2 つ目はキャンバスの要求の prototype で確認する。
 
 - isolation のヘッダを返すパスのページと、返さないパスのページが、同じ origin で両方動くこと。
 - キャンバスの候補が、isolation のヘッダを返さないパスのページで動くこと。

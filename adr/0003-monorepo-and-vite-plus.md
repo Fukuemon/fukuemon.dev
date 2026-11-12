@@ -2,7 +2,7 @@
 
 ## Status
 
-承認（Decision 2 の一部を ADR-0011 と ADR-0017 に、Decision 3 を ADR-0017 に置換）
+承認（Decision 1 の構成の一覧を ADR-0029 に、Decision 2 の一部を ADR-0011 と ADR-0017 に、Decision 3 を ADR-0017 に置換）
 
 ## Context
 
@@ -11,7 +11,7 @@
 - 運用者は 1 名で、レビューによる職務分離が成立しない。
   - 規約の遵守を人手の確認に委ねられない。
 - `packages/content-model` は、Astro なしで単体テストできることを要求する。
-  - Astro の依存が同じ解決グラフに載ると、この要求を確かめられない。
+  - Astro の依存が同じ解決グラフに載ると、この要求を確認できない。
 - Vite+ (`vp`) は 2026-07-02 に beta になった。
   - MIT で完全 OSS 化され、有償プラン構想は撤回済み。
   - 単一バイナリが Vite 8 / Vitest / Rolldown / tsdown / Oxlint / Oxfmt / Vite Task を統合し、Node.js runtime と package manager も管理する。
@@ -51,7 +51,7 @@ package として分ければ、境界違反は依存解決の失敗として現
 - `content-model` の package.json が Astro を依存に持たない。
 - `design-system` の package.json が Tailwind を依存に持たない。
 
-どちらも設計不変量で、依存宣言を読むだけで確かめられる。  
+どちらも設計不変量で、依存宣言を読むだけで確認できる。  
 設計不変量は [design/DesignDoc.md](../design/DesignDoc.md) の 4 と 5 にある。
 
 `packages/` にモジュールを増やす条件は「2 つ以上の消費者が実在すること」とする。
@@ -100,7 +100,7 @@ Vite+ はタスクの並べ方とキャッシュだけを担い、何を実行�
 Astro の入力は `src/content/**` / `astro.config.ts` / `public/**` / 依存 package の成果物で、外から入力集合が自明でない。  
 **キャッシュの誤ヒットは「更新したページが出ない」形で表面化し、検知が遅れる。**
 
-実装時に次を確かめる。
+実装時に次を確認する。
 
 1. `apps/web/src/content/` のファイルを 1 つ変更して `vp run --cache build` がキャッシュミスすること
 2. `packages/design-system/` のトークンを変更して `apps/web` の build がキャッシュミスすること
@@ -115,7 +115,7 @@ Turborepo は `outputs` / `inputs` を明示宣言する方式のため、入力
 | 選択肢                                                                                                 | 強み                                                                                                                                                                                                           | 弱み                                                                                                                                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **採用:** pnpm workspace の monorepo とし、Vite+ を `vp run` / `vp env` / 同梱ツールに限定して採用する | package の依存宣言で境界を強制できる。Vite+ は Vite 8 / Vitest / Oxlint を同梱し、package manager は pnpm / npm / Yarn / Bun を wrap する。代替は Turborepo / Nx / pnpm scripts                                | Vite+ は 2026-07-02 に出た beta で、"stable, but not yet complete" という公式の留保がある。撤退の手段 (Decision の 4) を確保した上で採用する                                                                                                                                                         |
-| 単一 package で始め、必要になってから workspace 化する                                                 | 初期構成が最も単純になる。`pnpm-workspace.yaml` も package.json の分割も要らない                                                                                                                               | Content Model と Design System の独立を lint でしか守れず、違反が「動いてしまう」形で混入する。同一 package では Astro の依存が常に解決可能なため、`content-model` を Astro なしで単体テストできることを確かめる手段がない。後から workspace 化するとき、`apps/web` へツリー全体を移す作業が発生する |
+| 単一 package で始め、必要になってから workspace 化する                                                 | 初期構成が最も単純になる。`pnpm-workspace.yaml` も package.json の分割も要らない                                                                                                                               | Content Model と Design System の独立を lint でしか守れず、違反が「動いてしまう」形で混入する。同一 package では Astro の依存が常に解決可能なため、`content-model` を Astro なしで単体テストできることを確認する手段がない。後から workspace 化するとき、`apps/web` へツリー全体を移す作業が発生する |
 | Turborepo を採用する                                                                                   | `outputs` / `inputs` の明示宣言によりキャッシュの入力が自明になり、Astro の build でも誤ヒットの不確かさがない。実績が長い。2.9.x を別のプロジェクトで運用している。動作要件は Node.js のみ。代替は Vite+ / Nx | Node.js runtime と package manager の管理、lint / format / test の同梱が得られず、別途ツールを入れることになる。Vite+ を入れた場合と役割が重複する                                                                                                                                                   |
 | Vite+ を採用しない (pnpm scripts のみ)                                                                 | beta のツールに依存しない                                                                                                                                                                                      | Node.js の固定に mise 等を別途入れることになる。タスクのキャッシュが得られない                                                                                                                                                                                                                       |
 | mise で Node を固定する                                                                                | 実績があり、cargo 製バイナリ (`similarity-ts`) も管理できる                                                                                                                                                    | `vp env` と役割が重複し、Node のバージョン定義が 2 箇所になる。二重管理を避けるため採らない                                                                                                                                                                                                          |
@@ -134,7 +134,7 @@ Decision の 4 の条件を満たさなければ、Turborepo へ切り替える�
 
 - 依存規約 2 本のうち「`content-model` を Astro 非依存に保つ」が、package の依存宣言で強制される。
 - Node.js のバージョン固定、lint、format、test、タスクキャッシュが 1 つのツールに揃う。
-- `design-system` が Tailwind を依存に持たないことを、package.json の 1 行で確かめられる。
+- `design-system` が Tailwind を依存に持たないことを、package.json の 1 行で確認できる。
 
 ### Negative
 

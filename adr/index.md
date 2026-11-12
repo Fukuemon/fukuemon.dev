@@ -4,24 +4,24 @@
 
 ## サイトの構成と描画
 
-| ADR                                                         | 題                                                                                            |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [ADR-0001](0001-starlight-as-docs-renderer.md)              | Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む                            |
-| [ADR-0002](0002-content-model-independence.md)              | 関係を `contentId` の辺として持ち、Content Model を Astro 非依存に保つ                        |
-| [ADR-0008](0008-no-reader-identity.md)                      | 読者の identity を前提とする機能を作らず、バックエンドを持たない                              |
-| [ADR-0009](0009-site-sections-and-playground-collection.md) | サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする |
-| [ADR-0012](0012-search-dialog-on-listing.md)                | 本文の検索を、一覧の 3 ページに dialog として置く                                             |
-| [ADR-0016](0016-render-mermaid-with-pele.md)                | mermaid の図を、ビルドでも島でも Pele で SVG にする                                           |
-| [ADR-0018](0018-playground-groups-by-directory.md)          | playground を `playgrounds/` の直下のディレクトリで分類し、URL をファイルのパスにする         |
+| ADR                                              | 題                                                                                 |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [ADR-0001](0001-starlight-as-docs-renderer.md)   | Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む                 |
+| [ADR-0002](0002-content-model-independence.md)   | 関係を `contentId` の辺として持ち、Content Model を Astro 非依存に保つ             |
+| [ADR-0008](0008-no-reader-identity.md)           | 読者の identity を前提とする機能を作らず、バックエンドを持たない                   |
+| [ADR-0016](0016-render-mermaid-with-pele.md)     | mermaid の図を、ビルドでも島でも Pele で SVG にする                                |
+| [ADR-0029](0029-repository-layout-like-buddy.md) | リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く |
+| [ADR-0030](0030-articles-format-and-series.md)   | 種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す            |
 
-## ハンズオン
+次の ADR は、ADR-0030 に置換した。
 
-| ADR                                            | 題                                                                                            |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [ADR-0006](0006-interactive-content-levels.md) | 手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する             |
-| [ADR-0013](0013-pglite-for-planner-output.md)  | DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする      |
-| [ADR-0014](0014-lab-page-islands.md)           | ハンズオンのページは、手順の切り替えを React の外に置き、island どうしを CustomEvent でつなぐ |
-| [ADR-0015](0015-lab-steps-in-rehype.md)        | ハンズオンの手順の画面へのまとめを、remark ではなく rehype のプラグインに置く                 |
+- ADR-0006（[手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)）。Decision 2 は、ADR-0031 に置換した。
+- ADR-0009（[サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする](0009-site-sections-and-playground-collection.md)）
+- ADR-0012（[本文の検索を、一覧の 3 ページに dialog として置く](0012-search-dialog-on-listing.md)）
+- ADR-0013（[DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする](0013-pglite-for-planner-output.md)）
+- ADR-0014（[ハンズオンのページは、手順の切り替えを React の外に置き、island どうしを CustomEvent でつなぐ](0014-lab-page-islands.md)）
+- ADR-0015（[ハンズオンの手順の画面へのまとめを、remark ではなく rehype のプラグインに置く](0015-lab-steps-in-rehype.md)）
+- ADR-0018（[playground を `playgrounds/` の直下のディレクトリで分類し、URL をファイルのパスにする](0018-playground-groups-by-directory.md)）
 
 ## 開発のツール
 
@@ -37,6 +37,8 @@
 | ADR                                                     | 題                                                                                         |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | [ADR-0005](0005-workers-terraform-wrangler-boundary.md) | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する |
+| [ADR-0031](0031-subdomains-and-workers.md)              | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる        |
+| [ADR-0032](0032-docs-site-behind-access.md)             | ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する        |
 
 ## 書体、トークン、コンポーネント
 
@@ -61,18 +63,6 @@ ADR-0020（[トークンを、DADS の値をコピーしたプリミティブト
 
 ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り替える](0025-woodblock-art.md)）は、ADR-0026 に置換した。
 
-## 提案の ADR
-
-承認の前の ADR を並べる。  
-承認したら、上の話題の表へ移し、置換する ADR の Status と、下の依存の図を直す。
-
-| ADR                                              | 題                                                                                  | 承認したら置換する ADR                                                                                            |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [ADR-0029](0029-repository-layout-like-buddy.md) | リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く  | ADR-0001 の Decision 4、ADR-0003 の Decision 1 の構成の一覧                                                       |
-| [ADR-0030](0030-articles-format-and-series.md)   | 種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す             | ADR-0001 の Decision 3、ADR-0006 の Decision 2 のほか、ADR-0009、ADR-0012、ADR-0013、ADR-0014、ADR-0015、ADR-0018 |
-| [ADR-0031](0031-subdomains-and-workers.md)       | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる | ADR-0006 の Decision 2                                                                                            |
-| [ADR-0032](0032-docs-site-behind-access.md)      | ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する | 無い                                                                                                              |
-
 ## ADR の間の依存
 
 矢印は、ADR から、その ADR の Context が前提にした ADR へ向く。
@@ -82,14 +72,20 @@ flowchart TB
   subgraph site["サイトの構成と描画"]
     A0001["ADR-0001"]
     A0002["ADR-0002"]
-    A0009["ADR-0009"]
-  end
-  subgraph lab["ハンズオン"]
-    A0006["ADR-0006"]
+    A0008["ADR-0008"]
+    A0016["ADR-0016"]
+    A0029["ADR-0029"]
+    A0030["ADR-0030"]
   end
   subgraph tools["開発のツール"]
     A0003["ADR-0003"]
     A0007["ADR-0007"]
+    A0017["ADR-0017"]
+  end
+  subgraph infra["配信の基盤"]
+    A0005["ADR-0005"]
+    A0031["ADR-0031"]
+    A0032["ADR-0032"]
   end
   subgraph design["書体、トークン、コンポーネント"]
     A0004["ADR-0004"]
@@ -97,6 +93,7 @@ flowchart TB
     A0023["ADR-0023"]
     A0010["ADR-0010"]
     A0024["ADR-0024"]
+    A0021["ADR-0021"]
   end
   subgraph top["挿絵とトップの演出"]
     A0026["ADR-0026"]
@@ -105,18 +102,34 @@ flowchart TB
   A0002 --> A0001
   A0003 --> A0002
   A0007 --> A0003
-  A0004 --> A0006
-  A0006 --> A0004
   A0019 --> A0004
   A0023 --> A0004
   A0024 --> A0010
   A0024 --> A0023
-  A0026 --> A0009
   A0026 --> A0024
   A0027 --> A0026
+  A0029 --> A0001
+  A0029 --> A0002
+  A0029 --> A0003
+  A0029 --> A0017
+  A0029 --> A0021
+  A0029 --> A0024
+  A0030 --> A0001
+  A0030 --> A0002
+  A0030 --> A0016
+  A0030 --> A0026
+  A0031 --> A0005
+  A0031 --> A0008
+  A0031 --> A0021
+  A0032 --> A0001
+  A0032 --> A0005
+  A0032 --> A0021
+  A0032 --> A0029
+  A0032 --> A0031
 ```
 
-依存の無い ADR（ADR-0005、ADR-0008、ADR-0011〜0018、ADR-0021、ADR-0022）は、図に描かない。
+依存の無い ADR（ADR-0011、ADR-0022）は、図に描かない。  
+置換した ADR への依存は、図に描かない。ADR-0004 と ADR-0026 の Context は、置換した ADR-0006 と ADR-0009 を前提にしている。
 
 ## 番号の対応
 

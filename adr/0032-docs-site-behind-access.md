@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -40,7 +40,7 @@
 
 ## 承認の条件
 
-次の 3 つを確認する。
+ドキュメントサイトを作るタスクの中で、次の 3 つを確認する。
 
 - `workers_dev` と `preview_urls` を `false` にした Worker が、custom domain のほかの URL で開けないこと。
 - Zero Trust の組織を作る操作を、Terraform で管理できるか。管理できなければ、最初の 1 回だけダッシュボードで行い、手順を `apps/docs-site/README.md` に書く。
