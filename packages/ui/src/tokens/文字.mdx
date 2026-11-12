@@ -1,0 +1,17 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Text.stories";
+
+<Meta of={Stories} />
+
+# 文字
+
+画面のコードが文字を書くときの、テーマ変数の文字のユーティリティを並べる。
+
+- 使う場面と、DADS のスタイルとの対応: `packages/ui/design/tokens.md` の「文字」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `TEXT-MIN-SIZE`、`COLOR-TOKEN`
+- 値: `src/tokens/primitive.css` と `src/tokens/theme.css`
+
+## 一覧
+
+<Canvas of={Stories.Overview} />

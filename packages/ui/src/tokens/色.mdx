@@ -1,0 +1,26 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Color.stories";
+
+<Meta of={Stories} />
+
+# 色
+
+画面のコードが色を書くときのセマンティックトークンを、種類ごとに並べる。
+
+- 使う場面: `packages/ui/design/tokens.md` の「色」
+- テーマを切り替える条件: `packages/ui/design/tokens.md` の「テーマ」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `COLOR-TOKEN`、`STATE-NOT-COLOR-ONLY`
+- 値: `src/tokens/semantic.css`（ライト）と `src/tokens/semantic-dark.css`（ダーク）
+
+## ライト
+
+ライトのテーマの色。
+
+<Canvas of={Stories.Light} story={{ inline: false, height: "1080px" }} />
+
+## ダーク
+
+ダークのテーマの色。
+
+<Canvas of={Stories.Dark} story={{ inline: false, height: "1080px" }} />

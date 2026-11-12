@@ -1,0 +1,17 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Shape.stories";
+
+<Meta of={Stories} />
+
+# 余白と区切りと重なり
+
+画面のコードが余白、区切りの罫、重なる面、フォーカスの表示を書くときのユーティリティを並べる。
+
+- 使う場面: `packages/ui/design/tokens.md` の「レイアウト、区切り、重なり、動き」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `SPACING-SCALE`、`FOCUS-ONE`
+- 値: `src/tokens/theme.css`
+
+## 一覧
+
+<Canvas of={Stories.Overview} />
