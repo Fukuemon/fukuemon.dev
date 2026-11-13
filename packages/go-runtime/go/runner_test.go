@@ -50,14 +50,14 @@ func TestRunExitCodes(t *testing.T) {
 		code int
 		out  string
 	}{
-		{"os.Exit の値", "\tfmt.Println(\"bye\")\n\tos.Exit(3)", 3, "bye\n"},
+		{"os.Exit の値で、panic の行を出さない", "\tfmt.Println(\"bye\")\n\tos.Exit(3)", 3, "bye\n"},
 		{"panic は 2", "\tfmt.Println(\"before\")\n\tpanic(\"boom\")", 2, "before\nmain.go:9:2: panic: play.main(...)\npanic: boom\n"},
 		{"型の合わないコードは 1", "\tvar n int = \"x\"\n\tfmt.Println(n, os.Args)", 1, "main.go:9:"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			code, out := run(t, map[string]string{"main.go": mainWith("\t\"fmt\"\n\t\"os\"", c.body)})
-			if code != c.code || !strings.HasPrefix(out, c.out) {
+			if code != c.code || !strings.HasPrefix(out, c.out) || (c.code == 3 && out != c.out) {
 				t.Fatalf("code = %d, out = %q", code, out)
 			}
 		})

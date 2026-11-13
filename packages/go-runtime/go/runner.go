@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"io"
 	"path"
-	"regexp"
+	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -46,8 +45,21 @@ func newInterpreter(in Input, stdout, stderr io.Writer) (*interp.Interpreter, er
 	if err := i.Use(stdlib.Symbols); err != nil {
 		return nil, err
 	}
+	// fmt/fmt を含まない Use では、Yaegi は os.Exit を制限した版に戻さない
+	if err := i.Use(interp.Exports{"os/os": {"Exit": reflect.ValueOf(requestExit)}}); err != nil {
+		return nil, err
+	}
 	return i, nil
 }
+
+// exitRequest は、訪問者のコードが呼んだ os.Exit の値である。
+// Yaegi は panic のたびに「panic: <関数>(...)」の行を書くが、値のエラーの文が net/http の abort Handler と同じときは書かない。
+// os.Exit で panic の行を出さないために、同じ文を返す。
+type exitRequest struct{ code int }
+
+func (exitRequest) Error() string { return "net/http: abort Handler" }
+
+func requestExit(code int) { panic(exitRequest{code}) }
 
 // Run は、ルートのディレクトリの main の package を実行し、終了コードを返す。
 // ディレクトリを渡した EvalPath は、main の panic を Panic のエラーにせずに投げるので、ここで受ける。
@@ -88,18 +100,14 @@ func LoadTests(in Input, stdout, stderr io.Writer) ([]testing.InternalTest, int)
 	return tests, 0
 }
 
-// Yaegi は、制限した os.Exit を、この文字列の panic にする
-var osExit = regexp.MustCompile(`^os\.Exit\((-?\d+)\)$`)
-
 // exitCode は、Yaegi のエラーを終了コードにする。os.Exit は渡した値、panic は 2、コンパイルのエラーは 1 である。
 func exitCode(err error, stderr io.Writer) int {
 	if err == nil {
 		return 0
 	}
 	if p, ok := errors.AsType[interp.Panic](err); ok {
-		if m := osExit.FindStringSubmatch(fmt.Sprint(p.Value)); m != nil {
-			code, _ := strconv.Atoi(m[1])
-			return code
+		if exit, ok := p.Value.(exitRequest); ok {
+			return exit.code
 		}
 		fmt.Fprintln(stderr, "panic: "+fmt.Sprint(p.Value))
 		return 2
