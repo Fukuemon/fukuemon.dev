@@ -65,30 +65,22 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 
 ## 実行環境とプレイグラウンド
 
-| ADR                                                    | 題                                                                                                                 |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| [ADR-0033](0033-webcontainers-for-node.md)             | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                            |
-| [ADR-0034](0034-playground-origin-and-embedding.md)    | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す |
-| [ADR-0035](0035-record-http-and-console-in-runtime.md) | HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する                       |
-| [ADR-0037](0037-go-with-yaegi.md)                      | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                |
-| [ADR-0038](0038-pglite-over-unix-socket.md)            | DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する |
+| ADR                                                           | 題                                                                                                                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [ADR-0033](0033-webcontainers-for-node.md)                    | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                                              |
+| [ADR-0034](0034-playground-origin-and-embedding.md)           | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す                   |
+| [ADR-0035](0035-record-http-and-console-in-runtime.md)        | HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する                                         |
+| [ADR-0037](0037-go-with-yaegi.md)                             | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                                  |
+| [ADR-0038](0038-pglite-over-unix-socket.md)                   | DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する                   |
+| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)              | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                          |
+| [ADR-0040](0040-canvas-figures-in-articles.md)                | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                                |
+| [ADR-0041](0041-slides-editor-with-marp.md)                   | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                     |
+| [ADR-0042](0042-published-slides-as-static-pages.md)          | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                             |
+| [ADR-0043](0043-multiple-named-documents-per-tool.md)         | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                                |
+| [ADR-0044](0044-ai-operations-with-webmcp.md)                 | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                               |
+| [ADR-0045](0045-ai-operations-permission-and-confirmation.md) | AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す |
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。
-
-## 提案の ADR
-
-承認の前の ADR を並べる。  
-承認したら、上の話題の表へ移し、下の依存の図を直す。
-
-| ADR                                                           | 題                                                                                                                              | 置換する ADR |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)              | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                     | 無い         |
-| [ADR-0040](0040-canvas-figures-in-articles.md)                | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                           | 無い         |
-| [ADR-0041](0041-slides-editor-with-marp.md)                   | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                | 無い         |
-| [ADR-0042](0042-published-slides-as-static-pages.md)          | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                        | 無い         |
-| [ADR-0043](0043-multiple-named-documents-per-tool.md)         | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                           | 無い         |
-| [ADR-0044](0044-ai-operations-with-webmcp.md)                 | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                          | 無い         |
-| [ADR-0045](0045-ai-operations-permission-and-confirmation.md) | AI のエージェントからの操作は、ページを開くたびにオフに戻るスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す | 無い         |
 
 ## ADR の間の依存
 
@@ -121,6 +113,7 @@ flowchart TB
     A0010["ADR-0010"]
     A0024["ADR-0024"]
     A0021["ADR-0021"]
+    A0022["ADR-0022"]
   end
   subgraph top["挿絵とトップの演出"]
     A0026["ADR-0026"]
@@ -132,6 +125,13 @@ flowchart TB
     A0035["ADR-0035"]
     A0037["ADR-0037"]
     A0038["ADR-0038"]
+    A0039["ADR-0039"]
+    A0040["ADR-0040"]
+    A0041["ADR-0041"]
+    A0042["ADR-0042"]
+    A0043["ADR-0043"]
+    A0044["ADR-0044"]
+    A0045["ADR-0045"]
   end
   A0002 --> A0001
   A0003 --> A0002
@@ -175,9 +175,33 @@ flowchart TB
   A0038 --> A0033
   A0038 --> A0034
   A0038 --> A0035
+  A0039 --> A0031
+  A0039 --> A0034
+  A0040 --> A0016
+  A0040 --> A0030
+  A0040 --> A0031
+  A0040 --> A0039
+  A0041 --> A0022
+  A0041 --> A0024
+  A0041 --> A0031
+  A0042 --> A0030
+  A0042 --> A0034
+  A0042 --> A0041
+  A0043 --> A0031
+  A0043 --> A0039
+  A0043 --> A0040
+  A0043 --> A0041
+  A0044 --> A0033
+  A0044 --> A0034
+  A0044 --> A0039
+  A0044 --> A0041
+  A0045 --> A0008
+  A0045 --> A0031
+  A0045 --> A0034
+  A0045 --> A0044
 ```
 
-依存の無い ADR（ADR-0011、ADR-0022）は、図に描かない。  
+依存の無い ADR（ADR-0011）は、図に描かない。  
 置換した ADR への依存は、図に描かない。ADR-0004 と ADR-0026 の Context は、置換した ADR-0006 と ADR-0009 を前提にしている。
 
 ## 番号の対応
