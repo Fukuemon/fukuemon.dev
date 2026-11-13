@@ -43,5 +43,9 @@ function mermaidSource(pre: Element): string | undefined {
 
 function toSvg(source: string, idPrefix: string): Element {
   const { svg } = render(source, { fontFamily: FONT, idPrefix });
-  return fromHtml(svg, { fragment: true }).children[0] as Element;
+  const el = fromHtml(svg, { fragment: true }).children.find(
+    (c): c is Element => c.type === "element",
+  );
+  if (!el) throw new Error(`Pele が SVG の要素を返さなかった: ${source}`);
+  return el;
 }

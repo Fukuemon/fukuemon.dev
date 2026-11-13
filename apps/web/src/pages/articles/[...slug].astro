@@ -9,7 +9,7 @@ type Props = ArticlePageProps;
 const { id, title, description, publishedAt, updatedAt, series } = Astro.props;
 const Content = await renderArticle(id);
 
-const toDate = (d: Date) => d.toISOString().slice(0, 10);
+const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
 <SiteLayout title={`${title} | fukuemon.dev`} description={description}>
@@ -18,11 +18,11 @@ const toDate = (d: Date) => d.toISOString().slice(0, 10);
       <header class="flex flex-col gap-2">
         <h1 class="font-heading text-heading-lg font-semibold">{title}</h1>
         <p class="text-caption text-text-secondary">
-          <time datetime={toDate(publishedAt)}>{toDate(publishedAt)}</time>
+          <time datetime={toIsoDate(publishedAt)}>{toIsoDate(publishedAt)}</time>
           {
             updatedAt && (
               <>
-                {" "}（更新 <time datetime={toDate(updatedAt)}>{toDate(updatedAt)}</time>）
+                {" "}（更新 <time datetime={toIsoDate(updatedAt)}>{toIsoDate(updatedAt)}</time>）
               </>
             )
           }

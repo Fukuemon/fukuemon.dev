@@ -47,6 +47,12 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - 最初の訪問かを返す `visit.ts`
 - 季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
 
+`src/lib/` の次のモジュールも対象にする。
+
+- 公開するかを判定し、シリーズの位置と前後を組む `content/article-pages.ts`
+- `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
+- 和文の間の改行を消す `rehype-ja-linebreak.ts`
+
 `apps/playground` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
 対象のファイルは、まだ無い。

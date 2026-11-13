@@ -19,18 +19,17 @@ export async function getArticlePaths() {
   ]);
   // series の glob は `<series>/index.md` を読み、id はディレクトリ名から始まる
   const titles = new Map(series.map((s) => [s.id.split("/")[0], s.data.title]));
-  const byId = new Map(articles.map((a) => [a.id, a.data]));
-  return planArticlePages(articles, titles, import.meta.env.DEV).map((page) => {
-    const { title, description, publishedAt, updatedAt } = byId.get(page.id)!;
+  return planArticlePages(articles, titles, import.meta.env.DEV).map(({ article, series }) => {
+    const { title, description, publishedAt, updatedAt } = article.data;
     return {
-      params: { slug: page.id },
+      params: { slug: article.id },
       props: {
-        id: page.id,
+        id: article.id,
         title,
         description,
         publishedAt,
         updatedAt,
-        series: page.series,
+        series,
       } satisfies ArticlePageProps,
     };
   });

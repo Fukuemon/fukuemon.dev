@@ -26,7 +26,7 @@ order: 1
 
 > 引用の段落である。
 
-文中の `inline code` と、[シリーズに入れない記事へのリンク](/articles/standalone-check) を置く。
+文中の `inline code` と、[シリーズに入れない記事へのリンク](/articles/page-check-standalone) を置く。
 
 | 項目 | 値                 |
 | ---- | ------------------ |
