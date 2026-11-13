@@ -124,6 +124,7 @@ describe("planSeriesPages", () => {
     const [page] = pages;
     expect(page).toMatchObject({
       name: "rdbms",
+      href: "/series/rdbms",
       title: "RDBMS を手で追う",
       description: "B-tree から順に追う",
     });

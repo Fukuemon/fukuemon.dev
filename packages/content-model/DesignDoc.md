@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: Content Model
-description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef へのloader との結線
+description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef の型、loader との結線
 status: stable
 governs:
   - packages/content-model/
@@ -198,6 +198,7 @@ flowchart TD
         articles["lib/content/articles.ts<br/>ページが使う astro:content の読み出し"]
         pages["lib/content/article-pages.ts<br/>isPublic() / planArticlePages()"]
         list["lib/content/article-list.ts<br/>listArticles() / planSeriesPages()"]
+        rss["lib/content/rss.ts<br/>buildRss()"]
     end
     ac["astro:content"]
     config --> ac
@@ -209,6 +210,8 @@ flowchart TD
     articles --> list
     list --> pages
     list --> types
+    list --> schema
+    rss --> types
     pages --> schema
     graph --> types
 ```

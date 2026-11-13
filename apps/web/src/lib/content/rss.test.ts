@@ -5,6 +5,7 @@ import { buildRss } from "./rss";
 const CHANNEL = {
   title: "fukuemon.dev",
   description: "技術の記事",
+  language: "ja",
   site: new URL("https://fukuemon.dev"),
 };
 

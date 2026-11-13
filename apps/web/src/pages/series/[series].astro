@@ -2,13 +2,13 @@
 import { Breadcrumb } from "@fukuemon/ui";
 import ArticleRow from "../../features/articles/ArticleRow.astro";
 import SiteLayout from "../../layouts/SiteLayout.astro";
-import { type SeriesPage, seriesHref } from "../../lib/content/article-list";
+import type { SeriesPage } from "../../lib/content/article-list";
 import { getSeriesPaths } from "../../lib/content/articles";
 
 export const getStaticPaths = getSeriesPaths;
 
 type Props = SeriesPage;
-const { name, title, description, articles } = Astro.props;
+const { href, title, description, articles } = Astro.props;
 ---
 
 <SiteLayout title={`${title} | fukuemon.dev`} description={description}>
@@ -17,7 +17,7 @@ const { name, title, description, articles } = Astro.props;
       <Breadcrumb
         items={[
           { label: "記事", href: "/articles" },
-          { label: title, href: seriesHref(name) },
+          { label: title, href },
         ]}
       />
       <h1 class="font-heading text-heading-lg font-semibold">{title}</h1>

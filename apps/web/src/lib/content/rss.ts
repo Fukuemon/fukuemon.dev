@@ -3,6 +3,8 @@ import type { ContentRef } from "@fukuemon/content-model";
 export type RssChannel = {
   title: string;
   description: string;
+  /** BCP 47 の言語タグ */
+  language: string;
   /** サイトの URL。item の link と guid は、記事の href をこの URL で絶対にしたものになる */
   site: URL;
 };
@@ -41,7 +43,7 @@ export function buildRss(channel: RssChannel, items: readonly ContentRef[]): str
     element("title", channel.title),
     element("link", channel.site.href),
     element("description", channel.description),
-    element("language", "ja"),
+    element("language", channel.language),
     ...lines,
     "</channel>",
     "</rss>",

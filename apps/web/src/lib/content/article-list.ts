@@ -1,5 +1,4 @@
 import type { ArticleData, ContentRef, SeriesData } from "@fukuemon/content-model";
-import type { SeriesPagerLink } from "@fukuemon/ui";
 import { type ArticleSource, articleHref, isPublic, orderOf, seriesDir } from "./article-pages";
 
 /** 一覧、シリーズのページ、RSS を組むのに要る、記事の 1 本の値。記事のページの値に、一覧に出す項目を足す */
@@ -14,14 +13,15 @@ export type SeriesSource = {
   data: SeriesData;
 };
 
-/** シリーズのページへのリンク。シリーズの前後のリンクと同じ形にする */
-export type SeriesLink = SeriesPagerLink;
+/** シリーズのページへのリンク */
+export type SeriesLink = Pick<ContentRef, "title" | "href">;
 
 /** 一覧の 1 行。記事がシリーズに入っていれば、シリーズの題とページへのリンクを持つ */
 export type ArticleListItem = { ref: ContentRef; series?: SeriesLink };
 
 export type SeriesPage = {
   name: string;
+  href: string;
   title: string;
   description: string;
   /** `order` の昇順に並べた、公開した記事 */
@@ -92,6 +92,8 @@ export function planSeriesPages(
     const members = byDir.get(name);
     if (members === undefined) return [];
     const articles = members.toSorted((a, b) => orderOf(a) - orderOf(b)).map(toContentRef);
-    return [{ name, title: data.title, description: data.description, articles }];
+    return [
+      { name, href: seriesHref(name), title: data.title, description: data.description, articles },
+    ];
   });
 }
