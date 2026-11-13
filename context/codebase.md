@@ -136,7 +136,7 @@ Expressive Code の規則は cascade layer に属さないので、上書きす�
   - サイドバーの開閉のキーは、`components/Side.astro` の props の `id` から `side:<id>` にする。
   - サイドバーの開閉は、`components/Side.astro` の inline script が描画の前に同期で読む。
 - プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#保存) にある。
-- プレイグラウンドは、AI からの操作の許可のスイッチと、確認を省く選択を、ツールごとに `localStorage` に置く。キーと値の形は、[AI からの操作の Design Doc](../design/features/ai-operations/DesignDoc.md#スイッチと確認の状態の保存) にある。
+- プレイグラウンドは、AI からの操作の許可のスイッチの状態と、「このページでは今後尋ねない」の状態を、ツールごとに `localStorage` に置く。キーと値の形は、[AI からの操作の Design Doc](../design/features/ai-operations/DesignDoc.md#スイッチと確認の状態の保存) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の種別の切り替えは URL（ページ）で、分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [design/DesignDoc.md](../design/DesignDoc.md#設計不変量)
