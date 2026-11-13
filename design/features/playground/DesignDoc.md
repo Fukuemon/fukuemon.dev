@@ -158,7 +158,8 @@ flowchart TB
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
 - Oxlint の `no-restricted-imports` が止める import は、次の 3 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+  - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
 
 ### NodeRuntime
 
@@ -545,7 +546,8 @@ DB のプロセスの標準入出力では、次の形式で送る。
 
 - Oxlint の `no-restricted-imports`: 次の 3 つの import を止める。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+  - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
 - package の依存の宣言と knip: 次の 3 つを確認する。
   - `apps/playground` が、`@webcontainer/api` を import しないこと
   - 実行環境の 3 つの package が、React、`@fukuemon/ui`、`@fukuemon/playground-project` に依存しないこと
