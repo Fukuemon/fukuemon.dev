@@ -74,23 +74,24 @@ fukuemon.dev はダークを持つ。
 
 ## 文字
 
-| ユーティリティ       | DADS のスタイル        | 使う場面                                                                                 |
-| -------------------- | ---------------------- | ---------------------------------------------------------------------------------------- |
-| `text-caption`       | Dns-14N-130            | 補足、図の説明、時刻                                                                     |
-| `text-body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行、コンソールの値（`font-mono` と組み合わせる） |
-| `text-body`          | Std-16N-170            | 記事の本文                                                                               |
-| `text-label`         | Oln-16B-100            | ボタン、タブ                                                                             |
-| `text-heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                                                           |
-| `text-heading-md`    | Std-20B-150            | 記事の見出し                                                                             |
-| `text-heading-lg`    | Std-28B-150            | 記事の題                                                                                 |
-| `text-code`          | 等幅の 16px のスタイル | コードブロック、エディタ、端末                                                           |
-| `text-code-dense`    | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示                                                      |
-| `text-compact`       | 12px のスタイル        | コンソールの値、時刻、出力元、行の数                                                     |
-| `text-label-compact` | 太字の 13px のスタイル | コンソールのログレベルのボタン                                                           |
+| ユーティリティ       | DADS のスタイル        | 使う場面                                   |
+| -------------------- | ---------------------- | ------------------------------------------ |
+| `text-caption`       | Dns-14N-130            | 補足、図の説明、時刻                       |
+| `text-body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行 |
+| `text-body`          | Std-16N-170            | 記事の本文                                 |
+| `text-label`         | Oln-16B-100            | ボタン、タブ                               |
+| `text-heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題             |
+| `text-heading-md`    | Std-20B-150            | 記事の見出し                               |
+| `text-heading-lg`    | Std-28B-150            | 記事の題                                   |
+| `text-code`          | 等幅の 16px のスタイル | コードブロック、エディタ、端末             |
+| `text-code-dense`    | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示        |
+| `text-compact`       | 12px のスタイル        | コンソールの値、時刻、出力元、行の数       |
+| `text-label-compact` | 太字の 13px のスタイル | コンソールのログレベルのボタン             |
 
 - 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0023）。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
+- `dense` は 14px 以上で行高を詰めた段、`compact` は 14px より小さい例外の段である。
 - 12px と 13px の文字は、コードを動かす画面のコンソールだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062、提案）。
 
 ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)

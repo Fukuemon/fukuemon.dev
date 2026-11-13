@@ -95,7 +95,7 @@
   /* 等幅の和文の字は BIZ UDGothic で受ける */
   --font-mono: "Noto Sans Mono", "BIZ UDGothic", monospace;
 
-  /* 文字: 用途の名前で置く。14px より小さい文字を置かない */
+  /* 文字: 用途の名前で置く。14px より小さい文字は、下の compact の 2 つだけにする */
   --text-caption: var(--fd-primitive-font-size-14);
   --text-caption--line-height: var(--fd-primitive-line-height-130);
   --text-body-dense: var(--fd-primitive-font-size-16);
@@ -114,13 +114,14 @@
   /* 等幅: 同じ大きさの本文のスタイルの行高を使う */
   --text-code: var(--fd-primitive-font-size-16);
   --text-code--line-height: var(--fd-primitive-line-height-170);
+  --text-code-dense: var(--fd-primitive-font-size-14);
+  --text-code-dense--line-height: var(--fd-primitive-line-height-130);
+  /* compact: コードを動かす画面のコンポーネントだけに使う 12px と 13px（docs/adr/0062-dense-text-and-targets-in-playground.md） */
   --text-compact: var(--fd-primitive-font-size-12);
   --text-compact--line-height: var(--fd-primitive-line-height-130);
   --text-label-compact: var(--fd-primitive-font-size-13);
   --text-label-compact--line-height: var(--fd-primitive-line-height-100);
   --text-label-compact--font-weight: var(--fd-primitive-font-weight-700);
-  --text-code-dense: var(--fd-primitive-font-size-14);
-  --text-code-dense--line-height: var(--fd-primitive-line-height-130);
 
   --font-weight-normal: var(--fd-primitive-font-weight-400);
   --font-weight-bold: var(--fd-primitive-font-weight-700);

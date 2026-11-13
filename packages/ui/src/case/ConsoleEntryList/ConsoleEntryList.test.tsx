@@ -148,6 +148,23 @@ describe("ConsoleEntryList", () => {
     }
   });
 
+  it("値の行は 1 行 21 px と 12 px の文字、ログレベルのボタンは 28 px と 13 px の文字に詰める", () => {
+    // 狭い幅では時刻と出力元が値の下へ折り返すので、1 行に収まる幅で描く
+    render(
+      <div className="w-150">
+        <Default />
+      </div>,
+    );
+    const height = row(1).getBoundingClientRect().height;
+    expect(height).toBeGreaterThanOrEqual(21);
+    expect(height).toBeLessThan(22);
+    expect(getComputedStyle(row(1).querySelector(".font-mono") as Element).fontSize).toBe("12px");
+    const button = levelButton(/^debug/);
+    expect(button.getBoundingClientRect().height).toBeLessThan(32);
+    expect(getComputedStyle(button).fontSize).toBe("13px");
+    expect(treeItem(/^\{id: 42/).closest('[role="tree"]')).toHaveStyle({ fontSize: "12px" });
+  });
+
   it("高さを決めた枠では、題とボタンを残して、行の領域だけをスクロールする", async () => {
     render(<FixedHeight />);
     const rows = screen.getByRole("region", { name: "ログの行" });

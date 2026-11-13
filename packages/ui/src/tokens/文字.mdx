@@ -76,6 +76,18 @@ import * as Stories from "./Text.stories";
         "HTTP のヘッダと本文、端末の狭い表示",
         "content-type: application/json",
       ],
+      [
+        "text-compact",
+        "font-mono text-compact",
+        "コードを動かす画面のコンソールの値、時刻、出力元（ADR-0062、提案）",
+        "10:00:00.120 server.js",
+      ],
+      [
+        "text-label-compact",
+        "text-label-compact",
+        "コードを動かす画面のコンソールのログレベルのボタン（ADR-0062、提案）",
+        "error 1",
+      ],
     ].map(([name, cls, use, sample]) => (
       <div key={name} className="flex flex-col gap-1">
         <p className={cls}>{sample}</p>

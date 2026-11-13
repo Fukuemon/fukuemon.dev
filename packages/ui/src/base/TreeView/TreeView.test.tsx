@@ -3,10 +3,9 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
-import { TreeView } from "./TreeView";
 import * as stories from "./TreeView.stories";
 
-const { Collapsed, Expanded, WithContent } = composeStories(stories);
+const { Collapsed, Compact, Expanded, WithContent } = composeStories(stories);
 
 const item = (name: string) => screen.getByRole("treeitem", { name });
 
@@ -83,17 +82,12 @@ describe("TreeView", () => {
     expect(item("index.ts")).toBeInTheDocument();
   });
 
-  it("density を compact にすると、項目は 24 px の高さになる", () => {
-    render(
-      <TreeView
-        density="compact"
-        items={[{ id: "src", label: "src", children: [{ id: "a", label: "a.ts" }] }]}
-        label="ファイル"
-      />,
-    );
+  it("density を compact にすると、項目は 24 px の高さと 12 px の文字になる", () => {
+    render(<Compact />);
     const height = item("src").getBoundingClientRect().height;
     expect(height).toBeGreaterThanOrEqual(24);
     expect(height).toBeLessThan(26);
+    expect(getComputedStyle(item("src")).fontSize).toBe("12px");
   });
 
   it("content を渡すと、label の代わりに content を描き、タイプアヘッドは label で探す", async () => {
