@@ -200,7 +200,7 @@
      端末の bright の色は、ライトの面で読めるよう、通常の色より暗い階調にする */
   --fd-color-code-surface: var(--fd-primitive-color-sumi-75);
   --fd-color-code-text: var(--fd-primitive-color-sumi-900);
-  --fd-color-code-comment: var(--fd-primitive-color-sumi-600);
+  --fd-color-code-comment: var(--fd-primitive-color-sumi-650);
   --fd-color-code-keyword: var(--fd-primitive-color-wine-800);
   --fd-color-code-string: var(--fd-primitive-color-green-800);
   --fd-color-code-number: var(--fd-primitive-color-brown-700);

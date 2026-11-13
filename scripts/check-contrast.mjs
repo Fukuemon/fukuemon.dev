@@ -50,10 +50,19 @@ const TEXT_PAIRS = [
     ["text", `${state}-surface`],
   ]),
   // コードの字句と端末の色は、コードの面の上で本文と同じ基準にする（コメントも含む）
-  ...["text", "comment", "keyword", "string", "number", "function", "type"].map((t) => [
-    `code-${t}`,
+  // エディタの選択、検索の一致、補完とパネルの面の上にも、コードの字句が載る
+  ...[
     "code-surface",
-  ]),
+    "info-surface",
+    "warning-surface",
+    "surface-subtle",
+    "surface-raised",
+  ].flatMap((bg) =>
+    ["text", "comment", "keyword", "string", "number", "function", "type"].map((t) => [
+      `code-${t}`,
+      bg,
+    ]),
+  ),
   ...["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"].flatMap((color) => [
     [`code-ansi-${color}`, "code-surface"],
     [`code-ansi-bright-${color}`, "code-surface"],
