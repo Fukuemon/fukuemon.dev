@@ -3,11 +3,15 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
-import { type ConsoleEntry, ConsoleEntryList } from "./ConsoleEntryList";
+import {
+  type ConsoleEntry,
+  ConsoleEntryList,
+  type ConsoleEntryListProps,
+} from "./ConsoleEntryList";
 import * as stories from "./ConsoleEntryList.stories";
 import { type ConsoleValue, preview } from "./consoleValue";
 
-const { Default, ErrorOnly, Empty, Loading, Error } = composeStories(stories);
+const { Default, ErrorOnly, FixedHeight, Empty, Loading, Error } = composeStories(stories);
 
 const rows = () => within(screen.getByRole("list")).getAllByRole("listitem");
 const row = (index: number) => rows()[index] as HTMLElement;
@@ -113,6 +117,8 @@ describe("ConsoleEntryList", () => {
     await userEvent.keyboard("{Enter}");
     expect(levelButton(/^debug/)).toHaveAttribute("aria-pressed", "true");
     for (let i = 0; i < 5; i++) await userEvent.tab();
+    expect(screen.getByRole("region", { name: "ログの行" })).toHaveFocus();
+    await userEvent.tab();
     const root = treeItem(/^\{id: 42/);
     expect(root).toHaveFocus();
     await userEvent.keyboard("{ArrowRight}");
@@ -131,7 +137,19 @@ describe("ConsoleEntryList", () => {
     }
   });
 
-  it("最後の行が見えているときだけ、行が増えると一番下へ送る", async () => {
+  it("高さを決めた枠では、題とボタンを残して、行の領域だけをスクロールする", async () => {
+    render(<FixedHeight />);
+    const rows = screen.getByRole("region", { name: "ログの行" });
+    expect(rows.scrollHeight).toBeGreaterThan(rows.clientHeight);
+    rows.scrollTop = 0;
+    await nextFrames(3);
+    expect(screen.getByRole("heading", { name: "コンソール" })).toBeVisible();
+    expect(levelButton(/^debug/).getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      rows.getBoundingClientRect().top,
+    );
+  });
+
+  describe("一番下への送り", () => {
     const entriesOf = (length: number): ConsoleEntry[] =>
       Array.from({ length }, (_, index) => ({
         id: String(index),
@@ -139,24 +157,33 @@ describe("ConsoleEntryList", () => {
         source: "server.js",
         args: [{ kind: "number", value: index }],
       }));
-    const frame = (length: number) => (
-      <div className="h-48 overflow-y-auto" data-testid="frame">
-        <ConsoleEntryList entries={entriesOf(length)} />
+    const frame = (length: number, state?: ConsoleEntryListProps["state"]) => (
+      <div className="flex h-80 flex-col">
+        <ConsoleEntryList entries={entriesOf(length)} state={state} />
       </div>
     );
-    const { rerender } = render(frame(30));
-    const box = screen.getByTestId("frame");
+    const rows = () => screen.getByRole("region", { name: "ログの行" });
+    const distanceToBottom = () => rows().scrollHeight - rows().scrollTop - rows().clientHeight;
 
-    box.scrollTop = box.scrollHeight;
-    await nextFrames(3);
-    rerender(frame(31));
-    await expect.poll(() => box.scrollHeight - box.scrollTop - box.clientHeight).toBeLessThan(2);
+    it("最初は一番下を見せ、一番下を見ているときだけ、行が増えると一番下へ送る", async () => {
+      const { rerender } = render(frame(30));
+      expect(distanceToBottom()).toBeLessThan(2);
+      rerender(frame(31));
+      await expect.poll(distanceToBottom).toBeLessThan(2);
 
-    box.scrollTop = 0;
-    await nextFrames(3);
-    rerender(frame(32));
-    await nextFrames(3);
-    expect(box.scrollTop).toBe(0);
+      rows().scrollTop = 0;
+      await nextFrames(3);
+      rerender(frame(32));
+      await nextFrames(3);
+      expect(rows().scrollTop).toBe(0);
+    });
+
+    it("読み込み中から同じ行に戻ったときも、一番下を見せる", async () => {
+      const { rerender } = render(frame(30));
+      rerender(frame(30, { kind: "loading", label: "実行環境を起動しています" }));
+      rerender(frame(30));
+      await expect.poll(distanceToBottom).toBeLessThan(2);
+    });
   });
 
   it("空、読み込み中、エラーでは、行の代わりに文を出す", () => {

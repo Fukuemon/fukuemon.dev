@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { type Ref, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { TreeView } from "../../base/TreeView/TreeView";
 import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
@@ -99,12 +99,11 @@ function CheckIcon({ isChecked }: { isChecked: boolean }) {
   );
 }
 
-function EntryRow({ entry, ref }: { entry: ConsoleEntry; ref?: Ref<HTMLLIElement> }) {
+function EntryRow({ entry }: { entry: ConsoleEntry }) {
   // ツリーの項目は文字の上に余白を持つので、値がツリーで始まる行は、印と時刻をその 1 行目にそろえる
   const startsWithTree = entry.args[0] !== undefined && isExpandable(entry.args[0]);
   return (
     <li
-      ref={ref}
       className={clsx(
         "flex gap-2 border-b border-l-2 border-b-border py-2 pr-4 pl-3.5 last:border-b-0",
         ROW_CLASS_NAME[entry.level],
@@ -167,25 +166,25 @@ export function ConsoleEntryList({
     setLevels(next);
   };
 
-  // スクロールする枠は呼ぶ側が持つので、枠を探さずに、最後の行が見えているかで一番下を見ているかを決める
-  const lastRowRef = useRef<HTMLLIElement>(null);
-  const isAtBottom = useRef(false);
   const lastId = visible.at(-1)?.id;
   const paneState: ToolPaneState =
     state ??
     (entries.length === 0
       ? { kind: "empty", message: "まだログがありません。" }
       : { kind: "ready" });
-  // 読み込み中とエラーの間は行の要素が消えるので、戻ったときに作り直した要素を見直す
+
+  // DevTools のコンソールと同じく、最初は一番下を見ている扱いにし、上へ戻したら送らない
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const isAtBottom = useRef(true);
+  const handleScroll = () => {
+    const rows = rowsRef.current;
+    if (!rows) return;
+    isAtBottom.current = rows.scrollHeight - rows.scrollTop - rows.clientHeight < 2;
+  };
+  // 読み込み中とエラーの間は行の領域が消えるので、戻ったときも一番下へ送る
   useEffect(() => {
-    const row = lastRowRef.current;
-    if (!row) return;
-    if (isAtBottom.current) row.scrollIntoView({ block: "nearest" });
-    const observer = new IntersectionObserver((records) => {
-      isAtBottom.current = records.at(-1)?.isIntersecting ?? false;
-    });
-    observer.observe(row);
-    return () => observer.disconnect();
+    const rows = rowsRef.current;
+    if (rows && isAtBottom.current) rows.scrollTop = rows.scrollHeight;
   }, [lastId, paneState.kind]);
   const toolbar = (
     <div
@@ -219,21 +218,27 @@ export function ConsoleEntryList({
   );
   return (
     <ToolPane state={paneState} title={title} toolbar={toolbar}>
-      {visible.length === 0 ? (
-        <p className="p-4 text-body-dense text-text-secondary">
-          選んだログレベルの行はありません。
-        </p>
-      ) : (
-        <ol className="flex flex-col">
-          {visible.map((entry) => (
-            <EntryRow
-              entry={entry}
-              key={entry.id}
-              ref={entry.id === lastId ? lastRowRef : undefined}
-            />
-          ))}
-        </ol>
-      )}
+      {/* 高さを呼ぶ側が決めたときは、題とボタンを残して、行の領域だけをスクロールさせる */}
+      <div
+        aria-label="ログの行"
+        className="min-h-0 flex-1 overflow-y-auto focus-visible:focus-ring"
+        onScroll={handleScroll}
+        ref={rowsRef}
+        role="region"
+        tabIndex={0}
+      >
+        {visible.length === 0 ? (
+          <p className="p-4 text-body-dense text-text-secondary">
+            選んだログレベルの行はありません。
+          </p>
+        ) : (
+          <ol className="flex flex-col">
+            {visible.map((entry) => (
+              <EntryRow entry={entry} key={entry.id} />
+            ))}
+          </ol>
+        )}
+      </div>
     </ToolPane>
   );
 }

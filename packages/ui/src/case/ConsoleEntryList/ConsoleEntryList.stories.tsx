@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { ConsoleEntryList } from "./ConsoleEntryList";
-import { ENTRIES, LONG_ENTRY } from "./fixtures";
+import { ENTRIES, LONG_ENTRY, MANY_ENTRIES } from "./fixtures";
 
 const meta = {
   title: "コンポーネント/Case/ConsoleEntryList",
@@ -33,6 +33,17 @@ export const Hover: Story = {
   name: "hover",
   parameters: { pseudo: { hover: true } },
   play: Expanded.play,
+};
+export const FixedHeight: Story = {
+  name: "高さを決めた枠",
+  args: { entries: MANY_ENTRIES },
+  decorators: [
+    (Story) => (
+      <div className="flex h-96 flex-col">
+        <Story />
+      </div>
+    ),
+  ],
 };
 export const ErrorOnly: Story = { name: "error だけを表示", args: { defaultLevels: ["error"] } };
 export const NoMatch: Story = { name: "選んだログレベルの行が無い", args: { defaultLevels: [] } };

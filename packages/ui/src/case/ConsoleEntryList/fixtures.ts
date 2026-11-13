@@ -139,3 +139,15 @@ export const LONG_ENTRY: ConsoleEntry = {
     },
   ],
 };
+
+/** 高さを決めた枠の中で、行の領域をスクロールさせる例の行。 */
+export const MANY_ENTRIES: ConsoleEntry[] = Array.from({ length: 24 }, (_, index) => ({
+  id: `many-${index}`,
+  level: index % 8 === 7 ? "warn" : "log",
+  source: "server.js",
+  time: `10:00:${String(index).padStart(2, "0")}.000`,
+  args: [
+    { kind: "string", value: "GET /callback" },
+    { kind: "number", value: index % 8 === 7 ? 400 : 200 },
+  ],
+}));
