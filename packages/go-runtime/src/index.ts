@@ -1,8 +1,8 @@
+/** 値が変わったことを受け取る関数を登録し、解除する関数を返す。 */
+export type Subscribe = (onChange: () => void) => () => void;
+
 /** 値と、値が変わったことの通知。画面は useSyncExternalStore で読む。 */
-export type Store<T> = {
-  subscribe: (onChange: () => void) => () => void;
-  getSnapshot: () => T;
-};
+export type Store<T> = { subscribe: Subscribe; getSnapshot: () => T };
 
 /** ツールのルートからのパスと、ファイルの中身。 */
 export type GoFiles = Readonly<Record<string, string>>;

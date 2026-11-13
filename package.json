@@ -81,7 +81,8 @@
     },
     "ignoreBinaries": [
       "terraform",
-      "similarity-ts"
+      "similarity-ts",
+      "go"
     ],
     "ignoreDependencies": [
       "playwright",

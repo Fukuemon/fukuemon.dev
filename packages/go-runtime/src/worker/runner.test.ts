@@ -11,10 +11,6 @@ type FakeWorker = WorkerLike & {
 };
 
 function fakeWorker(): FakeWorker {
-  const listeners = {
-    message: [] as ((event: Event) => void)[],
-    error: [] as ((e: Event) => void)[],
-  };
   const worker: FakeWorker = {
     sent: [],
     terminated: false,
@@ -22,14 +18,11 @@ function fakeWorker(): FakeWorker {
     terminate: () => {
       worker.terminated = true;
     },
-    addEventListener: (type, listener) => listeners[type].push(listener),
-    emit: (data) => {
-      for (const listener of listeners.message) listener(new MessageEvent("message", { data }));
-    },
-    fail: (message) => {
-      for (const listener of listeners.error)
-        listener(Object.assign(new Event("error"), { message }));
-    },
+    onmessage: null,
+    onerror: null,
+    emit: (data) => worker.onmessage?.(new MessageEvent("message", { data })),
+    fail: (message) =>
+      worker.onerror?.(Object.assign(new Event("error"), { message }) as ErrorEvent),
   };
   return worker;
 }

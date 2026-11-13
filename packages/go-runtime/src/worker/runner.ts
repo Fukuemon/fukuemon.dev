@@ -21,7 +21,8 @@ export type FromWorker = { type: "output"; chunk: string } | { type: "exit"; cod
 export type WorkerLike = {
   postMessage: (message: ToWorker) => void;
   terminate: () => void;
-  addEventListener: (type: "message" | "error", listener: (event: Event) => void) => void;
+  onmessage: ((event: MessageEvent<FromWorker>) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
 };
 
 export type GoRunnerOptions = {
@@ -104,15 +105,13 @@ export function createGoRunner({ compile, createWorker }: GoRunnerOptions): GoRu
           resolve(exit);
         };
         current = { resolve: finish };
-        worker.addEventListener("message", (event) => {
-          const message = (event as MessageEvent<FromWorker>).data;
-          if (message.type === "output") onOutput(message.chunk);
-          else finish({ kind: "exited", exitCode: message.code });
-        });
-        worker.addEventListener("error", (event) => {
-          const detail = (event as ErrorEvent).message;
-          finish({ kind: "failed", message: detail ? `${STOPPED}: ${detail}` : STOPPED });
-        });
+        worker.onmessage = ({ data }) => {
+          if (data.type === "output") onOutput(data.chunk);
+          else finish({ kind: "exited", exitCode: data.code });
+        };
+        worker.onerror = ({ message }) => {
+          finish({ kind: "failed", message: message ? `${STOPPED}: ${message}` : STOPPED });
+        };
         worker.postMessage({ module, input });
       });
     };
