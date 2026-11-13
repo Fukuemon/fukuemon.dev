@@ -14,13 +14,10 @@
     "test": "pnpm -r --sequential run test:cov",
     "test:ui": "pnpm --filter @fukuemon/ui test",
     "knip": "knip",
-    "shot": "node --experimental-strip-types e2e/shoot.ts",
-    "shot:diff": "node --experimental-strip-types e2e/diff.ts",
     "doctor": "npx --yes react-doctor@latest --verbose --scope changed",
     "check:doctor": "npx --yes react-doctor@0.9.17 -y --no-score --no-supply-chain --scope changed",
     "check:similarity": "similarity-ts --fail-on-duplicates apps packages",
     "check:contrast": "bash scripts/check-contrast-themes.sh",
-    "check:contrast:legacy": "pnpm --filter @fukuemon/design-system run check",
     "check:raw-values": "node scripts/check-raw-values.mjs",
     "check:utilities": "node scripts/check-utilities.mjs --doc packages/ui/DESIGN.md",
     "build:tokens": "node scripts/build-static-tokens.mjs --out ./packages/ui/src/tokens/tokens.gen.css ./packages/ui/src/tokens/primitive.css ./packages/ui/src/tokens/semantic.css ./packages/ui/src/tokens/semantic-dark.css && node scripts/build-code-theme.mjs",
@@ -30,7 +27,7 @@
     "check:worker-name": "bash scripts/check-worker-name.sh",
     "check:deploy": "pnpm --filter @fukuemon/web exec wrangler deploy --dry-run && pnpm --filter @fukuemon/ui exec wrangler deploy --dry-run",
     "build:storybook": "pnpm --filter @fukuemon/ui build-storybook",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:doctor && pnpm run check:similarity && pnpm run check:contrast && pnpm run check:contrast:legacy && pnpm run check:raw-values && pnpm run check:utilities && pnpm run check:tokens && pnpm run check:art && pnpm run check:worker-name && pnpm run test && pnpm run test:ui && pnpm run build && pnpm run build:storybook && pnpm run check:deploy",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:doctor && pnpm run check:similarity && pnpm run check:contrast &&pnpm run check:raw-values && pnpm run check:utilities && pnpm run check:tokens && pnpm run check:art && pnpm run check:worker-name && pnpm run test && pnpm run test:ui && pnpm run build && pnpm run build:storybook && pnpm run check:deploy",
     "infra:init": "terraform -chdir=infra/cloudflare init",
     "infra:plan": "terraform -chdir=infra/cloudflare plan",
     "infra:apply": "terraform -chdir=infra/cloudflare apply",
@@ -47,7 +44,6 @@
     "oxfmt": "^0.48.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",
-    "playwright": "1.64.1",
     "tailwindcss": "^4.3.3",
     "textlint": "^15.8.0",
     "textlint-plugin-mdx": "1.1.0",
@@ -71,14 +67,6 @@
           "scripts/check-contrast.mjs"
         ]
       },
-      "apps/web": {
-        "entry": [
-          "src/features/lab/panel/SqlRunner.tsx"
-        ],
-        "ignoreDependencies": [
-          "pagefind"
-        ]
-      },
       "packages/ui": {
         "entry": [
           "src/tokens/tokens.gen.css",
@@ -86,9 +74,6 @@
         ]
       }
     },
-    "ignoreUnresolved": [
-      "/pagefind/pagefind.js"
-    ],
     "ignoreBinaries": [
       "terraform",
       "similarity-ts"
