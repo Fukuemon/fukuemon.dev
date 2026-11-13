@@ -84,6 +84,15 @@ describe("TextField", () => {
     expect(style.borderBottomColor).toBe(colorOf("text-border"));
   });
 
+  it("boxed の欄は、無効と誤りが重なると、下罫を飾りの罫の色の 1 px にする", () => {
+    render(<Disabled error="URL の形式が正しくありません" />);
+    const style = getComputedStyle(
+      faceOf(screen.getByRole("textbox", { name: "リダイレクト先の URL" })),
+    );
+    expect(style.borderBottomWidth).toBe("1px");
+    expect(style.borderBottomColor).toBe(colorOf("text-border"));
+  });
+
   it("誤りがあれば欄を aria-invalid にし、誤りの文を説明に結ぶ。role=alert は付けない", () => {
     render(<Error />);
     const input = screen.getByRole("textbox", { name: "リダイレクト先の URL" });

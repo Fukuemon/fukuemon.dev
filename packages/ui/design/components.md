@@ -98,6 +98,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 状態: デフォルト、hover（`underline`）、フォーカス、エラー、無効。
   - エラーのときに色のほかに示すもの: `boxed` は 2px の赤の下罫、`underline` は赤の罫にし、どちらも誤りの文と印を出す。誤りの文は `aria-describedby` で欄に結び付け、`role="alert"` を付けない。
   - 無効のとき、`boxed` は面を `surface-disabled` にし、下罫を飾りの区切りの罫の色（`border`）に替える。有効の欄より目立たせないためである。
+    無効と誤りが重なったときも下罫は `border` の 1px にし、誤りの文は残す。
 - 内容の制約: `label` を必ず渡す。見出しを画面に出さないときも、`isLabelHidden` で読み上げに残す。案内の文（placeholder）を見出しの代わりにしない。
 - キーボード: 入力欄の標準の操作だけを持つ。
 
@@ -276,6 +277,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 変種: `onReload` を渡すと、再読み込みのボタンが出る。
 - 状態: 中身あり、空、読み込み中、エラー。URL の欄は書き換えられない。
   - URL の欄と再読み込みのボタンは、上下の中央をそろえる。
+  - 欄とボタンの間は 8px のままにする。再読み込みのボタンは枠を持たないので、欄の外へ 4px 広がるフォーカスの輪と枠が並ばないためである。
 - 内容の制約: iframe には `title` を付けて渡す。
 - キーボード: 再読み込みのボタンは、Enter と Space で押す。
 
