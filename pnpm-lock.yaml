@@ -148,6 +148,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.5
         version: 19.2.5(@types/react@19.2.18)
+      '@vitest/coverage-v8':
+        specifier: ^4.1.11
+        version: 4.1.11(vitest@4.1.11)
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -156,7 +159,10 @@ importers:
         version: 6.0.2
       vite-plus:
         specifier: 'catalog:'
-        version: 1.4.0(@astrojs/compiler-rs@0.5.3)(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(typescript@6.0.2)(yaml@2.9.1)
+        version: 1.4.0(@astrojs/compiler-rs@0.5.3)(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(typescript@6.0.2)(yaml@2.9.1)
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/browser-preview@5.0.5(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       wrangler:
         specifier: ^4.127.1
         version: 4.127.1
@@ -10321,6 +10327,7 @@ snapshots:
       '@oxfmt/binding-win32-ia32-msvc': 0.74.0
       '@oxfmt/binding-win32-x64-msvc': 0.74.0
       vite-plus: 1.4.0(@astrojs/compiler-rs@0.5.3)(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(typescript@6.0.2)(yaml@2.9.1)
+    optional: true
 
   oxlint-tsgolint@7.0.2001:
     optionalDependencies:
@@ -10435,6 +10442,7 @@ snapshots:
       '@oxlint/binding-win32-x64-msvc': 1.89.0
       oxlint-tsgolint: 7.0.2004
       vite-plus: 1.4.0(@astrojs/compiler-rs@0.5.3)(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(playwright@1.64.1)(typescript@6.0.2)(yaml@2.9.1)
+    optional: true
 
   p-limit@7.3.3:
     dependencies:
@@ -11495,6 +11503,7 @@ snapshots:
       - utf-8-validate
       - vue-tsc
       - yaml
+    optional: true
 
   vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1):
     dependencies:
@@ -11648,6 +11657,7 @@ snapshots:
       '@vitest/ui': 5.0.5(vitest@5.0.5)
     transitivePeerDependencies:
       - msw
+    optional: true
 
   vitest@5.0.5(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5)(@vitest/browser-preview@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)):
     dependencies:
