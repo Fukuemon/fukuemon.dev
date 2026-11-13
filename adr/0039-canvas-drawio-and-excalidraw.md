@@ -80,7 +80,12 @@ Excalidraw には、クラウドのアイコンを配らない。
 | ダークのエディタ                 | `dark=1` でダークになった                                 | `theme="dark"` でダークになった    |
 | 自分のページのほかへのリクエスト | `embed.diagrams.net` に 68 件、`log.diagrams.net` に 1 件 | 0 件（書体を自分で配ったとき）     |
 
-表の結果は、3 つのブラウザで同じだった。リクエストの数は Chromium で数えた。
+表の結果は、次の行を除いて、3 つのブラウザで同じだった。
+
+- draw.io の「isolation のヘッダを返すパス」の行は、ADR-0034 の Verification の結果で、Chromium と WebKit で確認した。Firefox は未確認である。
+- draw.io の「ダークのエディタ」の行は、Chromium だけで確認した。
+- Excalidraw の scene 入りの SVG を開く操作は、Chromium だけで確認した。
+- リクエストの数は、Chromium で数えた。
 
 - draw.io は、試した操作（読み込み、編集、書き出し、再訪、ファイルを開く）の範囲で、図の中身を通信に出さなかった。リクエストは全て GET で、WebSocket は 0 件、Cookie は 0 件だった。図に入れた目印の文字列を含むリクエストは、3 つのブラウザで 0 件だった。
 - `log.diagrams.net` へのリクエストは、draw.io のバージョンとホスト名だけを含んだ。

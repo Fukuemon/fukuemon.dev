@@ -106,6 +106,8 @@ Chrome 156 と Chromium 158 は、フラグ `enable-webmcp-testing` を有効に
 - draw.io に図形を足す操作は、今の XML に `mxCell` を足して、`load` で読み込み直す形にした。全体を置き換える操作の後に図を読むと、渡した XML だけが返った。
 - polyfill を読み込むと、Firefox と WebKit にも `document.modelContext` ができ、同じ `registerTool` のコードが動いた。
 - relay を通して、スライドのテーマを変える操作を、Chrome 156 で呼べた。`enum` に無い値は、relay が検証して「Input validation error」を返した。
+- Chrome 156 は、フラグと polyfill の両方がある状態で、relay を通した呼び出しが通った。どちらの実装が登録を受けたかは未確認である。
+- 通信を記録したのは、relay を通したスライドのページだけである。そのページからサイトのサーバーへのリクエストは、ページとスクリプトの取得だけだった。ほかのページの通信は記録していない。
 - polyfill は brotli で 71 KB、relay につなぐスクリプトは合わせて 9 KB だった。外部へのリクエストは、`127.0.0.1` への WebSocket だけだった。
 - relay を、別の origin を渡した `--widget-origin` で起動すると、ページの接続は拒否された。relay のデフォルトは、どの origin のページも受け付ける。
 - 別の origin の記事に埋め込んだ iframe は、`allow="tools"` が無いと、登録を拒否された。
@@ -130,7 +132,7 @@ Chrome 156 と Chromium 158 は、フラグ `enable-webmcp-testing` を有効に
 ### Positive
 
 - 利用者は、自分の AI のエージェントに頼んで、ファイルを書き、コードを実行し、図とスライドを編集できる。
-- 操作の内容は、ブラウザの中か、利用者の端末の relay を通る。fukuemon.dev のサーバーには送られない。
+- 操作の内容は、ブラウザの中か、利用者の端末の relay を通る。fukuemon.dev のサーバーに送る処理を持たない。
 - WebMCP が出荷されたときに、登録のコードを変えずに済む見込みである。
 
 ### Negative
