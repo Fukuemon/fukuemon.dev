@@ -194,6 +194,7 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 - 読む順は、記事の frontmatter の `order` で決まる。
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
+- キャンバスで描いた図は、書き出した SVG を `apps/web/src/content/figures/` に置き、記事から画像の記法で指す。形は、[キャンバスの Design Doc](features/canvas/DesignDoc.md#記事の図) にある。
 - 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事のディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md#プロジェクト) にある。
 
 書き方は [context/conventions.md](../context/conventions.md) にある。

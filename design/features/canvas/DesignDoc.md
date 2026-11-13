@@ -58,8 +58,11 @@ status: draft
 | `figure` | 記事の図の名前    | 記事の図を読み込む。`doc` は読まない |
 
 - クエリが無いときは、そのツールの図のうち、最後に更新した図を開く。図が 1 つも無いときは、空の図を出す。
-- `doc` の `id` に当たる図が無いときは、クエリが無いときと同じに扱う。
-- ページは、開いている図が変わるたびに、URL の `doc` を、履歴を足さずに書き換える。再読み込みで、同じ図が開く。
+- `doc` の `id` に当たる図が無いときと、`id` がほかのツールの図を指すときは、クエリが無いときと同じに扱う。
+- ページは、開いている図が変わるたびに、URL のクエリを、履歴を足さずに書き換える。再読み込みで、同じ図が開く。
+  - 保存した図を開いているときは、`doc` にその `id` を書き、`figure` を消す。
+  - まだ保存していない空の図を開いているときは、`doc` と `figure` を消す。
+  - 記事の図を開いていて、まだ保存していないときは、`figure` を残す。
 
 ### ディレクトリ
 
@@ -98,6 +101,8 @@ flowchart TB
 - `documents/` は、ツールの種類ごとの処理を持たない。中身は、文字列として受け取り、文字列として返す。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
+- `documents/` と `figures/` は、`project/` と、実行環境の package を import しない。`Store` の型は、`documents/` が自分で定義する。
+- `documents/` のコンポーネントは、画面に出す語（「図」か「スライド」）と、新しく作るものの名前の付け方を、props で受ける。
 - `@excalidraw/excalidraw` を import するのは、`src/excalidraw/` だけである。
 - Oxlint の `no-restricted-imports` が止める、ツールのページの間の import の対象に、`drawio/` と `excalidraw/` を足す。
 
@@ -117,7 +122,7 @@ flowchart TB
 ```
 
 - ヘッダは、ツールの名前、開いている図の名前、「図の一覧」、「新しい図」、「ファイル」のメニュー、保存の状態を、この順に並べる。
-- 図の名前を押すと、その場で名前を変えられる。
+- 図の名前を押すと、その場で名前を変えられる。まだ保存していない図の名前を変えたときは、その時点で、新しい図として保存する。
 - 「ファイル」のメニューは、ファイルを開く、ファイルに保存、SVG を書き出す、の 3 つを持つ。
 - 保存の状態は、最後に保存した時刻か、保存できないことを出す。
 - draw.io のツールは、ヘッダの下に、次の 2 つを書いた 1 行の文を、いつも出す。閉じる操作は持たない。
@@ -164,27 +169,36 @@ type DocumentContent = {
 `Store` は、プレイグラウンドの [NodeRuntime](../playground/DesignDoc.md#noderuntime) の `Store` と同じ形である。
 
 ```ts
+type DocumentBody = Omit<DocumentContent, "id">;
+
+type WriteResult = { ok: true } | { ok: false; reason: "unavailable" | "quota" | "missing" };
+
 type DocumentStore = {
   status: Store<{ kind: "ready" } | { kind: "unavailable" }>;
   list: (tool: ToolKind) => Store<readonly DocumentMeta[]>;
-  read: (id: string) => Promise<{ meta: DocumentMeta; data: string } | undefined>;
+  read: (id: string) => Promise<{ meta: DocumentMeta; content: DocumentBody } | undefined>;
   create: (input: {
     tool: ToolKind;
     name: string;
-    data: string;
+    content: DocumentBody;
     source?: DocumentMeta["source"];
-  }) => Promise<DocumentMeta>;
-  save: (id: string, data: string) => Promise<void>;
-  rename: (id: string, name: string) => Promise<void>;
-  remove: (id: string) => Promise<void>;
+  }) => Promise<{ ok: true; meta: DocumentMeta } | { ok: false; reason: "unavailable" | "quota" }>;
+  save: (id: string, content: DocumentBody) => Promise<WriteResult>;
+  rename: (id: string, name: string) => Promise<WriteResult>;
+  remove: (id: string) => Promise<WriteResult>;
 };
 ```
 
+- `documents/` は、`DocumentContent` の `id` のほかの値を、そのまま読み書きする。ツールが `DocumentContent` に足した値も、同じ関数で通る。
 - 一覧は、更新した時刻の新しい順に並ぶ。画面は、`useSyncExternalStore` で読む。
 - `create`、`save`、`remove` は、2 つの store を 1 つのトランザクションで書く。`save` は、`updatedAt` を進める。`rename` は、`updatedAt` を進めない。
-- IndexedDB を読めないときと、保存の容量が足りなくて書き込めないときは、`status` が `unavailable` になる。その後は、ページを開いている間、`documents/` は IndexedDB に書き込まない。ページは、保存できないことを、保存の状態に出す。
+- 書き込みの関数は、失敗しても Promise を失敗させず、理由を持つ値を返す。ページは、失敗のときに、保存できないことを保存の状態に出す。
+  - `unavailable`: IndexedDB を読めなかった。`status` が `unavailable` になり、その後は、ページを開いている間、`documents/` は IndexedDB に書き込まない。
+  - `quota`: 保存の容量が足りない。`status` は変えない。次の書き込みは、もう一度試す。訪問者は、図を消して、容量を空けられる。
+  - `missing`: `id` に当たる図が、`documents` に無い。ほかのタブが消した図である。`documents/` は、何も書かない。
 - IndexedDB を読めないときは、一覧が空で、ページは空の図を出す。訪問者は、描いた図を、ファイルに保存できる。
 - 2 つのタブで同じ図を開いたときは、後から保存したタブの中身が残る。
+- 一覧は、ほかのタブの変更を、ページを開き直すまで出さない。
 
 ### 図の一覧
 
@@ -204,6 +218,7 @@ type DocumentStore = {
 - 一覧は、そのツールの図だけを出す。
 - 行の名前を押すと、その図を開き、ダイアログを閉じる。
 - 「新しい図」は、空の図を新しく作って開く。前に開いていた図は変えない。名前は、`無題の図` に、ツールごとの連番を付ける（`無題の図 2`）。
+  - 連番は、そのツールの図の名前のうち、`無題の図 <数>` の形のものの、最も大きい数に 1 を足した数にする。その形の名前が無いときは、1 にする。
 - 「消す」は、ConfirmDialog で確認を出し、訪問者が通したら消す。消した図は戻せない。
 - 開いている図を消したときは、残りの図のうち、最後に更新した図を開く。残りが無いときは、空の図を出す。
 - 記事の図から作った図の行には、記事の図から作ったことを出す。
@@ -247,7 +262,13 @@ sequenceDiagram
 - draw.io のツールは、iframe の初期化のメッセージを受けてから、`load` で図の XML を渡す。編集のたびに届く `autosave` のイベントの XML を保存する。
 - Excalidraw のツールは、`onChange` を受けてから 300 ミリ秒のあいだ次の `onChange` が無いときに、scene の JSON を保存する。300 ミリ秒は、実装のタスクで測って変えてよい。
 - ページは、`embed.diagrams.net` の origin のメッセージだけを受ける。
+- ページは、図の中身が変わったときだけ保存する。選択、スクロール、拡大と縮小、エディタが読み込みの直後に出す通知では、保存しない。
+  - draw.io のツールは、届いた XML を、最後にエディタに渡したか保存した XML と比べる。
+  - Excalidraw のツールは、要素と、貼った画像が変わったかを比べる。
+  - 比べる手段と、draw.io が `load` の直後に `autosave` を出すかは、実装のタスクで確認する。
 - 図を切り替えるときは、エディタを読み込み直さずに、次の図の中身を渡す。
+- 図を切り替える前と、ページを閉じるとき（`pagehide`）に、待っている保存を先に書く。エディタから届いた中身は、編集したときに開いていた図の `id` に保存する。
+- エディタの外から図の中身を変えたとき（AI のエージェントからの操作）は、ページが、訪問者の編集と同じ流れで保存する。
 
 ### ファイルの読み書きと書き出し
 
@@ -257,10 +278,12 @@ sequenceDiagram
 | SVG を書き出す | 元データ入りの SVG を、`<図の名前>.drawio.svg` で保存する | scene 入りの SVG を、`<図の名前>.excalidraw.svg` で保存する |
 | ファイルを開く | `.drawio` と、元データ入りの SVG を開く                   | `.excalidraw` と、scene 入りの SVG を開く                   |
 
-- 「ファイルを開く」は、開いたファイルを、新しい図として保存して開く。前に開いていた図は変えない。名前は、ファイルの名前から拡張子を除いたものにする。
+- 「ファイルを開く」は、開いたファイルを、新しい図として保存して開く。前に開いていた図は変えない。名前は、ファイルの名前から、拡張子（`.drawio.svg`、`.excalidraw.svg`、`.drawio`、`.excalidraw`、`.svg`）を除いたものにする。
 - 元データ入りの SVG を開いたときは、SVG から元データ（図の XML か、scene の JSON）を取り出して、`data` に保存する。
 - 開いたファイルに元データが無いときと、そのツールの形式でないときは、エラーを出し、何も保存しない。
-- 書き出す SVG は、ライトの配色で、背景を持たない。運営者は、書き出した SVG を、そのまま記事の図のディレクトリに置ける。
+- 書き出す SVG は、背景を持たない。運営者は、書き出した SVG を、そのまま記事の図のディレクトリに置ける。
+  - draw.io のツールは、`export` のアクションに `xmlsvg` の形式を渡す。SVG は、明暗の両方の色を持つ。
+  - Excalidraw のツールは、scene を入れる設定で、エディタの明暗に依らず、ライトの配色で書き出す。
 - ファイルの読み書きは、訪問者のブラウザの中だけで行う。fukuemon.dev のサーバーに、図を送らない。
 
 ### 記事の図
@@ -279,9 +302,10 @@ apps/web/src/content/figures/
 ```
 
 - ファイルの名前は、`<名前>.drawio.svg` か `<名前>.excalidraw.svg` である。`<名前>` は、小文字の英数字とハイフンだけにする（`^[a-z0-9][a-z0-9-]*$`）。
-- シリーズの中の記事は、`../../figures/` と書く。
+- 画像のパスは、記事のファイルからの相対パスで書く。ビルドは、記事のファイルの場所からパスを解き、解いた先が `content/figures/` の直下のファイルのときに、記事の図として扱う。
 
-`apps/web` のビルドは、`content/figures/` のファイルを指す画像を、次のとおり置き換える。
+`apps/web` のビルドは、記事の図を指す画像を、次のとおり置き換える。  
+置き換える処理は、Markdown を HTML にする処理のプラグインとして、`apps/web/src/lib/` に置く。
 
 - 画像を、`<figure>` に置き換える。中に、インラインの SVG、キャプション、「キャンバスで開く」のリンクを、この順に置く。
 - 代替テキストは、SVG の読み上げの名前にする。画像の記法のタイトルは、キャプションにする。タイトルが無いときは、キャプションを出さない。
@@ -298,7 +322,7 @@ apps/web/src/content/figures/
 - 1 つの記事に複数の図を入れたときに、SVG の中の `id` が重ならないことを、実装のタスクで確認する。重なるときは、ビルドが、図ごとに `id` を付け替える。
 
 ビルドは、置いた SVG を、変えずに `https://fukuemon.dev/figures/<名前>.<ツール>.svg` に出力する。  
-`fukuemon.dev` は、`/figures/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
+`fukuemon.dev` は、`/figures/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。ヘッダは、`apps/web/public/_headers` に書く。
 
 ### 記事の図をキャンバスで開く
 
@@ -332,9 +356,10 @@ sequenceDiagram
 
 - 名前の検証、URL の組み立て、`fetch` は、`figures/` が持つ。
 - `figures/` は、名前が `^[a-z0-9][a-z0-9-]*$` に合わないときは、`fetch` しない。
-- URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。ツールは、ページのパスで決まる。fukuemon.dev の origin は、ビルドのときの値で、プロジェクトの JSON の URL を組み立てる `project/` と、同じ定義を読む。
+- URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。ツールは、ページのパスで決まる。fukuemon.dev の origin は、`apps/playground` のビルドのときの環境変数で渡す。`figures/` と `project/` は、同じ環境変数を読む。
 - `fetch` は、リダイレクトを辿らない。
 - 開いただけでは、IndexedDB に保存しない。最初に編集したときに、新しい図として保存する。同じリンクを開くたびに、一覧に図が増えないようにするためである。
+  - ADR-0043 の「開いた図を新しい図として保存する」は、この意味で読む。
 - 新しい図の名前は、記事の図の名前にする。レコードの `source` に、記事の図の名前を持つ。
 - 保存してあった図は変えない。同じ記事の図から作った図が保存してあっても、リンクは、記事の図を開く。
 - エラーのときは、保存してある図を開かない。リンクの先は、`https://fukuemon.dev/playground` である。
@@ -346,6 +371,8 @@ sequenceDiagram
 - `apps/playground/drawio/`、`apps/playground/excalidraw/`: ツールのエントリーポイント。
 - `apps/playground/src/drawio/`、`src/excalidraw/`、`src/documents/`、`src/figures/`: キャンバスのコード。
 - `apps/web/src/content/figures/<名前>.drawio.svg`、`<名前>.excalidraw.svg`: 運営者が置く、記事の図。
+- `apps/web/src/lib/`: 記事の図を指す画像を置き換えるプラグインと、図を `/figures/` に出力する処理。
+- `apps/web/public/_headers`: `/figures/*` に返す `Access-Control-Allow-Origin`。
 
 ### 読む値
 
