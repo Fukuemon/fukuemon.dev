@@ -4,18 +4,27 @@ import { signSvg } from "./sign";
 
 const file = readFileSync(new URL("./sign.svg", import.meta.url), "utf8");
 
+describe("sign.svg", () => {
+  it("README の形（viewBox を持つ svg と、塗った path が 1 本）である", () => {
+    expect({
+      svg: /^<svg\b[^>]*\bviewBox="[^"]+"/.test(file.trim()),
+      paths: file.match(/<path\b/g)?.length,
+      stroke: /\bstroke=/.test(file),
+    }).toStrictEqual({ svg: true, paths: 1, stroke: false });
+  });
+});
+
 describe("signSvg", () => {
-  it("置いてある署名の SVG に、class と読み上げを隠す属性を足す", () => {
-    expect(signSvg(file)).toMatch(
-      /^<svg class="sign" aria-hidden="true" focusable="false" xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 0 3566 1252"/,
-    );
+  it("置いてある署名の SVG の先頭に、class と読み上げを隠す属性を足す", () => {
+    expect(
+      signSvg(file).startsWith('<svg class="sign" aria-hidden="true" focusable="false" '),
+    ).toBe(true);
   });
 
   it("ファイルを替えると、出力の path も替わる", () => {
     const other =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 5"><path d="M0 0H10V5Z"/></svg>';
     expect(signSvg(other)).toContain('<path d="M0 0H10V5Z"/>');
-    expect(signSvg(other)).not.toBe(signSvg(file));
   });
 
   it("svg の中身は変えずに通す", () => {

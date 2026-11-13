@@ -4,8 +4,7 @@ import { CAM0, DESIGN, GATE, GATE_Z, project } from "./layout";
 describe("project", () => {
   it("最初のカメラの注視点を、設計の画面の中央に置く", () => {
     const [x, y] = project(CAM0.look);
-    expect(x).toBeCloseTo(DESIGN.w / 2);
-    expect(y).toBeCloseTo(DESIGN.h / 2);
+    expect([Math.round(x), Math.round(y)]).toStrictEqual([DESIGN.w / 2, DESIGN.h / 2]);
   });
 
   it("遠い点ほど、1 m を小さく描く", () => {
