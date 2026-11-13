@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { brush, rng, sample } from "./brush";
@@ -106,6 +107,13 @@ describe("inkSvg", () => {
     expect(out.strokes).toBe(281);
     expect(out.paths).toBe(415);
     expect(out.svg.match(/<path /g)).toHaveLength(415);
+  });
+
+  it("試作の i-mon.html の墨の絵と同じ文字列を書く", () => {
+    // 試作の SVG のタグの間の空白を除いた文字列の SHA-256。乱数の順がずれると変わる。
+    expect(createHash("sha256").update(out.svg).digest("hex")).toBe(
+      "22bff8b7a4e4d2063a82b3e6a097d6688792fd44f00c8c72f511e87c07dae22c",
+    );
   });
 
   it("gzip で 40 KB 以内に収まる", () => {

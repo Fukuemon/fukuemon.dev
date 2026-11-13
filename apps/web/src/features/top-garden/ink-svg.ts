@@ -2,7 +2,7 @@ import { rng, type Layer, type Stroke, type Tint } from "./brush";
 import { inkArt, type InkArt } from "./ink-art";
 import { DESIGN } from "./layout";
 
-/** 試作の時刻（ms）を、イントロの墨の段の長さに縮める倍率 */
+/** 試作の時刻（ms）に掛ける倍率。試作と同じ値である。 */
 const TIME_SCALE = 3150 / 3900;
 const RENDER_SEED = 11;
 
