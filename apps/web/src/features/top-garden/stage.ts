@@ -1,4 +1,4 @@
-import { seasonOf, timeOfDayOf, type Season, type TimeOfDay } from "./season";
+import { seasonOf, timeOfDayOf, type Season, type SeasonTime, type TimeOfDay } from "./season";
 import { takeFirstVisit, type SeenStore } from "./visit";
 
 interface StageRoot {
@@ -7,10 +7,7 @@ interface StageRoot {
 }
 
 /** 端末の日付と時刻の代わりに使う、季節と時間帯 */
-interface StageOverride {
-  readonly season?: Season;
-  readonly time?: TimeOfDay;
-}
+type StageOverride = Partial<SeasonTime>;
 
 /** `applyStage` が読むページと端末の値。inline script では、`document` や `localStorage` から作る */
 export interface StageEnv {
@@ -65,11 +62,12 @@ export function readOverride(search: string): StageOverride {
 /**
  * トップの `head` に置く inline script の中身を作る。
  * `dev` が true のときだけ、URL の引数を読む処理を入れる。`bundle` を渡さないときは、庭を出さない。
+ * 束は module の script で読み込む。開発のサーバーは束を ES モジュールのまま配り、本番のビルドの IIFE は module としても動くためである。
  */
 export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";
   const load = bundle
-    ? `function(e){var s=document.createElement("script");s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
+    ? `function(e){var s=document.createElement("script");s.type="module";s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
     : "null";
   return (
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +

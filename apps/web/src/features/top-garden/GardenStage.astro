@@ -1,0 +1,31 @@
+---
+// 庭を描く canvas を置く。html に class stage-on が付いたときだけ、画面の全体に出す。
+---
+
+<div class="garden-stage" data-garden-stage aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<style>
+  .garden-stage {
+    display: none;
+  }
+
+  :global(html.stage-on) {
+    overflow: hidden;
+  }
+
+  :global(html.stage-on) .garden-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: block;
+    background: var(--fd-color-surface);
+  }
+
+  canvas {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+</style>

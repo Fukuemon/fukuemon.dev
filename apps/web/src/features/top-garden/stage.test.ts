@@ -191,21 +191,26 @@ describe("stageScript", () => {
     expect([b.root.dataset.season, b.root.dataset.time]).toStrictEqual(["winter", "morning"]);
   });
 
-  it("場面の束の URL を渡すと、庭を出して、その URL の script を head に足す", () => {
+  it("場面の束の URL を渡すと、庭を出して、その URL の module の script を head に足す", () => {
     const b = browser();
-    const appended: { src?: string }[] = [];
+    const appended: { src?: string; type?: string }[] = [];
     const globals = {
       ...b.globals,
       document: {
         documentElement: b.root,
         createElement: () => ({}),
-        head: { appendChild: (s: { src?: string }) => void appended.push(s) },
+        head: { appendChild: (s: { src?: string; type?: string }) => void appended.push(s) },
       },
     };
     runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
-    expect({ classes: [...b.root.classes].sort(), src: appended[0]?.src }).toStrictEqual({
+    expect({
+      classes: [...b.root.classes].sort(),
+      src: appended[0]?.src,
+      type: appended[0]?.type,
+    }).toStrictEqual({
       classes: ["intro", "stage-on"],
       src: "/_astro/scene.js",
+      type: "module",
     });
   });
 });
