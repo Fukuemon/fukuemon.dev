@@ -93,6 +93,7 @@ packages/
 ```
 
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
+  - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
@@ -157,7 +158,7 @@ flowchart TB
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
 - Oxlint の `no-restricted-imports` が止める import は、次の 2 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` の間の import
 
 ### NodeRuntime
 
@@ -364,6 +365,7 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - 運営者は、プロジェクトを、記事のディレクトリの下に置く（`apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/`）。設定は、同じディレクトリの `playground.json` に書く。
 - `apps/web` のビルドが、プロジェクトごとに、1 つの JSON を、`https://fukuemon.dev/playground-projects/<埋め込みの ID>.json` に出力する。`fukuemon.dev` は、`/playground-projects/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
 - ツールのページは、埋め込みの ID から JSON の URL を組み立てて、`fetch` する。
+  - `fukuemon.dev` の origin は、`apps/playground` のビルドのときの環境変数で渡す。`project/` と、キャンバスの `figures/` が、同じ環境変数を読む。
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
 - JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
@@ -544,7 +546,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 
 - Oxlint の `no-restricted-imports`: 次の 2 つの import を止める。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` の間の import
 - package の依存の宣言と knip: 次の 3 つを確認する。
   - `apps/playground` が、`@webcontainer/api` を import しないこと
   - 実行環境の 3 つの package が、React、`@fukuemon/ui`、`@fukuemon/playground-project` に依存しないこと
