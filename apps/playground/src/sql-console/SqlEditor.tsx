@@ -1,42 +1,13 @@
 import { sql } from "@codemirror/lang-sql";
-import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
-import { tags } from "@lezer/highlight";
-import { Prec } from "@codemirror/state";
-import { keymap } from "@codemirror/view";
-import { EditorView, basicSetup } from "codemirror";
+import { EditorView } from "@codemirror/view";
 import { useEffect, useRef } from "react";
 
-// 色は packages/ui のテーマ変数を読み、ライトとダークをトークンの側で切り替える (docs/adr/0022-code-colors-from-tokens.md)
-const theme = EditorView.theme({
-  "&": {
-    height: "100%",
-    backgroundColor: "var(--color-code-surface)",
-    color: "var(--color-code-text)",
-    fontSize: "var(--text-code)",
-  },
-  ".cm-scroller": { fontFamily: "var(--font-mono)", lineHeight: "var(--text-code--line-height)" },
-  ".cm-gutters": {
-    backgroundColor: "var(--color-code-surface)",
-    color: "var(--color-code-comment)",
-    border: "none",
-  },
-  ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "transparent" },
-  ".cm-cursor": { borderLeftColor: "var(--color-code-text)" },
-});
-
-const highlight = HighlightStyle.define([
-  { tag: tags.keyword, color: "var(--color-code-keyword)" },
-  { tag: [tags.string, tags.special(tags.string)], color: "var(--color-code-string)" },
-  { tag: [tags.number, tags.bool, tags.null], color: "var(--color-code-number)" },
-  { tag: tags.comment, color: "var(--color-code-comment)" },
-  { tag: [tags.typeName, tags.standard(tags.name)], color: "var(--color-code-type)" },
-  { tag: tags.function(tags.variableName), color: "var(--color-code-function)" },
-]);
+import { codeEditorExtensions } from "../code-editor/extensions";
 
 export type SqlEditorProps = {
   value: string;
   onChange: (value: string) => void;
-  /** Ctrl か Cmd と Enter のキーで呼ぶ。 */
+  /** Ctrl か ⌘ と Enter のキーで呼ぶ。 */
   onRun: () => void;
 };
 
@@ -57,22 +28,8 @@ export function SqlEditor({ value, onChange, onRun }: SqlEditorProps) {
       parent: parentRef.current ?? undefined,
       doc: initialValue.current,
       extensions: [
-        basicSetup,
+        ...codeEditorExtensions({ label: "SQL", onRun: () => handlers.current.onRun() }),
         sql(),
-        theme,
-        syntaxHighlighting(highlight),
-        EditorView.contentAttributes.of({ "aria-label": "SQL" }),
-        Prec.highest(
-          keymap.of([
-            {
-              key: "Mod-Enter",
-              run: () => {
-                handlers.current.onRun();
-                return true;
-              },
-            },
-          ]),
-        ),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) handlers.current.onChange(update.state.doc.toString());
         }),
