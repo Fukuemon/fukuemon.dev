@@ -50,7 +50,7 @@ export const StandaloneWrapped: Story = {
     <ul className="w-80 text-body text-text">
       <li className="flex items-baseline justify-between gap-4 border-b border-border py-3">
         <Link {...args} />
-        <span className="text-caption text-text-secondary">2026-11-13</span>
+        <span className="shrink-0 text-caption text-text-secondary">2026-11-13</span>
       </li>
     </ul>
   ),
