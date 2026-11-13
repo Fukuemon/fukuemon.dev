@@ -6,8 +6,9 @@ import { type Workspace, type WorkspaceLoad, createWorkspace } from "../workspac
 import {
   type Change,
   type FileEntry,
-  type GoWorkspace,
+  type GoFileSet,
   createDirectory,
+  createFile,
   listEntries,
   normalizePath,
   remove,
@@ -18,7 +19,7 @@ import {
 type GoProject = Extract<ProjectLoad<"go">, { kind: "opened" }>["project"];
 
 /** IndexedDB に保存する 1 件。ファイルとディレクトリの一式を、丸ごと置き換える。 */
-export type GoRecord = GoWorkspace & { version: string; savedAt: number };
+export type GoRecord = GoFileSet & { version: string; savedAt: number };
 
 /** 出力の欄の中身。実行するたびに空にしてから書く。 */
 export type GoOutput = {
@@ -49,18 +50,23 @@ type RunOptions = { timeoutMs?: number };
 export type GoSession = {
   embedId: string | undefined;
   /** 最初に開くファイル。 */
-  open: string;
-  workspace: Store<GoWorkspace>;
+  openPath: string;
+  fileSet: Store<GoFileSet>;
   /** Yaegi を読み込んでいる間も true である。 */
   running: Store<boolean>;
   phase: Store<LoadPhase>;
   output: Store<GoOutput>;
   /** IndexedDB を読めず、ファイルを保存できないときは false である。 */
   canSave: boolean;
+  /** 最後の保存が失敗したときは true である。次の保存が通ると false に戻る。 */
+  saveFailed: Store<boolean>;
   list: (path?: string) => FileEntry[];
   /** ファイルの中身。無いパスとディレクトリは undefined を返す。 */
   read: (path: string) => string | undefined;
+  /** ファイルを書く。無ければ作り、あれば上書きする。 */
   write: (path: string, contents: string) => Change;
+  /** 空のファイルを作る。既にあるパスには作らない。 */
+  createFile: (path: string) => Change;
   createDirectory: (path: string) => Change;
   rename: (from: string, to: string) => Change;
   remove: (path: string) => Change;
@@ -96,9 +102,9 @@ const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
 
 /** IndexedDB から読んだ値が、ファイルとディレクトリの一式の形か。形でない値は、保存したファイルが無いときと同じに扱う。 */
-function isGoWorkspace(value: unknown): value is GoWorkspace {
+function isGoFileSet(value: unknown): value is GoFileSet {
   if (typeof value !== "object" || value === null) return false;
-  const { files, directories } = value as Partial<Record<keyof GoWorkspace, unknown>>;
+  const { files, directories } = value as Partial<Record<keyof GoFileSet, unknown>>;
   return (
     typeof files === "object" &&
     files !== null &&
@@ -111,7 +117,7 @@ export type GoSessionOptions = {
   project: GoProject;
   embedId: string | undefined;
   saved: WorkspaceLoad<GoRecord>;
-  workspace: Workspace<GoRecord>;
+  storage: Workspace<GoRecord>;
   runner: GoRunner;
   now?: () => number;
 };
@@ -120,15 +126,19 @@ export function createGoSession({
   project,
   embedId,
   saved,
-  workspace: storage,
+  storage,
   runner,
   now = Date.now,
 }: GoSessionOptions): GoSession {
-  const initial: GoWorkspace =
-    saved.kind === "saved" && isGoWorkspace(saved.record)
+  const initial: GoFileSet =
+    saved.kind === "saved" && isGoFileSet(saved.record)
       ? { files: saved.record.files, directories: saved.record.directories }
       : { files: project.files, directories: [] };
-  const workspace = createStore(initial);
+  const fileSet = createStore(initial);
+  const saveFailed = createStore(false);
+  // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
+  const version =
+    saved.kind === "saved" && isGoFileSet(saved.record) ? saved.record.version : project.version;
   const running = createStore(false);
   const output = createStore<GoOutput>({
     kind: undefined,
@@ -140,10 +150,11 @@ export function createGoSession({
 
   const apply = (change: Change): Change => {
     if (!change.ok) return change;
-    workspace.set(change.workspace);
-    void storage
-      .save({ ...change.workspace, version: project.version, savedAt: now() })
-      .catch(() => undefined);
+    fileSet.set(change.fileSet);
+    storage.save({ ...change.fileSet, version, savedAt: now() }).then(
+      () => saveFailed.set(false),
+      () => saveFailed.set(true),
+    );
     return change;
   };
 
@@ -161,9 +172,21 @@ export function createGoSession({
   ): Promise<GoResult> => {
     if (running.getSnapshot()) return { kind: "busy" };
     running.set(true);
+    try {
+      return await executeOnce(kind, timeoutMs);
+    } finally {
+      current = undefined;
+      running.set(false);
+    }
+  };
+
+  const executeOnce = async (
+    kind: "run" | "test",
+    timeoutMs: number | undefined,
+  ): Promise<GoResult> => {
     output.set({ kind, text: "", truncated: false, exit: undefined });
     // 実行を始めたときのファイルの写しを渡す。実行中に書き換えても、実行しているコードは変わらない
-    const files = workspace.getSnapshot().files;
+    const files = fileSet.getSnapshot().files;
     const execution = kind === "run" ? runner.run(files, append) : runner.test(files, append);
     current = execution;
     let timedOut = false;
@@ -174,37 +197,46 @@ export function createGoSession({
             timedOut = true;
             execution.stop();
           }, timeoutMs);
-    const finished = await execution.done;
-    clearTimeout(timer);
-    current = undefined;
+    let finished: GoExit;
+    try {
+      finished = await execution.done;
+    } catch (error) {
+      finished = {
+        kind: "failed",
+        message: error instanceof Error ? error.message : String(error),
+      };
+    } finally {
+      clearTimeout(timer);
+    }
     const exit = timedOut ? ({ kind: "timeout" } as const) : finished;
     output.set({ ...output.getSnapshot(), exit });
-    running.set(false);
     const { text, truncated } = output.getSnapshot();
     return { kind: "done", exit, output: text, truncated };
   };
 
   return {
     embedId,
-    open: Object.hasOwn(initial.files, project.open)
+    openPath: Object.hasOwn(initial.files, project.open)
       ? project.open
       : (Object.keys(initial.files).sort()[0] ?? project.open),
-    workspace,
+    fileSet,
     running,
     phase: runner.phase,
     output,
     canSave: saved.kind !== "unavailable",
+    saveFailed,
     list: (path) =>
-      listEntries(workspace.getSnapshot(), path === undefined ? undefined : normalizePath(path)),
+      listEntries(fileSet.getSnapshot(), path === undefined ? undefined : normalizePath(path)),
     read: (path) => {
       const normalized = normalizePath(path);
-      const files = workspace.getSnapshot().files;
+      const files = fileSet.getSnapshot().files;
       return normalized && Object.hasOwn(files, normalized) ? files[normalized] : undefined;
     },
-    write: (path, contents) => apply(writeFile(workspace.getSnapshot(), path, contents)),
-    createDirectory: (path) => apply(createDirectory(workspace.getSnapshot(), path)),
-    rename: (from, to) => apply(rename(workspace.getSnapshot(), from, to)),
-    remove: (path) => apply(remove(workspace.getSnapshot(), path)),
+    write: (path, contents) => apply(writeFile(fileSet.getSnapshot(), path, contents)),
+    createFile: (path) => apply(createFile(fileSet.getSnapshot(), path)),
+    createDirectory: (path) => apply(createDirectory(fileSet.getSnapshot(), path)),
+    rename: (from, to) => apply(rename(fileSet.getSnapshot(), from, to)),
+    remove: (path) => apply(remove(fileSet.getSnapshot(), path)),
     load: runner.load,
     run: (options) => execute("run", options),
     test: (options) => execute("test", options),
@@ -241,7 +273,7 @@ export function createGoSessionOpener(
             project: result.project,
             embedId: result.embedId,
             saved,
-            workspace,
+            storage: workspace,
             runner: createRunner(),
           }),
         };

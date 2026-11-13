@@ -1,5 +1,5 @@
 import type { GoExit, GoFiles, GoRunner, LoadPhase } from "@fukuemon/go-runtime";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ProjectLoad } from "../project/project";
 import type { Workspace, WorkspaceLoad } from "../workspace/workspace";
@@ -60,7 +60,7 @@ function setup(saved: WorkspaceLoad<GoRecord> = { kind: "empty" }) {
     project,
     embedId: "c/e",
     saved,
-    workspace,
+    storage: workspace,
     runner,
     now: () => 42,
   });
@@ -68,17 +68,28 @@ function setup(saved: WorkspaceLoad<GoRecord> = { kind: "empty" }) {
 }
 
 describe("createGoSession", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("保存したファイルが無いときは、プロジェクトのファイルで開く", () => {
     const { session } = setup();
-    expect(session.workspace.getSnapshot()).toEqual({ files: project.files, directories: [] });
-    expect([session.open, session.canSave, session.embedId]).toEqual(["main.go", true, "c/e"]);
+    expect(session.fileSet.getSnapshot()).toStrictEqual({ files: project.files, directories: [] });
+    expect([session.openPath, session.canSave, session.embedId]).toStrictEqual([
+      "main.go",
+      true,
+      "c/e",
+    ]);
   });
 
   it("保存したファイルがあるときは、それで開き、open が無ければ最初のファイルを開く", () => {
     const record = { version: "v0", savedAt: 1, files: { "b.go": "b" }, directories: ["d"] };
     const { session } = setup({ kind: "saved", record });
-    expect(session.workspace.getSnapshot()).toEqual({ files: { "b.go": "b" }, directories: ["d"] });
-    expect(session.open).toBe("b.go");
+    expect(session.fileSet.getSnapshot()).toStrictEqual({
+      files: { "b.go": "b" },
+      directories: ["d"],
+    });
+    expect(session.openPath).toBe("b.go");
   });
 
   it("保存した値が、ファイルとディレクトリの一式の形でないときは、プロジェクトのファイルで開く", () => {
@@ -88,7 +99,7 @@ describe("createGoSession", () => {
       { files: {}, directories: "x" },
     ]) {
       const { session } = setup({ kind: "saved", record: record as unknown as GoRecord });
-      expect(session.workspace.getSnapshot().files).toEqual(project.files);
+      expect(session.fileSet.getSnapshot().files).toStrictEqual(project.files);
     }
   });
 
@@ -102,32 +113,101 @@ describe("createGoSession", () => {
     expect(session.createDirectory("empty").ok).toBe(true);
     expect(session.rename("b.go", "c.go").ok).toBe(true);
     expect(session.remove("a").ok).toBe(true);
-    expect(session.workspace.getSnapshot()).toEqual({
+    expect(session.fileSet.getSnapshot()).toStrictEqual({
       files: { "main.go": "package main", "c.go": "b" },
       directories: ["empty"],
     });
-    expect(records.at(-1)).toEqual({
-      ...session.workspace.getSnapshot(),
+    expect(records.at(-1)).toStrictEqual({
+      ...session.fileSet.getSnapshot(),
       version: "v1",
       savedAt: 42,
     });
     expect(records).toHaveLength(4);
   });
 
+  it("createFile は、既にあるファイルを空にしない", () => {
+    const { session } = setup();
+    session.createFile("main.go");
+    expect(session.read("main.go")).toBe("package main");
+  });
+
+  it("保存してあったバージョンを引き継いで保存する", () => {
+    const record = { version: "v0", savedAt: 1, files: { "b.go": "b" }, directories: [] };
+    const { session, records } = setup({ kind: "saved", record });
+    session.write("b.go", "c");
+    expect(records.at(-1)?.version).toBe("v0");
+  });
+
+  it("保存に失敗したら saveFailed を true にし、次の保存が通ったら false に戻す", async () => {
+    const { runner } = fakeRunner();
+    const save = vi
+      .fn<Workspace<GoRecord>["save"]>()
+      .mockRejectedValueOnce(new Error("QuotaExceededError"))
+      .mockResolvedValue(undefined);
+    const session = createGoSession({
+      project,
+      embedId: undefined,
+      saved: { kind: "empty" },
+      storage: { load: async () => ({ kind: "empty" }), save },
+      runner,
+    });
+    const seen: boolean[] = [];
+    session.saveFailed.subscribe(() => seen.push(session.saveFailed.getSnapshot()));
+    session.write("a.go", "1");
+    await vi.waitFor(() => expect(seen).toHaveLength(1));
+    session.write("a.go", "2");
+    await vi.waitFor(() => expect(seen).toStrictEqual([true, false]));
+  });
+
+  it("実行が失敗で終わっても、実行中の値を戻し、failed を返す", async () => {
+    const { runner } = fakeRunner();
+    runner.run = () => ({ done: Promise.reject(new Error("boom")), stop: () => {} });
+    const { workspace } = fakeWorkspace();
+    const session = createGoSession({
+      project,
+      embedId: undefined,
+      saved: { kind: "empty" },
+      storage: workspace,
+      runner,
+    });
+    const result = await session.run();
+    expect([result, session.running.getSnapshot()]).toStrictEqual([
+      { kind: "done", exit: { kind: "failed", message: "boom" }, output: "", truncated: false },
+      false,
+    ]);
+  });
+
+  it("実行を始められないときも、実行中の値を戻す", async () => {
+    const { runner } = fakeRunner();
+    runner.test = () => {
+      throw new Error("no worker");
+    };
+    const { workspace } = fakeWorkspace();
+    const session = createGoSession({
+      project,
+      embedId: undefined,
+      saved: { kind: "empty" },
+      storage: workspace,
+      runner,
+    });
+    await expect(session.test()).rejects.toThrow("no worker");
+    expect(session.running.getSnapshot()).toBe(false);
+  });
+
   it("失敗した変更は、保存しない", () => {
     const { session, records } = setup();
-    expect(session.write("a", "x")).toEqual({ ok: false, reason: "「a」はディレクトリです" });
+    expect(session.write("a", "x")).toStrictEqual({ ok: false, reason: "「a」はディレクトリです" });
     expect(records).toHaveLength(0);
   });
 
   it("read はファイルの中身を返し、ディレクトリと無いパスは undefined を返す。list は path の下を返す", () => {
     const { session } = setup();
-    expect([session.read("./main.go"), session.read("a"), session.read("../x")]).toEqual([
+    expect([session.read("./main.go"), session.read("a"), session.read("../x")]).toStrictEqual([
       "package main",
       undefined,
       undefined,
     ]);
-    expect(session.list("a")).toEqual([{ path: "a/a.go", kind: "file" }]);
+    expect(session.list("a")).toStrictEqual([{ path: "a/a.go", kind: "file" }]);
     expect(session.list()).toHaveLength(3);
   });
 
@@ -135,11 +215,11 @@ describe("createGoSession", () => {
     const { session, calls } = setup();
     const result = session.run();
     expect(session.running.getSnapshot()).toBe(true);
-    expect(await session.run()).toEqual({ kind: "busy" });
+    expect(await session.run()).toStrictEqual({ kind: "busy" });
     const { pending } = calls[0]!;
     pending.onOutput("hello\n");
     pending.finish({ kind: "exited", exitCode: 0 });
-    expect(await result).toEqual({
+    expect(await result).toStrictEqual({
       kind: "done",
       exit: { kind: "exited", exitCode: 0 },
       output: "hello\n",
@@ -165,7 +245,6 @@ describe("createGoSession", () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(await result).toMatchObject({ exit: { kind: "timeout" } });
     expect(stop).toHaveBeenCalledTimes(1);
-    vi.useRealTimers();
   });
 
   it("stop は実行中の実行を止め、実行していないときは何もしない", async () => {
@@ -186,7 +265,7 @@ describe("createGoSession", () => {
     pending.onOutput("zz");
     pending.finish({ kind: "exited", exitCode: 0 });
     const done = await result;
-    expect(done.kind === "done" && [done.output.length, done.truncated]).toEqual([
+    expect(done.kind === "done" && [done.output.length, done.truncated]).toStrictEqual([
       OUTPUT_LIMIT,
       true,
     ]);
@@ -214,6 +293,6 @@ describe("createGoSessionOpener", () => {
   it("プロジェクトを読めないときは、failed をそのまま返す", async () => {
     const failed = Promise.resolve<ProjectLoad<"go">>({ kind: "failed", embedId: "x/y" });
     const open = createGoSessionOpener(() => failed);
-    expect(await open("?project=x/y")).toEqual({ kind: "failed", embedId: "x/y" });
+    expect(await open("?project=x/y")).toStrictEqual({ kind: "failed", embedId: "x/y" });
   });
 });

@@ -16,6 +16,27 @@ export function lineKind(line: string): LineKind {
   return KINDS.find(([pattern]) => pattern.test(line))?.[1] ?? "plain";
 }
 
+export type Shortcut = "run" | "test" | "stop";
+
+type KeyLike = {
+  key: string;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+};
+
+/**
+ * ページのどこにフォーカスがあっても受けるキー。Ctrl か ⌘ と Enter で実行、Shift を足すとテスト、Ctrl か ⌘ と . で止める。
+ * 当たらないキーは undefined を返す。
+ */
+export function shortcutOf(event: KeyLike): Shortcut | undefined {
+  if (!(event.metaKey || event.ctrlKey) || event.altKey) return undefined;
+  if (event.key === "Enter") return event.shiftKey ? "test" : "run";
+  if (event.key === "." && !event.shiftKey) return "stop";
+  return undefined;
+}
+
 /** 実行のボタンを押してから終わるまでの、待っている段階の文。待っていないときは undefined を返す。 */
 export function progressLabel(
   phase: LoadPhase,

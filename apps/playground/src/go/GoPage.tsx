@@ -11,13 +11,30 @@ import {
   StatusBadge,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { Suspense, use, useRef, useState, useSyncExternalStore } from "react";
+import {
+  Suspense,
+  use,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { goDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { GoEditor } from "./GoEditor";
-import { type Change, isSameOrUnder, kindOf, movePath, toTree } from "./files";
-import { exitLabel, lineKind, progressLabel } from "./output";
+import {
+  type Change,
+  baseName,
+  isSameOrUnder,
+  joinPath,
+  kindOf,
+  movePath,
+  parentOf,
+  toTree,
+} from "./files";
+import { exitLabel, lineKind, progressLabel, shortcutOf } from "./output";
 import { type GoSession, OUTPUT_LIMIT, createGoSessionOpener } from "./session";
 
 const openSession = createGoSessionOpener(createProjectLoader("go", goDefaultProject));
@@ -31,11 +48,6 @@ const LINE_CLASS = {
   run: "text-code-comment",
   plain: undefined,
 } as const;
-
-const join = (parent: string | undefined, name: string) => (parent ? `${parent}/${name}` : name);
-const parentOf = (path: string) =>
-  path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;
-const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 
 function GoTool({ search, embedded }: { search: string; embedded: boolean }) {
   const load = use(openSession(search));
@@ -63,6 +75,14 @@ function OutputPane({ session }: { session: GoSession }) {
   const exit = exitLabel(output.exit);
   const lines = output.text === "" ? [] : output.text.replace(/\n$/, "").split("\n");
   const succeeded = output.exit?.kind === "exited" && output.exit.exitCode === 0;
+  const logRef = useRef<HTMLDivElement>(null);
+  // 下端を見ているときだけ、新しい出力に合わせて下端へ送る
+  const atBottom = useRef(true);
+
+  useEffect(() => {
+    const log = logRef.current;
+    if (log && atBottom.current) log.scrollTop = log.scrollHeight;
+  }, [output.text]);
 
   return (
     <TerminalFrame
@@ -76,7 +96,19 @@ function OutputPane({ session }: { session: GoSession }) {
       title={output.kind === "test" ? "テストの結果" : "出力"}
     >
       {() => (
-        <div aria-live="polite" className="min-h-0 flex-1 overflow-auto p-3" role="log">
+        <div
+          aria-label="出力"
+          className="min-h-0 flex-1 overflow-auto p-3 focus-visible:focus-ring"
+          onScroll={(event) => {
+            const log = event.currentTarget;
+            atBottom.current = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
+          }}
+          ref={logRef}
+          role="log"
+          // 長い出力をキーボードで送れるよう、スクロールする領域をフォーカスできるようにする
+          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+        >
           {progress !== undefined && <Loading label={progress} />}
           {lines.length === 0 && progress === undefined && output.exit === undefined && (
             <p className="font-sans text-body-dense text-code-comment">
@@ -105,20 +137,22 @@ function OutputPane({ session }: { session: GoSession }) {
 }
 
 function GoWorkbench({ session, embedded }: { session: GoSession; embedded: boolean }) {
-  const workspace = useSyncExternalStore(
-    session.workspace.subscribe,
-    session.workspace.getSnapshot,
-  );
+  const fileSet = useSyncExternalStore(session.fileSet.subscribe, session.fileSet.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
-  const [tabs, setTabs] = useState<string[]>([session.open]);
-  const [active, setActive] = useState<string | undefined>(session.open);
-  const [selected, setSelected] = useState<string | undefined>(session.open);
+  const [tabs, setTabs] = useState<string[]>([session.openPath]);
+  const [active, setActive] = useState<string | undefined>(session.openPath);
+  const [selected, setSelected] = useState<string | undefined>(session.openPath);
   const [cursor, setCursor] = useState({ line: 1, column: 1 });
   const [deleting, setDeleting] = useState<string>();
   const [problem, setProblem] = useState<string>();
+  const [created, setCreated] = useState<string>();
+  const saveFailed = useSyncExternalStore(
+    session.saveFailed.subscribe,
+    session.saveFailed.getSnapshot,
+  );
   const states = useRef(new Map<string, EditorState>());
 
-  const openTabs = tabs.filter((path) => Object.hasOwn(workspace.files, path));
+  const openTabs = tabs.filter((path) => Object.hasOwn(fileSet.files, path));
   const shown = active !== undefined && openTabs.includes(active) ? active : openTabs[0];
 
   const report = (change: Change): change is Extract<Change, { ok: true }> => {
@@ -133,24 +167,25 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 
   const select = (path: string) => {
     setSelected(path);
-    if (kindOf(workspace, path) === "file") openFile(path);
+    if (kindOf(fileSet, path) === "file") openFile(path);
   };
 
   const create = (name: string, parent: string | undefined) => {
-    const change = session.write(join(parent, name), "");
+    const change = session.createFile(joinPath(parent, name));
     if (report(change)) {
+      setCreated(change.path);
       setSelected(change.path);
       openFile(change.path);
     }
   };
 
   const createDirectory = (name: string, parent: string | undefined) => {
-    const change = session.createDirectory(join(parent, name));
+    const change = session.createDirectory(joinPath(parent, name));
     if (report(change)) setSelected(change.path);
   };
 
   const renameEntry = (id: string, name: string) => {
-    const change = session.rename(id, join(parentOf(id), name));
+    const change = session.rename(id, joinPath(parentOf(id), name));
     if (!report(change)) return;
     const { from = id, path: to } = change;
     const move = (path: string) => movePath(path, from, to);
@@ -185,7 +220,23 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 
   const run = () => void session.run();
   const test = () => void session.test();
-  const deletingKind = deleting === undefined ? undefined : kindOf(workspace, deleting);
+  const onShortcut = useEffectEvent((event: KeyboardEvent) => {
+    // エディタが同じキーを受けたときは、2 回実行しない
+    if (event.defaultPrevented) return;
+    const shortcut = shortcutOf(event);
+    if (shortcut === undefined) return;
+    event.preventDefault();
+    if (shortcut === "run") run();
+    else if (shortcut === "test") test();
+    else session.stop();
+  });
+
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onShortcut(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
+  const deletingKind = deleting === undefined ? undefined : kindOf(fileSet, deleting);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -201,7 +252,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="hidden text-caption text-text-secondary sm:inline">
-            Ctrl か ⌘ と Enter で実行
+            Ctrl か ⌘ と Enter で実行、Shift を足すとテスト
           </span>
           <Button
             aria-keyshortcuts="Control+Enter Meta+Enter"
@@ -211,14 +262,33 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
           >
             実行する
           </Button>
-          <Button disabled={running} onClick={test} size="S" variant="secondary">
+          <Button
+            aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter"
+            disabled={running}
+            onClick={test}
+            size="S"
+            variant="secondary"
+          >
             テストする
           </Button>
-          <Button disabled={!running} onClick={session.stop} size="S" variant="secondary">
+          <Button
+            aria-keyshortcuts="Control+. Meta+."
+            disabled={!running}
+            onClick={session.stop}
+            size="S"
+            variant="secondary"
+          >
             止める
           </Button>
         </div>
       </header>
+      {session.canSave && saveFailed && (
+        <div className="px-4 pt-2">
+          <Notice isAlert title="ファイルを保存できませんでした" tone="warning">
+            ブラウザの保存の容量が足りないか、保存できない状態です。次にファイルを変えたときに、もう一度保存します。
+          </Notice>
+        </div>
+      )}
       {!session.canSave && (
         <div className="px-4 pt-2">
           <Notice title="ファイルを保存できません" tone="warning">
@@ -239,10 +309,10 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
               )}
               <div className="grid min-h-0 flex-1 grid-rows-1">
                 <FileTree
-                  defaultExpandedIds={[
-                    ...new Set(Object.keys(workspace.files).map(parentOf)),
-                  ].filter((p): p is string => p !== undefined)}
-                  items={toTree(workspace)}
+                  defaultExpandedIds={[...new Set(Object.keys(fileSet.files).map(parentOf))].filter(
+                    (p): p is string => p !== undefined,
+                  )}
+                  items={toTree(fileSet)}
                   onCreate={create}
                   onCreateDirectory={createDirectory}
                   onDelete={setDeleting}
@@ -276,6 +346,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
                   >
                     {(_, file) => (
                       <GoEditor
+                        focusOnOpen={file.id === created}
                         key={file.id}
                         onChange={(path, value) => {
                           if (session.read(path) !== value) session.write(path, value);
@@ -284,7 +355,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
                         onRun={run}
                         path={file.id}
                         states={states.current}
-                        value={workspace.files[file.id] ?? ""}
+                        value={fileSet.files[file.id] ?? ""}
                       />
                     )}
                   </EditorFrame>

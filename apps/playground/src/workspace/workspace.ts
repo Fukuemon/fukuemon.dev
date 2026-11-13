@@ -66,7 +66,14 @@ export function createWorkspace<T>(
     save: async (record) => {
       if (unavailable) return;
       const db = await connect();
-      await request(db.transaction(STORE, "readwrite").objectStore(STORE).put(record, key));
+      const transaction = db.transaction(STORE, "readwrite");
+      transaction.objectStore(STORE).put(record, key);
+      // 容量の超過は commit のときに起きるので、トランザクションの終わりで結果を決める
+      await new Promise<void>((resolve, reject) => {
+        transaction.addEventListener("complete", () => resolve());
+        transaction.addEventListener("abort", () => reject(transaction.error));
+        transaction.addEventListener("error", () => reject(transaction.error));
+      });
     },
   };
 }

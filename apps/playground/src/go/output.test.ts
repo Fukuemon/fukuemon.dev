@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { exitLabel, lineKind, progressLabel } from "./output";
+import { exitLabel, lineKind, progressLabel, shortcutOf } from "./output";
 
 describe("lineKind", () => {
   it.each([
@@ -18,6 +18,33 @@ describe("lineKind", () => {
     ["PASSWORD", "plain"],
   ])("%s は %s", (line, kind) => {
     expect(lineKind(line)).toBe(kind);
+  });
+});
+
+describe("shortcutOf", () => {
+  const key = (
+    key: string,
+    modifiers: Partial<Record<"metaKey" | "ctrlKey" | "shiftKey" | "altKey", boolean>>,
+  ) => ({
+    key,
+    metaKey: false,
+    ctrlKey: false,
+    shiftKey: false,
+    altKey: false,
+    ...modifiers,
+  });
+
+  it.each([
+    ["⌘ と Enter", key("Enter", { metaKey: true }), "run"],
+    ["Ctrl と Enter", key("Enter", { ctrlKey: true }), "run"],
+    ["⌘ と Shift と Enter", key("Enter", { metaKey: true, shiftKey: true }), "test"],
+    ["Ctrl と .", key(".", { ctrlKey: true }), "stop"],
+    ["Enter だけ", key("Enter", {}), undefined],
+    ["Alt を足した Ctrl と Enter", key("Enter", { ctrlKey: true, altKey: true }), undefined],
+    ["Ctrl と Shift と .", key(".", { ctrlKey: true, shiftKey: true }), undefined],
+    ["Ctrl と s", key("s", { ctrlKey: true }), undefined],
+  ])("%s は %s", (_, event, expected) => {
+    expect(shortcutOf(event)).toBe(expected);
   });
 });
 
