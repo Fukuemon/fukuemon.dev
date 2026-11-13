@@ -179,7 +179,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 変種: 項目の高さの `default`（44px）と `compact`（24px）。
   - `compact` は、コードを動かす画面のコンポーネントだけに使う。
   - 押せる領域を 44×44 CSS px 以上にする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする（ADR-0062）。
-  - `compact` の文字は、`textSize` で 12px（コンソールの値の木）か 13px（ファイルの木）にする（ADR-0067（提案））。
+  - `compact` の文字は、`textSize` で 12px（コンソールの値の木）か 13px（ファイルの木）にする（ADR-0067、提案）。
   - 13px では、選んだ項目を太字にせず、面の色と左の 2px の `primary` の罫で示す。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
   - ADR-0067（提案）: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](../../../docs/adr/0067-compact-text-tokens-in-dense-panes.md)
