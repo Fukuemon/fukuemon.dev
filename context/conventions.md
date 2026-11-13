@@ -59,29 +59,24 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 組版の専門語（版面、罫、縦組み、縦中横）は、平易な語に言い換えずに使う。
 - 比喩と省略に寄った言い回しを使わない。使わない語と言い換えは `prh.yml` に置く。
 
-### 記事とハンズオンの本文
+### 記事の本文
 
-記事とハンズオンの本文は `apps/web/src/content/` に置く。  
-コンテンツの用語と、frontmatter の項目が守る条件は [domain.md](domain.md) にある。  
-1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。
+記事の本文は `apps/web/src/content/articles/` に置く。  
+コンテンツの用語と、frontmatter の項目が守る条件は [domain.md](domain.md) と [domain/content.md](domain/content.md) にある。  
+1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。新しいシリーズを作るときだけ、`index.md` を足す。
 
 - 原稿の本文は、`である` 調で書く。frontmatter の `description` も同じである。
   - 箇条書きと表のセルは、体言止めか終止形で書く。
   - 手順の指示は「〜する」「〜を確認する」と書き、「〜してください」と書かない。
   - リポジトリの文書（context、PRD、Design Doc、ADR など）も、`である` 調で書く。
 - サイトの UI の文言（ボタン、状態の表示、空の状態の案内）は、`ですます` 調で書く。
-- 記事は `articles/` に、ハンズオンは `labs/` に置く。frontmatter に種別を書かない。
-- 実行パネルを置く記事とハンズオンは `.mdx` で書き、置かないものは `.md` で書く。
-  - `interactive.level` が `local` のハンズオンは実行パネルを持たないので、`.md` で書く。
-- 実行パネルは、コードフェンスの言語の後に `run` を付けて置く。著者は JSX を書かない。
-  - 記事は `setup` を持てないので、フェンスの中で必要なものを作りきる。
-- `run` のフェンスに書く `VACUUM` は、1 文だけで書く。`CREATE DATABASE` と `CREATE INDEX CONCURRENTLY` も同じ。
-  - 複数の文は暗黙のトランザクションに包まれ、`VACUUM cannot run inside a transaction block` で失敗する。
-- ハンズオンの手順の所要時間は、手順の見出しの直後に `Duration: MM:SS` の行で書く。
+- シリーズに入れる記事は `articles/<series>/` に置き、シリーズに入れない記事は `articles/` の直下に置く。ディレクトリは 1 階層までにする。
+- シリーズの中の記事は frontmatter の `order` を書き、シリーズに入れない記事は `order` を書かない。
+- frontmatter に `format` を書くときは、`page` だけを書く。
 - 図は `mermaid` のコードフェンスで書き、色を指定しない。
   - `style` や `classDef` で色を書くと、暗い地で読めなくなる。
 
-書いた記事とハンズオンは、`pnpm --filter @fukuemon/web dev` で確認する。
+書いた記事は、`pnpm --filter @fukuemon/web dev` で確認する。
 
 ## Styling
 
