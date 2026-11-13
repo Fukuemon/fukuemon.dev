@@ -8,7 +8,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 ## コンポーネント
 
 コンポーネントは BCD Design で分類し、`packages/ui` には Base（`src/base/<名前>/`）と Case（`src/case/<名前>/`）だけを置く。  
-ドメインを持つコンポーネント（サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置）は、`apps/web` の `features/<機能>/components/` に置く。  
+ドメインを持つコンポーネントのうち、サイトの帯と記事の一覧の行は `apps/web` の `features/<機能>/` に、プレイグラウンドの画面の配置は `apps/playground/src/` の関心ごとのディレクトリに置く。  
 見た目は `variant` のような props で変え、呼び出す側から `className` で上書きしない。  
 DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（APG）のパターンのキーボードの操作に従う。
 
