@@ -29,17 +29,17 @@ function ListHead({ motif, title }: { motif: ArtMotif; title: string }) {
 export const Seigaiha: Story = {
   name: "青海波（記事の一覧の冒頭）",
   args: { motif: "seigaiha", layout: "band" },
-  render: () => <ListHead motif="seigaiha" title="記事" />,
+  render: (args) => <ListHead motif={args.motif} title="記事" />,
 };
 
 export const Kasumi: Story = {
   name: "霞の山並み（記事の一覧の冒頭）",
   args: { motif: "kasumi", layout: "band" },
-  render: () => <ListHead motif="kasumi" title="記事" />,
+  render: (args) => <ListHead motif={args.motif} title="記事" />,
 };
 
 export const MoonPine: Story = {
   name: "月と松（記事の一覧の冒頭）",
   args: { motif: "moonPine", layout: "band" },
-  render: () => <ListHead motif="moonPine" title="記事" />,
+  render: (args) => <ListHead motif={args.motif} title="記事" />,
 };

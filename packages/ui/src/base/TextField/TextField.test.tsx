@@ -61,6 +61,7 @@ describe("TextField", () => {
     const style = getComputedStyle(stroke);
     expect(style.visibility).toBe("visible");
     expect(style.animationName).toBe("fd-draw-stroke");
+    expect(style.maskImage).not.toBe("none");
     const primary = document.body.appendChild(document.createElement("span"));
     primary.className = "bg-primary";
     expect(style.backgroundColor).toBe(getComputedStyle(primary).backgroundColor);

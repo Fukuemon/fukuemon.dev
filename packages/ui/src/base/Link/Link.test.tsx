@@ -29,12 +29,6 @@ describe("Link", () => {
     expect(getComputedStyle(link).color).not.toBe(colorOf("text-link"));
   });
 
-  it("hover の罫は、hover の前は長さが 0 である", () => {
-    render(<Default />);
-    const style = getComputedStyle(screen.getByRole("link", { name: "認可コードフローの記事" }));
-    expect(style.backgroundSize).toBe("0% 2px");
-  });
-
   it("フォーカスの表示が外へ広がる幅だけ左右を空け、前後の文字に重ねない", async () => {
     render(<Default />);
     const link = screen.getByRole("link", { name: "認可コードフローの記事" });

@@ -16,9 +16,9 @@ describe("Dialog", () => {
     // 開いた直後は濃度が 0 から上がる途中なので、見えるまで待つ
     await waitFor(() => expect(dialog).toBeVisible());
     expect(getComputedStyle(dialog).animationName).toBe("fd-fade-in");
-    expect(getComputedStyle(dialog.querySelector("span[aria-hidden]")!).animationName).toBe(
-      "fd-draw-stroke",
-    );
+    const stroke = dialog.querySelector("span[aria-hidden]");
+    if (!(stroke instanceof HTMLElement)) throw new Error("上端の筆の線が無い");
+    expect(getComputedStyle(stroke).animationName).toBe("fd-draw-stroke");
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(opener).toHaveFocus();

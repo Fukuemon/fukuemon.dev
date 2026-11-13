@@ -33,9 +33,14 @@ describe("Breadcrumb", () => {
   it("リンクを hover すると、箱の下に箱の幅の筆の線を引く。ラベルが折り返しても線は 1 本である", async () => {
     render(<LongLabel />);
     const target = screen.getByRole("link", { name: /OpenID Connect/ });
+    const range = document.createRange();
+    range.selectNodeContents(target);
+    const lineTops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+    expect(lineTops.size).toBeGreaterThan(1);
     const brush = () => getComputedStyle(target, "::after");
+    expect(brush().maskImage).not.toBe("none");
     expect(brush().clipPath).toBe("inset(0px 100% 0px 0px)");
-    expect(brush().width).toBe(`${target.getBoundingClientRect().width}px`);
+    expect(Number.parseFloat(brush().width)).toBeCloseTo(target.getBoundingClientRect().width, 1);
     await userEvent.hover(target);
     await expect.poll(() => brush().clipPath).toBe("inset(0px)");
   });

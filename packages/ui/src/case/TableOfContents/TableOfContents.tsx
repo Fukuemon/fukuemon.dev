@@ -107,6 +107,7 @@ export function TableOfContents({ headings }: TableOfContentsProps) {
         )}
         href={`#${item.id}`}
       >
+        {/* a は flex で、直下の子はブロックになり罫が行ごとに出ないので、内側の span に罫を付ける */}
         <span>
           <span className="link-rule">{item.label}</span>
         </span>

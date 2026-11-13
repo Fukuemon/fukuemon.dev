@@ -50,8 +50,7 @@ describe("SeriesPager", () => {
   it("前後の記事の面を hover すると、折り返した題のどの行にも 2px の罫を引く", async () => {
     render(<LongTitle />);
     const target = screen.getByRole("link", { name: /次の記事/ });
-    const title = target.querySelector(".link-rule");
-    if (!(title instanceof HTMLElement)) throw new Error("題の span が無い");
+    const title = screen.getByText(/古いトークンが使われたら/);
     expect(title.getClientRects().length).toBeGreaterThan(1);
     expect(getComputedStyle(title).backgroundSize).toBe("0% 2px");
     await userEvent.hover(target);

@@ -116,8 +116,7 @@ describe("TableOfContents", () => {
   it("長い見出しのリンクを hover すると、折り返した文字のどの行にも 2px の罫を引く", async () => {
     render(<LongHeading />);
     const target = screen.getByRole("link", { name: /引き換えるまで/ });
-    const label = target.querySelector(".link-rule");
-    if (!(label instanceof HTMLElement)) throw new Error("見出しの文字の span が無い");
+    const label = screen.getByText(/引き換えるまで/);
     expect(label.getClientRects().length).toBeGreaterThan(1);
     expect(getComputedStyle(label).backgroundSize).toBe("0% 2px");
     await userEvent.hover(target);
