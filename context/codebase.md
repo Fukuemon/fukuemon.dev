@@ -109,6 +109,8 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
 - `apps/web` は、`@fukuemon/content-model` と `@fukuemon/design-system` に依存する。`@fukuemon/ui` には、まだ依存しない。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
+- `apps/playground` は、`@fukuemon/ui` に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。
+  - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
 island の framework は 1 つに絞る。  
@@ -129,6 +131,7 @@ Expressive Code の規則は cascade layer に属さないので、上書きす�
   - 進捗のキーは `lab:<contentId>` にし、値に完了した手順の index の一覧と最後に開いた手順を持つ。
   - サイドバーの開閉のキーは、`components/Side.astro` の props の `id` から `side:<id>` にする。
   - サイドバーの開閉は、`components/Side.astro` の inline script が描画の前に同期で読む。
+- プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#保存) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の種別の切り替えは URL（ページ）で、分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [design/DesignDoc.md](../design/DesignDoc.md#設計不変量)
@@ -170,6 +173,7 @@ package を切り出すのは、次のどちらかが成り立つときである
 - コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に、パターンを `packages/ui/src/patterns/` に置く。
   - story とテストは、コンポーネントと同じディレクトリに置く。
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/components/` に置く。
+  - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。
 - カタログの Worker の設定は `packages/ui/wrangler.jsonc` に、カタログが返すレスポンスヘッダは `packages/ui/.storybook/public/_headers` に置く。
 
 ### infra
