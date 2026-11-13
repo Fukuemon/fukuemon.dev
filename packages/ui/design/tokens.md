@@ -91,7 +91,7 @@ fukuemon.dev はダークを持つ。
 - 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0023）。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
-- 12px と 13px の文字は、コードを動かす画面のコンソールだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである。
+- 12px と 13px の文字は、コードを動かす画面のコンソールだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062、提案）。
 
 ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
 
