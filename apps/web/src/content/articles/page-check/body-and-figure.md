@@ -28,6 +28,7 @@ English の間の改行は、空白として残る。
 > 引用の段落である。
 
 文中の `inline code` と、[シリーズに入れない記事へのリンク](/articles/page-check-standalone) を置く。
+外部のリンクは [Pele](https://pele.run/) のように置く。
 
 | 項目 | 値                 |
 | ---- | ------------------ |
