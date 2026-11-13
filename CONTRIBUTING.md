@@ -38,12 +38,10 @@ apm lifecycle trust
 
 ```sh
 pnpm exec textlint <直した Markdown>
-pnpm exec textlint --config apps/web/src/content/.textlintrc.json <直した原稿>
 node .claude/hooks/docs/hooks/check-history.mjs
 node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 ```
 
-- サイトの原稿（`apps/web/src/content/` の `.md` と `.mdx`）には、原稿の設定を `--config` で渡す。原稿の設定は、`.mdx` を読むプラグインを持つためである。
 - リンクのチェックは、原稿を対象にしない。原稿はサイト内の URL でリンクするためである。
 - 既存の文書には textlint の指摘が残っている。直した文書だけに掛け、CI も pull request で変えた Markdown だけを見る。
 
@@ -56,7 +54,7 @@ node .claude/hooks/docs/hooks/check-links.mjs --exclude apps/web/src/content/
 - 保護するブランチへの直接のコミットと push を止める。
 - ステージしたファイルに Oxfmt を掛け、整形した結果をステージし直す。
   - Oxfmt の設定は `.oxfmtrc.jsonc` にある。
-- ステージした Markdown に textlint を掛ける。原稿には原稿の設定を使う。
+- ステージした Markdown に textlint を掛ける。
 - commit-msg のフックで、`ticket-number` が issue 番号をメッセージに足す。
   - ブランチの名前が `feature/<issue 番号>` で、1 行目に `#<issue 番号>` がないときに、1 行目の末尾へ足す。
 - commit-msg のフックで、commitlint がメッセージの形式を確認する。規則は `commitlint.config.mjs` にある。
@@ -117,6 +115,6 @@ gitGraph
 
 - [infra/README.md](infra/README.md): Terraform で Cloudflare の基盤を作る手順と、apply の手順
 - [packages/ui/README.md](packages/ui/README.md): Storybook の起動、デザインシステムのチェック、トークンの生成、カタログの配信
-- [design/prototypes/top/README.md](design/prototypes/top/README.md): トップの試作を開く手順と、録画と測定を作り直す手順
+- [docs/design/prototypes/top/README.md](docs/design/prototypes/top/README.md): トップの試作を開く手順と、録画と測定を作り直す手順
 
 配信してよい条件と、credential の置き場は、[context/operations.md](context/operations.md) にある。

@@ -46,7 +46,7 @@ pnpm run build:tokens
 プリミティブトークンの値は fukuemon.dev が決める。
 値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足し、`pnpm run check:contrast` で組み合わせを確認する。
 
-- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
 ## Deployment
 
@@ -65,4 +65,4 @@ custom domain は Terraform で作る。
 
 - [DESIGN.md](DESIGN.md): 画面とコンポーネントのコードを書く前に読む規則。トークン、コンポーネント、カタログの規則は [design/](design/) の 3 つの文書にある
 - [DesignDoc.md](DesignDoc.md): トークンの層とテーマ、コンポーネントの範囲、カタログの構成
-- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../adr/0021-ui-components-and-catalog.md)
+- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)

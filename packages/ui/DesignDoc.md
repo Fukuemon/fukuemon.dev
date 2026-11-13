@@ -18,9 +18,9 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 トークンの層とコンポーネントの分け方は、buddy の `packages/ui` と同じ形にする。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
-- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../adr/0024-tokens-of-fukuemon-dev.md)
-- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../adr/0021-ui-components-and-catalog.md)
-- ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../adr/0028-radius-shadow-and-brush-motion.md)
+- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
+- ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
 
 ## Scope
 
@@ -81,7 +81,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 状態の色は、DADS の色相のとおり、成功を緑、エラーを赤に当て、注意を錆、情報を藍にする。どの値も、生成りの地の上で選ぶ。
 
 - 出典: [DADS の色](https://design.digital.go.jp/dads/foundations/color/)
-- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
 文字と面の組は、WCAG 2.2 の AA を満たす。  
 文字は 4.5:1 以上、入力欄と押せるものの枠とフォーカスの表示は 3:1 以上にする。
@@ -95,7 +95,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - 等幅の和文の字は、BIZ UDGothic の 400 と 700 で受ける。M PLUS 1 Code と比べて、見出しの字に絞ったときのファイルが小さく（400 字で約 70 KB と約 150 KB）、Fontsource に静的なウェイトがあるためである。
 - 見出しの明朝のウェイトは、テーマ変数の `font-semibold`（600）で書く。
 - どの書体も `font-display: swap` にし、和文の分割は preload しない。
-- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../adr/0023-keep-art-and-key-color.md)
+- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../docs/adr/0023-keep-art-and-key-color.md)
 
 テーマ変数には、DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。
 
@@ -130,7 +130,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - 面の上に重なる面（ダイアログ、メニュー、候補の一覧）は、`bg-surface-raised`、1px の `border-field` の枠、`shadow-raised` の影を組にして書く。
   - 影は、ぼかさずに右下へ 4px ずらす。ぼかした影は、ダークの面の上でほぼ見えないためである。
   - 影は、重なる面だけに付ける。ボタンと入力欄には付けない。影が、重なりだけを表すためである。テーマ変数に置く影の名前は、`shadow-raised` の 1 つだけにする。
-- ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../adr/0028-radius-shadow-and-brush-motion.md)
+- ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
 - 記事の本文の幅は、1 行を全角 40 字前後にする。測度の値は、テーマ変数の `--container-prose` に置く。
 - ヘッダーと本文の外枠は、旧サイトの一覧の幅の 68rem にそろえ、テーマ変数の `--container-page` に置く。記事の一覧は、題と日付の列を青海波の帯と同じ外枠の幅に広げ、日付を右端に寄せる。記事の本文の列だけを、`--container-prose` に抑える。ヘッダーのロゴの左端と本文の左端は、余白を外枠の外側に置いてそろえる。
@@ -152,9 +152,9 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 
 動きの時間と緩急は、Tailwind のデフォルトのユーティリティと、テーマ変数のファイルに足した animation とユーティリティで書く。  
 テーマ変数のファイルに足すのは、デフォルトで組めない動きだけにする。  
-サイト全体の動きの規則（位置を動かさない、動きのために JavaScript を配らない、5 秒を超える動きを止める）は、[Design System の Design Doc の「動き」](../design-system/DesignDoc.md#動き) にある。
+サイト全体の動きの規則（位置を動かさない、動きのために JavaScript を配らない、5 秒を超える動きを止める）は、[全体の Design Doc の「動き」](../../docs/design/DesignDoc.md#動き) にある。
 
-ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../adr/0028-radius-shadow-and-brush-motion.md)
+ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
 
 #### 動きを付ける操作
 
@@ -203,7 +203,7 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
 コードの色は、セマンティックトークンのコードの種類に置き、テーマごとに参照先を替える。  
 記事のコードブロック、エディタ、端末は、同じトークンから作ったテーマを使う。
 
-- ADR-0022: [コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る](../../adr/0022-code-colors-from-tokens.md)
+- ADR-0022: [コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る](../../docs/adr/0022-code-colors-from-tokens.md)
 
 | トークン        | 当てる字句                                                       |
 | --------------- | ---------------------------------------------------------------- |

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-apm_version: 0.32.0
+apm_version: 0.35.0
 dependencies:
 - repo_url: fukuemon/agent-harness
   materialization_repo_url: Fukuemon/agent-harness
@@ -417,9 +417,9 @@ dependencies:
   materialization_repo_url: Fukuemon/agent-harness
   name: docs
   host: github.com
-  resolved_commit: 3eb26d7f7792b15de0880093832823d86bcddc1c
-  resolved_ref: docs-v0.2.14
-  version: 0.2.14
+  resolved_commit: 7c2d70e4ba270d288e5760070127d2486ee6c2aa
+  resolved_ref: docs-v0.2.15
+  version: 0.2.15
   virtual_path: packages/docs
   is_virtual: true
   package_type: marketplace_plugin
@@ -489,15 +489,15 @@ dependencies:
     .agents/skills/write-design-docs/references/feature-design-doc.md: sha256:e11254b26e4656d8dbb59a91e383579a46017917a9dd08fcf7d42574522d234d
     .agents/skills/write-design-docs/references/prd.md: sha256:bceae48a95ef3ce5bc4b5467e1b77e8c2e309549c84df6e9d18a07ffce459822
     .agents/skills/write-design-docs/references/spec.md: sha256:27413b5eb34bb2eca8e629f785d7ac95db0e5b81f601e25f592f399a0b6c08a3
-    .agents/skills/write-prose/SKILL.md: sha256:a30b8decfe84ce7817a457b39dd203e8014254517064822fe675010b49bde0eb
+    .agents/skills/write-prose/SKILL.md: sha256:1831cced75aaa8c4c1055efd48dc780baea4102ce7f7735c3669f16f1e007b30
     .agents/skills/write-prose/references/rewrite-patterns.md: sha256:a438b9ac9ad81a2b47eb292a9c98c6e5f8398dbebe4e35d13860f9cd317c0f2f
     .agents/skills/write-prose/references/sequence-diagram.md: sha256:d0deb354174c8267c6f7b99d546a169b5984945ada68399f12826625ebcbd4fb
     .claude/hooks/docs/hooks/check-docs.mjs: sha256:3596d54889bca6b089127de2c3dcd950d9c8e5bd91bbe641747819d35d7db2c9
     .claude/hooks/docs/hooks/check-docs.test.mjs: sha256:196e2369fb048670440ae92bb301aa50af24f5be27dd0c0f76ab8956f460805d
     .claude/hooks/docs/hooks/check-history.mjs: sha256:dd63ff09b2d914503796e6a037410d518e34c848d8c0812e6d5dac9672233afe
     .claude/hooks/docs/hooks/check-links.mjs: sha256:62b0b017174f79436ace8df63b91ddb20342ba25cf9681cd81a882d9093f02ec
-    .claude/hooks/docs/hooks/checks.test.mjs: sha256:0e689c99f108f67b7691905e3861476af2d6f3a0a40f0128beb4954b1f7498b1
-    .claude/hooks/docs/hooks/doc-checks.mjs: sha256:e2d3679d42c21437d25d586c45a9cd62aa90eb12410f2b9f9884af13d71435a0
+    .claude/hooks/docs/hooks/checks.test.mjs: sha256:0629a5aedd750534fce0b515b1aa59cce45eca71299f211c9556dc93f85eefee
+    .claude/hooks/docs/hooks/doc-checks.mjs: sha256:f8c88b1e547d7ae0dcf14e65b27e67998e94d32e548f21fd8456fb5b1f1f8cd7
     .claude/hooks/docs/hooks/list-drift.mjs: sha256:a2422953eb0336fa947354e1ca55e1d24282b3270205d192d9c5fbd416f01475
     .claude/hooks/docs/hooks/package.json: sha256:8005a3491db7d92f36ac66369861589f9c47123d3a7c71e643fc2c06168cd45a
     .claude/skills/setup-design-docs/SKILL.md: sha256:b51a3f833eb56e6d22578253782f4d1c02d65ab6d2e1f80ee10878959575e83f
@@ -512,18 +512,18 @@ dependencies:
     .claude/skills/write-design-docs/references/feature-design-doc.md: sha256:e11254b26e4656d8dbb59a91e383579a46017917a9dd08fcf7d42574522d234d
     .claude/skills/write-design-docs/references/prd.md: sha256:bceae48a95ef3ce5bc4b5467e1b77e8c2e309549c84df6e9d18a07ffce459822
     .claude/skills/write-design-docs/references/spec.md: sha256:27413b5eb34bb2eca8e629f785d7ac95db0e5b81f601e25f592f399a0b6c08a3
-    .claude/skills/write-prose/SKILL.md: sha256:a30b8decfe84ce7817a457b39dd203e8014254517064822fe675010b49bde0eb
+    .claude/skills/write-prose/SKILL.md: sha256:1831cced75aaa8c4c1055efd48dc780baea4102ce7f7735c3669f16f1e007b30
     .claude/skills/write-prose/references/rewrite-patterns.md: sha256:a438b9ac9ad81a2b47eb292a9c98c6e5f8398dbebe4e35d13860f9cd317c0f2f
     .claude/skills/write-prose/references/sequence-diagram.md: sha256:d0deb354174c8267c6f7b99d546a169b5984945ada68399f12826625ebcbd4fb
     .codex/hooks/docs/hooks/check-docs.mjs: sha256:3596d54889bca6b089127de2c3dcd950d9c8e5bd91bbe641747819d35d7db2c9
     .codex/hooks/docs/hooks/check-docs.test.mjs: sha256:196e2369fb048670440ae92bb301aa50af24f5be27dd0c0f76ab8956f460805d
     .codex/hooks/docs/hooks/check-history.mjs: sha256:dd63ff09b2d914503796e6a037410d518e34c848d8c0812e6d5dac9672233afe
     .codex/hooks/docs/hooks/check-links.mjs: sha256:62b0b017174f79436ace8df63b91ddb20342ba25cf9681cd81a882d9093f02ec
-    .codex/hooks/docs/hooks/checks.test.mjs: sha256:0e689c99f108f67b7691905e3861476af2d6f3a0a40f0128beb4954b1f7498b1
-    .codex/hooks/docs/hooks/doc-checks.mjs: sha256:e2d3679d42c21437d25d586c45a9cd62aa90eb12410f2b9f9884af13d71435a0
+    .codex/hooks/docs/hooks/checks.test.mjs: sha256:0629a5aedd750534fce0b515b1aa59cce45eca71299f211c9556dc93f85eefee
+    .codex/hooks/docs/hooks/doc-checks.mjs: sha256:f8c88b1e547d7ae0dcf14e65b27e67998e94d32e548f21fd8456fb5b1f1f8cd7
     .codex/hooks/docs/hooks/list-drift.mjs: sha256:a2422953eb0336fa947354e1ca55e1d24282b3270205d192d9c5fbd416f01475
     .codex/hooks/docs/hooks/package.json: sha256:8005a3491db7d92f36ac66369861589f9c47123d3a7c71e643fc2c06168cd45a
-  content_hash: sha256:2014f2bcb554a74f60592c16bc17b13db1de3e3014b36578c22ff08d2359acdb
+  content_hash: sha256:4dbe2455795600f8f858748c276b507a7ee10c5e52754188a8fca6e1919d8aec
   declared_license: MIT
 - repo_url: fukuemon/agent-harness
   materialization_repo_url: Fukuemon/agent-harness
@@ -939,7 +939,7 @@ deployments:
   owners:
   - fukuemon/agent-harness/packages/docs
   active_owner: fukuemon/agent-harness/packages/docs
-  content_hash: sha256:0e689c99f108f67b7691905e3861476af2d6f3a0a40f0128beb4954b1f7498b1
+  content_hash: sha256:0629a5aedd750534fce0b515b1aa59cce45eca71299f211c9556dc93f85eefee
 - kind: project-relative
   target: claude
   value: .claude/hooks/docs/hooks/doc-checks.mjs
@@ -948,7 +948,7 @@ deployments:
   owners:
   - fukuemon/agent-harness/packages/docs
   active_owner: fukuemon/agent-harness/packages/docs
-  content_hash: sha256:e2d3679d42c21437d25d586c45a9cd62aa90eb12410f2b9f9884af13d71435a0
+  content_hash: sha256:f8c88b1e547d7ae0dcf14e65b27e67998e94d32e548f21fd8456fb5b1f1f8cd7
 - kind: project-relative
   target: claude
   value: .claude/hooks/docs/hooks/list-drift.mjs
@@ -2397,7 +2397,7 @@ deployments:
   owners:
   - fukuemon/agent-harness/packages/docs
   active_owner: fukuemon/agent-harness/packages/docs
-  content_hash: sha256:a30b8decfe84ce7817a457b39dd203e8014254517064822fe675010b49bde0eb
+  content_hash: sha256:1831cced75aaa8c4c1055efd48dc780baea4102ce7f7735c3669f16f1e007b30
 - kind: project-relative
   target: claude
   value: .claude/skills/write-prose/references/rewrite-patterns.md
@@ -3891,7 +3891,7 @@ deployments:
   owners:
   - fukuemon/agent-harness/packages/docs
   active_owner: fukuemon/agent-harness/packages/docs
-  content_hash: sha256:a30b8decfe84ce7817a457b39dd203e8014254517064822fe675010b49bde0eb
+  content_hash: sha256:1831cced75aaa8c4c1055efd48dc780baea4102ce7f7735c3669f16f1e007b30
 - kind: project-relative
   target: codex
   value: .agents/skills/write-prose/references/rewrite-patterns.md
@@ -4080,7 +4080,7 @@ deployments:
   owners:
   - fukuemon/agent-harness/packages/docs
   active_owner: fukuemon/agent-harness/packages/docs
-  content_hash: sha256:0e689c99f108f67b7691905e3861476af2d6f3a0a40f0128beb4954b1f7498b1
+  content_hash: sha256:0629a5aedd750534fce0b515b1aa59cce45eca71299f211c9556dc93f85eefee
 - kind: project-relative
   target: codex
   value: .codex/hooks/docs/hooks/doc-checks.mjs
@@ -4089,7 +4089,7 @@ deployments:
   owners:
   - fukuemon/agent-harness/packages/docs
   active_owner: fukuemon/agent-harness/packages/docs
-  content_hash: sha256:e2d3679d42c21437d25d586c45a9cd62aa90eb12410f2b9f9884af13d71435a0
+  content_hash: sha256:f8c88b1e547d7ae0dcf14e65b27e67998e94d32e548f21fd8456fb5b1f1f8cd7
 - kind: project-relative
   target: codex
   value: .codex/hooks/docs/hooks/list-drift.mjs

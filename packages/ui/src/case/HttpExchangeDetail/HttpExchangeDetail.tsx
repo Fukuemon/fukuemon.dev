@@ -35,6 +35,7 @@ function HeaderTable({ caption, headers }: { caption: string; headers: readonly 
       </Table.Header>
       <Table.Body>
         {headers.map((header, index) => (
+          // oxlint-disable-next-line react/no-array-index-key -- 同じ名前のヘッダが並ぶことがあり、並びも変わらない (context/conventions.md)
           <Table.Row key={`${header.name}-${index}`}>
             <Table.HeaderCell scope="row">
               <span className="font-mono text-code-dense break-words">{header.name}</span>

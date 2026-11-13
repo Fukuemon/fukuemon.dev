@@ -3,8 +3,8 @@ version: 2
 hosting: github
 
 docs:
-  design: design
-  adr: adr
+  design: docs/design
+  adr: docs/adr
   spec: specs
 
 process:
