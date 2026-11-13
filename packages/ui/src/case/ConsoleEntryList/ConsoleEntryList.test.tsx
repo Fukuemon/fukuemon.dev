@@ -86,7 +86,7 @@ describe("ConsoleEntryList", () => {
     expect(treeItem(/^at callback \(\/home\/project\/src\/callback\.js/)).toBeInTheDocument();
   });
 
-  it("中身の無い配列と、stack の無い Error は、ツリーにせず 1 行で出す", () => {
+  it("中身の無い配列と、stack が空の Error は、ツリーにせず 1 行で出す", () => {
     const entries: ConsoleEntry[] = [
       {
         id: "1",
@@ -94,7 +94,7 @@ describe("ConsoleEntryList", () => {
         source: "server.js",
         args: [
           { kind: "array", items: [] },
-          { kind: "error", name: "Error", message: "x", stack: "" },
+          { kind: "error", name: "Error", message: "x", stack: [] },
         ],
       },
     ];

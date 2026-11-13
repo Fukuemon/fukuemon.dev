@@ -10,7 +10,7 @@ import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
 
 export type FileTreeProps = {
   title?: string;
-  /** ファイルとディレクトリの木。children を持つ項目がディレクトリである。 */
+  /** ファイルとディレクトリの木。children を持つ項目がディレクトリである。項目の名前は label で描き、content を使わない。 */
   items: readonly TreeNode[];
   selectedId?: string;
   onSelect: (id: string) => void;

@@ -1,8 +1,9 @@
 import type { TreeNode } from "../../base/TreeView/TreeView";
 
 /**
- * コンソールに出す 1 つの値。記録の形には依らず、描くのに要る区別だけを持つ。
- * 関数と DOM の要素のように複製できなかった値は、文字列にして `text` で渡す。循環した参照は `circular` で渡す。
+ * コンソールに出す 1 つの値。記録の形には依らず、描き方を変える区別だけを持つ。
+ * `function` は名前の分かる関数で、`ƒ name()` と描く。`text` は、ほかの種類に当たらない値（DOM の要素など）を呼ぶ側が文字にしたもので、そのまま描く。
+ * 循環した参照は `circular` で渡す。`error` の `stack` は、呼び出し元のフレームの行の並びで、どの行を出すかは呼ぶ側が決める。
  */
 export type ConsoleValue =
   | { kind: "string"; value: string }
@@ -19,7 +20,7 @@ export type ConsoleValue =
   | { kind: "object"; className?: string; entries: readonly ConsoleProperty[] }
   | { kind: "map"; entries: readonly ConsoleMapEntry[] }
   | { kind: "set"; items: readonly ConsoleValue[] }
-  | { kind: "error"; name: string; message: string; stack?: string };
+  | { kind: "error"; name: string; message: string; stack?: readonly string[] };
 
 export type ConsoleProperty = { key: string; value: ConsoleValue };
 export type ConsoleMapEntry = { key: ConsoleValue; value: ConsoleValue };
@@ -38,7 +39,7 @@ const sizeOf = (value: ConsoleValue): number => {
 
 /** 開いて中を見られる値か。中身の無い配列とオブジェクトは、1 行で全てが見えるので開かない。 */
 export const isExpandable = (value: ConsoleValue): boolean =>
-  value.kind === "error" ? Boolean(value.stack) : sizeOf(value) > 0;
+  value.kind === "error" ? (value.stack?.length ?? 0) > 0 : sizeOf(value) > 0;
 
 /**
  * 値を 1 行の文字にする。DevTools のコンソールに合わせ、入れ子の中の文字列は引用符で囲み、
@@ -123,8 +124,8 @@ const childrenOf = (value: ConsoleValue): TreeEntry[] => {
   }
 };
 
-const stackNodes = (id: string, stack: string): TreeNode[] =>
-  stack.split("\n").map((line, index) => ({
+const stackNodes = (id: string, stack: readonly string[]): TreeNode[] =>
+  stack.map((line, index) => ({
     id: `${id}/stack/${index}`,
     label: line,
     content: <span className="font-mono wrap-anywhere whitespace-pre-wrap">{line}</span>,
@@ -157,7 +158,7 @@ export function toTreeNode(
   if (!isExpandable(value)) return { id, label, content };
   const children =
     value.kind === "error"
-      ? stackNodes(id, value.stack ?? "")
+      ? stackNodes(id, value.stack ?? [])
       : childrenOf(value).map((child, index) =>
           toTreeNode(child.value, `${id}/${index}`, child.key, child.separator),
         );

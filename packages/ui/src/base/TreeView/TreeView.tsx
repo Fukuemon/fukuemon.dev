@@ -6,7 +6,10 @@ export type TreeNode = {
   id: string;
   /** タイプアヘッドで探す文字。content を渡さないときは、画面にもこの文字を描く。 */
   label: string;
-  /** label の代わりに描く中身。文字の一部を太字にするときに使う。読み上げる名前は、この中身の文字になる。 */
+  /**
+   * label の代わりに描く中身。文字の一部を太字にするときに使う。読み上げる名前は、この中身の文字になる。
+   * label と同じ文字を描き、押せる要素を入れない。treeitem の中に、ほかの操作を置けないためである。
+   */
   content?: ReactNode;
   children?: readonly TreeNode[];
   /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */

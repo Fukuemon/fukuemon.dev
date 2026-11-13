@@ -73,10 +73,9 @@ export const ENTRIES: ConsoleEntry[] = [
         name: "TypeError",
         message: "Cannot read properties of undefined (reading 'token')",
         stack: [
-          "TypeError: Cannot read properties of undefined (reading 'token')",
-          "    at callback (/home/project/src/callback.js:12:20)",
-          "    at Server.<anonymous> (/home/project/src/server.js:30:5)",
-        ].join("\n"),
+          "at callback (/home/project/src/callback.js:12:20)",
+          "at Server.<anonymous> (/home/project/src/server.js:30:5)",
+        ],
       },
     ],
   },
