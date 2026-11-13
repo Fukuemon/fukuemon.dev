@@ -20,7 +20,8 @@ verified_commit: ab2da87
 
 - 共有の設定は、tsconfig を `@fukuemon/config` に、Oxlint の設定をルートの `oxlint.config.ts` に、vitest の設定を各 package に置く。
 - `infra/` は、どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
-- `apps/` には、1 つの Worker に配信するアプリを 1 つずつ置く。サイトは `apps/web`、プレイグラウンドは `apps/playground` である。
+- `apps/` には、1 つの Worker に deploy するアプリを 1 つずつ置く。
+  サイトは `apps/web`、プレイグラウンドは `apps/playground` である。
 - サイトのほかのアプリを、`apps/web` に置くか、別の app と Worker にするかは、ADR-0031 の規則で決める。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
 
@@ -159,11 +160,13 @@ package を切り出すのは、次のどちらかが成り立つときである
 
 ### apps/playground
 
-- ツールのページ（`apps/playground/src/` の `node/`、`sql/`、`go/`）どうしは import しない。2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
-  - チェックは Oxlint が行う。`oxlint.config.ts` と `apps/playground/vite.config.ts` は、`apps/playground/` の下の `index.html` を持つディレクトリを、ツールとして読む。
-  - ツールのページの中のディレクトリに、ほかのツールと同じ名前を付けない。Oxlint は、`../<ほかのツールの名前>/` の形の import を、ツールの間の参照として止める。
+- ツールのページ（`apps/playground/src/` の `node/`、`sql/`、`go/`）どうしは import しない。
+  2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
+  - チェックは Oxlint が行う。
+    `oxlint.config.ts` と `apps/playground/vite.config.ts` は、`apps/playground/` の下の `index.html` を持つディレクトリを、ツールとして読む。
+  - ツールのページの中のディレクトリに、ほかのツールと同じ名前を付けない。
+    Oxlint は、`../<ほかのツールの名前>/` の形の import を、ツールの間の参照として止める。
 - `@webcontainer/api` の import は、`packages/node-runtime/src/webcontainer/` の外では Oxlint が止める。
-- ディレクトリの分け方と import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 
 ### infra
 

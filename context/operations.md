@@ -66,7 +66,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 | カタログ         | `design.fukuemon.dev` | `packages/ui/.storybook/public/_headers` |
 | プレイグラウンド | `play.fukuemon.dev`   | `apps/playground/public/_headers`        |
 
-`fukuemon.dev` では、次のように書く。
+`fukuemon.dev` が返すヘッダは次のとおり。
 
 - cross-origin isolation のヘッダは、isolation を求める実行環境を埋め込む記事の URL にだけ返す。`fukuemon.dev` の全体には返さない。
   - 全体に返すと、CORP を返さない第三者のリソースが一律にブロックされる。
@@ -77,15 +77,14 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
 - HSTS に `includeSubDomains` を付ける。HTTP で公開するサブドメインが要るときは外す。
 
-`play.fukuemon.dev` では、次のように書く。
+`play.fukuemon.dev` が返すヘッダとリダイレクトは次のとおり。
 
 - cross-origin isolation の 3 つのヘッダは、Node の実行環境のパス（`/node/*`）にだけ返す。
-  - `Cross-Origin-Opener-Policy: same-origin`
-  - `Cross-Origin-Embedder-Policy: require-corp`
-  - `Cross-Origin-Resource-Policy: cross-origin`
-  - ほかのツールのパスに返すと、別の origin の iframe を読むツールが動かない。
+  3 つの値は、COOP が `same-origin`、COEP が `require-corp`、CORP が `cross-origin` である。
+  - ほかのツールのパスに返すと、別の origin のページを iframe で埋め込むツールが動かない。
   - ADR-0034: [cross-origin isolation のヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md#2-プレイグラウンドでヘッダを返すパス)
-- 本番の切り替え（[#91](https://github.com/Fukuemon/fukuemon.dev/issues/91)）までは、全てのパスに `X-Robots-Tag: noindex` を返す。
+- `fukuemon.dev` の本番を作り直したサイトに切り替えるまでは、すべてのパスに `X-Robots-Tag: noindex` を返す。
+  - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。
 - `/` は、`apps/playground/public/_redirects` で `https://fukuemon.dev/playground` へリダイレクトする。
 
 ## Deployment Conditions
@@ -93,7 +92,8 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
 - カタログの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-catalog workflow が行う。初回の deploy と出し直しは、運用者が deploy-catalog workflow を `workflow_dispatch` で `develop` から手で起動する。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
-- プレイグラウンドの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-playground workflow が行う。初回の deploy と出し直しは、運用者が deploy-playground workflow を `workflow_dispatch` で `develop` から手で起動する。
+- プレイグラウンドの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-playground workflow が行う。
+  初回の deploy と出し直しは、運用者が deploy-playground workflow を `workflow_dispatch` で `develop` から手で起動する。
   - custom domain の `play.<zone>` は、初回の deploy で Worker ができてから apply する。
 - Terraform の apply は、運用者が apply workflow を `workflow_dispatch` で手で起動したときだけ行う。
   - 起動には、`infra` environment の protection rules の承認が要る。
