@@ -31,7 +31,7 @@ export async function startProject(runtime: NodeRuntime, project: NodeProject): 
 
 /**
  * プロジェクトの初期ファイルで実行環境を起動し、startProject を進める。プロジェクトごとに、1 つの実行環境を起動する。
- * React の use に渡すので、同じプロジェクトには、同じ Promise を返す。プロセスの起動は待たずに解決する。
+ * React の use に渡すので、同じプロジェクトには、同じ Promise を返す。プロジェクトのオブジェクトは、project/ が埋め込みの ID ごとに 1 つ返す。プロセスの起動は待たずに解決する。
  */
 export function createRuntimeStarter(
   boot: (options: BootOptions) => Promise<NodeRuntime> = bootNodeRuntime,
