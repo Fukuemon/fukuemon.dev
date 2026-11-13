@@ -53,7 +53,27 @@
   }
   /* rehype-scroll-box が表と図を包む枠。縮めずに横に送る */
   .prose :where(.scroll-box) {
-    @apply overflow-x-auto focus-visible:focus-ring;
+    @apply grid overflow-x-auto focus-visible:focus-ring;
+  }
+  .prose :where(.scroll-box > *) {
+    grid-area: 1 / 1;
+  }
+  /*
+   * 続きがあるときだけ、右端を地の色で薄くする。
+   * あふれない枠ではスクロールの timeline が働かず、既定の opacity: 0 のままになる。
+   * 枠に mask を当てると、外へ広がるフォーカスの輪も切れるので、内容の上に重ねる。
+   */
+  @supports (animation-timeline: scroll()) {
+    .prose .scroll-box::after {
+      @apply pointer-events-none sticky end-0 w-12 justify-self-end bg-linear-to-r from-transparent to-surface opacity-0;
+      content: "";
+      grid-area: 1 / 1;
+      /* shorthand で書くと、ビルドが animation-timeline まで shorthand にまとめ、ブラウザが宣言ごと捨てる */
+      animation-name: scroll-box-fade;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(nearest inline);
+    }
   }
   /* w-full のままだと、表は送られずに列を潰して収まる */
   .prose :where(.scroll-box > table) {
@@ -75,6 +95,17 @@
     @apply block;
     /* Pele は SVG の style に max-width: 100% を書き、列に合わせて文字ごと縮める。!important でないと style に勝てない */
     max-width: none !important;
+  }
+}
+
+/* 右端に着く少し手前から消し始め、端に着いたときに消えきる */
+@keyframes scroll-box-fade {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
