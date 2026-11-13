@@ -28,7 +28,7 @@ export type TreeViewProps = {
   onRequestRename?: (id: string) => void;
   /** 渡すと、項目で Delete のキーを押したときに呼ぶ。削除の確認を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
   onRequestDelete?: (id: string) => void;
-  /** compact は項目を 24px に詰め、文字を 12px にする。コードを動かす画面のコンソールの値の木に使う。 */
+  /** compact は、項目の高さを 24px 以上、文字を 12px にする。コードを動かす画面のコンソールの値の木に使う。 */
   density?: "default" | "compact";
 };
 
