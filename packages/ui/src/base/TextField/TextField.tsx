@@ -47,7 +47,7 @@ export function TextField({
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className={clsx("flex flex-col", isCompact ? "gap-1" : "gap-2")}>
+    <div className={clsx("flex flex-col", "gap-2")}>
       <label
         className={clsx(
           isCompact ? "text-label-compact" : "text-label",
@@ -57,10 +57,17 @@ export function TextField({
         htmlFor={id}
       >
         {label}
-        {required && <span className="ml-2 text-caption text-danger">必須</span>}
+        {required && (
+          <span className={clsx("ml-2 text-danger", isCompact ? "text-compact" : "text-caption")}>
+            必須
+          </span>
+        )}
       </label>
       {description !== undefined && (
-        <p className="text-caption text-text-secondary" id={descriptionId}>
+        <p
+          className={clsx(isCompact ? "text-compact" : "text-caption", "text-text-secondary")}
+          id={descriptionId}
+        >
           {description}
         </p>
       )}
@@ -123,7 +130,13 @@ export function TextField({
         </div>
       )}
       {error !== undefined && (
-        <p className="flex items-center gap-1 text-caption text-danger" id={errorId}>
+        <p
+          className={clsx(
+            "flex items-center gap-1 text-danger",
+            isCompact ? "text-compact" : "text-caption",
+          )}
+          id={errorId}
+        >
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" width="16">
             <circle cx="8" cy="8" fill="none" r="7" stroke="currentColor" strokeWidth="1.5" />
             <path d="M8 4v5M8 11v1" stroke="currentColor" strokeWidth="1.5" />

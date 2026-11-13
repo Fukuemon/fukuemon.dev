@@ -29,9 +29,8 @@ export type ToolPaneProps = {
 const JoinedContext = createContext(false);
 
 /**
- * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は、外の枠の代わりに右と下だけに 1px の罫を引く。
- * 並べた領域の間の罫が 2 重にならず、1px になる。並べ方（flex、grid）は呼ぶ側が書き、領域の間の隙間を空けない。
- * 画面の左と上の端の罫は、画面の側が描く。
+ * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は四方に 1px の罫を引き、左と上へ 1px ずらして隣の罫に重ねる。
+ * 隣の領域と高さや幅がそろわない並びでも、領域の間の罫は 1px になる。並べ方（flex、grid）は呼ぶ側が書き、領域の間の隙間を空けない。
  */
 export function ToolPaneGroup({ children }: { children: ReactNode }) {
   return <JoinedContext value>{children}</JoinedContext>;
@@ -60,7 +59,8 @@ export function ToolPane({
       aria-labelledby={titleId}
       className={clsx(
         "flex min-h-0 min-w-0 flex-col border-border bg-surface text-text",
-        isJoined ? "border-r border-b" : "border",
+        "border",
+        isJoined && "-mt-px -ml-px",
       )}
     >
       <div className="flex min-h-8 items-center justify-between gap-2 border-b border-border pr-1 pl-3">

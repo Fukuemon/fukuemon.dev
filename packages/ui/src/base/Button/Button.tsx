@@ -6,6 +6,7 @@ export type ButtonVariant = "primary" | "secondary" | "danger";
 /**
  * ボタンの高さ。S は 40px で、見た目の外まで 44px を押せる。M は 48px である。
  * XS は 28px で、文字を 13px にする。コードを動かす画面の帯だけに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
+ * ほかの Base の density="compact" と違い、Button は高さを size で選ぶので、同じ軸に XS を足している。
  */
 export type ButtonSize = "XS" | "S" | "M";
 
