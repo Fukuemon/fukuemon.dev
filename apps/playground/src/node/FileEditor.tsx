@@ -6,6 +6,7 @@ import type { NodeRuntime } from "@fukuemon/node-runtime";
 import { useEffect, useRef } from "react";
 
 import { codeEditorExtensions } from "../code-editor/extensions";
+import { syncFile } from "./file-sync";
 import { languageOf } from "./language";
 
 function languageExtension(path: string): Extension[] {
@@ -30,9 +31,7 @@ export function FileEditor({ path, files, initialText }: FileEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let lastWritten: string | undefined;
-    let writing = 0;
-    let closed = false;
+    let sync: ReturnType<typeof syncFile> | undefined;
     const view = new EditorView({
       parent: parentRef.current ?? undefined,
       doc: files ? "" : initialText,
@@ -42,38 +41,23 @@ export function FileEditor({ path, files, initialText }: FileEditorProps) {
         EditorState.readOnly.of(files === undefined),
         EditorView.updateListener.of((update) => {
           // 実行環境から読んだ中身を写したときは、書き戻さない
-          if (
-            !files ||
-            !update.docChanged ||
-            update.transactions.some((t) => t.isUserEvent("load"))
-          )
-            return;
-          const text = update.state.doc.toString();
-          lastWritten = text;
-          writing++;
-          void files.write(path, text).finally(() => writing--);
+          if (!update.docChanged || update.transactions.some((t) => t.isUserEvent("load"))) return;
+          sync?.input(update.state.doc.toString());
         }),
       ],
     });
-    if (!files) return () => view.destroy();
-
-    const load = async () => {
-      const text = await files.read(path).catch(() => undefined);
-      // 自分が書いた中身の通知と、書き込みの途中の通知では、入力中の中身を置き換えない
-      if (closed || text === undefined || writing > 0 || text === lastWritten) return;
-      if (text === view.state.doc.toString()) return;
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: text },
-        userEvent: "load",
+    if (files) {
+      sync = syncFile(files, path, {
+        read: () => view.state.doc.toString(),
+        replace: (text) =>
+          view.dispatch({
+            changes: { from: 0, to: view.state.doc.length, insert: text },
+            userEvent: "load",
+          }),
       });
-    };
-    void load();
-    const unsubscribe = files.changes.subscribe((paths) => {
-      if (paths.includes(path)) void load();
-    });
+    }
     return () => {
-      closed = true;
-      unsubscribe();
+      sync?.close();
       view.destroy();
     };
   }, [path, files, initialText]);
