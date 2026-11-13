@@ -43,6 +43,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - story は、Vitest のブラウザのモードでテストとして動かす。ブラウザは Playwright の chromium を使う。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
 - `@electric-sql/pglite` は、プレイグラウンドで、`@fukuemon/sql-runtime` が SQL だけを動かすツールに使う。Node の実行環境の中の DB のプロセスには、`@fukuemon/node-runtime` の `guest/` の `package.json` に書いた同じバージョンを、実行環境の中で `npm install` する。
+- CodeMirror 6 は、プレイグラウンドのツールの入力欄のエディタに使う。色は、`packages/ui` のテーマ変数を読む。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。`vp build` は、`apps/playground` の build に使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。

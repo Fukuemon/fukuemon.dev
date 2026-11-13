@@ -78,9 +78,10 @@ apps/playground/
   go/index.html           Go を動かすツールのエントリーポイント
   src/
     node/                 Node の実行環境のページ。レイアウト、ペインのコンポーネント、Context、選択の状態、起動と保存を進める React の外のモジュール
-    sql/                  SQL だけを動かすツールのページ
+    sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
     go/                   Go を動かすツールのページ
-    sql-console/          SQL の入力欄と、結果の表
+    sql-console/          SQL の入力欄、結果の表、実行計画の木
+    code-editor/          ツールのエディタに共通の、CodeMirror 6 の拡張の組み立て
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
     ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
@@ -121,6 +122,7 @@ flowchart TB
   sql["src/sql"]
   go["src/go"]
   console["sql-console"]
+  codeeditor["code-editor"]
   runtime["@fukuemon/node-runtime"]
   database["@fukuemon/sql-runtime"]
   runner["@fukuemon/go-runtime"]
@@ -150,6 +152,7 @@ flowchart TB
   go --> ui
   go --> ai
   console --> database
+  console --> codeeditor
   console --> ui
   runtime --> database
   workspace --> project
@@ -355,7 +358,8 @@ flowchart TB
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
   - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
-  - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値を、props で受ける。`status` は、`useSyncExternalStore` で読む。
+  - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値、入力欄のファイルの名前、DB が止まったときの復帰の案内を、props で受ける。`status` は、`useSyncExternalStore` で読む。実行の結果は、このコンポーネントが持ち、表に出す。
+  - 復帰の動きは `SqlDatabase` の実装ごとに違うので、復帰の案内の文は呼ぶ側が渡す。
   - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
@@ -367,6 +371,22 @@ flowchart TB
 - SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。
 - SQL だけを動かすツールの PGlite と、Go を動かすツールの Yaegi は、訪問者が実行のボタンを押したときと、AI からの操作の `sql_run_query`、`go_run`、`go_test` が呼ばれたときに読み込む。ページを開いたときには、読み込まない。
   - ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../docs/adr/0063-ai-operations-for-sql-and-go.md)
+
+SQL だけを動かすツールのページは、次のとおり組む。
+
+- `src/sql/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、次のものを持つ。
+  - 入力欄の今の SQL の store と、値を変える関数。初期値は、プロジェクトの `files` の、`open` のファイルの中身である。
+  - 実行中かどうかの store。
+  - `SqlDatabase` を Web Worker で動かす実装（`@fukuemon/sql-runtime`）と、PGlite の読み込みを始める関数。
+  - 実行する関数。実行中かどうかの値を変え、`SqlDatabase` の `run` を呼び、`SqlResponse` を返す。実行中に呼んだときは、実行せずに `error` を持つ値を返す。
+- 同じモジュールが、ページの URL のクエリからプロジェクトを読み、埋め込みの ID の SqlSession を返す関数を持つ。ページは、この関数の Promise を `use` で読む。
+- ページは、このモジュールの値を `useSyncExternalStore` で読み、`sql-console/` のコンポーネントに渡す。
+- 入力欄のエディタは、CodeMirror 6 にする。Ctrl か ⌘ と Enter で実行する。
+- CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境と Go を動かすツールのエディタも、同じ組み立てを使い、言語の拡張だけを足す。
+  - 行番号、今いる行の帯、字下げの補助線、対応する括弧の強調を出す。折りたたみの印は出さない。Tab のキーは字下げに使わない。
+  - 色は、`packages/ui` のテーマ変数を読む。字句の色は `--color-code-*`、今いる行の帯は `--color-surface`、字下げの補助線は `--color-border`、対応する括弧の枠は `--color-border-field` である。
+- 実行のボタンを押してから結果が出るまで、待っている段階を `Loading` で出す。段階は、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つである。
+- 埋め込みのときは、ページの題を出さない。
 
 ### プロジェクト
 
@@ -381,6 +401,7 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
 - JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
+- 埋め込みの ID が `<英小文字、数字、ハイフン>/<英小文字、数字、ハイフン>` の形でないときと、JSON の `tool` が開いたページのツールと違うときも、JSON を読めないときと同じ表示にする。形でない ID では、JSON を取得せず、エラーの文に ID を出さない。URL を作った人の任意の文を、ページに出さないためである。
 
 JSON は、次の値を持つ。
 
@@ -523,8 +544,14 @@ type SqlResult = {
 
 - 複数の文を 1 回で渡したときは、`results` に、文ごとの結果が入る。SQL の画面は、最後の文の結果を表示する。
 - 1 つの文が失敗したときは、全部を取り消す。SQL の画面は、エラーと、全部を取り消したことを表示する。
+  - SQL の画面が、全部を取り消したことを表示するのは、`error` が `code`（SQLSTATE）を持つときだけである。`code` を持たない `error`（PGlite の読み込みの失敗、Web Worker の異常終了）では、取り消した文は無いので、メッセージだけを出す。
 - 1 つの結果が 100,000 行を超えるときは、`rows` に先頭の 100,000 行を入れ、`totalRows` に全体の行の数を、`truncated` に `true` を入れる。SQL の画面は、切ったことと、全体の行の数を表示する。
 - SQL の画面は、結果をページ送りで表示する。1 ページの行の数は、訪問者が 10、50、100、500 から選ぶ。デフォルトは 100 である。
+- 結果の列が `QUERY PLAN` の 1 つだけのときは、実行計画として表示する。1 行で JSON の値のときは、`FORMAT JSON` の出力として、ノードの木（`TreeView`）と、`Planning Time` と `Execution Time` を出す。それ以外は、行をつないだテキストで出す。
+  - SQL の画面は、訪問者が書いた文を書き換えて実行し直さない。`EXPLAIN ANALYZE` は文を実際に実行するので、書き換えて 2 回実行すると、`INSERT` のような文も 2 回実行されるためである。
+  - 実行計画の木は、`sql-console/` に置く。使うのが `sql-console/` だけのためである。
+- 結果のセルは、`NULL` を `NULL` と出し、空の文字列と見分けられるようにする。日時は ISO 8601、`bytea` は `\x` で始まる 16 進数、JSON とそのほかのオブジェクトは JSON の文字列で出す。
+- SQL だけを動かすツールの DB の中身は、保存しない。ページを開き直すと、初期データの SQL を実行した状態に戻る。
 - `run` は、SQL の失敗でも、DB が止まっているときでも、Promise を失敗させず、`error` を持つ値を返す。
 - SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`@fukuemon/sql-runtime` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
   - `guest/` の DB のプロセスのスクリプトは、この関数を import し、ビルドで 1 つのファイルに束ねる。PGlite と `pglite-socket` は束ねず、実行環境の中で `npm install` する。
@@ -541,6 +568,9 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
 - `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。
+- Web Worker で動かす実装は、`SqlDatabase` に加えて、読み込みの段階の store（`idle`、`loading`、`seeding`、`ready`、`failed`）と、読み込みを始める関数を持つ。Web Worker は、最初に読み込みを始める関数か `run` を呼んだときに作る。
+- PGlite を読み込めないときと、初期データの SQL が失敗したときは、`run` が `error` を持つ値を返し、Web Worker を捨てる。次の `run` で、Web Worker を作り直す。Web Worker を作れないときも、同じに扱う。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
+- Web Worker を捨てる処理は、`@fukuemon/sql-runtime` の中の 1 つの関数に置く。実行を止める手段を公開するときは、この関数を使う。
 
 ## Interface
 
