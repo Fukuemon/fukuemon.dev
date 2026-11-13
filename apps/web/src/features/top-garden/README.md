@@ -15,7 +15,8 @@ Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/REA
 
 ## Structure
 
-コードは、動く場所と制約の違いで 3 つのディレクトリに分ける。
+コードは、墨の絵、`head` のスクリプト、立体の場面という関心ごとで、3 つのディレクトリに分ける。
+それぞれ、動く場所と制約が違う。
 墨の絵と場面の両方が読む `layout.ts` と `rng.ts` は、このディレクトリの直下に置く。
 `Profile.astro` は、3 つのどれにも当たらないので、直下に置く。
 ディレクトリの間の import は、`scene/` から `stage/` へは型だけ、`stage/` から `scene/` へは場面のバンドルの URL（`?worker&url`）だけにする。
