@@ -1,6 +1,7 @@
-import type { PlaygroundProject } from "@fukuemon/playground-project";
+import { type PlaygroundProject, playgroundProjectSchema } from "@fukuemon/playground-project";
 import { describe, expect, it, vi } from "vitest";
 
+import { nodeDefaultProject, sqlDefaultProject } from "./defaults";
 import { createProjectLoader, fetchProject, isEmbedId, projectUrl } from "./project";
 
 const sqlProject = {
@@ -12,6 +13,15 @@ const sqlProject = {
 
 const respond = (body: unknown, init: ResponseInit = {}) =>
   vi.fn<typeof fetch>(async () => new Response(JSON.stringify(body), init));
+
+describe("デフォルトのプロジェクト", () => {
+  it.each([
+    ["SQL", sqlDefaultProject],
+    ["Node", nodeDefaultProject],
+  ])("%s のツールのものは、プロジェクトの schema に合う", (_, project) => {
+    expect(playgroundProjectSchema.safeParse(project).success).toBe(true);
+  });
+});
 
 describe("projectUrl", () => {
   it("埋め込みの ID から、fukuemon.dev の JSON の URL を作る", () => {
@@ -55,6 +65,11 @@ describe("fetchProject", () => {
     ["404", "a/b", respond({}, { status: 404 })],
     ["schema に合わない JSON", "a/b", respond({ tool: "sql" })],
     ["ほかのツールのプロジェクト", "a/b", respond({ ...sqlProject, tool: "go" })],
+    [
+      "作業ディレクトリの外を指す files のキー",
+      "a/b",
+      respond({ ...sqlProject, files: { ...sqlProject.files, "../a.sql": "" } }),
+    ],
     ["JSON でない本文", "a/b", vi.fn<typeof fetch>(async () => new Response("<html>"))],
     [
       "取得の失敗",

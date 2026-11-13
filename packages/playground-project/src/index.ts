@@ -6,9 +6,24 @@ const startCommandSchema = z.object({
   name: z.string().min(1),
 });
 
+const UNSAFE_SEGMENTS = new Set(["", ".", "..", "__proto__"]);
+
+/** 作業ディレクトリからの相対のパスとして書けるキーか。作業ディレクトリの外と、オブジェクトの prototype を指せないようにする。 */
+const isFilePath = (path: string) =>
+  !/[\\\0]/.test(path) && path.split("/").every((segment) => !UNSAFE_SEGMENTS.has(segment));
+
+// z.record は __proto__ のキーを検証の前に落とすので、生の入力のキーで確かめる
+const filesSchema = z
+  .unknown()
+  .refine(
+    (files) => typeof files !== "object" || files === null || Object.keys(files).every(isFilePath),
+    "files のキーは、空、.、..、__proto__ の区切りと、\\ と NUL を含まないパスにする",
+  )
+  .pipe(z.record(z.string(), z.string()));
+
 const common = {
   version: z.string().min(1),
-  files: z.record(z.string(), z.string()),
+  files: filesSchema,
   open: z.string().min(1),
 };
 
