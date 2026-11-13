@@ -25,9 +25,9 @@ status: draft
 
 ### トップの庭の見た目の回帰
 
-`apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して流す。
-CI では、`pnpm run check` がビルドの後に流す。
-手元では、ビルドしてから次を流す。
+`apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
+CI では、`pnpm run check` がビルドの後に実行する。
+ローカル環境では、ビルドしてから次を実行する。
 
 ```sh
 pnpm run build
@@ -35,11 +35,14 @@ pnpm run test:visual
 ```
 
 - 庭は WebGL で描くので、GPU に依らないよう、chromium に SwiftShader で描かせる。
-- 基準の画像は、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。比べるときは、画素の 1% までの違いを許す。macOS の chromium で流しても、この範囲に収まる。
-- 場面を変えて基準の画像を作り直すときは、CI と同じ Linux の Playwright のイメージで作る。CI で流す環境と同じ絵を基準にするためである。
+- 基準のスナップショットは、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
+  - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
+  - macOS の chromium で実行しても、この範囲に収まる。
+- 場面を変えて基準のスナップショットを作り直すときは、CI と同じ Linux の Playwright のイメージで作る。
+  - CI で実行する環境と同じ絵を基準にするためである。
 
-基準の画像の作り直し方は、次のとおり。
-`apps/web/dist/` を手元で配信し、コンテナから `host.docker.internal` で開く。
+基準のスナップショットの作り直し方は、次のとおり。
+`apps/web/dist/` をローカル環境で配信し、コンテナから `host.docker.internal` で開く。
 イメージのバージョンは、`@playwright/test` のバージョンに合わせる。
 
 ```sh
@@ -50,7 +53,7 @@ docker run --rm --platform linux/amd64 --ipc=host -v "$PWD":/work -w /work/apps/
   node node_modules/@playwright/test/cli.js test -c e2e/playwright.config.ts --update-snapshots
 ```
 
-`python3 -m http.server` は別の端末で流し、作り直した後に止める。
+`python3 -m http.server` は別のターミナルで実行し、作り直した後に止める。
 
 ## Test Data and Login
 

@@ -239,12 +239,14 @@ SVG を `set:html` で HTML に置くので、SVG の中の `path` にユーテ�
 
 ### 場面の束
 
-場面の束は、three と場面のモジュールを 1 つにまとめた JavaScript のファイルである。
+場面の束は、three と場面のモジュールを 1 つにまとめた JavaScript のバンドルである。
 トップの `head` の inline script が、庭を出すときだけ、module の script で読み込む。
 
-- 束の大きさの上限は、gzip で 160 KB（160,000 バイト）である。ビルドの後に `pnpm run check:garden-bundle` が確認する。
+- 束の大きさの上限は、gzip で 160 KB（160,000 バイト）である。
+  - ビルドの後に `pnpm run check:garden-bundle` が確認する。
 - 束は、ビルドのときに Vite が IIFE の 1 ファイルにまとめ、ファイル名にハッシュを付けて `/_astro/` に置く。
-- 場面の色の値は、場面の色の表のモジュールだけに書く。デザインシステムのトークンの対象の外である。
+  - 開発サーバーは束を ES モジュールのまま配るので、どちらでも動く module の script で読み込む。
+- 場面の色は、デザインシステムのトークンの対象の外である（[デザインシステムの Design Doc の Scope](../../../../packages/ui/DesignDoc.md#scope)）。
 
 ### 確認用のページ
 

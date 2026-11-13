@@ -209,11 +209,13 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - `packages/ui/src/case/ConsoleEntryList/ConsoleEntryList.tsx` の 1 行の値の並び。`console.*` に同じ値の引数を渡すことがあり、値だけでは key が重なる。
   - どの一覧も、描いた後に並びが変わらない。
 - Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
-- 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene-colors.ts` とそのテストを見ない（`EXCLUDES`）。
-  - トップの庭の場面の色は、トークンの対象の外に置くと決めた（`packages/ui/DesignDoc.md` の Scope）。
+- 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
+  - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。
-- 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を見ない（行ごとの `design-system-allow`）。色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
-- Oxlint の `import/default` を、`apps/web/src/features/top-garden/TopStageScript.astro` の `?worker&url` の import の 1 行だけで抑制する。Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+- 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
+  - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
+- Oxlint の `import/default` を、`apps/web/src/features/top-garden/TopStageScript.astro` の `?worker&url` の import の 1 行だけで抑制する。
+  - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 
