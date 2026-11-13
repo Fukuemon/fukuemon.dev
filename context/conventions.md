@@ -70,9 +70,6 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - 手順の指示は「〜する」「〜を確認する」と書き、「〜してください」と書かない。
   - リポジトリの文書（context、PRD、Design Doc、ADR など）も、`である` 調で書く。
 - サイトの UI の文言（ボタン、状態の表示、空の状態の案内）は、`ですます` 調で書く。
-- 原稿の textlint の設定は `apps/web/src/content/.textlintrc.json` に置く。
-  - ルートの `.textlintrc.json` に、`.mdx` を読むプラグインと、原稿だけに許す語を足している。
-  - textlint は、実行したディレクトリの設定を 1 つだけ読み、ディレクトリごとに設定を重ねない。原稿には `--config` で原稿の設定を渡す。
 - 記事は `articles/` に、ハンズオンは `labs/` に置く。frontmatter に種別を書かない。
 - 実行パネルを置く記事とハンズオンは `.mdx` で書き、置かないものは `.md` で書く。
   - `interactive.level` が `local` のハンズオンは実行パネルを持たないので、`.md` で書く。
@@ -195,11 +192,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
 - knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
-- knip は、textlint の規則とプラグインのパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則とプラグインの名前で読み込み、import されないため。
-- 原稿の textlint は、ai-words-ja の `実測` と `走ら` を指摘しない（`allows`）。
-  - どちらも、ハンズオンの手順の見出し（`見積もりと実測を並べる`、`VACUUM を走らせる`）にあり、手順の見出しは書き換えないと決めている。
-  - `実測` は、`EXPLAIN ANALYZE` が返す実際の値を指す語として定着している。
-  - `allows` は検出した語だけと照らし、前後の文脈で絞れないため、語の形で除外する。
+- knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
   - 承認した ADR-0026 の題と、PRD の性能の要求の行にあり、言い換えると承認した文が変わる。
