@@ -69,7 +69,7 @@ apps/playground/
   src/
     slides/               スライドのエディタのページ。レイアウト、プレビュー、書き出し、ファイルを開く処理、documents/ に Markdown を渡す時点を決める React の外のモジュール
     documents/            名前を付けた図とスライドの保存、開いているものの状態、一覧のコンポーネント。キャンバスのツールと共有する
-    code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント。Node の実行環境のページと sql-console/ と共有する
+    code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント。Node の実行環境のページ、Go を動かすツールのページ、sql-console/ と共有する
 
 apps/web/
   src/content/slides/     運営者が公開するスライドの Markdown
@@ -111,7 +111,7 @@ flowchart TB
 - `documents/` は、`@fukuemon/slides` を import しない。スライドの中身は、文字列として受け取る。
 - `documents/` は、ツールの種類に依らない処理を、React の外のモジュールとして持つ。持つ処理の一覧は、[キャンバスの Design Doc の「ディレクトリ」](../canvas/DesignDoc.md#ディレクトリ) にある。
 - `src/slides/` は、エディタとのやり取り、中身が変わったかの比較、ファイルの形式の処理を持つ。`documents/` に Markdown を渡す時点（500 ミリ秒の待ち）も、`src/slides/` が持つ。開いているスライド、書き込み、書き込みの結果は、持たない。
-- `code-editor/` は、`sql-console/` と同じく、ツールのページのディレクトリから import される。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
+- `code-editor/` は、ツールのページのディレクトリと `sql-console/` から import される。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - `packages/slides/src/page/` のスクリプトは、ブラウザで動く。tsconfig と lint の対象を、package のほかのコードと分ける。package のほかのコードは、`page/` のファイルを、文字列として読み込む。
 
 ### `@fukuemon/slides`
