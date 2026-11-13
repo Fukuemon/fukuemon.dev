@@ -1,11 +1,12 @@
 ---
+import { Link } from "@fukuemon/ui";
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
-<SiteLayout title="ページが見つかりません | fukuemon.dev" description="お探しのページは見つかりませんでした。">
+<SiteLayout title="ページが見つかりません | fukuemon.dev" description="お探しのページは見つかりませんでした。" noindex>
   <div class="px-4 py-8">
     <h1 class="font-heading text-heading-lg font-semibold">ページが見つかりません</h1>
     <p class="mt-4 text-body">お探しのページは、移動したか削除されました。</p>
-    <p class="mt-4 text-body"><a class="text-link underline underline-offset-4 hover:decoration-2 focus-visible:focus-ring visited:text-link-visited" href="/">トップへ戻る</a></p>
+    <p class="mt-4 text-body"><Link href="/">トップへ戻る</Link></p>
   </div>
 </SiteLayout>

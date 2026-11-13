@@ -1,3 +1,6 @@
 @import "tailwindcss";
 @import "@fukuemon/ui/fonts.css";
 @import "@fukuemon/ui/theme.css";
+
+/* Tailwind CSS は node_modules の下を走査しないので、packages/ui のコンポーネントのクラスを足す */
+@source "../../../../packages/ui/src";
