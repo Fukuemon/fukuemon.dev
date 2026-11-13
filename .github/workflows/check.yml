@@ -57,3 +57,12 @@ jobs:
 
       # knip は check に含む。無指摘の状態から始めるので、増えたら落とす
       - run: pnpm run check
+
+      # トップの庭の見た目の回帰が落ちたときに、CI で描いた絵と差分を取り出せるようにする（context/testing/e2e.md）
+      - if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: web-visual-test-results
+          path: apps/web/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

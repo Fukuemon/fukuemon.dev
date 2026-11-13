@@ -1,4 +1,4 @@
-import { seasonOf, timeOfDayOf, type Season, type TimeOfDay } from "./season";
+import { seasonOf, timeOfDayOf, type Season, type SeasonTime, type TimeOfDay } from "./season";
 import { takeFirstVisit, type SeenStore } from "./visit";
 
 interface StageRoot {
@@ -7,10 +7,7 @@ interface StageRoot {
 }
 
 /** 端末の日付と時刻の代わりに使う、季節と時間帯 */
-interface StageOverride {
-  readonly season?: Season;
-  readonly time?: TimeOfDay;
-}
+type StageOverride = Partial<SeasonTime>;
 
 /** `applyStage` が読むページと端末の値。inline script では、`document` や `localStorage` から作る */
 export interface StageEnv {
@@ -19,7 +16,7 @@ export interface StageEnv {
   readonly override: StageOverride;
   readonly reducedMotion: boolean;
   readonly storage: () => SeenStore;
-  /** 場面の束を読み込む。失敗したら、渡した関数を呼ぶ。束が無いときは null */
+  /** 場面のバンドルを読み込む。失敗したら、渡した関数を呼ぶ。バンドルが無いときは null */
   readonly load: ((onError: () => void) => void) | null;
 }
 
@@ -31,8 +28,8 @@ interface StageFns {
 
 /**
  * 季節と時間帯を `html` の `data-season` と `data-time` に書き、最初の訪問かを記録する。
- * 動きを減らす設定のときと、場面の束が無いときは、庭を出さない。記録は、庭を出すかに関わらず書く。
- * 庭を出すときは class `stage-on` を付け、最初の訪問なら class `intro` も付けて、場面の束を読み込む。
+ * 動きを減らす設定のときと、場面のバンドルが無いときは、庭を出さない。記録は、庭を出すかに関わらず書く。
+ * 庭を出すときは class `stage-on` を付け、最初の訪問なら class `intro` も付けて、場面のバンドルを読み込む。
  * 読み込みに失敗したら、2 つの class を外し、ふつうのページに戻す。記録は戻さない。
  *
  * `head` の inline script に文字列にして埋め込むので、この関数の外の名前を参照しない。
@@ -65,11 +62,12 @@ export function readOverride(search: string): StageOverride {
 /**
  * トップの `head` に置く inline script の中身を作る。
  * `dev` が true のときだけ、URL の引数を読む処理を入れる。`bundle` を渡さないときは、庭を出さない。
+ * バンドルは module の script で読み込む。開発のサーバーはバンドルを ES モジュールのまま配り、本番のビルドの IIFE は module としても動くためである。
  */
 export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";
   const load = bundle
-    ? `function(e){var s=document.createElement("script");s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
+    ? `function(e){var s=document.createElement("script");s.type="module";s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
     : "null";
   return (
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +

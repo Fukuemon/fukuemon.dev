@@ -5,6 +5,12 @@
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type TimeOfDay = "morning" | "day" | "evening" | "night";
 
+/** 場面の季節と時間帯 */
+export interface SeasonTime {
+  readonly season: Season;
+  readonly time: TimeOfDay;
+}
+
 /** 端末の日付の月で季節を返す。3〜5 月が春、6〜8 月が夏、9〜11 月が秋、12〜2 月が冬である。 */
 export function seasonOf(date: Date): Season {
   const seasons: readonly Season[] = ["winter", "spring", "summer", "autumn"];
