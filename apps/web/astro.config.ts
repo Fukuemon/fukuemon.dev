@@ -2,10 +2,16 @@ import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
 import { unified } from "@astrojs/markdown-remark";
-import expressiveCode, { ExpressiveCodeTheme } from "astro-expressive-code";
+import expressiveCode, { ExpressiveCodeTheme, pluginFramesTexts } from "astro-expressive-code";
 import { toVsCodeTheme } from "@fukuemon/ui/code-theme";
 import { rehypeJaLinebreak } from "./src/lib/rehype-ja-linebreak";
 import { rehypeMermaid } from "./src/lib/rehype-mermaid";
+
+// サイトの UI の文言は、ですます調の日本語にする (context/conventions.md)
+pluginFramesTexts.overrideTexts(undefined, {
+  copyButtonTooltip: "クリップボードにコピーします",
+  copyButtonCopied: "コピーしました",
+});
 
 export default defineConfig({
   site: "https://fukuemon.dev",
@@ -46,6 +52,8 @@ export default defineConfig({
           terminalTitlebarBorderBottomColor: "var(--color-border)",
           terminalTitlebarForeground: "var(--color-code-text)",
           terminalTitlebarDotsForeground: "var(--color-border-field)",
+          tooltipSuccessBackground: "var(--color-success-surface)",
+          tooltipSuccessForeground: "var(--color-text)",
         },
       },
     }),

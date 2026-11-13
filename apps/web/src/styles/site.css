@@ -64,3 +64,12 @@
     @apply block;
   }
 }
+
+/*
+ * Expressive Code のコピーの吹き出しは、下から上へ動かして出す。位置を動かさず、濃さだけで出す (docs/design/DesignDoc.md の「動き」)。
+ * Expressive Code の CSS は層の外にあり、後から読まれるので、層の外に置き、.prose で詳細度を上げる。
+ */
+.prose .expressive-code .copy .feedback {
+  transform: none;
+  transition-property: opacity;
+}
