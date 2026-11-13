@@ -438,7 +438,7 @@ sequenceDiagram
 ### 動くチェック
 
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。
-  - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` である。
+  - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` である。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground` の中の、`src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、`documents/` と `figures/` の間の import を止める。
