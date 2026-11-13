@@ -34,7 +34,7 @@ import {
   parentOf,
   toTree,
 } from "./files";
-import { exitLabel, lineKind, progressLabel, shortcutOf } from "./output";
+import { exitLabel, groupLines, progressLabel, shortcutOf } from "./output";
 import { type GoSession, OUTPUT_LIMIT, createGoSessionOpener } from "./session";
 
 const openSession = createGoSessionOpener(createProjectLoader("go", goDefaultProject));
@@ -73,7 +73,7 @@ function OutputPane({ session }: { session: GoSession }) {
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
   const progress = progressLabel(phase, running, output.kind);
   const exit = exitLabel(output.exit);
-  const lines = output.text === "" ? [] : output.text.replace(/\n$/, "").split("\n");
+  const groups = groupLines(output.text);
   const succeeded = output.exit?.kind === "exited" && output.exit.exitCode === 0;
   const logRef = useRef<HTMLDivElement>(null);
   // 下端を見ているときだけ、新しい出力に合わせて下端へ送る
@@ -110,18 +110,17 @@ function OutputPane({ session }: { session: GoSession }) {
           tabIndex={0}
         >
           {progress !== undefined && <Loading label={progress} />}
-          {lines.length === 0 && progress === undefined && output.exit === undefined && (
+          {groups.length === 0 && progress === undefined && output.exit === undefined && (
             <p className="font-sans text-body-dense text-code-comment">
               実行するか、テストすると、標準出力と標準エラーがここに出ます。
             </p>
           )}
           <pre className="whitespace-pre-wrap break-words">
-            {lines.map((line, index) => (
-              // 行は出力の順で並び、並べ替えも途中の削除もしないので、位置を key にする
+            {groups.map((group, index) => (
+              // まとまりは出力の順で並び、並べ替えも途中の削除もしないので、位置を key にする
               // oxlint-disable-next-line react/no-array-index-key
-              <span className={LINE_CLASS[lineKind(line)]} key={index}>
-                {line}
-                {"\n"}
+              <span className={LINE_CLASS[group.kind]} key={index}>
+                {group.text}
               </span>
             ))}
           </pre>

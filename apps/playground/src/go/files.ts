@@ -163,9 +163,10 @@ export function remove(fileSet: GoFileSet, rawPath: string): Change {
 
 /** FileTree に渡す木。各階層で、ディレクトリを先に、名前の順で並べる。項目の id はパスである。 */
 export function toTree(fileSet: GoFileSet): TreeNode[] {
+  const entries = listEntries(fileSet);
   const build = (parent: string | undefined): TreeNode[] => {
     const prefix = parent === undefined ? "" : `${parent}/`;
-    const children = listEntries(fileSet).filter(
+    const children = entries.filter(
       (entry) => entry.path.startsWith(prefix) && !entry.path.slice(prefix.length).includes("/"),
     );
     const directories = children.filter((e) => e.kind === "directory");

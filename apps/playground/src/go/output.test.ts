@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { exitLabel, lineKind, progressLabel, shortcutOf } from "./output";
+import { exitLabel, groupLines, lineKind, progressLabel, shortcutOf } from "./output";
 
 describe("lineKind", () => {
   it.each([
@@ -18,6 +18,20 @@ describe("lineKind", () => {
     ["PASSWORD", "plain"],
   ])("%s は %s", (line, kind) => {
     expect(lineKind(line)).toBe(kind);
+  });
+});
+
+describe("groupLines", () => {
+  it("同じ種類の続く行を 1 つにまとめ、行の終わりに改行を付ける", () => {
+    expect(groupLines("a\nb\n--- PASS: T (0.00s)\nPASS\nc")).toStrictEqual([
+      { kind: "plain", text: "a\nb\n" },
+      { kind: "pass", text: "--- PASS: T (0.00s)\nPASS\n" },
+      { kind: "plain", text: "c\n" },
+    ]);
+  });
+
+  it("空の出力は、まとまりを返さない", () => {
+    expect(groupLines("")).toStrictEqual([]);
   });
 });
 

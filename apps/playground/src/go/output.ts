@@ -16,6 +16,19 @@ export function lineKind(line: string): LineKind {
   return KINDS.find(([pattern]) => pattern.test(line))?.[1] ?? "plain";
 }
 
+/** 出力を行に分け、同じ種類の続く行を 1 つにまとめる。描く要素の数を、行の数より減らすためである。 */
+export function groupLines(text: string): { kind: LineKind; text: string }[] {
+  if (text === "") return [];
+  const groups: { kind: LineKind; text: string }[] = [];
+  for (const line of text.replace(/\n$/, "").split("\n")) {
+    const kind = lineKind(line);
+    const last = groups.at(-1);
+    if (last?.kind === kind) last.text += `${line}\n`;
+    else groups.push({ kind, text: `${line}\n` });
+  }
+  return groups;
+}
+
 export type Shortcut = "run" | "test" | "stop";
 
 type KeyLike = {

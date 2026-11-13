@@ -80,6 +80,9 @@ export type GoSession = {
 /** 出力の欄に持つ文字数の上限。超えた分は捨てる。 */
 export const OUTPUT_LIMIT = 1_000_000;
 
+/** 出力を溜めてから、出力の store に写すまでの間隔（ms）。出力のたびに全文を描き直さないためである。 */
+const OUTPUT_FLUSH_MS = 50;
+
 type WritableStore<T> = Store<T> & { set: (value: T) => void };
 
 function createStore<T>(initial: T): WritableStore<T> {
@@ -157,22 +160,58 @@ export function createGoSession({
   });
   let current: GoExecution | undefined;
 
+  // 保存の途中に来た変更は、最新の 1 件だけを持ち、保存が終わってから書く。1 文字の入力ごとに書き込みを重ねないためである
+  let saving = false;
+  let queued: GoRecord | undefined;
+  const persist = (record: GoRecord) => {
+    if (saving) {
+      queued = record;
+      return;
+    }
+    saving = true;
+    void storage
+      .save(record)
+      .then(
+        () => saveFailed.set(false),
+        () => saveFailed.set(true),
+      )
+      .finally(() => {
+        saving = false;
+        const next = queued;
+        queued = undefined;
+        if (next) persist(next);
+      });
+  };
+
   const apply = (change: Change): Change => {
     if (!change.ok) return change;
     fileSet.set(change.fileSet);
-    storage.save({ ...change.fileSet, version, savedAt: now() }).then(
-      () => saveFailed.set(false),
-      () => saveFailed.set(true),
-    );
+    persist({ ...change.fileSet, version, savedAt: now() });
     return change;
   };
 
-  const append = (chunk: string) => {
+  let pending = "";
+  let flushTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const flush = () => {
+    clearTimeout(flushTimer);
+    flushTimer = undefined;
     const shown = output.getSnapshot();
-    if (shown.truncated) return;
-    const text = shown.text + chunk;
+    if (pending === "" || shown.truncated) {
+      pending = "";
+      return;
+    }
+    const text = shown.text + pending;
+    pending = "";
     const truncated = text.length > OUTPUT_LIMIT;
     output.set({ ...shown, text: truncated ? text.slice(0, OUTPUT_LIMIT) : text, truncated });
+  };
+
+  const append = (chunk: string) => {
+    if (output.getSnapshot().truncated) return;
+    pending += chunk;
+    if (output.getSnapshot().text.length + pending.length > OUTPUT_LIMIT) flush();
+    else flushTimer ??= setTimeout(flush, OUTPUT_FLUSH_MS);
   };
 
   const execute = async (
@@ -216,6 +255,7 @@ export function createGoSession({
       };
     } finally {
       clearTimeout(timer);
+      flush();
     }
     const exit = timedOut ? ({ kind: "timeout" } as const) : finished;
     output.set({ ...output.getSnapshot(), exit });

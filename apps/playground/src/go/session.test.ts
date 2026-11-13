@@ -108,22 +108,36 @@ describe("createGoSession", () => {
     expect(setup({ kind: "unavailable" }).session.canSave).toBe(false);
   });
 
-  it("ファイルを変えると、ストアを変え、ファイルとディレクトリの一式を丸ごと保存する", () => {
-    const { session, records } = setup();
-    expect(session.write("b.go", "b").ok).toBe(true);
-    expect(session.createDirectory("empty").ok).toBe(true);
-    expect(session.rename("b.go", "c.go").ok).toBe(true);
-    expect(session.remove("a").ok).toBe(true);
+  it("ファイルを変えると、ストアを変える", () => {
+    const { session } = setup();
+    session.write("b.go", "b");
+    session.createDirectory("empty");
+    session.rename("b.go", "c.go");
+    session.remove("a");
     expect(session.fileSet.getSnapshot()).toStrictEqual({
       files: { "main.go": "package main", "c.go": "b" },
       directories: ["empty"],
     });
-    expect(records.at(-1)).toStrictEqual({
-      ...session.fileSet.getSnapshot(),
+  });
+
+  it("保存の途中の変更は、最新の 1 件だけを、保存が終わってから丸ごと書く", async () => {
+    const { session, records } = setup();
+    session.write("b.go", "1");
+    session.write("b.go", "2");
+    session.write("b.go", "3");
+    await vi.waitFor(() => expect(records).toHaveLength(2));
+    expect(records.map((record) => record.files["b.go"])).toStrictEqual(["1", "3"]);
+  });
+
+  it("保存するレコードは、ファイルとディレクトリの一式と、バージョンと、時刻を持つ", () => {
+    const { session, records } = setup();
+    session.createDirectory("empty");
+    expect(records[0]).toStrictEqual({
+      files: project.files,
+      directories: ["empty"],
       version: "v1",
       savedAt: 42,
     });
-    expect(records).toHaveLength(4);
   });
 
   it("createFile は、既にあるファイルを空にしない", () => {
