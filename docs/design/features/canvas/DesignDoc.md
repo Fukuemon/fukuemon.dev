@@ -13,7 +13,7 @@ status: draft
 構成図を描く draw.io のツールと、手描きの図を描く Excalidraw のツールの 2 つを、`play.fukuemon.dev` で提供する。  
 運営者は、キャンバスから書き出した SVG を記事に埋め込む。訪問者は、記事の図をキャンバスで開いて、描き変えられる。
 
-全体の構成とホスト名は [fukuemon.dev Design Doc](../../DesignDoc.md) に、プレイグラウンドのアプリの構成は [プレイグラウンド](../playground/DesignDoc.md) にある。  
+全体の構成とホスト名は [fukuemon.dev Design Doc](../../DesignDoc.md) に、プレイグラウンドのアプリの構成は [プレイグラウンド](../../../../apps/playground/DesignDoc.md) にある。  
 方式は、次の ADR が決めている。
 
 - ADR-0039: [キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する](../../../adr/0039-canvas-drawio-and-excalidraw.md)
@@ -198,7 +198,7 @@ type DocumentContent = {
 - 時刻は、エポックからのミリ秒の数値である。
 
 `documents/` は、次の型でデータベースを公開する。名前は、実装のときに変えてよい。  
-`Store` は、プレイグラウンドの [NodeRuntime](../playground/DesignDoc.md#noderuntime) の `Store` と同じ形である。
+`Store` は、プレイグラウンドの [NodeRuntime](../../../../apps/playground/DesignDoc.md#noderuntime) の `Store` と同じ形である。
 
 ```ts
 type DocumentBody = Omit<DocumentContent, "id">;
@@ -409,7 +409,7 @@ sequenceDiagram
 - ツールのページは、`figures/` に、自分のツール（`drawio` か `excalidraw`）を渡す。図を描いたツールの型は、`@fukuemon/figures` が持つ。`figures/` と `documents/` は、互いの型を使わない。
   - `@fukuemon/figures` のツールの型の値は、`ToolKind` から `slides` を除いた値と同じ文字列である。2 つの型は互いを import しないので、ツールのページが、同じ文字列を `figures/` と `documents/` の両方に渡す。
 - `figures/` は、名前が規則に合わないときは、`fetch` しない。
-- URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
+- URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../../../../apps/playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
 - `fetch` は、リダイレクトを辿らない。
 - 開いただけでは、IndexedDB に保存しない。最初に編集したときに、新しい図として保存する。同じリンクを開くたびに、一覧に図が増えないようにするためである。
   - ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)

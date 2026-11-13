@@ -6,6 +6,7 @@ status: stable
 governs:
   - pnpm-workspace.yaml
   - apps/web/src/
+  - apps/playground/src/
   - packages/
   - oxlint.config.ts
 verified_commit: ab2da87
@@ -19,6 +20,8 @@ verified_commit: ab2da87
 
 - 共有の設定は、tsconfig を `@fukuemon/config` に、Oxlint の設定をルートの `oxlint.config.ts` に、vitest の設定を各 package に置く。
 - `infra/` は、どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
+- `apps/` には、1 つの Worker に deploy するアプリを 1 つずつ置く。
+  サイトは `apps/web`、プレイグラウンドは `apps/playground` である。
 - サイトのほかのアプリを、`apps/web` に置くか、別の app と Worker にするかは、ADR-0031 の規則で決める。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
 
@@ -97,7 +100,7 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
 - `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project`、`@fukuemon/figures` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
-  - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#ディレクトリ) にある。
+  - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
 island の framework は React の 1 つに絞る。  
@@ -111,7 +114,7 @@ hydrate するページはその framework のランタイムを配るので、2
 - サーバー側の永続的な状態を持たない。読者の identity を前提にする機能を作らない。
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
-- プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#保存) にある。
+- プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#保存) にある。
 - プレイグラウンドは、訪問者が描いた図を、訪問者のファイルと別の IndexedDB のデータベースに置く。レコードの形は、[キャンバスの Design Doc](../docs/design/features/canvas/DesignDoc.md#保存するデータ) にある。
 - トップ（`/`）は、端末でトップを開いたことを、`localStorage` の `fd-top-seen` に記録する。
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
@@ -160,6 +163,16 @@ package を切り出すのは、次のどちらかが成り立つときである
   - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。
 - カタログの Worker の設定は `packages/ui/wrangler.jsonc` に、カタログが返すレスポンスヘッダは `packages/ui/.storybook/public/_headers` に置く。
 
+### apps/playground
+
+- ツールのページ（`apps/playground/src/` の `node/`、`sql/`、`go/`）どうしは import しない。
+  2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
+  - チェックは Oxlint が行う。
+    `oxlint.config.ts` と `apps/playground/vite.config.ts` は、`apps/playground/` の下の `index.html` を持つディレクトリを、ツールとして読む。
+  - ツールのページの中のディレクトリに、ほかのツールと同じ名前を付けない。
+    Oxlint は、`../<ほかのツールの名前>/` の形の import を、ツールの間の参照として止める。
+- `@webcontainer/api` の import は、`packages/node-runtime/src/webcontainer/` の外では Oxlint が止める。
+
 ### infra
 
 - `.tf` のファイル名は、`provider.tf`、`<対象>.tf`、`vars.tf` の 3 種に揃える。
@@ -177,7 +190,8 @@ URL の一覧は [docs/design/DesignDoc.md](../docs/design/DesignDoc.md#url-の�
 ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-series.md)
 
 - `/docs/` の配下に入れない。描画の実装の詳細を URL に出さない。
-- 古いサイトの URL（`/blog`、`/labs/<path>` など）は転送しない。`public/_redirects` を置かない。
+- 古いサイトの URL（`/blog`、`/labs/<path>` など）は転送しない。`apps/web/public/_redirects` を置かない。
+  - `play.fukuemon.dev` の `/` のリダイレクトは、[operations.md](operations.md#レスポンスヘッダ) にある。
 - `/playground` は、プレイグラウンドの一覧に使う。ツールは `fukuemon.dev` に置かず、`play.fukuemon.dev` に置く。cross-origin isolation のヘッダは、Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)

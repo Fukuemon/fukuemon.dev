@@ -29,3 +29,4 @@ check() {
 
 check apps/web/wrangler.jsonc worker_name
 check packages/ui/wrangler.jsonc catalog_worker_name
+check apps/playground/wrangler.jsonc playground_worker_name
