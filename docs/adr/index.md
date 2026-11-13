@@ -51,6 +51,7 @@
 | [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md) | サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う                                                                  |
 | [ADR-0024](0024-tokens-of-fukuemon-dev.md)               | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
 | [ADR-0028](0028-radius-shadow-and-brush-motion.md)       | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                    |
+| [ADR-0061](0061-sumi-focus-ring.md)                      | フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする                                                                                       |
 | [ADR-0021](0021-ui-components-and-catalog.md)            | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
 | [ADR-0022](0022-code-colors-from-tokens.md)              | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
 | [ADR-0062](0062-dense-text-and-targets-in-playground.md) | コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                           |
@@ -60,6 +61,8 @@ ADR-0010 の Decision の「preflight を読み込まない」と「トークン
 ADR-0020（[トークンを、DADS の値をコピーしたプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、ライトとダークをセマンティックトークンで切り替える](0020-design-tokens-from-dads.md)）は、ADR-0024 に置換した。
 
 ADR-0024 の、角丸、影、読み込み中の印の決定は、ADR-0028 に置換した。
+
+ADR-0060（[フォーカスの色を、DADS の値で持つ](0060-focus-color-from-dads.md)）は、ADR-0061 に置換した。
 
 ## 挿絵とトップの演出
 
@@ -98,6 +101,8 @@ ADR-0026 の Decision の「ヘッダーの『筆者について』は `/` を�
 | [ADR-0054](0054-record-http-and-console-with-prefixed-lines.md) | HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない                                          |
 | [ADR-0056](0056-article-figures-directory-and-name.md)          | 記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す                              |
 | [ADR-0057](0057-document-records-in-two-object-stores.md)       | 図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する                       |
+| [ADR-0058](0058-slides-package-for-themes-and-pages.md)         | スライドのテーマ、テンプレート、Marp の設定、ページを組み立てる関数を、`packages/slides` に置く                                       |
+| [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)           | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                             |
 | [ADR-0063](0063-ai-operations-for-sql-and-go.md)                | AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む |
 
 ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
@@ -142,6 +147,7 @@ flowchart TB
     A0062["ADR-0062"]
     A0024["ADR-0024"]
     A0028["ADR-0028"]
+    A0061["ADR-0061"]
     A0021["ADR-0021"]
     A0022["ADR-0022"]
   end
@@ -172,6 +178,8 @@ flowchart TB
     A0054["ADR-0054"]
     A0056["ADR-0056"]
     A0057["ADR-0057"]
+    A0058["ADR-0058"]
+    A0059["ADR-0059"]
     A0063["ADR-0063"]
   end
   A0002 --> A0001
@@ -280,6 +288,7 @@ flowchart TB
   A0055 --> A0010
   A0055 --> A0024
   A0055 --> A0029
+  A0061 --> A0028
   A0056 --> A0030
   A0056 --> A0039
   A0056 --> A0040
@@ -292,6 +301,13 @@ flowchart TB
   A0057 --> A0048
   A0057 --> A0050
   A0057 --> A0056
+  A0058 --> A0021
+  A0058 --> A0041
+  A0058 --> A0042
+  A0058 --> A0046
+  A0058 --> A0048
+  A0059 --> A0028
+  A0059 --> A0042
   A0062 --> A0024
   A0062 --> A0028
   A0063 --> A0031
@@ -312,3 +328,4 @@ flowchart TB
 | 旧番号   | 判断                                               | 今の ADR                           |
 | -------- | -------------------------------------------------- | ---------------------------------- |
 | ADR-0023 | 挿絵を、トークンの色で描く版画風の図柄に作り替える | ADR-0026（分けた ADR-0025 を置換） |
+| ADR-0024 | フォーカスの色を、DADS の値で持つ                  | ADR-0061（分けた ADR-0060 を置換） |
