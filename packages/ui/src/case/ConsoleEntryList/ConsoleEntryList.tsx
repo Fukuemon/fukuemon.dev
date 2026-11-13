@@ -148,8 +148,9 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
 /**
  * `console.*` の出力を、起きた順に並べたコンソール。行ごとに、ログレベルの印、値、時刻、出力元を出す。
  * 題の下のボタンで、表示するログレベルを選ぶ。配列、オブジェクト、`Error`、`Map`、`Set` は、TreeView で開いて中を見られる。
- * 高さは呼ぶ側が決める。高さを決めたときは、行の領域だけをスクロールさせる。親は、高さの決まった縦方向の flex か grid にする。
- * 高さを決めない親では、行の数だけ伸び、ページはスクロールしない。
+ * 高さは呼ぶ側が決める。高さを決めたときは、行の領域だけをスクロールさせる。
+ * 行の領域だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。
+ * 高さを決めない親では、コンソールは行の数だけ伸び、行が増えてもページをスクロールしない。
  * 一番下を見ている間に行が増えると、行の領域を一番下まで送る。
  */
 export function ConsoleEntryList({
@@ -187,7 +188,7 @@ export function ConsoleEntryList({
     if (!rows) return;
     isAtBottom.current = rows.scrollHeight - rows.scrollTop - rows.clientHeight < 2;
   };
-  // 読み込み中とエラーの間は行の領域が消え、作り直すと先頭に戻る。一番下を見ている扱いに戻し、戻ったときは一番下へ送る
+  // 読み込み中とエラーの間は行の領域が消え、行の表示に戻ると先頭から描かれる。消えている間に一番下を見ている扱いに戻し、行の表示に戻ったときに一番下へ送る
   useEffect(() => {
     const rows = rowsRef.current;
     if (!rows) {

@@ -37,7 +37,8 @@ status: draft
   足さないと、画面が動画の左上に 8 割の大きさで描かれ、右と下に余白が出る。
 - spec は story の画面（`iframe.html?id=<story の id>&viewMode=story`）を開く。
 - テーマは、`page.emulateMedia({ colorScheme: "dark" })` でブラウザの配色の設定を変えて選ぶ。
-  カタログのデフォルトのテーマは「OS の設定」で、`data-theme="system"` のまま、配色の設定に合うトークンの値で描く。
+  カタログのデフォルトのテーマは「OS の設定」である。
+  このテーマでは、`data-theme="system"` のまま、ブラウザの配色の設定に合うトークンの値で描く。
   URL の `&globals=theme:<名前>` では選べない。
   Storybook は URL の globals の値を英数字、空白、`_`、`-` に限って受け付け、テーマの名前（`ダーク` など）は日本語だからである。
 - pull request の動作確認の spec は、下書きの置き場のディレクトリを環境変数 `SPECS_DIR` に渡して流す。
