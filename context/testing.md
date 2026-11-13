@@ -24,6 +24,7 @@ verified_commit: ab2da87
 | unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理の分岐を踏む                               |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
+| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                 |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -46,6 +47,7 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 
 - `src/features/top-garden/` の、墨の絵の SVG を作る `layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`
 - `src/features/top-garden/` の、季節と時間帯を返す `season.ts`
+- `src/features/top-garden/` の、時間帯と季節から場面の色を決める `scene-colors.ts`
 - `src/features/top-garden/` の、最初の訪問かを返す `visit.ts`
 - `src/features/top-garden/` の、季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
@@ -71,6 +73,11 @@ CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/8
 見た目の回帰のチェックは、E2E のエビデンスの静止画を、変更の前後で並べて比べる。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
 サイトの E2E の package（`packages/e2e`）は、まだ無い。
+
+トップの庭は、Playwright のスクリーンショットの比較で確認する。  
+庭は WebGL で描き、目で比べても色の小さな違いに気づけないためである。  
+spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。  
+実行の方法は [E2E のテスト](testing/e2e.md) にある。
 
 ## Runtime Requirements
 

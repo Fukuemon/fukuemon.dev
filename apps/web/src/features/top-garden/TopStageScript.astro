@@ -1,11 +1,9 @@
 ---
 import { stageScript } from "./stage";
+// oxlint-disable-next-line import/default -- Vite の ?worker&url は、バンドルの URL の文字列を default で返す。oxlint はこの接尾辞を解決できない
+import bundle from "./garden-entry.ts?worker&url";
 
-interface Props {
-  /** 場面の束の URL。渡さないときは、庭を出さない */
-  bundle?: string;
-}
-const { bundle } = Astro.props;
+// 場面のバンドルは、Vite が worker の形で IIFE の 1 ファイルにまとめ、ハッシュを付けて _astro/ に置く。
 const script = stageScript({ dev: import.meta.env.DEV, bundle });
 ---
 
