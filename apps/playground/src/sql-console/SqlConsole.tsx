@@ -44,7 +44,7 @@ export function SqlConsole({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex h-72 min-h-0 flex-col">
+      <div className="flex h-96 min-h-0 flex-col has-[.cm-focused]:focus-ring">
         <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
           {() => <SqlEditor onChange={onChange} onRun={() => void run()} value={value} />}
         </EditorFrame>
@@ -53,9 +53,7 @@ export function SqlConsole({
         <Button isLoading={running} onClick={() => void run()} size="S">
           実行する
         </Button>
-        <span className="text-body-dense text-text-secondary">
-          Ctrl か ⌘ と Enter でも実行します
-        </span>
+        <span className="text-caption text-text-secondary">Ctrl か ⌘ と Enter でも実行します</span>
       </div>
       <section aria-label="実行の結果" className="flex min-w-0 flex-col gap-4">
         {progress !== undefined && <Loading label={progress} />}

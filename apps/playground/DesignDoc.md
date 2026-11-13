@@ -384,7 +384,10 @@ SQL だけを動かすツールのページは、次のとおり組む。
 - 入力欄のエディタは、CodeMirror 6 にする。Ctrl か ⌘ と Enter で実行する。
 - CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境と Go を動かすツールのエディタも、同じ組み立てを使い、言語の拡張だけを足す。
   - 行番号、今いる行の帯、字下げの補助線、対応する括弧の強調を出す。折りたたみの印は出さない。Tab のキーは字下げに使わない。
-  - 色は、`packages/ui` のテーマ変数を読む。字句の色は `--color-code-*`、今いる行の帯は `--color-surface`、字下げの補助線は `--color-border`、対応する括弧の枠は `--color-border-field` である。
+  - Ctrl か ⌘ と F で、検索と置換の帯を上端に出す。帯の文言は日本語にする。
+  - 色は、`packages/ui` のテーマ変数を読む。字句の色は `--color-code-*`、今いる行の帯は `surface-subtle`、選択の範囲は `primary-surface` である。
+  - 検索の一致は `info-surface`、字下げの補助線は `border`、対応する括弧の枠は `border-field` である。補完の一覧は、`surface-raised`、`border-field` の枠、`shadow-raised` の重なりの組にする。
+  - フォーカスの表示は、入力欄を囲む要素に `has-[.cm-focused]:focus-ring` で付ける。CodeMirror が作る帯の入力欄とボタンには、`focus-ring` と同じ値を書く。
 - 実行のボタンを押してから結果が出るまで、待っている段階を `Loading` で出す。段階は、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つである。
 - 埋め込みのときは、ページの題を出さない。
 

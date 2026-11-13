@@ -69,7 +69,7 @@ function RowsTable({ result }: { result: SqlResult }) {
             1 ページの行
           </label>
           <select
-            className="h-10 rounded-control bg-surface px-2 text-body-dense text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring"
+            className="h-12 rounded-control bg-surface px-2 text-body-dense text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring"
             id={sizeId}
             onChange={(event) => {
               setPageSize(Number(event.target.value) as PageSize);
@@ -87,8 +87,8 @@ function RowsTable({ result }: { result: SqlResult }) {
         {range.pages > 1 && (
           <div className="flex items-center gap-2">
             <Button
-              aria-disabled={range.page === 0}
-              onClick={() => range.page > 0 && setPage(range.page - 1)}
+              disabled={range.page === 0}
+              onClick={() => setPage(range.page - 1)}
               size="S"
               variant="secondary"
             >
@@ -98,8 +98,8 @@ function RowsTable({ result }: { result: SqlResult }) {
               {range.page + 1} / {range.pages}
             </span>
             <Button
-              aria-disabled={range.page === range.pages - 1}
-              onClick={() => range.page < range.pages - 1 && setPage(range.page + 1)}
+              disabled={range.page === range.pages - 1}
+              onClick={() => setPage(range.page + 1)}
               size="S"
               variant="secondary"
             >
@@ -117,9 +117,13 @@ function ResultBody({ result }: { result: SqlResult }) {
   if (plan?.kind === "json") return <PlanTree plan={plan.plan} />;
   if (plan?.kind === "text") {
     return (
-      <pre className="overflow-x-auto bg-code-surface p-4 font-mono text-code-dense text-code-text">
-        {plan.text}
-      </pre>
+      <section
+        aria-label="実行計画"
+        className="overflow-x-auto bg-code-surface focus-visible:focus-ring"
+        tabIndex={0}
+      >
+        <pre className="p-4 font-mono text-code text-code-text">{plan.text}</pre>
+      </section>
     );
   }
   if (result.fields.length === 0) {
@@ -160,7 +164,7 @@ export function ResultView({ response }: ResultViewProps) {
   const last = response.results.at(-1);
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <p className="text-body-dense text-text-secondary">
+      <p className="text-caption text-text-secondary">
         {response.results.length} 個の文を {ms(response.ms)} で実行しました。
       </p>
       {last && <ResultBody result={last} />}
