@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -44,6 +44,7 @@ SQL だけを動かす記事は、Node の実行環境を使わず、PGlite を�
 
 - PGlite を動かすページは、プレイグラウンドのサブドメインの、isolation のヘッダを返さないパス（`/sql/`）に置く。
 - PGlite は、Web Worker で動かす。ツールのページのメインスレッドでは、SQL を実行しない。重いクエリの間も、画面の操作を受け付けるためである。
+- Web Worker が異常終了したときは、SQL の画面にエラーを出す。次の実行で、Web Worker を作り直す。DB の中身は、初期の状態に戻る。
 - PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装は、package（`@fukuemon/sql-runtime`）に置く。DB のプロセスのスクリプトも、同じ関数を使う。
   - ADR-0048: [Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する](0048-node-runtime-interface-and-stores.md)
 - SQL だけを動かす記事には、isolation のヘッダが適用されない。外部の画像と埋め込みを使える。
@@ -106,7 +107,8 @@ SQL の結果は、100,000 行までを全て返し、ページ送りで見ら�
 
 - 複数の文のうち 1 つが、実行のときのエラー（制約の違反など）で失敗したときに、全部が取り消されることを確認している。確認したのは、構文エラーの 1 件である。
 - SQL だけを動かすツール（Web Worker で動かす PGlite）で、100,000 行の結果を返す時間を測っている。
-- package（`@fukuemon/sql-runtime`）の Web Worker の実装と、DB のプロセスのスクリプトに関数を束ねる処理が、`apps/playground` の Vite のビルドで動くことを確認している。メインスレッドで PGlite を動かしたときの画面への影響は、測っていない。
+- `@fukuemon/sql-runtime` の Web Worker の実装が、`apps/playground` の Vite のビルドで動くことを確認している。メインスレッドで PGlite を動かしたときの画面への影響は、測っていない。
+- `@fukuemon/node-runtime` が export する Vite の plugin で、DB のプロセスのスクリプトに関数を束ねられることを確認している。
 
 ## Verification
 

@@ -71,7 +71,7 @@ export function ActionMenu({ label, items }: ActionMenuProps) {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label={label}
-        className="inline-grid size-11 cursor-pointer place-items-center text-text hover:bg-surface-subtle focus-visible:focus-ring"
+        className="inline-grid size-11 cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring"
         onClick={() => setOpen(!isOpen)}
         ref={buttonRef}
         type="button"
@@ -85,7 +85,7 @@ export function ActionMenu({ label, items }: ActionMenuProps) {
       {isOpen && (
         <div
           aria-label={label}
-          className="absolute top-full right-0 z-10 mt-1 flex min-w-48 flex-col bg-surface-raised border border-border-field py-1"
+          className="absolute top-full right-0 z-10 mt-1 flex min-w-48 animate-fade-in flex-col rounded-control border border-border-field bg-surface-raised py-1 shadow-raised"
           id={menuId}
           onKeyDown={handleMenuKeyDown}
           role="menu"

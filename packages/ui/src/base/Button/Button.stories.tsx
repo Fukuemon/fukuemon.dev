@@ -26,4 +26,7 @@ export const Secondary: Story = { args: { variant: "secondary" } };
 export const Danger: Story = { args: { variant: "danger", children: "削除" } };
 export const Loading: Story = { args: { isLoading: true } };
 export const SecondaryLoading: Story = { args: { variant: "secondary", isLoading: true } };
+export const DangerLoading: Story = {
+  args: { variant: "danger", isLoading: true, children: "削除" },
+};
 export const Small: Story = { args: { size: "S" } };
