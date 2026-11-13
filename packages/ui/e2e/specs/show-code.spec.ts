@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { docsFrame, sourcePanels } from "../selectors/storybook-docs";
 
-// Button.stories.tsx の export の名前と、Docs のページに並ぶ順
+// Button.stories.tsx の export の名前。順は Button.mdx の Canvas の順
 const BUTTON_STORIES = [
   "Primary",
   "PrimaryHover",
@@ -28,8 +28,11 @@ test("Button の Docs のページを開いた直後にテーマを選ぶと、�
 
   const frame = docsFrame(page);
   const showCode = frame.getByRole("switch", { name: "Show code" });
+  // Canvas が増えたときに開き残さないよう、ページの switch を全て押す
+  await showCode.nth(BUTTON_STORIES.length - 1).waitFor();
+  const count = await showCode.count();
   // 押した switch は名前が Hide code に変わるので、first() は毎回まだ開いていない次の switch を指す
-  for (let i = 0; i < BUTTON_STORIES.length; i++) await showCode.first().click();
+  for (let i = 0; i < count; i++) await showCode.first().click();
 
   await expect(sourcePanels(frame)).toHaveText(
     BUTTON_STORIES.map((name) => new RegExp(`^const ${name} = \\(\\) =>[\\s\\S]*<Button`)),
