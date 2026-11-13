@@ -59,7 +59,13 @@ function LevelIcon({ level }: { level: ConsoleLevel }) {
       viewBox="0 0 16 16"
       width="16"
     >
-      {level === "debug" && <path d="M4 8h1M7.5 8h1M11 8h1" strokeWidth="2" />}
+      {level === "debug" && (
+        <g fill="currentColor" stroke="none">
+          <circle cx="4" cy="8" r="1.25" />
+          <circle cx="8" cy="8" r="1.25" />
+          <circle cx="12" cy="8" r="1.25" />
+        </g>
+      )}
       {level === "info" && (
         <>
           <circle cx="8" cy="8" r="6.5" />
@@ -112,7 +118,7 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
       <span className="sr-only">{entry.level}</span>
       {/* 狭い幅では、時刻と出力元を値の下へ折り返し、値の幅を空ける */}
       <div className="flex min-w-0 flex-1 flex-wrap gap-x-4">
-        <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 font-mono text-body-dense text-text">
+        <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 gap-y-2 font-mono text-body-dense text-text">
           {entry.args.map((arg, index) =>
             isExpandable(arg) ? (
               <div className="w-full" key={index}>
@@ -197,7 +203,7 @@ export function ConsoleEntryList({
           <button
             aria-pressed={isOn}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-2 px-3 text-label transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
+              "relative flex min-h-11 cursor-pointer items-center gap-2 px-3 text-label transition-colors hover:bg-surface-subtle focus-visible:z-10 focus-visible:focus-ring",
               isOn ? "text-text" : "text-text-secondary",
             )}
             key={level}
