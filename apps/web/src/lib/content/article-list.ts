@@ -1,14 +1,10 @@
 import type { ArticleData, ContentRef, SeriesData } from "@fukuemon/content-model";
-import { articleHref, isPublic, orderOf, seriesDir } from "./article-pages";
+import type { SeriesPagerLink } from "@fukuemon/ui";
+import { type ArticleSource, articleHref, isPublic, orderOf, seriesDir } from "./article-pages";
 
-/** 一覧、シリーズのページ、RSS を組むのに要る、記事の 1 本の値 */
-export type ListArticleSource = {
-  /** Astro の id。`articles/` からの相対パスから拡張子を外したもの */
-  id: string;
-  data: Pick<
-    ArticleData,
-    "contentId" | "title" | "description" | "tags" | "status" | "publishedAt" | "format" | "order"
-  >;
+/** 一覧、シリーズのページ、RSS を組むのに要る、記事の 1 本の値。記事のページの値に、一覧に出す項目を足す */
+export type ListArticleSource = ArticleSource & {
+  data: Pick<ArticleData, "contentId" | "description" | "tags" | "publishedAt" | "format">;
 };
 
 /** シリーズの `index.md` の 1 枚の値 */
@@ -18,7 +14,8 @@ export type SeriesSource = {
   data: SeriesData;
 };
 
-export type SeriesLink = { title: string; href: string };
+/** シリーズのページへのリンク。シリーズの前後のリンクと同じ形にする */
+export type SeriesLink = SeriesPagerLink;
 
 /** 一覧の 1 行。記事がシリーズに入っていれば、シリーズの題とページへのリンクを持つ */
 export type ArticleListItem = { ref: ContentRef; series?: SeriesLink };
