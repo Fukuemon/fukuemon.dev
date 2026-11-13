@@ -22,7 +22,7 @@ const linkClassName =
   "flex min-h-11 flex-col gap-1 border-t border-border px-2 py-4 hover:bg-surface-subtle focus-visible:focus-ring";
 
 /**
- * シリーズの中の位置と、前と次の記事へのリンク。hover で、記事の題の下に 2px の罫を行ごとに引く。
+ * シリーズの中の位置と、前と次の記事へのリンク。hover で、記事の題の下に 2px の罫を行ごとに引く。罫は題の下線に重なるので、下線が太くなる形に見える。
  * 広い画面では前を左、次を右に並べ、前が無くても次は右に置く。
  */
 export function SeriesPager({ series, position, total, prev, next }: SeriesPagerProps) {
