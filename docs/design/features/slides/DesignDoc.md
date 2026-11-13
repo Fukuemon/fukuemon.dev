@@ -14,7 +14,7 @@ status: draft
 公開するスライドは、`fukuemon.dev/slides/<slug>` の静的なページである。
 
 全体の構成とホスト名は [fukuemon.dev Design Doc](../../DesignDoc.md) にある。  
-プレイグラウンドのアプリの構成は [プレイグラウンドの Design Doc](../playground/DesignDoc.md) にある。  
+プレイグラウンドのアプリの構成は [プレイグラウンドの Design Doc](../../../../apps/playground/DesignDoc.md) にある。  
 方式は、次の ADR が決めている。
 
 - ADR-0041: [スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する](../../../adr/0041-slides-editor-with-marp.md)
@@ -34,7 +34,8 @@ status: draft
 
 持たないものは次のとおり。
 
-- IndexedDB に保存するレコードの形と、一覧の画面の中身。ADR-0057 と、キャンバスの Design Doc が持つ。
+- IndexedDB に保存するレコードの形と、一覧の画面の中身。[キャンバスの Design Doc](../canvas/DesignDoc.md) が持つ。
+  - ADR-0057: [図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する](../../../adr/0057-document-records-in-two-object-stores.md)
 - AI のエージェントからの操作の登録と、スイッチと操作の記録の欄の位置。AI からの操作の設計の文書が持つ。
   - ADR-0044: [AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする](../../../adr/0044-ai-operations-with-webmcp.md)
 - 公開するスライドの一覧のページ。
@@ -109,12 +110,7 @@ flowchart TB
 - `@fukuemon/slides` は、React、`@fukuemon/ui`、workspace のほかの package に依存しない。
 - `src/slides/` は、`apps/playground/src/` のほかのツールのページのディレクトリ（`node/`、`sql/`、`go/` と、キャンバスのツール）を import しない。Oxlint の `no-restricted-imports` の対象に、`slides/` を足す。
 - `documents/` は、`@fukuemon/slides` を import しない。スライドの中身は、文字列として受け取る。
-- `documents/` は、ツールの種類に依らない次の処理を、React の外のモジュールとして持つ。
-  - 開いているものの識別子と、URL のクエリを同期する。
-  - 最初に編集したときに、新しく作るかを決める。
-  - 待っている保存を書く。
-  - 消した後に開くものを決める。
-  - 名前に連番を付ける。
+- `documents/` は、ツールの種類に依らない処理を、React の外のモジュールとして持つ。持つ処理の一覧は、[キャンバスの Design Doc の「ディレクトリ」](../canvas/DesignDoc.md#ディレクトリ) にある。
 - `src/slides/` は、エディタとのやり取り、中身が変わったかの比較、ファイルの形式の処理だけを持つ。
 - `code-editor/` は、`sql-console/` と同じく、ツールのページのディレクトリから import される。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - `packages/slides/src/page/` のスクリプトは、ブラウザで動く。tsconfig と lint の対象を、package のほかのコードと分ける。package のほかのコードは、`page/` のファイルを、文字列として読み込む。
@@ -249,33 +245,34 @@ flowchart TB
 | 4    | 「テーマ: 素」     | `ActionMenu` の、ラジオの項目のメニュー | 項目は、テーマの表示の名前である。選んでいるテーマに、印を出す。選ぶと、`theme:` を書き換える。開くボタンの文に、今のテーマを出す |
 | 5    | 「テンプレート」   | `ActionMenu`                            | 項目は、テンプレートの表示の名前である。選ぶと、カーソルのあるスライドの後ろに足す                                                |
 | 6    | 「ファイル」       | `ActionMenu`                            | ファイルを開く、Markdown を書き出す、HTML を書き出す、PDF にする                                                                  |
-| 7    | 保存の状態         | 文                                      | 保存した時刻を出す。保存できないときは、ヘッダの下に、`Notice` の `warning` で出す                                                |
+| 7    | 保存の状態         | 文                                      | 保存した時刻を出す。保存できないときは、ヘッダの下に、`Notice`（`danger`、`isAlert`）で出す                                       |
 
 - 「スライドの一覧」「新しいスライド」のボタンは、`Button` の `secondary` にする。ヘッダに、主のボタンは置かない。
 - `md:` より狭い画面では、ヘッダを 2 行にする。1 行目に、スライドの名前を置く。2 行目に、操作と保存の状態を置く。
 - レイアウトは、`SplitPane` で、左に `MarkdownPane`、右に `PreviewPane` を並べる。`md:` より狭い画面では、`Tabs` で 2 つを切り替える。
 - `MarkdownPane` は、`code-editor/` のコンポーネントで、`EditorFrame` に、Node の実行環境と同じエディタのエンジンを渡す。タブは、スライドの名前の 1 つだけを出す。閉じる操作は渡さない。
+  - 狭い画面では、`Tabs` の中に `EditorFrame` のタブが入り、タブの並びが 2 段になる。2 段のままにするか、`EditorFrame` のタブを出さないかは、実装のタスクで決める。
 - `PreviewPane` は、全てのスライドを縦に並べ、幅に合わせて縮める。スライドの左上に、何枚目かを出す。
   - スクロールする領域に、「プレビュー」の名前を付け、キーボードでフォーカスできるようにする。訪問者は、フォーカスした後に、上下の矢印のキーでスクロールできる。
   - プレビューは、Shadow DOM に入れる。Marp の CSS を、ページに適用させないためである。
   - 入力のたびに、`renderSlides` の結果で描き直す。
   - カーソルのあるスライドが見えるところまで、プレビューのスクロールの位置を変える。位置は、動きを付けずに変える。
-- スライドの名前、一覧、確認のダイアログは、`documents/` のコンポーネントを使う。一覧の中身と、消す操作の確認は、キャンバスのツールと同じである。画面に出す語（「スライド」）と、新しく作るものの名前の付け方は、props で渡す。
-- 新しいスライドの名前は、`無題のスライド` に連番を付ける。連番の決め方は、キャンバスのツールと同じである。
+- スライドの名前、一覧、確認のダイアログは、`documents/` のコンポーネントを使う。一覧の中身と、消す操作の確認は、[キャンバスの Design Doc の「図の一覧」](../canvas/DesignDoc.md#図の一覧) にある。画面に出す語（「スライド」）と、新しく作るものの名前の付け方は、props で渡す。
+- 新しいスライドの名前は、`無題のスライド` に連番を付ける。連番の決め方は、キャンバスのツールの「新しい図」と同じである。
 - 開いているスライドの識別子、スライドの一覧（名前と、更新した時刻）、IndexedDB を使えるか（`status`）は、`documents/` のモジュールが Store で持つ。保存の状態の文は、この 3 つから出す。`SlidesPage` は、`useSyncExternalStore` で読む。Effect の中で `setState` を呼んで、Store の値を写さない。
 - `SlidesPage` は、開いているスライドの識別子を `key` にして、`SlidesEditor` を置く。スライドを切り替えると、`SlidesEditor` を作り直す。
 - `SlidesEditor` は、`use` で読んだ中身を初期値にして、`useReducer` で状態を持つ。持つのは、Markdown、カーソルの行、狭い画面で選んだタブである。
   - テーマは、状態に持たない。`readTheme` で、Markdown から求める。
   - 状態管理のライブラリと、ツリーをまたぐ通知は使わない。
-- `use` に渡す Promise（開くスライドの読み込み）は、`documents/` の React の外のモジュールが持つ。スライドを切り替えるたびに、Promise を新しいものに替える。
+- `use` に渡す Promise（開くスライドの読み込み）は、`documents/` のモジュールから受け取る。
 - テーマを選ぶ操作と、テンプレートを足す操作は、`themeEdit` と `insertAfterSlideEdit` の編集を、エディタのエンジンに渡す。訪問者は、元に戻す操作で取り消せる。
 
 ### 保存
 
 保存するレコードの形、データベース、IndexedDB を読み書きできないときの動きは、ADR-0057 に従う。  
-ADR-0057 は、一覧に出す値（`DocumentMeta`）と中身（`DocumentContent`）を、2 つの object store に分けて保存すると決めている。  
+ADR-0057: [図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する](../../../adr/0057-document-records-in-two-object-stores.md)  
 スライドのエディタは、`documents/` のモジュールを通して、読み書きする。  
-保存する時点と、開くスライドの決め方は、キャンバスのツールと同じである。
+保存する時点と、開くスライドの決め方は、[キャンバスの Design Doc の「保存の流れ」](../canvas/DesignDoc.md#保存の流れ) と同じである。
 
 - ツールの種類は、`slides` である。
 - 中身（`DocumentContent` の `data`）は、Markdown の全文である。テーマは、Markdown の `theme:` に入っている。`DocumentContent` に、スライドだけの値を足さない。
@@ -490,9 +487,9 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 
 #### `ActionMenu` の変種
 
-`ActionMenu` に、次の 2 つの変種を足す。
+`ActionMenu` に、ラジオの項目のメニューを足す。
 
-- 開くボタンに、文を出す変種。今の開くボタンは、印だけである。ヘッダの「テーマ」「テンプレート」「ファイル」のメニューが使う。
+- ヘッダの「テーマ」「テンプレート」「ファイル」のメニューは、開くボタンに文を出す。開くボタンに文を出す変種は、キャンバスのツールを実装するときに `@fukuemon/ui` に足したものを使う。スライドの実装では、足さない。
 - ラジオの項目のメニュー。項目のうち 1 つを、選んでいる状態にする。「テーマ」のメニューが使う。
   - メニューの全ての項目が、`role="menuitemradio"` と `aria-checked` を持つ。ラジオの項目と、ほかの項目を、1 つのメニューに混ぜない。
   - 選んでいる項目には、項目の左に印を出す。色だけで示さない。印は、読み上げから外す。
@@ -501,7 +498,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 
 #### `packages/ui` の文書とチェック
 
-- コンポーネントの文書の `ActionMenu` に、2 つの変種、選んでいる状態、使う場面の「テーマを選ぶ」、項目が 2 つでも使う例外を足す。
+- コンポーネントの文書の `ActionMenu` に、ラジオの項目のメニューの変種、選んでいる状態、使う場面の「テーマを選ぶ」、項目が 2 つでも使う例外を足す。
 - トークンの文書の、色の表と、色でない値の例外の一覧に、足した名前を書く。
 - デザインシステムの文書の `MOTION-REDUCE` に、静的なページの例外を書く。静的なページは `theme.css` を読めないので、ページの CSS に、動きを止める規則を 1 か所書く。
 
@@ -519,7 +516,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 - `apps/web/src/lib/`: `::slides` を処理するプラグイン。ディレクティブの解析に、`remark-directive` を使う。
 - `packages/ui/package.json`: `exports` に、トークンの CSS のサブパスを足す。
 - `packages/ui/src/tokens/`: 静的なページが使う CSS 変数と、スライド用のセマンティックトークン。
-- `packages/ui/src/base/ActionMenu/`: 開くボタンに文を出す変種と、ラジオの項目のメニュー。
+- `packages/ui/src/base/ActionMenu/`: ラジオの項目のメニュー。
 - `packages/ui/scripts/`: トークンの CSS の生成、コントラストのチェックの組、色の値のチェックの対象。
 - `packages/ui/DESIGN.md`、`packages/ui/design/tokens.md`、`packages/ui/design/components.md`: 足したトークン、変種、`MOTION-REDUCE` の例外。
 

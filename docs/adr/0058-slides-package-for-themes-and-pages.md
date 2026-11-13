@@ -12,8 +12,10 @@
   - ADR-0041: [スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する](0041-slides-editor-with-marp.md)
 - 公開するスライドは、`apps/web` のビルドが、Node で marp-core を動かして静的な HTML にする。ページ送りは、リンクと CSS の `:target` で作る。
   - ADR-0042: [公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む](0042-published-slides-as-static-pages.md)
-- スライドのエディタは、`apps/playground` のツールである。`apps/playground` は、`apps/web` に依存しない。
+- スライドのエディタは、`apps/playground` のツールである。
   - ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける](0046-playground-as-vite-react-app.md)
+- `apps/playground` は、`apps/web` に依存しない。
+  - 出典: [コードベースの構造](../../context/codebase.md)
 - 実行環境の処理は、実行環境ごとの package に置く。package は、React と画面を持たない。
   - ADR-0048: [Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する](0048-node-runtime-interface-and-stores.md)
 - `packages/ui` は、Base と Case の React のコンポーネントと、トークンを持つ。workspace のどの package にも依存しない。
