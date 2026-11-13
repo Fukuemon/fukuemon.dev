@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@fukuemon/ui/fonts.css";
+@import "@fukuemon/ui/theme.css";
+
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+  }
+}
