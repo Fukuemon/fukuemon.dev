@@ -1,7 +1,7 @@
 ---
 type: context
 title: 業務の知識
-description: コンテンツ、種別、contentId、関連、手順、実行パネルなどの用語と、コードの識別子との対応。状態と不変条件は概念ごとに domain/ に置く
+description: コンテンツ、記事、形式、シリーズ、contentId、関連などの用語と、コードの識別子との対応。状態と不変条件は概念ごとに domain/ に置く
 status: stable
 ---
 
@@ -9,29 +9,22 @@ status: stable
 
 ## Glossary
 
-- コンテンツ: サイトで公開する記事、ハンズオン、playground の総称。
-  - 本文は `apps/web/src/content/` の Markdown か MDX に置く。
-- 種別: 記事とハンズオンの 2 つ。URL を分ける単位で、増やさない。
-  - 記事はディレクトリ `articles/` と URL `/articles/<path>`、schema `articleSchema` に対応する。
-  - ハンズオンはディレクトリ `labs/` と URL `/labs/<path>`、schema `handsOnSchema` に対応する。
-- playground: 手順に沿わずにコードを動かせる場所。ディレクトリ `playgrounds/<分類>/` と URL `/playground/<path>` に対応する。
-  - 分類は、Postgres や言語の単位で、`playgrounds/` の直下のディレクトリ名で決まる。
+- コンテンツ: サイトで公開する記事。本文は `apps/web/src/content/articles/` の Markdown か MDX に置く。
+- 記事: コンテンツの唯一の種別。ディレクトリ `articles/` と URL `/articles/<path>`、schema `articleSchema` に対応する。
+  - ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](../docs/adr/0030-articles-format-and-series.md)
+- 形式: 記事の構成。frontmatter の `format` に書く。受け付ける値は、実装した `page`（1 ページ）だけで、省くと `page` になる。
+- シリーズ: 1 つの主題にまとめた記事の集まり。`articles/<series>/` のディレクトリに対応し、タイトルと説明を `index.md` に書く。
+  - schema は `seriesSchema` である。
+- `order`: シリーズの中の記事の読む順。frontmatter に書く整数で、小さいほど前になる。
+- プレイグラウンド: 手順に沿わずにコードを動かせる場所。`play.fukuemon.dev` に置き、`apps/web` のコンテンツには含めない。
 - セクション: サイトを分ける about、blog、playground の 3 つ。
 - 分類: 主題を示す自由な語。frontmatter の `tags` に書き、索引のページを持たない。
-- `contentId`: コンテンツの安定した識別子。ファイルのパス、URL、ストレージから独立する。
+- `contentId`: 記事の安定した識別子。ファイルのパス、URL、ストレージから独立する。
   - Astro の `id` とは別に持つ。
-- 関連: あるコンテンツから別のコンテンツへの、著者が明示した参照。frontmatter の `related` に相手の `contentId` を書く。
+- 関連: ある記事から別の記事への、著者が明示した参照。frontmatter の `related` に相手の `contentId` を書く。
 - 逆参照: 片方向に書いた関連から、ビルドのときに導く逆向きの関連。
-- `ContentRef`: 種別の違うコンテンツを、一覧で一様に扱うために正規化した表現。
-- 手順: ハンズオンを区切る単位。本文の `h2` が境界になり、進捗を保存する単位になる。
-- 実行パネル: 本文の中でコードを実行するコンポーネント。`run` を付けたコードフェンスから作る。
-- 手を動かす場所: ハンズオンの frontmatter の `interactive.level`。`embedded`（ページの中）と `local`（読者の端末）がある。
-  - `sandbox`（WebContainers と WebVM）は設計だけを決めてある。
-  - ADR-0006: [手を動かす場所の 4 分類](../docs/adr/0006-interactive-content-levels.md)
-- 実行環境: `embedded` のハンズオンでコードを動かす環境。frontmatter の `interactive.runtime` で選ぶ。
-- `setup`: `embedded` のハンズオンで、実行パネルが最初に 1 度だけ流す準備のコード。
+- `ContentRef`: 記事を、一覧で一様に扱うために正規化した表現。
 
 ## Concepts
 
-- [コンテンツ](domain/content.md): `contentId`、公開の状態、関連が守る条件
-- [ハンズオン](domain/hands-on.md): 手を動かす場所、手順、進捗が守る条件
+- [コンテンツ](domain/content.md): `contentId`、公開の状態、関連、シリーズが守る条件
