@@ -18,12 +18,12 @@ const row = "border-t border-border py-2";
 
 <div class="px-4 pt-10 pb-24 md:px-6">
   <div class="mx-auto max-w-page">
-    <section class={section} aria-labelledby="profile">
-      <h1 id="profile" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
+    <section class={section} data-garden-card aria-labelledby="profile">
+      <h1 id="profile" tabindex="-1" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
       <p class="mb-4 text-text-secondary">自己紹介の見本。どんな仕事をしていて、このサイトに何を書いているかを、数行で書く。</p>
       <p>関心のある技術と、記事で扱う主題を書く。</p>
     </section>
-    <section class={section} aria-labelledby="career">
+    <section class={section} data-garden-card aria-labelledby="career">
       <h2 id="career" class:list={[heading, "text-heading-md"]}>経歴</h2>
       <ul>
         {
@@ -36,7 +36,7 @@ const row = "border-t border-border py-2";
         }
       </ul>
     </section>
-    <section class={section} aria-labelledby="stack">
+    <section class={section} data-garden-card aria-labelledby="stack">
       <h2 id="stack" class:list={[heading, "text-heading-md"]}>技術スタック</h2>
       <dl>
         {
@@ -49,10 +49,87 @@ const row = "border-t border-border py-2";
         }
       </dl>
     </section>
-    <section class={section} aria-labelledby="articles">
+    <section class={section} data-garden-card aria-labelledby="articles">
       <h2 id="articles" class:list={[heading, "text-heading-md"]}>記事</h2>
       <p class="mb-4">記事の一覧への入口の見本。</p>
       <Link href="/articles" isStandalone>記事の一覧を開く</Link>
     </section>
   </div>
 </div>
+
+<style>
+  /* 庭を出すときは、セクションを和紙に置く。色は時間帯の場面の色で、テーマに依らない（top-garden の Design Doc の「和紙の文」） */
+  :global(html.stage-on) [data-garden-card] {
+    box-sizing: content-box;
+    inline-size: 25rem;
+    max-inline-size: none;
+    padding: var(--scene-pad-y) var(--scene-pad-x);
+    border: 0;
+    background: var(--scene-paper);
+    color: var(--scene-text);
+    font-size: 1rem;
+    line-height: 1.9;
+    opacity: 0;
+    transition: opacity 700ms ease;
+  }
+
+  /* CSS3DRenderer が要素に pointer-events: auto を書くので、見せていない文は !important で止める */
+  :global(html.stage-on) [data-garden-card]:not(:global(.is-current)) {
+    pointer-events: none !important;
+  }
+
+  :global(html.stage-on.garden-ready) [data-garden-card]:global(.is-current) {
+    opacity: 1;
+  }
+
+  :global(html.stage-on) [data-garden-card] :is(h1, h2) {
+    margin-block-end: 1rem;
+    padding-block-end: 0.625rem;
+    border-block-end: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+    font-size: 1.5rem;
+  }
+
+  :global(html.stage-on) [data-garden-card] p {
+    margin-block-end: 1rem;
+    color: inherit;
+  }
+
+  :global(html.stage-on) [data-garden-card] :is(p:last-child, li:last-child p) {
+    margin-block-end: 0;
+  }
+
+  :global(html.stage-on) [data-garden-card] :is(li, dl > div) {
+    padding-block: 0.625rem;
+    border-color: color-mix(in srgb, currentColor 25%, transparent);
+  }
+
+  :global(html.stage-on) [data-garden-card] :is(li, dl > div):first-child {
+    padding-block-start: 0;
+    border-block-start: 0;
+  }
+
+  :global(html.stage-on) [data-garden-card] :is(span, dt) {
+    color: inherit;
+  }
+
+  :global(html.stage-on) [data-garden-card] a {
+    color: var(--scene-link);
+  }
+
+  :global(html.stage-on) [data-garden-card] :focus-visible {
+    outline-color: currentColor;
+  }
+
+  @media (max-width: 640px) {
+    :global(html.stage-on) [data-garden-card] {
+      inline-size: 17.5rem;
+      line-height: 1.8;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.stage-on) [data-garden-card] {
+      transition: none;
+    }
+  }
+</style>

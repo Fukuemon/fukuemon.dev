@@ -198,6 +198,8 @@ export function tree(
     m.frustumCulled = false;
     g.add(m);
   }
+  // 和紙を掛ける枝は、幹のこの点から伸ばす。
+  g.userData.top = trunk.getPoint(0.86).multiplyScalar(s);
   g.scale.setScalar(s);
   return g;
 }

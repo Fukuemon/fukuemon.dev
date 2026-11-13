@@ -1,13 +1,32 @@
 ---
-// 庭を描く canvas を置く。html に class stage-on が付いたときだけ、画面の全体に出す。
+// 庭を描く canvas と、庭の中のボタンを置く。html に class stage-on が付いたときだけ、画面の全体に出す。
+// 和紙に置いたセクションは、場面のバンドルがこの中へ移すので、外側の要素は読み上げから隠さない。
+import { STATIONS } from "../layout";
 ---
 
-<div class="garden-stage bg-surface" data-garden-stage aria-hidden="true">
-  <canvas></canvas>
+<div class="garden-stage bg-surface" data-garden-stage>
+  <canvas aria-hidden="true"></canvas>
 </div>
+<nav class="garden-nav" data-garden-nav aria-label="庭の中の移動">
+  <div class="stops">
+    {
+      STATIONS.map(({ label }, i) => (
+        <button type="button" data-station={i} aria-current={i === 0 ? "true" : "false"}>
+          {label}
+        </button>
+      ))
+    }
+  </div>
+  <div class="tools">
+    <button type="button" data-garden-pause aria-pressed="false">動きを止める</button>
+    <button type="button" data-garden-plain>文だけで読む</button>
+  </div>
+</nav>
+<p class="sr-only" data-garden-live aria-live="polite"></p>
 
 <style>
-  .garden-stage {
+  .garden-stage,
+  .garden-nav {
     display: none;
   }
 
@@ -26,5 +45,92 @@
     display: block;
     inline-size: 100%;
     block-size: 100%;
+  }
+
+  .garden-stage :global(.garden-cards) {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* 庭の中のボタン（top-garden の Design Doc の「庭の中のボタンの並び」） */
+  :global(html.stage-on.garden-ready) .garden-nav {
+    position: fixed;
+    inset: auto 1.25rem 1.25rem;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .garden-nav > * {
+    pointer-events: auto;
+  }
+
+  .stops {
+    display: flex;
+  }
+
+  .tools {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-end: 0;
+    display: flex;
+    gap: 1rem;
+  }
+
+  button {
+    min-block-size: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    border: 1px solid var(--fd-color-border-field);
+    background: var(--fd-color-surface);
+    color: var(--fd-color-text);
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--fd-color-focus);
+    outline-offset: 2px;
+  }
+
+  .stops button + button {
+    margin-inline-start: -1px;
+  }
+
+  .stops button[aria-current="true"] {
+    border-color: var(--fd-color-text);
+    background: var(--fd-color-text);
+    color: var(--fd-color-surface);
+  }
+
+  .tools button {
+    padding-inline: 0.25rem;
+    border: 0;
+    background: none;
+    color: var(--garden-ui, var(--fd-color-text));
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .tools button[aria-pressed="true"] {
+    font-weight: 700;
+    text-decoration-thickness: 2px;
+  }
+
+  @media (max-width: 900px) {
+    :global(html.stage-on.garden-ready) .garden-nav {
+      inset-block-end: 0.75rem;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .tools {
+      position: static;
+    }
+
+    button {
+      padding-inline: 0.875rem;
+    }
   }
 </style>
