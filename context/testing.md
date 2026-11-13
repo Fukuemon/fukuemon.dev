@@ -42,6 +42,10 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 対象は、`src/features/top-garden/` の `season.ts`（季節と時間帯を返す）と `visit.ts`（最初の訪問かを返す）である。
 
+`apps/playground` には、分岐、関数、行、文のカバレッジ 90% を求める。  
+対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
+対象のファイルは、まだ無い。
+
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  
 [PRD](../docs/PRD.md#success-metrics) の成功条件に対応しない E2E を書かない。  

@@ -7,7 +7,7 @@ if (!root) throw new Error("#root が無い");
 createRoot(root).render(
   <StrictMode>
     <main>
-      <h1>SQL</h1>
+      <h1>SQL の実行環境</h1>
     </main>
   </StrictMode>,
 );
