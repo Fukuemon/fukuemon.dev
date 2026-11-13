@@ -6,6 +6,7 @@ import expressiveCode, { ExpressiveCodeTheme, pluginFramesTexts } from "astro-ex
 import { toVsCodeTheme } from "@fukuemon/ui/code-theme";
 import { rehypeJaLinebreak } from "./src/lib/rehype-ja-linebreak";
 import { rehypeMermaid } from "./src/lib/rehype-mermaid";
+import { rehypeScrollBox } from "./src/lib/rehype-scroll-box";
 
 // サイトの UI の文言は、ですます調の日本語にする (context/conventions.md)
 pluginFramesTexts.overrideTexts(undefined, {
@@ -24,7 +25,7 @@ export default defineConfig({
   markdown: {
     // デフォルトの Sätteri は rehype のプラグインを動かさないので、unified の処理に替える。
     // rehypeMermaid は Expressive Code より前に動き、素の <pre><code> のまま図を拾う
-    processor: unified({ rehypePlugins: [rehypeMermaid, rehypeJaLinebreak] }),
+    processor: unified({ rehypePlugins: [rehypeMermaid, rehypeScrollBox, rehypeJaLinebreak] }),
   },
   integrations: [
     react(),
@@ -37,9 +38,15 @@ export default defineConfig({
       minSyntaxHighlightingColorContrast: 0,
       styleOverrides: {
         borderColor: "var(--color-border)",
+        borderWidth: "1px",
         borderRadius: "0",
+        // text-code（16px、行高 170%）と text-caption（14px）に合わせる。テーマ変数はこの設定の CSS に届かない
         codeFontFamily: "var(--font-mono)",
+        codeFontSize: "1rem",
+        codeLineHeight: "1.7",
         uiFontFamily: "var(--font-sans)",
+        uiFontSize: "0.875rem",
+        focusBorder: "var(--color-focus)",
         frames: {
           frameBoxShadowCssValue: "none",
           editorTabBarBackground: "var(--color-code-surface)",
@@ -48,10 +55,12 @@ export default defineConfig({
           editorActiveTabForeground: "var(--color-code-text)",
           editorActiveTabBorderColor: "var(--color-border)",
           editorActiveTabIndicatorTopColor: "var(--color-primary)",
+          editorActiveTabIndicatorHeight: "2px",
           terminalTitlebarBackground: "var(--color-code-surface)",
           terminalTitlebarBorderBottomColor: "var(--color-border)",
           terminalTitlebarForeground: "var(--color-code-text)",
           terminalTitlebarDotsForeground: "var(--color-border-field)",
+          terminalTitlebarDotsOpacity: "1",
           tooltipSuccessBackground: "var(--color-success-surface)",
           tooltipSuccessForeground: "var(--color-text)",
         },

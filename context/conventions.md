@@ -94,6 +94,8 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
 - `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css`、`theme.css`、`sources.css` を読む。読み込みの並びは、`sources.css` のほかは、カタログの `preview.css` と同じ形にする。
 - 記事の本文の要素のスタイリングは、`site.css` の `.prose` に置く。Markdown から出る要素には class が付かないので、要素の選択子で当てる。
+- 本文の表と図は、`apps/web/src/lib/rehype-scroll-box.ts` が、横に送れるフォーカスできる枠で包む。縮めて列に収めると、表の列が潰れ、図の文字が 14px より小さくなるためである。
+  - Markdown の表には `caption` を書けないので、記事の表は、`packages/ui` の `Table` と違い、題を持たない。
 - Pele が描いた図の色は、`site.css` が Pele の CSS 変数（`--pele-fg` など）をトークンへ対応させる。
   - ADR-0055: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md)
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。

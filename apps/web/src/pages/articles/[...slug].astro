@@ -13,8 +13,8 @@ const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
 <SiteLayout title={`${title} | fukuemon.dev`} description={description}>
-  <div class="px-4 py-8 md:px-6">
-    <article class="mx-auto flex max-w-prose flex-col gap-8">
+  <div class="mx-auto max-w-page px-4 py-8 md:px-6">
+    <article class="flex max-w-(--container-prose) flex-col gap-8">
       <header class="flex flex-col gap-2">
         <h1 class="font-heading text-heading-lg font-semibold">{title}</h1>
         <p class="text-caption text-text-secondary">

@@ -52,6 +52,7 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - 公開するかを判定し、シリーズの位置と前後を組む `content/article-pages.ts`
 - `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
 - 和文の間の改行を消す `rehype-ja-linebreak.ts`
+- 表と図を横に送れる枠で包む `rehype-scroll-box.ts`
 
 `apps/playground` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
