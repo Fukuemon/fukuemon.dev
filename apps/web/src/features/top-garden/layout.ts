@@ -17,8 +17,6 @@ export const GATE_Z = 3;
 export interface Gate {
   readonly posts: readonly Box[];
   readonly beams: readonly Box[];
-  readonly arms: readonly Box[];
-  readonly ridge: Box;
   readonly roof: {
     readonly halfW: number;
     readonly ridgeY: number;
@@ -34,16 +32,11 @@ export const GATE: Gate = {
     [1.25, 1.25, GATE_Z, 0.26, 2.5, 0.26],
   ],
   beams: [[0, 2.3, GATE_Z, 2.24, 0.2, 0.2]],
-  arms: [
-    [-1.25, 2.56, GATE_Z, 0.18, 0.14, 2.0],
-    [1.25, 2.56, GATE_Z, 0.18, 0.14, 2.0],
-  ],
-  ridge: [0, 3.4, GATE_Z, 4.7, 0.14, 0.2],
   roof: { halfW: 2.3, ridgeY: 3.36, eaveY: 2.62, depth: 1.15 },
   door: { x: 1.1, h: 2.1, len: 1.05 },
 };
 
-export const WALL = { x0: 1.38, x1: 16, h: 1.7, roofY: 1.82, t: 0.3 } as const;
+export const WALL = { x0: 1.38, x1: 16, roofY: 1.82 } as const;
 /** 飛び石の中心の [x, z] */
 export const STEPS: readonly Vec2[] = [
   [0.16, 8.3],
@@ -70,7 +63,7 @@ export interface Mountain {
   readonly t0: number;
 }
 
-// 遠景の山並み。SVG の座標（1600×900）で書き、立体の場面では、最初のカメラから同じ位置に見える板に描く。
+/** 遠景の山並み。SVG の座標（1600×900）で書き、立体の場面では、最初のカメラから同じ位置に見える板に描く。 */
 export const MOUNTAINS: readonly Mountain[] = [
   {
     peaks: [

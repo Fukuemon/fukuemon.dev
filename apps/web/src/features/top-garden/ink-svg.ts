@@ -6,7 +6,7 @@ import { DESIGN } from "./layout";
 const TIME_SCALE = 3150 / 3900;
 const RENDER_SEED = 11;
 
-const f1 = (v: number) => String(Math.round(v * 10) / 10);
+const round1 = (v: number) => String(Math.round(v * 10) / 10);
 
 export interface RenderedLayers {
   /** 層ごとの、線 1 本を包む `<g>` の文字列の列 */
@@ -46,16 +46,16 @@ export function renderStrokes(strokes: readonly Stroke[], scale = TIME_SCALE): R
         const wf = Math.pow(Math.min(1, u / st.tin) * Math.min(1, (1 - u) / st.tout), 0.6);
         d +=
           (d ? "L" : "M") +
-          f1(pt[0] - (dy / len) * off * wf) +
+          round1(pt[0] - (dy / len) * off * wf) +
           " " +
-          f1(pt[1] + (dx / len) * off * wf);
+          round1(pt[1] + (dx / len) * off * wf);
         // 最後の点を必ず通る。
         if (i < i1 && i + step > i1) i = i1 - step;
       }
       const width = nb === 1 ? st.w * 0.55 + st.lw * 0.5 : (st.w / nb) * 1.15 + st.lw * 0.4;
       const alpha = Math.min(1, st.a * (0.62 + 0.38 * Q()) * (nb === 1 ? 0.9 : 0.8));
       parts.push(
-        `<path pathLength="1" d="${d}" stroke-width="${f1(width)}" stroke-opacity="${Math.round(alpha * 100) / 100}"/>`,
+        `<path pathLength="1" d="${d}" stroke-width="${round1(width)}" stroke-opacity="${Math.round(alpha * 100) / 100}"/>`,
       );
       paths++;
     }

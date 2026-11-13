@@ -1,5 +1,16 @@
 import { brush, type Stroke, type Tint } from "./brush";
-import { DESIGN, GATE, GATE_Z, MOUNTAINS, STEPS, STEP_R, WALL, project, type Vec2 } from "./layout";
+import {
+  CAM0,
+  DESIGN,
+  GATE,
+  GATE_Z,
+  MOUNTAINS,
+  STEPS,
+  STEP_R,
+  WALL,
+  project,
+  type Vec2,
+} from "./layout";
 
 export interface InkArt {
   readonly strokes: readonly Stroke[];
@@ -7,6 +18,8 @@ export interface InkArt {
 }
 
 const INK_SEED = 7;
+// 飛び石の楕円の縦横の比に使う、最初のカメラの焦点距離（px）の丸めた値。計算した値（約 1060.1）に替えると出力が変わる
+const STEP_FOCAL = 1060;
 
 /**
  * 墨の絵の線を、山並み、塀、門、飛び石、石、松の順に作る。
@@ -207,7 +220,7 @@ export function inkArt(seed = INK_SEED): InkArt {
     const c = P(x, 0, z);
     if (c[1] > DESIGN.h + 40) return;
     const rx = STEP_R * c[2],
-      ry = rx * Math.min(0.5, (1.55 * c[2]) / 1060) * 1.1,
+      ry = rx * Math.min(0.5, (CAM0.pos[1] * c[2]) / STEP_FOCAL) * 1.1,
       arc: Vec2[] = [];
     for (let q = 0; q <= 14; q++) {
       const an = Math.PI * 2 * (q / 14) - 2.6;

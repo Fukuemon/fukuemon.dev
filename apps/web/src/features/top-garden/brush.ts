@@ -95,7 +95,7 @@ export interface Brush {
 
 /**
  * 筆の線を溜める筆を作る。同じ種で同じ順に呼べば、同じ線ができる。
- * 乱数を進める順は試作（`design/prototypes/top/src/h-strokes.mjs`）と同じにしてあり、順を変えると絵が変わる。
+ * 乱数を進める順は試作（`docs/design/prototypes/top/src/h-strokes.mjs`）と同じにしてあり、順を変えると絵が変わる。
  */
 export function brush(seed: number): Brush {
   const R = rng(seed);
@@ -122,7 +122,7 @@ export function brush(seed: number): Brush {
       dur: o.dur,
       tin: o.tin ?? 0.12,
       tout: o.tout ?? 0.3,
-      lw: o.lw || 1.7,
+      lw: o.lw ?? 1.7,
     });
   }
 
@@ -233,7 +233,7 @@ export function brush(seed: number): Brush {
         w: 2.4,
         a: 0.3,
         dry: 0.85,
-        t0: 1650 + r * 110 + (cx > 800 ? 150 : 0),
+        t0: 1650 + r * 110,
         dur: 420,
       });
     }
