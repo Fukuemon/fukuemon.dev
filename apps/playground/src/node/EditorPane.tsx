@@ -27,7 +27,9 @@ export function EditorPane() {
       {(_, file) => (
         <FileEditor
           files={runtime?.files}
-          initialText={project.files[file.id] ?? ""}
+          initialText={
+            (Object.hasOwn(project.files, file.id) ? project.files[file.id] : undefined) ?? ""
+          }
           key={file.id}
           path={file.id}
         />

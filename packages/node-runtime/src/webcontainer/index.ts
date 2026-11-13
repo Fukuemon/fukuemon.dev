@@ -29,7 +29,10 @@ function toTree(files: Readonly<Record<string, string>>): FileSystemTree {
     if (name === undefined) continue;
     let directory = root;
     for (const part of parts) {
-      const node = (directory[part] ??= { directory: {} });
+      // constructor のような Object.prototype の名前を、継承した値として読まない
+      const node =
+        (Object.hasOwn(directory, part) ? directory[part] : undefined) ??
+        (directory[part] = { directory: {} });
       if (!("directory" in node)) throw new Error(`${part} はディレクトリではない`);
       directory = node.directory;
     }
