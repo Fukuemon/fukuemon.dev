@@ -311,7 +311,8 @@ type BackendProcess = {
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
-- `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
+- `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
+- プレビューの URL の確認は、`webcontainer/` が知らせたポートのうち、URL が `https:` で、ツールのページと別の origin のものだけを、`ports` の store に入れる。合わないポートは、プレビューのタブに出さない。ツールのページと同じ origin のページを、`allow-same-origin` を付けた iframe で開くと、プレビューのスクリプトがツールのページを操作できるためである。ポートの URL を書くファイルは、`webcontainer/` が、確認の前の一覧で書く。
 - `guest/` のファイルと、標準入出力での `SqlDatabase` の実装は、実行環境が Node のプロセスを動かすことを前提にしている。Node のプロセスを持たない実行環境に差し替えるときは、`webcontainer/` に加えて、この 2 つも直す。
 
 ### 記録を読む形
@@ -421,6 +422,7 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
 - JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
+- schema は、`files` のキーのうち、`/` で区切った部分に空、`.`、`..`、`__proto__` があるものと、`\` か NUL を含むものを断る。作業ディレクトリの外と、オブジェクトの prototype を指すキーを、実行環境とエディタに渡さないためである。
 - 埋め込みの ID が `<英小文字、数字、ハイフン>/<英小文字、数字、ハイフン>` の形でないときと、JSON の `tool` が開いたページのツールと違うときも、JSON を読めないときと同じ表示にする。形でない ID では、JSON を取得せず、エラーの文に ID を出さない。URL を作った人の任意の文を、ページに出さないためである。
 
 JSON は、次の値を持つ。
