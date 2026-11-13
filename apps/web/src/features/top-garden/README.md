@@ -3,27 +3,29 @@
 このディレクトリは、トップの最初の訪問に出す墨の絵と署名の SVG を作るコードを持つ。
 墨の絵と立体の庭の場面の両方が読む、庭の配置も持つ。
 墨の絵と署名の SVG を作るモジュール（`layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`、`sign.ts`）は、React と DOM に依らない TypeScript で、ビルドのときに Node で動く。
-`season.ts` と `visit.ts` の関数と、`stage.ts` の `applyStage` と `readOverride` は、文字列にしてトップの `head` の inline script に埋め込み、ブラウザで表示の前に動く。
+`stage.ts` の `stageScript` は、`season.ts` と `visit.ts` の関数と `applyStage` を、文字列にしてトップの `head` の inline script に埋め込む。
+埋め込んだ関数は、ブラウザで、表示の前に動く。
+`readOverride` は、開発のビルドの inline script にだけ埋め込む。
 
 見た目の数値は、[トップの水墨の門と立体の庭の Design Doc](../../../../../docs/design/features/top-garden/DesignDoc.md) にある。
 Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/README.md) のコードから取った。
 
 ## Structure
 
-| ファイル               | 持つもの                                                                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layout.ts`            | 門、塀、飛び石、山並みの配置と、最初のカメラの投影                                                                                          |
-| `brush.ts`             | シードから決まった順の値を返す乱数と、筆の線と松の円を配列に足していく `brush`                                                              |
-| `ink-art.ts`           | 墨の絵の線を、山並み、塀、門、飛び石、石、松の順に作る                                                                                      |
-| `ink-svg.ts`           | 線を、線ごとの `path` を持つ 1 枚の SVG の文字列にする                                                                                      |
-| `sign.ts`              | 署名の SVG のファイルから、HTML に置く署名の `svg` を作る                                                                                   |
-| `InkGate.astro`        | 墨の絵と署名を、アニメーションなしの、描き終えた状態で出す Astro のコンポーネント                                                           |
-| `sign.svg`             | 署名の輪郭                                                                                                                                  |
-| `season.ts`            | 端末の日付と時刻から、季節と時間帯を返す                                                                                                    |
-| `visit.ts`             | 端末で初めてトップを開いたかを返す                                                                                                          |
-| `stage.ts`             | 季節と時間帯と最初の訪問を `html` に書き、庭を出すかを決める。開発のビルドだけで読む URL の引数と、`head` の inline script の組み立ても持つ |
-| `TopStageScript.astro` | `stage.ts` が組み立てた inline script を、トップの `head` に置く                                                                            |
-| `OFL.txt`              | 書体 Great Vibes のライセンスの全文                                                                                                         |
+| ファイル               | 持つもの                                                                                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout.ts`            | 門、塀、飛び石、山並みの配置と、最初のカメラの投影                                                                                              |
+| `brush.ts`             | シードから決まった順の値を返す乱数と、筆の線と松の円を配列に足していく `brush`                                                                  |
+| `ink-art.ts`           | 墨の絵の線を、山並み、塀、門、飛び石、石、松の順に作る                                                                                          |
+| `ink-svg.ts`           | 線を、線ごとの `path` を持つ 1 枚の SVG の文字列にする                                                                                          |
+| `sign.ts`              | 署名の SVG のファイルから、HTML に置く署名の `svg` を作る                                                                                       |
+| `InkGate.astro`        | 墨の絵と署名を、アニメーションなしの、描き終えた状態で出す Astro のコンポーネント                                                               |
+| `sign.svg`             | 署名の輪郭                                                                                                                                      |
+| `season.ts`            | 端末の日付と時刻から、季節と時間帯を返す                                                                                                        |
+| `visit.ts`             | 端末で初めてトップを開いたかを返す                                                                                                              |
+| `stage.ts`             | 季節と時間帯を `html` の属性に、庭を出すかと最初の訪問かを class に書く。URL の引数を読む関数と、`head` の inline script を組み立てる関数も持つ |
+| `TopStageScript.astro` | `stage.ts` が組み立てた inline script を、トップの `head` に置く                                                                                |
+| `OFL.txt`              | 書体 Great Vibes のライセンスの全文                                                                                                             |
 
 ## 同じシードから同じ絵ができる
 
