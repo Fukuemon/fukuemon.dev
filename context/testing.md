@@ -22,6 +22,7 @@ verified_commit: ab2da87
 | ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                             |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
+| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準の画像と同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                             |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -44,6 +45,7 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 
 - 墨の絵と署名の SVG を作る `layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`、`sign.ts`
 - 季節と時間帯を返す `season.ts`
+- 時間帯と季節から場面の色を決める `scene-colors.ts`
 - 最初の訪問かを返す `visit.ts`
 - 季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
 
@@ -63,6 +65,7 @@ CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/8
 それまでは、Storybook のバージョンを上げるときに、ビルドしたカタログを配信し、その URL を `BASE_URL` に渡して `pnpm --filter @fukuemon/ui e2e` で実行する。
 
 見た目の回帰のチェックは、E2E のエビデンスの静止画を、変更の前後で並べて比べる。  
+トップの庭は WebGL で描き、目で比べても色の小さな違いに気づけないので、Playwright の静止画の比較で確認する。流し方は [E2E のテスト](testing/e2e.md) にある。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
 サイトの E2E の package（`packages/e2e`）は、まだ無い。
 

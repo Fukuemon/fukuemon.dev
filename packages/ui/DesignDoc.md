@@ -40,6 +40,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - エディタと端末のエンジン（CodeMirror、xterm.js など）の選択と結び付け。プレイグラウンドの要求の prototype で決める。`packages/ui` は枠とテーマだけを持つ。
 - 記事の Markdown の描画と、Mermaid の図の SVG への変換。サイトの基盤の要求で扱う。
 - 縦組み。
+- トップの立体の庭の場面の色。時間帯ごとに 20 個を超える色を使い、場面のほかでは使わないので、トークンにしない。値は `apps/web/src/features/top-garden/scene-colors.ts` だけに書き、色の値のチェック（`check:raw-values`）はこのファイルを対象から外す。表は [トップの水墨の門と立体の庭の Design Doc](../../docs/design/features/top-garden/DesignDoc.md#時間帯ごとの場面の色) にある。
 
 ## Design
 

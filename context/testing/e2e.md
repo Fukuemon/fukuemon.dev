@@ -23,6 +23,35 @@ status: draft
 
 <!-- 流すコマンド、テストのプロジェクトの分け方（準備と E2E）と CI で流す範囲、向ける環境と URL、worker の数とその理由、lint と型のチェックのコマンド。backend を差し替えて流す spec と本物の backend につなぐ spec の見分け方（ファイル名かプロジェクト）。エビデンスを撮る撮影の設定があれば、その置き場 -->
 
+### トップの庭の見た目の回帰
+
+`apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して流す。
+CI では、`pnpm run check` がビルドの後に流す。
+手元では、ビルドしてから次を流す。
+
+```sh
+pnpm run build
+pnpm run test:visual
+```
+
+- 庭は WebGL で描くので、GPU に依らないよう、chromium に SwiftShader で描かせる。
+- 基準の画像は、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。比べるときは、画素の 1% までの違いを許す。macOS の chromium で流しても、この範囲に収まる。
+- 場面を変えて基準の画像を作り直すときは、CI と同じ Linux の Playwright のイメージで作る。CI で流す環境と同じ絵を基準にするためである。
+
+基準の画像の作り直し方は、次のとおり。
+`apps/web/dist/` を手元で配信し、コンテナから `host.docker.internal` で開く。
+イメージのバージョンは、`@playwright/test` のバージョンに合わせる。
+
+```sh
+pnpm run build
+python3 -m http.server 4400 --directory apps/web/dist
+docker run --rm --platform linux/amd64 --ipc=host -v "$PWD":/work -w /work/apps/web \
+  -e BASE_URL=http://host.docker.internal:4400 mcr.microsoft.com/playwright:v1.64.1-noble \
+  node node_modules/@playwright/test/cli.js test -c e2e/playwright.config.ts --update-snapshots
+```
+
+`python3 -m http.server` は別の端末で流し、作り直した後に止める。
+
 ## Test Data and Login
 
 <!-- テストデータの作り方と片付け方。使い捨ての環境でデータを消さずに環境ごと作り直すなら、作り直すコマンドと、作り直してから流す spec。ログインの状態の保存先と、並列で共有しない理由。ID 基盤のログインやワンタイムのコードの扱い -->
