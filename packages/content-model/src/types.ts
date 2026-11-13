@@ -1,22 +1,16 @@
-export type ContentType = "article" | "hands-on";
+import type { ArticleFormat } from "./schema.js";
 
-export type MetaItem = { label: string; value: string };
-
-/** 手を動かす場所。ページに何を置くかが変わる */
-export type InteractiveLevel = "embedded" | "local";
-
-/** 一覧が種別ごとの分岐を持たないための正規化表現 */
+/** 一覧が記事の形式ごとの分岐を持たないための正規化表現 */
 export type ContentRef = {
   contentId: string;
-  type: ContentType;
-  /** ハンズオンのみ。導線の文言を level から出すために持つ */
-  level?: InteractiveLevel;
+  format: ArticleFormat;
+  /** シリーズに入る記事のみ。`articles/` の直下のディレクトリ名 */
+  series?: string;
   title: string;
   description: string;
   href: string;
   tags: string[];
   date: Date;
-  meta: MetaItem[];
 };
 
 export type ContentGraph = {
