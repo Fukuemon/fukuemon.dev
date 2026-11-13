@@ -19,6 +19,7 @@ export function subsetFonts(family: string): AstroIntegration {
         const root = fileURLToPath(dir);
         const files = await list(root);
         const used = await usedChars(files);
+        const chars = [...used];
         const css = files.filter((f) => f.endsWith(".css"));
         const renames = new Map<string, string>();
         let before = 0;
@@ -27,7 +28,7 @@ export function subsetFonts(family: string): AstroIntegration {
         if (all.length === 0)
           throw new Error(`${family}: 作り直す @font-face が CSS に見つからない`);
         for (const face of all) {
-          const text = [...used].filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
+          const text = chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
           if (text === "") continue;
           const path = join(root, face.url);
           const src = await readFile(path);
@@ -63,7 +64,12 @@ interface Face {
 export function parseFaces(css: string, family: string): Face[] {
   const out: Face[] = [];
   for (const [, body] of css.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
-    if (!new RegExp(`font-family:\\s*["']?${family}["']?\\s*;`).test(body)) continue;
+    if (
+      !new RegExp(
+        `font-family:\\s*["']?${family.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']?\\s*;`,
+      ).test(body)
+    )
+      continue;
     const url = /url\(([^)]+\.woff2)\)/.exec(body)?.[1]?.replace(/^["']|["']$/g, "");
     const range = /unicode-range:([^;}]*)/.exec(body)?.[1];
     if (url === undefined || range === undefined) continue;
