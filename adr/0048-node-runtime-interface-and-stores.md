@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -53,6 +53,7 @@ SQL だけを動かすツールと、Go を動かすツールは、それぞれ�
   - ADR-0053: [DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る](0053-pglite-database-in-playground.md)
 - `@fukuemon/node-runtime` は、`@fukuemon/sql-runtime` に依存する。逆の向きの依存は無い。
 - 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
+- `@fukuemon/node-runtime` は、実行環境の中の Node が動かすスクリプトを束ねる Vite の plugin を export する。`apps/playground` の `vite.config` は、plugin を登録するだけにする。package が、アプリのビルドの設定に依らないようにするためである。
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけにする。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
 - リポジトリの中で、`@webcontainer/api` を import できるのは、`packages/node-runtime/src/webcontainer/` だけにする。Oxlint の `no-restricted-imports` で止める。
 - `node-runtime/`（`packages/node-runtime/src/`）の直下と、`webcontainer/` の間も、型で分ける。WebContainers に依る処理は、`webcontainer/` に置く。

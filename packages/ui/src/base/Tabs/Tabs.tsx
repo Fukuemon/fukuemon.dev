@@ -76,7 +76,7 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
               {isSelected && (
                 <span
                   aria-hidden="true"
-                  className="absolute inset-x-0 bottom-0 h-0.5 animate-stroke bg-primary"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1 animate-stroke bg-primary stroke-brush"
                 />
               )}
               <button
@@ -114,7 +114,7 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
                 <button
                   aria-hidden="true"
                   aria-label={`${item.label} を閉じる`}
-                  className="inline-grid size-11 cursor-pointer place-items-center text-text-secondary transition-colors hover:text-text focus-visible:focus-ring"
+                  className="inline-grid size-11 cursor-pointer place-items-center rounded-control text-text-secondary transition-colors hover:text-text focus-visible:focus-ring"
                   onClick={() => onClose?.(item.id)}
                   tabIndex={-1}
                   type="button"

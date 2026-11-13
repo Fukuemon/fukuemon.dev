@@ -6,7 +6,8 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading, SecondaryLoading, Small } = composeStories(stories);
+const { Primary, PrimaryDisabled, Loading, SecondaryLoading, DangerLoading, Small } =
+  composeStories(stories);
 
 describe("Button", () => {
   it("押すと onClick を呼ぶ。Enter と Space でも押せる", async () => {
@@ -40,15 +41,46 @@ describe("Button", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("読み込み中の印の罫は、ボタンの文の色で動く", () => {
+  it("読み込み中の主と danger のボタンは、hover で色を変えない", async () => {
+    for (const Story of [Loading, DangerLoading]) {
+      const { unmount } = render(<Story />);
+      const button = screen.getByRole("button");
+      const before = getComputedStyle(button).backgroundColor;
+      await userEvent.hover(button);
+      expect(button).toHaveAttribute("aria-busy", "true");
+      expect(getComputedStyle(button).backgroundColor).toBe(before);
+      unmount();
+    }
+  });
+
+  it("読み込み中でない主のボタンは、hover で色を変える", async () => {
+    render(<Primary />);
+    const button = screen.getByRole("button", { name: "保存" });
+    const before = getComputedStyle(button).backgroundColor;
+    await userEvent.hover(button);
+    await expect.poll(() => getComputedStyle(button).backgroundColor).not.toBe(before);
+  });
+
+  it("読み込み中の印の 3 つの点は、ボタンの文の色で動く", () => {
     for (const Story of [Loading, SecondaryLoading]) {
       const { unmount } = render(<Story />);
       const button = screen.getByRole("button", { name: "保存" });
-      const stroke = getComputedStyle(button.querySelector("[aria-hidden]")!, "::after");
-      expect(stroke.animationName).toBe("fd-loading-stroke");
-      expect(stroke.backgroundColor).toBe(getComputedStyle(button).color);
+      const dots = button.querySelectorAll("[aria-hidden] > span");
+      expect(dots).toHaveLength(3);
+      for (const dot of dots) {
+        const style = getComputedStyle(dot);
+        expect(style.animationName).toBe("fd-loading-dot");
+        expect(style.backgroundColor).toBe(getComputedStyle(button).color);
+      }
       unmount();
     }
+  });
+
+  it("墨のにじみの面は、押す前は見えず、クリックを受けない", () => {
+    render(<Primary />);
+    const ink = getComputedStyle(screen.getByRole("button", { name: "保存" }), "::before");
+    expect(ink.opacity).toBe("0");
+    expect(ink.pointerEvents).toBe("none");
   });
 
   it("S のボタンは、見た目の外まで 44×44 px 以上を押せる", () => {
