@@ -22,7 +22,7 @@ const linkClassName =
   "flex min-h-11 flex-col gap-1 border-t border-border px-2 py-4 hover:bg-surface-subtle focus-visible:focus-ring";
 
 /**
- * シリーズの中の位置と、前と次の記事へのリンク。
+ * シリーズの中の位置と、前と次の記事へのリンク。hover で、記事の題の下に 2px の罫を行ごとに引く。
  * 広い画面では前を左、次を右に並べ、前が無くても次は右に置く。
  */
 export function SeriesPager({ series, position, total, prev, next }: SeriesPagerProps) {
@@ -38,7 +38,7 @@ export function SeriesPager({ series, position, total, prev, next }: SeriesPager
             <a className={linkClassName} href={prev.href} rel="prev">
               <span className="text-caption text-text-secondary">前の記事</span>
               <span className="text-body-dense text-link underline underline-offset-4">
-                {prev.title}
+                <span className="link-rule">{prev.title}</span>
               </span>
             </a>
           )}
@@ -50,7 +50,7 @@ export function SeriesPager({ series, position, total, prev, next }: SeriesPager
             >
               <span className="text-caption text-text-secondary">次の記事</span>
               <span className="text-body-dense text-link underline underline-offset-4">
-                {next.title}
+                <span className="link-rule">{next.title}</span>
               </span>
             </a>
           )}

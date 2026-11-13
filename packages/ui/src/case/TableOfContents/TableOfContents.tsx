@@ -86,7 +86,7 @@ const useCurrentHeadingId = (ids: readonly string[]) => {
 };
 
 /**
- * 記事の見出しの目次。h2 と h3 の 2 段を、入れ子のリストで並べる。
+ * 記事の見出しの目次。h2 と h3 の 2 段を、入れ子のリストで並べる。hover で、見出しの文字の下に 2px の罫を行ごとに引く。
  * JavaScript が動くときは、読んでいる見出しのリンクに `aria-current="location"` を付け、太字と左の線で示す。
  * 静的に描いた HTML では、見出しへのリンクだけが働く。
  */
@@ -99,7 +99,7 @@ export function TableOfContents({ headings }: TableOfContentsProps) {
       <a
         aria-current={isCurrent ? "location" : undefined}
         className={clsx(
-          "flex min-h-11 items-center border-l-2 py-2 pr-2 text-body-dense underline-offset-4 hover:underline focus-visible:focus-ring",
+          "flex min-h-11 items-center border-l-2 py-2 pr-2 text-body-dense focus-visible:focus-ring",
           item.level === 3 ? "pl-8" : "pl-4",
           isCurrent
             ? "border-current-page font-bold text-current-page"
@@ -107,7 +107,9 @@ export function TableOfContents({ headings }: TableOfContentsProps) {
         )}
         href={`#${item.id}`}
       >
-        {item.label}
+        <span>
+          <span className="link-rule">{item.label}</span>
+        </span>
       </a>
     );
   };

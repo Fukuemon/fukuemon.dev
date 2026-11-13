@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TableOfContents.stories";
 
-const { Default, Reading, ReadToEnd } = composeStories(stories);
+const { Default, Reading, ReadToEnd, LongHeading } = composeStories(stories);
 
 const link = (name: string) => screen.getByRole("link", { name });
 
@@ -111,5 +111,16 @@ describe("TableOfContents", () => {
     await expect
       .poll(() => link("トークンと引き換える").getAttribute("aria-current"))
       .toBe("location");
+  });
+
+  it("長い見出しのリンクを hover すると、折り返した文字のどの行にも 2px の罫を引く", async () => {
+    render(<LongHeading />);
+    const target = screen.getByRole("link", { name: /引き換えるまで/ });
+    const label = target.querySelector(".link-rule");
+    if (!(label instanceof HTMLElement)) throw new Error("見出しの文字の span が無い");
+    expect(label.getClientRects().length).toBeGreaterThan(1);
+    expect(getComputedStyle(label).backgroundSize).toBe("0% 2px");
+    await userEvent.hover(target);
+    await expect.poll(() => getComputedStyle(label).backgroundSize).toBe("100% 2px");
   });
 });

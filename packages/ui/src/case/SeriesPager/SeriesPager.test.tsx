@@ -2,10 +2,11 @@ import { composeStories } from "@storybook/react-vite";
 import { render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vite-plus/test";
+import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./SeriesPager.stories";
 
-const { Middle, First, Last } = composeStories(stories);
+const { Middle, First, Last, LongTitle } = composeStories(stories);
 
 describe("SeriesPager", () => {
   it("静的に描いた HTML に、シリーズの位置と前後の記事へのリンクがある", () => {
@@ -44,5 +45,16 @@ describe("SeriesPager", () => {
     expect(screen.queryByRole("link", { name: /次の記事/ })).toBeNull();
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.getByRole("link", { name: /前の記事/ })).toBeInTheDocument();
+  });
+
+  it("前後の記事の面を hover すると、折り返した題のどの行にも 2px の罫を引く", async () => {
+    render(<LongTitle />);
+    const target = screen.getByRole("link", { name: /次の記事/ });
+    const title = target.querySelector(".link-rule");
+    if (!(title instanceof HTMLElement)) throw new Error("題の span が無い");
+    expect(title.getClientRects().length).toBeGreaterThan(1);
+    expect(getComputedStyle(title).backgroundSize).toBe("0% 2px");
+    await userEvent.hover(target);
+    await expect.poll(() => getComputedStyle(title).backgroundSize).toBe("100% 2px");
   });
 });
