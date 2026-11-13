@@ -337,4 +337,11 @@ describe("preview", () => {
   it.each(cases)("%j を、入れ子の中か %s で 1 行の文字にする", (value, isNested, expected) => {
     expect(preview(value, isNested)).toBe(expected);
   });
+
+  it("行の領域のフォーカスの輪は、領域の内側に引く（ADR-0066）", () => {
+    render(<Default />);
+    const rows = screen.getByRole("region", { name: "ログの行" });
+    rows.focus();
+    expect(getComputedStyle(rows).outlineOffset).toBe("-2px");
+  });
 });

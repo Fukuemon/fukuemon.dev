@@ -107,7 +107,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | `STATE-NOT-COLOR-ONLY` | レビュー                                                                      |                                                                                                                                             |
 | `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                                    | compact の 4 つの文字のトークンを、コードを動かす画面の外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                       |
 | `PRIMARY-ACTION-ONE`   | レビュー                                                                      |                                                                                                                                             |
-| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | クラスの名前を文字列の連結で組み立てた書き方                                                                                                |
+| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | `focus-ring-inset` を、コードを動かす画面の詰めたペインの外で使った書き方（レビューで見る）。クラスの名前を文字列の連結で組み立てた書き方   |
 | `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
 | `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
 | `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |

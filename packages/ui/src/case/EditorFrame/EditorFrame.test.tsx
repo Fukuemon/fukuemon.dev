@@ -73,4 +73,11 @@ describe("EditorFrame", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("エディタを読み込めませんでした");
     expect(screen.queryByRole("tab")).toBeNull();
   });
+
+  it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0066）", () => {
+    render(<Default />);
+    const engine = screen.getByRole("region", { name: "server.js のコード" });
+    engine.focus();
+    expect(getComputedStyle(engine).outlineOffset).toBe("-2px");
+  });
 });

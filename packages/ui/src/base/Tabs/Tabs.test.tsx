@@ -93,4 +93,12 @@ describe("Tabs", () => {
     const stroke = tab.parentElement?.querySelector("span[aria-hidden]");
     expect(stroke?.getBoundingClientRect().height).toBe(3);
   });
+
+  it("density を compact にすると、タブのフォーカスの輪をタブの内側に引く（ADR-0066）", async () => {
+    render(<Compact />);
+    await userEvent.tab();
+    const focused = document.activeElement as Element;
+    expect(focused).toHaveAttribute("role", "tab");
+    expect(getComputedStyle(focused).outlineOffset).toBe("-2px");
+  });
 });

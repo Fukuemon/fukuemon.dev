@@ -93,8 +93,9 @@ fukuemon.dev はダークを持つ。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字である（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
-- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062）。
+- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062、ADR-0066）。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
+  - ADR-0066（提案）: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引き、13px の文字のトークンを 2 つ足す](../../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
 
 ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
 
@@ -111,6 +112,7 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 | 角               | `rounded-control`                                            | 操作できる要素（`Button`、`IconButton`、`boxed` の入力欄、木の行、開閉の要約、タブの閉じるボタン）と、重なる面の角                                                                                                                                                                              |
 | 重なり           | `bg-surface-raised border border-border-field shadow-raised` | ダイアログ、メニュー、候補の一覧                                                                                                                                                                                                                                                                |
 | フォーカス       | `focus-visible:focus-ring`                                   | 全ての操作できる要素のフォーカスの表示。要素から 2px 離した墨の 2px の輪（`FOCUS-ONE`）                                                                                                                                                                                                         |
+| フォーカス       | `focus-visible:focus-ring-inset`                             | コードを動かす画面の詰めたペインの中の行と、ペインいっぱいのスクロールの枠。墨の 2px の輪を要素の内側に引く（`FOCUS-ONE` の例外、ADR-0066）                                                                                                                                                     |
 | 動き             | `transition-colors`                                          | 木の行、タブ、タブの閉じるボタンの色の切り替え（デフォルトの 150ms）                                                                                                                                                                                                                            |
 | 動き             | `transition-transform` と `rotate-90`                        | ファイルの木と `Disclosure` の山形の開閉（デフォルトの 150ms）                                                                                                                                                                                                                                  |
 | 動き             | `animate-stroke`                                             | 選んだタブの下、検索の欄のフォーカス、ダイアログの上端の罫を、左から 1 回引く                                                                                                                                                                                                                   |
