@@ -139,6 +139,7 @@ flowchart TB
   sql --> project
   sql --> workspace
   sql --> ui
+  sql --> ai
   go --> runner
   go --> project
   go --> workspace

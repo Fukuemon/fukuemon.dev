@@ -17,18 +17,19 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 
 - ADR-0044: [AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする](../../../adr/0044-ai-operations-with-webmcp.md)
 - ADR-0045: [AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す](../../../adr/0045-ai-operations-permission-and-confirmation.md)
+- ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../../adr/0063-ai-operations-for-sql-and-go.md)
 
 ## Scope
 
 持つものは次のとおり。
 
-- 21 個の操作の名前、入力、結果の形
+- 23 個の操作の名前、入力、結果の形
 - 許可のスイッチの位置と文言、スイッチの状態の保存
 - 確認の画面の形と、確認を待つ間の動き
 - 操作の記録の欄の位置と、1 行に出す内容
 - `localStorage` のキーと値、期限の扱い
 - 登録、許可、確認、記録の処理の流れと、コードの置き場
-- ツールのページ、`NodeRuntime`、`GoRunner` に、この機能が必要とするもの
+- ツールのページ、`NodeRuntime`、`SqlDatabase`、`GoRunner` に、この機能が必要とするもの
 
 持たないものは次のとおり。
 
@@ -41,13 +42,13 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 
 ### 操作を公開するページ
 
-操作を公開するツールは、Node の実行環境、Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールの 5 つである。  
-この文書では、5 つを `node`、`go`、`slides`、`excalidraw`、`drawio` と呼ぶ。
+操作を公開するツールは、Node の実行環境、SQL だけを動かすツール、Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールの 6 つである。  
+この文書では、6 つを `node`、`sql`、`go`、`slides`、`excalidraw`、`drawio` と呼ぶ。
 
 - 操作を登録するのは、トップレベルで開いたページだけである（ADR-0045 の Decision 3）。
   - 埋め込みかどうかは、`ai-operations/` の React の外のモジュールが、`window.self !== window.top` で判定する。判定は、この 1 か所に置く。
   - 埋め込みのときは、保存してあるスイッチの状態を読まず、スクリプトの読み込みと登録を行わない。ページはヘッダを出さないので、スイッチも出ない。
-- SQL だけを動かすツールは、操作を持たない。スイッチと操作の記録の欄を出さない。
+- Node の実行環境が、DB を使うプロジェクトで持つ DB には、SQL の操作を公開しない。エージェントは、`node_write_file` と `node_run_command` で、`pg` を使うコードを書いて実行する。
 
 ### コードの置き場
 
@@ -65,10 +66,12 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 - `ai-operations/` は、実行環境の package と、`workspace/`、`project/` を import しない。
 - ツールのディレクトリの、React の外のモジュールが、モジュールの初期化で、操作の定義の一覧とツールの名前を、`ai-operations/` に渡す。React のコンポーネントは、渡さない。
   - Node の実行環境では、起動の Promise を持つ `src/node/` のモジュールが渡す。
+  - SQL だけを動かすツールでは、入力欄の SQL を持つ `src/sql/` のモジュールが渡す。
   - Go を動かすツールでは、ファイルを持つ `src/go/` のモジュールが渡す。
   - `ai-operations/` は、定義を受け取ったときに、保存してあるスイッチの状態を読み、オンなら登録する。
 - 操作の定義の `check` と `execute` は、呼ばれるたびに、React の外の値から、ツールの今の状態を読む。Context から読まない。
   - Node の実行環境では、起動の Promise を持つモジュールから、今の `NodeRuntime` のインスタンスを読む。実行環境を起動し直した後も、新しいインスタンスを使うためである。
+  - SQL だけを動かすツールでは、入力欄の SQL を持つ `src/sql/` のモジュールから、今の SQL と `SqlDatabase` を読む。
   - Go を動かすツールでは、ファイルを持つ `src/go/` のモジュールから、今のファイルを読む。
 - polyfill（`@mcp-b/global`）と、relay につなぐスクリプト（`@mcp-b/webmcp-local-relay` が配るもの）は、`apps/playground` の依存に、範囲ではなく 1 つのバージョンで書く。読み込むのは、`ai-operations/` だけである。
   - 2 つは、ツールのページのスクリプトと別のファイルにして、`play.fukuemon.dev` から配る。ファイルの分け方（動的な `import()` か、静的なファイルか）は、実装のタスクで決める。
@@ -143,6 +146,8 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
 | `node`       | `node_write_file`           | ファイルを書く                           | 無い                           | 無い |
 | `node`       | `node_delete_file`          | ファイルを消す                           | 重大な操作                     | 出す |
 | `node`       | `node_run_command`          | コマンドを実行し、終了コードと出力を返す | 重大な操作、信頼できない内容   | 無い |
+| `sql`        | `sql_read_query`            | 入力欄の SQL を返す                      | 読み取りだけ、信頼できない内容 | 無い |
+| `sql`        | `sql_run_query`             | 渡した SQL を実行し、結果を返す          | 重大な操作、信頼できない内容   | 無い |
 | `go`         | `go_list_files`             | ファイルの一覧を返す                     | 読み取りだけ                   | 無い |
 | `go`         | `go_read_file`              | ファイルの中身を返す                     | 読み取りだけ、信頼できない内容 | 無い |
 | `go`         | `go_write_file`             | ファイルを書く                           | 無い                           | 無い |
@@ -154,6 +159,7 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
   - polyfill（`@mcp-b/global` 6.2.0）は、`[A-Za-z0-9_.-]` の 1〜128 文字でない名前の登録を拒否する。
   - relay（`@mcp-b/webmcp-local-relay` 6.2.0）は、名前を `[a-zA-Z0-9_]` に直して、MCP のクライアントに見せる。
 - 注釈の語は、ADR-0044 の Decision 4 と同じである。
+- `sql` と `go` の操作は、ADR-0063 が足した。
 
 ### 結果の形
 
@@ -165,15 +171,15 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
 
 `code` は、次の 7 つ。
 
-| `code`          | 返すとき                                                                                                    |
-| --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `invalid_input` | 入力が schema に合わない。パスが作業ディレクトリの外を指す。XML を読めない。識別子が重なる                  |
-| `not_found`     | 指したファイルか要素が無い                                                                                  |
-| `too_large`     | 入力か、読むファイルが、上限を超える                                                                        |
-| `not_ready`     | 実行環境が起動していない。ツールの読み込みが終わっていない。開いている図かスライドが無い。Go の実行中である |
-| `declined`      | 利用者が、確認の画面で断った。確認を待つ時間の上限を過ぎた。確認を待つ間に、スイッチがオフになった          |
-| `timeout`       | コマンドか Go の実行が、時間の上限までに終わらなかった                                                      |
-| `failed`        | そのほかの失敗。`check` と `execute` が投げた例外は、`ai-operations/` が受けて、この値にする                |
+| `code`          | 返すとき                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `invalid_input` | 入力が schema に合わない。パスが作業ディレクトリの外を指す。XML を読めない。識別子が重なる                         |
+| `not_found`     | 指したファイルか要素が無い                                                                                         |
+| `too_large`     | 入力か、読むファイルが、上限を超える                                                                               |
+| `not_ready`     | 実行環境が起動していない。ツールの読み込みが終わっていない。開いている図かスライドが無い。SQL か Go の実行中である |
+| `declined`      | 利用者が、確認の画面で断った。確認を待つ時間の上限を過ぎた。確認を待つ間に、スイッチがオフになった                 |
+| `timeout`       | コマンド、SQL、Go の実行が、時間の上限までに終わらなかった                                                         |
+| `failed`        | そのほかの失敗。SQL の失敗を含む。`check` と `execute` が投げた例外は、`ai-operations/` が受けて、この値にする     |
 
 ### 入力と結果
 
@@ -216,6 +222,9 @@ type Inputs = {
   node_delete_file: { path: string };
   node_run_command: { command: string; args?: string[]; timeoutMs?: number };
 
+  sql_read_query: {};
+  sql_run_query: { sql: string; timeoutMs?: number };
+
   go_list_files: { path?: string };
   go_read_file: { path: string };
   go_write_file: { path: string; contents: string };
@@ -256,6 +265,8 @@ type NewElement = {
 | `node_write_file`           | `path`                                            |
 | `node_delete_file`          | `path`                                            |
 | `node_run_command`          | `exitCode`、`output`、`truncated`                 |
+| `sql_read_query`            | `sql`                                             |
+| `sql_run_query`             | `results`（文ごとの結果の配列）、`ms`             |
 | `go_list_files`             | `entries`（`{ path, kind }` の配列）、`truncated` |
 | `go_read_file`              | `path`、`contents`                                |
 | `go_write_file`             | `path`                                            |
@@ -274,8 +285,9 @@ type NewElement = {
 - `strokeColor` と `backgroundColor` は、`#` と 6 桁の 16 進の文字列である。`backgroundColor` は、`transparent` も受け付ける。
 - `drawio_add_cells` は、今の図にある `id` と同じ `id` の `mxCell` を渡されたときに、`invalid_input` を返す。
 - `entries` の `kind` は、`file` か `directory` である。
-- `markdown`、`xml`、`cells`、`contents` は、UTF-8 で 1 MB までである。超えるときは、`too_large` を返す。
-- 読み取りの結果のうち、大きさの上限を持つのは、ファイルの中身（`contents`）、ファイルの一覧（`entries`）、コマンドと Go の実行の `output` だけである。
+- `sql_run_query` の `results` の要素は、`SqlResult` と同じ `fields`、`rows`、`affectedRows`、`totalRows`、`truncated` を持つ。`ms` は、実行にかかった時間である。
+- `markdown`、`xml`、`cells`、`contents`、`sql_run_query` の `sql` は、UTF-8 で 1 MB までである。超えるときは、`too_large` を返す。
+- 読み取りの結果のうち、大きさの上限を持つのは、ファイルの中身（`contents`）、ファイルの一覧（`entries`）、コマンドと Go の実行の `output`、SQL の結果の `rows` だけである。
 
 ### 操作の対象の図とスライド
 
@@ -317,6 +329,26 @@ type NewElement = {
   - `output` は、端末の制御の文字を除いた出力の、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。
   - 時間と文字数の値は、実装のタスクで測って変えてよい。
 
+### SQL だけを動かすツールの操作
+
+`sql` の操作は、SQL だけを動かすツールの入力欄の SQL と、`SqlDatabase` を使う。  
+どちらの操作も、入力欄の SQL を書き換えない。  
+利用者が書いて保存した SQL が、エージェントの操作で消えないようにするためである。
+
+- `sql_read_query` は、入力欄の今の SQL を返す。保存した SQL を読み終えていないときは、`not_ready` を返す。
+- `sql_run_query` は、入力の `sql` を、画面の実行のボタンと同じ `SqlDatabase` の `run` に渡す。
+  - 確認を出さない。`DROP` と `DELETE` を含む SQL も、確認なしで実行する。DB の中身は保存されず、Web Worker を作り直すと、初期の状態に戻るためである。
+  - 結果は、操作の記録の欄にだけ出す。SQL の画面の結果の表は、変えない。利用者が見ている結果が、利用者の操作なしに替わらないようにするためである。
+  - PGlite を読み込んでいないときは、読み込んでから実行する。読み込みの時間は、`timeoutMs` に含めない。読み込めないときは、`failed` を返す。
+  - 複数の文を渡したときは、`results` に、文ごとの結果を入れる。
+  - `rows` は、文ごとに、先頭の 200 行までである。`totalRows` に全体の行の数を入れ、切り詰めたときは `truncated` を `true` にする。200 行に切り詰める処理は、`src/sql/` の操作の定義が持つ。エージェントのコンテキストを使い切らないためである。
+  - SQL が失敗したときは、`failed` を返す。このときの結果は、`error` のほかに、Postgres のエラーコードの `sqlState` と、エラーの位置の `position` を持つ。どちらも、`SqlResponse` の `error` に無いときは、持たない。1 つの文が失敗したときは、全部を取り消す。
+  - `timeoutMs` は、1,000 から 120,000 までの整数で、デフォルトは 30,000 である。上限までに終わらないときは、Web Worker を作り直して、`timeout` を返す。DB の中身は、初期の状態に戻る。説明の文に、このことを書く。60 秒を超える値の扱いは、`node_run_command` と同じである。
+  - 実行中に、もう 1 つの `sql_run_query` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。エージェントの操作で実行している間は、画面の実行のボタンを、実行中の表示にする。
+  - 行の値のうち、JSON にできない値の表し方は、実装のタスクで決める。
+  - 行の数と時間の値は、実装のタスクで測って変えてよい。
+- テーブルの一覧と列を返す操作は、持たない。エージェントは、`sql_run_query` で `information_schema` を読む。
+
 ### Go を動かすツールの操作
 
 `go` の操作は、Go を動かすツールのファイルと、`GoRunner` を使う。  
@@ -325,7 +357,10 @@ type NewElement = {
 
 - `go_list_files`、`go_read_file`、`go_write_file`、`go_delete_file` は、`src/go/` の React の外のモジュールが持つファイルを読み書きする。エディタの表示と IndexedDB への保存は、利用者が書き換えたときと同じように更新される。
 - パスは、相対パスだけを受け付ける。`..` で外へ出るパスと絶対パスは、`invalid_input` を返す。ファイルは、UTF-8 で 1 MB までのテキストである。保存しないファイルの規則の `exclude` は、使わない。
-- ディレクトリを持てるかと、ディレクトリを含むパスの扱いは、Go を動かすツールのファイルの形に従う。ディレクトリを持つときは、`node` の操作と同じに扱う。
+- Go を動かすツールのファイルは、ディレクトリを持つ。ディレクトリを含むパスは、`node` の操作と同じに扱う。
+  - `go_list_files` は、`path` の下の全ての階層を返す。1,000 件までにし、切り詰めたときは `truncated` を `true` にする。
+  - `go_write_file` は、親のディレクトリが無ければ作る。
+  - `go_delete_file` は、ファイルだけを消す。ディレクトリを指したときは `invalid_input` を、無いパスを指したときは `not_found` を返す。
 - プロジェクトと、保存したファイルを読み終えていないときは、ファイルの 4 つの操作は `not_ready` を返す。
 - `go_write_file` は、ファイルがあれば上書きし、無ければ作る。上書きの前に、確認を出さない。
 - `go_delete_file` は、確認を出す。
@@ -338,7 +373,7 @@ type NewElement = {
   - コンパイルのエラーと、テストの失敗は、`ok` を `true` にし、`exitCode` を 1 にして、`output` にエラーを入れる。`go_test` は、出力（`=== RUN`、`--- PASS`、`--- FAIL`）をそのまま返し、テストごとの結果に分けない。
   - `output` は、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。
   - 実行中に、もう 1 つの `go_run` か `go_test` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。エージェントの操作で実行している間は、画面の実行のボタンとテストのボタンを、実行中の表示にする。
-- `go_run` と `go_test` は、確認を出さない。Yaegi で動かすコードは、ページの `localStorage` と IndexedDB を読み書きできないためである。
+- `go_run` と `go_test` は、確認を出さない（ADR-0063 の Decision 2）。Yaegi で動かすコードは、ページの `localStorage` と IndexedDB を読み書きできないためである。
   - Yaegi に渡す symbol を `stdlib.Symbols` だけにすると、Yaegi で動かすコードは、`syscall/js`、`syscall`、`unsafe` を import できない。Yaegi 0.16.3 の WASM を Node の上で動かして確認した。ブラウザの中では、実装のタスクのテストで確認する。
   - Yaegi で動かすコードは、`net/http` を import できる。ブラウザの中で、外部へリクエストを送れるかは、実装のタスクで確認する。
 
@@ -446,7 +481,7 @@ sequenceDiagram
 操作の記録の欄は、スイッチがオンの間だけ出す。
 
 - Node の実行環境では、下のペインのタブ（端末、コンソール、HTTP の一覧と同じ並び）に、「AI からの操作」のタブを足す。
-- Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールでは、ページの下端に、開閉できる欄を置く。閉じている間は、題の「AI からの操作」と、最後の 1 行だけを出す。
+- SQL だけを動かすツール、Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールでは、ページの下端に、開閉できる欄を置く。閉じている間は、題の「AI からの操作」と、最後の 1 行だけを出す。
 - 欄の先頭に、`Disclosure` の「AI のエージェントのつなぎ方」を置く。relay を起動するときに渡す `--widget-origin <ページの origin>` を書く。本番では、`https://play.fukuemon.dev` になる。
 
 1 行は、1 回の呼び出しである。
@@ -469,7 +504,7 @@ sequenceDiagram
 
 スイッチのオンと、「このページでは今後尋ねない」の状態は、ツールごとに、`localStorage` の 1 つのキーに保存する。
 
-- キー: `fd-ai-operations:<ツール>`。`<ツール>` は、`node`、`go`、`slides`、`excalidraw`、`drawio` のどれかである。
+- キー: `fd-ai-operations:<ツール>`。`<ツール>` は、`node`、`sql`、`go`、`slides`、`excalidraw`、`drawio` のどれかである。
 - 値: 次の形の JSON。
 
 ```ts
@@ -490,22 +525,29 @@ type StoredPermission = {
 - 同じツールを複数のタブで開いているときは、`storage` のイベントを受けて、ほかのタブが書いた値（スイッチと、「このページでは今後尋ねない」の両方）を、自分のタブにも反映する。
 - `localStorage` を読み書きできないときは、スイッチは、ページを開いている間だけ働き、状態を保存しない。
 
-### ツールのページ、NodeRuntime、GoRunner に必要なもの
+### ツールのページと実行環境の package に必要なもの
 
-この機能を作るには、ツールのページ、`NodeRuntime`、`GoRunner`、`src/go/` のモジュールに、次のものが必要である。  
+この機能を作るには、ツールのページ、`NodeRuntime`、`SqlDatabase`、`GoRunner`、`src/sql/` と `src/go/` のモジュールに、次のものが必要である。  
 持つのは、ツールごとの Design Doc と、プレイグラウンドの Design Doc である。
 
 - ツールのページは、ヘッダの右端に、スイッチを置く場所を持つ。
-- Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールのページは、下端に、操作の記録の欄を置く場所を持つ。
+- SQL だけを動かすツール、Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールのページは、下端に、操作の記録の欄を置く場所を持つ。
 - Node の実行環境のページは、下のペインのタブの並びに、`ai-operations/` のコンポーネントを置ける。選択の状態の、下のペインのタブの値に、「AI からの操作」のタブを持つ。
-- ツールのページは、タイトル（`<title>`）に、開いているものの名前を入れる。図とスライドは、その名前である。Node の実行環境と、Go を動かすツールは、埋め込みの ID である。
-- ツールのディレクトリの名前は、`node`、`go`、`slides`、`excalidraw`、`drawio` である。
+- ツールのページは、タイトル（`<title>`）に、開いているものの名前を入れる。図とスライドは、その名前である。Node の実行環境、SQL だけを動かすツール、Go を動かすツールは、埋め込みの ID である。
+- ツールのディレクトリの名前は、`node`、`sql`、`go`、`slides`、`excalidraw`、`drawio` である。
 - `NodeRuntime` は、操作の実装のタスクまでに、次の 3 つを持つ。
   - `FileEntry` の、ファイルかディレクトリかの値。
   - 1 つのファイルの、大きさと、テキストとして読めるかの判定。`files.readAll` と同じ規則で、`maxBytes` は呼ぶ側が渡す。
   - `files.read` と `files.remove` が失敗したときに、パスが無いことを見分けられる値。
+- `@fukuemon/sql-runtime` の `SqlDatabase` は、操作の実装のタスクまでに、実行を止める手段を持つ。`run` に `AbortSignal` を渡す形か、Web Worker を作り直す関数である。
+- `apps/playground/src/sql/` は、React の外のモジュールに、次のものを持つ。
+  - 入力欄の今の SQL。
+  - PGlite の読み込みを始める関数。
+  - 実行中かどうかの値。
+  - 実行する関数。実行中かどうかの値を変え、`SqlDatabase` の `run` を呼ぶ。画面のボタンと、`sql_run_query` は、どちらもこの関数を呼ぶ。
 - `@fukuemon/go-runtime` の `GoRunner` は、操作の実装のタスクまでに、次のものを持つ。
   - ファイルの一式を渡して、実行するか、テストを実行する関数。
+  - ディレクトリで複数の package に分けたファイルの、import の解決。
   - 出力と、終了コード。
   - 実行を止める手段。Yaegi を、Worker の中で動かす。
   - Yaegi に渡す symbol は、`stdlib.Symbols` だけにする。`syscall`、`unsafe`、`unrestricted` の symbol を渡さない。`syscall/js` の import が失敗することを、テストで確認する。
@@ -515,10 +557,10 @@ type StoredPermission = {
   - Yaegi の読み込みを始める関数。
   - 実行する関数と、テストを実行する関数。ファイルの写しを取り、実行中かどうかの値を変え、`GoRunner` を呼ぶ。画面のボタンと、`go_run` と `go_test` は、どちらもこの関数を呼ぶ。
   - 出力の store。
-- プレイグラウンドの Design Doc に、Go を動かすツールのファイルの形（ディレクトリを持つか）を書く。
-- プレイグラウンドの Design Doc の、実行のボタンの実行中の状態を `useTransition` で持つ文を直す。Go を動かすツールでは、`src/go/` のモジュールの、実行中かどうかの値から読む。
-- Go を動かすツールのページは、利用者がファイルを追加し、削除できる画面を持つ。
-- プレイグラウンドの Design Doc の、Yaegi を「訪問者が実行のボタンを押してから読み込む」の文に、`go_run` と `go_test` が呼ばれたときを足す。
+- プレイグラウンドの Design Doc に、Go を動かすツールのファイルの形（ディレクトリを持つこと）を書く。
+- プレイグラウンドの Design Doc の、実行のボタンの実行中の状態を `useTransition` で持つ文を直す。SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` のモジュールの、実行中かどうかの値から読む。
+- Go を動かすツールのページは、利用者がファイルとディレクトリを追加し、削除できる画面を持つ。
+- プレイグラウンドの Design Doc の、PGlite と Yaegi を「訪問者が実行のボタンを押してから読み込む」の文を直す。`sql_run_query`、`go_run`、`go_test` が呼ばれたときにも読み込む（ADR-0063 の Decision 3）。
 
 ## Interface
 
