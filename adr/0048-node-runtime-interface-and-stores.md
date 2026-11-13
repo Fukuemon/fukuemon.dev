@@ -38,7 +38,7 @@ SQL だけを動かすツールと、Go を動かすツールは、それぞれ�
 - 記録（ファイルのツリー、プロセスの一覧、ポート、HTTP の記録、コンソールの記録）は、種類ごとに、`subscribe` と `getSnapshot` を持つ store で公開する。画面は、`useSyncExternalStore` で読む。
 - プロセスの出力は、store にしない。今までの出力を返す `read` と、追加の出力を受ける `subscribe` で公開する。`read` と `subscribe` が返すのは、記録の行を除いた出力である。端末のエンジンは、`write` を呼んで出力を追加する、React の外のシステムのためである。
 - ファイルの書き込みと、プロセスの起動は、関数で公開する。画面は、イベントハンドラから呼ぶ。
-- 起動は、関数が返す Promise で待つ。画面は、`Suspense` と `use` で待つ。Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つだけ作って持つ。
+- 起動は、関数が返す Promise で待つ。画面は、`Suspense` と `use` で待つ。Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。実行環境を起動し直すときは、起動の Promise を新しいものに替える。
 - 実行環境を起動し直すときは、インスタンスを破棄し、新しいインスタンスを作る。
 
 型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#noderuntime) にある。
