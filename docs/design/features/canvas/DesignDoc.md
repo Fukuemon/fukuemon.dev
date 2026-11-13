@@ -114,7 +114,10 @@ flowchart TB
   - まだ IndexedDB に書いていない中身を、図を切り替える前と、ページを閉じるときに書く処理
   - 開いている図を消したときに、次に開く図を決める処理
   - 新しく作るものの名前の連番
-- 記事の図を読み込む関数と、URL から消すクエリのキー（`figure`）は、ツールのページが、`figures/` から受け取り、`documents/` のモジュールに引数で渡す。クエリのキーは、`figures/` が、`@fukuemon/figures` の値を、そのまま公開する。
+- ツールのページは、`figures/` の読み込みと、自分の元データを取り出す処理をつないだ関数を作り、URL から消すクエリのキー（`figure`）と一緒に、`documents/` のモジュールに引数で渡す。
+  - 関数は、クエリに `figure` が無い、エラー、読めた（図の名前と中身）、の 3 つを返し分ける。
+  - `documents/` は、最初にこの関数を呼び、`figure` が無いときだけ、`doc` を読む。
+  - クエリのキーは、`figures/` が、`@fukuemon/figures` の値を、そのまま公開する。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
 - `@fukuemon/figures` は、workspace のほかの package にも、React にも依存しない。SVG を読む処理、`fetch`、2 つのアプリの origin の値を持たない。
@@ -399,7 +402,7 @@ sequenceDiagram
   end
 ```
 
-- `figures/` は、`@fukuemon/figures` で、URL のクエリの `figure` から図の名前を読み、検証する。名前とツールから URL のパスを組み立てて、`fetch` する。`figures/` は、SVG の文字列を返す。
+- `figures/` は、`@fukuemon/figures` で、URL のクエリの `figure` から図の名前を読み、検証する。名前とツールから URL のパスを組み立てて、`fetch` する。`figures/` は、図の名前と、SVG の文字列を返す。クエリに `figure` が無いときは、無いことを返す。
 - SVG から元データを取り出して、そのツールの形式かを確認する処理は、ツールのページが持つ。「ファイルを開く」と同じ関数を使う。
 - ツールのページは、`figures/` に、自分のツール（`drawio` か `excalidraw`）を渡す。図を描いたツールの型は、`@fukuemon/figures` が持つ。`figures/` と `documents/` は、互いの型を使わない。
   - `@fukuemon/figures` のツールの型の値は、`ToolKind` から `slides` を除いた値と同じ文字列である。2 つの型は互いを import しないので、ツールのページが、同じ文字列を `figures/` と `documents/` の両方に渡す。
@@ -435,5 +438,6 @@ sequenceDiagram
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。
   - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` である。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import を止める。
-- Oxlint の `no-restricted-imports`: `apps/playground/src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
+- Oxlint の `no-restricted-imports`: `apps/playground` の中の、`src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
+- Oxlint の `no-restricted-imports`: `apps/playground/src/` の、`documents/` と `figures/` の間の import を止める。
 - `apps/web` のビルド: 図を指す画像の代替テキスト、ファイルの有無、ファイルの名前、拡張子と元データの一致を確認する。
