@@ -32,7 +32,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - `apps/playground` は、Vite の React のアプリで、画面の全体を React で描く。React Compiler を、`apps/playground` のビルドにだけ入れる。
   - ADR-0046: [プレイグラウンドのアプリの構成](../docs/adr/0046-playground-as-vite-react-app.md)
   - ADR-0047: [React Compiler を入れる範囲](../docs/adr/0047-react-compiler-in-playground.md)
-- `@webcontainer/api` は、Node の実行環境の package（`@fukuemon/node-runtime`）だけに使う。import できるディレクトリは、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#ディレクトリ) にある。
+- `@webcontainer/api` は、Node の実行環境の package（`@fukuemon/node-runtime`）だけに使う。import できるディレクトリは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 - Tailwind CSS と `@tailwindcss/vite` は、CSS のスタイリングの基盤として使う。
   - サイトの共通の CSS は preflight を読み、`@theme static` を使わない。
   - ADR-0010: [Tailwind CSS の採用](../docs/adr/0010-tailwind-as-styling-base.md)

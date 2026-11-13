@@ -6,6 +6,7 @@ status: stable
 governs:
   - pnpm-workspace.yaml
   - apps/web/src/
+  - apps/playground/src/
   - packages/
   - oxlint.config.ts
 verified_commit: ab2da87
@@ -19,6 +20,7 @@ verified_commit: ab2da87
 
 - 共有の設定は、tsconfig を `@fukuemon/config` に、Oxlint の設定をルートの `oxlint.config.ts` に、vitest の設定を各 package に置く。
 - `infra/` は、どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
+- `apps/` には、1 つの Worker に配信するアプリを 1 つずつ置く。サイトは `apps/web`、プレイグラウンドは `apps/playground` である。
 - サイトのほかのアプリを、`apps/web` に置くか、別の app と Worker にするかは、ADR-0031 の規則で決める。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
 
@@ -96,7 +98,7 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
 - `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
-  - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#ディレクトリ) にある。
+  - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
 island の framework は React の 1 つに絞る。  
@@ -110,7 +112,7 @@ hydrate するページはその framework のランタイムを配るので、2
 - サーバー側の永続的な状態を持たない。読者の identity を前提にする機能を作らない。
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
-- プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#保存) にある。
+- プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#保存) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [docs/design/DesignDoc.md](../docs/design/DesignDoc.md#設計不変量)
@@ -154,6 +156,13 @@ package を切り出すのは、次のどちらかが成り立つときである
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/` の関心ごとのディレクトリに置く。
   - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。
 - カタログの Worker の設定は `packages/ui/wrangler.jsonc` に、カタログが返すレスポンスヘッダは `packages/ui/.storybook/public/_headers` に置く。
+
+### apps/playground
+
+- ツールのページ（`apps/playground/src/` の `node/`、`sql/`、`go/`）どうしは import しない。2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
+  - チェックは Oxlint が行う。ツールのページの名前は、`oxlint.config.ts` の `PLAYGROUND_TOOLS` に並べる。ツールを足すときは、この一覧にも足す。
+- `@webcontainer/api` の import は、`packages/node-runtime/src/webcontainer/` の外では Oxlint が止める。
+- ディレクトリの分け方と import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 
 ### infra
 
