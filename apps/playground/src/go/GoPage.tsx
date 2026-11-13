@@ -224,11 +224,13 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const run = () => void session.run();
   const test = () => void session.test();
   const onShortcut = useEffectEvent((event: KeyboardEvent) => {
-    // エディタが同じキーを受けたときは、2 回実行しない
-    if (event.defaultPrevented) return;
     const shortcut = shortcutOf(event);
     if (shortcut === undefined) return;
+    // エディタの中の Ctrl か ⌘ と Enter は、エディタが実行する。ここでも受けると 2 回実行する
+    const inEditor = event.target instanceof Element && event.target.closest(".cm-editor") !== null;
+    if (shortcut === "run" && inEditor) return;
     event.preventDefault();
+    event.stopPropagation();
     if (shortcut === "run") run();
     else if (shortcut === "test") test();
     else session.stop();
@@ -236,8 +238,9 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => onShortcut(event);
-    window.addEventListener("keydown", listener);
-    return () => window.removeEventListener("keydown", listener);
+    // ファイルの一覧などが Enter を先に受けて止めないよう、capture の段で受ける
+    window.addEventListener("keydown", listener, { capture: true });
+    return () => window.removeEventListener("keydown", listener, { capture: true });
   }, []);
   const deletingKind = deleting === undefined ? undefined : kindOf(fileSet, deleting);
 
