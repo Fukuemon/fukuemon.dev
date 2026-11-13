@@ -101,16 +101,16 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 | ブレークポイント | `md:`                                                        | 狭い画面と広い画面の切り替え。ブレークポイントはこの 1 つだけにする                                                           |
 | 区切り           | `border-b-2 border-text`、`border-t-2 border-text`           | ヘッダーの下と表の頭の上の墨の罫                                                                                              |
 | 区切り           | `border-b border-border`（向きは場所に合わせる）             | ほかの区切りの罫                                                                                                              |
-| 角               | `rounded-control`                                            | 操作するもの（`Button`、`IconButton`、枠のある入力欄、木の行、開閉の要約、タブの閉じるボタン）と、重なる面の角                |
+| 角               | `rounded-control`                                            | 操作できる要素（`Button`、`IconButton`、枠のある入力欄、木の行、開閉の要約、タブの閉じるボタン）と、重なる面の角              |
 | 重なり           | `bg-surface-raised border border-border-field shadow-raised` | ダイアログ、メニュー、候補の一覧                                                                                              |
 | フォーカス       | `focus-visible:focus-ring`                                   | 全ての操作できる要素のフォーカスの表示（`FOCUS-ONE`）                                                                         |
 | 動き             | `transition-colors`                                          | 木の行、タブ、タブの閉じるボタンの色の切り替え（デフォルトの 150ms）                                                          |
 | 動き             | `transition-transform` と `rotate-90`                        | ファイルの木と `Disclosure` の山形の開閉（デフォルトの 150ms）                                                                |
-| 動き             | `animate-stroke`                                             | 選んだタブの罫、検索の欄のフォーカスの罫、ダイアログの上端の罫を、左から 1 回引く                                             |
+| 動き             | `animate-stroke`                                             | 選んだタブの下、検索の欄のフォーカス、ダイアログの上端の罫を、左から 1 回引く                                                 |
 | 動き             | `stroke-brush`                                               | `animate-stroke` で引く罫を、筆の線の形にする                                                                                 |
 | 動き             | `link-rule`                                                  | 文中のリンク、目次の見出し、前後の記事の題の hover で、文字の下に 2px の罫を左から 1 回引く。折り返した文字では全ての行に引く |
 | 動き             | `brush-hover`                                                | パンくずリストのリンクの hover で、リンクの箱の下に筆の線を左から 1 回引く                                                    |
-| 動き             | `ink-press`                                                  | `Button` を押して離すと、文の色の墨がにじんで消える                                                                           |
+| 動き             | `ink-press`                                                  | `Button` を押して離すと、文字の色の墨がにじんで消える                                                                         |
 | 動き             | `animate-fade-in`                                            | ダイアログ、メニュー、候補の一覧が、濃度を上げて出る                                                                          |
 | 動き             | `loading-dots`                                               | `Button` の読み込み中の、3 つの点の印                                                                                         |
 | 動き             | `animate-loading`                                            | `Loading` の読み込み中の印の罫                                                                                                |
@@ -119,11 +119,11 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
   - 出典: [DADS の余白](https://design.digital.go.jp/dads/foundations/spacing/)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
 - 角丸と影のユーティリティは、`rounded-control` と `shadow-raised` の 1 つずつだけを書ける。DADS のコンポーネントは、コンポーネントごとに角丸と影の値を持つが、罫線で区切る版面と合わないためである（ADR-0028）。
-  - `rounded-control` は、操作するものと重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックには付けない。
+  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックには付けない。
   - `shadow-raised` は、重なる面だけに付ける。ボタンと入力欄には付けない。
 - 動きの時間と緩急は、表のユーティリティだけで書く。テーマ変数で止められない時間の値（`duration-[…]` の任意値）を書かない（`MOTION-TOKEN`）。
 - 動きを付ける操作、長さ、付けない所は、[Design Doc の「動き」](../DesignDoc.md#動き) にある。フォーカスの表示、入力した文字、誤りの文には、動きを付けない。
 - 筆の線の形は、テーマ変数のファイルの `--fd-mask-brush`（`:root` に置く SVG）にあり、`stroke-brush` と `brush-hover` だけが読む。サイトのヘッダーのナビ（`apps/web/src/styles/site.css`）は、`apps/web` が `@fukuemon/ui` に依存しないので、同じ SVG を写して持つ。
 - 動きを減らす設定での止め方は、テーマ変数のファイル（`src/tokens/theme.css`）の末尾の 1 か所にある（`MOTION-REDUCE`）。罫と筆の線を引く動きは、止めると全長の線が最初から出る。`Button` の読み込み中の印は、濃い 3 つの点で止まる。
 
-ADR-0028: [操作するものと重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../adr/0028-radius-shadow-and-brush-motion.md)
+ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../adr/0028-radius-shadow-and-brush-motion.md)

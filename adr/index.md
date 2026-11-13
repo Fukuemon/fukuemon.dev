@@ -49,7 +49,7 @@
 | [ADR-0023](0023-keep-art-and-key-color.md)         | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
 | [ADR-0010](0010-tailwind-as-styling-base.md)       | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
 | [ADR-0024](0024-tokens-of-fukuemon-dev.md)         | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
-| [ADR-0028](0028-radius-shadow-and-brush-motion.md) | 操作するものと重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                      |
+| [ADR-0028](0028-radius-shadow-and-brush-motion.md) | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                    |
 | [ADR-0021](0021-ui-components-and-catalog.md)      | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
 | [ADR-0022](0022-code-colors-from-tokens.md)        | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
 

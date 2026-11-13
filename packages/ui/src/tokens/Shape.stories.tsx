@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /**
  * 区切りと重なりとフォーカスの表示を、見本で並べる。余白は Tailwind のデフォルトの段（1 段 4px）を使う。
- * 区切りは罫線と余白で示す。操作するものと重なる面の角は rounded-control で丸め、重なる面は 1px の枠と shadow-raised の影で示す。
+ * 区切りは罫線と余白で示す。操作できる要素と重なる面の角は rounded-control で丸め、重なる面は 1px の枠と shadow-raised の影で示す。
  */
 function ShapeTokens() {
   return (
