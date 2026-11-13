@@ -92,7 +92,8 @@ fukuemon.dev はダークを持つ。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
-- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062、提案）。
+- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062）。
+  - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 
 ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
 

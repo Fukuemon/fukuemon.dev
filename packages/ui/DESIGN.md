@@ -2,11 +2,12 @@
 
 この文書は、fukuemon.dev の画面とコンポーネントのコードを書く人が、書く前に読む規則である。  
 値は fukuemon.dev が決め、アクセシビリティ、タイポグラフィ、配色、レイアウトの指標と参考に、デジタル庁デザインシステム（DADS）を使う。  
-構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028、ADR-0062（提案）にある。
+構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028、ADR-0062にある。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
 - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
 - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 
 カタログは https://design.fukuemon.dev で開ける。  
 ローカルでは、リポジトリのルートで `pnpm --filter @fukuemon/ui storybook` を流し、`http://localhost:6106` を開く。
@@ -71,7 +72,8 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - `STATE-NOT-COLOR-ONLY`: 状態を色だけで伝えない。エラーと注意には、文と印を色と一緒に出す。
   - 確認: レビューで、色を見分けられない人がエラーの場所と内容を読み取れるかを見る。
 - `TEXT-MIN-SIZE`: 14px より小さい文字を使わない。本文と操作の文字は 16px にし、14px は補足だけに使う。
-  - 例外: コードを動かす画面のコンポーネントは、コードと操作のラベルを 13px、コンソールの値と補足を 12px まで小さくしてよい（`text-compact`、`text-label-compact`）。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062、提案）。
+  - 例外: コードを動かす画面のコンポーネントは、コードと操作のラベルを 13px、コンソールの値と補足を 12px まで小さくしてよい（`text-compact`、`text-label-compact`）。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062）。
+    - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
   - 確認: `pnpm run check:utilities`。2 つのトークンをコードを動かす画面の外で使っていないかは、レビューで見る。
 - `PRIMARY-ACTION-ONE`: 主のボタンは、1 つの画面かダイアログに 1 つまでにする。
   - 確認: レビューで、画面の主の操作が 1 つに決まるかを見る。
@@ -79,7 +81,8 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 確認: `pnpm run check:utilities`
 - `TARGET-SIZE`: 押せる領域は 44×44 CSS px 以上にする。WCAG 2.2 の AA（2.5.8）の 24×24 より厳しい、AAA（2.5.5）の値を選んでいる。見た目を小さくするときは、見た目の外に押せる領域を広げる。
   - 例外: `Link` は対象にせず、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。本文の中の文字のリンクを 44×44 CSS px にすると、行の高さが崩れるためである。
-  - 例外: コードを動かす画面のコンポーネントは、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。木の行と開閉の要約（`Disclosure`）は 24px、ボタン、入力欄、タブは 28〜32px にする（ADR-0062、提案）。
+  - 例外: コードを動かす画面のコンポーネントは、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。木の行と開閉の要約（`Disclosure`）は 24px、ボタン、入力欄、タブは 28〜32px にする（ADR-0062）。
+    - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
   - 確認: `pnpm run test:ui` の component の project で、コンポーネントごとの、名前に「44 px」を含むテストが見る。コードを動かす画面の例外のコンポーネントでは、名前に「24 px」か「28 px」を含むテストが見る。例は、`src/base/Button/Button.test.tsx` の「S のボタンは、見た目の外まで 44×44 px 以上を押せる」である。カタログのアクセシビリティの自動チェックは、押せる領域の大きさを確認しない。
 - `SPACING-SCALE`: 余白は、トークンの文書の「レイアウト、区切り、重なり、動き」の表の余白の段のユーティリティだけで書く。任意値（`p-[13px]` のような書き方）を書かない。
   - 確認: `pnpm run check:utilities`
@@ -164,7 +167,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | 文字のコントラスト           | 4.5:1 以上                                                                                                                                                                          | `pnpm run check:contrast`                                                                                                        |
 | 文字でないもののコントラスト | 入力欄と押せる枠の境界、フォーカスの表示が 3:1 以上                                                                                                                                 | `pnpm run check:contrast`（`border-field`、フォーカスの表示の組）                                                                |
 | フォーカスの見え方           | 全ての操作できる要素で、フォーカスの表示を出す                                                                                                                                      | `pnpm run check:utilities`（`FOCUS-ONE`）と、レビュー                                                                            |
-| ターゲットの大きさ           | 44×44 CSS px 以上。AA の 2.5.8 の 24×24 より厳しい、このプロダクトの選択（AAA の 2.5.5）。コードを動かす画面は例外で、24×24 以上（ADR-0062、提案）                                  | `pnpm run test:ui`（`TARGET-SIZE`）                                                                                              |
+| ターゲットの大きさ           | 44×44 CSS px 以上。AA の 2.5.8 の 24×24 より厳しい、このプロダクトの選択（AAA の 2.5.5）。コードを動かす画面は例外で、24×24 以上（ADR-0062）                                        | `pnpm run test:ui`（`TARGET-SIZE`）                                                                                              |
 | キーボードの操作             | コンポーネントの文書のとおりに動く                                                                                                                                                  | `pnpm run test:ui` のコンポーネントのテスト                                                                                      |
 | 入力の誤りの伝え方           | 欄ごとの誤りの文は `aria-describedby` で欄に結び付け、`role="alert"` を付けない。送った後は最初の誤りの欄へフォーカスを移す。送れなかったときの文だけを `role="alert"` で読み上げる | `pnpm run test:ui` の `TextField` のテスト（欄ごとの誤りの文）。送った後のフォーカスの移り方と、送れなかったときの文は、レビュー |
 | 動きを減らす設定             | 設定が `reduce` のとき、位置、大きさ、回転を動かすアニメーションと遷移、スクロールに合わせた動きを止める。このプロダクトの選択（AAA の 2.3.3）                                      | レビュー（`MOTION-REDUCE`）                                                                                                      |
