@@ -68,17 +68,16 @@ export function listArticles(
   series: readonly SeriesSource[],
   isDev: boolean,
 ): ArticleListItem[] {
+  const refs = articles.filter((a) => isPublic(a.data.status, isDev)).map(toContentRef);
+  assertSeriesDefined(
+    refs.map((ref) => ref.series),
+    series,
+  );
   const links = seriesLinks(series);
-  return articles
-    .filter((a) => isPublic(a.data.status, isDev))
-    .map(toContentRef)
-    .sort(byNewest)
-    .map((ref) => {
-      if (ref.series === undefined) return { ref };
-      const link = links.get(ref.series);
-      if (link === undefined) throw new Error(`シリーズの題が無い: ${ref.series}`);
-      return { ref, series: link };
-    });
+  return refs.sort(byNewest).map((ref) => {
+    const link = ref.series === undefined ? undefined : links.get(ref.series);
+    return link === undefined ? { ref } : { ref, series: link };
+  });
 }
 
 function assertSeriesDefined(

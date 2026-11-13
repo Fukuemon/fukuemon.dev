@@ -64,9 +64,17 @@ describe("buildRss", () => {
     );
   });
 
-  it("題に XML 1.0 で使えない制御文字があると、ビルドを失敗させる", () => {
-    expect(() => buildRss(CHANNEL, [ref("/articles/x", { title: "a\u000Bb" })])).toThrow(
-      "XML に書けない文字がある",
-    );
+  it("説明のタブ、改行、復帰は、そのまま書く", () => {
+    const xml = buildRss(CHANNEL, [ref("/articles/x", { description: "a\tb\nc\r" })]);
+    expect(xml).toBe(document([item("/articles/x", "題 /articles/x", "a\tb\nc\r")]));
   });
+
+  it.each(["\u0000", "\u000B", "\u001F", "￾", "￿"])(
+    "題に XML 1.0 で使えない文字 %j があると、ビルドを失敗させる",
+    (char) => {
+      expect(() => buildRss(CHANNEL, [ref("/articles/x", { title: `a${char}b` })])).toThrow(
+        "XML に書けない文字がある",
+      );
+    },
+  );
 });

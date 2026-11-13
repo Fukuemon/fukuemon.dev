@@ -277,7 +277,8 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 `planSeriesPages()` は、`isPublic()` を通った記事を、シリーズごとに `order` の昇順に並べる。  
 公開した記事が 1 本も無いシリーズのページは書き出さない。  
 `listArticles()` と `planSeriesPages()` は、記事を `ContentRef` にして返す。  
-2 つとも、`index.md` の無いディレクトリの記事があると throw し、ビルドを失敗させる。  
+2 つとも、`isPublic()` を通った記事に、`index.md` の無いディレクトリの記事があると throw し、ビルドを失敗させる。  
+`buildRss()` は、題、説明、URL に XML 1.0 で使えない文字があると throw し、ビルドを失敗させる。  
 `planSeries()` は、読み込みのときのチェックにだけ使い、戻り値はページに渡さない。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
