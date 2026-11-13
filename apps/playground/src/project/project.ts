@@ -1,0 +1,70 @@
+import {
+  type PlaygroundProject,
+  type PlaygroundTool,
+  playgroundProjectSchema,
+} from "@fukuemon/playground-project";
+
+export const SITE_ORIGIN = "https://fukuemon.dev";
+
+/** 開いたプロジェクトと、保存のキーに使う埋め込みの ID。デフォルトのプロジェクトは、埋め込みの ID を持たない。 */
+type OpenedProject<T extends PlaygroundTool> = {
+  project: Extract<PlaygroundProject, { tool: T }>;
+  embedId?: string;
+};
+
+/** プロジェクトを開けなかったときは、どの理由でも、エラーと一覧へのリンクを出す。 */
+export type ProjectLoad<T extends PlaygroundTool> =
+  | ({ kind: "opened" } & OpenedProject<T>)
+  | { kind: "failed"; embedId: string };
+
+// <contentId>/<埋め込みの名前>。`..` や `?` で、JSON の置き場の外を指せないようにする
+const EMBED_ID = /^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/;
+
+export const projectUrl = (embedId: string) => `${SITE_ORIGIN}/playground-projects/${embedId}.json`;
+
+/** 埋め込みの ID のプロジェクトの JSON を取得し、schema とツールの種類を確かめる。 */
+export async function fetchProject<T extends PlaygroundTool>(
+  embedId: string,
+  tool: T,
+  fetchJson: typeof fetch = fetch,
+): Promise<ProjectLoad<T>> {
+  const failed = { kind: "failed", embedId } as const;
+  if (!EMBED_ID.test(embedId)) return failed;
+  try {
+    const response = await fetchJson(projectUrl(embedId));
+    if (!response.ok) return failed;
+    const parsed = playgroundProjectSchema.safeParse(await response.json());
+    if (!parsed.success || parsed.data.tool !== tool) return failed;
+    return {
+      kind: "opened",
+      project: parsed.data as Extract<PlaygroundProject, { tool: T }>,
+      embedId,
+    };
+  } catch {
+    return failed;
+  }
+}
+
+/**
+ * ページの URL のクエリの `project` から、開くプロジェクトを決める。`project` が無いときは、デフォルトのプロジェクトを開く。
+ * React の use に渡すので、同じ埋め込みの ID には、同じ Promise を返す。
+ */
+export function createProjectLoader<T extends PlaygroundTool>(
+  tool: T,
+  defaultProject: Extract<PlaygroundProject, { tool: T }>,
+  fetchJson: typeof fetch = fetch,
+) {
+  const loads = new Map<string, Promise<ProjectLoad<T>>>();
+  return (search: string): Promise<ProjectLoad<T>> => {
+    const embedId = new URLSearchParams(search).get("project");
+    const key = embedId ?? "";
+    const cached = loads.get(key);
+    if (cached) return cached;
+    const load =
+      embedId === null
+        ? Promise.resolve<ProjectLoad<T>>({ kind: "opened", project: defaultProject })
+        : fetchProject(embedId, tool, fetchJson);
+    loads.set(key, load);
+    return load;
+  };
+}

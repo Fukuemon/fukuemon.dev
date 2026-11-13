@@ -21,7 +21,7 @@ const ANSI_KEYS = ["black", "red", "green", "yellow", "blue", "magenta", "cyan",
  */
 export function toVsCodeTheme(name: CodeThemeName): VsCodeTheme {
   const c: CodeColors = codeTheme[name];
-  const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const ansi = Object.fromEntries(
     ANSI_KEYS.flatMap((key) => {
       const bright = `bright${capitalize(key)}` as keyof CodeColors["ansi"];
