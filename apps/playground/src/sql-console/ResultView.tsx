@@ -146,13 +146,13 @@ export function ResultView({ response }: ResultViewProps) {
     if (code === undefined) {
       return (
         <Notice isAlert title="実行できませんでした" tone="danger">
-          <span className="font-mono whitespace-pre-wrap">{message}</span>
+          <span className="font-mono break-all whitespace-pre-wrap">{message}</span>
         </Notice>
       );
     }
     return (
       <Notice isAlert title="SQL が失敗しました" tone="danger">
-        <span className="font-mono whitespace-pre-wrap">{message}</span>
+        <span className="font-mono break-all whitespace-pre-wrap">{message}</span>
         <span className="block">
           SQLSTATE {code}
           {position !== undefined && `、${position} 文字目`}

@@ -44,7 +44,7 @@ export function SqlConsole({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex h-96 min-h-0 flex-col has-[.cm-focused]:focus-ring">
+      <div className="grid h-96 min-h-0 has-[.cm-focused]:focus-ring">
         <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
           {() => <SqlEditor onChange={onChange} onRun={() => void run()} value={value} />}
         </EditorFrame>

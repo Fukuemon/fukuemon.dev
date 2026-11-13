@@ -1,4 +1,5 @@
 import {
+  acceptCompletion,
   autocompletion,
   closeBrackets,
   closeBracketsKeymap,
@@ -15,6 +16,7 @@ import { search, searchKeymap } from "@codemirror/search";
 import { EditorState, type Extension, Prec } from "@codemirror/state";
 import {
   EditorView,
+  crosshairCursor,
   drawSelection,
   dropCursor,
   highlightActiveLine,
@@ -22,6 +24,7 @@ import {
   highlightSpecialChars,
   keymap,
   lineNumbers,
+  rectangularSelection,
 } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
@@ -41,9 +44,16 @@ const theme = EditorView.theme({
     backgroundColor: "var(--color-code-surface)",
     color: "var(--color-code-comment)",
     border: "none",
+    borderRight: "1px solid var(--color-border)",
   },
+  ".cm-lineNumbers .cm-gutterElement": { padding: "0 8px 0 12px" },
   "&.cm-focused": { outline: "none" },
-  ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "var(--color-surface-subtle)" },
+  // 選択があるときは、アクティブ行の帯を消す。帯は選択の層より上に描かれ、選択の範囲を隠すため
+  ".cm-activeLine": { backgroundColor: "var(--color-surface-subtle)" },
+  "&:has(.cm-selectionBackground) .cm-activeLine": { backgroundColor: "transparent" },
+  ".cm-activeLineGutter": { backgroundColor: "var(--color-surface-subtle)" },
+  ".cm-specialChar": { color: "var(--color-danger)" },
+  ".cm-dropCursor": { borderLeftColor: "var(--color-code-text)" },
   "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":
     { backgroundColor: "var(--color-primary-surface)" },
   ".cm-tooltip": {
@@ -55,7 +65,7 @@ const theme = EditorView.theme({
   },
   ".cm-tooltip-autocomplete > ul": { fontFamily: "var(--font-mono)" },
   ".cm-searchMatch": { backgroundColor: "var(--color-info-surface)" },
-  ".cm-searchMatch-selected": { outline: "1px solid var(--color-border-field)" },
+  ".cm-searchMatch-selected": { outline: "2px solid var(--color-primary)" },
   ".cm-panels": {
     backgroundColor: "var(--color-surface)",
     color: "var(--color-text)",
@@ -75,6 +85,7 @@ const theme = EditorView.theme({
     display: "inline-flex",
     alignItems: "center",
     gap: "4px",
+    minHeight: "44px",
     fontSize: "inherit",
   },
   ".cm-panel.cm-search input[type=checkbox]": { accentColor: "var(--color-primary)", margin: 0 },
@@ -108,6 +119,7 @@ const theme = EditorView.theme({
       outlineOffset: "2px",
       boxShadow: "0 0 0 2px var(--fd-color-focus-halo)",
     },
+  ".cm-button:active": { backgroundImage: "none", backgroundColor: "var(--color-surface-subtle)" },
   ".cm-panel.cm-search [name=close]": {
     top: "8px",
     right: "8px",
@@ -183,12 +195,14 @@ export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Exten
     phrases,
     history(),
     drawSelection(),
+    rectangularSelection(),
+    crosshairCursor(),
     dropCursor(),
     EditorState.allowMultipleSelections.of(true),
     indentOnInput(),
     bracketMatching(),
     closeBrackets(),
-    autocompletion(),
+    autocompletion({ icons: false }),
     indentationMarkers({
       colors: { light: guide, dark: guide, activeLight: guide, activeDark: guide },
     }),
@@ -212,6 +226,8 @@ export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Exten
         ]
       : []),
     keymap.of([
+      // 補完の一覧が開いているときだけ、Tab で確定する。閉じているときは、Tab でエディタの外へ移る
+      { key: "Tab", run: acceptCompletion },
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,
