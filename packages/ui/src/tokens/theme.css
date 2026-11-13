@@ -43,8 +43,7 @@
   --color-link-external: var(--fd-color-link-external);
   --color-current-page: var(--fd-color-current-page);
 
-  --color-focus-outline: var(--fd-color-focus-outline);
-  --color-focus-halo: var(--fd-color-focus-halo);
+  --color-focus: var(--fd-color-focus);
 
   --color-danger: var(--fd-color-danger);
   --color-danger-hover: var(--fd-color-danger-hover);
@@ -180,11 +179,10 @@
   }
 }
 
-/* フォーカスの表示は、このユーティリティだけで書く。黄色の輪が要素に接し、その外に黒の枠を置く */
+/* フォーカスの表示は、このユーティリティだけで書く。要素から 2px 離して、墨の 2px の輪を 1 重に引く */
 @utility focus-ring {
-  outline: 4px solid var(--fd-color-focus-outline);
+  outline: 2px solid var(--fd-color-focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--fd-color-focus-halo);
 }
 
 /* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う。apps/web/src/styles/site.css のヘッダーのナビに写しがあるので、変えたら写しも直す */

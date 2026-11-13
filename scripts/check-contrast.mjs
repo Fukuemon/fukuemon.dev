@@ -23,8 +23,6 @@ const PREFIX = "--fd-color-";
 
 const SURFACES = ["surface", "surface-subtle", "surface-raised"];
 const STATES = ["danger", "warning", "success", "info"];
-// --root でダークのブロックを渡したときは、ダークの値を読む
-const DARK = process.argv.some((a) => a.includes("dark"));
 
 // 文字と、その下の面の組。4.5:1 以上
 const TEXT_PAIRS = [
@@ -65,16 +63,13 @@ const TEXT_PAIRS = [
 ];
 
 // 文字でないもの（入力欄と押せるものの枠、フォーカスの表示）と、その下の面の組。3:1 以上
-const NON_TEXT_PAIRS = [
-  ...SURFACES.flatMap((bg) => [
-    ["border-field", bg],
-    ["primary", bg],
-    ["danger", bg],
-    // フォーカスの表示は、ライトでは外の黒の枠が、ダークでは要素に接する黄色の輪が、面に対して 3:1 以上を保つ
-    [DARK ? "focus-halo" : "focus-outline", bg],
-  ]),
-  ["focus-outline", "focus-halo"],
-];
+const NON_TEXT_PAIRS = SURFACES.flatMap((bg) => [
+  ["border-field", bg],
+  ["primary", bg],
+  ["danger", bg],
+  // フォーカスの表示は、要素から離して引く墨の輪が、面に対して 3:1 以上を保つ
+  ["focus", bg],
+]);
 
 const MAX_DEPTH = 10;
 const roots = [];
