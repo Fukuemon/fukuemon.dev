@@ -82,7 +82,8 @@ packages/
   figures/src/           図の名前の規則、ファイルの名前と URL のパスの形
 ```
 
-図の名前の規則と、ファイルの名前と URL のパスの形は、`packages/figures`（`@fukuemon/figures`）に置く。`apps/web` のビルドと、`figures/` が使う。  
+図の名前の規則と、ファイルの名前と URL のパスの形は、`packages/figures`（`@fukuemon/figures`）に置く。  
+`apps/web` のビルドと、`apps/playground` の `figures/` が、この package を使う。  
 ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
 
 次の図は、キャンバスのディレクトリと package の間で許す import の向きを示す。矢印の無い組は、import しない。
@@ -116,7 +117,7 @@ flowchart TB
 - 記事の図を読み込む関数と、URL から消すクエリのキー（`figure`）は、ツールのページが、`documents/` のモジュールに引数で渡す。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
-- `@fukuemon/figures` は、workspace のほかの package と、React に依存しない。`fetch`、SVG を読む処理、origin の値を持たない。
+- `@fukuemon/figures` は、workspace のほかの package にも、React にも依存しない。SVG を読む処理、`fetch`、2 つのアプリの origin の値を持たない。
 - `@fukuemon/figures` を import するのは、`apps/playground` では `figures/` だけである。`documents/` は、import しない。
 - `documents/` と `figures/` は、`project/` と、実行環境の package を import しない。`Store` の型は、`documents/` が、`@fukuemon/sql-runtime` の `Store` と同じ形で定義する。形を変えるときは、両方を直す。
 - `documents/` のコンポーネントは、画面に出す語（「図」か「スライド」）と、新しく作るものの名前の付け方を、props で受ける。
@@ -146,7 +147,7 @@ flowchart TB
   - 図の名前のボタンの読み上げの名前は、「名前を変える: <図の名前>」にする。
   - 一覧のダイアログの中で名前を変えている間の Esc は、名前の変更だけを取り消し、ダイアログを閉じない。
 - 「ファイル」のメニューは、ActionMenu で作る。開くボタンには、「ファイル」の文字を出す。
-  - 開くボタンに文字を出す props は、今の ActionMenu に無い。キャンバスの実装のタスクが、`@fukuemon/ui` に足す。
+  - 開くボタンに文字を出す props は、今の ActionMenu に無い。キャンバスを実装するときに、`@fukuemon/ui` に足す。
 - 「ファイル」のメニューは、ファイルを開く、ファイルに保存、SVG を書き出す、の 3 つを持つ。
 - 保存の状態は、最後に保存した時刻を、文で出す。時刻が変わっても、読み上げない。
 - 保存できないときは、ヘッダの下に、Notice（`danger`、`isAlert`）で、保存できないことと理由を出す。保存の容量が足りないときは、図を消すと容量が空くことを、文に入れる。
@@ -244,7 +245,8 @@ type DocumentStore = {
 
 - 一覧は、そのツールの図だけを出す。
 - 一覧は、Dialog の中に、Table で作る。「新しい図」は、Dialog の `footer` に置く。
-  - Table の使う場面（[components.md](../../../../packages/ui/design/components.md)）に、行ごとの操作を持つ一覧は、今は無い。キャンバスの実装のタスクが足す。
+  - 行ごとの操作を持つ一覧は、今の Table を使う場面に無い。キャンバスを実装するときに、その場面を足す。
+    - [components.md](../../../../packages/ui/design/components.md)
 - 行の名前を押すと、その図を開き、ダイアログを閉じる。
   - 行の名前は、`?doc=<id>` を `href` に持つ Link にする。ページは、押したときに、ページを読み込み直さずに図を切り替える。新しいタブで開く操作は、ブラウザに任せる。
 - 行の「⋯」のボタンの読み上げの名前は、`<図の名前> の操作` にする。「消す」は、ActionMenu の `isDanger` の項目にする。
@@ -348,7 +350,8 @@ apps/web/src/content/figures/
 - 「キャンバスで開く」のリンクの先は、`https://play.fukuemon.dev/<ツール>/?figure=<名前>` である。
   - リンクの読み上げの名前に、図の代替テキストを入れる（例: 「VPC の構成をキャンバスで開く」）。1 つの記事に複数の図があっても、リンクを見分けられるようにするためである。
   - リンクは、同じタブで開く。
-- 図が本文の幅に収まらないときは、縮めずに、横にスクロールする枠に入れる。図の中の文字が、小さくなりすぎないようにするためである。枠のキーボードの操作は、`@fukuemon/ui` の Table の、幅に収まらない表の枠と同じにする。Tab のキーで枠にフォーカスし、左右の矢印のキーで横にスクロールする。
+- 図が本文の幅に収まらないときは、縮めずに、横にスクロールする枠に入れる。図の中の文字が、小さくなりすぎないようにするためである。
+  - 枠のキーボードの操作は、`@fukuemon/ui` の Table の、幅に収まらない表の枠と同じにする。Tab のキーで枠にフォーカスし、左右の矢印のキーで横にスクロールする。
 - Excalidraw の図で、運営者が選んだ色は、ダークでもライトの色のままである。運営者は、図を置くときに、ライトとダークの両方で読めることを確認する。
 - インラインにする SVG は、色の値を、トークンの CSS 変数に置き換える。
   - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](../../../adr/0040-canvas-figures-in-articles.md)
@@ -395,10 +398,10 @@ sequenceDiagram
   end
 ```
 
-- `figures/` は、`@fukuemon/figures` で、クエリの `figure` から名前を読んで検証し、URL のパスを組み立てて、`fetch` する。`figures/` は、SVG の文字列を返す。
+- `figures/` は、`@fukuemon/figures` で、URL のクエリの `figure` から図の名前を読み、検証する。名前とツールから URL のパスを組み立てて、`fetch` する。`figures/` は、SVG の文字列を返す。
 - SVG から元データを取り出して、そのツールの形式かを確認する処理は、ツールのページが持つ。「ファイルを開く」と同じ関数を使う。
-- ツールのページは、`figures/` に、図の名前と、自分のツール（`drawio` か `excalidraw`）を渡す。図を描いたツールの型は、`@fukuemon/figures` が持つ。`figures/` と `documents/` は、互いの型を使わない。
-  - package の型の値は、`ToolKind` の `slides` を除く値と同じ語である。2 つの型は import でつながらないので、ツールのページが、同じ文字列を両方に渡す。
+- ツールのページは、`figures/` に、自分のツール（`drawio` か `excalidraw`）を渡す。図を描いたツールの型は、`@fukuemon/figures` が持つ。`figures/` と `documents/` は、互いの型を使わない。
+  - `@fukuemon/figures` のツールの型の値は、`ToolKind` から `slides` を除いた値と同じ文字列である。2 つの型は互いを import しないので、ツールのページが、同じ文字列を `figures/` と `documents/` の両方に渡す。
 - `figures/` は、名前が規則に合わないときは、`fetch` しない。
 - URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
 - `fetch` は、リダイレクトを辿らない。

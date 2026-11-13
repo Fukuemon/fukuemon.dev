@@ -109,7 +109,7 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 | `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                         |
 | `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                       |
 | `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                  |
-| `@fukuemon/figures`            | 記事の図の名前の規則と、ファイルの名前と URL のパスの形                                                                                | SVG を読む処理、図を読み込む処理、origin の値        |
+| `@fukuemon/figures`            | 記事の図の名前の規則と、ファイルの名前と URL のパスの形                                                                                | SVG を読む処理、`fetch`、2 つのアプリの origin の値  |
 | `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                               |
 | `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                               |
 | `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                               |
