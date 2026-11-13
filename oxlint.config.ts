@@ -23,8 +23,34 @@ const noPagesLayouts: Restriction[] = [
   },
 ];
 
+const noWebcontainer: Restriction[] = [
+  {
+    name: "@webcontainer/api",
+    message:
+      "@webcontainer/api は packages/node-runtime/src/webcontainer/ だけが import する (apps/playground/DesignDoc.md)",
+  },
+];
+
+// override は規則を置き換えるので、どの entry にも @webcontainer/api の禁止を足す
 function restrict(paths: Restriction[], patterns: Restriction[]): OxlintOverride["rules"] {
-  return { "no-restricted-imports": ["error", { paths, patterns }] };
+  return { "no-restricted-imports": ["error", { paths: [...paths, ...noWebcontainer], patterns }] };
+}
+
+const PLAYGROUND_SRC = "apps/playground/src";
+const PLAYGROUND_TOOLS = ["node", "sql", "go"];
+
+function playgroundToolOverrides(): OxlintOverride[] {
+  return PLAYGROUND_TOOLS.map((tool) => ({
+    files: [`${PLAYGROUND_SRC}/${tool}/**`],
+    rules: restrict(
+      [],
+      PLAYGROUND_TOOLS.filter((t) => t !== tool).map((other) => ({
+        regex: `^(\\.\\./)+${other}(/|$)`,
+        message:
+          "ツールのページどうしは参照しない。2 つ以上のツールが使うものは、関心ごとのディレクトリへ移す (apps/playground/DesignDoc.md)",
+      })),
+    ),
+  }));
 }
 
 function escapeRegex(s: string): string {
@@ -82,6 +108,13 @@ const noFeaturesFromComponents: Restriction[] = [
   },
 ];
 
+const noPackagesToApps: Restriction[] = [
+  {
+    group: ["**/apps/**", "@fukuemon/web*", "@fukuemon/playground*"],
+    message: "packages から apps への逆依存は禁止 (context/codebase.md 規約 4)",
+  },
+];
+
 export default defineConfig({
   plugins: ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y", "import"],
   ignorePatterns: ["docs/design/prototypes/**/vendor/"],
@@ -97,6 +130,7 @@ export default defineConfig({
     "react/purity": "error",
     "react/immutability": "error",
     "react/refs": "error",
+    "no-restricted-imports": ["error", { paths: noWebcontainer }],
   },
   overrides: [
     {
@@ -149,17 +183,14 @@ export default defineConfig({
       ),
     },
     ...featureOverrides(),
+    ...playgroundToolOverrides(),
     {
       files: ["packages/**"],
-      rules: restrict(
-        [],
-        [
-          {
-            group: ["**/apps/**", "@fukuemon/web*"],
-            message: "packages から apps への逆依存は禁止 (context/codebase.md 規約 4)",
-          },
-        ],
-      ),
+      rules: restrict([], noPackagesToApps),
+    },
+    {
+      files: ["packages/node-runtime/src/webcontainer/**"],
+      rules: { "no-restricted-imports": ["error", { patterns: noPackagesToApps }] },
     },
     {
       // decorator の useEffect は Storybook の hook で、React の hook の規則が当たらない (context/conventions.md)
