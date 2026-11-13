@@ -10,5 +10,7 @@
     "packages/ui/src/tokens/*.gen.*",
     // 試作のソース。build-i.mjs が shared.css を文字列の位置で切るので、整形すると違う HTML を書く
     "docs/design/prototypes/",
+    // Go の lib/wasm/wasm_exec.js の写し。Go のものと同じかを、ビルドのスクリプトが比べる
+    "packages/go-runtime/src/worker/vendor/wasm_exec.js",
   ],
 }

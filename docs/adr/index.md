@@ -104,6 +104,7 @@ ADR-0026 の Decision の「ヘッダーの『筆者について』は `/` を�
 | [ADR-0058](0058-slides-package-for-themes-and-pages.md)         | スライドのテーマ、テンプレート、Marp の設定、ページを組み立てる関数を、`packages/slides` に置く                                       |
 | [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)           | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                             |
 | [ADR-0063](0063-ai-operations-for-sql-and-go.md)                | AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む |
+| [ADR-0064](0064-go-net-http-same-origin-only.md)                | Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す                                         |
 
 ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
 ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。  
@@ -181,6 +182,7 @@ flowchart TB
     A0058["ADR-0058"]
     A0059["ADR-0059"]
     A0063["ADR-0063"]
+    A0064["ADR-0064"]
   end
   A0002 --> A0001
   A0003 --> A0002
@@ -317,6 +319,9 @@ flowchart TB
   A0063 --> A0045
   A0063 --> A0050
   A0063 --> A0053
+  A0064 --> A0008
+  A0064 --> A0034
+  A0064 --> A0063
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  

@@ -15,16 +15,18 @@ verified_commit: ab2da87
 
 テストの種類ごとに、保証することと置き場は次のとおり。
 
-| 種類         | 対象                                                                               | ツール                   | 保証すること                                                                                                                                 |
-| ------------ | ---------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                 |
-| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする |
-| ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                             |
-| unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む  |
-| unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理の分岐を踏む                               |
-| E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
-| 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
-| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                 |
+| 種類         | 対象                                                                               | ツール                   | 保証すること                                                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                                                 |
+| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする                                 |
+| ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                                                             |
+| unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む                                  |
+| unit         | `packages/go-runtime` の Yaegi で Go を動かす処理（`go/`）                         | `go test`                | `syscall/js`、`syscall`、`unsafe`、`os/exec` の import が失敗すること、ディレクトリの package の import を解決できること、終了コードとテストの関数を集められることを確認する |
+| unit         | `packages/go-runtime` の `GoRunner` と、Web Worker の `fetch` の差し替え           | Vitest                   | Web Worker のモックで、実行、止める、package ごとのテスト、読み込みと Web Worker の失敗と、ほかの origin へのリクエストを止める処理を踏む                                    |
+| unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                              |
+| E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                                                           |
+| 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                                                 |
+| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                 |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -51,11 +53,12 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
 - `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
 
-`apps/playground` と `packages/sql-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
+`apps/playground`、`packages/sql-runtime`、`packages/go-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には、100% を求める。  
-`apps/playground` の対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
-`packages/sql-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。  
-2 つは `Worker` と `import.meta.url` を使い、Node では動かないためである。2 つのファイルは、テストする `database.ts` と `handler.ts` を呼ぶだけにする。
+`apps/playground` と `packages/go-runtime` の対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
+`packages/sql-runtime` と `packages/go-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。  
+2 つは `Worker` と `import.meta.url` を使い、Node では動かないためである。2 つのファイルは、テストする `database.ts` と `handler.ts`（`go-runtime` では `runner.ts`、`guard.ts`、`parts.ts`）を呼ぶだけにする。  
+`packages/go-runtime` の `test` の script は、Vitest の後に `go test` を実行するので、`mise.toml` の Go が要る。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  

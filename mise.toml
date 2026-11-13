@@ -1,6 +1,7 @@
 # ツールの版。pnpm の版は package.json の packageManager にある
 [tools]
 node = "24"
+go = "1.26.4"
 uv = "0.12"
 "pipx:apm-cli" = "0.35.0"
 # similarity-ts は npm になく、GitHub のリリースの prebuilt を使う
