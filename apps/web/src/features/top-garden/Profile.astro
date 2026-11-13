@@ -12,46 +12,48 @@ const stack = [
   { area: "フロントエンド", items: "見本: Astro、React、Tailwind CSS" },
   { area: "基盤", items: "見本: Cloudflare Workers、Terraform" },
 ];
-const section = "border-t border-border py-8 first:border-t-0 first:pt-0";
+const section = "max-w-prose border-t border-border py-8 first:border-t-0 first:pt-0";
 const heading = "mb-2 font-heading font-semibold";
 const row = "border-t border-border py-1.5";
 ---
 
-<div class="mx-auto max-w-prose px-4 pt-10 pb-24 sm:px-8">
-  <section class={section} aria-labelledby="profile">
-    <h1 id="profile" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
-    <p class="mb-3 text-text-secondary">自己紹介の見本。どんな仕事をしていて、このサイトに何を書いているかを、数行で書く。</p>
-    <p>関心のある技術と、記事で扱う主題を書く。</p>
-  </section>
-  <section class={section} aria-labelledby="career">
-    <h2 id="career" class:list={[heading, "text-heading-md"]}>経歴</h2>
-    <ul>
-      {
-        career.map(({ year, text }) => (
-          <li class:list={[row, "flex gap-4"]}>
-            <span class="w-18 flex-none text-text-secondary tabular-nums">{year}</span>
-            <span class="min-w-0">{text}</span>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-  <section class={section} aria-labelledby="stack">
-    <h2 id="stack" class:list={[heading, "text-heading-md"]}>技術スタック</h2>
-    <dl>
-      {
-        stack.map(({ area, items }) => (
-          <div class={row}>
-            <dt class="text-caption text-text-secondary">{area}</dt>
-            <dd>{items}</dd>
-          </div>
-        ))
-      }
-    </dl>
-  </section>
-  <section class={section} aria-labelledby="articles">
-    <h2 id="articles" class:list={[heading, "text-heading-md"]}>記事</h2>
-    <p class="mb-3">記事の一覧への入口の見本。</p>
-    <Link href="/articles" isStandalone>記事の一覧を開く</Link>
-  </section>
+<div class="px-4 pt-10 pb-24 sm:px-6">
+  <div class="mx-auto max-w-page">
+    <section class={section} aria-labelledby="profile">
+      <h1 id="profile" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
+      <p class="mb-3 text-text-secondary">自己紹介の見本。どんな仕事をしていて、このサイトに何を書いているかを、数行で書く。</p>
+      <p>関心のある技術と、記事で扱う主題を書く。</p>
+    </section>
+    <section class={section} aria-labelledby="career">
+      <h2 id="career" class:list={[heading, "text-heading-md"]}>経歴</h2>
+      <ul>
+        {
+          career.map(({ year, text }) => (
+            <li class:list={[row, "flex gap-4"]}>
+              <span class="w-18 flex-none text-text-secondary tabular-nums">{year}</span>
+              <span class="min-w-0">{text}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+    <section class={section} aria-labelledby="stack">
+      <h2 id="stack" class:list={[heading, "text-heading-md"]}>技術スタック</h2>
+      <dl>
+        {
+          stack.map(({ area, items }) => (
+            <div class={row}>
+              <dt class="text-caption text-text-secondary">{area}</dt>
+              <dd>{items}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+    <section class={section} aria-labelledby="articles">
+      <h2 id="articles" class:list={[heading, "text-heading-md"]}>記事</h2>
+      <p class="mb-3">記事の一覧への入口の見本。</p>
+      <Link href="/articles" isStandalone>記事の一覧を開く</Link>
+    </section>
+  </div>
 </div>

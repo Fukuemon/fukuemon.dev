@@ -1,0 +1,31 @@
+---
+import { SITE_NAV, currentNavHref } from "./site-nav";
+
+const current = currentNavHref(Astro.url.pathname);
+---
+
+<header class="border-b-2 border-text px-4 sm:px-6">
+  <div class="mx-auto flex min-h-16 max-w-page flex-wrap items-center justify-between gap-x-6 gap-y-2">
+    <a
+      class="font-heading text-heading-md font-semibold whitespace-nowrap text-text focus-visible:focus-ring"
+      href="/">fukuemon.dev</a
+    >
+    <nav aria-label="サイトの中の移動">
+      <ul class="flex gap-6">
+        {
+          SITE_NAV.map(({ label, href }) => (
+            <li>
+              <a
+                class="brush-hover inline-block py-2 whitespace-nowrap text-text focus-visible:focus-ring aria-[current=page]:after:animate-stroke aria-[current=page]:after:bg-current-page aria-[current=page]:after:[clip-path:inset(0)]"
+                href={href}
+                aria-current={href === current ? "page" : undefined}
+              >
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
