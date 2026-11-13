@@ -2,3 +2,62 @@
 @import "@fukuemon/ui/fonts.css";
 @import "@fukuemon/ui/theme.css";
 @import "@fukuemon/ui/sources.css";
+
+/* 記事の本文。Markdown から出る要素には class が付かないので、要素で当てる */
+@layer components {
+  .prose {
+    @apply flex flex-col gap-4 text-body;
+  }
+  .prose :where(h2) {
+    @apply mt-8 border-b border-border pb-2 font-heading text-heading-md font-semibold;
+  }
+  .prose :where(h3) {
+    @apply mt-4 font-heading text-heading-sm font-semibold;
+  }
+  .prose :where(ul) {
+    @apply list-disc ps-6;
+  }
+  .prose :where(ol) {
+    @apply list-decimal ps-6;
+  }
+  .prose :where(li > ul, li > ol) {
+    @apply mt-2;
+  }
+  .prose :where(blockquote) {
+    @apply border-s-2 border-border ps-4 text-text-secondary;
+  }
+  /* packages/ui の Link の文中の形と同じにする。フォーカスの輪が外へ 4px 広がるので、左右を 6px 空ける */
+  .prose :where(a) {
+    @apply mx-1.5 text-link underline underline-offset-4 link-rule link-rule-below-underline visited:text-link-visited focus-visible:focus-ring;
+  }
+  .prose :where(:not(pre) > code) {
+    @apply bg-code-surface px-1 font-mono text-code-dense text-code-text;
+  }
+  .prose :where(table) {
+    @apply w-full border-collapse;
+  }
+  .prose :where(thead) {
+    @apply border-t-2 border-text;
+  }
+  .prose :where(th, td) {
+    @apply border-b border-border px-2 py-2 text-start align-top;
+  }
+  .prose :where(th) {
+    @apply font-semibold;
+  }
+
+  /* Pele の SVG の色を、Pele の変数からトークンへ対応させる。1 枚の SVG のままライトとダークを切り替える (ADR-0016) */
+  .prose svg.pele {
+    --pele-bg: var(--color-surface);
+    --pele-fg: var(--color-text);
+    --pele-muted: var(--color-text-secondary);
+    --pele-line: var(--color-text);
+    --pele-surface: var(--color-surface-subtle);
+    --pele-surface-alt: var(--color-surface);
+    --pele-border: var(--color-border-field);
+    --pele-accent: var(--color-primary);
+    /* 角を丸めるのは操作できる要素と重なる面だけで、図の箱は罫で示す (ADR-0028) */
+    --pele-radius: 0;
+    @apply block;
+  }
+}
