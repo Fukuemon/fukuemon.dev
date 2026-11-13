@@ -10,7 +10,7 @@ import {
   WALL,
   project,
   type Vec2,
-} from "./layout";
+} from "../layout";
 
 export interface InkArt {
   readonly strokes: readonly Stroke[];

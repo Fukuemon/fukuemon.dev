@@ -2,7 +2,7 @@
 // 庭を描けないときは、バンドルの読み込みに失敗したときと同じく、ふつうのページに戻す。
 // 描く途中で例外が出たときも、ページが canvas に覆われたままにならないよう、ふつうのページに戻す。
 import { startGarden } from "./garden";
-import type { Season, TimeOfDay } from "./season";
+import type { Season, TimeOfDay } from "../stage/season";
 
 function boot(): void {
   const root = document.documentElement;
