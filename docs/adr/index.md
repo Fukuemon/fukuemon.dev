@@ -71,34 +71,37 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 
 ## 実行環境とプレイグラウンド
 
-| ADR                                                             | 題                                                                                                                                   |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [ADR-0033](0033-webcontainers-for-node.md)                      | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                                              |
-| [ADR-0034](0034-playground-origin-and-embedding.md)             | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す                   |
-| [ADR-0037](0037-go-with-yaegi.md)                               | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                                  |
-| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)                | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                          |
-| [ADR-0040](0040-canvas-figures-in-articles.md)                  | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                                |
-| [ADR-0041](0041-slides-editor-with-marp.md)                     | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                     |
-| [ADR-0042](0042-published-slides-as-static-pages.md)            | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                             |
-| [ADR-0043](0043-multiple-named-documents-per-tool.md)           | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                                |
-| [ADR-0044](0044-ai-operations-with-webmcp.md)                   | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                               |
-| [ADR-0045](0045-ai-operations-permission-and-confirmation.md)   | AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す |
-| [ADR-0046](0046-playground-as-vite-react-app.md)                | プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける                                  |
-| [ADR-0047](0047-react-compiler-in-playground.md)                | React Compiler を、`apps/playground` にだけ入れる                                                                                    |
-| [ADR-0048](0048-node-runtime-interface-and-stores.md)           | Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する                      |
-| [ADR-0049](0049-playground-projects-from-articles.md)           | 記事の埋め込みの初期ファイルと設定を、`apps/web` のビルドが JSON にし、ツールのページが埋め込みの ID で読む                          |
-| [ADR-0050](0050-save-visitor-files-in-indexeddb.md)             | 訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する                                                                       |
-| [ADR-0051](0051-node-runtime-boot-and-commands.md)              | Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす                      |
-| [ADR-0052](0052-runtime-files-outside-workdir.md)               | 実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す                                   |
-| [ADR-0053](0053-pglite-database-in-playground.md)               | DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る       |
-| [ADR-0054](0054-record-http-and-console-with-prefixed-lines.md) | HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない                                         |
-| [ADR-0056](0056-article-figures-directory-and-name.md)          | 記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す                             |
-| [ADR-0057](0057-document-records-in-two-object-stores.md)       | 図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する                      |
-| [ADR-0058](0058-slides-package-for-themes-and-pages.md)         | スライドのテーマ、テンプレート、Marp の設定、ページを組み立てる関数を、`packages/slides` に置く                                      |
-| [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)           | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                            |
+| ADR                                                             | 題                                                                                                                                    |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-0033](0033-webcontainers-for-node.md)                      | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                                               |
+| [ADR-0034](0034-playground-origin-and-embedding.md)             | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す                    |
+| [ADR-0037](0037-go-with-yaegi.md)                               | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                                   |
+| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)                | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                           |
+| [ADR-0040](0040-canvas-figures-in-articles.md)                  | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                                 |
+| [ADR-0041](0041-slides-editor-with-marp.md)                     | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                      |
+| [ADR-0042](0042-published-slides-as-static-pages.md)            | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                              |
+| [ADR-0043](0043-multiple-named-documents-per-tool.md)           | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                                 |
+| [ADR-0044](0044-ai-operations-with-webmcp.md)                   | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                                |
+| [ADR-0045](0045-ai-operations-permission-and-confirmation.md)   | AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す  |
+| [ADR-0046](0046-playground-as-vite-react-app.md)                | プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける                                   |
+| [ADR-0047](0047-react-compiler-in-playground.md)                | React Compiler を、`apps/playground` にだけ入れる                                                                                     |
+| [ADR-0048](0048-node-runtime-interface-and-stores.md)           | Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する                       |
+| [ADR-0049](0049-playground-projects-from-articles.md)           | 記事の埋め込みの初期ファイルと設定を、`apps/web` のビルドが JSON にし、ツールのページが埋め込みの ID で読む                           |
+| [ADR-0050](0050-save-visitor-files-in-indexeddb.md)             | 訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する                                                                        |
+| [ADR-0051](0051-node-runtime-boot-and-commands.md)              | Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす                       |
+| [ADR-0052](0052-runtime-files-outside-workdir.md)               | 実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す                                    |
+| [ADR-0053](0053-pglite-database-in-playground.md)               | DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る        |
+| [ADR-0054](0054-record-http-and-console-with-prefixed-lines.md) | HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない                                          |
+| [ADR-0056](0056-article-figures-directory-and-name.md)          | 記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す                              |
+| [ADR-0057](0057-document-records-in-two-object-stores.md)       | 図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する                       |
+| [ADR-0058](0058-slides-package-for-themes-and-pages.md)         | スライドのテーマ、テンプレート、Marp の設定、ページを組み立てる関数を、`packages/slides` に置く                                       |
+| [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)           | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                             |
+| [ADR-0063](0063-ai-operations-for-sql-and-go.md)                | AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む |
 
 ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
-ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。
+ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。  
+ADR-0044 の Decision 4 と、ADR-0045 の Decision 4 は、ADR-0063 に置換した。  
+ADR-0037 の Decision の「Yaegi の WASM は、訪問者が実行のボタンを押してから読み込む」は、ADR-0063 に置換した。
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
@@ -167,6 +170,7 @@ flowchart TB
     A0057["ADR-0057"]
     A0058["ADR-0058"]
     A0059["ADR-0059"]
+    A0063["ADR-0063"]
   end
   A0002 --> A0001
   A0003 --> A0002
@@ -290,6 +294,12 @@ flowchart TB
   A0058 --> A0048
   A0059 --> A0028
   A0059 --> A0042
+  A0063 --> A0031
+  A0063 --> A0037
+  A0063 --> A0044
+  A0063 --> A0045
+  A0063 --> A0050
+  A0063 --> A0053
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  

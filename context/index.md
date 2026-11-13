@@ -17,6 +17,7 @@
 - [fukuemon.dev PRD](../docs/PRD.md) — 訪問者がコードを書いて動かしながら、技術の仕組みを体系的に学べる個人の技術サイト。記事、シリーズ、記事に埋め込む図と実行環境、プレイグラウンドを提供する（draft）
 - [fukuemon.dev Design Doc](../docs/design/DesignDoc.md) — 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、サイト全体の動きの規則とトップの庭の例外、条件つきで足す機能の形（draft）
 - [キャンバス](../docs/design/features/canvas/DesignDoc.md) — draw.io と Excalidraw のツールのパスとページの構成、IndexedDB に保存する図の形、図の一覧の画面、保存と書き出しの流れ、記事の図の置き場と書き方、記事の図をキャンバスで開く流れ（draft）
+- [AI からの操作](../docs/design/features/ai-operations/DesignDoc.md) — AI のエージェントに公開する操作の名前と入力と結果、許可のスイッチ、確認の画面、操作の記録の欄、localStorage のキーと期限、登録から実行までの流れ（draft）
 - [トップの水墨の門と立体の庭](../docs/design/features/top-garden/DesignDoc.md) — トップの最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル（draft）
 - [プレイグラウンド](../apps/playground/DesignDoc.md) — apps/playground の構成とパス、ディレクトリ、実行環境のインターフェースの型、状態の置き場、プロジェクトと保存の形、起動の流れ、SQL を送る形式（draft）
 - [スライド](../docs/design/features/slides/DesignDoc.md) — スライドのエディタのパスと画面、テーマとテンプレートの一覧、packages/slides の関数、保存と書き出し、公開するスライドのビルドとページ送り、記事への埋め込みの書き方（draft）
