@@ -9,13 +9,10 @@ import {
   WebGLRenderer,
 } from "three";
 import { createInkPass } from "./ink-pass";
-import { STATIONS } from "./layout";
+import { PAPER_PAD, PX, STATIONS } from "./layout";
 import { scenePalette } from "./scene-colors";
 import { buildGarden } from "./scene";
 import type { SeasonTime } from "./season";
-
-/** 3D の場面の 1 m に当たる、和紙の文の px */
-const PX = 260;
 
 // 和紙の文の大きさ（px）の仮の値。文を和紙に置くときに、文の要素の大きさを測った値に替える。
 // 幅は Design Doc の「和紙の文」の 25rem と 17.5rem で、高さは試作の名乗りの文を測った値である。
@@ -61,8 +58,8 @@ export function startGarden(stage: HTMLElement, opts: SeasonTime): boolean {
   function aim(): void {
     const st = STATIONS[0]!;
     const text = narrow.matches ? TEXT.narrow : TEXT.wide;
-    const w = text.w / PX + 0.36;
-    const h = text.h / PX + 0.4;
+    const w = text.w / PX + PAPER_PAD.w;
+    const h = text.h / PX + PAPER_PAD.h;
     const fov = portrait() ? 62 : 46;
     const t2 = 2 * Math.tan((fov * Math.PI) / 360);
     const d = Math.max(2.1, w / (portrait() ? 0.92 : 0.46) / (t2 * camera.aspect), h / 0.56 / t2);

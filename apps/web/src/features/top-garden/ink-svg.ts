@@ -1,4 +1,5 @@
-import { rng, type Layer, type Stroke, type Tint } from "./brush";
+import type { Layer, Stroke, Tint } from "./brush";
+import { rng } from "./rng";
 import { inkArt, type InkArt } from "./ink-art";
 import { DESIGN } from "./layout";
 

@@ -54,7 +54,8 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
 - knip は、未使用の export、依存、ファイルの検出に使う。
 - Vitest は unit test に使う。
-- Playwright は、`packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）、トップの試作の録画に使う。
+- Playwright は、`packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）、トップの庭の見た目の回帰（`apps/web/e2e/`）、トップの試作の録画に使う。
+- three は、トップの立体の庭を描く場面の束にだけ使う。庭を出すときだけ読み込み、ほかのページには配らない。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
 - Wrangler は、サイトの Worker（`apps/web`）、カタログの Worker（`packages/ui`）、プレイグラウンドの Worker（`apps/playground`）の deploy に使う。

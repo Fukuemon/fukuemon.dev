@@ -105,9 +105,14 @@ export const MOUNTAINS: readonly Mountain[] = [
 export const FAR_Z = -60;
 
 /** 山並みの稜線の、設計の画面での y（px） */
-export function ridgeY(m: Mountain, x: number): number {
+export function ridgeY(m: Pick<Mountain, "peaks" | "base">, x: number): number {
   return m.base - m.peaks.reduce((s, p) => s + p[1] * Math.exp(-(((x - p[0]) / p[2]) ** 2)), 0);
 }
+
+/** 3D の場面の 1 m に当たる、和紙の文の px */
+export const PX = 260;
+/** 和紙の、文の外の余白の合計（m）。左右に 0.18 m、上下に 0.2 m */
+export const PAPER_PAD = { w: 0.36, h: 0.4 } as const;
 
 /** 池。中心の x と z、楕円の半径、y 軸の回りの回転（ラジアン） */
 export const POND = { x: 4.9, z: -6.3, rx: 2.7, rz: 1.8, rot: -0.4 } as const;

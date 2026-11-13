@@ -1,4 +1,5 @@
-// 門の内側の立体の庭を組み立てる。配置は layout.ts、色は scene-colors.ts から読む。
+// 門の内側の立体の庭を組み立てる。墨の絵と共有する配置は layout.ts から、色は scene-colors.ts から読む。
+// 苔、石、灯籠、奥と左右の塀、和紙を掛けない 2 本の松の配置は、場面だけが使うので、このファイルに置く。
 import {
   BoxGeometry,
   Color,
@@ -28,7 +29,7 @@ import {
   ridgeY,
 } from "./layout";
 import { CLEAR, mixHex, type ScenePalette } from "./scene-colors";
-import { rng } from "./brush";
+import { rng } from "./rng";
 import { canvasTexture, lantern, rock, tree, type TreeLeaf } from "./scene-parts";
 
 type BoxSpec = readonly [number, number, number, number, number, number];
@@ -97,7 +98,7 @@ function farRange(C: ScenePalette): Mesh {
   return m;
 }
 
-/** 苔の島。[中心 x, z, x の半径, z の半径] */
+/** 苔の島。[中心 x, z, x の半径, z の半径]。木の根元の回りに置くので、木を動かしたら合わせて動かす */
 const MOSS: readonly (readonly [number, number, number, number])[] = [
   [-6.9, -7.4, 2.7, 1.8],
   [2.2, -11.3, 2.6, 1.3],

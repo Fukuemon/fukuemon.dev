@@ -11,6 +11,7 @@ export default defineConfig({
         "src/features/top-garden/ink-art.ts",
         "src/features/top-garden/ink-svg.ts",
         "src/features/top-garden/layout.ts",
+        "src/features/top-garden/rng.ts",
         "src/features/top-garden/scene-colors.ts",
         "src/features/top-garden/season.ts",
         "src/features/top-garden/sign.ts",

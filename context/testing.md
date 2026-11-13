@@ -67,7 +67,8 @@ CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/8
 見た目の回帰のチェックは、E2E のエビデンスの静止画を、変更の前後で並べて比べる。  
 トップの庭は WebGL で描き、目で比べても色の小さな違いに気づけないので、Playwright の静止画の比較で確認する。流し方は [E2E のテスト](testing/e2e.md) にある。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
-サイトの E2E の package（`packages/e2e`）は、まだ無い。
+サイトの E2E の package（`packages/e2e`）は、まだ無い。  
+トップの庭の見た目の回帰は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。
 
 ## Runtime Requirements
 
