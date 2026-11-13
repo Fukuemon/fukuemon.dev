@@ -211,6 +211,14 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - 試作のビルドのスクリプトは、CSS を文字列の位置で切る。整形すると、エラーを出さずに違う HTML を書く。
 - oxlint は、`docs/design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three の束で、Git で追跡しないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。
+- Oxlint は、`packages/ui/.storybook/` の `react/rules-of-hooks` と `react/exhaustive-deps` を見ない。
+  - decorator の中の `useEffect` は、`storybook/preview-api` の hook で、React の hook ではない。
+  - decorator の名前は小文字で始まるので、`rules-of-hooks` は、コンポーネントの外で hook を呼んだと見なす。
+- Oxlint の `react/no-array-index-key` を、次の 2 か所だけで、行ごとのコメントで抑制する。
+  - `packages/ui/src/case/HttpExchangeDetail/HttpExchangeDetail.tsx` のヘッダの行。同じ名前のヘッダが並ぶことがあり、名前だけでは key が重なる。
+  - `packages/ui/src/case/ToolPane/fixtures.tsx` のコードの行。同じ中身の行が並ぶことがあり、中身だけでは key が重なる。
+  - どちらの一覧も、描いた後に並びが変わらない。
+- Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 
