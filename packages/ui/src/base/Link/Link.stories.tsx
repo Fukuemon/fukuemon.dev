@@ -40,6 +40,21 @@ export const Standalone: Story = {
     </ul>
   ),
 };
+export const StandaloneWrapped: Story = {
+  args: {
+    isStandalone: true,
+    children: "認可コードフローで、認可サーバーがクライアントにコードを返すまでの記事",
+  },
+  parameters: { pseudo: { hover: true } },
+  render: (args) => (
+    <ul className="w-80 text-body text-text">
+      <li className="flex items-baseline justify-between gap-4 border-b border-border py-3">
+        <Link {...args} />
+        <span className="text-caption text-text-secondary">2026-11-13</span>
+      </li>
+    </ul>
+  ),
+};
 export const External: Story = {
   args: { href: "https://design.digital.go.jp/dads/", isExternal: true, children: "DADS" },
 };
