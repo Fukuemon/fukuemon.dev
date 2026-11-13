@@ -53,8 +53,9 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 `apps/playground`、`packages/sql-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には 100% を求める。  
 `packages/sql-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。`Worker` と `import.meta.url` に依り、Node の上では動かないためである。中身は、テストする `database.ts` と `handler.ts` を結ぶだけにする。  
-`packages/node-runtime` の `src/webcontainer/` と `src/index.ts` は、対象に入れない。  
+`packages/node-runtime` の `src/webcontainer/index.ts` と `src/index.ts` は、対象に入れない。  
 WebContainers はブラウザでしか動かないためである。  
+`src/webcontainer/` のうち、WebContainers を動かさない処理（初期ファイルを mount に渡す木にする `tree.ts`）は、別のファイルに分けて対象に入れる。  
 動きは、ブラウザでの動作確認で見る。  
 対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。
 

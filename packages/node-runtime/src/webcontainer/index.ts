@@ -1,4 +1,4 @@
-import { type FileSystemTree, WebContainer, type WebContainerProcess } from "@webcontainer/api";
+import { WebContainer, type WebContainerProcess } from "@webcontainer/api";
 
 import type {
   BackendFiles,
@@ -8,6 +8,7 @@ import type {
   RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
+import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
@@ -20,26 +21,6 @@ const PREVIEW_ALLOW = "cross-origin-isolated";
 const DEFAULT_TERMINAL: TerminalSize = { cols: 80, rows: 24 };
 
 const env = { PLAYGROUND_PORTS_FILE: PORTS_FILE };
-
-function toTree(files: Readonly<Record<string, string>>): FileSystemTree {
-  const root: FileSystemTree = {};
-  for (const [path, contents] of Object.entries(files)) {
-    const parts = path.split("/");
-    const name = parts.pop();
-    if (name === undefined) continue;
-    let directory = root;
-    for (const part of parts) {
-      // constructor のような Object.prototype の名前を、継承した値として読まない
-      const node =
-        (Object.hasOwn(directory, part) ? directory[part] : undefined) ??
-        (directory[part] = { directory: {} });
-      if (!("directory" in node)) throw new Error(`${part} はディレクトリではない`);
-      directory = node.directory;
-    }
-    directory[name] = { file: { contents } };
-  }
-  return root;
-}
 
 function toBackendProcess(process: WebContainerProcess): BackendProcess {
   const listeners = new Set<(chunk: string) => void>();
