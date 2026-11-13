@@ -115,7 +115,7 @@
   --text-code--line-height: var(--fd-primitive-line-height-170);
   --text-code-dense: var(--fd-primitive-font-size-14);
   --text-code-dense--line-height: var(--fd-primitive-line-height-130);
-  /* compact: コードを動かす画面のコンポーネントだけに使う 12px と 13px。code-compact は等幅の 13px で、約 20px の行にする（docs/adr/0062-dense-text-and-targets-in-playground.md、docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
+  /* compact: コードを動かす画面のコンポーネントだけに使う 12px と 13px。code-compact は等幅の 13px で、約 20px の行にする（docs/adr/0062-dense-text-and-targets-in-playground.md、docs/adr/0067-compact-text-tokens-in-dense-panes.md） */
   --text-compact: var(--fd-primitive-font-size-12);
   --text-compact--line-height: var(--fd-primitive-line-height-130);
   --text-label-compact: var(--fd-primitive-font-size-13);
