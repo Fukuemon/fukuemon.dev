@@ -93,12 +93,13 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
 - `@fukuemon/playground-project` は、workspace のどの package にも依存しない。
-- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project` に依存してよい。
+- `@fukuemon/figures` は、workspace のどの package にも依存せず、React にも依存しない。
+- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project`、`@fukuemon/figures` に依存してよい。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
 - `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
-- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
+- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project`、`@fukuemon/figures` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
   - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
@@ -114,6 +115,8 @@ hydrate するページはその framework のランタイムを配るので、2
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
 - プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#保存) にある。
+- プレイグラウンドは、訪問者が描いた図を、訪問者のファイルと別の IndexedDB のデータベースに置く。レコードの形は、[キャンバスの Design Doc](../docs/design/features/canvas/DesignDoc.md#保存するデータ) にある。
+- プレイグラウンドは、AI からの操作の許可のスイッチの状態と、「このページでは今後尋ねない」の状態を、ツールごとに `localStorage` に置く。キーと値の形は、[AI からの操作の Design Doc](../docs/design/features/ai-operations/DesignDoc.md#スイッチと確認の状態の保存) にある。
 - トップ（`/`）は、端末でトップを開いたことを、`localStorage` の `fd-top-seen` に記録する。
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
   - `fd-top-seen` の意味と、`head` の inline script が `html` に書く属性と class は、[トップの水墨の門と立体の庭の Design Doc](../docs/design/features/top-garden/DesignDoc.md#ページが持つ状態) にある。
@@ -194,3 +197,5 @@ ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
 - `/playground-projects/*` は、記事に埋め込む実行環境のプロジェクトの JSON に使う。
+- `/figures/*` は、記事の図の、元データ入りの SVG に使う。
+  - ADR-0056: [記事の図の置き場と URL](../docs/adr/0056-article-figures-directory-and-name.md)

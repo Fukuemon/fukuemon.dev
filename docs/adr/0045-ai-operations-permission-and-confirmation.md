@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision 4 を ADR-0063 に置換）
 
 ## Context
 
