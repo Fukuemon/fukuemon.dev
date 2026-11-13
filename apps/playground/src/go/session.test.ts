@@ -92,15 +92,16 @@ describe("createGoSession", () => {
     expect(session.openPath).toBe("b.go");
   });
 
-  it("保存した値が、ファイルとディレクトリの一式の形でないときは、プロジェクトのファイルで開く", () => {
-    for (const record of [
-      null,
-      { files: { "a.go": 1 }, directories: [] },
-      { files: {}, directories: "x" },
-    ]) {
-      const { session } = setup({ kind: "saved", record: record as unknown as GoRecord });
-      expect(session.fileSet.getSnapshot().files).toStrictEqual(project.files);
-    }
+  it.each([
+    ["null", null],
+    ["文字列でない中身", { version: "v", files: { "a.go": 1 }, directories: [] }],
+    ["配列でないディレクトリ", { version: "v", files: {}, directories: "x" }],
+    ["親の階層を含むパス", { version: "v", files: { "../a.go": "a" }, directories: [] }],
+    ["正規化していないディレクトリ", { version: "v", files: {}, directories: ["./d"] }],
+    ["文字列でない version", { version: 1, files: {}, directories: [] }],
+  ])("保存した値が %s のときは、プロジェクトのファイルで開く", (_, record) => {
+    const { session } = setup({ kind: "saved", record: record as unknown as GoRecord });
+    expect(session.fileSet.getSnapshot().files).toStrictEqual(project.files);
   });
 
   it("IndexedDB を読めないときは canSave を false にする", () => {
