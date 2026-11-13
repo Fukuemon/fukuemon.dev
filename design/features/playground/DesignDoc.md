@@ -33,7 +33,7 @@ status: draft
 
 持たないものは次のとおり。
 
-- AI のエージェントからの操作の登録。登録する位置（トップレベルで開いたページ）だけを書く。
+- AI のエージェントからの操作の登録。登録する位置（トップレベルで開いたページ）だけを書く。操作の名前、許可のスイッチ、確認、記録は、[AI からの操作の Design Doc](../ai-operations/DesignDoc.md) が持つ。
   - ADR-0044: [AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする](../../../adr/0044-ai-operations-with-webmcp.md)
 - コンソールの式を評価する入力欄。
 - キャンバスとスライドのエディタの中の構成。ディレクトリを並べる位置だけを書く。
@@ -80,6 +80,7 @@ apps/playground/
     sql-console/          SQL の入力欄と、結果の表
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
+    ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
 
 packages/
   sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
@@ -122,6 +123,7 @@ flowchart TB
   project["project"]
   workspace["workspace"]
   ui["@fukuemon/ui"]
+  ai["ai-operations"]
   pp["@fukuemon/playground-project"]
 
   node --> runtime
@@ -130,6 +132,8 @@ flowchart TB
   node --> workspace
   node --> database
   node --> ui
+  node --> ai
+  ai --> ui
   sql --> console
   sql --> database
   sql --> project
