@@ -99,23 +99,26 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 
 テーマ変数には、DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。
 
-| 名前            | DADS のスタイル        | 用途                                                                 |
-| --------------- | ---------------------- | -------------------------------------------------------------------- |
-| `caption`       | Dns-14N-130            | 補足、図の説明、時刻                                                 |
-| `body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行                           |
-| `body`          | Std-16N-170            | 記事の本文                                                           |
-| `label`         | Oln-16B-100            | ボタン、タブ                                                         |
-| `heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                                       |
-| `heading-md`    | Std-20B-150            | 記事の見出し                                                         |
-| `heading-lg`    | Std-28B-150            | 記事の題                                                             |
-| `code`          | 等幅の 16px のスタイル | コードブロック、エディタ、端末                                       |
-| `code-dense`    | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示                                  |
-| `compact`       | 12px のスタイル        | コードを動かす画面のコンソールの値、時刻、出力元、行の数（ADR-0062） |
-| `label-compact` | 太字の 13px のスタイル | コードを動かす画面のコンソールのログレベルのボタン（ADR-0062）       |
+| 名前            | DADS のスタイル        | 用途                                                                           |
+| --------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| `caption`       | Dns-14N-130            | 補足、図の説明、時刻                                                           |
+| `body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行                                     |
+| `body`          | Std-16N-170            | 記事の本文                                                                     |
+| `label`         | Oln-16B-100            | ボタン、タブ                                                                   |
+| `heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                                                 |
+| `heading-md`    | Std-20B-150            | 記事の見出し                                                                   |
+| `heading-lg`    | Std-28B-150            | 記事の題                                                                       |
+| `code`          | 等幅の 16px のスタイル | コードブロック、エディタ、端末                                                 |
+| `code-dense`    | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示                                            |
+| `compact`       | 12px のスタイル        | コードを動かす画面のコンソールの値、時刻、出力元、行の数（ADR-0062）           |
+| `label-compact` | 太字の 13px のスタイル | コードを動かす画面の領域の題、タブ、ボタン、開閉の要約（ADR-0062）             |
+| `body-compact`  | 13px のスタイル        | コードを動かす画面のファイルの木の行、入力欄の値、表のセル（ADR-0062）         |
+| `code-compact`  | 等幅の 13px のスタイル | コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダ（ADR-0062） |
 
-等幅の 2 つの行は、DADS の等幅のテキストスタイルのうち、大きさが同じものの行高を使う。
+`code` と `code-dense` は、DADS の等幅のテキストスタイルのうち、大きさが同じものの行高を使う。  
+`code-compact` の行高は、DADS に無い 154%（20px）にする。VS Code と StackBlitz のエディタは 12〜14px の文字を 18〜20px の行に置き、DADS の 150%（19.5px）では行が画素の境目にそろわないためである。
 
-- 14px より小さい文字を使わない。例外は、コードを動かす画面のコンポーネントの `text-compact`（12px）と `text-label-compact`（太字の 13px）である（ADR-0062）。
+- 14px より小さい文字を使わない。例外は、コードを動かす画面のコンポーネントの compact の 4 つ（12px と 13px）である（ADR-0062）。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 - `code-dense` だけが、本文でない 14px の文字になる。HTTP のヘッダは長い値が多く、16px では 1 行に収まらないためである。
 
@@ -341,6 +344,14 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `HttpExchangeDetail` | 1 つの行き来のヘッダ、Cookie、本文                                                                 |
 | `ConsoleEntryList`   | `console.*` の出力の一覧。ログレベルで絞り、値を `TreeView` で開いて見せる                         |
 | `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む            |
+
+コードを動かす画面の Case は、どれも `ToolPane` の領域として描き、次の形にそろえる。
+
+- 領域は、VS Code と DevTools のように隙間なく並べ、1px の `border` の罫で仕切る。並べる側は `ToolPaneGroup` で囲み、領域の間を空けない。中の `ToolPane` は、右と下にだけ罫を引くので、罫は 2 重にならない。`ToolPaneGroup` の外に置いた `ToolPane` は、四方に枠を引く。
+- 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
+- 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。
+  - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
+  - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
 
 ### カタログ
 

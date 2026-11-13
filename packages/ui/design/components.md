@@ -19,7 +19,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: コードの写し、実行、ファイルの操作のように、画面の中で何かを起こす操作。
 - 使わない場面と、代わりに使うもの: ほかのページへ移るときは `Link`。文字を持たない小さな操作は `IconButton`。
-- 変種: `primary`、`secondary`、`danger` と、大きさの `M`、`S`。
+- 変種: `primary`、`secondary`、`danger` と、大きさの `M`、`S`、`XS`。`XS` は 28px で、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
   - DADS の文字だけのボタンは持たない。文字だけの操作は `Link` か `IconButton` で足りるためである。
   - `danger` は、ファイルの削除のように、データを失う操作を確定するボタンに使う。DADS のボタンには、この種類がない。
   - `primary` は、1 つの画面かダイアログに 1 つまでにする（`PRIMARY-ACTION-ONE`）。
@@ -35,7 +35,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 題の右の操作、再読み込み、閉じるのように、印だけで意味が伝わる小さな操作。
 - 使わない場面と、代わりに使うもの: 印だけで意味が伝わらない操作は、文を持つ `Button`。
-- 変種: なし。
+- 変種: 密度の `default`（44px）と `compact`（28px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: デフォルト、hover、フォーカス、無効。
 - 内容の制約: `label` を必ず渡す。`label` が読み上げの名前になる。
 - キーボード: Enter と Space で押す。
@@ -58,7 +58,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 記事の中の例の切り替え、エディタのファイルのタブ、狭い画面での 2 つのペインの切り替え。
 - 使わない場面と、代わりに使うもの: 内容を開いて閉じるだけなら `Disclosure`。ページを移るなら `Link`。
-- 変種: パネルの余白の `padded` と `flush`。タブごとの `closable`。
+- 変種: パネルの余白の `padded` と `flush`。タブごとの `closable`。密度の `default` と `compact`（タブ 32px、閉じるボタン 28px、筆の線 2px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: デフォルト、hover、フォーカス、選択。選んだタブの下には、緑の筆の線を左から 1 回引く。
 - 内容の制約: `label` をタブの並びの名前に渡す。
 - キーボード: 左右の矢印のキーで隣のタブへ移り、端から反対の端へ回る。Home と End で端のタブへ移る。
@@ -82,7 +82,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: ファイルとディレクトリの操作のメニュー。プレイグラウンドのツールのページで、ヘッダに置く操作のメニュー（テンプレートを足す、ファイルを開く、書き出す）。
 - 使わない場面と、代わりに使うもの: 操作が 1 つか 2 つなら、`Button` か `IconButton` を並べる。
-- 変種: 項目ごとの `isDanger`。データを失う操作の項目を赤くし、最後に並べる。
+- 変種: 項目ごとの `isDanger`。データを失う操作の項目を赤くし、最後に並べる。密度の `default` と `compact`（ボタンと項目 28px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: 閉じている、開いている、項目の hover とフォーカス。
 - 内容の制約: `label` を開くボタンの名前に渡す。
 - キーボード: 開くと最初の項目へフォーカスが移る。上下の矢印のキーで項目を移り、端から反対の端へ回る。Home と End で端の項目へ移る。Esc で閉じて開くボタンへフォーカスを戻し、Tab で閉じる。
@@ -91,7 +91,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 検索の語と、ファイルの名前の入力。
 - 使わない場面と、代わりに使うもの: 検索の語と候補を一緒に扱うなら `SearchBox`。
-- 変種: 枠の `boxed` と、下罫だけの `underline`。補足（`description`）、見出しを画面に出さない `isLabelHidden`、必須の表示。
+- 変種: 枠の `boxed` と、下罫だけの `underline`。補足（`description`）、見出しを画面に出さない `isLabelHidden`、必須の表示。`boxed` の密度の `default` と `compact`（28px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
   - `underline` は、検索の欄だけに使う。墨の下罫だけを引き、フォーカスすると緑の筆の線を左から 1 回引く。DADS のインプットテキストは枠と標準のフォーカスの表示を使うが、運営者が検索の欄の和の感じを罫で出すと決めたためである。例外の理由は [Design Doc の「フォーカスの表示」](../DesignDoc.md#フォーカスの表示)にある（`FOCUS-ONE`）。
 - 状態: デフォルト、hover（`underline`）、フォーカス、エラー、無効。
   - エラーのときに色のほかに示すもの: `boxed` はデフォルトより太い赤の枠、`underline` は赤の罫にし、どちらも誤りの文を出す。誤りの文は `aria-describedby` で欄に結び付け、`role="alert"` を付けない。
@@ -102,7 +102,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 記事の表、SQL の結果、HTTP のヘッダ。
 - 使わない場面と、代わりに使うもの: 並びの見た目を揃えるだけで、行と列の意味を持たない内容には使わない。
-- 変種: 見出しのセルの `scope`（`col`、`row`）。
+- 変種: 見出しのセルの `scope`（`col`、`row`）。密度の `default` と `compact`（セルの余白 上下 2px、左右 8px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: デフォルトと、幅に収まらない表の枠のフォーカス。
 - 内容の制約: `caption` を必ず渡す。表の題になり、横に送る枠の名前にもなる。
 - キーボード: 幅に収まらない表は、Tab のキーで枠にフォーカスし、左右の矢印のキーで横に送る。
@@ -130,7 +130,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 記事の補足と、リクエストとレスポンスの詳細。
 - 使わない場面と、代わりに使うもの: 並んだ内容から 1 つを選んで見せるなら `Tabs`。
-- 変種: 最初から開いた `defaultOpen`。
+- 変種: 最初から開いた `defaultOpen`。密度の `default` と `compact`（要約 24px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: 閉じている、開いている、hover、フォーカス。JavaScript が無くても開閉できる（`<details>`）。
 - 内容の制約: `summary` に、開いて読める内容が分かる文を渡す。
 - キーボード: Enter と Space で開閉する。
@@ -158,7 +158,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: `FileTree` と `ConsoleEntryList` が組む木の表示。
 - 使わない場面と、代わりに使うもの: ファイルの作成、名前の変更、削除まで扱うなら `FileTree`。入れ子の無い一覧には使わない。
-- 変種: 項目の高さの `default`（44px）と `compact`（24px）。`compact` は、コードを動かす画面のコンポーネントだけに使う。押せる領域を 44×44 CSS px 以上にする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする（ADR-0062）。
+- 変種: 項目の高さの `default`（44px）と `compact`（24px）。`compact` は、コードを動かす画面のコンポーネントだけに使う。押せる領域を 44×44 CSS px 以上にする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする（ADR-0062）。`compact` の文字は、`textSize` で 12px（コンソールの値の木）か 13px（ファイルの木）にする。13px では、選んだ項目を太字にしない。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 - 状態: 枝の開閉、選択、hover、フォーカス。
 - 内容の制約: `label` を木の名前に渡す。
