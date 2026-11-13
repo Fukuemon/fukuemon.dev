@@ -79,7 +79,7 @@ apps/playground/
   src/
     node/                 Node の実行環境のページ。レイアウト、ペインのコンポーネント、Context、選択の状態、起動と保存を進める React の外のモジュール
     sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
-    go/                   Go を動かすツールのページ
+    go/                   Go を動かすツールのページ。ファイル、実行中かどうか、出力、実行とテストの関数を持つ React の外のモジュール
     sql-console/          SQL の入力欄、結果の表、実行計画の木
     code-editor/          ツールのエディタに共通の、CodeMirror 6 の拡張の組み立て
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
@@ -91,7 +91,9 @@ packages/
   node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
     webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
     guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
-  go-runtime/src/         GoRunner の型、Yaegi の読み込みと実行
+  go-runtime/src/         GoRunner の型、import のパスと、テストを持つ package を求める関数
+    worker/               Yaegi を Web Worker で動かす GoRunner の実装、Web Worker の fetch を差し替える処理
+  go-runtime/go/          WASM にする Go のコード。Yaegi で訪問者のファイルを実行する処理
 ```
 
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
@@ -147,6 +149,7 @@ flowchart TB
   sql --> ui
   sql --> ai
   go --> runner
+  go --> codeeditor
   go --> project
   go --> workspace
   go --> ui
@@ -424,6 +427,7 @@ ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedD
 
 - キーは、ツールの名前と、埋め込みの ID の組である。デフォルトのプロジェクトは、固定のキーを使う。
 - SQL だけを動かすツールは、入力欄の SQL を保存する。Go を動かすツールは、ファイルを保存する。
+- Go を動かすツールのレコードは、ファイルのパスと中身、訪問者が作ったディレクトリ、保存した時刻、初期ファイルのバージョンを持つ。ファイルを変えるたびに、レコードを丸ごと置き換える。
 
 Node の実行環境は、次のとおり保存する。
 
@@ -571,6 +575,65 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - Web Worker で動かす実装は、`SqlDatabase` に加えて、読み込みの段階の store（`idle`、`loading`、`seeding`、`ready`、`failed`）と、読み込みを始める関数を持つ。Web Worker は、最初に読み込みを始める関数か `run` を呼んだときに作る。
 - PGlite を読み込めないときと、初期データの SQL が失敗したときは、`run` が `error` を持つ値を返し、Web Worker を捨てる。次の `run` で、Web Worker を作り直す。Web Worker を作れないときも、同じに扱う。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
 - Web Worker を捨てる処理は、`@fukuemon/sql-runtime` の中の 1 つの関数に置く。実行を止める手段を公開するときは、この関数を使う。
+
+### Go
+
+Go を動かすツールは、Yaegi のインタプリタの WASM で、訪問者の Go のコードを動かす。
+ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](../../docs/adr/0037-go-with-yaegi.md)
+
+ファイルの形と、実行する範囲は、次のとおり。
+
+- ファイルは、ディレクトリに分けて持つ。訪問者が作った空のディレクトリも、一覧に出して保存する。
+- ルートのディレクトリの import のパスは、ルートの `go.mod` の `module` の行から読む。`go.mod` が無いときと、`module` の行が無いときは、`play` にする。
+  - ディレクトリの package は、`<モジュールの名前>/<ディレクトリ>` で import する。手元の Go と同じ書き方にして、訪問者がファイルを写せば `go run` で動くようにするためである。
+- 実行のボタンは、ルートのディレクトリの直下にある `main` の package を動かす。テストのボタンは、テストのファイル（`_test.go`）を持つ全ての package のテストを、package の名前の順に動かす。
+- テストは、package ごとに、Web Worker と WASM のインスタンスを作り直して動かす。`testing.Main` が `os.Exit` で終わるためである。package ごとに、`go test` と同じ `ok` か `FAIL` の行を、出力に足す。
+- 終了コードは、正常に終わると 0、コンパイルのエラーとテストの失敗は 1、panic は 2、`os.Exit` を呼んだときは渡した値である。テストは、どれかの package が失敗すると 1 にする。
+
+`GoRunner`（`@fukuemon/go-runtime`）の形は、次のとおり。
+
+```ts
+type GoRunner = {
+  phase: Store<LoadPhase>;
+  load: () => Promise<void>;
+  run: (files: GoFiles, onOutput: (chunk: string) => void) => GoExecution;
+  test: (files: GoFiles, onOutput: (chunk: string) => void) => GoExecution;
+};
+
+type GoExecution = { done: Promise<GoExit>; stop: () => void };
+
+type GoExit =
+  | { kind: "exited"; exitCode: number }
+  | { kind: "stopped" }
+  | { kind: "failed"; message: string };
+```
+
+- `load` は、Yaegi の WASM を取得して、ページのメインスレッドで 1 度だけコンパイルする。実行のたびに、コンパイルした `WebAssembly.Module` を、新しい Web Worker に渡す。
+- `stop` は、Web Worker を終了させる。無限ループでも止まり、次の実行は新しい Web Worker で動く。
+- Yaegi に渡す symbol は、`stdlib.Symbols` だけである（ADR-0063 の Decision 2）。Yaegi がソースを読むファイルシステムには、訪問者のファイルだけを、`src/<モジュールの名前>/` に置く。
+- Web Worker は、Yaegi を起動する前に、Web Worker の `fetch` を、同じ origin へのリクエストだけを通すものに差し替える。
+  - ADR-0064: [Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す](../../docs/adr/0064-go-net-http-same-origin-only.md)
+- Yaegi の標準出力と標準エラーは、1 つの出力として、出た順に `onOutput` に渡す。エラーの中のファイルのパスは、ツールのルートからのパスにする。
+
+WASM のビルドと配信は、次のとおり。
+
+- `@fukuemon/go-runtime` の `build` の script が、`go/` のコードを `GOOS=js GOARCH=wasm` でビルドする。WASM はコミットしない。`apps/playground` の `dev` と `build` は、先にこの script を動かす。
+- WASM は、2 つのファイルに分けて配る。Workers の静的なファイルの 1 つの大きさの上限（25 MiB）を、WASM の全体が超えるためである。ブラウザは、2 つを順につないで、取得しながらコンパイルする。
+- Go の `lib/wasm/wasm_exec.js` は、`go-runtime/src/worker/vendor/` にコミットする。ビルドの script は、mise で入れた Go のものと中身を比べ、違うときは失敗する。
+
+ページは、次のとおり組む。
+
+- `src/go/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、次のものを持つ。
+  - ファイルとディレクトリの一式の store、実行中かどうかの store、出力の store。
+  - ファイルの一覧、読み込み、書き込み、ディレクトリの作成、名前の変更、削除の関数。
+  - 実行とテストの関数。時間の上限を受け取り、実行を始めたときのファイルの写しを `GoRunner` に渡す。実行中に呼んだときは、実行せずに、実行中であることを返す。
+- 出力の store は、1,000,000 文字を上限にし、超えた分を捨てる。
+- 画面は、左にファイルの一覧（`FileTree`）、右上にエディタ（`EditorFrame`）、右下に出力（`TerminalFrame`）を置く。`SplitPane` で、幅と高さを変えられる。ヘッダに、実行、テスト、止めるのボタンを置く。
+- エディタのファイルごとの `EditorState` は、ページが持つ。タブを切り替えても、元に戻す履歴とカーソルの位置を残すためである。
+- 出力は、`--- PASS` と `ok` の行、`--- FAIL` と `FAIL` の行、コンパイルのエラーと panic の行を、色で分ける。
+- 出力の欄の下に、Yaegi で動かしていることと、`iter` と一部のジェネリックな関数を使えないことを、常に出す。
+- 実行のボタンを押してから終わるまで、待っている段階を `Loading` で出す。段階は、Yaegi の読み込み、実行、テストの実行の 3 つである。
+- ファイルとディレクトリを消すときは、`ConfirmDialog` で確認する。
 
 ## Interface
 
