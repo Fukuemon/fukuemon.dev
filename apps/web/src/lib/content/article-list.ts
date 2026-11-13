@@ -61,7 +61,7 @@ function seriesLinks(series: readonly SeriesSource[]): Map<string, SeriesLink> {
 
 /**
  * 一覧に載せる記事を、公開の日付の新しい順に返す。
- * シリーズの題が引けない記事があると throw する。題の無いシリーズ名を一覧に出さないためである。
+ * シリーズの題が引けない記事があると throw する。読み込みのときに `planSeries()` が先に止めるので、loader と collection の対応を誤ったときだけ起きる。
  */
 export function listArticles(
   articles: readonly ArticleListSource[],
@@ -93,7 +93,8 @@ function assertSeriesDefined(
 /**
  * 書き出すシリーズのページを組む。記事は `order` の昇順に並べる。
  * 公開した記事が 1 本も無いシリーズは返さない。記事の無いページを書き出さないためである。
- * `index.md` の無いディレクトリの記事があると throw する。記事がどのページにも出ないまま、ビルドが通るのを防ぐ。
+ * `index.md` の無いディレクトリの記事があると throw する。
+ * 読み込みのときに `planSeries()` が先に止めるので、ここに来るのは、loader と collection の対応を誤ったときだけである。
  */
 export function planSeriesPages(
   articles: readonly ArticleListSource[],
