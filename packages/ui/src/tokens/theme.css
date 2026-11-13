@@ -210,7 +210,7 @@
   }
 }
 
-/* 箱のリンクの hover で、箱の下端の近くに筆の線を左から引く。箱に付けるので、中の文字が折り返しても線は 1 本で崩れない */
+/* 箱のリンクの hover で、箱の下端に筆の線を左から引く。箱に付けるので、中の文字が折り返しても線は 1 本で崩れない */
 @utility brush-hover {
   position: relative;
 
@@ -218,7 +218,7 @@
     content: "";
     position: absolute;
     inset-inline: 0;
-    bottom: 4px;
+    bottom: 0;
     height: 4px;
     background: currentColor;
     mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E")
