@@ -223,7 +223,9 @@ type OutputLog = {
 - `OpenPort` は、ポート、URL、プレビューの iframe に付ける属性（`sandbox`、`allow`）を持つ。属性の値は、`webcontainer/` が決める。
 - プレビューに入れるスクリプトから `postMessage` で送られるコンソールの記録を受けて、`consoleEntries` に入れる処理は、`node-runtime/` が持つ。スクリプトの中身と、メッセージの形は、`node-runtime/` の直下が持つ。`node-runtime/` の直下は、スクリプトの中身を、`BackendBootOptions` の `previewScript` で `webcontainer/` に渡す。メッセージの origin の確認は、`webcontainer/` が行う。
 - `database` は、DB を使うプロジェクトのときだけある。DB のプロセスの状態は、`database` の `status` で公開し、`NodeRuntime` には持たせない。
-- 実行環境を起動し直すときは、`dispose` を呼び、`bootNodeRuntime` で新しいインスタンスを作る。
+- 実行環境を起動し直すときは、`src/node/` のモジュールが、古いインスタンスの `files.readAll` の結果を受け取ってから、`dispose` を呼ぶ。その結果を `BootOptions` の `files` に渡して、`bootNodeRuntime` で新しいインスタンスを作る。
+  - `files.readAll` には、保存のときと同じ `exclude` と `maxBytes` を渡す。`text` が `null` のファイルは、新しいインスタンスに渡さない。
+  - ページを開いたときに読んだ、保存したファイルは使わない。IndexedDB を読めないときも、訪問者が変えたファイルで起動する。
 
 SQL だけを動かすツールと、Go を動かすツールは、`NodeRuntime` を実装しない。それぞれ、`SqlDatabase`（`database/`）と `GoRunner`（`go-runner/`）を持つ。
 
@@ -347,7 +349,7 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - ツールのページは、埋め込みの ID から JSON の URL を組み立てて、`fetch` する。
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
-- JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ型で扱う。
+- JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
 
 JSON は、次の値を持つ。
 
@@ -380,7 +382,7 @@ Node の実行環境は、次のとおり保存する。
 - 保存しないファイルの規則は、`src/node/` の 1 か所に置き、`files.readAll` の引数で渡す。`exclude` に `node_modules` を、`maxBytes` に 1 MB を渡す。
 - 1 つのファイルが 1 MB を超えるものと、テキストとして読めないもの（`text` が `null` のもの）は、保存しない。
 - 保存したバージョンと、プロジェクトの JSON のバージョンが違うときは、保存したファイルを開き、「初期の状態に戻す」の操作を出す。
-- `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。
+- `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。読めなかった後は、ページを開いている間、IndexedDB に書き込まない。
 - 実行環境が追加するファイルは、作業ディレクトリの外にあるので、保存の対象に入らない。
   - ADR-0052: [実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す](../../../adr/0052-runtime-files-outside-workdir.md)
 
@@ -445,6 +447,7 @@ sequenceDiagram
 - プレビューの iframe が 30 秒で読み込まれないときは、`PreviewPane` が、プレビューのペインにだけ、動かせない理由を出す。
 - 訪問者は、端末で、WebContainers のシェルを制限なしで使う。
 - 「実行環境を起動し直す」の操作は、いつでも使える。起動し直した後は、保存したファイルがあるときと同じに扱う。`npm install` だけを自動で実行し、起動のコマンドは、訪問者が実行のボタンを押してから実行する。
+- DB のプロセスの終了のほかの理由で、起動の後に実行環境が動かなくなったときは、訪問者が、「実行環境を起動し直す」の操作で起動し直す。画面は、実行環境の全体の状態を表示しない。
 
 ### 実行環境が追加するファイルとプロセス
 

@@ -72,7 +72,7 @@ URL に書けるのを埋め込みの ID だけにする理由は、他人が、
 JSON と、設定のファイルの型と schema は、新しい package（`packages/playground-project`、`@fukuemon/playground-project`）に置く。
 
 - package は、型と schema だけを持つ。JSON を出力する処理と、読み込む処理は持たない。
-- `apps/web` のビルドは、この schema で、設定のファイルを検証する。`apps/playground` は、読んだ JSON を、同じ型で扱う。
+- `apps/web` のビルドは、この schema で、設定のファイルを検証する。`apps/playground` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
 - package は、workspace のほかの package に依存しない。
 
 package にする理由は、JSON を書く側（`apps/web`）と、読む側（`apps/playground`）の 2 つが、同じ形を使うためである。
@@ -122,4 +122,5 @@ JSON の形の置き場の選択肢は次のとおり。
 - `fukuemon.dev` が、プロジェクトの JSON のパスに、CORS のヘッダを返す。
 - ツールのページが、`fukuemon.dev` の JSON のパスの形を知っている。パスを変えるときは、2 つのアプリを直す。
 - 設定のファイルの schema と、ビルドのときの検証を作る。
+- `apps/playground` が、ブラウザで schema を検証するので、検証のコードをツールのページに配信する。
 - package が 1 つ増える。
