@@ -7,7 +7,6 @@ import subsetFont from "subset-font";
 
 /**
  * 和文の書体のスライスを、サイトが使う字だけに作り直す。
- * Fontsource のスライスは常用の字をまとめて持つので、1 ページで約 1 MiB を取得していた。
  * スライスの分け方と unicode-range はそのまま残すので、ページは今までと同じスライスだけを取得する。
  * 作り直したファイルは中身の hash で名前を付け直す。同じ名前のまま中身を変えると、
  * 長く保存したキャッシュが古い字の集合を返し、新しく使った字が別の書体で描かれる。
@@ -24,18 +23,22 @@ export function subsetFonts(family: string): AstroIntegration {
         const renames = new Map<string, string>();
         let before = 0;
         let after = 0;
-        for (const face of await faces(css, family)) {
+        const all = await collectFaces(css, family);
+        if (all.length === 0)
+          throw new Error(`${family}: 作り直す @font-face が CSS に見つからない`);
+        for (const face of all) {
           const text = [...used].filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
           if (text === "") continue;
           const path = join(root, face.url);
           const src = await readFile(path);
-          const out = await subsetFont(src, text, { targetFormat: "woff2" });
-          const url = rename(face.url, out);
-          await writeFile(join(root, url), out);
+          const subset = await subsetFont(src, text, { targetFormat: "woff2" });
+          const url = hashedUrl(face.url, subset);
+          if (url === face.url) throw new Error(`${face.url}: 名前の hash を差し替えられない`);
+          await writeFile(join(root, url), subset);
           await rm(path);
           renames.set(face.url, url);
           before += src.length;
-          after += out.length;
+          after += subset.length;
         }
         for (const f of css) {
           const body = await readFile(f, "utf8");
@@ -95,7 +98,7 @@ async function usedChars(files: string[]): Promise<Set<string>> {
   return used;
 }
 
-async function faces(css: string[], family: string): Promise<Face[]> {
+async function collectFaces(css: string[], family: string): Promise<Face[]> {
   const seen = new Map<string, Face>();
   for (const f of css)
     for (const face of parseFaces(await readFile(f, "utf8"), family)) seen.set(face.url, face);
@@ -103,7 +106,7 @@ async function faces(css: string[], family: string): Promise<Face[]> {
 }
 
 /** Vite の付けた hash を、作り直した中身の hash に差し替える */
-export function rename(url: string, body: Uint8Array): string {
+export function hashedUrl(url: string, body: Uint8Array): string {
   const hash = createHash("sha256").update(body).digest("base64url").slice(0, 8);
   return url.replace(/\.[\w-]{8}\.woff2$/, `.${hash}.woff2`);
 }
