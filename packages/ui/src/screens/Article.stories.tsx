@@ -58,7 +58,9 @@ export const List: Story = {
                 className="flex items-baseline justify-between gap-4 border-b border-border py-3"
                 key={article.title}
               >
-                <Link href="#article">{article.title}</Link>
+                <Link href="#article" isStandalone>
+                  {article.title}
+                </Link>
                 <span className="text-caption text-text-secondary">{article.date}</span>
               </li>
             ))}

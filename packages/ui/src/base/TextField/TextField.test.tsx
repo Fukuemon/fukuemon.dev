@@ -52,7 +52,7 @@ describe("TextField", () => {
     expect(placeholder.color).not.toBe(getComputedStyle(screen.getByRole("textbox")).color);
   });
 
-  it("underline の欄は、フォーカスすると緑の罫が引かれ、標準の輪を出さない", async () => {
+  it("underline の欄は、フォーカスすると緑の筆の線が引かれ、標準の輪を出さない", async () => {
     const { container } = render(<Underline />);
     const input = screen.getByRole("textbox");
     const stroke = container.querySelectorAll("span[aria-hidden]")[1];
@@ -61,11 +61,12 @@ describe("TextField", () => {
     const style = getComputedStyle(stroke);
     expect(style.visibility).toBe("visible");
     expect(style.animationName).toBe("fd-draw-stroke");
+    expect(style.maskImage).not.toBe("none");
     const primary = document.body.appendChild(document.createElement("span"));
     primary.className = "bg-primary";
     expect(style.backgroundColor).toBe(getComputedStyle(primary).backgroundColor);
     primary.remove();
-    expect(stroke.getBoundingClientRect().height).toBe(2);
+    expect(stroke.getBoundingClientRect().height).toBe(4);
     expect(getComputedStyle(input).outlineStyle).toBe("none");
     expect(getComputedStyle(input).boxShadow).toBe("none");
   });
