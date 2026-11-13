@@ -1,7 +1,7 @@
 import type { PlaygroundProject } from "@fukuemon/playground-project";
 import { describe, expect, it, vi } from "vitest";
 
-import { createProjectLoader, fetchProject, projectUrl } from "./project";
+import { createProjectLoader, fetchProject, isEmbedId, projectUrl } from "./project";
 
 const sqlProject = {
   tool: "sql",
@@ -18,6 +18,17 @@ describe("projectUrl", () => {
     expect(projectUrl("btree-index/explain")).toBe(
       "https://fukuemon.dev/playground-projects/btree-index/explain.json",
     );
+  });
+});
+
+describe("isEmbedId", () => {
+  it.each([
+    ["btree-index/explain", true],
+    ["../secret", false],
+    ["a/b/c", false],
+    ["A/b", false],
+  ])("%s は %s", (value, expected) => {
+    expect(isEmbedId(value)).toBe(expected);
   });
 });
 

@@ -20,6 +20,9 @@ export type ProjectLoad<T extends PlaygroundTool> =
 // <contentId>/<埋め込みの名前>。`..` や `?` で、JSON の置き場の外を指せないようにする
 const EMBED_ID = /^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/;
 
+/** 形に合う埋め込みの ID か。合わない ID は、取得せず、画面にも出さない。 */
+export const isEmbedId = (value: string) => EMBED_ID.test(value);
+
 export const projectUrl = (embedId: string) => `${SITE_ORIGIN}/playground-projects/${embedId}.json`;
 
 /** 埋め込みの ID のプロジェクトの JSON を取得し、schema とツールの種類を確かめる。 */
@@ -29,7 +32,7 @@ export async function fetchProject<T extends PlaygroundTool>(
   fetchJson: typeof fetch = fetch,
 ): Promise<ProjectLoad<T>> {
   const failed = { kind: "failed", embedId } as const;
-  if (!EMBED_ID.test(embedId)) return failed;
+  if (!isEmbedId(embedId)) return failed;
   try {
     const response = await fetchJson(projectUrl(embedId));
     if (!response.ok) return failed;

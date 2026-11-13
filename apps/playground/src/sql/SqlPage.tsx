@@ -2,7 +2,7 @@ import { Link, Notice } from "@fukuemon/ui";
 import { Suspense, use, useSyncExternalStore } from "react";
 
 import { sqlDefaultProject } from "../project/defaults";
-import { SITE_ORIGIN, createProjectLoader } from "../project/project";
+import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { progressLabel } from "./progress";
 import { type SqlSession, createSessionOpener } from "./session";
@@ -14,7 +14,9 @@ function SqlTool({ search }: { search: string }) {
   if (load.kind === "failed") {
     return (
       <Notice title="プロジェクトを開けませんでした" tone="danger">
-        埋め込みの ID「{load.embedId}」のプロジェクトを読めませんでした。{" "}
+        {isEmbedId(load.embedId)
+          ? `埋め込みの ID「${load.embedId}」のプロジェクトを読めませんでした。`
+          : "プロジェクトを読めませんでした。"}{" "}
         <Link href={`${SITE_ORIGIN}/playground`}>プレイグラウンドの一覧</Link>
         から開き直してください。
       </Notice>
