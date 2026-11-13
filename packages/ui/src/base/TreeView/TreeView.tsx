@@ -167,8 +167,10 @@ export function TreeView({
             aria-selected={onSelect ? node.id === selectedId : undefined}
             aria-setsize={setSize}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-1 pr-2 transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
+              // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
+              "flex min-h-11 items-start gap-1 py-3 pr-2 transition-colors focus-visible:focus-ring",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
+              (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
             )}
             key={node.id}
             onClick={() => {
@@ -186,20 +188,24 @@ export function TreeView({
             style={{ paddingInlineStart: `${(level - 1) * 1.5 + 0.5}rem` }}
             tabIndex={node.id === tabStopId ? 0 : -1}
           >
-            <svg
-              aria-hidden="true"
-              className={clsx(
-                "shrink-0 transition-transform",
-                isOpen && "rotate-90",
-                !isBranch && "invisible",
-              )}
-              height="16"
-              viewBox="0 0 16 16"
-              width="16"
-            >
-              <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-            {node.icon?.(isOpen)}
+            <span className="flex h-5 shrink-0 items-center">
+              <svg
+                aria-hidden="true"
+                className={clsx(
+                  "transition-transform",
+                  isOpen && "rotate-90",
+                  !isBranch && "invisible",
+                )}
+                height="16"
+                viewBox="0 0 16 16"
+                width="16"
+              >
+                <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            </span>
+            {node.icon && (
+              <span className="flex h-5 shrink-0 items-center">{node.icon(isOpen)}</span>
+            )}
             {node.content ?? node.label}
           </li>
         );

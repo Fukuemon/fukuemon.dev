@@ -29,6 +29,11 @@ export const Expanded: Story = {
     }
   },
 };
+export const Hover: Story = {
+  name: "hover",
+  parameters: { pseudo: { hover: true } },
+  play: Expanded.play,
+};
 export const ErrorOnly: Story = { name: "error だけを表示", args: { defaultLevels: ["error"] } };
 export const NoMatch: Story = { name: "選んだログレベルの行が無い", args: { defaultLevels: [] } };
 export const Empty: Story = { name: "空", args: { entries: [] } };

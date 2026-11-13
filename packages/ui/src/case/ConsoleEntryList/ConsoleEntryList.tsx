@@ -33,15 +33,6 @@ export type ConsoleEntryListProps = {
 
 const LEVELS: readonly ConsoleLevel[] = ["debug", "log", "info", "warn", "error"];
 
-/** 読み上げる名前。印の形と行の色に、文字を重ねる。 */
-const LEVEL_LABEL: Record<ConsoleLevel, string> = {
-  debug: "デバッグ",
-  log: "ログ",
-  info: "情報",
-  warn: "警告",
-  error: "エラー",
-};
-
 const ROW_CLASS_NAME: Record<ConsoleLevel, string> = {
   debug: "border-transparent",
   log: "border-transparent",
@@ -58,7 +49,7 @@ const ICON_CLASS_NAME: Record<ConsoleLevel, string> = {
   error: "text-danger",
 };
 
-/** ログレベルの印。色を見分けられなくても区別できるように、形を変える。 */
+/** ログレベルの印。色を見分けられなくても区別できるように、形を変える。log は印を描かず、幅だけを空ける。 */
 function LevelIcon({ level }: { level: ConsoleLevel }) {
   return (
     <svg
@@ -72,7 +63,6 @@ function LevelIcon({ level }: { level: ConsoleLevel }) {
       width="16"
     >
       {level === "debug" && <path d="M4 8h1M7.5 8h1M11 8h1" strokeWidth="2" />}
-      {level === "log" && <path d="M5 4l4 4-4 4" />}
       {level === "info" && (
         <>
           <circle cx="8" cy="8" r="6.5" />
@@ -110,21 +100,23 @@ function CheckIcon({ isChecked }: { isChecked: boolean }) {
 }
 
 function EntryRow({ entry, ref }: { entry: ConsoleEntry; ref?: Ref<HTMLLIElement> }) {
+  // ツリーの項目は文字の上に余白を持つので、値がツリーで始まる行は、印と時刻をその 1 行目にそろえる
+  const startsWithTree = entry.args[0] !== undefined && isExpandable(entry.args[0]);
   return (
     <li
       ref={ref}
       className={clsx(
-        "flex gap-2 border-b border-l-2 border-b-border px-4 py-2",
+        "flex gap-2 border-b border-l-2 border-b-border py-2 pr-4 pl-3.5 last:border-b-0",
         ROW_CLASS_NAME[entry.level],
       )}
     >
-      <span className="flex h-6 items-center">
+      <span className={clsx("flex h-5 items-center", startsWithTree && "mt-3")}>
         <LevelIcon level={entry.level} />
       </span>
-      <span className="sr-only">{LEVEL_LABEL[entry.level]}</span>
+      <span className="sr-only">{entry.level}</span>
       {/* 狭い幅では、時刻と出力元を値の下へ折り返し、値の幅を空ける */}
       <div className="flex min-w-0 flex-1 flex-wrap gap-x-4">
-        <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 font-mono text-code text-text">
+        <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 font-mono text-body-dense text-text">
           {entry.args.map((arg, index) =>
             isExpandable(arg) ? (
               <div className="w-full" key={index}>
@@ -137,7 +129,12 @@ function EntryRow({ entry, ref }: { entry: ConsoleEntry; ref?: Ref<HTMLLIElement
             ),
           )}
         </div>
-        <span className="ml-auto flex h-6 shrink-0 items-center gap-2 text-caption text-text">
+        <span
+          className={clsx(
+            "ml-auto flex h-5 shrink-0 items-center gap-2 text-caption text-text",
+            startsWithTree && "mt-3",
+          )}
+        >
           {entry.time !== undefined && <span>{entry.time}</span>}
           <span>{entry.source}</span>
         </span>
@@ -193,7 +190,7 @@ export function ConsoleEntryList({
   const toolbar = (
     <div
       aria-label="表示するログレベル"
-      className="flex flex-wrap border-b border-border"
+      className="flex flex-wrap border-b border-border px-1"
       role="group"
     >
       {LEVELS.map((level) => {

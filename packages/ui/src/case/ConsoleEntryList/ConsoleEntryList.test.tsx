@@ -29,7 +29,7 @@ describe("ConsoleEntryList", () => {
   it("行ごとに、ログレベルの名前と印を出し、warn と error の行には状態の色を当てる", () => {
     render(<Default />);
     const levels = rows().map((item) => item.querySelector(".sr-only")?.textContent);
-    expect(levels).toStrictEqual(["デバッグ", "ログ", "情報", "警告", "エラー", "ログ", "ログ"]);
+    expect(levels).toStrictEqual(["debug", "log", "info", "warn", "error", "log", "log"]);
     expect(row(3)).toHaveClass("border-warning", "bg-warning-surface");
     expect(row(4)).toHaveClass("border-danger", "bg-danger-surface");
     expect(row(4).querySelector("svg")).toHaveClass("text-danger");
@@ -42,7 +42,7 @@ describe("ConsoleEntryList", () => {
     ];
     render(<ConsoleEntryList entries={entries} />);
     expect(row(0)).toHaveTextContent("10:00:00.120server.js");
-    expect(row(1)).toHaveTextContent(/^ログプレビュー$/);
+    expect(row(1)).toHaveTextContent(/^logプレビュー$/);
   });
 
   it("ログレベルのボタンを押すと、そのログレベルの行を隠し、もう 1 回押すと戻す", async () => {
