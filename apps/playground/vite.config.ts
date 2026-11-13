@@ -1,9 +1,13 @@
-import { resolve } from "node:path";
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import babel from "@rolldown/plugin-babel";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-const TOOLS = ["node", "sql", "go"];
+// ツールは、index.html を持つディレクトリから読む。oxlint.config.ts も同じ方法で読む
+const tools = readdirSync(import.meta.dirname, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && existsSync(join(import.meta.dirname, d.name, "index.html")))
+  .map((d) => d.name);
 
 export default defineConfig({
   // React Compiler は apps/playground にだけ入れる。外すときは babel の plugin を消す (ADR-0047)
@@ -11,7 +15,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: Object.fromEntries(
-        TOOLS.map((tool) => [tool, resolve(import.meta.dirname, tool, "index.html")]),
+        tools.map((tool) => [tool, join(import.meta.dirname, tool, "index.html")]),
       ),
     },
   },

@@ -36,19 +36,32 @@ function restrict(paths: Restriction[], patterns: Restriction[]): OxlintOverride
   return { "no-restricted-imports": ["error", { paths: [...paths, ...noWebcontainer], patterns }] };
 }
 
-const PLAYGROUND_SRC = "apps/playground/src";
-const PLAYGROUND_TOOLS = ["node", "sql", "go"];
+const PLAYGROUND_DIR = "apps/playground";
+
+// ツールは、エントリーポイントの HTML を持つディレクトリから読む。ツールを足したときに、設定を直さなくてよい
+function playgroundTools(): string[] {
+  const root = join(import.meta.dirname, PLAYGROUND_DIR);
+  if (!existsSync(root)) throw new Error(`${PLAYGROUND_DIR} が無い。PLAYGROUND_DIR を直す`);
+  const tools = readdirSync(root, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(root, d.name, "index.html")))
+    .map((d) => d.name);
+  if (tools.length === 0) throw new Error(`${PLAYGROUND_DIR} にツールのエントリーポイントが無い`);
+  return tools;
+}
 
 function playgroundToolOverrides(): OxlintOverride[] {
-  return PLAYGROUND_TOOLS.map((tool) => ({
-    files: [`${PLAYGROUND_SRC}/${tool}/**`],
+  const tools = playgroundTools();
+  return tools.map((tool) => ({
+    files: [`${PLAYGROUND_DIR}/src/${tool}/**`],
     rules: restrict(
       [],
-      PLAYGROUND_TOOLS.filter((t) => t !== tool).map((other) => ({
-        regex: `^(\\.\\./)+${other}(/|$)`,
-        message:
-          "ツールのページどうしは参照しない。2 つ以上のツールが使うものは、関心ごとのディレクトリへ移す (apps/playground/DesignDoc.md)",
-      })),
+      tools
+        .filter((t) => t !== tool)
+        .map((other) => ({
+          regex: `^(\\.\\./)+${other}(/|$)`,
+          message:
+            "ツールのページどうしは参照しない。2 つ以上のツールが使うものは、関心ごとのディレクトリへ移す (apps/playground/DesignDoc.md)",
+        })),
     ),
   }));
 }
@@ -110,7 +123,7 @@ const noFeaturesFromComponents: Restriction[] = [
 
 const noPackagesToApps: Restriction[] = [
   {
-    group: ["**/apps/**", "@fukuemon/web*", "@fukuemon/playground*"],
+    group: ["**/apps/**", "@fukuemon/web*", "@fukuemon/playground", "@fukuemon/playground/**"],
     message: "packages から apps への逆依存は禁止 (context/codebase.md 規約 4)",
   },
 ];

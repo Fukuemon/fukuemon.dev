@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 
 type Rule = { pattern: RegExp; headers: Map<string, string> };
 
+function readPublic(name: string): string {
+  return readFileSync(new URL(`../public/${name}`, import.meta.url), "utf8");
+}
+
 // Workers Static Assets の _headers の書き方のうち、このファイルが使う形（* の splat）だけを読む
 function parseHeaders(text: string): Rule[] {
   const rules: Rule[] = [];
@@ -24,7 +28,7 @@ function parseHeaders(text: string): Rule[] {
   return rules;
 }
 
-const rules = parseHeaders(readFileSync(new URL("../public/_headers", import.meta.url), "utf8"));
+const rules = parseHeaders(readPublic("_headers"));
 
 function headersFor(path: string): Map<string, string> {
   const merged = new Map<string, string>();
@@ -35,30 +39,34 @@ function headersFor(path: string): Map<string, string> {
   return merged;
 }
 
-const ISOLATION = {
+const ISOLATION: Record<string, string> = {
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-embedder-policy": "require-corp",
   "cross-origin-resource-policy": "cross-origin",
 };
 
+function isolationHeaders(path: string): Record<string, string> {
+  const headers = headersFor(path);
+  return Object.fromEntries(
+    Object.keys(ISOLATION).flatMap((name) => {
+      const value = headers.get(name);
+      return value === undefined ? [] : [[name, value]];
+    }),
+  );
+}
+
 describe("_headers", () => {
   it.each(["/node/", "/node/index.html"])(
     "Node の実行環境のパス %s に cross-origin isolation の 3 つのヘッダを返す",
     (path) => {
-      const headers = headersFor(path);
-      for (const [name, value] of Object.entries(ISOLATION)) {
-        expect(headers.get(name)).toBe(value);
-      }
+      expect(isolationHeaders(path)).toStrictEqual(ISOLATION);
     },
   );
 
   it.each(["/", "/sql/", "/go/", "/assets/node-abc.js", "/nodejs/"])(
     "%s に cross-origin isolation のヘッダを返さない",
     (path) => {
-      const headers = headersFor(path);
-      for (const name of Object.keys(ISOLATION)) {
-        expect(headers.has(name)).toBe(false);
-      }
+      expect(isolationHeaders(path)).toStrictEqual({});
     },
   );
 
@@ -68,4 +76,14 @@ describe("_headers", () => {
       expect(headersFor(path).get("x-robots-tag")).toBe("noindex");
     },
   );
+});
+
+describe("_redirects", () => {
+  it("/ だけを fukuemon.dev のプレイグラウンドの一覧へ 302 でリダイレクトする", () => {
+    const lines = readPublic("_redirects")
+      .split("\n")
+      .filter((line) => line.trim() !== "" && !line.startsWith("#"))
+      .map((line) => line.trim().split(/\s+/));
+    expect(lines).toStrictEqual([["/", "https://fukuemon.dev/playground", "302"]]);
+  });
 });
