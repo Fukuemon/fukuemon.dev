@@ -71,7 +71,7 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
   - `ai-operations/` は、定義を受け取ったときに、保存してあるスイッチの状態を読み、オンなら登録する。
 - 操作の定義の `check` と `execute` は、呼ばれるたびに、React の外の値から、ツールの今の状態を読む。Context から読まない。
   - Node の実行環境では、起動の Promise を持つモジュールから、今の `NodeRuntime` のインスタンスを読む。実行環境を起動し直した後も、新しいインスタンスを使うためである。
-  - SQL だけを動かすツールでは、入力欄の SQL を持つ `src/sql/` のモジュールから、今の SQL と `SqlDatabase` を読む。
+  - SQL だけを動かすツールでは、入力欄の SQL を持つ `src/sql/` のモジュールから、今の SQL を読み、同じモジュールの実行する関数を呼ぶ。
   - Go を動かすツールでは、ファイルを持つ `src/go/` のモジュールから、今のファイルを読む。
 - polyfill（`@mcp-b/global`）と、relay につなぐスクリプト（`@mcp-b/webmcp-local-relay` が配るもの）は、`apps/playground` の依存に、範囲ではなく 1 つのバージョンで書く。読み込むのは、`ai-operations/` だけである。
   - 2 つは、ツールのページのスクリプトと別のファイルにして、`play.fukuemon.dev` から配る。ファイルの分け方（動的な `import()` か、静的なファイルか）は、実装のタスクで決める。
@@ -159,7 +159,7 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
   - polyfill（`@mcp-b/global` 6.2.0）は、`[A-Za-z0-9_.-]` の 1〜128 文字でない名前の登録を拒否する。
   - relay（`@mcp-b/webmcp-local-relay` 6.2.0）は、名前を `[a-zA-Z0-9_]` に直して、MCP のクライアントに見せる。
 - 注釈の語は、ADR-0044 の Decision 4 と同じである。
-- `sql` と `go` の操作は、ADR-0063 が足した。
+- `sql` と `go` の操作の注釈は、ADR-0063 の Decision 1 にある。
 
 ### 結果の形
 
@@ -336,13 +336,13 @@ type NewElement = {
 利用者が書いて保存した SQL が、エージェントの操作で消えないようにするためである。
 
 - `sql_read_query` は、入力欄の今の SQL を返す。保存した SQL を読み終えていないときは、`not_ready` を返す。
-- `sql_run_query` は、入力の `sql` を、画面の実行のボタンと同じ `SqlDatabase` の `run` に渡す。
+- `sql_run_query` は、入力の `sql` を、`src/sql/` のモジュールの実行する関数に渡す。関数は、画面の実行のボタンと同じ `SqlDatabase` の `run` を呼ぶ。
   - 確認を出さない。`DROP` と `DELETE` を含む SQL も、確認なしで実行する。DB の中身は保存されず、Web Worker を作り直すと、初期の状態に戻るためである。
   - 結果は、操作の記録の欄にだけ出す。SQL の画面の結果の表は、変えない。利用者が見ている結果が、利用者の操作なしに替わらないようにするためである。
   - PGlite を読み込んでいないときは、読み込んでから実行する。読み込みの時間は、`timeoutMs` に含めない。読み込めないときは、`failed` を返す。
   - 複数の文を渡したときは、`results` に、文ごとの結果を入れる。
   - `rows` は、文ごとに、先頭の 200 行までである。`totalRows` に全体の行の数を入れ、切り詰めたときは `truncated` を `true` にする。200 行に切り詰める処理は、`src/sql/` の操作の定義が持つ。エージェントのコンテキストを使い切らないためである。
-  - SQL が失敗したときは、`failed` を返す。このときの結果は、`error` のほかに、Postgres のエラーコードの `sqlState` と、エラーの位置の `position` を持つ。どちらも、`SqlResponse` の `error` に無いときは、持たない。1 つの文が失敗したときは、全部を取り消す。
+  - SQL が失敗したときは、`failed` を返す。このときの結果は、`error` のほかに、Postgres のエラーコードの `sqlState` と、エラーの位置の `position` を持つ。2 つは、`error` の外に置く（`{"ok":false,"error":{"code":"failed","message":"…"},"sqlState":"42P01","position":15}`）。どちらも、`SqlResponse` の `error` に無いときは、持たない。1 つの文が失敗したときは、全部を取り消す。
   - `timeoutMs` は、1,000 から 120,000 までの整数で、デフォルトは 30,000 である。上限までに終わらないときは、Web Worker を作り直して、`timeout` を返す。DB の中身は、初期の状態に戻る。説明の文に、このことを書く。60 秒を超える値の扱いは、`node_run_command` と同じである。
   - 実行中に、もう 1 つの `sql_run_query` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。エージェントの操作で実行している間は、画面の実行のボタンを、実行中の表示にする。
   - 行の値のうち、JSON にできない値の表し方は、実装のタスクで決める。
@@ -373,7 +373,7 @@ type NewElement = {
   - コンパイルのエラーと、テストの失敗は、`ok` を `true` にし、`exitCode` を 1 にして、`output` にエラーを入れる。`go_test` は、出力（`=== RUN`、`--- PASS`、`--- FAIL`）をそのまま返し、テストごとの結果に分けない。
   - `output` は、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。
   - 実行中に、もう 1 つの `go_run` か `go_test` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。エージェントの操作で実行している間は、画面の実行のボタンとテストのボタンを、実行中の表示にする。
-- `go_run` と `go_test` は、確認を出さない（ADR-0063 の Decision 2）。Yaegi で動かすコードは、ページの `localStorage` と IndexedDB を読み書きできないためである。
+- `go_run` と `go_test` は、確認を出さない（ADR-0063 の Decision 2）。Yaegi に渡す symbol を絞り、Yaegi で動かすコードが、ページの `localStorage` と IndexedDB を読み書きできないようにする。
   - Yaegi に渡す symbol を `stdlib.Symbols` だけにすると、Yaegi で動かすコードは、`syscall/js`、`syscall`、`unsafe` を import できない。Yaegi 0.16.3 の WASM を Node の上で動かして確認した。ブラウザの中では、実装のタスクのテストで確認する。
   - Yaegi で動かすコードは、`net/http` を import できる。ブラウザの中で、外部へリクエストを送れるかは、実装のタスクで確認する。
 
@@ -539,7 +539,7 @@ type StoredPermission = {
   - `FileEntry` の、ファイルかディレクトリかの値。
   - 1 つのファイルの、大きさと、テキストとして読めるかの判定。`files.readAll` と同じ規則で、`maxBytes` は呼ぶ側が渡す。
   - `files.read` と `files.remove` が失敗したときに、パスが無いことを見分けられる値。
-- `@fukuemon/sql-runtime` の `SqlDatabase` は、操作の実装のタスクまでに、実行を止める手段を持つ。`run` に `AbortSignal` を渡す形か、Web Worker を作り直す関数である。
+- `@fukuemon/sql-runtime` の `SqlDatabase` は、操作の実装のタスクまでに、実行を止める手段を持つ。`run` に `AbortSignal` を渡す形か、Web Worker を作り直す関数である。どちらの形でも、止めるときは、Web Worker を作り直す。
 - `apps/playground/src/sql/` は、React の外のモジュールに、次のものを持つ。
   - 入力欄の今の SQL。
   - PGlite の読み込みを始める関数。
@@ -557,7 +557,8 @@ type StoredPermission = {
   - Yaegi の読み込みを始める関数。
   - 実行する関数と、テストを実行する関数。ファイルの写しを取り、実行中かどうかの値を変え、`GoRunner` を呼ぶ。画面のボタンと、`go_run` と `go_test` は、どちらもこの関数を呼ぶ。
   - 出力の store。
-- プレイグラウンドの Design Doc に、Go を動かすツールのファイルの形（ディレクトリを持つこと）を書く。
+- プレイグラウンドの Design Doc に、Go を動かすツールのファイルの形（ディレクトリを持つこと、空のディレクトリの扱い）を書く。実行のボタンが動かす package、テストのボタンが対象にする package、import のパスの付け方も書く。
+- プレイグラウンドの Design Doc の、`sql-console/` のコンポーネントが `database` の `run` を呼ぶ流れを直す。SQL だけを動かすツールでは、`src/sql/` のモジュールの実行する関数を通る。
 - プレイグラウンドの Design Doc の、実行のボタンの実行中の状態を `useTransition` で持つ文を直す。SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` のモジュールの、実行中かどうかの値から読む。
 - Go を動かすツールのページは、利用者がファイルとディレクトリを追加し、削除できる画面を持つ。
 - プレイグラウンドの Design Doc の、PGlite と Yaegi を「訪問者が実行のボタンを押してから読み込む」の文を直す。`sql_run_query`、`go_run`、`go_test` が呼ばれたときにも読み込む（ADR-0063 の Decision 3）。
