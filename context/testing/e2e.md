@@ -44,7 +44,7 @@ pnpm run test:visual
 
 ```sh
 pnpm run build
-python3 -m http.server 4400 --directory apps/web/dist
+python3 -m http.server 4400 --bind 127.0.0.1 --directory apps/web/dist
 docker run --rm --platform linux/amd64 --ipc=host -v "$PWD":/work -w /work/apps/web \
   -e BASE_URL=http://host.docker.internal:4400 mcr.microsoft.com/playwright:v1.64.1-noble \
   node node_modules/@playwright/test/cli.js test -c e2e/playwright.config.ts --update-snapshots

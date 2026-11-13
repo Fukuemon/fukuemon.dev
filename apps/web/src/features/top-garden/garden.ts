@@ -81,9 +81,12 @@ export function startGarden(stage: HTMLElement, opts: SeasonTime): boolean {
   }
 
   let target: FramebufferTexture;
+  let size = { w: 0, h: 0 };
   function resize(): void {
     const w = stage.clientWidth;
     const h = stage.clientHeight;
+    if (w === size.w && h === size.h) return;
+    size = { w, h };
     renderer.setSize(w, h, false);
     const sz = renderer.getDrawingBufferSize(new Vector2());
     target = new FramebufferTexture(sz.x, sz.y);
