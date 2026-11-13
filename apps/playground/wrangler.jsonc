@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fukuemon-dev-play",
+  "compatibility_date": "2026-08-30",
+  // ハンドラを持たないため main を置かない (ADR-0005)
+  "assets": {
+    "directory": "./dist",
+  },
+  // 公開先は Terraform の custom domain の play.<zone> だけにする。workers_dev の既定は true で、
+  // 書かないと apply の前から *.workers.dev でプレイグラウンドが開ける
+  "workers_dev": false,
+  "preview_urls": false,
+}
