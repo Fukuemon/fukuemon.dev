@@ -57,10 +57,11 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 レスポンスヘッダは `apps/web/public/_headers` に書く。
 
-- cross-origin isolation をサイト全体に掛けない。`/playground/*` のうち、`sandbox` の playground の URL だけに掛ける。
-  - 全体に掛けると、CORP を返さない第三者のリソースが一律にブロックされる。
-  - ヘッダは、該当する `sandbox` の playground が実在してから書く。PGlite の playground には掛けない。
-  - ADR-0006: [手を動かす場所の 4 分類](../docs/adr/0006-interactive-content-levels.md)
+- cross-origin isolation のヘッダを、`fukuemon.dev` の全体に返さない。例外は、isolation を求める実行環境を埋め込む記事の URL だけである。
+  - 全体に返すと、CORP を返さない第三者のリソースが一律にブロックされる。
+  - ヘッダは、該当する記事が実在してから書く。
+  - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md#5-cross-origin-isolation)
+  - ADR-0034: [cross-origin isolation のヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
 - HTML に `Cache-Control` を書かない。Workers Static Assets のデフォルト値に任せる。
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
 - HSTS に `includeSubDomains` を付ける。HTTP で公開するサブドメインが要るときは外す。
