@@ -61,6 +61,13 @@ export default defineConfig({
           terminalTitlebarForeground: "var(--color-code-text)",
           terminalTitlebarDotsForeground: "var(--color-border-field)",
           terminalTitlebarDotsOpacity: "1",
+          // packages/ui の IconButton と同じく、面と枠を持たず、hover とフォーカスのときだけ面を付ける
+          inlineButtonBackground: "var(--color-surface-subtle)",
+          inlineButtonBackgroundIdleOpacity: "0",
+          inlineButtonBackgroundHoverOrFocusOpacity: "1",
+          inlineButtonBackgroundActiveOpacity: "1",
+          inlineButtonBorderOpacity: "0",
+          inlineButtonForeground: "var(--color-text)",
           tooltipSuccessBackground: "var(--color-success-surface)",
           tooltipSuccessForeground: "var(--color-text)",
         },
