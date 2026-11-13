@@ -195,7 +195,7 @@
   outline-offset: 2px;
 }
 
-/* 詰めたペインの中の行と、ペインいっぱいの枠に使う。隣の行や領域の端で輪が欠けないよう、要素の内側に引く（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
+/* 詰めたペインの中の行と、ペインの全体を占めるスクロールする領域に使う。隣の行や領域の端で輪が欠けないよう、要素の内側に引く（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
 @utility focus-ring-inset {
   outline: 2px solid var(--fd-color-focus);
   outline-offset: -2px;

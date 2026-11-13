@@ -71,18 +71,19 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - `STATE-NOT-COLOR-ONLY`: 状態を色だけで伝えない。エラーと注意には、文と印を色と一緒に出す。
   - 確認: レビューで、色を見分けられない人がエラーの場所と内容を読み取れるかを見る。
 - `TEXT-MIN-SIZE`: 14px より小さい文字を使わない。本文と操作の文字は 16px にし、14px は補足だけに使う。
-  - 例外: コードを動かす画面のコンポーネントは、コードと操作のラベルを 13px、コンソールの値と補足を 12px まで小さくしてよい。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062）。
+  - 例外: コードを動かす画面のコンポーネントは、コードと操作のラベル、木の行、入力欄の値、表のセルを 13px、コンソールの値と補足を 12px まで小さくしてよい。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062、ADR-0066）。
     - 使うトークンは、`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact` の 4 つである。
     - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
+    - ADR-0066（提案）: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引き、13px の文字のトークンを 2 つ足す](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
   - 確認: `pnpm run check:utilities`。4 つのトークンをコードを動かす画面の外で使っていないかは、レビューで見る。
 - `PRIMARY-ACTION-ONE`: 主のボタンは、1 つの画面かダイアログに 1 つまでにする。
   - 確認: レビューで、画面の主の操作が 1 つに決まるかを見る。
-- `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティ（墨の 2px の 1 重の輪）だけを使い、コンポーネントごとに色や太さを変えない。例外は 2 つで、理由は DesignDoc の「フォーカスの表示」に書いた。
-  - 検索の欄（`TextField` の `appearance="underline"`）の緑の罫。
-  - コードを動かす画面の詰めたペインの中の行と、ペインいっぱいの枠の、内側に引く輪（`focus-ring-inset`）。ADR-0066 は提案である。
-    - ADR-0066: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引き、13px の文字のトークンを 2 つ足す](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
+- `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティ（墨の 2px の 1 重の輪）だけを使い、コンポーネントごとに色や太さを変えない。例外の理由は DesignDoc の「フォーカスの表示」に書いた。
+  - 例外: 検索の欄（`TextField` の `appearance="underline"`）の緑の罫。
+  - 例外: コードを動かす画面の詰めたペインの中の行と、ペインの全体を占めるスクロールする領域の、内側に引く輪（`focus-ring-inset`）。
+    - ADR-0066（提案）: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引き、13px の文字のトークンを 2 つ足す](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
   - DADS は、黄色の輪と黒の枠の 2 重の表示を求める。墨の輪にする理由は、DesignDoc の「フォーカスの表示」にある。
-  - 確認: `pnpm run check:utilities`
+  - 確認: `pnpm run check:utilities`。`focus-ring-inset` を詰めたペインの外で使っていないかは、レビューで見る。
 - `TARGET-SIZE`: 押せる領域は 44×44 CSS px 以上にする。WCAG 2.2 の AA（2.5.8）の 24×24 より厳しい、AAA（2.5.5）の値を選んでいる。見た目を小さくするときは、見た目の外に押せる領域を広げる。
   - 例外: `Link` は対象にせず、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。本文の中の文字のリンクを 44×44 CSS px にすると、行の高さが崩れるためである。
   - 例外: コードを動かす画面のコンポーネントは、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。木の行と開閉の要約（`Disclosure`）は 24px、ボタン、入力欄、タブは 28〜32px にする（ADR-0062）。
@@ -107,7 +108,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | `STATE-NOT-COLOR-ONLY` | レビュー                                                                      |                                                                                                                                             |
 | `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                                    | compact の 4 つの文字のトークンを、コードを動かす画面の外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                       |
 | `PRIMARY-ACTION-ONE`   | レビュー                                                                      |                                                                                                                                             |
-| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | `focus-ring-inset` を、コードを動かす画面の詰めたペインの外で使った書き方（レビューで見る）。クラスの名前を文字列の連結で組み立てた書き方   |
+| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | `focus-ring-inset` を、コードを動かす画面の詰めたペインの外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                     |
 | `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
 | `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
 | `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
