@@ -1,7 +1,7 @@
 import type { ArticleData, ContentRef, SeriesData } from "@fukuemon/content-model";
 import { type ArticleSource, articleHref, isPublic, orderOf, seriesDir } from "./article-pages";
 
-/** 一覧、シリーズのページ、RSS を組むのに要る、記事の 1 本の値。記事のページの値に、一覧に出す項目を足す */
+/** 一覧、シリーズのページ、RSS を組むのに要る、記事 1 本の id と frontmatter。記事のページの値に、一覧に出す項目を足す */
 export type ArticleListSource = ArticleSource & {
   data: Pick<ArticleData, "contentId" | "description" | "tags" | "publishedAt" | "format">;
 };
@@ -47,13 +47,11 @@ function toContentRef(a: ArticleListSource): ContentRef {
   };
 }
 
-/**
- * 新しい順。同じ日の記事は href の順にして、ビルドごとに並びが変わらないようにする。
- * localeCompare は実行する環境のロケールで結果が変わるので、コードポイントで比べる
- */
+/** 新しい順に比べる。同じ日の記事は href の順にし、ビルドごとに並びが変わらないようにする */
 function byNewest(a: ContentRef, b: ContentRef): number {
   const byDate = b.date.getTime() - a.date.getTime();
   if (byDate !== 0) return byDate;
+  // localeCompare は実行する環境のロケールで結果が変わるので、コードポイントで比べる
   return a.href < b.href ? -1 : 1;
 }
 

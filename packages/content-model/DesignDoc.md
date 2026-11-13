@@ -261,7 +261,6 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 - `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
 - `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `planArticlePages()`
 - `apps/web/src/lib/content/article-list.ts`: 一覧とシリーズのページの関数
-  - `toContentRef()`: 記事を `ContentRef` にする
   - `listArticles()`: 一覧と RSS に載せる記事を返す
   - `planSeriesPages()`: シリーズのページを組む
 - `apps/web/src/lib/content/rss.ts`: `ContentRef` の並びから RSS 2.0 の文書を組む `buildRss()`
@@ -277,6 +276,8 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 同じ日の記事は、`href` の順にする。  
 `planSeriesPages()` は、`isPublic()` を通った記事を、シリーズごとに `order` の昇順に並べる。  
 公開した記事が 1 本も無いシリーズのページは書き出さない。  
+`listArticles()` と `planSeriesPages()` は、記事を `ContentRef` にして返す。  
+2 つとも、`index.md` の無いディレクトリの記事があると throw し、ビルドを失敗させる。  
 `planSeries()` は、読み込みのときのチェックにだけ使い、戻り値はページに渡さない。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。

@@ -17,7 +17,7 @@ const ESCAPES: Record<string, string> = {
   "'": "&apos;",
 };
 
-/** XML 1.0 の Char の範囲か。タブ、改行、復帰を除く制御文字と、U+FFFE と U+FFFF を外す */
+/** XML 1.0 で使える文字かを、UTF-16 の 1 単位ずつ見る。タブ、改行、復帰を除く制御文字と、U+FFFE と U+FFFF を外す。単独のサロゲートは見ない */
 function isXmlChar(code: number): boolean {
   if (code < 0x20) return code === 0x09 || code === 0x0a || code === 0x0d;
   return code !== 0xfffe && code !== 0xffff;
