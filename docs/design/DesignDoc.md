@@ -109,6 +109,7 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 | `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                         |
 | `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                       |
 | `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                  |
+| `@fukuemon/figures`            | 記事の図の名前の規則と、ファイルの名前と URL のパスの形                                                                                | SVG を読む処理、`fetch`、2 つのアプリの origin の値  |
 | `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                               |
 | `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                               |
 | `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                               |
@@ -125,6 +126,8 @@ flowchart TD
     web --> cm["@fukuemon/content-model"]
     web --> pp["@fukuemon/playground-project"]
     play --> pp
+    web --> fig["@fukuemon/figures"]
+    play --> fig
     play --> sqlrt["@fukuemon/sql-runtime"]
     play --> nodert["@fukuemon/node-runtime"]
     play --> gort["@fukuemon/go-runtime"]
@@ -141,6 +144,7 @@ flowchart TD
 - [UI](../../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
 - [トップの庭](features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
 - [プレイグラウンド](../../apps/playground/DesignDoc.md): アプリの構成、パス、実行環境のインターフェース、プロジェクトと保存の形
+- [キャンバス](features/canvas/DesignDoc.md): ツールのパス、保存する図の形、図の一覧、記事の図の置き場と書き方
 - [基盤](../../infra/DesignDoc.md): Terraform の構成、state backend、deploy と apply の流れ
 
 ## Interfaces
@@ -180,6 +184,7 @@ ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-serie
 | `/series/<series>`                          | シリーズのページ。タイトル、説明、読む順の記事の一覧                             |
 | `/playground`                               | プレイグラウンドの一覧。ツールは、`play.fukuemon.dev` に置く                     |
 | `/playground-projects/<埋め込みの ID>.json` | 記事に埋め込む実行環境のプロジェクト。`play.fukuemon.dev` のツールのページが読む |
+| `/figures/<名前>.<ツール>.svg`              | 記事の図の、元データ入りの SVG。`play.fukuemon.dev` のキャンバスのツールが読む   |
 | `/rss.xml`                                  | RSS                                                                              |
 
 描画の実装の詳細を URL に含めない。  
@@ -193,6 +198,7 @@ URL の規約は [context/codebase.md](../../context/codebase.md#url) にある�
 - 読む順は、記事の frontmatter の `order` で決まる。
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
+- キャンバスで描いた図は、書き出した SVG を `apps/web/src/content/figures/` に置き、記事から画像の記法で指す。形は、[キャンバスの Design Doc](features/canvas/DesignDoc.md#記事の図) にある。
 - 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事のディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#プロジェクト) にある。
 
 書き方は [context/conventions.md](../../context/conventions.md) にある。

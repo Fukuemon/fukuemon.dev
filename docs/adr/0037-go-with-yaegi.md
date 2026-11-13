@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision の「Yaegi の WASM は、訪問者が実行のボタンを押してから読み込む」を ADR-0063 に置換）
 
 ## Context
 

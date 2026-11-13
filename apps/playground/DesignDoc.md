@@ -36,7 +36,7 @@ verified_commit: unverified
 
 持たないものは次のとおり。
 
-- AI のエージェントからの操作の登録。登録する位置（トップレベルで開いたページ）だけを書く。
+- AI のエージェントからの操作の登録。登録する位置（トップレベルで開いたページ）だけを書く。操作の名前、許可のスイッチ、確認、記録は、[AI からの操作の Design Doc](../../docs/design/features/ai-operations/DesignDoc.md) が持つ。
   - ADR-0044: [AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする](../../docs/adr/0044-ai-operations-with-webmcp.md)
 - コンソールの式を評価する入力欄。
 - キャンバスとスライドのエディタの中の構成。ディレクトリを並べる位置だけを書く。
@@ -83,6 +83,7 @@ apps/playground/
     sql-console/          SQL の入力欄と、結果の表
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
+    ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
 
 packages/
   sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
@@ -93,6 +94,7 @@ packages/
 ```
 
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
+  - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
@@ -125,6 +127,7 @@ flowchart TB
   project["project"]
   workspace["workspace"]
   ui["@fukuemon/ui"]
+  ai["ai-operations"]
   pp["@fukuemon/playground-project"]
 
   node --> runtime
@@ -133,15 +136,19 @@ flowchart TB
   node --> workspace
   node --> database
   node --> ui
+  node --> ai
+  ai --> ui
   sql --> console
   sql --> database
   sql --> project
   sql --> workspace
   sql --> ui
+  sql --> ai
   go --> runner
   go --> project
   go --> workspace
   go --> ui
+  go --> ai
   console --> database
   console --> ui
   runtime --> database
@@ -155,9 +162,10 @@ flowchart TB
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
-- Oxlint の `no-restricted-imports` が止める import は、次の 2 つ。
+- Oxlint の `no-restricted-imports` が止める import は、次の 3 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` の間の import
+  - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
 
 ### NodeRuntime
 
@@ -347,13 +355,18 @@ flowchart TB
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
   - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
-  - `SqlPane` は、`NodeRuntime` の `database` と、入力欄の値を、`sql-console/` のコンポーネントに props で渡す。`sql-console/` のコンポーネントは、`database` の `status` を `useSyncExternalStore` で読む。
+  - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値を、props で受ける。`status` は、`useSyncExternalStore` で読む。
+  - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
+  - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
+  - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
-- 実行のボタンの待ちの状態は、`useTransition` で持つ。
-- SQL だけを動かすツールの PGlite と、Go を動かすツールの Yaegi は、訪問者が実行のボタンを押してから読み込む。
+- Node の実行環境では、実行のボタンの、実行中かどうかの値を、`useTransition` で持つ。
+- SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。
+- SQL だけを動かすツールの PGlite と、Go を動かすツールの Yaegi は、訪問者が実行のボタンを押したときと、AI からの操作の `sql_run_query`、`go_run`、`go_test` が呼ばれたときに読み込む。ページを開いたときには、読み込まない。
+  - ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../docs/adr/0063-ai-operations-for-sql-and-go.md)
 
 ### プロジェクト
 
@@ -364,6 +377,7 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - 運営者は、プロジェクトを、記事のディレクトリの下に置く（`apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/`）。設定は、同じディレクトリの `playground.json` に書く。
 - `apps/web` のビルドが、プロジェクトごとに、1 つの JSON を、`https://fukuemon.dev/playground-projects/<埋め込みの ID>.json` に出力する。`fukuemon.dev` は、`/playground-projects/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
 - ツールのページは、埋め込みの ID から JSON の URL を組み立てて、`fetch` する。
+  - `fukuemon.dev` の origin は、`apps/playground` のビルドのときの環境変数で渡す。`project/` と、キャンバスの `figures/` が、同じ環境変数を読む。
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
 - JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
@@ -478,7 +492,9 @@ sequenceDiagram
 
 ### SQL
 
-SQL の画面（`sql-console/`）は、`SqlDatabase` に SQL を渡し、結果を表示する。  
+SQL の画面（`sql-console/`）は、SQL を実行する関数を props で受ける。  
+この関数に SQL を渡し、結果を表示する。  
+SQL を実行する関数は、`SqlDatabase` の `run` を呼ぶ。  
 `SqlDatabase` の実装は 2 つである。
 
 - SQL だけを動かすツール: Web Worker で動かす PGlite（`@fukuemon/sql-runtime`）。ツールのページのメインスレッドでは、SQL を実行しない。
@@ -542,9 +558,10 @@ DB のプロセスの標準入出力では、次の形式で送る。
 
 ### 動くチェック
 
-- Oxlint の `no-restricted-imports`: 次の 2 つの import を止める。
+- Oxlint の `no-restricted-imports`: 次の 3 つの import を止める。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` の間の import
+  - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
 - package の依存の宣言と knip: 次の 3 つを確認する。
   - `apps/playground` が、`@webcontainer/api` を import しないこと
   - 実行環境の 3 つの package が、React、`@fukuemon/ui`、`@fukuemon/playground-project` に依存しないこと

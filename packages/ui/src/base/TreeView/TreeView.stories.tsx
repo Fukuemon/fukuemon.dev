@@ -28,15 +28,18 @@ function TreeViewExample({
   items,
   defaultExpandedIds,
   initialSelectedId,
+  density,
 }: {
   items: TreeNode[];
   defaultExpandedIds?: string[];
   initialSelectedId?: string;
+  density?: "default" | "compact";
 }) {
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   return (
     <TreeView
       defaultExpandedIds={defaultExpandedIds}
+      density={density}
       items={items}
       label="ファイル"
       onSelect={setSelectedId}
@@ -60,4 +63,40 @@ export const Expanded: Story = {
   name: "開いて選んでいる",
   args: { defaultExpandedIds: ["src", "src/routes"], initialSelectedId: "src/routes/token.ts" },
 };
+export const Compact: Story = {
+  name: "詰めた項目（compact）",
+  args: {
+    density: "compact",
+    defaultExpandedIds: ["src", "src/routes"],
+    initialSelectedId: "src/routes/token.ts",
+  },
+};
 export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };
+export const WithContent: Story = {
+  name: "中身を描く",
+  args: {
+    items: [
+      {
+        id: "user",
+        label: "user: {id: 42}",
+        content: (
+          <span>
+            <span className="font-bold">user:</span> {"{id: 42}"}
+          </span>
+        ),
+        children: [
+          {
+            id: "user/id",
+            label: "id: 42",
+            content: (
+              <span>
+                <span className="font-bold">id:</span> 42
+              </span>
+            ),
+          },
+        ],
+      },
+      { id: "name", label: "name", content: <span>名前の項目</span> },
+    ],
+  },
+};
