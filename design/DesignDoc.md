@@ -37,7 +37,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - サーバー側の永続的な状態。訪問者の identity を前提にする機能を作らないので、求める機能がない。
 - サイト全体の SPA 化。
 - 設計不変量のほかに、将来のために先に作っておくもの。
-- 実行環境の方式と、プレイグラウンドのツールの設計。実行環境の方式を決める ADR と、その Design Doc が持つ。
+- 実行環境の方式と、プレイグラウンドのツールの設計。実行環境の方式を決める ADR と、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md) が持つ。
 
 ## Assumptions and Constraints
 
@@ -63,7 +63,7 @@ ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-in
 ```mermaid
 flowchart TD
     reader["訪問者 (Browser)"] --> site["Worker: fukuemon.dev<br/>Static Assets"]
-    reader --> play["Worker: プレイグラウンドのサブドメイン<br/>Static Assets"]
+    reader --> play["Worker: play.fukuemon.dev<br/>Static Assets"]
     dev["運営者 (Browser)"] --> catalog["Worker: design.fukuemon.dev<br/>Static Assets"]
     dev --> access["Cloudflare Access"]
     access --> docsw["Worker: docs.fukuemon.dev<br/>Static Assets"]
@@ -101,22 +101,34 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 
 モジュールごとの責務は次のとおり。
 
-| モジュール                | 責務                                                                                                 | 持たないもの                      |
-| ------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `apps/web`                | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化                | トークンとコンポーネントの定義    |
-| `apps/docs-site`          | `docs/` をビルドしたドキュメントサイトの設定と Worker                                                | 文書の原本                        |
-| `@fukuemon/ui`            | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                | ページと原稿                      |
-| `@fukuemon/content-model` | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                | Astro への依存                    |
-| `@fukuemon/config`        | tsconfig の共有の設定                                                                                | 無い                              |
-| `@fukuemon/e2e`           | 配信したサイトを操作する E2E のテストと、エビデンス                                                  | サイトのコードへの依存            |
-| `infra/`                  | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット | Worker の script と静的なアセット |
+| モジュール                     | 責務                                                                                                                                   | 持たないもの                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `apps/web`                     | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化                                                  | トークンとコンポーネントの定義                       |
+| `apps/playground`              | プレイグラウンドのツールのページ（Node の実行環境、SQL、Go）。画面、画面の状態、訪問者のファイルの保存、プロジェクトの JSON の読み込み | 実行環境の処理と、`@webcontainer/api` への直接の依存 |
+| `apps/docs-site`               | `docs/` をビルドしたドキュメントサイトの設定と Worker                                                                                  | 文書の原本                                           |
+| `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                         |
+| `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                       |
+| `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                  |
+| `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                               |
+| `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                               |
+| `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                               |
+| `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                 |
+| `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                               |
+| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                    |
 
 次の図は、package の間の依存の向きを示す。
 
 ```mermaid
 flowchart TD
     web["apps/web"] --> ui["@fukuemon/ui"]
+    play["apps/playground"] --> ui
     web --> cm["@fukuemon/content-model"]
+    web --> pp["@fukuemon/playground-project"]
+    play --> pp
+    play --> sqlrt["@fukuemon/sql-runtime"]
+    play --> nodert["@fukuemon/node-runtime"]
+    play --> gort["@fukuemon/go-runtime"]
+    nodert --> sqlrt
     e2e["@fukuemon/e2e"] -. "配信した URL だけ" .-> web
 ```
 
@@ -128,6 +140,7 @@ flowchart TD
 - [Content Model](../packages/content-model/DesignDoc.md): schema、`contentId`、関係グラフ、`ContentRef` への正規化
 - [UI](../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
 - [トップの庭](features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
+- [プレイグラウンド](features/playground/DesignDoc.md): アプリの構成、パス、実行環境のインターフェース、プロジェクトと保存の形
 - [基盤](../infra/DesignDoc.md): Terraform の構成、state backend、deploy と apply の流れ
 
 ## Interfaces
@@ -137,16 +150,18 @@ flowchart TD
 1 つのアプリを、1 つの Worker と 1 つのホスト名に割り当てる。  
 ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-workers.md)
 
-プレイグラウンドは 1 つのアプリで、全てのツールを 1 つのサブドメインに置く。  
-サブドメインの名前と、cross-origin isolation のヘッダを返すパスは、実行環境の方式を決める ADR が決める。
+プレイグラウンドは 1 つのアプリ（`apps/playground`）で、全てのツールを `play.fukuemon.dev` に置く。  
+cross-origin isolation のヘッダは、Node の実行環境のパス（`/node/*`）にだけ返す。  
+ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../adr/0034-playground-origin-and-embedding.md)  
+ツールのパスは、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md#アプリとパス) にある。
 
-| ホスト名                       | 置くもの                                       | アクセスできる人                           |
-| ------------------------------ | ---------------------------------------------- | ------------------------------------------ |
-| `fukuemon.dev`                 | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                     |
-| プレイグラウンドのサブドメイン | プレイグラウンドの全てのツール                 | 誰でも                                     |
-| `design.fukuemon.dev`          | カタログ                                       | 誰でも                                     |
-| `docs.fukuemon.dev`            | ドキュメントサイト                             | 運営者が許可した人                         |
-| workers.dev の URL             | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない |
+| ホスト名              | 置くもの                                       | アクセスできる人                           |
+| --------------------- | ---------------------------------------------- | ------------------------------------------ |
+| `fukuemon.dev`        | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                     |
+| `play.fukuemon.dev`   | プレイグラウンドの全てのツール                 | 誰でも                                     |
+| `design.fukuemon.dev` | カタログ                                       | 誰でも                                     |
+| `docs.fukuemon.dev`   | ドキュメントサイト                             | 運営者が許可した人                         |
+| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない |
 
 ドキュメントサイトのビルドの方法と、アクセスの認証は、次の ADR にある。  
 ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)
@@ -156,15 +171,16 @@ ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-si
 `fukuemon.dev` の URL は次のとおり。  
 ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-series.md)
 
-| URL                         | 中身                                                                   |
-| --------------------------- | ---------------------------------------------------------------------- |
-| `/`                         | トップ。プロフィールを兼ねる                                           |
-| `/articles`                 | 記事の一覧                                                             |
-| `/articles/<slug>`          | シリーズに入れない記事                                                 |
-| `/articles/<series>/<slug>` | シリーズの中の記事                                                     |
-| `/series/<series>`          | シリーズのページ。タイトル、説明、読む順の記事の一覧                   |
-| `/playground`               | プレイグラウンドの一覧。ツールは、プレイグラウンドのサブドメインに置く |
-| `/rss.xml`                  | RSS                                                                    |
+| URL                                         | 中身                                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `/`                                         | トップ。プロフィールを兼ねる                                                     |
+| `/articles`                                 | 記事の一覧                                                                       |
+| `/articles/<slug>`                          | シリーズに入れない記事                                                           |
+| `/articles/<series>/<slug>`                 | シリーズの中の記事                                                               |
+| `/series/<series>`                          | シリーズのページ。タイトル、説明、読む順の記事の一覧                             |
+| `/playground`                               | プレイグラウンドの一覧。ツールは、`play.fukuemon.dev` に置く                     |
+| `/playground-projects/<埋め込みの ID>.json` | 記事に埋め込む実行環境のプロジェクト。`play.fukuemon.dev` のツールのページが読む |
+| `/rss.xml`                                  | RSS                                                                              |
 
 描画の実装の詳細を URL に含めない。  
 URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
@@ -177,6 +193,7 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 - 読む順は、記事の frontmatter の `order` で決まる。
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
+- 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事のディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md#プロジェクト) にある。
 
 書き方は [context/conventions.md](../context/conventions.md) にある。
 
@@ -250,7 +267,7 @@ deploy と apply の条件は [context/operations.md](../context/operations.md#d
 
 - 手順の形式の記事は、記事の形式の値を追加して作る。種別と URL を増やさない。
 - キャンバスの図とスライドは、種別を増やさずに追加する。
-- キャンバスとスライドのエディタは、プレイグラウンドのツールとして、プレイグラウンドのサブドメインに追加する。Worker とホスト名を増やさない。
+- キャンバスとスライドのエディタは、プレイグラウンドのツールとして、`play.fukuemon.dev` に追加する。Worker とホスト名を増やさない。
   - ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-workers.md)
 - 記事のあいだの関連の表示は、Content Model の関係グラフから生成する。
 - 分類での絞り込みは、URL パラメータで絞り込む island にする。ページと索引のページは増やさない。

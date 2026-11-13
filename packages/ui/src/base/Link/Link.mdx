@@ -7,7 +7,7 @@ import * as Stories from "./Link.stories";
 
 # Link
 
-本文の内部と外部のリンク。
+本文の内部と外部のリンクと、文中に置かないリンク。
 
 ## 規則
 
@@ -26,9 +26,21 @@ import * as Stories from "./Link.stories";
 
 <Canvas of={Stories.Hover} />
 
+### 折り返したリンクの hover
+
+<Canvas of={Stories.Wrapped} />
+
 ### フォーカス
 
 <Canvas of={Stories.Focus} />
+
+### 文中に置かないリンク
+
+<Canvas of={Stories.Standalone} />
+
+### 文中に置かないリンクが折り返したときの hover
+
+<Canvas of={Stories.StandaloneWrapped} />
 
 ### 外部のリンク
 

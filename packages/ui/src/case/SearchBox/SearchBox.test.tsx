@@ -1,5 +1,5 @@
 import { composeStories } from "@storybook/react-vite";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
@@ -50,7 +50,8 @@ describe("SearchBox", () => {
     expect(input).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("listbox")).toBeNull();
     await userEvent.click(input);
-    expect(screen.getByRole("listbox")).toBeVisible();
+    // 開いた直後は濃度が 0 から上がる途中なので、見えるまで待つ
+    await waitFor(() => expect(screen.getByRole("listbox")).toBeVisible());
   });
 
   it("語を入れたのに候補が 0 件なら、live の領域に emptyMessage の文を入れる", async () => {

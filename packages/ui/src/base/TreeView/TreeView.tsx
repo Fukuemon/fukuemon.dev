@@ -168,7 +168,7 @@ export function TreeView({
             aria-setsize={setSize}
             className={clsx(
               // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
-              "flex min-h-11 items-start gap-1 py-3 pr-2 transition-colors focus-visible:focus-ring",
+              "flex min-h-11 items-start gap-1 rounded-control py-3 pr-2 transition-colors focus-visible:focus-ring",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
               (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
             )}

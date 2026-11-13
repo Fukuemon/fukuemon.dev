@@ -42,17 +42,20 @@
 
 ## 書体、トークン、コンポーネント
 
-| ADR                                           | 題                                                                                                                                                                   |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-0004](0004-typography-static-weights.md) | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
-| [ADR-0019](0019-latin-font-stix-two-text.md)  | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
-| [ADR-0023](0023-keep-art-and-key-color.md)    | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
-| [ADR-0010](0010-tailwind-as-styling-base.md)  | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
-| [ADR-0024](0024-tokens-of-fukuemon-dev.md)    | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
-| [ADR-0021](0021-ui-components-and-catalog.md) | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
-| [ADR-0022](0022-code-colors-from-tokens.md)   | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
+| ADR                                                | 題                                                                                                                                                                   |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-0004](0004-typography-static-weights.md)      | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
+| [ADR-0019](0019-latin-font-stix-two-text.md)       | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
+| [ADR-0023](0023-keep-art-and-key-color.md)         | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
+| [ADR-0010](0010-tailwind-as-styling-base.md)       | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
+| [ADR-0024](0024-tokens-of-fukuemon-dev.md)         | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
+| [ADR-0028](0028-radius-shadow-and-brush-motion.md) | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                    |
+| [ADR-0021](0021-ui-components-and-catalog.md)      | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
+| [ADR-0022](0022-code-colors-from-tokens.md)        | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
 
 ADR-0020（[トークンを、DADS の値をコピーしたプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、ライトとダークをセマンティックトークンで切り替える](0020-design-tokens-from-dads.md)）は、ADR-0024 に置換した。
+
+ADR-0024 の、角丸、影、読み込み中の印の決定は、ADR-0028 に置換した。
 
 ## 挿絵とトップの演出
 
@@ -65,22 +68,31 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 
 ## 実行環境とプレイグラウンド
 
-| ADR                                                           | 題                                                                                                                                   |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [ADR-0033](0033-webcontainers-for-node.md)                    | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                                              |
-| [ADR-0034](0034-playground-origin-and-embedding.md)           | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す                   |
-| [ADR-0035](0035-record-http-and-console-in-runtime.md)        | HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する                                         |
-| [ADR-0037](0037-go-with-yaegi.md)                             | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                                  |
-| [ADR-0038](0038-pglite-over-unix-socket.md)                   | DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する                   |
-| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)              | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                          |
-| [ADR-0040](0040-canvas-figures-in-articles.md)                | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                                |
-| [ADR-0041](0041-slides-editor-with-marp.md)                   | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                     |
-| [ADR-0042](0042-published-slides-as-static-pages.md)          | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                             |
-| [ADR-0043](0043-multiple-named-documents-per-tool.md)         | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                                |
-| [ADR-0044](0044-ai-operations-with-webmcp.md)                 | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                               |
-| [ADR-0045](0045-ai-operations-permission-and-confirmation.md) | AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す |
+| ADR                                                             | 題                                                                                                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [ADR-0033](0033-webcontainers-for-node.md)                      | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                                              |
+| [ADR-0034](0034-playground-origin-and-embedding.md)             | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す                   |
+| [ADR-0037](0037-go-with-yaegi.md)                               | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                                  |
+| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)                | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                          |
+| [ADR-0040](0040-canvas-figures-in-articles.md)                  | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                                |
+| [ADR-0041](0041-slides-editor-with-marp.md)                     | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                     |
+| [ADR-0042](0042-published-slides-as-static-pages.md)            | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                             |
+| [ADR-0043](0043-multiple-named-documents-per-tool.md)           | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                                |
+| [ADR-0044](0044-ai-operations-with-webmcp.md)                   | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                               |
+| [ADR-0045](0045-ai-operations-permission-and-confirmation.md)   | AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す |
+| [ADR-0046](0046-playground-as-vite-react-app.md)                | プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける                                  |
+| [ADR-0047](0047-react-compiler-in-playground.md)                | React Compiler を、`apps/playground` にだけ入れる                                                                                    |
+| [ADR-0048](0048-node-runtime-interface-and-stores.md)           | Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する                      |
+| [ADR-0049](0049-playground-projects-from-articles.md)           | 記事の埋め込みの初期ファイルと設定を、`apps/web` のビルドが JSON にし、ツールのページが埋め込みの ID で読む                          |
+| [ADR-0050](0050-save-visitor-files-in-indexeddb.md)             | 訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する                                                                       |
+| [ADR-0051](0051-node-runtime-boot-and-commands.md)              | Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす                      |
+| [ADR-0052](0052-runtime-files-outside-workdir.md)               | 実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す                                   |
+| [ADR-0053](0053-pglite-database-in-playground.md)               | DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る       |
+| [ADR-0054](0054-record-http-and-console-with-prefixed-lines.md) | HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない                                         |
 
-ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。
+ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
+ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
+ADR-0035（[HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する](0035-record-http-and-console-in-runtime.md)）は、ADR-0054 に置換した。
 
 ## ADR の間の依存
 
@@ -112,6 +124,7 @@ flowchart TB
     A0023["ADR-0023"]
     A0010["ADR-0010"]
     A0024["ADR-0024"]
+    A0028["ADR-0028"]
     A0021["ADR-0021"]
     A0022["ADR-0022"]
   end
@@ -122,9 +135,7 @@ flowchart TB
   subgraph runtime["実行環境とプレイグラウンド"]
     A0033["ADR-0033"]
     A0034["ADR-0034"]
-    A0035["ADR-0035"]
     A0037["ADR-0037"]
-    A0038["ADR-0038"]
     A0039["ADR-0039"]
     A0040["ADR-0040"]
     A0041["ADR-0041"]
@@ -132,6 +143,15 @@ flowchart TB
     A0043["ADR-0043"]
     A0044["ADR-0044"]
     A0045["ADR-0045"]
+    A0046["ADR-0046"]
+    A0047["ADR-0047"]
+    A0048["ADR-0048"]
+    A0049["ADR-0049"]
+    A0050["ADR-0050"]
+    A0051["ADR-0051"]
+    A0052["ADR-0052"]
+    A0053["ADR-0053"]
+    A0054["ADR-0054"]
   end
   A0002 --> A0001
   A0003 --> A0002
@@ -142,6 +162,8 @@ flowchart TB
   A0024 --> A0023
   A0026 --> A0024
   A0027 --> A0026
+  A0028 --> A0024
+  A0028 --> A0026
   A0029 --> A0001
   A0029 --> A0002
   A0029 --> A0003
@@ -166,15 +188,9 @@ flowchart TB
   A0034 --> A0030
   A0034 --> A0031
   A0034 --> A0033
-  A0035 --> A0021
-  A0035 --> A0033
   A0037 --> A0008
   A0037 --> A0030
   A0037 --> A0034
-  A0038 --> A0030
-  A0038 --> A0033
-  A0038 --> A0034
-  A0038 --> A0035
   A0039 --> A0031
   A0039 --> A0034
   A0040 --> A0016
@@ -199,6 +215,44 @@ flowchart TB
   A0045 --> A0031
   A0045 --> A0034
   A0045 --> A0044
+  A0046 --> A0031
+  A0046 --> A0034
+  A0046 --> A0045
+  A0047 --> A0046
+  A0048 --> A0033
+  A0048 --> A0054
+  A0048 --> A0037
+  A0048 --> A0046
+  A0049 --> A0030
+  A0049 --> A0031
+  A0049 --> A0034
+  A0049 --> A0040
+  A0049 --> A0046
+  A0050 --> A0031
+  A0050 --> A0043
+  A0050 --> A0046
+  A0050 --> A0049
+  A0051 --> A0031
+  A0051 --> A0033
+  A0051 --> A0034
+  A0051 --> A0045
+  A0051 --> A0049
+  A0051 --> A0050
+  A0052 --> A0033
+  A0052 --> A0054
+  A0052 --> A0050
+  A0052 --> A0051
+  A0053 --> A0030
+  A0053 --> A0031
+  A0053 --> A0033
+  A0053 --> A0034
+  A0053 --> A0054
+  A0053 --> A0048
+  A0053 --> A0049
+  A0053 --> A0051
+  A0053 --> A0052
+  A0054 --> A0021
+  A0054 --> A0033
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  
