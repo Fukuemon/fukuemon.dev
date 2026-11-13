@@ -8,7 +8,8 @@ const meta = {
   args: { href: "#article", children: "認可コードフローの記事" },
   render: (args) => (
     <p className="text-body text-text">
-      詳しくは <Link {...args} /> を読む。
+      詳しくは <Link {...args} />
+      {" を読む。"}
     </p>
   ),
 } satisfies Meta<typeof Link>;
