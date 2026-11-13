@@ -46,6 +46,9 @@ function playgroundTools(): string[] {
     .filter((d) => d.isDirectory() && existsSync(join(root, d.name, "index.html")))
     .map((d) => d.name);
   if (tools.length === 0) throw new Error(`${PLAYGROUND_DIR} にツールのエントリーポイントが無い`);
+  // HTML と src/ のディレクトリの名前がずれると、禁止が掛からないまま通る
+  const missing = tools.filter((tool) => !existsSync(join(root, "src", tool)));
+  if (missing.length > 0) throw new Error(`${PLAYGROUND_DIR}/src/ に ${missing.join("、")} が無い`);
   return tools;
 }
 
@@ -58,7 +61,7 @@ function playgroundToolOverrides(): OxlintOverride[] {
       tools
         .filter((t) => t !== tool)
         .map((other) => ({
-          regex: `^(\\.\\./)+${other}(/|$)`,
+          regex: `^(\\.\\./)+${escapeRegex(other)}(/|$)`,
           message:
             "ツールのページどうしは参照しない。2 つ以上のツールが使うものは、関心ごとのディレクトリへ移す (apps/playground/DesignDoc.md)",
         })),
