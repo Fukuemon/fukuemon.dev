@@ -74,4 +74,12 @@ describe("HttpExchangeList", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("通信の記録を読めませんでした");
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
+
+  it("行のフォーカスの輪は、行の内側に引く（ADR-0066）", async () => {
+    render(<Default />);
+    await userEvent.tab();
+    const focused = document.activeElement as Element;
+    expect(focused.tagName).toBe("BUTTON");
+    expect(getComputedStyle(focused).outlineOffset).toBe("-2px");
+  });
 });

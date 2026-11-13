@@ -124,7 +124,7 @@ export function HttpExchangeList({
               <button
                 aria-current={isSelected ? "true" : undefined}
                 className={clsx(
-                  "flex min-h-6 w-full cursor-pointer flex-col border-l-2 py-1 pr-3 pl-2.5 text-left hover:bg-surface-subtle focus-visible:focus-ring",
+                  "flex min-h-6 w-full cursor-pointer flex-col border-l-2 py-1 pr-3 pl-2.5 text-left hover:bg-surface-subtle focus-visible:focus-ring-inset",
                   isSelected ? "border-primary bg-surface-subtle" : "border-transparent",
                 )}
                 onClick={() => onSelect(exchange.id)}

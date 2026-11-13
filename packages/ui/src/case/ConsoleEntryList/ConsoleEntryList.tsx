@@ -238,7 +238,7 @@ export function ConsoleEntryList({
       {/* 高さを呼ぶ側が決めたときは、題とボタンを残して、行の領域だけをスクロールさせる */}
       <div
         aria-label="ログの行"
-        className="min-h-0 flex-1 overflow-y-auto focus-visible:focus-ring"
+        className="min-h-0 flex-1 overflow-y-auto focus-visible:focus-ring-inset"
         onScroll={handleScroll}
         ref={rowsRef}
         role="region"

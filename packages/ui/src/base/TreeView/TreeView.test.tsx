@@ -106,4 +106,13 @@ describe("TreeView", () => {
       expect(getComputedStyle(treeitem).fontWeight).toBe("400");
     }
   });
+
+  it("compact の項目は、フォーカスの輪を項目の内側に引く（ADR-0066）", async () => {
+    render(<CompactBody />);
+    await userEvent.tab();
+    const focused = document.activeElement as Element;
+    expect(focused).toHaveAttribute("role", "treeitem");
+    expect(getComputedStyle(focused).outlineStyle).toBe("solid");
+    expect(getComputedStyle(focused).outlineOffset).toBe("-2px");
+  });
 });

@@ -118,7 +118,7 @@ export function DummyEngine({
     <pre
       aria-label={label}
       className={clsx(
-        "min-h-48 flex-1 overflow-auto focus-visible:focus-ring",
+        "min-h-48 flex-1 overflow-auto focus-visible:focus-ring-inset",
         isSource ? "flex py-1" : "px-3 py-2",
       )}
       data-code-theme={theme.name}

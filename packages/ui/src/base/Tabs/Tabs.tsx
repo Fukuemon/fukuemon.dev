@@ -101,7 +101,8 @@ export function Tabs({
                 aria-keyshortcuts={item.closable ? "Delete" : undefined}
                 aria-selected={isSelected}
                 className={clsx(
-                  "flex cursor-pointer items-center transition-colors focus-visible:focus-ring",
+                  "flex cursor-pointer items-center transition-colors",
+                  isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
                   isCompact ? "h-8 gap-1.5 px-3 text-label-compact" : "h-11 gap-2 px-4 text-label",
                   isSelected ? "text-text" : "text-text-secondary hover:text-text",
                 )}
@@ -133,7 +134,8 @@ export function Tabs({
                   aria-hidden="true"
                   aria-label={`${item.label} を閉じる`}
                   className={clsx(
-                    "inline-grid cursor-pointer place-items-center rounded-control text-text-secondary transition-colors hover:text-text focus-visible:focus-ring",
+                    "inline-grid cursor-pointer place-items-center rounded-control text-text-secondary transition-colors hover:text-text",
+                    isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
                     isCompact ? "size-7" : "size-11",
                   )}
                   onClick={() => onClose?.(item.id)}
