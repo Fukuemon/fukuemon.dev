@@ -297,7 +297,8 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 │   ├── design/
 │   │   ├── DesignDoc.md         # この文書
 │   │   ├── apps/                # コードの隣の Design Doc へのシンボリックリンク
-│   │   └── packages/
+│   │   ├── packages/
+│   │   └── infra.md             # infra/DesignDoc.md へのシンボリックリンク
 │   └── adr/
 ├── context/                     # 規約と事実
 ├── apps/

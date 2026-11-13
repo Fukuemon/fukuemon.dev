@@ -38,6 +38,7 @@ verified_commit: ab2da87
 - 実装の種類のディレクトリ（`components/`、`hooks/`、`utils/`、`types/`、`constants/`）を作らない。
   - 種類で分けると、1 つの関心ごとを直すときに、複数のディレクトリを行き来することになる。
 - hook は、使うコンポーネントの隣か、同じ関心ごとのモジュールの隣に置く。
+- feature の中のディレクトリに、ほかの feature と同じ名前を付けない。Oxlint は、`../<ほかの feature の名前>/` の形の import を、feature の間の参照として止める。
 - feature とディレクトリごとの re-export のファイル（`index.ts`）を作らず、ファイルを直接 import する。
   - package のエントリーポイント（`packages/*/src/index.ts`）は残す。
 
@@ -62,7 +63,7 @@ entry を足すときの注意は [conventions.md](conventions.md#shared-configu
 - 規約 3: island は Astro を import しない。
   - island は、`apps/web/src/{features,components}/**/*.{tsx,jsx}` を指す。
   - `astro`、`astro:content`、`.astro` のファイルのどれも参照しない。必要な値は props で受ける。
-  - チェックは Oxlint が行う。拡張子で対象を指定し、`astro:content` を `paths` で、`*.astro` を `patterns` で禁じる。
+  - チェックは Oxlint が行う。拡張子で対象を指定し、`astro` と `astro:content` を `paths` で、`*.astro`、`astro:*`、`astro/**` を `patterns` で禁じる。
 - 規約 4: `packages/` は `apps/` を参照しない。
   - チェックは Oxlint が行う。
 - 規約 5: 層をまたぐ参照は 1 方向にする。
@@ -85,7 +86,7 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/config` は、どこにも依存しない。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
-- `apps/web` は、`@fukuemon/ui` に依存する。
+- `apps/web` は、`@fukuemon/ui` と `@fukuemon/content-model` に依存してよい。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `infra/` は、どこにも依存しない。
 

@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { defineConfig, type OxlintOverride } from "oxlint";
 
 const FEATURES_DIR = "apps/web/src/features";
@@ -17,7 +18,9 @@ const noAstroInIsland: Restriction[] = [
   "astro:transitions",
   "astro:middleware",
 ].map((name) => ({ name, message: RULE_3 }));
-const noAstroFileInIsland: Restriction[] = [{ group: ["*.astro", "**/*.astro"], message: RULE_3 }];
+const noAstroFileInIsland: Restriction[] = [
+  { group: ["*.astro", "**/*.astro", "astro:*", "astro:*/**", "astro/**"], message: RULE_3 },
+];
 const noPagesLayouts: Restriction[] = [
   {
     group: ["**/pages/**", "~/pages/**", "**/layouts/**", "~/layouts/**"],
@@ -36,9 +39,10 @@ function islandFiles(dir: string): string[] {
 // overrides は同じ規則を後勝ちで上書きし、前の entry と合流しない。
 // そのため entry ごとに、そのファイル群に要る禁止を全て書く (context/conventions.md)
 function featureOverrides(): OxlintOverride[] {
-  // features/ が無い間も、設定の読み込みを失敗させない
-  const features = existsSync(FEATURES_DIR)
-    ? readdirSync(FEATURES_DIR, { withFileTypes: true })
+  // 実行したディレクトリによらず、設定ファイルの隣から読む。features/ が無い間も、設定の読み込みを失敗させない
+  const root = join(import.meta.dirname, FEATURES_DIR);
+  const features = existsSync(root)
+    ? readdirSync(root, { withFileTypes: true })
         .filter((d) => d.isDirectory())
         .map((d) => d.name)
     : [];
@@ -93,8 +97,17 @@ export default defineConfig({
   },
   overrides: [
     {
-      files: ["apps/web/src/pages/**", "apps/web/src/layouts/**"],
+      files: ["apps/web/src/pages/**"],
       rules: restrict(noAstroContent, []),
+    },
+    {
+      files: ["apps/web/src/layouts/**"],
+      rules: restrict(noAstroContent, [
+        {
+          group: ["**/pages/**", "~/pages/**"],
+          message: "layouts は pages を参照しない (context/codebase.md 規約 5)",
+        },
+      ]),
     },
     {
       files: ["apps/web/src/lib/**"],
@@ -118,6 +131,18 @@ export default defineConfig({
       rules: restrict(
         [...noAstroContent, ...noAstroInIsland],
         [...noAstroFileInIsland, ...noFeaturesFromComponents, ...noPagesLayouts],
+      ),
+    },
+    // feature の直下のファイルと、feature を足す前の設定の読み込みにも、規約 1、3、5 を当てる
+    {
+      files: [`${FEATURES_DIR}/**`],
+      rules: restrict(noAstroContent, noPagesLayouts),
+    },
+    {
+      files: islandFiles(FEATURES_DIR),
+      rules: restrict(
+        [...noAstroContent, ...noAstroInIsland],
+        [...noAstroFileInIsland, ...noPagesLayouts],
       ),
     },
     ...featureOverrides(),
