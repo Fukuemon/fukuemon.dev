@@ -53,7 +53,10 @@ export function SqlConsole({
         <Button isLoading={running} onClick={() => void run()} size="S">
           実行する
         </Button>
-        <span className="text-caption text-text-secondary">Ctrl か ⌘ と Enter でも実行します</span>
+        <span className="text-caption text-text-secondary">
+          Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
+          でエディタの外へ移ります
+        </span>
       </div>
       <section aria-label="実行の結果" className="flex min-w-0 flex-col gap-4">
         {progress !== undefined && <Loading label={progress} />}

@@ -5,7 +5,7 @@ import {
   closeBracketsKeymap,
   completionKeymap,
 } from "@codemirror/autocomplete";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import {
   HighlightStyle,
   bracketMatching,
@@ -27,6 +27,7 @@ import {
   rectangularSelection,
 } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
+import { createSearchPanel } from "./search-panel";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
 
 // 色は packages/ui のテーマ変数を読み、ライトとダークをトークンの側で切り替える (docs/adr/0022-code-colors-from-tokens.md)
@@ -48,7 +49,7 @@ const theme = EditorView.theme({
   },
   ".cm-lineNumbers .cm-gutterElement": { padding: "0 8px 0 12px" },
   "&.cm-focused": { outline: "none" },
-  // 選択があるときは、アクティブ行の帯を消す。帯は選択の層より上に描かれ、選択の範囲を隠すため
+  // 選択があるときは、アクティブ行のハイライトを消す。ハイライトは選択の層より上に描かれ、選択の範囲を隠すため
   ".cm-activeLine": { backgroundColor: "var(--color-surface-subtle)" },
   "&:has(.cm-selectionBackground) .cm-activeLine": { backgroundColor: "transparent" },
   ".cm-activeLineGutter": { backgroundColor: "var(--color-surface-subtle)" },
@@ -63,7 +64,7 @@ const theme = EditorView.theme({
     borderRadius: "var(--radius-control)",
     boxShadow: "var(--shadow-raised)",
   },
-  ".cm-tooltip-autocomplete > ul": { fontFamily: "var(--font-mono)" },
+  ".cm-tooltip-autocomplete > ul": { fontFamily: "var(--font-mono)", maxHeight: "264px" },
   ".cm-searchMatch": { backgroundColor: "var(--color-info-surface)" },
   ".cm-searchMatch-selected": { outline: "2px solid var(--color-primary)" },
   ".cm-panels": {
@@ -72,23 +73,14 @@ const theme = EditorView.theme({
     fontFamily: "var(--font-sans)",
   },
   ".cm-panels-top": { borderBottom: "1px solid var(--color-border)" },
-  ".cm-panel.cm-search": {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: "8px",
-    padding: "8px 60px 8px 8px",
-    fontSize: "var(--text-body-dense)",
+  ".cm-search": { padding: "8px", fontSize: "var(--text-body-dense)" },
+  ".cm-search-row": { display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" },
+  ".cm-search-row + .cm-search-row": { marginTop: "8px" },
+  ".cm-search-row .cm-textfield": { flex: "1 1 8rem", minWidth: 0 },
+  ".cm-button[aria-pressed=true]": {
+    backgroundColor: "var(--color-primary-surface)",
+    color: "var(--color-text)",
   },
-  ".cm-panel.cm-search br": { flexBasis: "100%", height: 0 },
-  ".cm-panel.cm-search label": {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "4px",
-    minHeight: "44px",
-    fontSize: "inherit",
-  },
-  ".cm-panel.cm-search input[type=checkbox]": { accentColor: "var(--color-primary)", margin: 0 },
   ".cm-textfield": {
     minHeight: "44px",
     margin: 0,
@@ -112,21 +104,20 @@ const theme = EditorView.theme({
     border: "1px solid var(--color-border-field)",
     borderRadius: "var(--radius-control)",
   },
-  // 帯の入力欄とボタンは CodeMirror が作るので、クラスを付けられない。focus-ring のユーティリティと同じ値を書く
-  ".cm-textfield:focus-visible, .cm-button:focus-visible, .cm-panel.cm-search [name=close]:focus-visible, .cm-panel.cm-search input[type=checkbox]:focus-visible":
-    {
-      outline: "4px solid var(--fd-color-focus-outline)",
-      outlineOffset: "2px",
-      boxShadow: "0 0 0 2px var(--fd-color-focus-halo)",
-    },
+  // パネルの入力欄とボタンは CodeMirror の DOM の中にあるので、クラスを付けられない。focus-ring のユーティリティと同じ値を書く
+  ".cm-textfield:focus-visible, .cm-button:focus-visible": {
+    outline: "4px solid var(--fd-color-focus-outline)",
+    outlineOffset: "2px",
+    boxShadow: "0 0 0 2px var(--fd-color-focus-halo)",
+  },
   ".cm-button:active": { backgroundImage: "none", backgroundColor: "var(--color-surface-subtle)" },
-  ".cm-panel.cm-search [name=close]": {
-    top: "8px",
-    right: "8px",
-    width: "44px",
-    height: "44px",
-    fontSize: "var(--text-body)",
-    color: "var(--color-text)",
+  // CodeMirror の既定は、閉じるボタンを右上に重ねる。ほかのボタンと同じ並びに戻す
+  ".cm-panel.cm-search [name=close]": { position: "static", color: "var(--color-text)" },
+  ".cm-tooltip-autocomplete > ul > li": {
+    display: "flex",
+    alignItems: "center",
+    minHeight: "44px",
+    padding: "0 12px",
   },
   ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
     backgroundColor: "var(--color-primary-surface)",
@@ -150,19 +141,8 @@ const highlight = HighlightStyle.define([
 
 const guide = "var(--color-border)";
 
-// 検索と置換の帯と、読み上げの文言
+// 置換と行への移動の読み上げ、行へ移動のパネルの文言
 const phrases = EditorState.phrases.of({
-  Find: "検索",
-  Replace: "置換",
-  next: "次へ",
-  previous: "前へ",
-  all: "すべて選ぶ",
-  "match case": "大文字と小文字を区別",
-  regexp: "正規表現",
-  "by word": "単語で探す",
-  replace: "置換",
-  "replace all": "すべて置換",
-  close: "閉じる",
   "current match": "今の一致",
   "on line": "行",
   "replaced match on line $": "$ 行目の一致を置換しました",
@@ -180,9 +160,9 @@ export type CodeEditorOptions = {
 
 /**
  * プレイグラウンドのツールのエディタに共通の、CodeMirror 6 の拡張。言語の拡張は、呼ぶ側が足す。
- * 行番号、今いる行の帯、字下げの補助線、対応する括弧の強調を出し、折りたたみの印は出さない。
- * Tab のキーは字下げに使わない。キーボードで入力欄の外へ移れなくなるためである。
- * 検索と置換の帯は、Ctrl か ⌘ と F で上端に出す。帯の文言は日本語にし、見た目はトークンで組む。
+ * 行番号、アクティブ行のハイライト、インデントガイド、対応する括弧のハイライトを出し、折りたたみのガターは出さない。
+ * Tab キーでインデントする。Esc の後 2 秒の間の Tab で、エディタの外へ移る（CodeMirror の tab focus mode）。
+ * 検索と置換のパネルは、Ctrl か ⌘ と F で上端に出す。パネルは search-panel.ts が組む。
  * フォーカスの表示は持たない。呼ぶ側が、入力欄を囲む要素に `has-[.cm-focused]:focus-ring` を付ける。
  */
 export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Extension[] {
@@ -191,7 +171,7 @@ export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Exten
     highlightActiveLineGutter(),
     highlightActiveLine(),
     highlightSpecialChars(),
-    search({ top: true }),
+    search({ top: true, createPanel: createSearchPanel }),
     phrases,
     history(),
     drawSelection(),
@@ -226,8 +206,9 @@ export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Exten
         ]
       : []),
     keymap.of([
-      // 補完の一覧が開いているときだけ、Tab で確定する。閉じているときは、Tab でエディタの外へ移る
+      // 補完の一覧が開いているときは、Tab で確定する。閉じているときは、Tab でインデントする
       { key: "Tab", run: acceptCompletion },
+      indentWithTab,
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,
