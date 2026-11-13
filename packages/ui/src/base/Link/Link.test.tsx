@@ -40,6 +40,7 @@ describe("Link", () => {
     render(<Wrapped />);
     const link = screen.getByRole("link", { name: /認可コードフロー/ });
     expect(link.getClientRects().length).toBeGreaterThan(1);
+    expect(getComputedStyle(link).backgroundSize).toBe("0% 2px");
     await userEvent.hover(link);
     await expect.poll(() => getComputedStyle(link).backgroundSize).toBe("100% 2px");
   });
