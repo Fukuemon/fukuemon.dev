@@ -4,8 +4,8 @@
 墨の絵と立体の庭の場面の両方が読む、庭の配置も持つ。
 コードは React にも DOM にも依らない TypeScript で、ビルドのときに Node で動く。
 
-見た目の数値は、[トップの水墨の門と立体の庭の Design Doc](../../../../../design/features/top-garden/DesignDoc.md) にある。
-値の元は、[試作](../../../../../design/prototypes/top/README.md) である。
+見た目の数値は、[トップの水墨の門と立体の庭の Design Doc](../../../../../docs/design/features/top-garden/DesignDoc.md) にある。
+値の元は、[試作](../../../../../docs/design/prototypes/top/README.md) である。
 
 ## Structure
 
@@ -17,12 +17,14 @@
 | `ink-svg.ts` | 線を、線ごとの `path` を持つ 1 枚の SVG の文字列にする    |
 | `sign.ts`    | 署名の SVG のファイルから、HTML に置く署名の `svg` を作る |
 | `sign.svg`   | 署名の輪郭                                                |
+| `season.ts`  | 端末の日付と時刻から、季節と時間帯を返す                  |
+| `visit.ts`   | 端末で初めてトップを開いたかを返す                        |
 | `OFL.txt`    | 書体 Great Vibes のライセンスの全文                       |
 
 ## 同じ種から同じ絵ができる
 
 同じ種からは、同じ線のデータと、同じ SVG の文字列ができる。
-乱数を使う順は、試作の `design/prototypes/top/src/h-strokes.mjs` と同じにしてある。
+乱数を使う順は、試作の `docs/design/prototypes/top/src/h-strokes.mjs` と同じにしてある。
 線を足すか、消すか、並べ替えると、それより後の線がすべて変わる。
 
 今の出力は、線が 281 本、`path` が 415 本で、試作の `i-mon.html` の墨の絵と同じ文字列である。
@@ -38,7 +40,7 @@ SVG の大きさの上限は gzip で 40 KB で、ユニットテストが確認
 線（`stroke`）で描いた SVG は、字として出ない。
 試作の CSS は、署名に塗りの色だけを付けるためである。
 
-今の `sign.svg` は、書体 Great Vibes の輪郭を、試作の `design/prototypes/top/src/sign-path.py` で取り出したものである。
+今の `sign.svg` は、書体 Great Vibes の輪郭を、試作の `docs/design/prototypes/top/src/sign-path.py` で取り出したものである。
 書体のファイルは、リポジトリにもサイトにも置かない。
 
 ## License
