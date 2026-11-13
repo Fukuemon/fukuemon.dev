@@ -104,11 +104,10 @@ const theme = EditorView.theme({
     border: "1px solid var(--color-border-field)",
     borderRadius: "var(--radius-control)",
   },
-  // パネルの入力欄とボタンは CodeMirror の DOM の中にあるので、クラスを付けられない。focus-ring のユーティリティと同じ値を書く
+  // パネルの入力欄とボタンは CodeMirror の DOM の中にあるので、クラスを付けられない。focus-ring のユーティリティと同じ値を書く。packages/ui/src/tokens/theme.css の focus-ring を変えたら、ここも直す
   ".cm-textfield:focus-visible, .cm-button:focus-visible": {
-    outline: "4px solid var(--fd-color-focus-outline)",
+    outline: "2px solid var(--fd-color-focus)",
     outlineOffset: "2px",
-    boxShadow: "0 0 0 2px var(--fd-color-focus-halo)",
   },
   ".cm-button:active": { backgroundImage: "none", backgroundColor: "var(--color-surface-subtle)" },
   // CodeMirror の既定は、閉じるボタンを右上に重ねる。ほかのボタンと同じ並びに戻す
