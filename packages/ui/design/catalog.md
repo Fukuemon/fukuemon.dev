@@ -35,9 +35,10 @@
 - story は、コンポーネントの状態ごとに 1 つ置く。コンポーネントの文書のそのコンポーネントに並べた状態を、全部例にする。読み込み中とエラーのように、データで決まる状態も、ダミーのデータで作る。
 - Show code は、ビルドのときに story のソースから作ったコードを出す。
   - Button の Primary では、`const Primary = () => <Button variant="primary">保存</Button>;` が出る。
-  - `render` が `args` を読む story では、`args` の値ではなく、`args.headings` のような式のまま出る。
+  - `render` が `{...args}` で props を渡す story では、`args` の値が props に展開されて出る。
+  - `render` が `args.headings` のように `args` のプロパティを読む story では、その式のまま出る。
   - `render` の JSX で、要素の直後に続くテキストの先頭の空白は、Show code に出ない。
-  - 空白から始まるテキストは、`{" を読む。"}` のように文字列リテラルの式で書く。
+  - 要素の直後に続くテキストが空白から始まるときは、`{" を読む。"}` のように文字列リテラルの式で書く。
 - テーマは、Storybook のツールバーで「OS の設定」「ライト」「ダーク」から切り替える。
 - 全ての story で a11y のアドオン（axe）を動かし、違反を `pnpm run test:ui` の失敗にする。
 
