@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Link.stories";
 
-const { Default, Wrapped, External } = composeStories(stories);
+const { Default, Wrapped, Standalone, External } = composeStories(stories);
 
 const colorOf = (className: string) => {
   render(<span className={className} data-testid={className} />);
@@ -39,6 +39,23 @@ describe("Link", () => {
     expect(extent).toBeGreaterThan(0);
     expect(Number.parseFloat(style.marginLeft)).toBeGreaterThanOrEqual(extent);
     expect(Number.parseFloat(style.marginRight)).toBeGreaterThanOrEqual(extent);
+  });
+
+  it("文中でないリンクは左右を空けず、フォーカスの表示を隣の日付に重ねない", async () => {
+    render(<Standalone />);
+    const link = screen.getByRole("link", { name: "認可コードフローの記事" });
+    const style = getComputedStyle(link);
+    expect(style.marginLeft).toBe("0px");
+    expect(style.marginRight).toBe("0px");
+    await userEvent.tab();
+    expect(link).toHaveFocus();
+    const focused = getComputedStyle(link);
+    const extent =
+      Number.parseFloat(focused.outlineOffset) + Number.parseFloat(focused.outlineWidth);
+    const date = screen.getByText("2026-11-13");
+    expect(link.getBoundingClientRect().right + extent).toBeLessThanOrEqual(
+      date.getBoundingClientRect().left,
+    );
   });
 
   it("hover すると、折り返したリンクのどの行にも 2px の罫を引く", async () => {
