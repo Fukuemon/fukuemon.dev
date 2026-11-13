@@ -57,7 +57,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 レスポンスヘッダは `apps/web/public/_headers` に書く。
 
-- cross-origin isolation のヘッダを、`fukuemon.dev` の全体に返さない。例外は、isolation を求める実行環境を埋め込む記事の URL だけである。
+- cross-origin isolation のヘッダは、isolation を求める実行環境を埋め込む記事の URL にだけ返す。`fukuemon.dev` の全体には返さない。
   - 全体に返すと、CORP を返さない第三者のリソースが一律にブロックされる。
   - ヘッダは、該当する記事が実在してから書く。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md#5-cross-origin-isolation)

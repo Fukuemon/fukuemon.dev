@@ -6,15 +6,16 @@
 
 ## Context
 
-新しい `apps/web` は、全てのページを `packages/ui` のトークンとコンポーネントで組む。
+`apps/web` のサイトの共通の CSS で、preflight を読むかと、トークンをどこから読むかを決める必要がある。
 
-- ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く](0029-repository-layout-like-buddy.md)
+新しい `apps/web` は、全てのページを `packages/ui` のトークンとコンポーネントで組む。  
+ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く](0029-repository-layout-like-buddy.md)
 
-ADR-0010 は、古いサイトの CSS について次の 2 つを決めている。
+ADR-0010 は、古いサイトの CSS について次の 2 つを決めている。  
+ADR-0010: [Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す](0010-tailwind-as-styling-base.md)
 
-- ADR-0010: [Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す](0010-tailwind-as-styling-base.md)
 - preflight を読み込まない。古いサイトの本文の段落の間隔が、UA のデフォルトの `margin-block: 1em` に依存していたためである。
-- トークンを `@theme static` に置く。挿絵の SVG が `fill="var(--color-wood-1)"` で色を参照し、Tailwind の走査に映らない変数が出力されなくなるためである。
+- トークンを `@theme static` に置く。`static` を付けないと、ユーティリティから参照されない変数が出力されず、挿絵の SVG が `fill="var(--color-wood-1)"` で参照する色が消えるためである。
 
 今の `packages/ui` は、次の形になっている。
 
@@ -24,7 +25,7 @@ ADR-0010 は、古いサイトの CSS について次の 2 つを決めている
 - 挿絵の SVG は、`fill="var(--fd-color-surface)"` のように、セマンティックトークンの素のカスタムプロパティを参照する。
 - カタログ（`packages/ui/.storybook/preview.css`）は、`@import "tailwindcss"` で preflight を読み、コンポーネントを preflight の上で描いている。
 
-古いサイトの本文の CSS と挿絵の CSS は、`apps/web` と一緒に消した。
+古いサイトの本文の CSS と挿絵の CSS は、リポジトリに無い。
 
 ## Decision
 
@@ -35,15 +36,15 @@ ADR-0010 の Decision の「preflight を読み込まない」と「トークン
 `apps/web` のサイトの共通の CSS は、`@import "tailwindcss"` で preflight を読む。  
 層の順は、Tailwind CSS のデフォルトの `theme`、`base`、`components`、`utilities` にする。
 
-- `packages/ui` のコンポーネントは、カタログで preflight の上で描いている。サイトで preflight を外すと、カタログと同じ見た目にならない。
-- preflight を外す理由だった古いサイトの本文の CSS は、もう無い。
+- カタログは、`packages/ui` のコンポーネントを preflight の上で描く。サイトで preflight を外すと、カタログと同じ見た目にならない。
+- preflight を外す理由だった古いサイトの本文の CSS は、リポジトリに無い。
 - 記事の本文の段落の間隔は、記事のページを作るときに、`packages/ui` のトークンで指定する。
 
 ### 2. `@theme static` を使わない
 
 サイトの共通の CSS は、`packages/ui` の `theme.css` をそのまま読み、`@theme static` を書かない。
 
-- トークンの値は、`primitive.css` と `semantic.css` の `:root` に素のカスタムプロパティとして出る。Tailwind CSS の走査に映らない変数も消えない。
+- トークンの値は、`primitive.css` と `semantic.css` の `:root` に素のカスタムプロパティとして出る。ユーティリティから参照されない変数も出力される。
 - `@theme static` を求めていた Expressive Code の `styleOverrides` は、まだ無い。
 
 ADR-0010 のほかの Decision（Tailwind CSS v4 を採り、コンポーネントの CSS を utility へ移す、`@utility` にしない、基準値と状態の上書きを同じ層に置く、CSS に残すもの）は変えない。
@@ -61,7 +62,7 @@ ADR-0010 のほかの Decision（Tailwind CSS v4 を採り、コンポーネン�
 ### Positive
 
 - サイトとカタログで、同じコンポーネントが同じ見た目になる。
-- サイトの共通の CSS が、`packages/ui` の 2 つのファイルを読むだけになる。
+- サイトの共通の CSS が、`packages/ui` の `fonts.css` と `theme.css` を読むだけになる。
 
 ### Negative
 

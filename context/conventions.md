@@ -89,16 +89,16 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 ## Styling
 
 `packages/ui` のコンポーネントと、`packages/ui` で組む画面は、[packages/ui/DESIGN.md](../packages/ui/DESIGN.md) と、そこから指す 3 つの文書の規則に従う。  
-この節には、`apps/web` のスタイリングの規則のうち、`packages/ui` の文書に無いものを書く。
+このセクションには、`apps/web` のスタイリングの規則のうち、`packages/ui` の文書に無いものを書く。
 
-層の順とトークンの層は [デザインシステム（packages/ui）の Design Doc の「トークンの層」](../packages/ui/DesignDoc.md#トークンの層) にある。
+トークンの層は [デザインシステム（packages/ui）の Design Doc の「トークンの層」](../packages/ui/DesignDoc.md#トークンの層) に、層の順は [ADR-0055](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md#1-preflight-を読む) にある。
 
 ### サイトの共通の CSS
 
 - サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
 - `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css` と `theme.css` を読む。カタログの `preview.css` と同じ形にする。
   - ADR-0055: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md)
-- `@theme static` を書かない。トークンの値は、`packages/ui` の `:root` の素のカスタムプロパティとして出る。
+- `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
 - 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
 - `scroll-padding-block-start` は、画面の上に固定のヘッダを置くときに、ヘッダの高さに合わせて決める。
 
@@ -134,16 +134,16 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 React の誤りのうち、lint で止まるものは Oxlint の規則に任せる。  
 有効にしている規則は `oxlint.config.ts` にある。  
-この節には、lint で止まらない書き方を書く。
+このセクションには、lint で止まらない書き方を書く。
 
 - props が変わったときに state を初期の値に戻すのは、`key` で行う。Effect の中で `setState` を呼んで戻さない。
 - 利用者の操作で起きる処理は、イベントハンドラに書く。Effect に書かない。
 - 外部の store を購読するときは、`useSyncExternalStore` で書く。
-- Effect の中で、最新の props を読むだけの処理は、`useEffectEvent` に分ける。依存の配列に入れて、Effect を張り直させない。
+- Effect の中で、最新の props を読むだけの処理は、`useEffectEvent` に分ける。依存の配列に入れると Effect が再実行されるので、入れない。
 - 端末の値（`localStorage`、端末の日付、画面の幅）で描く island は、次のどちらかで書く。
   - `useSyncExternalStore` の 3 つ目の引数に、サーバーで描くときの値を渡す。
   - `client:only` で置き、サーバーで描かない。
-- マウントの後に Effect で `setState` を呼んで描き直す形を使わない。サーバーで描いた HTML と 1 度目の描画が食い違い、画面がちらつく。
+- マウントの後に Effect で `setState` を呼んで描き直す形を使わない。1 度目の描画の後に端末の値で描き直すので、画面がちらつく。
 
 ## Shared Configuration
 

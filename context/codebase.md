@@ -72,8 +72,11 @@ entry を足すときの注意は [conventions.md](conventions.md#shared-configu
   - `features/` は、`components/`、`lib/`、同じ feature の中を参照してよい。
   - `components/` は、`lib/` を参照してよい。
   - `lib/` は、`packages/` だけを参照してよい。
-  - チェックは Oxlint が行う。feature どうしの参照は、エイリアス（`~/features/`）と相対のパスの両方を止める。`lib/` から `pages/` と `layouts/` への参照は、Oxlint が止めない。
-  - `oxlint.config.ts` は、`apps/web/src/features/` の下のディレクトリを読み、feature ごとの override を作る。feature を足したときに、設定を直さなくてよい。`features/` が無い間は feature ごとの override を作らず、`apps/web/src/` が無いときは設定の読み込みを失敗させる。
+  - チェックは Oxlint が行う。
+  - feature どうしの参照は、エイリアス（`~/features/`）と相対のパスの両方を止める。
+  - `lib/` から `pages/` と `layouts/` への参照は、Oxlint が止めない。
+  - `oxlint.config.ts` は、`apps/web/src/features/` の下のディレクトリを読み、feature ごとの override を作る。feature を足したときに、設定を直さなくてよい。
+  - `features/` が無い間は feature ごとの override を作らず、`apps/web/src/` が無いときは設定の読み込みを失敗させる。
 
 規約 5 を守るため、次のように書く。
 
