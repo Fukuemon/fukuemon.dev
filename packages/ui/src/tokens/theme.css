@@ -136,7 +136,7 @@
 
   /* 読み込み中の印。罫が左から伸びて右へ抜ける。1 周 1600ms */
   --animate-loading: fd-loading-stroke 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  /* 罫を左から 1 回引く。選んだタブ、検索の欄のフォーカス、ダイアログの上端で使う */
+  /* 罫を左から 1 回引く。選んだタブ、検索の欄のフォーカス、ダイアログの上端、ヘッダーのナビの今いるページで使う */
   --animate-stroke: fd-draw-stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
   /* 重なる面が、濃度を上げて出る */
   --animate-fade-in: fd-fade-in 150ms ease-out;
