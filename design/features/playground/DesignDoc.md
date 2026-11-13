@@ -59,7 +59,8 @@ ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツ�
 - 記事の iframe と、トップレベルで開くページは、同じ URL を使う。ページは、`window.self !== window.top` で埋め込みかどうかを判定し、埋め込みのときは、ページのヘッダを出さず、AI のエージェントからの操作を登録しない。
 - ペインの並べ方は、ページの幅で決める。
 
-React Compiler を、`apps/playground` のビルドにだけ入れる。`apps/playground` のコードに、`memo`、`useMemo`、`useCallback` を書かない。  
+ビルドは、`vite build` で行う。  
+React Compiler を、`apps/playground` のビルドにだけ入れる。`apps/playground` のコードに、`memo`、`useMemo`、`useCallback` を書かない。書くのは、計測して遅いと分かったときだけにする。  
 ADR-0047: [React Compiler を、`apps/playground` にだけ入れる](../../../adr/0047-react-compiler-in-playground.md)
 
 ### ディレクトリ
@@ -108,6 +109,7 @@ flowchart TB
   node --> console
   node --> project
   node --> workspace
+  node --> database
   node --> ui
   sql --> console
   sql --> database
@@ -125,7 +127,7 @@ flowchart TB
   workspace --> project
 ```
 
-- `sql-console/`、`node-runtime/`、`workspace/` が、`database/` と `project/` から import するのは、型だけである。
+- `src/node/`、`sql-console/`、`node-runtime/` が `database/` から import するのは、型だけである。`node-runtime/` と `workspace/` が `project/` から import するのも、型だけである。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - Oxlint の `no-restricted-imports` が止める import は、次の 2 つ。
   - `src/node-runtime/webcontainer/` のほかからの、`@webcontainer/api` の import
@@ -215,7 +217,8 @@ SQL だけを動かすツールと、Go を動かすツールは、`NodeRuntime`
 - `getSnapshot` は、記録が変わっていない間、同じ参照を返す。
 - プロセスの出力は、`OutputLog` で公開する。端末のペインは、Effect の中で、`read` の結果を端末のエンジンに書いてから、`subscribe` で追加の出力を書く。
 - preload は、記録の行の行頭に、固定のプレフィックスを付ける。`node-runtime/` の直下（`webcontainer/` の外）の処理が、実装から受けたそのままの出力から、プレフィックスの付いた行を抜き出して、store に入れる。`OutputLog` には、抜き出した後の出力を渡す。
-- プレフィックスは、HTTP の記録、コンソールの記録、DB のプロセスの応答の 3 種類である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
+- プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
+  - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](../../../adr/0054-record-http-and-console-with-prefixed-lines.md)
 - store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。値は、実装のタスクで測って変えてよい。
 
 ### React のツリーと状態
@@ -269,8 +272,9 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 
 - 埋め込みの ID は、記事の `contentId` と、記事の中の埋め込みの名前の組である（`<contentId>/<埋め込みの名前>`）。
 - 運営者は、プロジェクトを、記事のディレクトリの下に置く（`apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/`）。設定は、同じディレクトリの `playground.json` に書く。
-- `apps/web` のビルドが、プロジェクトごとに、1 つの JSON を出力する。`fukuemon.dev` は、JSON のパスに、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
+- `apps/web` のビルドが、プロジェクトごとに、1 つの JSON を、`https://fukuemon.dev/playground-projects/<埋め込みの ID>.json` に出力する。`fukuemon.dev` は、`/playground-projects/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
 - ツールのページは、埋め込みの ID から JSON の URL を組み立てて、`fetch` する。
+- JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。
 
 JSON は、次の値を持つ。
@@ -291,6 +295,7 @@ JSON は、次の値を持つ。
 ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](../../../adr/0050-save-visitor-files-in-indexeddb.md)
 
 - キーは、ツールの名前と、埋め込みの ID の組である。デフォルトのプロジェクトは、固定のキーを使う。
+- SQL だけを動かすツールは、入力欄の SQL を保存する。Go を動かすツールは、ファイルを保存する。次の 3 つの項目は、Node の実行環境の保存である。
 - レコードは、ファイルのパスと中身の一覧、保存した時刻、初期ファイルのバージョンを持つ。
 - `src/node/` が、`files.changes` の通知を受けて、`files.readAll` の結果を `workspace/` に渡す。`node_modules` は、`readAll` に含めない。
 - 1 つのファイルが 1 MB を超えるものと、テキストとして読めないものは、保存しない。
@@ -342,7 +347,7 @@ sequenceDiagram
   end
 ```
 
-- `bootNodeRuntime` は、DB を使うプロジェクトのときに、DB のプロセスの依存を入れ、DB のプロセスを起動し、初期データの SQL を実行してから、Promise を解決する。
+- `bootNodeRuntime` は、DB を使うプロジェクトのときに、DB のプロセスの依存を入れ、DB のプロセスを起動し、初期データの SQL を実行してから、Promise を解決する。起動の 30 秒は、この Promise が解決するまでの時間に掛ける。
 - プレビューの iframe が 30 秒で読み込まれないときは、`PreviewPane` が、プレビューのペインにだけ、動かせない理由を出す。
 - 訪問者は、端末で、WebContainers のシェルを制限なしで使う。
 - 「実行環境を起動し直す」の操作は、いつでも使える。
@@ -352,9 +357,8 @@ sequenceDiagram
 - 実行環境は、preload、DB のプロセスのスクリプトと依存、待ち受けたポートの URL を書くファイルを、`/tmp` の下の、実行環境のディレクトリに置く。
 - 実行環境は、起動する全てのプロセスとシェルの環境変数に、次の値を渡す。
   - `NODE_OPTIONS`: preload ごとの `--require <絶対パス>`。HTTP の流れとコンソールを記録する preload は、いつも追加する。Unix ドメインソケットに接続している間はプロセスを終了させない preload は、DB を使うプロジェクトのときだけ追加する。
-  - 待ち受けたポートの URL を書くファイルのパス。
+  - `PLAYGROUND_PORTS_FILE`: 待ち受けたポートの URL を書くファイルのパス。
   - DB を使うプロジェクトのときは、`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`。
-- 環境変数の名前と、プレフィックスの文字列は、実装のタスクで決める。
 
 ### SQL
 

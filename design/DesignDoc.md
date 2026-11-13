@@ -160,15 +160,16 @@ ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-si
 `fukuemon.dev` の URL は次のとおり。  
 ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-series.md)
 
-| URL                         | 中身                                                         |
-| --------------------------- | ------------------------------------------------------------ |
-| `/`                         | トップ。プロフィールを兼ねる                                 |
-| `/articles`                 | 記事の一覧                                                   |
-| `/articles/<slug>`          | シリーズに入れない記事                                       |
-| `/articles/<series>/<slug>` | シリーズの中の記事                                           |
-| `/series/<series>`          | シリーズのページ。タイトル、説明、読む順の記事の一覧         |
-| `/playground`               | プレイグラウンドの一覧。ツールは、`play.fukuemon.dev` に置く |
-| `/rss.xml`                  | RSS                                                          |
+| URL                                         | 中身                                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `/`                                         | トップ。プロフィールを兼ねる                                                     |
+| `/articles`                                 | 記事の一覧                                                                       |
+| `/articles/<slug>`                          | シリーズに入れない記事                                                           |
+| `/articles/<series>/<slug>`                 | シリーズの中の記事                                                               |
+| `/series/<series>`                          | シリーズのページ。タイトル、説明、読む順の記事の一覧                             |
+| `/playground`                               | プレイグラウンドの一覧。ツールは、`play.fukuemon.dev` に置く                     |
+| `/playground-projects/<埋め込みの ID>.json` | 記事に埋め込む実行環境のプロジェクト。`play.fukuemon.dev` のツールのページが読む |
+| `/rss.xml`                                  | RSS                                                                              |
 
 描画の実装の詳細を URL に含めない。  
 URL の規約は [context/codebase.md](../context/codebase.md#url) にある。

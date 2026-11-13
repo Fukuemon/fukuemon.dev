@@ -6,19 +6,19 @@
 
 ## Context
 
-実行環境が追加するファイル（preload、待ち受けたポートの URL を書くファイル）の置き場と、preload を訪問者のプロセスに追加する方法を決める必要がある。
+実行環境が追加するファイル（preload、DB のプロセスのファイル、待ち受けたポートの URL を書くファイル）の置き場と、preload を訪問者のプロセスに追加する方法を決める必要がある。
 
 - 実行環境は、待ち受けたポートごとの URL をファイルに書き、訪問者のコードはそのファイルを読む。
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
 - HTTP の流れとコンソールを記録する preload は、実行環境が追加する。訪問者が書く起動のコマンドには、現れない。
-  - ADR-0035: [HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する](0035-record-http-and-console-in-runtime.md)
+  - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](0054-record-http-and-console-with-prefixed-lines.md)
 - 訪問者の作業ディレクトリの全体（`node_modules` を除く）を、IndexedDB に保存する。
   - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
 - 訪問者は、シェルを制限なしで使う。
   - ADR-0051: [Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす](0051-node-runtime-boot-and-commands.md)
 - Node は、環境変数 `NODE_OPTIONS` の `--require` で、プロセスの起動のときにモジュールを読み込む。
   - 出典: [Node.js: Command-line API](https://nodejs.org/api/cli.html#node_optionsoptions)
-- WebContainers の API の `mount` は、作業ディレクトリの中に書く。
+- WebContainers の API の `mount` は、渡したファイルを、作業ディレクトリの中に書く。
 
 ## Decision
 
@@ -26,7 +26,7 @@
 
 実行環境が追加するファイルは、訪問者の作業ディレクトリの外（`/tmp` の下の、実行環境のディレクトリ）に置く。
 
-- 対象は、preload のファイルと、待ち受けたポートの URL を書くファイルである。
+- 対象は、preload のファイル、DB のプロセスのスクリプトと依存、待ち受けたポートの URL を書くファイルである。
 - 訪問者のファイルのツリーと、作業ディレクトリには出ない。保存の対象にも入らない。
 - 待ち受けたポートの URL を書くファイルのパスは、環境変数で渡す。記事のコードは、環境変数からパスを読む。
 
@@ -41,12 +41,17 @@
 
 `NODE_OPTIONS` で渡す理由は、訪問者がシェルで打ったコマンドと、`npm run` が起動する `node` にも、preload が追加されるためである。
 
+## 承認の条件
+
+- 待ち受けたポートの URL を書くファイルを、`/tmp` の下に置いて、訪問者のコードから読めることを確認している。
+- ファイルを `/tmp` の下に置く手順（WebContainers の API で直接書くか、作業ディレクトリに書いてから移すか）を決めている。
+
 ## Verification
 
 WebContainers 1.6.4 の中の Node 24.22.2 で測った。  
 マシンは Apple M2、ブラウザは Playwright 1.65.0 の Chromium、WebKit、Firefox（headless）、配信は `localhost` である。実機のブラウザは未確認である。
 
-preload は、Unix ドメインソケットに接続している間はプロセスを終了させないもの（ADR-0053）と、HTTP の流れを記録するもの（ADR-0035）の 2 つを使った。  
+preload は、Unix ドメインソケットに接続している間はプロセスを終了させないもの（ADR-0053）と、HTTP の流れを記録するもの（ADR-0054）の 2 つを使った。  
 短いスクリプトは、`pg` の `Pool` か `Client` で、クエリを 3 つ実行して `end()` を呼ぶ。
 
 | 起動の仕方                                           | `NODE_OPTIONS`                      | Chromium     | WebKit                | Firefox      |

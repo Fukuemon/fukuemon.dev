@@ -27,7 +27,7 @@
 Astro のページに island を置く形にしない。
 
 - ツールごとに、HTML のエントリーポイントを分ける。1 つのツールのページは、1 つの React のツリーになる。
-- ビルドは、`packages/ui` と同じ Vite+（`vp build`）で行う。
+- ビルドは、`vite build` で行う。Vite と `@vitejs/plugin-react` の設定は、`packages/ui` の Storybook とテストと同じものを使う。
 - 画面は、`@fukuemon/ui` のコンポーネントとトークンで組む。
 
 理由は、1 つのページが 1 つの React のツリーになり、ペインの間の状態を props と Context で渡せることである。
@@ -55,7 +55,7 @@ Astro のページに island を置く形にしない。
 
 ## Verification
 
-使い捨てのアプリを、workspace の中に作ってビルドした。  
+使い捨てのアプリを、workspace の中に作ってビルドした。ビルドは、Vite+ の `vp build` で流した。`vite build` では、流していない。  
 Vite+ 1.4.0、`@vitejs/plugin-react` 6.3.0、`@tailwindcss/vite` 4.3.3、React 19.2.8 である。
 
 - `build.rollupOptions.input` に、`node/index.html`、`sql/index.html`、`go/index.html` を渡した。ビルドは、`dist/node/index.html`、`dist/sql/index.html`、`dist/go/index.html` を出力した。

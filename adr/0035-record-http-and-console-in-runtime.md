@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+ADR-0054 に置換
 
 ## Context
 
