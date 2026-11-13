@@ -117,6 +117,6 @@ gitGraph
 
 - [infra/README.md](infra/README.md): Terraform で Cloudflare の基盤を作る手順と、apply の手順
 - [packages/ui/README.md](packages/ui/README.md): Storybook の起動、デザインシステムのチェック、トークンの生成、カタログの配信
-- [design/prototypes/top/README.md](docs/design/prototypes/top/README.md): トップの試作を開く手順と、録画と測定を作り直す手順
+- [docs/design/prototypes/top/README.md](docs/design/prototypes/top/README.md): トップの試作を開く手順と、録画と測定を作り直す手順
 
 配信してよい条件と、credential の置き場は、[context/operations.md](context/operations.md) にある。

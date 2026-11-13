@@ -5,8 +5,6 @@ description: テストの種類ごとに保証すること、カバレッジを�
 status: draft
 governs:
   - packages/content-model/
-  - apps/web/vitest.config.ts
-  - e2e/
 verified_commit: ab2da87
 ---
 
@@ -40,7 +38,8 @@ Astro のコンポーネントは静的な HTML を出すだけで、分岐は `
 ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-model-independence.md)
 
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象のモジュールは、まだ無い。
+対象のモジュールは、まだ無い。  
+最初のモジュールを足すときに、`apps/web` の `test:cov` の script と `vitest.config.ts` を足す。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  

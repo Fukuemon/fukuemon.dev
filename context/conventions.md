@@ -49,7 +49,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 変更の経緯と issue の番号。コミットと ADR が持つ。
 - spec と issue の引用。spec は issue を閉じるときに消える作業文書で、リンクが宙に浮く。
 
-理由を残すときのリンク先は、`adr/`、`context/`、feature の Design Doc に限る。
+理由を残すときのリンク先は、`docs/adr/`、`context/`、feature の Design Doc に限る。
 
 ## Documents
 

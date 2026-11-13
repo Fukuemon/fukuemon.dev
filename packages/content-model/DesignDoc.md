@@ -5,8 +5,6 @@ description: 記事とハンズオンに共通する schema、安定識別子 co
 status: stable
 governs:
   - packages/content-model/
-  - apps/web/src/content.config.ts
-  - apps/web/src/lib/content/
 verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
@@ -277,11 +275,7 @@ frontmatter は種別を持たない。
 - `packages/content-model/src/graph.ts`: `buildContentGraph()`
 - `packages/content-model/src/steps.ts`: 手順の型 `Step`
 - `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
-- `apps/web/src/content.config.ts`: collection の定義
-- `apps/web/src/lib/content/index.ts`: ページが `astro:content` の代わりに呼ぶ関数
-  - `ContentRef` を返す `listContent()`、`getContent()`、`getRelated()`
-  - entry を返す `listArticleEntries()`、`listLabEntries()`、`listPlaygrounds()`
-  - 本文を描画する `renderEntry()`、`renderPlayground()`
+- loader との結線（`apps/web/src/content.config.ts` と `apps/web/src/lib/content/`）は、まだ無い。
   - 公開するかを判定する `isPublic()`
 
 `isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
