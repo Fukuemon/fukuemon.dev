@@ -32,7 +32,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - `apps/playground` は、Vite の React のアプリで、画面の全体を React で描く。React Compiler を、`apps/playground` のビルドにだけ入れる。
   - ADR-0046: [プレイグラウンドのアプリの構成](../adr/0046-playground-as-vite-react-app.md)
   - ADR-0047: [React Compiler を入れる範囲](../adr/0047-react-compiler-in-playground.md)
-- `@webcontainer/api` は、`apps/playground` の Node の実行環境だけに使う。import できるディレクトリは、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#ディレクトリ) にある。
+- `@webcontainer/api` は、Node の実行環境の package（`@fukuemon/node-runtime`）だけに使う。import できるディレクトリは、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#ディレクトリ) にある。
 - Tailwind CSS と `@tailwindcss/vite` は、CSS のスタイリングの基盤として使う。
   - preflight は読まない。
   - トークンは `@theme static` に置き、Expressive Code の `styleOverrides` から参照できる素のカスタムプロパティとして残す。
@@ -46,7 +46,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - バージョンは範囲で書かず、1 つに固定する。上げるときは、図の見た目を撮って比べる。
   - ADR-0016: [mermaid の図を、ビルドでも島でも Pele で SVG にする](../adr/0016-render-mermaid-with-pele.md)
 - `pagefind` は、全文検索の索引を `astro build` の後に作る。
-- `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。`apps/playground` では、SQL だけを動かすツールと、Node の実行環境の中の DB のプロセスに使う。
+- `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。プレイグラウンドでは、`@fukuemon/sql-runtime` が、SQL だけを動かすツールと、Node の実行環境の中の DB のプロセスに使う。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。

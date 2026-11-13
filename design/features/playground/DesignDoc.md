@@ -66,7 +66,7 @@ ADR-0047: [React Compiler を、`apps/playground` にだけ入れる](../../../a
 ### ディレクトリ
 
 `apps/playground/src/` は、関心ごとのディレクトリで分ける。実装の種類のディレクトリ（`components/`、`hooks/`、`utils/`）を作らない。  
-ADR-0048: [Node の実行環境のモジュールを `apps/playground` の中に置き、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する](../../../adr/0048-node-runtime-interface-and-stores.md)
+ADR-0048: [Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する](../../../adr/0048-node-runtime-interface-and-stores.md)
 
 ```text
 apps/playground/
@@ -78,25 +78,37 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ
     go/                   Go を動かすツールのページ
     sql-console/          SQL の入力欄と、結果の表
-    node-runtime/         NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
-      webcontainer/       @webcontainer/api を import する実装。WebContainers に依る処理
-      guest/              実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
-    database/             SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を単体で動かす実装
-    go-runner/            GoRunner の型、Yaegi の読み込みと実行
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
+
+packages/
+  sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
+  node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
+    webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
+    guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
+  go-runtime/src/         GoRunner の型、Yaegi の読み込みと実行
 ```
 
-- キャンバスとスライドのエディタは、追加するときに、`src/` の同じ階層に並べる。
+- キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
+- 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
+  - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
+  - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境。`@fukuemon/sql-runtime` に依存する。
+  - `@fukuemon/go-runtime`（`packages/go-runtime`）: Go のコードを実行する処理。
+  - 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。`@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
+  - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。
+- この文書では、`node-runtime/` は `packages/node-runtime/src/` を、`webcontainer/` と `guest/` はその下のディレクトリを指す。
+- `@fukuemon/sql-runtime` は、エントリーポイントを 2 つに分ける。
+  - 型と、PGlite で SQL を実行して結果の形にする関数。PGlite からは、型だけを import する。
+  - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
 - `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
-- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`apps/playground` の依存と同じにする。テストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
+- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。テストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
   - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
 
-次の図は、ディレクトリの間で許す import の向きを示す。矢印の無い組は、import しない。
+次の図は、`apps/playground/src/` のディレクトリと、package の間で許す import の向きを示す。矢印の無い組は、import しない。
 
 ```mermaid
 flowchart TB
@@ -104,9 +116,9 @@ flowchart TB
   sql["src/sql"]
   go["src/go"]
   console["sql-console"]
-  runtime["node-runtime"]
-  database["database"]
-  runner["go-runner"]
+  runtime["@fukuemon/node-runtime"]
+  database["@fukuemon/sql-runtime"]
+  runner["@fukuemon/go-runtime"]
   project["project"]
   workspace["workspace"]
   ui["@fukuemon/ui"]
@@ -134,14 +146,15 @@ flowchart TB
   project --> pp
 ```
 
-- `src/node/`、`sql-console/`、`node-runtime/` が `database/` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
-  - `guest/` の DB のプロセスのスクリプトだけは、`database/` の、PGlite で SQL を実行して結果の形にする関数を import する。この関数は、PGlite から型だけを import するファイルに置く。このファイルを、ブラウザのコードの tsconfig と、`guest/` の tsconfig の両方の対象に入れる。
+- `src/node/`、`sql-console/`、`node-runtime/` が `@fukuemon/sql-runtime` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
+  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数を import する。`guest/` は、Web Worker で動かす実装のエントリーポイントを import しない。
 - `node-runtime/` は、`project/` を import しない。`BootOptions` は、プロジェクトの型を使わない。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
+- `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` は、依存に入れない。
 - Oxlint の `no-restricted-imports` が止める import は、次の 2 つ。
-  - `src/node-runtime/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `src/node/`、`src/sql/`、`src/go/` の間の import
+  - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
 
 ### NodeRuntime
 
@@ -227,7 +240,7 @@ type OutputLog = {
   - `files.readAll` には、保存のときと同じ `exclude` と `maxBytes` を渡す。`text` が `null` のファイルは、新しいインスタンスに渡さない。
   - ページを開いたときに読んだ、保存したファイルは使わない。IndexedDB を読めないときも、訪問者が変えたファイルで起動する。
 
-SQL だけを動かすツールと、Go を動かすツールは、`NodeRuntime` を実装しない。それぞれ、`SqlDatabase`（`database/`）と `GoRunner`（`go-runner/`）を持つ。
+SQL だけを動かすツールと、Go を動かすツールは、`NodeRuntime` を実装しない。それぞれ、`SqlDatabase`（`@fukuemon/sql-runtime`）と `GoRunner`（`@fukuemon/go-runtime`）を持つ。
 
 ### `webcontainer/` が実装する型
 
@@ -463,7 +476,7 @@ sequenceDiagram
 SQL の画面（`sql-console/`）は、`SqlDatabase` に SQL を渡し、結果を表示する。  
 `SqlDatabase` の実装は 2 つである。
 
-- SQL だけを動かすツール: ツールのページの PGlite（`database/`）。
+- SQL だけを動かすツール: Web Worker で動かす PGlite（`@fukuemon/sql-runtime`）。ツールのページのメインスレッドでは、SQL を実行しない。
 - DB を使うプロジェクトの Node の実行環境: DB のプロセスの標準入出力（`node-runtime/`）。
 
 ```ts
@@ -492,9 +505,9 @@ type SqlResult = {
 - 1 つの結果が 100,000 行を超えるときは、`rows` に先頭の 100,000 行を入れ、`totalRows` に全体の行の数を、`truncated` に `true` を入れる。SQL の画面は、切ったことと、全体の行の数を表示する。
 - SQL の画面は、結果をページ送りで表示する。1 ページの行の数は、訪問者が 10、50、100、500 から選ぶ。デフォルトは 100 である。
 - `run` は、SQL の失敗でも、DB が止まっているときでも、Promise を失敗させず、`error` を持つ値を返す。
-- SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`database/` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
+- SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`@fukuemon/sql-runtime` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
   - `guest/` の DB のプロセスのスクリプトは、この関数を import し、ビルドで 1 つのファイルに束ねる。PGlite と `pglite-socket` は束ねず、実行環境の中で `npm install` する。
-  - 束ねる処理は、Vite のビルドの中で行う。束ねた結果は、コミットしない。
+  - 束ねる処理は、`apps/playground` の Vite のビルドの中で行う。束ねた結果は、コミットしない。
   - 束ねられないときは、関数を `guest/` にコピーし、同じテストの入力で、2 つの実装をテストする。束ねられるかは、実装のタスクで確認する。
 
 DB のプロセスの標準入出力では、次の形式で送る。
@@ -513,6 +526,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - `apps/playground/`: アプリのコード。Worker の設定と、レスポンスヘッダ（`/node/*` の cross-origin isolation のヘッダ、`/` のリダイレクト）を持つ。
 - `apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/`: 運営者が書くプロジェクト。`playground.json` と、初期ファイルを置く。
 - `packages/playground-project/`: プロジェクトの JSON と、`playground.json` の型と schema。
+- `packages/sql-runtime/`、`packages/node-runtime/`、`packages/go-runtime/`: 実行環境ごとの処理。
 
 ### 読む値
 
@@ -521,5 +535,10 @@ DB のプロセスの標準入出力では、次の形式で送る。
 
 ### 動くチェック
 
-- Oxlint の `no-restricted-imports`: `@webcontainer/api` の import と、`src/node/`、`src/sql/`、`src/go/` の間の import を止める。
+- Oxlint の `no-restricted-imports`: 次の 2 つの import を止める。
+  - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
+- package の依存の宣言と knip: 次の 2 つを確認する。
+  - `apps/playground` が、`@webcontainer/api` を import しないこと
+  - 実行環境の 3 つの package が、React と `@fukuemon/ui` に依存しないこと
 - `apps/web` のビルド: `@fukuemon/playground-project` の schema で `playground.json` を検証する。`tool` が `node` のプロジェクトを埋め込む記事の URL を、`_headers` に書く。

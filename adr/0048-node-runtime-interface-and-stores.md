@@ -1,4 +1,4 @@
-# ADR-0048: Node の実行環境のモジュールを `apps/playground` の中に置き、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する
+# ADR-0048: Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する
 
 ## Status
 
@@ -19,7 +19,7 @@
 - React は、外部の store の購読を、`useSyncExternalStore` で書くよう勧めている。Effect の中で `setState` を呼んで値を写す形を、勧めていない。
   - 出典: [useSyncExternalStore（react.dev）](https://react.dev/reference/react/useSyncExternalStore)
   - 出典: [You Might Not Need an Effect（react.dev）](https://react.dev/learn/you-might-not-need-an-effect)
-- package を切り出すのは、2 つ以上の消費者が実在するか、消費する側と別の理由で変わるときである。
+- package を切り出すのは、2 つ以上の消費者が実在するか、消費する側と別の理由で変わるときである。消費者が 1 つでも、自分のバージョン、自分のテスト、自分の理由で変わるものは、package にする。
   - [context/codebase.md](../context/codebase.md#packages)
 - `packages/ui` の Case は、表示に要る値を props で受け取る。`PreviewFrame` は iframe を作らず、呼ぶ側が作る。
 
@@ -45,20 +45,27 @@ SQL だけを動かすツールと、Go を動かすツールは、それぞれ�
 
 ### 3. モジュールの置き場
 
-実行環境のモジュールは、package にせず、`apps/playground/src/node-runtime/` に置く。
+実行環境の処理は、実行環境ごとの package に置く。
 
-- `@webcontainer/api` を import できるのは、`src/node-runtime/webcontainer/` だけにする。Oxlint の `no-restricted-imports` で止める。
-- `node-runtime/` の直下と、`webcontainer/` の間も、型で分ける。WebContainers に依る処理は、`webcontainer/` に置く。
+- Node の実行環境は、`@fukuemon/node-runtime`（`packages/node-runtime`）に置く。
+- Go のコードを実行する処理は、`@fukuemon/go-runtime`（`packages/go-runtime`）に置く。
+- PGlite で SQL を実行する処理は、`@fukuemon/sql-runtime`（`packages/sql-runtime`）に置く。
+  - ADR-0053: [DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る](0053-pglite-database-in-playground.md)
+- `@fukuemon/node-runtime` は、`@fukuemon/sql-runtime` に依存する。逆の向きの依存は無い。
+- 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
+- `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけにする。`apps/playground` は、依存に入れない。
+- `@fukuemon/node-runtime` の中で、`@webcontainer/api` を import できるのは、`src/webcontainer/` だけにする。Oxlint の `no-restricted-imports` で止める。
+- `node-runtime/`（`packages/node-runtime/src/`）の直下と、`webcontainer/` の間も、型で分ける。WebContainers に依る処理は、`webcontainer/` に置く。
   - 動かせるかの判定、環境変数の組み立て、プレビューの iframe の属性
   - プレビューからのメッセージの origin の確認、実行環境の中の Node が動かすファイルを置く処理
   - 型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#webcontainer-が実装する型) にある。
-- `node-runtime/` が公開する起動の関数は 1 つにする。起動の Promise を埋め込みの ID ごとに持つ処理は、ツールのページのディレクトリ（`src/node/`）に置く。
+- `@fukuemon/node-runtime` が公開する起動の関数は 1 つにする。起動の Promise を埋め込みの ID ごとに持つ処理は、`apps/playground` の、ツールのページのディレクトリ（`src/node/`）に置く。
 - `apps/playground/src/` は、関心ごとのディレクトリで分ける。実装の種類のディレクトリ（`components/`、`hooks/`、`utils/`）を作らない。
 - ツールのページのディレクトリ（`src/node/`、`src/sql/`、`src/go/`）は、互いに import しない。Oxlint の `no-restricted-imports` で止める。
 - そのほかのディレクトリの間の import の向きは、Design Doc に書き、lint では止めない。
 
-package にしない理由は、インターフェースの型と store が、画面の要求で変わり、消費する側と同じ理由で変わるためである。  
-WebContainers のバージョンで変わるのは、`webcontainer/` の中だけである。
+package にする理由は、実行環境の処理が、画面にもアプリにも依らず、自分のバージョン（WebContainers、PGlite、Yaegi）と自分のテストを持つためである。  
+3 つの package の消費者は、`apps/playground` の 1 つである。`@fukuemon/sql-runtime` は、`@fukuemon/node-runtime` も使う。
 
 ### 4. 画面の状態
 
@@ -88,10 +95,12 @@ store を分ける単位の選択肢は次のとおり。
 
 モジュールの置き場の選択肢は次のとおり。
 
-| 選択肢                                               | 強み                                                                                | 弱み                                          |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- |
-| **採用:** `apps/playground/src/node-runtime/` に置く | package が増えない。lint の対象が、1 つのディレクトリになる                         | 境界を守る手段が、lint だけになる             |
-| 別の package（`packages/playground-runtime`）にする  | 画面のコードが `@webcontainer/api` を import できないことを、package の依存で保てる | package が増える。使うアプリは 1 つだけである |
+| 選択肢                                                            | 強み                                                                                                                          | 弱み                                                                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **採用:** 実行環境ごとに、3 つの package にする                   | 画面のコードが `@webcontainer/api` を import できないことを、package の依存で保てる。実行環境ごとに、依存とテストを分けられる | package が 3 つ増える。消費者は `apps/playground` の 1 つで、型を変えるときに 2 つの package を直す       |
+| SQL の処理だけを package にする                                   | package が 1 つで済む                                                                                                         | Node の実行環境の境界を守る手段が、lint だけになる                                                        |
+| 1 つの package にまとめ、エントリーポイントを実行環境ごとに分ける | package が 1 つで済む                                                                                                         | WebContainers、PGlite、Yaegi の依存が、1 つの package に入る                                              |
+| `apps/playground/src/` に置く                                     | package が増えない                                                                                                            | 境界を守る手段が、lint だけになる。実行環境の中の Node が動かすファイルの tsconfig を、アプリの中で分ける |
 
 実行環境を起動し直すときの形の選択肢は次のとおり。
 
@@ -117,7 +126,8 @@ Context の分け方の選択肢は次のとおり。
 
 ### Negative
 
-- `webcontainer/` の中は、WebContainers のバージョンという、画面と別の理由で変わる。この部分だけを見ると、package にする条件に当たる。境界は、lint で守る。
+- package が 3 つ増える。消費者は `apps/playground` の 1 つなので、インターフェースの型を変えるときは、package とアプリの両方を直す。
+- `node-runtime/` の直下と `webcontainer/` の間の境界は、package の依存では守れない。lint で守る。
 - 実行環境の中の Node が動かすファイルと、標準入出力で SQL を送る処理は、実行環境が Node のプロセスを動かすことを前提にしている。Node のプロセスを持たない実行環境に差し替えるときは、`webcontainer/` に加えて、この 2 つも直す。
 - 記録の読み方が、store と、プロセスの出力の 2 つになる。
 - 上限を超えた古い記録は、消える。
