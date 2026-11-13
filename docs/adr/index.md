@@ -92,8 +92,13 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 | [ADR-0052](0052-runtime-files-outside-workdir.md)               | 実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す                                   |
 | [ADR-0053](0053-pglite-database-in-playground.md)               | DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る       |
 | [ADR-0054](0054-record-http-and-console-with-prefixed-lines.md) | HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない                                         |
+| [ADR-0056](0056-article-figures-directory-and-name.md)          | 記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す                             |
+| [ADR-0057](0057-document-records-in-two-object-stores.md)       | 図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する                      |
 | [ADR-0058](0058-slides-package-for-themes-and-pages.md)         | スライドのテーマ、テンプレート、Marp の設定、ページを組み立てる関数を、`packages/slides` に置く                                      |
 | [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)           | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                            |
+
+ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
+ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
@@ -158,6 +163,8 @@ flowchart TB
     A0052["ADR-0052"]
     A0053["ADR-0053"]
     A0054["ADR-0054"]
+    A0056["ADR-0056"]
+    A0057["ADR-0057"]
     A0058["ADR-0058"]
     A0059["ADR-0059"]
   end
@@ -264,6 +271,18 @@ flowchart TB
   A0055 --> A0010
   A0055 --> A0024
   A0055 --> A0029
+  A0056 --> A0030
+  A0056 --> A0039
+  A0056 --> A0040
+  A0056 --> A0042
+  A0056 --> A0043
+  A0056 --> A0049
+  A0057 --> A0039
+  A0057 --> A0041
+  A0057 --> A0043
+  A0057 --> A0048
+  A0057 --> A0050
+  A0057 --> A0056
   A0058 --> A0021
   A0058 --> A0041
   A0058 --> A0042

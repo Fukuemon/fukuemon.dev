@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: Content Model
-description: 記事とハンズオンに共通する schema、安定識別子 contentId、相互参照のグラフ、ContentRef への正規化、loader との結線
+description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef へのloader との結線
 status: stable
 governs:
   - packages/content-model/
@@ -12,20 +12,21 @@ verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 
 ## Overview
 
-Content Model は、記事とハンズオンを同じ一覧に載せ、互いを参照できるようにする。  
-[PRD の Success Metrics](../../docs/PRD.md#success-metrics) のうち、種別で絞り込んだ一覧、片方向の記述で双方向に出る関連、Markdown 1 枚での追加を支える。  
+Content Model は、記事を同じ一覧に載せ、シリーズにまとめ、互いを参照できるようにする。  
+[PRD の Success Metrics](../../docs/PRD.md#success-metrics) のうち、片方向の記述で双方向に出る関連と、Markdown 1 枚での追加を支える。  
 全体の構成は [Design Doc](../../docs/design/DesignDoc.md#components) にある。  
-ADR-0002: [Content Model の Astro からの独立](../../docs/adr/0002-content-model-independence.md)
+ADR-0002: [Content Model の Astro からの独立](../../docs/adr/0002-content-model-independence.md)  
+ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](../../docs/adr/0030-articles-format-and-series.md)
 
 ## Scope
 
 持つものは次のとおり。
 
-- 記事とハンズオンに共通する schema（`portalBase`）と、種別ごとの拡張
+- 記事の schema（`articleSchema`）と、シリーズの schema（`seriesSchema`）
 - 安定した識別子 `contentId` の定義と、一意であることのチェック
+- シリーズの構造と、シリーズの中の読む順（`order`）のチェック
 - 相互参照のグラフの構築、解決できない参照の検出、逆参照の導出
-- `ContentRef` への正規化
-- Astro の Content Layer の loader との結線
+- `ContentRef` の型
 
 持たないものは次のとおり。
 
@@ -33,6 +34,7 @@ ADR-0002: [Content Model の Astro からの独立](../../docs/adr/0002-content-
 - 分類（tag）ごとの索引のページ。分類は URL パラメータでの絞り込みにだけ使う。
   - 設計不変量 8: [Design Doc](../../docs/design/DesignDoc.md#種別と分類の切り分け)
 - CMS や別のデータソースの実装。loader を差し替える点を 1 つにするところまでを持つ。
+- プレイグラウンドの設定。プレイグラウンドは、記事の collection に含めない。
 
 ## Design
 
@@ -42,7 +44,7 @@ Astro は `id` をファイルのパスから導いて占有するので、自�
 ADR-0002: [Content Model の Astro からの独立](../../docs/adr/0002-content-model-independence.md)
 
 ```yaml
-contentId: rdbms-query-execution # 発行した後は変えない。記事とハンズオンのあいだで一意
+contentId: rdbms-query-execution # 発行した後は変えない。記事のあいだで一意
 ```
 
 URL のパスは、Astro がファイルのパスから導く `id` で決まる。  
@@ -52,11 +54,11 @@ URL のパスは、Astro がファイルのパスから導く `id` で決まる�
 内容を表す語をハイフンでつなぐ。  
 日付や連番は、改名の動機になるので入れない。
 
-### 共通の schema
+### 記事の schema
 
 ```ts
 // packages/content-model/src/schema.ts
-export const portalBase = z.object({
+export const articleSchema = z.object({
   contentId: z.string().regex(CONTENT_ID),
   title: z.string(),
   description: z.string(),
@@ -64,8 +66,10 @@ export const portalBase = z.object({
   status: z.enum(["draft", "published", "archived"]).default("draft"),
   publishedAt: z.coerce.date(),
   updatedAt: z.coerce.date().optional(),
-  related: z.array(z.string()).default([]), // ほかのコンテンツの contentId
+  related: z.array(z.string()).default([]), // ほかの記事の contentId
   repository: z.object({ url: z.string().url(), path: z.string().optional() }).optional(),
+  format: z.enum(["page"]).default("page"),
+  order: z.number().int().optional(), // シリーズの中の読む順
 });
 ```
 
@@ -73,60 +77,57 @@ export const portalBase = z.object({
 一覧の分類の列に、必ず値が入る状態を保つためである。  
 索引のページを持たないので、値の集合を先に定義しない。
 
-### 種別ごとの拡張
+`format` は、記事の構成を表す。  
+受け付ける値は、実装した形式の `page` だけで、省くと `page` になる。  
+`steps` のように実装していない値を受け付けると、ビルドを通った記事が、表示のときに崩れる。  
+形式を足すときは、`ARTICLE_FORMATS` に値を足す。
 
-読み物の種別は 2 つだけで、増やさない。
+記事は、読了時間を持たない。  
+手で書くと本文の分量とずれる。  
+ずれた数字があると、同じ行にある計測の値まで信用されなくなる。
 
-| collection | 足す属性                                                                   | 描画                     |
-| ---------- | -------------------------------------------------------------------------- | ------------------------ |
-| `articles` | 持たない                                                                   | `ArticleLayout`          |
-| `labs`     | `difficulty`、`duration`（正の整数、分）、`setup?: string`、`interactive?` | `LabLayout` と手順の一覧 |
+### シリーズ
 
-playground（`playgrounds`）の schema は `portalBase` を拡張せず、独立に定義する。  
-持つ属性は `contentId`、`title`、`description`、`status`、`runtime`、`setup?`、`presets?`、`order?` で、`tags`、日付、`related` は持たない。  
-`presets` と `order` は省略でき、デフォルトは空の配列と 0 である。  
-playground の `contentId` は `buildContentGraph()` に渡さないので、ビルドは一意であることを確認しない。  
-著者が playground どうしで重ならないようにする。  
-URL は `/playground/<path>` で `contentId` を含まないので、記事とハンズオンの `contentId` と重なってもよい。  
-`playgrounds/` の直下のディレクトリが分類になり、`<path>` は `postgres/shop` のように分類を含む。  
-ADR-0018: [playground の分類と URL](../../docs/adr/0018-playground-groups-by-directory.md)
+`apps/web/src/content/articles/<series>/` のディレクトリが、1 つのシリーズになる。  
+シリーズに入れない記事は、`articles/` の直下に置く。
 
-playground の frontmatter は、次のように書く。
-
-```yaml
-contentId: postgres
-title: イベントの記録
-description: 1 テーブル 50,000 行で、実行計画、索引、統計情報、設定を見る。
-status: published
-runtime: pglite
-presets:
-  - label: バージョンと実行環境
-    sql: select version();
+```text
+articles/
+├── standalone.md          # シリーズに入れない記事。order を書かない
+└── rdbms/                 # シリーズ rdbms
+    ├── index.md           # シリーズのタイトルと説明 (seriesSchema)
+    ├── query-execution.md # order: 1
+    └── vacuum.md          # order: 2
 ```
 
-`playgrounds` は種別ではない。  
-一覧のタブにも RSS にも出ず、`ContentRef` にも写さない。  
-collection にするのは、playground を足す手順を、記事と同じ「Markdown 1 枚」に保つためである。  
-ADR-0009: [サイトのセクションと playground](../../docs/adr/0009-site-sections-and-playground-collection.md)
+`index.md` は記事ではなくシリーズの定義なので、`series` の collection が読み、`articles` の collection からは外す。  
+`seriesSchema` は `title` と `description` を持つ。
 
-記事は固有の属性を持たず、読了時間を出さない。  
-手で書くと本文の分量とずれる。ずれた数字があると、同じ行にある計測の値まで信用されなくなる。
+`planSeries()` は、記事の `articles/` からの相対パスと `order`、`index.md` を持つシリーズのディレクトリ名の集合を受け取り、次の違反があればビルドを失敗させる。  
+エラーには、違反した記事のパスを載せる。
 
-`difficulty` は `beginner`、`intermediate`、`advanced` のどれかである。  
-`interactive` の型は [ADR-0006](../../docs/adr/0006-interactive-content-levels.md) が定める。
+| 違反                                                          | エラー                    |
+| ------------------------------------------------------------- | ------------------------- |
+| シリーズのディレクトリの下に、もう 1 階層のディレクトリがある | `NestedSeriesError`       |
+| シリーズのディレクトリに `index.md` がない                    | `MissingSeriesIndexError` |
+| シリーズの中の記事が `order` を書いていない                   | `MissingOrderError`       |
+| 1 つのシリーズの中で `order` が重なる                         | `DuplicateOrderError`     |
+| シリーズに入れない記事（`articles/` の直下）が `order` を書く | `StandaloneOrderError`    |
 
-ハンズオンは、手順の数を frontmatter に持たず、本文の `h2` から導く。  
-frontmatter に書くと本文と二重に管理することになり、手順を足したときに片方だけが古くなる。
+`order` はシリーズの中の読む順だけを表す。  
+直下の記事に書くと、無視される値が原稿に残り、後でシリーズへ移すときに順が食い違う。
+
+結果は、シリーズごとに、`order` の昇順に並べた記事のパスの配列になる。
 
 ### 分類
 
 分類を束ねる上位の分類の軸を持たない。  
-種別が 2 つなので、分類ごとの交差のページを作っても、相互参照（`related`）より多くのものは得られない。  
+一覧の分類は URL パラメータでの絞り込みにだけ使う。  
 種別と分類の分け方は [Design Doc](../../docs/design/DesignDoc.md#種別と分類の切り分け) にある。
 
 ### 相互参照のグラフ
 
-`related` は、ほかのコンテンツの `contentId` の配列にする。  
+`related` は、ほかの記事の `contentId` の配列にする。  
 Astro の `reference()` は使わない。  
 理由は [ADR-0002](../../docs/adr/0002-content-model-independence.md) にある。
 
@@ -134,13 +135,14 @@ Astro の `reference()` は使わない。
 
 ```mermaid
 flowchart LR
-    h1["Hands-on<br/>rdbms-query-execution"] -->|related| a1["Article<br/>index-not-used"]
-    h2["Hands-on<br/>vacuum-and-bloat"] -->|related| h1
-    a2["Article<br/>wal-and-checkpoint"] -->|related| h2
+    a1["Article<br/>rdbms-query-execution"] -->|related| a2["Article<br/>index-not-used"]
+    a3["Article<br/>vacuum-and-bloat"] -->|related| a1
+    a4["Article<br/>wal-and-checkpoint"] -->|related| a3
 ```
 
-`related` は、著者が明示した筋である。  
-分類が同じであることとは別の軸で、分類から自動では作らない。
+`related` は、著者が明示した関連である。  
+分類が同じであることとは別の軸で、分類から自動では作らない。  
+同じシリーズに入っていることとも別で、シリーズの並びからは作らない。
 
 `buildContentGraph()` は、次の処理を行う。
 
@@ -158,33 +160,24 @@ flowchart LR
 
 ### ContentRef
 
-`ContentRef` は、一覧のページが collection ごとの分岐を持たないための、正規化した表現である。
+`ContentRef` は、一覧のページが記事の形式ごとの分岐を持たないための、正規化した表現である。
 
 ```ts
 // packages/content-model/src/types.ts
 export type ContentRef = {
   contentId: string;
-  type: "article" | "hands-on";
-  level?: "embedded" | "local"; // ハンズオンだけが持つ。`interactive.level` を写す
+  format: "page";
+  series?: string; // シリーズに入る記事の、articles/ の直下のディレクトリ名
   title: string;
   description: string;
-  href: string; // 種別ごとの URL の規則を吸収した最終の URL
+  href: string; // 記事の最終の URL
   tags: string[];
   date: Date;
-  meta: { label: string; value: string }[]; // 種別に固有の、表示用の metadata
 };
 ```
 
-種別が 2 つでも、`ContentRef` は残す。  
-理由は種別の多さではなく、設計不変量 3（`pages/`、`features/`、`components/`、`layouts/` は `astro:content` を直接参照しない）を成り立たせることにある。  
-`href` と `meta` が違いを吸収するので、URL の規則や描画のレイヤを変えるときに変わるのは、`href` を算出する規則だけである。
-
-`meta` の中身は、一覧の「種類」の列に出る文字列に対応する。
-
-| 種別       | `meta` の例                          |
-| ---------- | ------------------------------------ |
-| `article`  | `[]`                                 |
-| `hands-on` | `[{ label: "所要", value: "52分" }]` |
+`ContentRef` は、設計不変量 3（`pages/`、`features/`、`components/`、`layouts/` は `astro:content` を直接参照しない）を成り立たせるために持つ。  
+URL の規則を変えるときに変わるのは、`href` を算出する規則だけである。
 
 ### コンポーネントの構成
 
@@ -193,76 +186,53 @@ export type ContentRef = {
 ```mermaid
 flowchart TD
     subgraph cm ["@fukuemon/content-model (Astro 非依存)"]
-        schema["schema.ts<br/>portalBase / 種別の拡張"]
+        schema["schema.ts<br/>articleSchema / seriesSchema"]
         types["types.ts<br/>ContentRef"]
+        series["series.ts<br/>planSeries()"]
         graph["graph.ts<br/>buildContentGraph()"]
-        steps["steps.ts<br/>Step"]
         toc["toc.ts<br/>buildToc()"]
     end
     subgraph web ["apps/web"]
         config["content.config.ts<br/>loader と schema の結線"]
-        adapter["lib/content/<br/>listContent / getContent / getRelated"]
-        layouts["layouts/**"]
-        pages["pages/**"]
+        loader["lib/content/articles-loader.ts<br/>読み込み後のシリーズのチェック"]
     end
     ac["astro:content"]
     config --> ac
     config --> schema
-    adapter --> ac
-    adapter --> graph
-    adapter --> types
-    pages --> adapter
-    adapter --> toc
-    layouts --> adapter
-    layouts --> steps
+    config --> loader
+    loader --> series
     graph --> types
-```
-
-`listContent()` は、種別での絞り込みを引数で受ける。  
-一覧の 3 ページは、同じ関数を違う引数で呼ぶだけで作る。
-
-```ts
-listContent(); // すべて → /blog
-listContent({ type: "article" }); // 記事 → /blog/articles
-listContent({ type: "hands-on" }); // ハンズオン → /blog/labs
 ```
 
 ### loader との結線
 
 ```ts
 // apps/web/src/content.config.ts
-const loader = (dir: string) => glob({ base: `./src/content/${dir}`, pattern: "**/*.{md,mdx}" });
-
-// データソースを差し替える点。schema は種別ごとに持つ
 export const collections = {
-  articles: defineCollection({
-    loader: loader("articles"),
-    schema: articleSchema,
-  }),
-  labs: defineCollection({ loader: loader("labs"), schema: handsOnSchema }),
-  playgrounds: defineCollection({
-    loader: loader("playgrounds"),
-    schema: playgroundSchema,
+  articles: defineCollection({ loader: articlesLoader(), schema: articleSchema }),
+  series: defineCollection({
+    loader: glob({ base: "./src/content/articles", pattern: "*/index.{md,mdx}" }),
+    schema: seriesSchema,
   }),
 };
 ```
 
-collection を種別ごとに分ける。  
-`src/content/` の直下のディレクトリと collection は 1 対 1 なので、種別はコンテンツを置いたディレクトリで決まる。  
-frontmatter は種別を持たない。
+`articlesLoader()` は、`glob` の loader で記事を読んだ後に、`planSeries()` でシリーズの構造と `order` を確認する。  
+チェックをページの描画に任せると、そのページを使わないビルドでチェックが抜けるので、読み込みのときに行う。  
+`articles` の glob は、`*/index.{md,mdx}` を除く。
 
-種別ごとに schema が違う。  
-`articles` は `difficulty` や `duration` を持たない。  
-1 つの collection にまとめると、片方だけが持つ属性をすべて optional にすることになり、schema が種別の違いを表せなくなる。
+1 つの collection にまとめず、記事とシリーズを別の collection にする。  
+frontmatter の項目が違い、1 つの schema にまとめると、記事の必須の項目が欠けた原稿がシリーズの schema で通ってしまう。
 
-### コンテンツを 1 本足すときの流れ
+### 記事を 1 本足すときの流れ
 
-1. 著者が `apps/web/src/content/labs/<name>.mdx` を作り、frontmatter を書く。
-   - 書くキーは、`contentId`、`title`、`description`、`tags`、`publishedAt`、`difficulty`、`duration` の 7 つ。
+1. 著者が `apps/web/src/content/articles/<name>.md` を作り、frontmatter を書く。
+   - 書くキーは、`contentId`、`title`、`description`、`tags`、`publishedAt` の 5 つ。
    - `status` を省くと `draft` になり、build は書き出さない。公開するときは `status: published` を書く。
+   - シリーズに入れるときは、`articles/<series>/` に置き、`order` を書く。
 2. 関連があれば、`related` に相手の `contentId` を書く（片方向だけ）。
-3. ビルドが、`contentId` が一意であることと、`related` が解決できることを確認する。
-4. 該当する一覧（ハンズオンなら `/blog` と `/blog/labs`）と、相手の側の関連するコンテンツに、自動で現れる。
+3. 新しいシリーズを作るときだけ、`articles/<series>/index.md` に `title` と `description` を書く。
+4. ビルドが、`contentId` が一意であることと、`related` が解決できることと、シリーズの構造を確認する。
 
 索引のページを手で直す作業は生じない。
 
@@ -270,22 +240,21 @@ frontmatter は種別を持たない。
 
 ### 置くファイル
 
-- `packages/content-model/src/schema.ts`: `portalBase`、種別ごとの schema、`playgroundSchema`
+- `packages/content-model/src/schema.ts`: `articleSchema`、`seriesSchema`
 - `packages/content-model/src/types.ts`: `ContentRef`
+- `packages/content-model/src/series.ts`: `planSeries()`
 - `packages/content-model/src/graph.ts`: `buildContentGraph()`
-- `packages/content-model/src/steps.ts`: 手順の型 `Step`
 - `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
-- loader との結線（`apps/web/src/content.config.ts` と `apps/web/src/lib/content/`）は、まだ無い。
-  - 公開するかを判定する `isPublic()`
+- `apps/web/src/content.config.ts`: collection の結線
+- `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
+- 一覧と詳細のページが使う関数（`listContent()` など）と、公開するかを判定する `isPublic()` は、まだ無い。
 
-`isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
-一覧の関数と、詳細のページの `getStaticPaths()` は、同じ `isPublic()` で絞る。  
-`buildContentGraph()` には、下書きも含めたすべてのコンテンツを渡す。  
-下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。  
-公開しないコンテンツは、`listContent()`、`getContent()`、`getRelated()` が結果から除く。
+`isPublic()` を作るときは、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
+`buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
+下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
 
 ### チェック
 
-`graph.ts` と `toc.ts` に求めるカバレッジと、分岐をすべて踏む検出は [context/testing.md](../../context/testing.md#test-types-and-guarantees) にある。
+`graph.ts`、`toc.ts`、`series.ts` に求めるカバレッジと、分岐をすべて踏む検出は [context/testing.md](../../context/testing.md#test-types-and-guarantees) にある。
 
 Content Model が Astro に依存しないことのチェックは、[context/codebase.md](../../context/codebase.md#dependency-rules) の規約 2 にある。
