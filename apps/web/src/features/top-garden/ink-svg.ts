@@ -87,7 +87,8 @@ export interface InkSvg {
 
 /**
  * 墨の絵を、HTML に置く `<svg class="ink-svg">` の文字列にする。
- * 線の色と、かすれの filter の掛け方と、描く動きは、ページの CSS が持つ。松の円の色は CSS 変数 `--art-pine` で決める。
+ * 線の色と、かすれの filter の掛け方は、`InkGate.astro` の CSS が、class（`far`、`mid`、`near`、`lines`、`pine`）と id（`f-dry`、`f-wash`、`g-pine`）で引く。
+ * 松の円の色は CSS 変数 `--art-pine` で決める。筆の順に描く動きは、この文字列の外の CSS が付ける。
  */
 export function inkSvg(art: InkArt = inkArt()): InkSvg {
   const r = renderStrokes(art.strokes);
