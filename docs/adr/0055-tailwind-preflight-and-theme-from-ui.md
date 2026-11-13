@@ -65,7 +65,7 @@ ADR-0010 のほかの Decision（Tailwind CSS v4 を採り、コンポーネン�
 ### Positive
 
 - サイトとカタログで、同じコンポーネントが同じ見た目になる。
-- サイトの共通の CSS が、`packages/ui` の `fonts.css` と `theme.css` を読むだけになる。
+- サイトの共通の CSS が、`packages/ui` の `fonts.css`、`theme.css`、`sources.css` を読むだけになる。
 
 ### Negative
 

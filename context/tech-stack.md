@@ -28,7 +28,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Astro は、全画面を描画する framework として使う。
   - 描画は Astro のページとして自前で組み、Starlight は使わない。
   - ADR-0001: [Starlight の採否](../docs/adr/0001-starlight-as-docs-renderer.md)
-- React は、`packages/ui` のコンポーネントと、`apps/web` の island に使う。
+- React は、`packages/ui` のコンポーネントと、`apps/web` の island に使う。`@astrojs/react` は、`packages/ui` のコンポーネントを Astro のページに `client:*` なしで描くのにも使う。
 - Tailwind CSS と `@tailwindcss/vite` は、CSS のスタイリングの基盤として使う。
   - サイトの共通の CSS は preflight を読み、`@theme static` を使わない。
   - ADR-0010: [Tailwind CSS の採用](../docs/adr/0010-tailwind-as-styling-base.md)

@@ -93,10 +93,10 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 ### サイトの共通の CSS
 
 - サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
-- `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css` と `theme.css` を読む。カタログの `preview.css` と同じ形にする。
+- `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css`、`theme.css`、`sources.css` を読む。`sources.css` のほかは、カタログの `preview.css` と同じ形にする。
   - ADR-0055: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md)
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
-- `site.css` は、`@source` で `packages/ui/src` を走査の対象に足す。Tailwind CSS は `node_modules` の下を走査しないので、足さないと `packages/ui` のコンポーネントのクラスが出力されない。
+- `packages/ui` のコンポーネントのクラスは、`@fukuemon/ui/sources.css` の `@source` が、Tailwind CSS の走査の対象に足す。Tailwind CSS は `node_modules` の下を走査しないためである。story、文書、テストは対象から外す。
 - 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
 - 検索エンジンに載せないページ（404 など）は、`SiteLayout.astro` に `noindex` を渡す。canonical を出さず、`<meta name="robots" content="noindex">` を出す。
 - `scroll-padding-block-start` は、画面の上に固定のヘッダを置くときに、ヘッダの高さに合わせて決める。

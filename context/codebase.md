@@ -141,6 +141,7 @@ package を切り出すのは、次のどちらかが成り立つときである
 
 - デザインシステムの文書は、`packages/ui/DESIGN.md` と、`packages/ui/design/` の `tokens.md`、`components.md`、`catalog.md` の 4 つに置く。
 - トークンの 3 つの層は、`packages/ui/src/tokens/` の `primitive.css`、`semantic.css` と `semantic-dark.css`、`theme.css` に置く。
+- 使う側の Tailwind CSS に、コンポーネントのクラスを走査させる `@source` は、`packages/ui/src/sources.css` に置く。
 - コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に、パターンを `packages/ui/src/patterns/` に置く。
   - story とテストは、コンポーネントと同じディレクトリに置く。
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/` の関心ごとのディレクトリに置く。
