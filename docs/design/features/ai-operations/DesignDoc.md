@@ -55,12 +55,12 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 ツールに共通の処理は、`apps/playground/src/ai-operations/` に置く。  
 操作の定義は、ツールのディレクトリに、ツールごとに 1 つのファイルで置く。
 
-| 置き場                                        | 持つもの                                                                                                                                |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/playground/src/ai-operations/`          | スイッチの状態と `localStorage`、polyfill と relay のスクリプトの読み込み、登録と解除、入力の検証、確認の順番と時間の上限、記録の store |
-| `apps/playground/src/ai-operations/` の React | スイッチ、確認の画面、操作の記録の欄のコンポーネント                                                                                    |
-| `apps/playground/src/<ツール>/`               | そのツールの操作の定義（名前、説明、入力の schema、注釈、確認の前の検証、確認に出す内容、実行する関数）                                 |
-| `@fukuemon/ui`                                | `Switch`、`Checkbox`、`Dialog`、`Disclosure`、`StatusBadge`、`Notice`、`Button`                                                         |
+| 置き場                                        | 持つもの                                                                                                                                                                                |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/playground/src/ai-operations/`          | スイッチの状態と `localStorage`、polyfill と relay のスクリプトの読み込み、登録と解除、入力の検証、ファイルの操作に共通の schema と相対パスの検証、確認の順番と時間の上限、記録の store |
+| `apps/playground/src/ai-operations/` の React | スイッチ、確認の画面、操作の記録の欄のコンポーネント                                                                                                                                    |
+| `apps/playground/src/<ツール>/`               | そのツールの操作の定義（名前、説明、入力の schema、注釈、確認の前の検証、確認に出す内容、実行する関数）                                                                                 |
+| `@fukuemon/ui`                                | `Switch`、`Checkbox`、`Dialog`、`Disclosure`、`StatusBadge`、`Notice`、`Button`                                                                                                         |
 
 - ツールのディレクトリが、`ai-operations/` を import する。`ai-operations/` は、ツールのディレクトリを import しない。
 - `ai-operations/` は、実行環境の package と、`workspace/`、`project/` を import しない。
@@ -68,6 +68,7 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
   - Node の実行環境では、起動の Promise を持つ `src/node/` のモジュールが渡す。
   - SQL だけを動かすツールでは、入力欄の SQL を持つ `src/sql/` のモジュールが渡す。
   - Go を動かすツールでは、ファイルを持つ `src/go/` のモジュールが渡す。
+  - 操作の定義のファイルは、状態を持つモジュールを import しない。今の状態を読む関数と、実行する関数を引数で受けて、定義の一覧を返す関数を export する。状態を持つモジュールが、この関数を呼ぶ。2 つのファイルが互いを import しないようにするためである。
   - `ai-operations/` は、定義を受け取ったときに、保存してあるスイッチの状態を読み、オンなら登録する。
 - 操作の定義の `check` と `execute` は、呼ばれるたびに、React の外の値から、ツールの今の状態を読む。Context から読まない。
   - Node の実行環境では、起動の Promise を持つモジュールから、今の `NodeRuntime` のインスタンスを読む。実行環境を起動し直した後も、新しいインスタンスを使うためである。
@@ -353,7 +354,8 @@ type NewElement = {
 
 `go` の操作は、Go を動かすツールのファイルと、`GoRunner` を使う。  
 ファイルの 4 つの操作の入力と結果は、`node` の同じ名前の操作と同じである。  
-ファイルの 4 つの操作の入力の schema と、パスと大きさの検証は、`ai-operations/` に置き、`src/node/` と `src/go/` の操作の定義が使う。
+ファイルの 4 つの操作の入力の schema、相対パスの検証、書くときの `contents` の 1 MB の上限は、`ai-operations/` に置き、`src/node/` と `src/go/` の操作の定義が使う。  
+読むときの大きさとテキストの判定、パスが無いことの判定、ディレクトリかどうかの判定は、ツールの側（`NodeRuntime` と `src/go/`）に置く。
 
 - `go_list_files`、`go_read_file`、`go_write_file`、`go_delete_file` は、`src/go/` の React の外のモジュールが持つファイルを読み書きする。エディタの表示と IndexedDB への保存は、利用者が書き換えたときと同じように更新される。
 - パスは、相対パスだけを受け付ける。`..` で外へ出るパスと絶対パスは、`invalid_input` を返す。ファイルは、UTF-8 で 1 MB までのテキストである。保存しないファイルの規則の `exclude` は、使わない。
@@ -371,7 +373,7 @@ type NewElement = {
   - 出力は、出力のペインにも出す。利用者がボタンを押したときと、同じ表示にする。
   - `timeoutMs` は、1,000 から 120,000 までの整数で、デフォルトは 30,000 である。上限までに終わらないときは、`GoRunner` の実行を止める手段で止めて、`timeout` を返す。このときの結果は、`error` のほかに、それまでの `output` と `truncated` を持つ。60 秒を超える値の扱いは、`node_run_command` と同じである。
   - コンパイルのエラーと、テストの失敗は、`ok` を `true` にし、`exitCode` を 1 にして、`output` にエラーを入れる。`go_test` は、出力（`=== RUN`、`--- PASS`、`--- FAIL`）をそのまま返し、テストごとの結果に分けない。
-  - `output` は、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。
+  - `output` は、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。切り詰める処理は、`src/go/` の操作の定義が持つ。
   - 実行中に、もう 1 つの `go_run` か `go_test` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。エージェントの操作で実行している間は、画面の実行のボタンとテストのボタンを、実行中の表示にする。
 - `go_run` と `go_test` は、確認を出さない（ADR-0063 の Decision 2）。Yaegi に渡す symbol を絞り、Yaegi で動かすコードが、ページの `localStorage` と IndexedDB を読み書きできないようにする。
   - Yaegi に渡す symbol を `stdlib.Symbols` だけにすると、Yaegi で動かすコードは、`syscall/js`、`syscall`、`unsafe` を import できない。Yaegi 0.16.3 の WASM を Node の上で動かして確認した。ブラウザの中では、実装のタスクのテストで確認する。
@@ -539,26 +541,27 @@ type StoredPermission = {
   - `FileEntry` の、ファイルかディレクトリかの値。
   - 1 つのファイルの、大きさと、テキストとして読めるかの判定。`files.readAll` と同じ規則で、`maxBytes` は呼ぶ側が渡す。
   - `files.read` と `files.remove` が失敗したときに、パスが無いことを見分けられる値。
-- `@fukuemon/sql-runtime` の `SqlDatabase` は、操作の実装のタスクまでに、実行を止める手段を持つ。`run` に `AbortSignal` を渡す形か、Web Worker を作り直す関数である。どちらの形でも、止めるときは、Web Worker を作り直す。
+- `@fukuemon/sql-runtime` の、Web Worker で動かす実装は、操作の実装のタスクまでに、実行を止める手段を持つ。止めるときは、Web Worker を作り直す。
+  - 止める手段は、Web Worker の実装が返す値にだけ持たせる。`node-runtime/` の実装と共有する `SqlDatabase` の型には、足さない。使わない手段を、標準入出力の実装に持たせないためである。
 - `apps/playground/src/sql/` は、React の外のモジュールに、次のものを持つ。
   - 入力欄の今の SQL。
   - PGlite の読み込みを始める関数。
   - 実行中かどうかの値。
-  - 実行する関数。実行中かどうかの値を変え、`SqlDatabase` の `run` を呼ぶ。画面のボタンと、`sql_run_query` は、どちらもこの関数を呼ぶ。
+  - 実行する関数。SQL と時間の上限を受け取り、`SqlResponse` を返す。実行中かどうかの判定、値の変更、`SqlDatabase` の `run` の呼び出し、時間の上限で止める処理を、この関数の中で行う。結果は、呼んだ側に返すだけで、モジュールに持たない。画面のボタンと、`sql_run_query` は、どちらもこの関数を呼ぶ。
 - `@fukuemon/go-runtime` の `GoRunner` は、操作の実装のタスクまでに、次のものを持つ。
   - ファイルの一式を渡して、実行するか、テストを実行する関数。
   - ディレクトリで複数の package に分けたファイルの、import の解決。
-  - 出力と、終了コード。
-  - 実行を止める手段。Yaegi を、Worker の中で動かす。
+  - 出力と、終了コード。出力は、実行中に、少しずつ受け取れる。
+  - 実行を止める手段。Yaegi を、Web Worker の中で動かす。
   - Yaegi に渡す symbol は、`stdlib.Symbols` だけにする。`syscall`、`unsafe`、`unrestricted` の symbol を渡さない。`syscall/js` の import が失敗することを、テストで確認する。
 - `apps/playground/src/go/` は、React の外のモジュールに、次のものを持つ。
   - ファイルの一覧、読み込み、書き込み、削除の関数。
   - 実行中かどうかの値。
   - Yaegi の読み込みを始める関数。
-  - 実行する関数と、テストを実行する関数。ファイルの写しを取り、実行中かどうかの値を変え、`GoRunner` を呼ぶ。画面のボタンと、`go_run` と `go_test` は、どちらもこの関数を呼ぶ。
+  - 実行する関数と、テストを実行する関数。時間の上限を受け取る。実行中かどうかの判定、値の変更、ファイルの写し、`GoRunner` の呼び出し、時間の上限で止める処理を、この関数の中で行う。画面のボタンと、`go_run` と `go_test` は、どちらもこの関数を呼ぶ。
   - 出力の store。
 - プレイグラウンドの Design Doc に、Go を動かすツールのファイルの形（ディレクトリを持つこと、空のディレクトリの扱い）を書く。実行のボタンが動かす package、テストのボタンが対象にする package、import のパスの付け方も書く。
-- プレイグラウンドの Design Doc の、`sql-console/` のコンポーネントが `database` の `run` を呼ぶ流れを直す。SQL だけを動かすツールでは、`src/sql/` のモジュールの実行する関数を通る。
+- プレイグラウンドの Design Doc の、`sql-console/` のコンポーネントが `database` の `run` を呼ぶ流れを直す。SQL だけを動かすツールでは、`src/sql/` のモジュールの実行する関数を通る。`sql-console/` は、`src/sql/` を import せず、実行する関数と、実行中かどうかの値を、props で受ける。
 - プレイグラウンドの Design Doc の、実行のボタンの実行中の状態を `useTransition` で持つ文を直す。SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` のモジュールの、実行中かどうかの値から読む。
 - Go を動かすツールのページは、利用者がファイルとディレクトリを追加し、削除できる画面を持つ。
 - プレイグラウンドの Design Doc の、PGlite と Yaegi を「訪問者が実行のボタンを押してから読み込む」の文を直す。`sql_run_query`、`go_run`、`go_test` が呼ばれたときにも読み込む（ADR-0063 の Decision 3）。

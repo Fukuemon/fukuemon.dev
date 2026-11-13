@@ -22,7 +22,7 @@ AI のエージェントからの操作を、SQL だけを動かすツール（`
   - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
 - プレイグラウンドでは、訪問者が動かしたコードが、同じ origin に保存した図とスライドにアクセスできることを受け入れる。条件は、他人が用意したコードを、訪問者の操作なしに動かさないことである。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
-- Go のコードは、WebContainers の中ではなく、`play.fukuemon.dev` の Worker の中で動く。Worker の中からは、IndexedDB を読める。
+- Go のコードは、WebContainers の中ではなく、`play.fukuemon.dev` の Web Worker の中で動かす。Web Worker の中からは、`localStorage` を読めず、IndexedDB を読める。
 
 ## Decision
 
