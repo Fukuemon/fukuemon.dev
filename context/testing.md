@@ -21,6 +21,7 @@ verified_commit: ab2da87
 | unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする |
 | ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                             |
 | unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む  |
+| unit         | `packages/node-runtime` の、WebContainers に依らない処理                           | Vitest                   | WebContainers を使わないテスト用の実装で、ファイルのツリーと操作、プロセスの出力と終了、ポート、起動の失敗と 30 秒の上限、破棄の分岐を踏む   |
 | unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画の木、結果の表の行とページを組む処理の分岐を踏む                                   |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
@@ -44,8 +45,12 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 対象は、`src/features/top-garden/` の、墨の絵と署名の SVG を作るモジュールと、`season.ts`（季節と時間帯を返す）と `visit.ts`（最初の訪問かを返す）である。
 
-`apps/playground`、`packages/sql-runtime` には、分岐、関数、行、文のカバレッジ 90% を、`packages/playground-project` には 100% を求める。  
+`apps/playground`、`packages/sql-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
+`packages/playground-project` には 100% を求める。  
 `packages/sql-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。`Worker` と `import.meta.url` に依り、Node の上では動かないためである。中身は、テストする `database.ts` と `handler.ts` を結ぶだけにする。  
+`packages/node-runtime` の `src/webcontainer/` と `src/index.ts` は、対象に入れない。  
+WebContainers はブラウザでしか動かないためである。  
+動きは、ブラウザでの動作確認で見る。  
 対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
