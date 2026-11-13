@@ -1,0 +1,42 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { ConsoleEntryList } from "./ConsoleEntryList";
+import { ENTRIES, LONG_ENTRY } from "./fixtures";
+
+const meta = {
+  title: "コンポーネント/Case/ConsoleEntryList",
+  component: ConsoleEntryList,
+  args: { entries: ENTRIES },
+  decorators: [
+    (Story) => (
+      <div className="max-w-prose p-4">
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof ConsoleEntryList>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = { name: "ログレベルごと" };
+export const ErrorOnly: Story = { name: "error だけを表示", args: { defaultLevels: ["error"] } };
+export const NoMatch: Story = { name: "選んだログレベルの行が無い", args: { defaultLevels: [] } };
+export const Empty: Story = { name: "空", args: { entries: [] } };
+export const Loading: Story = {
+  name: "読み込み中",
+  args: { state: { kind: "loading", label: "実行環境を起動しています" } },
+};
+export const Error: Story = {
+  name: "エラー",
+  args: {
+    state: {
+      kind: "error",
+      title: "コンソールの記録を読めませんでした",
+      message: "実行環境を起動し直してください。",
+    },
+  },
+};
+export const LongValue: Story = { name: "長い値", args: { entries: [LONG_ENTRY] } };
+export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };

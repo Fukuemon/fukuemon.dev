@@ -4,7 +4,10 @@ import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 
 /** 木の 1 つの項目。children を持つ項目は枝で、開閉できる。 */
 export type TreeNode = {
   id: string;
+  /** タイプアヘッドで探す文字。content を渡さないときは、画面にもこの文字を描く。 */
   label: string;
+  /** label の代わりに描く中身。文字の一部を太字にするときに使う。読み上げる名前は、この中身の文字になる。 */
+  content?: ReactNode;
   children?: readonly TreeNode[];
   /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
   icon?: (isOpen: boolean) => ReactNode;
@@ -194,7 +197,7 @@ export function TreeView({
               <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
             </svg>
             {node.icon?.(isOpen)}
-            {node.label}
+            {node.content ?? node.label}
           </li>
         );
       })}
