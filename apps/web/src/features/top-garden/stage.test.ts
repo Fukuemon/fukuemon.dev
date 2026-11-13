@@ -215,6 +215,24 @@ describe("stageScript", () => {
   });
 });
 
+describe("stageScript の場面の束の読み込みの失敗", () => {
+  it("束の script が読み込みに失敗すると、庭を出す class を外す", () => {
+    const b = browser();
+    const appended: { onerror?: () => void }[] = [];
+    const globals = {
+      ...b.globals,
+      document: {
+        documentElement: b.root,
+        createElement: () => ({}),
+        head: { appendChild: (s: { onerror?: () => void }) => void appended.push(s) },
+      },
+    };
+    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    appended[0]?.onerror?.();
+    expect([...b.root.classes]).toStrictEqual([]);
+  });
+});
+
 describe("stageScript の場面の束の URL", () => {
   it("URL に </script> が入っても、script の要素を閉じる文字列を出さない", () => {
     expect(stageScript({ dev: false, bundle: "/a</script><b>" }).includes("</script")).toBe(false);

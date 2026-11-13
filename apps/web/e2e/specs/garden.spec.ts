@@ -10,6 +10,8 @@ test("秋の昼のトップを開くと、止めた庭の絵が基準の画像�
   await page.goto("/");
   const stage = page.locator("[data-garden-stage]");
   // 庭は、描く直前に canvas の大きさを画面に合わせる
-  await expect(stage.locator("canvas")).toHaveJSProperty("width", 1440);
+  await page.waitForFunction(
+    () => document.querySelector<HTMLCanvasElement>("[data-garden-stage] canvas")?.width === 1440,
+  );
   await expect(stage).toHaveScreenshot("garden-autumn-day.png", { maxDiffPixelRatio: 0.01 });
 });

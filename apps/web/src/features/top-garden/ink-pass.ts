@@ -13,7 +13,7 @@ import {
 const vertexShader =
   "varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }";
 
-// uTint が 0 のときは墨だけの絵、1 のときは淡彩の絵になる。0 から 1 へ動かすのは、イントロ（#64）である。
+// uTint が 0 のときは墨だけの絵、1 のときは淡彩の絵になる。0 から 1 へ動かすのは、最初の訪問のイントロである。
 const fragmentShader = `
 uniform sampler2D tScene; uniform vec2 uPx; uniform float uAspect, uTint, uSky, uVig; uniform vec3 uPaper, uInkCol, uLine, uEdge;
 varying vec2 vUv;

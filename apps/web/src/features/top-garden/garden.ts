@@ -1,5 +1,5 @@
 // 庭を canvas に描く。場面を描き、全画面のパスで画風を付ける。
-// 舞う物（#65）が無い間は場面が動かないので、開いたときと画面の大きさが変わったときだけ描く。
+// 舞う物が無い間は場面が動かないので、開いたときと画面の大きさが変わったときだけ描く。
 import {
   FramebufferTexture,
   PCFSoftShadowMap,
@@ -17,7 +17,7 @@ import type { SeasonTime } from "./season";
 /** 3D の場面の 1 m に当たる、和紙の文の px */
 const PX = 260;
 
-// 和紙の文の大きさ（px）の仮の値。文を置く #63 で、文の要素の大きさを測った値に替える。
+// 和紙の文の大きさ（px）の仮の値。文を和紙に置くときに、文の要素の大きさを測った値に替える。
 // 幅は Design Doc の「和紙の文」の 25rem と 17.5rem で、高さは試作の名乗りの文を測った値である。
 const TEXT = { wide: { w: 400, h: 240 }, narrow: { w: 280, h: 360 } } as const;
 
@@ -26,12 +26,18 @@ const webglAvailable = () => document.createElement("canvas").getContext("webgl2
 /**
  * 庭を `stage` の中の canvas に描き始める。
  * @returns 描き始めたら true。canvas が無いときと WebGL を使えないときは、何も描かずに false を返す
+ * @throws 場面を組み立てる途中の例外は、そのまま投げる
  */
 export function startGarden(stage: HTMLElement, opts: SeasonTime): boolean {
   const canvas = stage.querySelector("canvas");
   if (!canvas || !webglAvailable()) return false;
   const portrait = () => stage.clientWidth < stage.clientHeight;
-  const renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: "low-power" });
+  let renderer: WebGLRenderer;
+  try {
+    renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: "low-power" });
+  } catch {
+    return false;
+  }
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, portrait() ? 1.25 : 1.5));
   renderer.shadowMap.enabled = !portrait();
   renderer.shadowMap.type = PCFSoftShadowMap;

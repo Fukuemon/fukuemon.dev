@@ -28,7 +28,8 @@ import {
   ridgeY,
 } from "./layout";
 import { CLEAR, mixHex, type ScenePalette } from "./scene-colors";
-import { canvasTexture, lantern, rng, rock, tree, type TreeLeaf } from "./scene-parts";
+import { rng } from "./brush";
+import { canvasTexture, lantern, rock, tree, type TreeLeaf } from "./scene-parts";
 
 type BoxSpec = readonly [number, number, number, number, number, number];
 
@@ -197,7 +198,7 @@ function ground(C: ScenePalette, anisotropy: number): Mesh {
   return m;
 }
 
-function gateAndWalls(scene: Scene, C: ScenePalette): void {
+function addGateAndWalls(scene: Scene, C: ScenePalette): void {
   const wood = new MeshLambertMaterial({ color: C.wood });
   const roof = new MeshLambertMaterial({ color: C.roof });
   const plaster = new MeshLambertMaterial({ color: C.plaster });
@@ -248,7 +249,7 @@ const ROCKS: readonly (readonly [number, number, number, number, number])[] = [
   [2.0, -10.2, 0.4, 0.3, 0.36],
 ];
 
-function stones(scene: Scene, C: ScenePalette, R: () => number): void {
+function addStones(scene: Scene, C: ScenePalette, R: () => number): void {
   STEPS.concat([
     [-0.1, -1.7],
     [0.1, -3.0],
@@ -267,7 +268,7 @@ function stones(scene: Scene, C: ScenePalette, R: () => number): void {
 }
 
 /** 池と、池の縁の石 */
-function pond(scene: Scene, C: ScenePalette, R: () => number): void {
+function addPond(scene: Scene, C: ScenePalette, R: () => number): void {
   const sh = new Shape();
   sh.absellipse(0, 0, POND.rx, POND.rz, 0, Math.PI * 2, false, 0);
   const water = new Mesh(new ShapeGeometry(sh, 48), new MeshBasicMaterial({ color: C.water }));
@@ -320,10 +321,10 @@ export function buildGarden(C: ScenePalette, anisotropy: number): Scene {
   plain.position.set(0, -0.02, -50);
   scene.add(plain);
 
-  gateAndWalls(scene, C);
+  addGateAndWalls(scene, C);
   const R = rng(13);
-  stones(scene, C, R);
-  pond(scene, C, R);
+  addStones(scene, C, R);
+  addPond(scene, C, R);
 
   const lamp = lantern(C.stone, C.lamp, C.lampOn);
   lamp.position.set(-1.5, 0, -11.3);

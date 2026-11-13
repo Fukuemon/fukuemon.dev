@@ -22,17 +22,6 @@ import {
 } from "three";
 import { SHAPE_FILL, type LeafShape } from "./scene-colors";
 
-/** シードから決まった順に、0 以上 1 未満の値を返す乱数（mulberry32） */
-export function rng(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 /**
  * canvas に描いた絵をテクスチャにする。
  * @param mip true のときだけミップマップを作る。斜めから見る地面のように、遠くで細かい模様が乱れる物に使う

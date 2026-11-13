@@ -8,6 +8,7 @@ describe("mixHex", () => {
     ["#72805a", "#ffffff", 0.6],
     ["#a83c26", "#10151c", 0.3],
     ["#40543a", "#586c45", 0.5],
+    ["#000000", "#0a0a0a", 0.5],
   ])("%s と %s を %s で混ぜると、three の Color.lerp と同じ色になる", (a, b, k) => {
     expect(mixHex(a, b, k)).toBe("#" + new Color(a).lerp(new Color(b), k).getHexString());
   });
