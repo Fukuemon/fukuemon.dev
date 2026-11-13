@@ -179,6 +179,7 @@ ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-serie
 | `/series/<series>`                          | シリーズのページ。タイトル、説明、読む順の記事の一覧                             |
 | `/playground`                               | プレイグラウンドの一覧。ツールは、`play.fukuemon.dev` に置く                     |
 | `/playground-projects/<埋め込みの ID>.json` | 記事に埋め込む実行環境のプロジェクト。`play.fukuemon.dev` のツールのページが読む |
+| `/figures/<名前>.<ツール>.svg`              | 記事の図の、元データ入りの SVG。`play.fukuemon.dev` のキャンバスのツールが読む   |
 | `/rss.xml`                                  | RSS                                                                              |
 
 描画の実装の詳細を URL に含めない。  

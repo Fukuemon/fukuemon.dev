@@ -86,6 +86,8 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 | [ADR-0052](0052-runtime-files-outside-workdir.md)               | 実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す                                   |
 | [ADR-0053](0053-pglite-database-in-playground.md)               | DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る       |
 | [ADR-0054](0054-record-http-and-console-with-prefixed-lines.md) | HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない                                         |
+| [ADR-0056](0056-article-figures-directory-and-name.md)          | 記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す                             |
+| [ADR-0057](0057-document-records-in-two-object-stores.md)       | 図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する                      |
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
@@ -148,6 +150,8 @@ flowchart TB
     A0052["ADR-0052"]
     A0053["ADR-0053"]
     A0054["ADR-0054"]
+    A0056["ADR-0056"]
+    A0057["ADR-0057"]
   end
   A0002 --> A0001
   A0003 --> A0002
@@ -247,6 +251,17 @@ flowchart TB
   A0053 --> A0052
   A0054 --> A0021
   A0054 --> A0033
+  A0056 --> A0030
+  A0056 --> A0039
+  A0056 --> A0040
+  A0056 --> A0042
+  A0056 --> A0049
+  A0057 --> A0039
+  A0057 --> A0041
+  A0057 --> A0043
+  A0057 --> A0048
+  A0057 --> A0050
+  A0057 --> A0056
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  

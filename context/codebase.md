@@ -136,6 +136,7 @@ Expressive Code の規則は cascade layer に属さないので、上書きす�
   - サイドバーの開閉のキーは、`components/Side.astro` の props の `id` から `side:<id>` にする。
   - サイドバーの開閉は、`components/Side.astro` の inline script が描画の前に同期で読む。
 - プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#保存) にある。
+- プレイグラウンドは、訪問者が描いた図を、訪問者のファイルと別の IndexedDB のデータベースに置く。レコードの形は、[キャンバスの Design Doc](../design/features/canvas/DesignDoc.md#保存するデータ) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の種別の切り替えは URL（ページ）で、分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [design/DesignDoc.md](../design/DesignDoc.md#設計不変量)
@@ -206,3 +207,5 @@ URL の一覧は [design/DesignDoc.md](../design/DesignDoc.md#url-の構成) に
 - `/playground` は、プレイグラウンドの一覧に使う。ツールは `play.fukuemon.dev` に置き、cross-origin isolation のヘッダは、Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す。
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../adr/0034-playground-origin-and-embedding.md)
 - `/playground-projects/*` は、記事に埋め込む実行環境のプロジェクトの JSON に使う。
+- `/figures/*` は、記事の図の、元データ入りの SVG に使う。
+  - ADR-0056: [記事の図の置き場と URL](../adr/0056-article-figures-directory-and-name.md)
