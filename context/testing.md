@@ -20,6 +20,8 @@ verified_commit: ab2da87
 | unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                 |
 | unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする |
 | ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                             |
+| unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む  |
+| unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理の分岐を踏む                               |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
 | 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                 |
@@ -49,9 +51,11 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
 - `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
 
-`apps/playground` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
-対象のファイルは、まだ無い。
+`apps/playground` と `packages/sql-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
+`packages/playground-project` には、100% を求める。  
+`apps/playground` の対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
+`packages/sql-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。  
+2 つは `Worker` と `import.meta.url` を使い、Node では動かないためである。2 つのファイルは、テストする `database.ts` と `handler.ts` を呼ぶだけにする。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  
@@ -76,6 +80,7 @@ spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。
 ## Runtime Requirements
 
 - unit test は Node.js の上で動かし、ブラウザの環境を要求しない。
+  - 例外は、`apps/playground/src/code-editor/search-panel.ts` のテストである。CodeMirror のパネルは DOM を組むので、jsdom の上で動かす。
 - E2E を足すときは、ビルド済みの `dist/` を静的に配信して実行し、dev server を対象にしない。
   - Astro の dev と build で出力が違う場合があり、本番に近い側をチェックする。
 - 実行に要る環境変数、ポート、外部のサービスは、未定。

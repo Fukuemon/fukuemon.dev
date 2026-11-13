@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -11,12 +12,28 @@ const tools = readdirSync(import.meta.dirname, { withFileTypes: true })
 
 export default defineConfig({
   // React Compiler は apps/playground にだけ入れる。外すときは babel の plugin を消す (ADR-0047)
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+  // PGlite は .wasm と .data を import.meta.url から相対で読むので、事前のバンドルから外す
+  optimizeDeps: { exclude: ["@electric-sql/pglite"] },
+  worker: { format: "es" },
   build: {
+    // フォントを CSS に埋めると、使わない文字の範囲まで描画を止める CSS と一緒に配る。apps/web と同じ扱いにする
+    assetsInlineLimit: (file) => (/\.woff2?$/.test(file) ? false : undefined),
     rollupOptions: {
       input: Object.fromEntries(
         tools.map((tool) => [tool, join(import.meta.dirname, tool, "index.html")]),
       ),
+      output: {
+        // エディタは SQL、Node、Go、スライドのページが使う。1 つのチャンクにして、ページの間でキャッシュを共有する
+        advancedChunks: {
+          groups: [
+            {
+              name: "code-editor",
+              test: /node_modules[\\/](@codemirror|@lezer|@replit|crelt|style-mod|w3c-keyname)[\\/]/,
+            },
+          ],
+        },
+      },
     },
   },
 });

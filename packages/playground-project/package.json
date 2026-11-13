@@ -1,0 +1,23 @@
+{
+  "name": "@fukuemon/playground-project",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@fukuemon/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.1.11",
+    "typescript": "6.0.2",
+    "vitest": "^4.1.11"
+  }
+}
