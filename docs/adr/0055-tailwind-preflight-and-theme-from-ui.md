@@ -1,4 +1,4 @@
-# ADR-0050: サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う
+# ADR-0055: サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う
 
 ## Status
 

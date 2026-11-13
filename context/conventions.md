@@ -97,7 +97,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 - サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
 - `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css` と `theme.css` を読む。カタログの `preview.css` と同じ形にする。
-  - ADR-0050: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0050-tailwind-preflight-and-theme-from-ui.md)
+  - ADR-0055: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md)
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `:root` の素のカスタムプロパティとして出る。
 - 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
 - `scroll-padding-block-start` は、画面の上に固定のヘッダを置くときに、ヘッダの高さに合わせて決める。
