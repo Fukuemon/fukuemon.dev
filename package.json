@@ -51,7 +51,7 @@
     "textlint-rule-preset-ai-words-ja": "^1.2.1",
     "textlint-rule-prh": "^6.1.0",
     "textlint-rule-sentence-length": "^5.2.1",
-    "typescript": "^5.9.0"
+    "typescript": "6.0.2"
   },
   "engines": {
     "node": ">=22.12.0"
