@@ -190,7 +190,7 @@ export function ConsoleEntryList({
     if (!rows) return;
     isAtBottom.current = rows.scrollHeight - rows.scrollTop - rows.clientHeight < 2;
   };
-  // 読み込み中とエラーの間は行の領域が消え、行の表示に戻ると先頭から描かれる。消えている間に一番下を見ている扱いに戻し、行の表示に戻ったときに一番下へ送る
+  // 読み込み中、エラー、空の間は行の領域が消え、行の表示に戻ると先頭から描かれる。消えている間に一番下を見ている扱いに戻し、行の表示に戻ったときに一番下へ送る
   useEffect(() => {
     const rows = rowsRef.current;
     if (!rows) {

@@ -242,6 +242,15 @@ describe("ConsoleEntryList", () => {
       await expect.poll(distanceToBottom).toBeLessThan(2);
     });
 
+    it("上へ戻した後に行が全て消えて空になると、一番下を見ている扱いに戻り、行が戻ると一番下を見せる", async () => {
+      const { rerender } = render(frame(30));
+      rows().scrollTop = 0;
+      await nextFrames(3);
+      rerender(frame(0));
+      rerender(frame(30));
+      await expect.poll(distanceToBottom).toBeLessThan(2);
+    });
+
     it("上へ戻した後に読み込み中を挟むと、一番下を見ている扱いに戻り、行が増えると一番下へ送る", async () => {
       const { rerender } = render(frame(30));
       rows().scrollTop = 0;
