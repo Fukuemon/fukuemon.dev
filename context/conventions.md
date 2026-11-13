@@ -62,8 +62,8 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 ### 記事の本文
 
 記事の本文は `apps/web/src/content/articles/` に置く。  
-コンテンツの用語と、frontmatter の項目が守る条件は [domain.md](domain.md) にある。  
-1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。
+コンテンツの用語と、frontmatter の項目が守る条件は [domain.md](domain.md) と [domain/content.md](domain/content.md) にある。  
+1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。新しいシリーズを作るときだけ、`index.md` を足す。
 
 - 原稿の本文は、`である` 調で書く。frontmatter の `description` も同じである。
   - 箇条書きと表のセルは、体言止めか終止形で書く。

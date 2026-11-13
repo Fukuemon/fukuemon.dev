@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: Content Model
-description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef への正規化、loader との結線
+description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef へのloader との結線
 status: stable
 governs:
   - packages/content-model/
@@ -83,7 +83,8 @@ export const articleSchema = z.object({
 形式を足すときは、`ARTICLE_FORMATS` に値を足す。
 
 記事は、読了時間を持たない。  
-手で書くと本文の分量とずれる。ずれた数字があると、同じ行にある計測の値まで信用されなくなる。
+手で書くと本文の分量とずれる。  
+ずれた数字があると、同じ行にある計測の値まで信用されなくなる。
 
 ### シリーズ
 
@@ -102,7 +103,7 @@ articles/
 `index.md` は記事ではなくシリーズの定義なので、`series` の collection が読み、`articles` の collection からは外す。  
 `seriesSchema` は `title` と `description` を持つ。
 
-`planSeries()` は、記事の `articles/` からの相対パスと `order` を受け取り、次の違反があればビルドを失敗させる。  
+`planSeries()` は、記事の `articles/` からの相対パスと `order`、`index.md` を持つシリーズのディレクトリ名の集合を受け取り、次の違反があればビルドを失敗させる。  
 エラーには、違反した記事のパスを載せる。
 
 | 違反                                                          | エラー                    |
@@ -139,7 +140,7 @@ flowchart LR
     a4["Article<br/>wal-and-checkpoint"] -->|related| a3
 ```
 
-`related` は、著者が明示した筋である。  
+`related` は、著者が明示した関連である。  
 分類が同じであることとは別の軸で、分類から自動では作らない。  
 同じシリーズに入っていることとも別で、シリーズの並びからは作らない。
 
@@ -175,8 +176,7 @@ export type ContentRef = {
 };
 ```
 
-種別が 1 つでも、`ContentRef` は残す。  
-理由は種別の多さではなく、設計不変量 3（`pages/`、`features/`、`components/`、`layouts/` は `astro:content` を直接参照しない）を成り立たせることにある。  
+`ContentRef` は、設計不変量 3（`pages/`、`features/`、`components/`、`layouts/` は `astro:content` を直接参照しない）を成り立たせるために持つ。  
 URL の規則を変えるときに変わるのは、`href` を算出する規則だけである。
 
 ### コンポーネントの構成
@@ -219,7 +219,7 @@ export const collections = {
 
 `articlesLoader()` は、`glob` の loader で記事を読んだ後に、`planSeries()` でシリーズの構造と `order` を確認する。  
 チェックをページの描画に任せると、そのページを使わないビルドでチェックが抜けるので、読み込みのときに行う。  
-`articles` の glob は、`*/index.md` を除く。
+`articles` の glob は、`*/index.{md,mdx}` を除く。
 
 1 つの collection にまとめず、記事とシリーズを別の collection にする。  
 frontmatter の項目が違い、1 つの schema にまとめると、記事の必須の項目が欠けた原稿がシリーズの schema で通ってしまう。
