@@ -6,7 +6,7 @@ export type DisclosureProps = {
   summary: string;
   children: ReactNode;
   defaultOpen?: boolean;
-  /** compact は、要約を 24 px の高さと太字の 13 px、中身の余白を 4〜8 px にする。コードを動かす画面に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact は、要約を 24px の高さと太字の 13px にし、中身の余白を詰める。コードを動かす画面に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
   density?: "default" | "compact";
 };
 

@@ -13,7 +13,7 @@ export type ActionMenuProps = {
   /** 開くボタンの読み上げる名前。 */
   label: string;
   items: readonly ActionMenuItem[];
-  /** compact はボタンと項目を 28 px の高さ、項目の文字を 13 px にする。コードを動かす画面の帯に置くメニューに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact はボタンと項目を 28px の高さ、項目の文字を 13px にする。コードを動かす画面の帯に置くメニューに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
   density?: "default" | "compact";
 };
 

@@ -104,21 +104,22 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 | 名前            | DADS のスタイル        | 用途                                                                                                                                            |
 | --------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `caption`       | Dns-14N-130            | 補足、図の説明、時刻                                                                                                                            |
-| `body-dense`    | Dns-16N-130            | 表のセル、入力欄の値                                                                                                                            |
+| `body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、木の行                                                                                                                    |
 | `body`          | Std-16N-170            | 記事の本文                                                                                                                                      |
 | `label`         | Oln-16B-100            | ボタン、タブ                                                                                                                                    |
 | `heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                                                                                                                  |
 | `heading-md`    | Std-20B-150            | 記事の見出し                                                                                                                                    |
 | `heading-lg`    | Std-28B-150            | 記事の題                                                                                                                                        |
 | `code`          | 等幅の 16px のスタイル | コードブロック                                                                                                                                  |
-| `code-dense`    | 等幅の 14px のスタイル | 今はコンポーネントで使う場所が無い                                                                                                              |
+| `code-dense`    | 等幅の 14px のスタイル | プレイグラウンドの SQL の実行計画の文字                                                                                                         |
 | `compact`       | 12px のスタイル        | コードを動かす画面のコンソールの値、時刻、出力元、行の数、下の状態の帯、HTTP の流れの通信する者と状態コード、入力欄の補足と誤りの文（ADR-0062） |
 | `label-compact` | 太字の 13px のスタイル | コードを動かす画面の領域の題、タブ、ボタン、開閉の要約、入力欄の見出し、HTTP の本文の見出し（ADR-0062）                                         |
-| `body-compact`  | 13px のスタイル        | コードを動かす画面のファイルの木の行、入力欄の値、表のセル（ADR-0062）                                                                          |
+| `body-compact`  | 13px のスタイル        | コードを動かす画面のファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文（ADR-0062）                                |
 | `code-compact`  | 等幅の 13px のスタイル | コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダと本文（ADR-0062）                                                            |
 
 `code` と `code-dense` は、DADS の等幅のテキストスタイルのうち、大きさが同じものの行高を使う。  
-`code-compact` の行高は、DADS に無い 154%（約 20px、正確には 20.02px）にする。VS Code と StackBlitz のエディタは 12〜14px の文字を 18〜20px の行に置き、その間隔に近づけるためである。
+`code-compact` の行高は、DADS に無い 154% にし、13px の文字を約 20px（20.02px）の行に置く。  
+DADS の 150% では、行は 19.5px になる。
 
 - 14px より小さい文字を使わない。例外は、コードを動かす画面のコンポーネントの compact の 4 つ（12px と 13px）である（ADR-0062）。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
@@ -356,9 +357,11 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 
 コードを動かす画面の Case は、どれも `ToolPane` の領域として描き、次の形にそろえる。
 
-- 領域は、VS Code と DevTools のように隙間なく並べ、1px の `border` の罫で仕切る。並べる側は `ToolPaneGroup` で囲み、領域の間を空けない。中の `ToolPane` は、四方の罫を左と上へ 1px ずらして隣の罫に重ねるので、高さのそろわない並びでも罫は 2 重にならない。
+- 領域は、VS Code と DevTools のように隙間なく並べ、1px の `border` の罫で仕切る。
+  - 並べる側は `ToolPaneGroup` で囲み、領域の間を空けない。
+  - 中の `ToolPane` は、四方の罫を左と上へ 1px ずらして隣の罫に重ねる。高さのそろわない並びでも、罫は 2 重にならない。
 - 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
-- 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。
+- 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
 

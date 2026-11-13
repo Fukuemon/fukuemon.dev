@@ -25,7 +25,7 @@ export type TabsProps = {
    */
   panel?: "padded" | "flush";
   /**
-   * compact は、タブを 32 px の高さと 13 px の文字、閉じるボタンを 28 px、選んだタブの筆の線を 3 px にする。
+   * compact は、タブを 32px の高さと 13px の文字、閉じるボタンを 28px、選んだタブの筆の線を 3px にする。
    * コードを動かす画面のエディタのタブに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
    */
   density?: "default" | "compact";

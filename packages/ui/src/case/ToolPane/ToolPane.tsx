@@ -84,12 +84,12 @@ export function ToolPane({
         )}
         {state.kind === "loading" && (
           <div className="p-3">
-            <Loading label={state.label} />
+            <Loading density="compact" label={state.label} />
           </div>
         )}
         {state.kind === "error" && (
           <div className="p-3">
-            <Notice isAlert title={state.title} tone="danger">
+            <Notice density="compact" isAlert title={state.title} tone="danger">
               {state.message}
             </Notice>
           </div>

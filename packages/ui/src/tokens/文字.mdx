@@ -41,11 +41,7 @@ import * as Stories from "./Text.stories";
   <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
     {[
       ["text-body", "font-sans text-body", "記事の本文"],
-      [
-        "text-body-dense",
-        "font-sans text-body-dense",
-        "表のセル、入力欄の値、ファイルのツリーの行",
-      ],
+      ["text-body-dense", "font-sans text-body-dense", "表のセル、入力欄の値、木の行"],
       ["text-label", "font-sans text-label", "ボタン、タブ"],
       [
         "text-label-compact",
@@ -55,7 +51,7 @@ import * as Stories from "./Text.stories";
       [
         "text-body-compact",
         "font-sans text-body-compact",
-        "コードを動かす画面のファイルの木の行、入力欄の値、表のセル（ADR-0062）",
+        "コードを動かす画面のファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文（ADR-0062）",
       ],
       ["text-caption", "font-sans text-caption", "補足、図の説明、時刻"],
     ].map(([name, cls, use]) => (
@@ -74,16 +70,11 @@ import * as Stories from "./Text.stories";
 <Unstyled>
   <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
     {[
-      [
-        "text-code",
-        "font-mono text-code",
-        "コードブロック、エディタ、端末",
-        'const 値 = fetch("/api");',
-      ],
+      ["text-code", "font-mono text-code", "コードブロック", 'const 値 = fetch("/api");'],
       [
         "text-code-dense",
         "font-mono text-code-dense",
-        "HTTP のヘッダと本文、端末の狭い表示",
+        "プレイグラウンドの SQL の実行計画の文字",
         "content-type: application/json",
       ],
       [

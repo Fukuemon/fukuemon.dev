@@ -19,7 +19,7 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
   /** `underline` の欄の左に置く印。装飾なので読み上げから外す。 */
   leading?: ReactNode;
   /**
-   * compact は、欄を 28 px の高さ、値と見出しを 13 px にする。`appearance="boxed"` だけに効く。
+   * compact は、欄を 28px の高さ、値と見出しを 13px にする。`appearance="boxed"` だけに効く。
    * コードを動かす画面の帯に置く欄（プレビューの URL、ファイルの名前）に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
    */
   density?: "default" | "compact";

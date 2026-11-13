@@ -104,7 +104,7 @@ export const WithContent: Story = {
   },
 };
 export const CompactBody: Story = {
-  name: "compact の 13px",
+  name: "13px の詰めた項目",
   args: {
     density: "compact",
     textSize: "body-compact",

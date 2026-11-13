@@ -49,10 +49,10 @@ function highlight(line: string): ReactNode[] {
   return parts;
 }
 
-/** 行の頭の空白の数から、字下げの補助線を引く段の数を出す。字下げの 1 段は 2 文字である。 */
+/** 行の頭の空白の数から、インデントガイドを引く段の数を出す。インデントの 1 段は 2 文字である。 */
 const indentLevels = (line: string) => Math.floor((line.length - line.trimStart().length) / 2);
 
-/** 今いる行の最後の開き括弧と、それに対応する閉じ括弧の位置。括弧が無ければ undefined を返す。 */
+/** カーソルのある行の最後の `{` と、対応する `}` の位置。`{` が無ければ undefined を返す。 */
 function findBracketPair(
   lines: readonly string[],
   activeLine: number,
@@ -78,7 +78,7 @@ function findBracketPair(
 
 /**
  * カタログでエディタと端末のエンジンの代わりに置く、横に送れるコードの枠。受け取ったテーマの名前を data 属性に出す。
- * `source` は、プレイグラウンドの CodeMirror 6 の表示（apps/playground/src/code-editor/extensions.ts）に合わせ、行番号、今いる行の薄い帯、字下げの縦の補助線、対応する括弧の枠を描く。
+ * `source` は、プレイグラウンドの CodeMirror 6 の表示（#99）に合わせ、行番号、カーソルのある行の薄い帯、インデントガイド、対応する括弧の枠を描く。
  * 長い行を折り返さずに横に送り、行の右に 16px の余白を残す。
  */
 export function DummyEngine({
