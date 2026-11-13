@@ -55,6 +55,44 @@ function createStore<T>(initial: T): Store<T> & { set: (value: T) => void } {
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
+/** Web Worker を 1 つ作り、WASM を渡して、終了か失敗の結果を返す。`setRunning` には、止めるために結果を決める関数を、実行中だけ渡す */
+function runInWorker(
+  createWorker: () => WorkerLike,
+  module: WebAssembly.Module,
+  input: ToWorker["input"],
+  onOutput: (chunk: string) => void,
+  setRunning: (running: { resolve: (exit: GoExit) => void } | undefined) => void,
+): Promise<GoExit> {
+  return new Promise<GoExit>((resolve) => {
+    let worker: WorkerLike;
+    try {
+      worker = createWorker();
+    } catch (error) {
+      resolve({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
+      return;
+    }
+    const finish = (exit: GoExit) => {
+      worker.terminate();
+      setRunning(undefined);
+      resolve(exit);
+    };
+    setRunning({ resolve: finish });
+    worker.onmessage = ({ data }) => {
+      if (data.type === "output") onOutput(data.chunk);
+      else if (data.type === "exit") finish({ kind: "exited", exitCode: data.code });
+      else finish({ kind: "failed", message: `${CRASHED}: ${data.message}` });
+    };
+    worker.onerror = ({ message }) => {
+      finish({ kind: "failed", message: message ? `${CRASHED}: ${message}` : CRASHED });
+    };
+    try {
+      worker.postMessage({ module, input });
+    } catch (error) {
+      finish({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
+    }
+  });
+}
+
 /**
  * Yaegi を Web Worker で動かす GoRunner。WASM は、最初の load か実行で取得してコンパイルし、失敗したときは次の呼び出しで取得し直す。
  * 実行のたびに Web Worker と WASM のインスタンスを作り直す。testing.Main が os.Exit で終わり、インスタンスを使い回せないためである (ADR-0037)。
@@ -101,33 +139,8 @@ export function createGoRunner({ compile, createWorker }: GoRunnerOptions): GoRu
         return { kind: "failed", message: `Yaegi を読み込めませんでした: ${messageOf(error)}` };
       }
       if (stopped) return { kind: "stopped" };
-      return new Promise<GoExit>((resolve) => {
-        let worker: WorkerLike;
-        try {
-          worker = createWorker();
-        } catch (error) {
-          resolve({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
-          return;
-        }
-        const finish = (exit: GoExit) => {
-          worker.terminate();
-          current = undefined;
-          resolve(exit);
-        };
-        current = { resolve: finish };
-        worker.onmessage = ({ data }) => {
-          if (data.type === "output") onOutput(data.chunk);
-          else if (data.type === "exit") finish({ kind: "exited", exitCode: data.code });
-          else finish({ kind: "failed", message: `${CRASHED}: ${data.message}` });
-        };
-        worker.onerror = ({ message }) => {
-          finish({ kind: "failed", message: message ? `${CRASHED}: ${message}` : CRASHED });
-        };
-        try {
-          worker.postMessage({ module, input });
-        } catch (error) {
-          finish({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
-        }
+      return runInWorker(createWorker, module, input, onOutput, (running) => {
+        current = running;
       });
     };
 
