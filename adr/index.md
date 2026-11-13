@@ -75,6 +75,21 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。
 
+## 提案の ADR
+
+承認の前の ADR を並べる。  
+承認したら、上の話題の表へ移し、下の依存の図を直す。
+
+| ADR                                                           | 題                                                                                                                              | 置換する ADR |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| [ADR-0039](0039-canvas-drawio-and-excalidraw.md)              | キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する                     | 無い         |
+| [ADR-0040](0040-canvas-figures-in-articles.md)                | 記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする                           | 無い         |
+| [ADR-0041](0041-slides-editor-with-marp.md)                   | スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する                                                | 無い         |
+| [ADR-0042](0042-published-slides-as-static-pages.md)          | 公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む                        | 無い         |
+| [ADR-0043](0043-multiple-named-documents-per-tool.md)         | キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する                           | 無い         |
+| [ADR-0044](0044-ai-operations-with-webmcp.md)                 | AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする                          | 無い         |
+| [ADR-0045](0045-ai-operations-permission-and-confirmation.md) | AI のエージェントからの操作は、ページを開くたびにオフに戻るスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す | 無い         |
+
 ## ADR の間の依存
 
 矢印は、ADR から、その ADR の Context が前提にした ADR へ向く。
