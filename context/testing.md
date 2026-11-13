@@ -47,9 +47,9 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - 最初の訪問かを返す `visit.ts`
 - 季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
 
-`src/lib/` の次のモジュールも対象にする。
+`src/lib/` では、次のモジュールも対象。
 
-- 公開するかを判定し、シリーズの位置と前後を組む `content/article-pages.ts`
+- 公開するかを判定し、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `content/article-pages.ts`
 - `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
 - 和文の間の改行を消す `rehype-ja-linebreak.ts`
 - 表と図を横に送れる枠で包む `rehype-scroll-box.ts`

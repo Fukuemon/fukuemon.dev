@@ -252,14 +252,14 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 - `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
 - `apps/web/src/content.config.ts`: collection の結線
 - `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
-- `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事のページのシリーズの位置と前後を組む `planArticlePages()`
+- `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `planArticlePages()`
 - `apps/web/src/lib/content/articles.ts`: 記事のページが使う `getArticlePaths()` と `renderArticle()`
 - 一覧のページが使う関数（`listContent()` など）は、まだ無い。
 
 `isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
 `planArticlePages()` は、シリーズの位置と前後を、`isPublic()` を通った記事だけで数える。  
 シリーズの所属と読む順は、Astro の `id` の先頭のディレクトリ名と `order` から、`planArticlePages()` が導く。  
-`planSeries()` の結果は、ビルドのチェックにだけ使う。  
+`planSeries()` は、読み込みのときのチェックにだけ使い、戻り値はページに渡さない。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
 
