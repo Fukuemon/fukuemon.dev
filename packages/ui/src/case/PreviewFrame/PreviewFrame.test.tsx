@@ -16,7 +16,7 @@ describe("PreviewFrame", () => {
     expect(screen.getByTitle("プレビューの画面")).toBeInTheDocument();
   });
 
-  it("URL の欄の面と再読み込みのボタンは、上下の中央がそろう", () => {
+  it("URL の欄と再読み込みのボタンは、上下の中央がそろう", () => {
     render(<Default />);
     const field = screen.getByRole("textbox", { name: "プレビューの URL" }).getBoundingClientRect();
     const button = screen.getByRole("button", { name: "再読み込み" }).getBoundingClientRect();

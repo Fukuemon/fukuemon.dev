@@ -21,7 +21,10 @@ fukuemon.dev のデザインシステムのトークンの持ち方と、値の�
 
 ## Decision
 
-トークンを 3 つの層に分け、`packages/ui/src/tokens/` に置く。値は fukuemon.dev が決める。
+トークンを 3 つの層に分け、`packages/ui/src/tokens/` に置く。値は fukuemon.dev が決める。  
+フォーカスの色の判断は、ADR-0060 にある。
+
+- ADR-0060: [フォーカスの色を、DADS の値で持つ](0060-focus-color-from-dads.md)
 
 - プリミティブトークンは、fukuemon.dev の値を持つ。
   - 地と罫と差し色は、旧サイトの `packages/design-system/styles/tokens.css` の値を使う。生成りの地、墨の文字、温かい灰の罫、くすんだ緑、藍、錆である。

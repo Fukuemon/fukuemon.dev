@@ -143,7 +143,7 @@ describe("FileTree", () => {
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
   });
 
-  it("新しい項目の欄と「作る」ボタンは、上端と下端がそろう", async () => {
+  it("新しい項目の欄と「作る」ボタンは、上端と下端がそろい、間が 12 px 空く", async () => {
     render(<NoSelection />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     // 欄は、40 px の見た目の上下に 2 px ずつ押せる範囲を広げている（TextField の文書コメント）
