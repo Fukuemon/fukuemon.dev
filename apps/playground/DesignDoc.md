@@ -62,7 +62,7 @@ ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツ�
 - 記事の iframe と、トップレベルで開くページは、同じ URL を使う。ページは、`window.self !== window.top` で埋め込みかどうかを判定し、埋め込みのときは、ページのヘッダを出さず、AI のエージェントからの操作を登録しない。
 - ペインの並べ方は、ページの幅で決める。
 
-ビルドは、`vite build` で行う。  
+ビルドは、`vp build` で行う。  
 React Compiler を、`apps/playground` のビルドにだけ入れる。`apps/playground` のコードに、`memo`、`useMemo`、`useCallback` を書かない。書くのは、計測して遅いと分かったときだけにする。  
 ADR-0047: [React Compiler を、`apps/playground` にだけ入れる](../../docs/adr/0047-react-compiler-in-playground.md)
 
