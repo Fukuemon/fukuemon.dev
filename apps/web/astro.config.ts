@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@astrojs/react";
 import { unified } from "@astrojs/markdown-remark";
 import expressiveCode, { ExpressiveCodeTheme } from "astro-expressive-code";
-import { toVsCodeTheme } from "@fukuemon/ui";
+import { toVsCodeTheme } from "@fukuemon/ui/code-theme";
 import { rehypeJaLinebreak } from "./src/lib/rehype-ja-linebreak";
 import { rehypeMermaid } from "./src/lib/rehype-mermaid";
 

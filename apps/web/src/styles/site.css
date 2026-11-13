@@ -26,24 +26,27 @@
   .prose :where(blockquote) {
     @apply border-s-2 border-border ps-4 text-text-secondary;
   }
-  /* packages/ui の Link の文中の形と同じにする。フォーカスの輪が外へ 4px 広がるので、左右を 6px 空ける */
+  /* packages/ui の Link と Table の文中の形と同じにする。フォーカスの輪が外へ 4px 広がるので、左右を 6px 空ける */
   .prose :where(a) {
     @apply mx-1.5 text-link underline underline-offset-4 link-rule link-rule-below-underline visited:text-link-visited focus-visible:focus-ring;
+  }
+  .prose :where(a[href^="http"]) {
+    @apply text-link-external visited:text-link-external;
   }
   .prose :where(:not(pre) > code) {
     @apply bg-code-surface px-1 font-mono text-code-dense text-code-text;
   }
   .prose :where(table) {
-    @apply w-full border-collapse;
+    @apply w-full border-collapse text-body-dense;
   }
   .prose :where(thead) {
     @apply border-t-2 border-text;
   }
   .prose :where(th, td) {
-    @apply border-b border-border px-2 py-2 text-start align-top;
+    @apply border-b border-border px-4 py-2 text-start align-top;
   }
   .prose :where(th) {
-    @apply font-semibold;
+    @apply font-bold;
   }
 
   /* Pele の SVG の色を、Pele の変数からトークンへ対応させる。1 枚の SVG のままライトとダークを切り替える (ADR-0016) */

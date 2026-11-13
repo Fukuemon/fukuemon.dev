@@ -6,9 +6,8 @@ import { getArticlePaths, renderArticle, type ArticlePageProps } from "../../lib
 export const getStaticPaths = getArticlePaths;
 
 type Props = ArticlePageProps;
-const { entry, series } = Astro.props;
-const { title, description, publishedAt, updatedAt } = entry.data;
-const Content = await renderArticle(entry);
+const { id, title, description, publishedAt, updatedAt, series } = Astro.props;
+const Content = await renderArticle(id);
 
 const toDate = (d: Date) => d.toISOString().slice(0, 10);
 ---
