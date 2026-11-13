@@ -46,7 +46,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - バージョンは範囲で書かず、1 つに固定する。上げるときは、図の見た目を撮って比べる。
   - ADR-0016: [mermaid の図を、ビルドでも島でも Pele で SVG にする](../adr/0016-render-mermaid-with-pele.md)
 - `pagefind` は、全文検索の索引を `astro build` の後に作る。
-- `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。プレイグラウンドでは、`@fukuemon/sql-runtime` が、SQL だけを動かすツールに使う。Node の実行環境の中の DB のプロセスには、`@fukuemon/node-runtime` の `guest/` が、同じバージョンを入れる。
+- `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。プレイグラウンドでは、`@fukuemon/sql-runtime` が、SQL だけを動かすツールに使う。Node の実行環境の中の DB のプロセスには、`@fukuemon/node-runtime` の `guest/` の `package.json` に書いた同じバージョンを、実行環境の中で `npm install` する。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。

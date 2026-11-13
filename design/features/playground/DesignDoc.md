@@ -92,13 +92,13 @@ packages/
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
-  - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境。`@fukuemon/sql-runtime` に依存する。
+  - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
   - `@fukuemon/go-runtime`（`packages/go-runtime`）: Go のコードを実行する処理。
   - 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。`@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
   - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。
 - この文書では、`node-runtime/` は `packages/node-runtime/src/` を、`webcontainer/` と `guest/` はその下のディレクトリを指す。
 - `@fukuemon/sql-runtime` は、エントリーポイントを 2 つに分ける。
-  - 型と、PGlite で SQL を実行して結果の形にする関数。PGlite からは、型だけを import する。ブラウザと Node の両方で動かすので、DOM と Worker の API を使わない。`Store` の型も、ここに置く。
+  - 型と、PGlite で SQL を実行して結果の形にする関数。このエントリーポイントは、PGlite から型だけを import する。関数はブラウザと Node の両方で動くので、このエントリーポイントは DOM と Worker の API を使わない。`Store` の型も、このエントリーポイントに置く。
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
 - `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
@@ -108,7 +108,7 @@ packages/
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
   - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
 
-次の図は、`apps/playground/src/` のディレクトリと、package の間で許す import の向きを示す。矢印の無い組は、import しない。
+次の図は、`apps/playground/src/` のディレクトリと package の、互いの間で許す import の向きを示す。矢印の無い組は、import しない。
 
 ```mermaid
 flowchart TB
@@ -147,11 +147,11 @@ flowchart TB
 ```
 
 - `src/node/`、`sql-console/`、`node-runtime/` が `@fukuemon/sql-runtime` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
-  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数を import する。`guest/` は、Web Worker で動かす実装のエントリーポイントを import しない。
+  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数を import する。`guest/` は、PGlite を Web Worker で動かす `SqlDatabase` の実装のエントリーポイントを import しない。
 - `node-runtime/` は、`project/` を import しない。`BootOptions` は、プロジェクトの型を使わない。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
-- `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` は、依存に入れない。
+- `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
 - Oxlint の `no-restricted-imports` が止める import は、次の 2 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
   - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
@@ -238,7 +238,7 @@ type OutputLog = {
 - `database` は、DB を使うプロジェクトのときだけある。DB のプロセスの状態は、`database` の `status` で公開し、`NodeRuntime` には持たせない。
 - 実行環境を起動し直すときは、`src/node/` のモジュールが、古いインスタンスの `files.readAll` の結果を受け取ってから、`dispose` を呼ぶ。その結果を `BootOptions` の `files` に渡して、`bootNodeRuntime` で新しいインスタンスを作る。
   - `files.readAll` には、保存のときと同じ `exclude` と `maxBytes` を渡す。`text` が `null` のファイルは、新しいインスタンスに渡さない。
-  - ページを開いたときに読んだ、保存したファイルは使わない。IndexedDB を読めないときも、訪問者が変えたファイルで起動する。
+  - ページを開いたときに IndexedDB から読んだファイルは使わない。作業ディレクトリのファイルで起動するので、IndexedDB を読めないときも、訪問者が変えたファイルが残る。
 
 SQL だけを動かすツールと、Go を動かすツールは、`NodeRuntime` を実装しない。それぞれ、`SqlDatabase`（`@fukuemon/sql-runtime`）と `GoRunner`（`@fukuemon/go-runtime`）を持つ。
 
@@ -396,7 +396,7 @@ Node の実行環境は、次のとおり保存する。
 - 1 つのファイルが 1 MB を超えるものと、テキストとして読めないもの（`text` が `null` のもの）は、保存しない。
 - 保存したバージョンと、プロジェクトの JSON のバージョンが違うときは、保存したファイルを開き、「初期の状態に戻す」の操作を出す。
 - `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。
-- `workspace/` は、読めなかったことを、ページを開いている間だけ持ち、その間は IndexedDB に書き込まない。SQL だけを動かすツールと、Go を動かすツールも、同じ扱いになる。
+- `workspace/` は、IndexedDB を読めなかったことを、ページを開いている間だけ持ち、その間は IndexedDB に書き込まない。SQL だけを動かすツールと、Go を動かすツールでも、`workspace/` は同じように書き込まない。
 - 実行環境が追加するファイルは、作業ディレクトリの外にあるので、保存の対象に入らない。
   - ADR-0052: [実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す](../../../adr/0052-runtime-files-outside-workdir.md)
 
@@ -461,7 +461,7 @@ sequenceDiagram
 - プレビューの iframe が 30 秒で読み込まれないときは、`PreviewPane` が、プレビューのペインにだけ、動かせない理由を出す。
 - 訪問者は、端末で、WebContainers のシェルを制限なしで使う。
 - 「実行環境を起動し直す」の操作は、いつでも使える。起動し直した後は、保存したファイルがあるときと同じに扱う。`npm install` だけを自動で実行し、起動のコマンドは、訪問者が実行のボタンを押してから実行する。
-- DB のプロセスの終了のほかの理由で、起動の後に実行環境が動かなくなったときは、訪問者が、「実行環境を起動し直す」の操作で起動し直す。画面は、実行環境の全体の状態を表示しない。
+- DB のプロセスが終了したとき以外で、起動の後に実行環境が動かなくなったときは、訪問者が、「実行環境を起動し直す」の操作で起動し直す。画面は、実行環境の全体の状態を表示しない。
 
 ### 実行環境が追加するファイルとプロセス
 

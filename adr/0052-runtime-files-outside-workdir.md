@@ -32,7 +32,7 @@
 
 ### 2. preload の追加の仕方
 
-実行環境は、画面が起動するプロセスと、シェルに、環境変数 `NODE_OPTIONS` を渡す。  
+実行環境は、起動のコマンドのプロセスと、シェルに、環境変数 `NODE_OPTIONS` を渡す。  
 実行環境が自分で起動するプロセス（DB のプロセス、DB の依存の `npm install`）には、preload を追加しない。
 
 - `NODE_OPTIONS` には、preload ごとに `--require <絶対パス>` を並べる。
