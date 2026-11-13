@@ -74,7 +74,7 @@ apps/playground/
   sql/index.html          SQL だけを動かすツールのエントリーポイント
   go/index.html           Go を動かすツールのエントリーポイント
   src/
-    node/                 Node の実行環境のページ。レイアウト、ペインのコンポーネント、Context、選択の状態
+    node/                 Node の実行環境のページ。レイアウト、ペインのコンポーネント、Context、選択の状態、起動と保存を進める React の外のモジュール
     sql/                  SQL だけを動かすツールのページ
     go/                   Go を動かすツールのページ
     sql-console/          SQL の入力欄と、結果の表
@@ -98,11 +98,11 @@ packages/
   - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。
 - この文書では、`node-runtime/` は `packages/node-runtime/src/` を、`webcontainer/` と `guest/` はその下のディレクトリを指す。
 - `@fukuemon/sql-runtime` は、エントリーポイントを 2 つに分ける。
-  - 型と、PGlite で SQL を実行して結果の形にする関数。PGlite からは、型だけを import する。
+  - 型と、PGlite で SQL を実行して結果の形にする関数。PGlite からは、型だけを import する。ブラウザと Node の両方で動かすので、DOM と Worker の API を使わない。`Store` の型も、ここに置く。
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
 - `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
-- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。テストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
+- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
@@ -395,7 +395,8 @@ Node の実行環境は、次のとおり保存する。
 - 保存しないファイルの規則は、`src/node/` の 1 か所に置き、`files.readAll` の引数で渡す。`exclude` に `node_modules` を、`maxBytes` に 1 MB を渡す。
 - 1 つのファイルが 1 MB を超えるものと、テキストとして読めないもの（`text` が `null` のもの）は、保存しない。
 - 保存したバージョンと、プロジェクトの JSON のバージョンが違うときは、保存したファイルを開き、「初期の状態に戻す」の操作を出す。
-- `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。読めなかった後は、ページを開いている間、IndexedDB に書き込まない。
+- `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。
+- `workspace/` は、読めなかったことを、ページを開いている間だけ持ち、その間は IndexedDB に書き込まない。SQL だけを動かすツールと、Go を動かすツールも、同じ扱いになる。
 - 実行環境が追加するファイルは、作業ディレクトリの外にあるので、保存の対象に入らない。
   - ADR-0052: [実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す](../../../adr/0052-runtime-files-outside-workdir.md)
 
@@ -538,7 +539,8 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - Oxlint の `no-restricted-imports`: 次の 2 つの import を止める。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
   - `apps/playground/src/` の `node/`、`sql/`、`go/` の間の import
-- package の依存の宣言と knip: 次の 2 つを確認する。
+- package の依存の宣言と knip: 次の 3 つを確認する。
   - `apps/playground` が、`@webcontainer/api` を import しないこと
-  - 実行環境の 3 つの package が、React と `@fukuemon/ui` に依存しないこと
+  - 実行環境の 3 つの package が、React、`@fukuemon/ui`、`@fukuemon/playground-project` に依存しないこと
+  - `@fukuemon/node-runtime` が、workspace の package では、`@fukuemon/sql-runtime` だけに依存すること
 - `apps/web` のビルド: `@fukuemon/playground-project` の schema で `playground.json` を検証する。`tool` が `node` のプロジェクトを埋め込む記事の URL を、`_headers` に書く。
