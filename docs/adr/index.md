@@ -53,7 +53,7 @@
 | [ADR-0028](0028-radius-shadow-and-brush-motion.md)       | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                    |
 | [ADR-0021](0021-ui-components-and-catalog.md)            | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
 | [ADR-0022](0022-code-colors-from-tokens.md)              | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
-| [ADR-0062](0062-dense-text-and-targets-in-playground.md) | （提案）コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                   |
+| [ADR-0062](0062-dense-text-and-targets-in-playground.md) | コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                           |
 
 ADR-0010 の Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」は、ADR-0055 に置換した。
 
