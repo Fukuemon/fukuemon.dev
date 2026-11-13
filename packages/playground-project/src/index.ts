@@ -9,14 +9,15 @@ const startCommandSchema = z.object({
 const UNSAFE_SEGMENTS = new Set(["", ".", "..", "__proto__"]);
 
 /** 作業ディレクトリからの相対のパスとして書けるキーか。作業ディレクトリの外と、オブジェクトの prototype を指せないようにする。 */
-const isFilePath = (path: string) =>
+const isSafeFilePath = (path: string) =>
   !/[\\\0]/.test(path) && path.split("/").every((segment) => !UNSAFE_SEGMENTS.has(segment));
 
 // z.record は __proto__ のキーを検証の前に落とすので、生の入力のキーで確かめる
 const filesSchema = z
   .unknown()
   .refine(
-    (files) => typeof files !== "object" || files === null || Object.keys(files).every(isFilePath),
+    (files) =>
+      typeof files !== "object" || files === null || Object.keys(files).every(isSafeFilePath),
     "files のキーは、空、.、..、__proto__ の区切りと、\\ と NUL を含まないパスにする",
   )
   .pipe(z.record(z.string(), z.string()));

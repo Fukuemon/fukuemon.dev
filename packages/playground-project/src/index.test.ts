@@ -78,6 +78,14 @@ describe("playgroundProjectSchema", () => {
     },
   );
 
+  it.each([
+    ["null", null],
+    ["文字列", "x"],
+  ])("files が %s のときは、例外を投げずに files の誤りにする", (_, files) => {
+    const result = playgroundProjectSchema.safeParse({ ...sqlProject, files });
+    expect(result.error?.issues.map((issue) => issue.path)).toStrictEqual([["files"]]);
+  });
+
   it("open が files に無いときは、open の誤りにする", () => {
     const result = playgroundProjectSchema.safeParse({ ...sqlProject, open: "missing.sql" });
     expect(result.error?.issues.map((issue) => issue.path)).toStrictEqual([["open"]]);
