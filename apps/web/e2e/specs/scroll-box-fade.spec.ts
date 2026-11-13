@@ -29,3 +29,18 @@ for (const [name, label, index] of [
     await expect.poll(() => fadeOpacity(box)).toBe(0);
   });
 }
+
+test.describe("動きを減らす設定", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("右端の手前では薄れ始めず、右端に着いたときに一度に消える", async ({ page }) => {
+    const box = page.getByRole("region", { name: "表" }).nth(1);
+    await box.scrollIntoViewIfNeeded();
+    // 消し始める 90% と右端の間。動きを減らさない設定では opacity が 1 と 0 の間になる
+    await box.evaluate((el) => el.scrollTo({ left: (el.scrollWidth - el.clientWidth) * 0.95 }));
+    await expect.poll(() => fadeOpacity(box)).toBe(1);
+
+    await box.evaluate((el) => el.scrollTo({ left: el.scrollWidth }));
+    await expect.poll(() => fadeOpacity(box)).toBe(0);
+  });
+});

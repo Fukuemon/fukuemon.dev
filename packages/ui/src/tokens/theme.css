@@ -309,7 +309,52 @@
   }
 }
 
-/* OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない */
+/*
+ * 横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする。右端に着く手前から消し始め、着いたときに消えきる。
+ * 内容と ::after を grid の同じセルに重ねる。枠に mask を当てると、外へ広がるフォーカスの輪も切れるためである。
+ * あふれない枠ではスクロールの timeline が働かず、opacity: 0 のままになる。
+ */
+@utility scroll-fade-end {
+  display: grid;
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    &::after {
+      content: "";
+      grid-area: 1 / 1;
+      justify-self: end;
+      position: sticky;
+      inset-inline-end: 0;
+      width: calc(var(--spacing) * 12);
+      background-image: linear-gradient(to right, transparent, var(--fd-color-surface));
+      opacity: 0;
+      pointer-events: none;
+      /* shorthand で書くと、ビルドが animation-timeline まで shorthand にまとめ、ブラウザが宣言ごと捨てる */
+      animation-name: fd-scroll-fade-end;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(nearest inline);
+    }
+  }
+}
+
+@keyframes fd-scroll-fade-end {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/*
+ * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
+ * スクロールに合わせた動き（scroll-fade-end）は、途中の移り変わりを出さず、終わりの位置で一度に切り替える。
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -317,6 +362,7 @@
   *::backdrop {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-timing-function: step-end !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
