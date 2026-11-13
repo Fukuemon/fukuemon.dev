@@ -86,6 +86,7 @@ export function DummyEngine({
           </span>
           <code className="pr-4 pl-3">
             {lines.map((line, index) => (
+              // oxlint-disable-next-line react/no-array-index-key -- 同じ中身の行が並ぶことがあり、並びも変わらない (context/conventions.md)
               <span key={index}>
                 {highlight(line)}
                 {"\n"}

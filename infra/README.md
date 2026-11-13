@@ -1,7 +1,7 @@
 # infra
 
 Cloudflare の基盤を Terraform で作り、変える手順。  
-構成は [infra/DesignDoc.md](DesignDoc.md) に、管轄と apply の条件と credential の置き場は [context/operations.md](../context/operations.md) に、判断の理由は [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) にある。
+構成は [infra/DesignDoc.md](DesignDoc.md) に、管轄と apply の条件と credential の置き場は [context/operations.md](../context/operations.md) に、判断の理由は [ADR-0005](../docs/adr/0005-workers-terraform-wrangler-boundary.md) にある。
 
 ## Prerequisites
 

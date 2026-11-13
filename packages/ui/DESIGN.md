@@ -5,8 +5,8 @@
 構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028 にある。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
-- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../adr/0021-ui-components-and-catalog.md)
-- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
+- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
 カタログは https://design.fukuemon.dev で開ける。  
 ローカルでは、リポジトリのルートで `pnpm --filter @fukuemon/ui storybook` を流し、`http://localhost:6106` を開く。
@@ -34,7 +34,7 @@
 | 静的なファイルが読むトークンの CSS                                   | `src/tokens/tokens.gen.css`（生成物）                                                                 |
 | エンジンに渡すコードの色                                             | `src/tokens/code-theme.gen.json`（生成物）と、VS Code の形式のテーマを作る `src/tokens/code-theme.ts` |
 | コンポーネントの props と振る舞い                                    | `src/base/`、`src/case/` のコードと、カタログのコンポーネントのページの「props」と「状態」            |
-| 構成の判断と、却下した案                                             | リポジトリのルートの `adr/`                                                                           |
+| 構成の判断と、却下した案                                             | `docs/adr/`                                                                                           |
 
 ## 元にしたデザインシステムとの関係
 
@@ -61,7 +61,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | くすんだ緑、藍、錆の差し色         | 緑は主の色と内部のリンク、藍は外部のリンクと情報、錆は目次の現在地と注意                                      | [トークン](design/tokens.md)の「色」                               |
 | 記事の題と見出しの明朝             | 記事の題、見出し、小見出し、ダイアログの題                                                                    | [トークン](design/tokens.md)の「文字」                             |
 | 罫線の版面                         | 全ての画面。区切りは罫線と余白で示す。角は操作できる要素と重なる面だけを 2px で丸め、影は重なる面だけに付ける | [トークン](design/tokens.md)の「レイアウト、区切り、重なり、動き」 |
-| 版画風の挿絵                       | 記事の一覧の冒頭だけ。トップは水墨の門の絵と立体の庭にする                                                    | [挿絵の Design Doc](../design-system/art/DesignDoc.md)、`ArtBand`  |
+| 版画風の挿絵                       | 記事の一覧の冒頭だけ。トップは水墨の門の絵と立体の庭にする                                                    | [挿絵の Design Doc](src/art/DesignDoc.md)、`ArtBand`               |
 | 筆の線を引く動きと、墨のにじみ     | 選んだタブの下、検索の欄のフォーカス、ダイアログの上端、ヘッダーのナビ、パンくずリスト、押したボタン          | [Design Doc の「動き」](DesignDoc.md#動き)                         |
 
 ## 画面を作るときの原則
@@ -77,6 +77,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティだけを使い、コンポーネントごとに色や太さを変えない。例外は、検索の欄（`TextField` の `appearance="underline"`）の緑の罫だけで、理由は DesignDoc の「フォーカスの表示」に書いた。
   - 確認: `pnpm run check:utilities`
 - `TARGET-SIZE`: 押せる領域は 44×44 CSS px 以上にする。WCAG 2.2 の AA（2.5.8）の 24×24 より厳しい、AAA（2.5.5）の値を選んでいる。見た目を小さくするときは、見た目の外に押せる領域を広げる。
+  - 例外: `Link` は対象にせず、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。本文の中の文字のリンクを 44×44 CSS px にすると、行の高さが崩れるためである。
   - 確認: `pnpm run test:ui` の component の project で、コンポーネントごとの、名前に「44 px」を含むテストが見る。例は、`src/base/Button/Button.test.tsx` の「S のボタンは、見た目の外まで 44×44 px 以上を押せる」である。カタログのアクセシビリティの自動チェックは、押せる領域の大きさを確認しない。
 - `SPACING-SCALE`: 余白は、トークンの文書の「レイアウト、区切り、重なり、動き」の表の余白の段のユーティリティだけで書く。任意値（`p-[13px]` のような書き方）を書かない。
   - 確認: `pnpm run check:utilities`
@@ -98,7 +99,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                  | クラスの名前を文字列の連結で組み立てた書き方                                                                                                |
 | `PRIMARY-ACTION-ONE`   | レビュー                                                    |                                                                                                                                             |
 | `FOCUS-ONE`            | `pnpm run check:utilities`                                  | クラスの名前を文字列の連結で組み立てた書き方                                                                                                |
-| `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」を含むテスト）           | `Link`（「決まっていない選択」にある）と、画面のコードで組んだ押せる要素                                                                    |
+| `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」を含むテスト）           | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
 | `SPACING-SCALE`        | `pnpm run check:utilities`                                  | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
 | `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト） | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
 | `MOTION-TOKEN`         | `pnpm run check:utilities`                                  | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方 |
@@ -171,4 +172,3 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - カタログのアクセシビリティの自動チェックを、テーマごとに動かすか: 今はデフォルトのテーマ（OS の設定。テストのブラウザではライト）だけで動く。案は、`pnpm run test:ui` の storybook の project を、ライトとダークの 2 つの条件で流すこと。ダークの組み合わせは `pnpm run check:contrast` が見ているが、描画した story の違反は見ていないためである。
 - `LAYOUT-OVERFLOW` のテストを、記事の画面とダークのテーマに広げるか: 今は、コードを動かす画面をライトで見るだけである。案は、記事の画面の story にも同じ幅のテストを足すこと。
 - 動きを減らす設定で、状態の変化を伝える短い透明度の変化を残すか: `MOTION-REDUCE` は残してよいとしているが、今の止め方は透明度の変化も止める。案は、今のまま全てを止めること。残したい動きが出たときに、止め方の例外として足す。
-- `Link` を `TARGET-SIZE` の対象にするか: `Link` は押せる領域のテストを持たない。本文の中の文字のリンクで、44×44 CSS px にすると行の高さが崩れる。案は、本文の中の文字のリンクを `TARGET-SIZE` の対象から外し、外す理由をこの文書に書くこと。WCAG 2.5.5 も、文の中のリンクを例外にしている。
