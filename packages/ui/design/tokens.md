@@ -108,7 +108,7 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 | 動き             | `transition-transform` と `rotate-90`                        | ファイルの木と `Disclosure` の山形の開閉（デフォルトの 150ms）                                                 |
 | 動き             | `animate-stroke`                                             | 選んだタブの罫、検索の欄のフォーカスの罫、ダイアログの上端の罫を、左から 1 回引く                              |
 | 動き             | `stroke-brush`                                               | `animate-stroke` で引く罫を、筆の線の形にする                                                                  |
-| 動き             | `link-brush`                                                 | リンクの hover で、下線の下に筆の線を左から 1 回引く                                                           |
+| 動き             | `link-rule`                                                  | 文中のリンクの hover で、下線の下に 2px の罫を左から 1 回引く。折り返したリンクでは行ごとに引く                |
 | 動き             | `ink-press`                                                  | `Button` を押して離すと、文の色の墨がにじんで消える                                                            |
 | 動き             | `animate-fade-in`                                            | ダイアログ、メニュー、候補の一覧が、濃度を上げて出る                                                           |
 | 動き             | `loading-dots`                                               | `Button` の読み込み中の、3 つの点の印                                                                          |
