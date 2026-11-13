@@ -1,6 +1,6 @@
 import type { DatabaseStatus, SqlResponse, Store } from "@fukuemon/sql-runtime";
 import { Button, EditorFrame, Loading, Notice } from "@fukuemon/ui";
-import { useState, useSyncExternalStore } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 
 import { ResultView } from "./ResultView";
 import { SqlEditor } from "./SqlEditor";
@@ -34,6 +34,7 @@ export function SqlConsole({
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
   const database = useSyncExternalStore(status.subscribe, status.getSnapshot);
+  const hintId = useId();
   const [shown, setShown] = useState<{ id: number; response: SqlResponse }>();
 
   const run = async () => {
@@ -44,17 +45,25 @@ export function SqlConsole({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex h-72 min-h-0 flex-col">
+      <div className="grid h-96 min-h-0 has-[.cm-focused]:focus-ring">
         <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
-          {() => <SqlEditor onChange={onChange} onRun={() => void run()} value={value} />}
+          {() => (
+            <SqlEditor
+              describedBy={hintId}
+              onChange={onChange}
+              onRun={() => void run()}
+              value={value}
+            />
+          )}
         </EditorFrame>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <Button isLoading={running} onClick={() => void run()} size="S">
           実行する
         </Button>
-        <span className="text-body-dense text-text-secondary">
-          Ctrl か ⌘ と Enter でも実行します
+        <span className="text-caption text-text-secondary" id={hintId}>
+          Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
+          でエディタの外へ移ります
         </span>
       </div>
       <section aria-label="実行の結果" className="flex min-w-0 flex-col gap-4">

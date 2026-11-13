@@ -46,8 +46,10 @@ function SqlSessionView({ session }: { session: SqlSession }) {
 /** SQL だけを動かすツールのページ。埋め込みのときは、ページのヘッダを出さない。 */
 export function SqlPage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
-    <main className="mx-auto flex max-w-6xl min-w-0 flex-col gap-4 p-4">
-      {!embedded && <h1 className="font-heading text-heading-md text-text">SQL の実行環境</h1>}
+    <main className="mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4">
+      {!embedded && (
+        <h1 className="font-heading text-heading-md font-semibold text-text">SQL の実行環境</h1>
+      )}
       <Suspense
         fallback={
           <p className="text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>

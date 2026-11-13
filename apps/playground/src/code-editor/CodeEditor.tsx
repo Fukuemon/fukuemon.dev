@@ -75,5 +75,8 @@ export function CodeEditor({ label, initialText, extensions, connect }: CodeEdit
     };
   }, []);
 
-  return <div className="min-h-0 flex-1 overflow-hidden" ref={parentRef} />;
+  // codeEditorExtensions はフォーカスの表示を持たないので、囲む要素に付ける
+  return (
+    <div className="min-h-0 flex-1 overflow-hidden has-[.cm-focused]:focus-ring" ref={parentRef} />
+  );
 }

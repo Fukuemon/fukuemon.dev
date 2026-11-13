@@ -51,3 +51,49 @@ export const nodeDefaultProject = {
   open: "index.js",
   start: [{ command: "node", args: ["index.js"], name: "サーバー" }],
 } satisfies PlaygroundProject;
+
+const GO_MAIN = `package main
+
+import (
+	"fmt"
+
+	"play/greet"
+)
+
+func main() {
+	fmt.Println(greet.Hello("世界"))
+}
+`;
+
+const GO_GREET = `// Package greet は、あいさつの文を作る。
+package greet
+
+// Hello は、name へのあいさつを返す。
+func Hello(name string) string {
+	return "こんにちは、" + name
+}
+`;
+
+const GO_GREET_TEST = `package greet
+
+import "testing"
+
+func TestHello(t *testing.T) {
+	if got := Hello("Go"); got != "こんにちは、Go" {
+		t.Errorf("Hello(%q) = %q", "Go", got)
+	}
+}
+`;
+
+/** `project` を付けずに開いたときの、Go を動かすツールのプロジェクト。main の package が、別のディレクトリの package を import する。 */
+export const goDefaultProject = {
+  tool: "go",
+  version: "default-1",
+  files: {
+    "go.mod": "module play\n\ngo 1.22\n",
+    "main.go": GO_MAIN,
+    "greet/greet.go": GO_GREET,
+    "greet/greet_test.go": GO_GREET_TEST,
+  },
+  open: "main.go",
+} satisfies PlaygroundProject;

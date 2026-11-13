@@ -39,6 +39,17 @@ export default defineConfig({
       input: Object.fromEntries(
         tools.map((tool) => [tool, join(import.meta.dirname, tool, "index.html")]),
       ),
+      output: {
+        // エディタは SQL、Node、Go、スライドのページが使う。1 つのチャンクにして、ページの間でキャッシュを共有する
+        advancedChunks: {
+          groups: [
+            {
+              name: "code-editor",
+              test: /node_modules[\\/](@codemirror|@lezer|@replit|crelt|style-mod|w3c-keyname)[\\/]/,
+            },
+          ],
+        },
+      },
     },
   },
 });

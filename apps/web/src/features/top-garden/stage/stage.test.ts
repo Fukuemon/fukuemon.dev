@@ -56,7 +56,7 @@ const summary = ({ root, store, loads }: ReturnType<typeof run>) => ({
 });
 
 describe("applyStage", () => {
-  it("11 月の 20 時に初めて開くと、秋と夜を書き、記録して、イントロを出して場面の束を読み込む", () => {
+  it("11 月の 20 時に初めて開くと、秋と夜を書き、記録して、イントロを出して場面のバンドルを読み込む", () => {
     expect(summary(run())).toStrictEqual({
       season: "autumn",
       time: "night",
@@ -76,7 +76,7 @@ describe("applyStage", () => {
     });
   });
 
-  it("動きを減らす設定では、季節と時間帯を書いて記録し、場面の束を読み込まない", () => {
+  it("動きを減らす設定では、季節と時間帯を書いて記録し、場面のバンドルを読み込まない", () => {
     expect(summary(run({ reducedMotion: true }))).toStrictEqual({
       season: "autumn",
       time: "night",
@@ -86,7 +86,7 @@ describe("applyStage", () => {
     });
   });
 
-  it("場面の束が無いときは、季節と時間帯を書いて記録し、庭を出さない", () => {
+  it("場面のバンドルが無いときは、季節と時間帯を書いて記録し、庭を出さない", () => {
     expect(summary(run({ load: null }))).toStrictEqual({
       season: "autumn",
       time: "night",
@@ -96,7 +96,7 @@ describe("applyStage", () => {
     });
   });
 
-  it("場面の束の読み込みに失敗すると、2 つの class を外し、記録は残す", () => {
+  it("場面のバンドルの読み込みに失敗すると、2 つの class を外し、記録は残す", () => {
     const r = run();
     r.loads[0]!();
     expect({ classes: [...r.root.classes], seen: r.store.items.get("fd-top-seen") }).toStrictEqual({
@@ -191,26 +191,49 @@ describe("stageScript", () => {
     expect([b.root.dataset.season, b.root.dataset.time]).toStrictEqual(["winter", "morning"]);
   });
 
-  it("場面の束の URL を渡すと、庭を出して、その URL の script を head に足す", () => {
+  it("場面のバンドルの URL を渡すと、庭を出して、その URL の module の script を head に足す", () => {
     const b = browser();
-    const appended: { src?: string }[] = [];
+    const appended: { src?: string; type?: string }[] = [];
     const globals = {
       ...b.globals,
       document: {
         documentElement: b.root,
         createElement: () => ({}),
-        head: { appendChild: (s: { src?: string }) => void appended.push(s) },
+        head: { appendChild: (s: { src?: string; type?: string }) => void appended.push(s) },
       },
     };
     runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
-    expect({ classes: [...b.root.classes].sort(), src: appended[0]?.src }).toStrictEqual({
+    expect({
+      classes: [...b.root.classes].sort(),
+      src: appended[0]?.src,
+      type: appended[0]?.type,
+    }).toStrictEqual({
       classes: ["intro", "stage-on"],
       src: "/_astro/scene.js",
+      type: "module",
     });
   });
 });
 
-describe("stageScript の場面の束の URL", () => {
+describe("stageScript の場面のバンドルの読み込みの失敗", () => {
+  it("バンドルの script が読み込みに失敗すると、庭を出す class を外す", () => {
+    const b = browser();
+    const appended: { onerror?: () => void }[] = [];
+    const globals = {
+      ...b.globals,
+      document: {
+        documentElement: b.root,
+        createElement: () => ({}),
+        head: { appendChild: (s: { onerror?: () => void }) => void appended.push(s) },
+      },
+    };
+    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    appended[0]?.onerror?.();
+    expect([...b.root.classes]).toStrictEqual([]);
+  });
+});
+
+describe("stageScript の場面のバンドルの URL", () => {
   it("URL に </script> が入っても、script の要素を閉じる文字列を出さない", () => {
     expect(stageScript({ dev: false, bundle: "/a</script><b>" }).includes("</script")).toBe(false);
   });

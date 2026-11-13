@@ -4,6 +4,8 @@ import {
   playgroundProjectSchema,
 } from "@fukuemon/playground-project";
 
+export type { PlaygroundTool };
+
 export const SITE_ORIGIN = "https://fukuemon.dev";
 
 /** 開いたプロジェクトと、保存のキーに使う埋め込みの ID。デフォルトのプロジェクトは、埋め込みの ID を持たない。 */
