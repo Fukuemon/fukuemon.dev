@@ -1,6 +1,13 @@
+import type { ProcessInfo } from "@fukuemon/node-runtime";
 import { describe, expect, it } from "vitest";
 
-import { type Selection, initialSelection, selectionReducer } from "./selection";
+import {
+  type Selection,
+  initialSelection,
+  selectionReducer,
+  shownFiles,
+  shownProcess,
+} from "./selection";
 
 const state = (overrides: Partial<Selection> = {}): Selection => ({
   ...initialSelection("index.js"),
@@ -102,6 +109,71 @@ describe("selectionReducer", () => {
     expect(selectionReducer(state(), { type: "select-preview", port: 3001 })).toStrictEqual({
       ...state(),
       preview: 3001,
+    });
+  });
+});
+
+const proc = (id: string, status: ProcessInfo["status"]): ProcessInfo => ({
+  id,
+  kind: "command",
+  name: id,
+  status,
+});
+
+describe("shownProcess", () => {
+  const running = proc("server", { kind: "running" });
+  const passed = proc("build", { kind: "exited", code: 0 });
+  const failed = proc("install", { kind: "exited", code: 1 });
+
+  it("選んだプロセスを出す", () => {
+    expect(shownProcess([running, failed], "server")).toBe(running);
+  });
+
+  it.each([
+    ["選んでいないとき", undefined],
+    ["選んだプロセスが一覧に無いとき", "gone"],
+  ])("%s は、0 でない終了コードで終わったプロセスを出す", (_, selected) => {
+    expect(shownProcess([running, passed, failed], selected)).toBe(failed);
+  });
+
+  it("0 でない終了コードのプロセスが無いときは、先頭のプロセスを出す", () => {
+    expect(shownProcess([running, passed], undefined)).toBe(running);
+  });
+
+  it("プロセスが無いときは、出さない", () => {
+    expect(shownProcess([], undefined)).toBeUndefined();
+  });
+});
+
+describe("shownFiles", () => {
+  const file = (path: string) => ({ path, kind: "file" as const });
+
+  it("ツリーから消えたファイルのタブを出さず、選んだタブが消えたときは先頭のタブを選ぶ", () => {
+    expect(
+      shownFiles({ openFiles: ["a.js", "b.js", "c.js"], activeFile: "b.js" }, [
+        file("a.js"),
+        file("c.js"),
+      ]),
+    ).toStrictEqual({ openFiles: ["a.js", "c.js"], activeFile: "a.js" });
+  });
+
+  it("選んだタブが残るときは、選んだタブを変えない", () => {
+    expect(
+      shownFiles({ openFiles: ["a.js", "b.js"], activeFile: "b.js" }, [file("b.js")]),
+    ).toStrictEqual({ openFiles: ["b.js"], activeFile: "b.js" });
+  });
+
+  it("ツリーを読む前は、開いたファイルを全て出す", () => {
+    expect(shownFiles({ openFiles: ["a.js"], activeFile: "a.js" }, undefined)).toStrictEqual({
+      openFiles: ["a.js"],
+      activeFile: "a.js",
+    });
+  });
+
+  it("全てのタブが消えたときは、選ぶタブを無くす", () => {
+    expect(shownFiles({ openFiles: ["a.js"], activeFile: "a.js" }, [])).toStrictEqual({
+      openFiles: [],
+      activeFile: undefined,
     });
   });
 });

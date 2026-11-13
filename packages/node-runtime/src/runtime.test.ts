@@ -6,6 +6,7 @@ import { BootError } from "./types";
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 const failure = async (promise: Promise<unknown>) =>
@@ -88,6 +89,19 @@ describe("ports", () => {
     const port = { port: 3000, url: "https://a", sandbox: "allow-scripts", allow: "" };
     created.emitPorts([port]);
     expect(runtime.ports.getSnapshot()).toStrictEqual([port]);
+  });
+
+  it.each([
+    ["http: の URL", "http://3001.example.test"],
+    ["このページと同じ origin の URL", "https://play.example.test/preview"],
+    ["javascript: の URL", "javascript:alert(1)"],
+    ["URL でない文字列", "not a url"],
+  ])("%s のポートは、一覧に出さない", async (_, url) => {
+    vi.stubGlobal("location", { origin: "https://play.example.test" });
+    const { runtime, created } = await bootFake();
+    const allowed = { port: 3000, url: "https://3000.example.test", sandbox: "", allow: "" };
+    created.emitPorts([allowed, { ...allowed, port: 3001, url }]);
+    expect(runtime.ports.getSnapshot()).toStrictEqual([allowed]);
   });
 });
 

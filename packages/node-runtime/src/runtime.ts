@@ -9,11 +9,24 @@ const BOOT_TIMEOUT_MS = 30_000;
 
 const ignore = () => undefined;
 
+/**
+ * プレビューの iframe に入れてよい URL か。https: で、このページと別の origin のものだけを許す。
+ * 同じ origin のページを、allow-same-origin を付けた iframe で開くと、プレビューのスクリプトがこのページを操作できるためである。
+ */
+function isPreviewUrl(url: string) {
+  const pageOrigin = "location" in globalThis ? globalThis.location.origin : undefined;
+  if (!URL.canParse(url)) return false;
+  const parsed = new URL(url);
+  return parsed.protocol === "https:" && parsed.origin !== pageOrigin;
+}
+
 async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime> {
   const files = await createFiles(instance.files);
   const processes = createProcesses(instance);
   const ports = createStore<readonly OpenPort[]>([]);
-  const unsubscribePorts = instance.ports.subscribe(ports.set);
+  const unsubscribePorts = instance.ports.subscribe((open) =>
+    ports.set(open.filter((port) => isPreviewUrl(port.url))),
+  );
   let disposed: Promise<void> | undefined;
   return {
     files: files.api,

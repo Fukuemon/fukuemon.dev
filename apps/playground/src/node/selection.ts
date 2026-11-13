@@ -1,3 +1,5 @@
+import type { FileEntry, ProcessInfo } from "@fukuemon/node-runtime";
+
 import { isWithin } from "./tree";
 
 /** 画面の選択の状態。開いたファイルと、選んだ項目は、作業ディレクトリからのパスで持つ。 */
@@ -74,4 +76,36 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
     case "select-preview":
       return { ...state, preview: action.port };
   }
+}
+
+/**
+ * 端末のペインに出すプロセス。選んだプロセスが一覧に無いときは、0 でない終了コードで終わったプロセスを先に出す。
+ * npm install の失敗に気づけるようにするためである。
+ */
+export function shownProcess(
+  processes: readonly ProcessInfo[],
+  selected: string | undefined,
+): ProcessInfo | undefined {
+  return (
+    processes.find((info) => info.id === selected) ??
+    processes.find((info) => info.status.kind === "exited" && info.status.code !== 0) ??
+    processes[0]
+  );
+}
+
+/**
+ * エディタのペインに出すタブと、選ぶタブ。端末のコマンドが消したか名前を変えたファイルは、ツリーから無くなった時点で出さない。
+ * ツリーを読む前（entries が undefined）は、開いたファイルを全て出す。
+ */
+export function shownFiles(
+  selection: Pick<Selection, "openFiles" | "activeFile">,
+  entries: readonly FileEntry[] | undefined,
+): { openFiles: readonly string[]; activeFile: string | undefined } {
+  const existing = entries && new Set(entries.map((entry) => entry.path));
+  const openFiles = selection.openFiles.filter((path) => existing?.has(path) ?? true);
+  const activeFile =
+    selection.activeFile !== undefined && openFiles.includes(selection.activeFile)
+      ? selection.activeFile
+      : openFiles[0];
+  return { openFiles, activeFile };
 }

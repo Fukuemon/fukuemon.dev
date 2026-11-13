@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useRuntime, useSelection } from "./context";
 import { bootFailureMessage, processLabel, shellName } from "./messages";
 import { ProcessTerminal } from "./ProcessTerminal";
+import { shownProcess } from "./selection";
 import { colorScheme } from "./terminal-theme";
 
 // getSnapshot は同じ参照を返す。呼ぶたびに新しい配列を返すと、描画が止まらなくなる
@@ -18,11 +19,7 @@ export function TerminalPane() {
   const store = runtime?.processes.list ?? noProcesses;
   const processes = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const themeName = useSyncExternalStore(colorScheme.subscribe, colorScheme.getSnapshot);
-  // 選んでいないときは、0 でない終了コードで終わったプロセスを先に出す。npm install の失敗に気づけるようにする
-  const selected =
-    processes.find((info) => info.id === selection.terminal) ??
-    processes.find((info) => info.status.kind === "exited" && info.status.code !== 0) ??
-    processes[0];
+  const selected = shownProcess(processes, selection.terminal);
   const handle = selected && runtime?.processes.get(selected.id);
 
   const [opening, setOpening] = useState(false);
