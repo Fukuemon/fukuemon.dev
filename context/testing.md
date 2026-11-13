@@ -21,7 +21,7 @@ verified_commit: ab2da87
 | unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする |
 | ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                             |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
-| E2E          | 記事のページの表と図の枠（`apps/web/e2e/specs/`）                                  | Playwright               | 本文の列からあふれた表と図にだけ、続きがある間、右端のぼかしを出す                                                                           |
+| E2E          | 記事のページの表と図の枠（`apps/web/e2e/specs/`）                                  | Playwright               | 本文の列からあふれた表と図にだけ、続きがある間、右端にぼかしを出す                                                                           |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
 
 UI コンポーネントの単体テストは書かない。  
@@ -75,9 +75,9 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 サイトの E2E の package（`packages/e2e`）は、まだ無い。  
 サイトの spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置き、`pnpm run check` の `test:visual` で実行する。
 
-記事のページの表と図の枠のぼかしは、CSS の scroll-driven animation だけで出し分ける。  
-ブラウザで描かないと、あふれたときだけ出ることを確認できないので、E2E で確認する。  
-この spec は検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
+記事のページの表と図の枠は、ぼかしを CSS の scroll-driven animation だけで出し分ける。  
+あふれたときだけ出ることは、ブラウザで描かないと確認できないので、E2E で確認する。  
+この spec が検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
 
 ## Runtime Requirements
 
