@@ -4,7 +4,7 @@ export const CONTENT_ID = /^[a-z0-9][a-z0-9-]*$/;
 
 /**
  * 実装した形式の値だけを並べる。
- * 先に受け付けると、ビルドを通った記事が表示のときに崩れる (ADR-0030)
+ * 先に受け付けると、ビルドを通った記事が表示のときに崩れる (docs/adr/0030-articles-format-and-series.md)
  */
 export const ARTICLE_FORMATS = ["page"] as const;
 

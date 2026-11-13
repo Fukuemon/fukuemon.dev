@@ -18,8 +18,11 @@ describe("articleSchema", () => {
     expect(articleSchema.safeParse({ ...base, format: "steps" }).success).toBe(false);
   });
 
-  it("order は整数だけを受け付ける", () => {
+  it("整数でない order は受け付けない", () => {
     expect(articleSchema.safeParse({ ...base, order: 1.5 }).success).toBe(false);
+  });
+
+  it("整数の order を受け付ける", () => {
     expect(articleSchema.parse({ ...base, order: 2 }).order).toBe(2);
   });
 
@@ -30,8 +33,11 @@ describe("articleSchema", () => {
 });
 
 describe("seriesSchema", () => {
-  it("タイトルと説明を要る", () => {
+  it("説明が無ければ受け付けない", () => {
     expect(seriesSchema.safeParse({ title: "t" }).success).toBe(false);
+  });
+
+  it("タイトルと説明を受け付ける", () => {
     expect(seriesSchema.parse({ title: "t", description: "d" })).toStrictEqual({
       title: "t",
       description: "d",
