@@ -30,9 +30,9 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - ADR-0001: [Starlight の採否](../docs/adr/0001-starlight-as-docs-renderer.md)
 - React は、`packages/ui` のコンポーネントと、`apps/web` の island に使う。
 - Tailwind CSS と `@tailwindcss/vite` は、CSS のスタイリングの基盤として使う。
-  - preflight は読まない。
-  - トークンは `@theme static` に置き、Expressive Code の `styleOverrides` から参照できる素のカスタムプロパティとして残す。
+  - サイトの共通の CSS は preflight を読み、`@theme static` を使わない。
   - ADR-0010: [Tailwind CSS の採用](../docs/adr/0010-tailwind-as-styling-base.md)
+  - ADR-0050: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0050-tailwind-preflight-and-theme-from-ui.md)
   - `packages/ui` は、トークンを `@theme inline` のテーマ変数に置き、Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す。層の分け方は [packages/ui/DesignDoc.md](../packages/ui/DesignDoc.md#トークンの層) にある。
 - Storybook は、`packages/ui` のカタログに使う。a11y、docs、vitest、themes のアドオンと、hover の見た目を出す `storybook-addon-pseudo-states` を使う。
   - story は、Vitest のブラウザのモードでテストとして動かす。ブラウザは Playwright の chromium を使う。

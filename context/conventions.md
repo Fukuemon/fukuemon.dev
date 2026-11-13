@@ -89,9 +89,18 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 ## Styling
 
 `packages/ui` のコンポーネントと、`packages/ui` で組む画面は、[packages/ui/DESIGN.md](../packages/ui/DESIGN.md) と、そこから指す 3 つの文書の規則に従う。  
-この節の規則は、今のサイト（`apps/web` と `packages/design-system`）のスタイリングに当たる。
+この節には、`apps/web` のスタイリングの規則のうち、`packages/ui` の文書に無いものを書く。
 
 層の順とトークンの層は [デザインシステム（packages/ui）の Design Doc の「トークンの層」](../packages/ui/DesignDoc.md#トークンの層) にある。
+
+### サイトの共通の CSS
+
+- サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
+- `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css` と `theme.css` を読む。カタログの `preview.css` と同じ形にする。
+  - ADR-0050: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0050-tailwind-preflight-and-theme-from-ui.md)
+- `@theme static` を書かない。トークンの値は、`packages/ui` の `:root` の素のカスタムプロパティとして出る。
+- 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
+- `scroll-padding-block-start` は、画面の上に固定のヘッダを置くときに、ヘッダの高さに合わせて決める。
 
 ### 状態の書き方
 
@@ -114,23 +123,12 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - `<dialog>` に `display` を当てるときは、`[open]` に限定する。
   - UA のデフォルトの `dialog:not([open]) { display: none }` に勝ち、閉じている窓が画面に出る。
 
-### 配色の切り替え
-
-- 色は `light-dark(明, 暗)` で 1 度だけ書く。
-- 選択子を明暗で分けて、同じ色の値を 2 度書かない。
-  - システム設定用と明示指定用に同じ値を並べると、片方だけを直した誤りに、実行時まで気づけない。
-  - `check-contrast.ts` は、`tokens.css` の `@theme static` の 1 箇所だけを読む。
-- 色でないもの（`mix-blend-mode` など）を明暗で分けるときだけ、`@media (prefers-color-scheme: dark)` で分ける。
-  - 配色を手で切り替える仕組みは持たないので、システム設定の 1 本だけで足りる。
-
 ### 当たり判定
 
 規則は [packages/ui の DESIGN.md の「アクセシビリティ」](../packages/ui/DESIGN.md#アクセシビリティ) にある。
 
 - 触る端末だけで寸法を変えるときは、`pointer-coarse:` を使う。
-  - `hover: none` は Expressive Code の写しボタンだけに使う。EC の規則が cascade layer の外にあり、markup から当てられない。
-- `.hit-up` の当たり判定は疑似要素が持つ。
-  - `getBoundingClientRect()` は疑似要素を含めないので、測るときは `::after` の `top` と `bottom` を差し引いて足す。
+- 押せる範囲を疑似要素で広げるユーティリティを、サイトの CSS に持たない。押せる範囲は `packages/ui` のコンポーネントが持つ。
 
 ## React
 

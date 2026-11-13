@@ -21,6 +21,10 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body class="min-h-dvh">
+    <a
+      class="sr-only bg-surface px-4 py-2 text-link underline focus:not-sr-only focus:absolute focus:start-2 focus:top-2"
+      href="#main">本文へスキップ</a
+    >
     <main id="main"><slot /></main>
   </body>
 </html>
