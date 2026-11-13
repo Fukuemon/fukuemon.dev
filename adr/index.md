@@ -70,8 +70,18 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 | [ADR-0033](0033-webcontainers-for-node.md)             | Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける                            |
 | [ADR-0034](0034-playground-origin-and-embedding.md)    | cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す |
 | [ADR-0035](0035-record-http-and-console-in-runtime.md) | HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する                       |
-| [ADR-0036](0036-pglite-standalone-and-http-bridge.md)  | DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う             |
 | [ADR-0037](0037-go-with-yaegi.md)                      | Go のコードを、Yaegi のインタプリタの WASM で動かす                                                                |
+
+ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。
+
+## 提案の ADR
+
+承認の前の ADR を並べる。  
+承認したら、上の話題の表へ移し、下の依存の図を直す。
+
+| ADR                                         | 題                                                                                                                 | 置換する ADR |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------ |
+| [ADR-0038](0038-pglite-over-unix-socket.md) | DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する | ADR-0036     |
 
 ## ADR の間の依存
 
@@ -113,7 +123,6 @@ flowchart TB
     A0033["ADR-0033"]
     A0034["ADR-0034"]
     A0035["ADR-0035"]
-    A0036["ADR-0036"]
     A0037["ADR-0037"]
   end
   A0002 --> A0001
@@ -151,9 +160,6 @@ flowchart TB
   A0034 --> A0033
   A0035 --> A0021
   A0035 --> A0033
-  A0036 --> A0030
-  A0036 --> A0033
-  A0036 --> A0034
   A0037 --> A0008
   A0037 --> A0030
   A0037 --> A0034
