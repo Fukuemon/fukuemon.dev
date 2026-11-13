@@ -10,13 +10,12 @@ import type { ContentRef } from "./types.js";
 
 const ref = (contentId: string, over: Partial<ContentRef> = {}): ContentRef => ({
   contentId,
-  type: "article",
+  format: "page",
   title: contentId,
   description: "",
   href: `/articles/${contentId}`,
   tags: ["postgres"],
   date: new Date("2026-01-01"),
-  meta: [],
   ...over,
 });
 
