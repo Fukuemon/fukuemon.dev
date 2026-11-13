@@ -47,7 +47,7 @@ const theme = EditorView.theme({
     backgroundColor: "color-mix(in srgb, var(--color-surface) 60%, transparent)",
   },
   ".cm-activeLineGutter": { backgroundColor: "var(--color-surface)" },
-  "&.cm-focused": { outline: "2px solid var(--color-focus-outline)", outlineOffset: "-2px" },
+  "&.cm-focused": { outline: "2px solid var(--color-focus)", outlineOffset: "-2px" },
   ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground":
     { backgroundColor: "var(--color-info-surface)" },
   ".cm-selectionMatch": { backgroundColor: "var(--color-primary-surface)" },
