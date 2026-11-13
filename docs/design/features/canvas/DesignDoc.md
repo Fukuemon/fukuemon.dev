@@ -76,7 +76,7 @@ apps/playground/
     drawio/               draw.io のツールのページ。iframe との postMessage、XML の読み書き
     excalidraw/           Excalidraw のツールのページ。scene の読み書き、書体の配信の設定
     documents/            図とスライドの保存、一覧のダイアログ、名前を変える操作と消す操作のコンポーネント
-    figures/              記事の図の読み込み
+    figures/              記事の図の名前をクエリから読む処理、記事の図の読み込み
 
 packages/
   figures/src/           図の名前の規則、ファイルの名前と URL のパスの形
@@ -114,7 +114,7 @@ flowchart TB
   - まだ IndexedDB に書いていない中身を、図を切り替える前と、ページを閉じるときに書く処理
   - 開いている図を消したときに、次に開く図を決める処理
   - 新しく作るものの名前の連番
-- 記事の図を読み込む関数と、URL から消すクエリのキー（`figure`）は、ツールのページが、`documents/` のモジュールに引数で渡す。
+- 記事の図を読み込む関数と、URL から消すクエリのキー（`figure`）は、ツールのページが、`figures/` から受け取り、`documents/` のモジュールに引数で渡す。クエリのキーは、`figures/` が、`@fukuemon/figures` の値を、そのまま公開する。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
 - `@fukuemon/figures` は、workspace のほかの package にも、React にも依存しない。SVG を読む処理、`fetch`、2 つのアプリの origin の値を持たない。
@@ -258,6 +258,7 @@ type DocumentStore = {
   - 消した後は、一覧のダイアログを開いたままにし、フォーカスを、次の行の名前に移す。行が無いときは、「新しい図」に移す。
   - ほかのタブが先に消していたとき（`missing`）は、消せたときと同じに扱う。そのほかの失敗は、ConfirmDialog を閉じ、一覧の上に Notice（`danger`）で出す。
 - 開いている図を消したときは、残りの図のうち、最後に更新した図を開く。残りが無いときは、空の図を出す。
+- 開いている図の行には、開いていることを出す。
 - 記事の図から作った図の行には、記事の図から作ったことを出す。
 - 図を複製する操作は、持たない。
 
