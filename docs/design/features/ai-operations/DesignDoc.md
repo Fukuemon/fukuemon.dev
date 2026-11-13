@@ -373,6 +373,7 @@ type NewElement = {
 - `go_delete_file` は、確認を出す。
 - `go_run` は、`src/go/` のモジュールが持つ今のファイルを実行する。`go_test` は、同じファイルのテストを実行する。画面の実行のボタンとテストのボタンと、同じ関数を呼ぶ。
   - `go_run` は、ルートのディレクトリの直下にある `main` の package を実行する。`go_test` は、全ての package のテストを実行する。
+  - 複数の package の import を、Yaegi の WASM で解決できないときは、`main` の 1 つの package だけを実行する。別の package を import したコードには、エラーを `output` に入れる（ADR-0063 の承認の条件）。
   - 入力でコードを受け取らない。エージェントは、先に `go_write_file` で書く。
   - Yaegi の WASM を読み込んでいないときは、読み込んでから実行する。読み込みの時間は、`timeoutMs` に含めない。読み込めないときは、`failed` を返す。読み込みの間に来た呼び出しにも、実行中に来た呼び出しと同じく、`not_ready` を返す。
   - 実行を始めたときのファイルの写しを実行する。実行中に `go_write_file` と `go_delete_file` が呼ばれても、実行しているコードは変わらない。

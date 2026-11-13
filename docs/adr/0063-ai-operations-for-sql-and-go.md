@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -82,11 +82,10 @@ ADR-0045 の Decision 6 と同じく、エージェントの操作で読み込�
 
 ## 承認の条件
 
-次の 2 つを、ブラウザの中で確認する。  
-2 つの条件のどちらかを満たせないときは、Decision 2 を変え、Go を実行する操作とテストを実行する操作に、ページが確認を出す。
+次の 2 つを、Go を動かすツールの実装のタスク（#100）で、ブラウザの中で確認する。
 
-- Yaegi に渡す symbol を `stdlib.Symbols` だけにした WASM で、Yaegi で動かすコードの `syscall/js`、`syscall`、`unsafe` の import が失敗すること。Decision 2 が、Go を実行する操作に確認を出さないのは、この条件を前提にする。
-- ディレクトリで複数の package に分けたファイルの import を、Yaegi の WASM で解決できること。Decision 1 が、ファイルをディレクトリに分けて持つ形にするのは、この条件を前提にする。
+- Yaegi に渡す symbol を `stdlib.Symbols` だけにした WASM で、Yaegi で動かすコードの `syscall/js`、`syscall`、`unsafe` の import が失敗すること。Decision 2 が、Go を実行する操作に確認を出さないのは、この条件を前提にする。満たせないときは、Decision 2 を変え、Go を実行する操作とテストを実行する操作に、ページが確認を出す。
+- ディレクトリで複数の package に分けたファイルの import を、Yaegi の WASM で解決できること。解決できないときは、Go を動かすツールは、ファイルをディレクトリに分けて持てるが、`main` の 1 つの package だけを実行する。別の package を import したコードには、エラーを出す。
 
 ## Verification
 
