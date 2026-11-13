@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { seasonOf, timeOf } from "./season";
+import { seasonOf, timeOfDayOf } from "./season";
 
-const month = (m: number, d = 1) => new Date(2026, m - 1, d, 12);
-const hour = (h: number, min = 0) => new Date(2026, 10, 13, h, min);
+const dateOn = (m: number, d: number) => new Date(2026, m - 1, d, 12);
+const dateAt = (h: number, min: number) => new Date(2026, 10, 13, h, min);
 
 describe("seasonOf", () => {
   it.each([
@@ -16,11 +16,11 @@ describe("seasonOf", () => {
     [12, 1, "winter"],
     [1, 1, "winter"],
   ] as const)("%i 月 %i 日は %s", (m, d, season) => {
-    expect(seasonOf(month(m, d))).toBe(season);
+    expect(seasonOf(dateOn(m, d))).toBe(season);
   });
 });
 
-describe("timeOf", () => {
+describe("timeOfDayOf", () => {
   it.each([
     [0, 0, "night"],
     [4, 59, "night"],
@@ -33,11 +33,6 @@ describe("timeOf", () => {
     [19, 0, "night"],
     [23, 59, "night"],
   ] as const)("%i 時 %i 分は %s", (h, min, time) => {
-    expect(timeOf(hour(h, min))).toBe(time);
-  });
-
-  it("11 月の 20 時は、秋と夜になる", () => {
-    const d = new Date(2026, 10, 13, 20);
-    expect([seasonOf(d), timeOf(d)]).toEqual(["autumn", "night"]);
+    expect(timeOfDayOf(dateAt(h, min))).toBe(time);
   });
 });
