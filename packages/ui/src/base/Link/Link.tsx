@@ -5,13 +5,13 @@ export type LinkProps = Omit<ComponentPropsWithRef<"a">, "className" | "style"> 
   href: string;
   /** true のときは新しいタブで開き、そのことを名前に足して読み上げる。 */
   isExternal?: boolean;
-  /** true のときは、記事の一覧の題のように文中でない所に置く形にし、左右を空けない。 */
+  /** true のときは、記事の一覧の題のように文中に置かないリンクの形にし、左右を空けない。 */
   isStandalone?: boolean;
 };
 
 /**
  * 内部と外部のリンク。下線を引き、hover で下線の下に 2px の罫を左から引く。折り返したリンクでは行ごとに引く。内部のリンクは link、外部のリンクは link-external の色にする。訪問済みのリンクは色で分けない。
- * 文中では、フォーカスの表示が外へ 6px 広がるので、左右に 6px を空け、前後の文字に重ねない。文中でない所では空けず、見出しや帯と左端をそろえる。
+ * フォーカスの表示は外へ 6px 広がるので、文中では左右に 6px を空け、前後の文字に重ねない。文中に置かないリンクでは空けず、見出しや帯と左端をそろえる。
  * JavaScript なしで動く `<a>` だけを出す。
  */
 export function Link({ isExternal = false, isStandalone = false, children, ...props }: LinkProps) {

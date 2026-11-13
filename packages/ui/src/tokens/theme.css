@@ -215,7 +215,7 @@
   }
 }
 
-/* link-rule の罫を、underline-offset-4 の下線から離す。1px と 2px では罫が下線に重なった */
+/* link-rule の罫を 4px 下げ、underline-offset-4 の下線の下に置く。1px と 2px では、罫が下線に重なる */
 @utility link-rule-below-underline {
   --fd-link-rule-gap: 4px;
 }
