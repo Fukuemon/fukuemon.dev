@@ -47,6 +47,47 @@ const theme = EditorView.theme({
     backgroundColor: "transparent",
     outline: "1px solid var(--color-border-field)",
   },
+  // CodeMirror の既定の色はライトの固定の値なので、選択、検索、補完、フォーカスの色もテーマ変数にする
+  "&.cm-focused": { outline: "2px solid var(--color-focus)", outlineOffset: "-2px" },
+  ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, ::selection":
+    { backgroundColor: "var(--color-info-surface)" },
+  ".cm-searchMatch": {
+    backgroundColor: "var(--color-warning-surface)",
+    outline: "1px solid var(--color-warning)",
+  },
+  ".cm-searchMatch.cm-searchMatch-selected": { backgroundColor: "var(--color-info-surface)" },
+  ".cm-selectionMatch": { backgroundColor: "var(--color-surface-subtle)" },
+  ".cm-panels": {
+    backgroundColor: "var(--color-surface-raised)",
+    color: "var(--color-text)",
+    fontSize: "var(--text-body-dense)",
+  },
+  ".cm-panels.cm-panels-top": { borderBottom: "1px solid var(--color-border)" },
+  ".cm-panels.cm-panels-bottom": { borderTop: "1px solid var(--color-border)" },
+  ".cm-panel.cm-search": { fontSize: "var(--text-body-dense)" },
+  ".cm-panel.cm-search label": { fontSize: "var(--text-body-dense)" },
+  ".cm-textfield": {
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-text)",
+    border: "1px solid var(--color-border-field)",
+    fontSize: "var(--text-body-dense)",
+  },
+  ".cm-button": {
+    backgroundImage: "none",
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-text)",
+    border: "1px solid var(--color-border-field)",
+    fontSize: "var(--text-body-dense)",
+  },
+  ".cm-tooltip": {
+    backgroundColor: "var(--color-surface-raised)",
+    color: "var(--color-text)",
+    border: "1px solid var(--color-border)",
+  },
+  ".cm-tooltip-autocomplete ul li[aria-selected]": {
+    backgroundColor: "var(--color-info-surface)",
+    color: "var(--color-text)",
+  },
 });
 
 const highlight = HighlightStyle.define([

@@ -6,6 +6,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef } from "react";
 
+import { isTabFocusToggle } from "./terminal-keys";
 import { toXtermTheme } from "./terminal-theme";
 
 /** 1 つのプロセスの端末。今までの出力を書いてから、追加の出力を書き、入力と端末の大きさをプロセスに渡す。 */
@@ -31,6 +32,17 @@ export function ProcessTerminal({ handle, theme }: { handle: ProcessHandle; them
     terminal.open(parent);
     terminal.write(handle.output.read());
     const unsubscribe = handle.output.subscribe((chunk) => terminal.write(chunk));
+    // Tab はシェルに送るので、切り替えのキーで、Tab がフォーカスを移す形にする。キーボードだけで端末の外へ出られるようにする
+    let tabMovesFocus = false;
+    terminal.attachCustomKeyEventHandler((event) => {
+      if (event.type !== "keydown") return true;
+      if (isTabFocusToggle(event)) {
+        tabMovesFocus = !tabMovesFocus;
+        event.preventDefault();
+        return false;
+      }
+      return !(tabMovesFocus && event.key === "Tab");
+    });
     const input = terminal.onData((data) => handle.write(data));
     let size = "";
     const resize = () => {

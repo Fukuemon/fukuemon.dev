@@ -2,6 +2,7 @@ import {
   EditorFrame,
   FileTree,
   Link,
+  Loading,
   Notice,
   PreviewFrame,
   SplitPane,
@@ -40,7 +41,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
       <SelectionContext value={{ selection, dispatch }}>
         <div className="min-h-0 flex-1">
           <SplitPane
-            defaultSize={18}
+            defaultSize={20}
             label="ファイルのツリーの幅"
             primary={
               <Pane fallback={<FileTree items={[]} onSelect={() => undefined} state={booting} />}>
@@ -113,12 +114,10 @@ function NodeTool({ search }: { search: string }) {
 export function NodePage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
     <main className="flex h-dvh min-w-0 flex-col gap-2 p-2">
-      {!embedded && <h1 className="font-heading text-heading-md text-text">Node の実行環境</h1>}
-      <Suspense
-        fallback={
-          <p className="text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>
-        }
-      >
+      {!embedded && (
+        <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
+      )}
+      <Suspense fallback={<Loading label="プロジェクトを読み込んでいます" />}>
         <NodeTool search={search} />
       </Suspense>
     </main>
