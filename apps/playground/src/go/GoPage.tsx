@@ -26,12 +26,12 @@ import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project"
 import { GoEditor } from "./GoEditor";
 import {
   type Change,
-  baseName,
   isSameOrUnder,
   joinPath,
   kindOf,
   movePath,
   parentOf,
+  tabLabel,
   toTree,
 } from "./files";
 import { exitLabel, groupLines, progressLabel, shortcutOf } from "./output";
@@ -138,6 +138,10 @@ function OutputPane({ session }: { session: GoSession }) {
 function GoWorkbench({ session, embedded }: { session: GoSession; embedded: boolean }) {
   const fileSet = useSyncExternalStore(session.fileSet.subscribe, session.fileSet.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
+  const runningKind = useSyncExternalStore(
+    session.output.subscribe,
+    () => session.output.getSnapshot().kind,
+  );
   const [tabs, setTabs] = useState<string[]>([session.openPath]);
   const [active, setActive] = useState<string | undefined>(session.openPath);
   const [selected, setSelected] = useState<string | undefined>(session.openPath);
@@ -240,7 +244,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <title>{`${session.embedId ?? TITLE} | fukuemon.dev プレイグラウンド`}</title>
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-2">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-2 border-text bg-surface px-4 py-2">
         <div className="flex min-w-0 items-baseline gap-3">
           {!embedded && <h1 className="font-heading text-heading-sm text-text">{TITLE}</h1>}
           {session.embedId !== undefined && (
@@ -250,12 +254,13 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="hidden text-caption text-text-secondary sm:inline">
+          <span className="hidden text-caption text-text-secondary md:inline">
             Ctrl か ⌘ と Enter で実行、Shift を足すとテスト
           </span>
           <Button
             aria-keyshortcuts="Control+Enter Meta+Enter"
-            isLoading={running}
+            disabled={running && runningKind !== "run"}
+            isLoading={running && runningKind === "run"}
             onClick={run}
             size="S"
           >
@@ -263,7 +268,8 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
           </Button>
           <Button
             aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter"
-            disabled={running}
+            disabled={running && runningKind !== "test"}
+            isLoading={running && runningKind === "test"}
             onClick={test}
             size="S"
             variant="secondary"
@@ -295,7 +301,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
           </Notice>
         </div>
       )}
-      <div className="flex min-h-0 flex-1 p-2">
+      <div className="flex min-h-0 flex-1">
         <SplitPane
           defaultSize={22}
           label="ファイルの一覧とエディタの仕切り"
@@ -330,15 +336,18 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
               primary={
                 <div className="grid h-full min-h-0 grid-rows-1">
                   <EditorFrame
-                    files={openTabs.map((path) => ({ id: path, label: baseName(path) }))}
+                    files={openTabs.map((path) => ({ id: path, label: tabLabel(path, openTabs) }))}
                     onClose={closeTab}
                     onSelect={setActive}
                     selectedId={shown}
                     status={
                       <>
                         <span>{shown}</span>
-                        <span>
-                          行 {cursor.line}、列 {cursor.column}　Go
+                        <span className="flex gap-4">
+                          <span>
+                            行 {cursor.line}、列 {cursor.column}
+                          </span>
+                          <span>Go</span>
                         </span>
                       </>
                     }
@@ -365,7 +374,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
                   <div className="grid min-h-0 flex-1 grid-rows-1">
                     <OutputPane session={session} />
                   </div>
-                  <p className="px-1 text-caption text-text-secondary">
+                  <p className="px-4 text-caption text-text-secondary">
                     Yaegi のインタプリタで動かしています。<code>iter</code>{" "}
                     のパッケージと、型の推論に失敗する一部のジェネリックな関数は使えません。
                   </p>
@@ -393,7 +402,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 /** Go を動かすツールのページ。埋め込みのときは、ページの題を出さない。 */
 export function GoPage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
-    <main className="flex h-dvh min-w-0 flex-col bg-surface-subtle">
+    <main className="flex h-dvh min-w-0 flex-col bg-surface">
       <Suspense
         fallback={
           <p className="p-4 text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>

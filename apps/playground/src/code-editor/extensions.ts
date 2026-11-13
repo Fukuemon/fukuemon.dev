@@ -27,7 +27,8 @@ import { tags } from "@lezer/highlight";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
 
 // 色は packages/ui のテーマ変数を読み、ライトとダークをトークンの側で切り替える (docs/adr/0022-code-colors-from-tokens.md)
-// 今いる行の帯は、コードの面より明るい surface にする。ライトとダークのどちらでも、コードの面との差が出る
+// 今いる行の帯は、コードの面より明るい surface を半ば透かして重ねる。選択の層は行の下に描かれるので、不透明な帯だと選択が隠れる
+// CodeMirror の既定の見た目（選択、フォーカス、補完、検索）は、生の色を持つので、全てトークンで上書きする
 const theme = EditorView.theme({
   "&": {
     height: "100%",
@@ -41,7 +42,50 @@ const theme = EditorView.theme({
     color: "var(--color-code-comment)",
     border: "none",
   },
-  ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "var(--color-surface)" },
+  ".cm-lineNumbers .cm-gutterElement": { padding: "0 12px 0 16px" },
+  ".cm-activeLine": {
+    backgroundColor: "color-mix(in srgb, var(--color-surface) 60%, transparent)",
+  },
+  ".cm-activeLineGutter": { backgroundColor: "var(--color-surface)" },
+  "&.cm-focused": { outline: "2px solid var(--color-focus-outline)", outlineOffset: "-2px" },
+  ".cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground":
+    { backgroundColor: "var(--color-info-surface)" },
+  ".cm-selectionMatch": { backgroundColor: "var(--color-primary-surface)" },
+  ".cm-searchMatch": {
+    backgroundColor: "var(--color-warning-surface)",
+    outline: "1px solid var(--color-warning)",
+  },
+  ".cm-searchMatch.cm-searchMatch-selected": { backgroundColor: "var(--color-info-surface)" },
+  ".cm-tooltip": {
+    backgroundColor: "var(--color-surface-raised)",
+    color: "var(--color-text)",
+    border: "1px solid var(--color-border-field)",
+  },
+  ".cm-tooltip-autocomplete ul li[aria-selected]": {
+    backgroundColor: "var(--color-primary-surface)",
+    color: "var(--color-text)",
+  },
+  ".cm-panels": {
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-text)",
+    fontFamily: "var(--font-sans)",
+    fontSize: "var(--text-body-dense)",
+  },
+  ".cm-panels.cm-panels-bottom": { borderTop: "1px solid var(--color-border)" },
+  ".cm-panel.cm-search label": { fontSize: "var(--text-body-dense)" },
+  ".cm-textfield": {
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-text)",
+    border: "1px solid var(--color-border-field)",
+    fontSize: "var(--text-body-dense)",
+  },
+  ".cm-button": {
+    backgroundImage: "none",
+    backgroundColor: "var(--color-surface)",
+    color: "var(--color-primary)",
+    border: "1px solid var(--color-border-field)",
+    fontSize: "var(--text-body-dense)",
+  },
   ".cm-cursor": { borderLeftColor: "var(--color-code-text)" },
   ".cm-matchingBracket, &.cm-focused .cm-matchingBracket": {
     backgroundColor: "transparent",
@@ -59,6 +103,25 @@ const highlight = HighlightStyle.define([
 ]);
 
 const guide = "var(--color-border)";
+
+// 検索のパネルと行への移動の文を日本語にする
+const phrases = EditorState.phrases.of({
+  Find: "検索",
+  Replace: "置換",
+  next: "次へ",
+  previous: "前へ",
+  all: "すべて",
+  "match case": "大文字と小文字を区別",
+  "by word": "単語で",
+  regexp: "正規表現",
+  replace: "置換",
+  "replace all": "すべて置換",
+  close: "閉じる",
+  "current match": "今の一致",
+  "on line": "行",
+  "Go to line": "行へ移動",
+  go: "移動",
+});
 
 export type CodeEditorOptions = {
   /** 入力欄の読み上げる名前。 */
@@ -92,6 +155,7 @@ export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Exten
     }),
     syntaxHighlighting(highlight),
     theme,
+    phrases,
     EditorView.contentAttributes.of({ "aria-label": label }),
     ...(onRun
       ? [

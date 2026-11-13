@@ -6,6 +6,7 @@ import {
   createFile,
   joinPath,
   parentOf,
+  tabLabel,
   type GoFileSet,
   createDirectory,
   kindOf,
@@ -106,6 +107,9 @@ describe("パスの関数", () => {
     [parentOf("d/e/a.go"), "d/e"],
     [parentOf("a.go"), undefined],
     [baseName("d/e/a.go"), "a.go"],
+    [tabLabel("a.go", ["a.go", "b.go"]), "a.go"],
+    [tabLabel("main.go", ["main.go", "greet/main.go"]), "main.go — /"],
+    [tabLabel("greet/main.go", ["main.go", "greet/main.go"]), "main.go — greet"],
   ])("%s は %s", (actual, expected) => {
     expect(actual).toBe(expected);
   });

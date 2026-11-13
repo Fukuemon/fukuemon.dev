@@ -119,6 +119,13 @@ export const parentOf = (path: string) =>
 /** パスの最後の名前。 */
 export const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 
+/** タブの名前。開いているほかのファイルと名前が重なるときだけ、親のディレクトリを添える。 */
+export function tabLabel(path: string, openPaths: readonly string[]): string {
+  const name = baseName(path);
+  const clashes = openPaths.filter((other) => baseName(other) === name).length > 1;
+  return clashes ? `${name} — ${parentOf(path) ?? "/"}` : name;
+}
+
 export function createDirectory(fileSet: GoFileSet, rawPath: string): Change {
   const path = normalizePath(rawPath);
   if (!path) return failed(`「${rawPath}」はディレクトリのパスにできません`);
