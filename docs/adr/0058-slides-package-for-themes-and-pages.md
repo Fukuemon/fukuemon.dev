@@ -24,12 +24,12 @@
 
 `packages/slides`（`@fukuemon/slides`）を作り、エディタと `apps/web` のビルドが共有する処理を置く。
 
-- package が持つものは、次の 6 つ。
+- package が持つものは、次のとおり。
   - テーマの CSS
   - テンプレートの Markdown と、新しいスライドのひな形
   - Marp のインスタンスを作る関数と、Markdown をスライドの HTML と CSS にする関数。数式、絵文字の画像、HTML のタグを無効にする設定を、package の中だけが持つ
-  - Markdown の先頭の `theme:` を読む関数と、書き換える関数
-  - 行の番号から何枚目のスライドかを求める関数と、スライドの後ろに断片を足す関数
+  - Markdown の先頭の `theme:` を読む関数と、`theme:` を書き換える編集を返す関数
+  - 行の番号から何枚目のスライドかを求める関数と、スライドの後ろに断片を足す編集を返す関数
   - Markdown とトークンの CSS から、ページ送りつきの 1 枚の HTML を組み立てる関数
 - package は、`@marp-team/marp-core` に依存する。React、`@fukuemon/ui`、workspace のほかの package には依存しない。
 - トークンの CSS は、呼ぶ側が文字列で渡す。package は、トークンのファイルを読まない。エディタと `apps/web` のビルドは、同じ `@fukuemon/ui` のトークンの CSS を渡す。
