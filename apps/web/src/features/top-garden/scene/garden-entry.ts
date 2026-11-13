@@ -14,6 +14,9 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
   const tabs = [...(nav?.querySelectorAll<HTMLButtonElement>("[data-station]") ?? [])];
   const pause = nav?.querySelector<HTMLButtonElement>("[data-garden-pause]");
   const plain = nav?.querySelector<HTMLButtonElement>("[data-garden-plain]");
+  // 「文だけで読む」で、庭の操作の listener をまとめて外す。
+  const wiring = new AbortController();
+  const on = { signal: wiring.signal };
 
   const select = (i: number, announce: boolean) => {
     const s = garden.go(i);
@@ -22,11 +25,15 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
     const heading = cards[s]?.querySelector("h1, h2")?.textContent?.trim();
     if (announce && live && heading) live.textContent = heading;
   };
-  tabs.forEach((b, i) => b.addEventListener("click", () => select(i, true)));
+  tabs.forEach((b, i) => b.addEventListener("click", () => select(i, true), on));
   cards.forEach((el, i) =>
-    el.addEventListener("focusin", () => {
-      if (garden.station() !== i) select(i, false);
-    }),
+    el.addEventListener(
+      "focusin",
+      () => {
+        if (garden.station() !== i) select(i, false);
+      },
+      on,
+    ),
   );
   const onKey = (e: KeyboardEvent) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
@@ -38,24 +45,30 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
     if (e.key === "ArrowRight") select(garden.station() + 1, true);
     else if (e.key === "ArrowLeft") select(garden.station() - 1, true);
   };
-  addEventListener("keydown", onKey);
-  pause?.addEventListener("click", () => {
-    const on = pause.getAttribute("aria-pressed") !== "true";
-    pause.setAttribute("aria-pressed", String(on));
-    garden.pause(on);
-  });
+  addEventListener("keydown", onKey, on);
+  pause?.addEventListener(
+    "click",
+    () => {
+      const pressed = pause.getAttribute("aria-pressed") !== "true";
+      pause.setAttribute("aria-pressed", String(pressed));
+      garden.pause(pressed);
+    },
+    on,
+  );
   const fine = matchMedia("(hover: hover) and (pointer: fine)");
   const onPointer = (e: PointerEvent) => {
     if (fine.matches)
       garden.pointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
   };
-  addEventListener("pointermove", onPointer);
+  addEventListener("pointermove", onPointer, on);
   plain?.addEventListener("click", () => {
-    removeEventListener("keydown", onKey);
-    removeEventListener("pointermove", onPointer);
-    garden.stop();
-    cards.forEach((el) => el.classList.remove("is-current"));
-    leave();
+    wiring.abort();
+    try {
+      garden.stop();
+    } finally {
+      cards.forEach((el) => el.classList.remove("is-current"));
+      leave();
+    }
     document.querySelector<HTMLElement>("main h1")?.focus();
   });
   select(0, false);

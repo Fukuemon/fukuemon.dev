@@ -109,7 +109,7 @@ export function startGarden(
     const p = papers[i]!;
     const t2 = 2 * Math.tan((fov() * Math.PI) / 360);
     const aspect = stage.clientWidth / stage.clientHeight;
-    const d = Math.max(2.1, p.w / (portrait() ? 0.92 : 0.46) / (t2 * aspect), p.h / 0.56 / t2);
+    const d = Math.max(2.1, p.w / (portrait() ? 0.88 : 0.46) / (t2 * aspect), p.h / 0.56 / t2);
     return {
       pos: p.c
         .clone()
@@ -132,7 +132,8 @@ export function startGarden(
     const dt = state.last ? Math.min(100, now - state.last) : 16;
     state.last = now;
     const tgt = pose(state.station);
-    if (!state.paused) {
+    // 縦長の画面は和紙が幅いっぱいなので、揺らすと和紙が画面からはみ出る。
+    if (!state.paused && !portrait()) {
       tgt.pos.x += state.px * 0.25;
       tgt.pos.y -= state.py * 0.08;
     }
@@ -205,10 +206,12 @@ export function startGarden(
       cancelAnimationFrame(raf);
       removeEventListener("resize", resize);
       dark.removeEventListener("change", onTheme);
-      cards.forEach((el, i) => {
+      // 後ろのセクションから戻す。次の兄弟が、まだ戻していないセクションを指さないようにするためである。
+      for (let i = cards.length - 1; i >= 0; i--) {
+        const el = cards[i]!;
         el.removeAttribute("style");
         homes[i]!.parent?.insertBefore(el, homes[i]!.next);
-      });
+      }
       cssRenderer.domElement.remove();
       for (const k of Object.keys(sceneVars)) vars.removeProperty(k);
       renderer.dispose();
