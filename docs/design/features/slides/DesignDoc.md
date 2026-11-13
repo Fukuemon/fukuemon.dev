@@ -67,9 +67,9 @@ status: draft
 apps/playground/
   slides/index.html       スライドのエディタのエントリーポイント
   src/
-    slides/               スライドのエディタのページ。レイアウト、プレビュー、書き出し、ファイルを開く処理
+    slides/               スライドのエディタのページ。レイアウト、プレビュー、書き出し、ファイルを開く処理、documents/ に Markdown を渡す時点を決める React の外のモジュール
     documents/            名前を付けた図とスライドの保存、開いているものの状態、一覧のコンポーネント。キャンバスのツールと共有する
-    code-editor/          エディタのエンジンを、EditorFrame に結び付けるコンポーネント。Node の実行環境のページと共有する
+    code-editor/          EditorFrame に、エディタのエンジンを渡すコンポーネント。Node の実行環境のページと共有する
 
 apps/web/
   src/content/slides/     運営者が公開するスライドの Markdown
@@ -111,7 +111,7 @@ flowchart TB
 - `src/slides/` は、`apps/playground/src/` のほかのツールのページのディレクトリ（`node/`、`sql/`、`go/` と、キャンバスのツール）を import しない。Oxlint の `no-restricted-imports` の対象に、`slides/` を足す。
 - `documents/` は、`@fukuemon/slides` を import しない。スライドの中身は、文字列として受け取る。
 - `documents/` は、ツールの種類に依らない処理を、React の外のモジュールとして持つ。持つ処理の一覧は、[キャンバスの Design Doc の「ディレクトリ」](../canvas/DesignDoc.md#ディレクトリ) にある。
-- `src/slides/` は、エディタとのやり取り、中身が変わったかの比較、ファイルの形式の処理だけを持つ。
+- `src/slides/` は、エディタとのやり取り、中身が変わったかの比較、ファイルの形式の処理を持つ。`documents/` に Markdown を渡す時点（500 ミリ秒の待ち）も、`src/slides/` が持つ。開いているスライド、書き込み、書き込みの結果は、持たない。
 - `code-editor/` は、`sql-console/` と同じく、ツールのページのディレクトリから import される。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - `packages/slides/src/page/` のスクリプトは、ブラウザで動く。tsconfig と lint の対象を、package のほかのコードと分ける。package のほかのコードは、`page/` のファイルを、文字列として読み込む。
 
@@ -223,7 +223,7 @@ declare function slidesAssets(): VitePlugin;
 flowchart TB
   page["SlidesPage<br/>開いているスライドを読む"]
   doc["SlidesEditor<br/>スライドごとに作り直す"]
-  header["ページのヘッダ<br/>名前、一覧、新しいスライド、テーマ、テンプレート、ファイル、保存の状態"]
+  header["ページのヘッダ<br/>ツールの名前、スライドの名前、一覧、新しいスライド、テーマ、テンプレート、ファイル、保存の状態"]
   layout["レイアウト"]
   editor["MarkdownPane"]
   preview["PreviewPane"]
@@ -253,7 +253,7 @@ flowchart TB
 | 8    | 保存の状態                   | 文                                      | 保存した時刻を出す。保存できないときは、ヘッダの下に、`Notice`（`danger`、`isAlert`）で出す                                       |
 
 - 「スライドの一覧」「新しいスライド」のボタンは、`Button` の `secondary` にする。ヘッダに、主のボタンは置かない。
-- `md:` より狭い画面では、ヘッダを 2 行にする。1 行目に、スライドの名前を置く。2 行目に、操作と保存の状態を置く。
+- `md:` より狭い画面では、ヘッダを 2 行にする。1 行目に、ツールの名前と、スライドの名前を置く。2 行目に、操作と保存の状態を置く。
 - レイアウトは、`SplitPane` で、左に `MarkdownPane`、右に `PreviewPane` を並べる。`md:` より狭い画面では、`Tabs` で 2 つを切り替える。
 - `MarkdownPane` は、`code-editor/` のコンポーネントで、`EditorFrame` に、Node の実行環境と同じエディタのエンジンを渡す。タブは、スライドの名前の 1 つだけを出す。閉じる操作は渡さない。
   - 狭い画面では、`Tabs` の中に `EditorFrame` のタブが入り、タブの並びが 2 段になる。2 段のままにするか、`EditorFrame` のタブを出さないかは、実装のタスクで決める。
@@ -262,18 +262,21 @@ flowchart TB
   - プレビューは、Shadow DOM に入れる。Marp の CSS を、ページに適用させないためである。
   - 入力のたびに、`renderSlides` の結果で描き直す。
   - カーソルのあるスライドが見えるところまで、プレビューのスクロールの位置を変える。位置は、動きを付けずに変える。
-- スライドの名前、一覧、確認のダイアログは、`documents/` のコンポーネントを使う。一覧の中身と、消す操作の確認は、[キャンバスの Design Doc の「図の一覧」](../canvas/DesignDoc.md#図の一覧) にある。画面に出す語（「スライド」）と、新しく作るものの名前の付け方は、props で渡す。
+- スライドの名前、一覧、確認のダイアログは、`documents/` のコンポーネントを使う。一覧の中身と、消す操作の確認の形は、[キャンバスの Design Doc の「図の一覧」](../canvas/DesignDoc.md#図の一覧) と同じである。画面に出す語（「スライド」）と、新しく作るものの名前の付け方は、props で渡す。
 - 新しいスライドの名前は、`無題のスライド` に連番を付ける。連番の決め方は、キャンバスのツールの「新しい図」と同じである。
-- 開いているスライドの識別子、スライドの一覧（名前と、更新した時刻）、IndexedDB を使えるか（`status`）は、`documents/` のモジュールが Store で持つ。`SlidesPage` は、`useSyncExternalStore` で読む。Effect の中で `setState` を呼んで、Store の値を写さない。
-- 書き込みの結果（成功、`unavailable`、`quota`）は、`src/slides/` の React の外のモジュールが、`documents/` の関数の返す値から受け取り、Store で持つ。ヘッダは、この Store と、一覧の更新した時刻から、保存の状態を出す。
-  - まだ保存していないスライドでは、保存の状態を出さない。
-  - 保存の容量が足りないとき（`quota`）は、スライドを消すと容量が空くことを、`Notice` の文に入れる。
-- `SlidesPage` は、`documents/` が読み込みの Promise を替えるたびに変わる値を `key` にして、`SlidesEditor` を置く。スライドを切り替えると、`SlidesEditor` を作り直す。
-  - 最初の保存で、スライドに識別子が付いても、Promise は替わらない。`SlidesEditor` は作り直さず、カーソルと、元に戻す操作の履歴を残す。
-- `SlidesEditor` は、`use` で読んだ中身を初期値にして、`useReducer` で状態を持つ。開くスライドが無いときは、Promise が中身の無い値で解決し、`SlidesEditor` が `starterMarkdown` を初期値にする。持つのは、Markdown、カーソルの行、狭い画面で選んだタブである。
+- 開いているスライドの識別子、スライドの一覧（名前と、更新した時刻）、IndexedDB を使えるか（`status`）、最後の書き込みの結果は、`documents/` のモジュールが Store で持つ。`SlidesPage` は、`useSyncExternalStore` で読む。Effect の中で `setState` を呼んで、Store の値を写さない。
+- ヘッダは、この 4 つの Store から、保存の状態を出す。
+  - まだ保存していないスライドでは、保存した時刻の文を出さない。
+  - IndexedDB を使えないとき（`unavailable`）と、保存の容量が足りないとき（`quota`）は、保存していないスライドでも、`Notice` を出す。
+  - 保存の容量が足りないときは、スライドを消すと容量が空くことを、`Notice` の文に入れる。
+- `SlidesPage` は、`SlidesEditor` を置き、`key` に、読み込みの番号を渡す。読み込みの番号は、`documents/` のモジュールが、読み込みの Promise を新しいものに替えるたびに進める値である。
+  - スライドを切り替えると、読み込みの番号が進み、React が `SlidesEditor` を作り直す。
+  - `documents/` は、最初の保存でスライドに識別子が付いたときは、Promise を替えない。このため、`SlidesEditor` は作り直されず、カーソルと、元に戻す操作の履歴が残る。
+- `SlidesEditor` は、`use` で読んだ中身を初期値にして、`useReducer` で状態を持つ。持つのは、Markdown、カーソルの行、狭い画面で選んだタブである。
+  - 開くスライドが無いときは、Promise は `undefined` で解決し、`SlidesEditor` は `starterMarkdown` を初期値にする。
   - テーマは、状態に持たない。`readTheme` で、Markdown から求める。
   - 状態管理のライブラリと、ツリーをまたぐ通知は使わない。
-- `use` に渡す Promise（開くスライドの読み込み）は、`documents/` のモジュールから受け取る。スライドのエディタは、記事の図を読み込む関数を、`documents/` に渡さない。
+- `use` に渡す Promise（開くスライドの読み込み）は、`documents/` のモジュールから受け取る。`src/slides/` は、記事の図を読み込む関数を、`documents/` に渡さない。
 - テーマを選ぶ操作と、テンプレートを足す操作は、`themeEdit` と `insertAfterSlideEdit` の編集を、エディタのエンジンに渡す。訪問者は、元に戻す操作で取り消せる。
 
 ### 保存
@@ -281,12 +284,14 @@ flowchart TB
 保存するレコードの形、データベース、IndexedDB を読み書きできないときの動きは、ADR-0057 に従う。  
 ADR-0057: [図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する](../../../adr/0057-document-records-in-two-object-stores.md)  
 スライドのエディタは、`documents/` のモジュールを通して、読み書きする。  
-保存する時点は [キャンバスの Design Doc の「保存の流れ」](../canvas/DesignDoc.md#保存の流れ) と、開くスライドの決め方は [「ツールとパス」](../canvas/DesignDoc.md#ツールとパス) と同じである。
+保存する時点は、[キャンバスの Design Doc の「保存の流れ」](../canvas/DesignDoc.md#保存の流れ) と同じである。  
+開くスライドの決め方は、[キャンバスの Design Doc の「ツールとパス」](../canvas/DesignDoc.md#ツールとパス) と同じである。
 
 - ツールの種類は、`slides` である。
 - 中身（`DocumentContent` の `data`）は、Markdown の全文である。テーマは、Markdown の `theme:` に入っている。`DocumentContent` に、スライドだけの値を足さない。
 - `src/slides/` は、入力が 500 ミリ秒止まったときに、Markdown を `documents/` に渡す。500 ミリ秒は、測っていない値で、実装のタスクで測って変えてよい。
-- スライドを切り替える前と、ページを閉じるとき（`pagehide`）は、`src/slides/` が、500 ミリ秒を待たずに、まだ渡していない Markdown を `documents/` に渡す。`documents/` は、受け取った Markdown を、編集したときに開いていたスライドの識別子に保存する。
+- `src/slides/` は、まだ渡していない Markdown を返す関数を、`documents/` に登録する。`documents/` は、スライドを切り替える前と、ページを閉じるとき（`pagehide`）に、この関数を呼び、返った Markdown を先に書く。
+  - `documents/` は、受け取った Markdown を、編集したときに開いていたスライドの識別子に保存する。まだ保存していないスライドのときは、新しいスライドとして保存する。
 - ひな形を開いただけでは、保存しない。「新しいスライド」を押したときも同じである。最初に編集したときか、名前を変えたときに、`documents/` が、新しいスライドとして保存する。
 - 「ファイルを開く」は、`.md` のファイルを、新しいスライドとして保存して開く。開いていたスライドは変えない。
   - 名前は、ファイルの名前から、拡張子（`.md`）を除いたものにする。
@@ -318,8 +323,14 @@ sequenceDiagram
   S-->>P: HTML と CSS
   P-->>V: プレビューを描き直す
   P->>D: 入力が止まったら、Markdown を渡す
-  D->>D: 保存していないスライドは作り、保存したスライドは上書きする
-  D->>D: URL の doc を、開いているスライドの識別子にする
+  alt 書き込めた
+    D->>D: 保存していないスライドは作り、保存したスライドは上書きする
+    D->>D: URL の doc を、開いているスライドの識別子にする
+    P-->>V: 保存した時刻を表示する
+  else IndexedDB を使えない、または保存の容量が足りない
+    D-->>P: 書き込みの結果
+    P-->>V: 保存できないことを表示する
+  end
 ```
 
 ### 書き出し
@@ -522,7 +533,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 - `apps/playground/src/documents/`: 名前を付けた図とスライドの保存と、一覧のコンポーネント。
 - `packages/slides/`: テーマ、テンプレート、Marp の設定、ページを組み立てる関数。
 - `apps/web/src/content/slides/<slug>.md`: 運営者が公開するスライドの Markdown。
-- `apps/playground/src/code-editor/`: エディタのエンジンを、`EditorFrame` に結び付けるコンポーネント。
+- `apps/playground/src/code-editor/`: `EditorFrame` に、エディタのエンジンを渡すコンポーネント。
 - `apps/web/src/lib/content/`: slug の一覧と Markdown を読む関数。
 - `apps/web/src/pages/slides/`: `/slides/<slug>` の HTML を出力するエンドポイント。
 - `apps/web/src/lib/`: `::slides` を処理するプラグイン。ディレクティブの解析に、`remark-directive` を使う。
@@ -551,7 +562,10 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
   - `@fukuemon/slides` が、React、`@fukuemon/ui`、workspace のほかの package に依存しないこと
   - `apps/playground` と `apps/web` が、`@marp-team/marp-core` を直接は import しないこと
 - `apps/web` のビルド: slug の規則、スライドの枚数、`::slides` の題と `slug` を確認する。
-- `documents/` から `@fukuemon/slides` への import と、`code-editor/` からツールのページのディレクトリへの import は、Oxlint で止めず、レビューで見る。
+- 次の import は、Oxlint で止めず、レビューで見る。
+  - `documents/` から `@fukuemon/slides` への import
+  - `code-editor/` から、ツールのページのディレクトリと `documents/` への import
+  - `apps/playground/src/` から `@fukuemon/slides/vite` への import
 - 色の値のチェック（`check:raw-values`）: 対象に `packages/slides` を足す。テーマの CSS と、帯の CSS に、色の値とプリミティブトークンの名前を書けない。時間の値は、チェックが見ないので、レビューで見る。
 - コントラストのチェック: スライド用のトークンの 4 つの組を足す。
 
@@ -562,7 +576,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 実機のブラウザは未確認である。
 
 - HTML のタグを出さない設定（`html: false`）で、`<!-- _class: title -->` を書いたスライドの `<section>` に、`title` のクラスが付いた。`<b>` のタグは、文字として出た。
-- `apps/web` のエンドポイントが出力する `/slides/<slug>` に、HTML の Content-Type が付くファイルの名前は、未確認である。実装のタスクで確認する。
+- `apps/web/src/pages/slides/` のエンドポイントのファイルにどの名前を付けると、`/slides/<slug>` が HTML の Content-Type で配られるかは、未確認である。実装のタスクで確認する。
 - `fd-plain` と `fd-accent` の 2 つのテーマで、表紙、目次、コードの 3 つのクラスを描いた。色は、ライトとダークの両方で、トークンの値と一致した。
 - 下の帯の中央に「前へ」、番号、「次へ」を並べた形で、JavaScript を無効にして、前後に送れた（3 つのブラウザ）。
 - 章の扉と結びのクラスは、描いていない。

@@ -8,7 +8,7 @@
 
 スライドのテーマの CSS、テンプレート、Marp に渡す設定、ページ送りつきの HTML を組み立てる処理の、置き場を決める必要がある。
 
-- スライドのエディタは、ブラウザの中で marp-core を動かす。テーマは、トークンの CSS 変数を参照する CSS である。テンプレートは、Markdown の断片である。単独の HTML には、Marp の HTML と CSS に加えて、トークンの CSS を埋め込む。
+- スライドのエディタは、ブラウザの中で marp-core を動かす。テーマは、トークンの CSS 変数を参照する CSS である。テンプレートは、Markdown の断片である。
   - ADR-0041: [スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する](0041-slides-editor-with-marp.md)
 - 公開するスライドは、`apps/web` のビルドが、Node で marp-core を動かして静的な HTML にする。ページ送りは、リンクと CSS の `:target` で作る。
   - ADR-0042: [公開するスライドは、ビルドのときに静的な HTML にして `/slides/<slug>` に置き、記事には iframe で埋め込む](0042-published-slides-as-static-pages.md)
@@ -22,7 +22,7 @@
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](0021-ui-components-and-catalog.md)
 - `packages/ui` は、workspace のどの package にも依存しない。
   - 出典: [コードベースの構造](../../context/codebase.md)
-- エディタが書き出す単独の HTML と、`apps/web` のビルドが作る公開するスライドは、どちらも、Marp の HTML と CSS に、トークンの CSS を入れた HTML である。
+- エディタは、単独の HTML を書き出す。`apps/web` のビルドは、公開するスライドを HTML にする。どちらの HTML も、Marp の HTML と CSS に、トークンの CSS を入れたものである。
 
 ## Decision
 
@@ -38,8 +38,10 @@
 - package は、`@marp-team/marp-core` に依存する。React、`@fukuemon/ui`、workspace のほかの package には依存しない。
 - ページに入れる CSS は、色、フォーカスの輪、角、動きの時間を、トークンの CSS の変数で参照する。値を書かない。
 - トークンの CSS は、呼ぶ側が文字列で渡す。package は、トークンのファイルを読まない。エディタと `apps/web` のビルドは、同じ `@fukuemon/ui` のトークンの CSS を渡す。
-- package の関数は、ブラウザと Node の両方で動く。DOM の API を使わない。組み立てたページに入れるスクリプトは、package の中の別のディレクトリに置き、ブラウザのコードとして型を確認する。
-- package は、テーマの CSS と、ページに入れる CSS とスクリプトを文字列にする Vite の plugin を、別のサブパス（`@fukuemon/slides/vite`）で export する。plugin は、Node でだけ動く。2 つのアプリのビルドの設定は、plugin を登録するだけにする。
+- `@fukuemon/slides` のエントリーポイントの関数は、ブラウザと Node の両方で動く。DOM の API を使わない。組み立てたページに入れるスクリプトは、package の中の別のディレクトリに置き、ブラウザのコードとして型を確認する。
+- package は、Vite の plugin を、別のサブパス（`@fukuemon/slides/vite`）で export する。plugin は、テーマの CSS と、ページに入れる CSS とスクリプトを、文字列にする。plugin は、Node でだけ動く。
+  - サブパスを分ける理由は、エディタの JavaScript に、plugin のコードを入れないためである。
+  - 2 つのアプリのビルドの設定は、plugin を登録するだけにする。
 - エディタの「単独の HTML」の書き出しと、`apps/web` のビルドは、同じ関数で HTML を組み立てる。単独の HTML にも、公開するスライドと同じページ送りが入る。
 
 理由は、テーマと Marp の設定が 1 か所にあると、エディタのプレビューと、公開するスライドの見た目が食い違わないことである。

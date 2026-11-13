@@ -81,7 +81,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ
     go/                   Go を動かすツールのページ
     sql-console/          SQL の入力欄と、結果の表
-    code-editor/          エディタのエンジンを、EditorFrame に結び付けるコンポーネント
+    code-editor/          EditorFrame に、エディタのエンジンを渡すコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
 
@@ -96,7 +96,7 @@ packages/
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
   - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
   - スライドのエディタのディレクトリ（`slides/`）と、`@fukuemon/slides` への import の向きは、[スライドの Design Doc](../../docs/design/features/slides/DesignDoc.md#ディレクトリと依存) にある。Oxlint は、`slides/` も、ツールのページの間の import を止める対象にする。
-- `code-editor/` は、Node の実行環境のページ（`src/node/`）と、スライドのエディタのページ（`src/slides/`）が共有する。`code-editor/` は、ツールのページのディレクトリを import しない。
+- `code-editor/` は、Node の実行環境のページ（`src/node/`）と、スライドのエディタのページ（`src/slides/`）が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
