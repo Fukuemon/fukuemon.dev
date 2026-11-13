@@ -236,7 +236,12 @@ island は、読むことに要らない機能にだけ使う。
 - 5 秒を超えて続く動きは、5 秒以内に止める。WCAG 2.2 の 2.2.2 は、自動で始まり、5 秒を超えて続き、ほかの内容と並んで出る動きに、止める手段を求める。
   - 出典: [Understanding SC 2.2.2: Pause, Stop, Hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)
 
-OS で動きを減らす設定にした訪問者への止め方と、動きの時間と緩急のユーティリティは、[デザインシステム（packages/ui）の Design Doc の「動き」](../../packages/ui/DesignDoc.md#動き) にある。
+処理中の印（`Button` の読み込み中と `Loading`）は、5 秒以内に止める規則の例外にする。  
+印は、利用者が待っている処理が終わると消えるためである。
+
+ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../adr/0028-radius-shadow-and-brush-motion.md)
+
+動きを付ける操作、長さ、付けない所と、OS で動きを減らす設定にした訪問者への止め方と、動きの時間と緩急のユーティリティは、[デザインシステム（packages/ui）の Design Doc の「動き」](../../packages/ui/DesignDoc.md#動き) にある。
 
 #### トップの庭の例外
 

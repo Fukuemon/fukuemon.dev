@@ -19,7 +19,7 @@ export function IconButton({ label, icon, type = "button", ...props }: IconButto
     <button
       {...props}
       aria-label={label}
-      className="inline-grid size-11 cursor-pointer place-items-center text-text hover:bg-surface-subtle focus-visible:focus-ring"
+      className="inline-grid size-11 cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring"
       type={type}
     >
       {icon}
