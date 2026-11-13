@@ -395,7 +395,8 @@
     position: relative;
     padding-inline: var(--spacing-intra-2);
   }
-  /* 筆の線。形は packages/ui の stroke-brush と同じ。入りを太くし、終わりを払う。
+  /* 筆の線。apps/web は @fukuemon/ui に依存しないので、packages/ui/src/tokens/theme.css から写して持つ。
+     写した値: 形（--fd-mask-brush の SVG）、高さ 4px、hover の 240ms（brush-hover）、開いたときの 320ms（animate-stroke）、緩急。
      ナビの文字は折り返さないので、疑似要素で描いても崩れない */
   .topbar nav a::after {
     content: "";
@@ -403,7 +404,7 @@
     inset-inline: 0;
     inset-block-end: 0;
     block-size: 4px;
-    background: var(--color-ink);
+    background: var(--color-fg);
     mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E")
       center / 100% 100% no-repeat;
     clip-path: inset(0 100% 0 0);
@@ -417,7 +418,7 @@
     color: var(--color-fg);
   }
   .topbar nav a[aria-current]::after {
-    background: var(--color-rust);
+    background: var(--color-now);
     clip-path: inset(0);
     animation: topbar-draw-brush 320ms cubic-bezier(0.4, 0, 0.2, 1);
   }
