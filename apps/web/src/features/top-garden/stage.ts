@@ -69,7 +69,7 @@ export function readOverride(search: string): StageOverride {
 export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";
   const load = bundle
-    ? `function(e){var s=document.createElement("script");s.src=${JSON.stringify(bundle)};s.defer=true;s.onerror=e;document.head.appendChild(s)}`
+    ? `function(e){var s=document.createElement("script");s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.defer=true;s.onerror=e;document.head.appendChild(s)}`
     : "null";
   return (
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +

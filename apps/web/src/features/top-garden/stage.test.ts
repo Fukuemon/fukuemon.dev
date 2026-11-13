@@ -210,6 +210,12 @@ describe("stageScript", () => {
   });
 });
 
+describe("stageScript の場面の束の URL", () => {
+  it("URL に </script> が入っても、script の要素を閉じる文字列を出さない", () => {
+    expect(stageScript({ dev: false, bundle: "/a</script><b>" }).includes("</script")).toBe(false);
+  });
+});
+
 describe("inline script に埋め込む形", () => {
   it("applyStage は、文字列から作り直しても、外の名前を参照せずに動く", () => {
     const apply = runInNewContext(`(${applyStage.toString()})`) as typeof applyStage;
