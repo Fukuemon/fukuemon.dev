@@ -17,6 +17,9 @@ ADR-0010: [Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポ
 - preflight を読み込まない。古いサイトの本文の段落の間隔が、UA のデフォルトの `margin-block: 1em` に依存していたためである。
 - トークンを `@theme static` に置く。`static` を付けないと、ユーティリティから参照されない変数が出力されず、挿絵の SVG が `fill="var(--color-wood-1)"` で参照する色が消えるためである。
 
+トークンを `@theme static` に置くことには、もう 1 つ理由があった。  
+Expressive Code が挿す CSS はこのリポジトリのビルドを通らないので、`styleOverrides` から参照するトークンを、素のカスタムプロパティとして出しておく必要があった。
+
 今の `packages/ui` は、次の形になっている。
 
 - トークンの値は、`packages/ui/src/tokens/primitive.css` と `semantic.css` の `:root` に、素のカスタムプロパティとして書いてある。
