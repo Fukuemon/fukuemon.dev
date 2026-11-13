@@ -145,7 +145,7 @@ function Playground({
             selectedId={exchangeId}
           />
           <HttpExchangeDetail actors={ACTORS} exchange={exchange} />
-          {/* コンソールの高さ（h-80）は仮の値で、画面の設計は #95 で決める */}
+          {/* コンソールの高さ（h-80）は仮の値で、画面の設計で決め直す */}
           <div className="flex h-80 shrink-0 flex-col">
             <ConsoleEntryList entries={consoleEntries} />
           </div>

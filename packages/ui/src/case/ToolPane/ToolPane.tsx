@@ -30,6 +30,7 @@ export type ToolPaneProps = {
  * コードを動かす画面の 1 つの領域。題の帯、操作、中身を、罫で区切って縦に積む。
  * 中身の空、読み込み中、エラーの状態を、どの領域でも同じ形で出す。
  * 領域は自分の高さを持たない。中身だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。
+ * スクロールする要素は、中身の側が `min-h-0 flex-1 overflow-y-auto` で持つ。
  */
 export function ToolPane({
   title,
