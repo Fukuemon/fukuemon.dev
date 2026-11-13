@@ -148,7 +148,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 ### TreeView
 
-- 使う場面: `FileTree` が組む木の表示。
+- 使う場面: `FileTree` が組む木の表示と、`ConsoleEntryList` の値を開いて見る木。
 - 使わない場面と、代わりに使うもの: ファイルの作成、名前の変更、削除まで扱うなら `FileTree`。入れ子の無い一覧には使わない。
 - 変種: なし。
 - 状態: 枝の開閉、選択、hover、フォーカス。

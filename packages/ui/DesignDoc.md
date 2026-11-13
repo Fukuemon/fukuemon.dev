@@ -277,7 +277,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `Disclosure`           | 記事の補足、リクエストとレスポンスの詳細         | DADS のアコーディオン                           |
 | `Loading`              | 実行環境の起動、パッケージのインストール         | DADS のプログレスインジケーター                 |
 | `Breadcrumb`           | 記事とシリーズの位置                             | DADS のパンくずリスト                           |
-| `TreeView`             | `FileTree` が組む木の表示                        | APG の Tree View                                |
+| `TreeView`             | `FileTree` と `ConsoleEntryList` が組む木の表示  | APG の Tree View                                |
 | `SplitPane`            | エディタ、端末、プレビューの間の境界             | APG の Window Splitter                          |
 | `FileIcon`             | ファイルの木とエディタのタブの印                 | 自前の SVG                                      |
 

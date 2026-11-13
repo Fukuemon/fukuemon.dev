@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TreeView.stories";
 
-const { Collapsed, Expanded } = composeStories(stories);
+const { Collapsed, Expanded, WithContent } = composeStories(stories);
 
 const item = (name: string) => screen.getByRole("treeitem", { name });
 
@@ -80,5 +80,13 @@ describe("TreeView", () => {
     await userEvent.click(item("src"));
     expect(item("src")).toHaveAttribute("aria-expanded", "true");
     expect(item("index.ts")).toBeInTheDocument();
+  });
+
+  it("content を渡すと、label の代わりに content を描き、タイプアヘッドは label で探す", async () => {
+    render(<WithContent />);
+    expect(item("user: {id: 42}").querySelector(".font-bold")).toHaveTextContent("user:");
+    await userEvent.tab();
+    await userEvent.keyboard("n");
+    expect(item("名前の項目")).toHaveFocus();
   });
 });

@@ -61,3 +61,31 @@ export const Expanded: Story = {
   args: { defaultExpandedIds: ["src", "src/routes"], initialSelectedId: "src/routes/token.ts" },
 };
 export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };
+export const WithContent: Story = {
+  name: "中身を描く",
+  args: {
+    items: [
+      {
+        id: "user",
+        label: "user: {id: 42}",
+        content: (
+          <span>
+            <span className="font-bold">user:</span> {"{id: 42}"}
+          </span>
+        ),
+        children: [
+          {
+            id: "user/id",
+            label: "id: 42",
+            content: (
+              <span>
+                <span className="font-bold">id:</span> 42
+              </span>
+            ),
+          },
+        ],
+      },
+      { id: "name", label: "name", content: <span>名前の項目</span> },
+    ],
+  },
+};
