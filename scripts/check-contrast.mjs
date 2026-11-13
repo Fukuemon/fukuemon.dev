@@ -53,6 +53,7 @@ const TEXT_PAIRS = [
   // エディタの選択、検索の一致、補完とパネルの面の上にも、コードの字句が載る
   ...[
     "code-surface",
+    "surface",
     "info-surface",
     "warning-surface",
     "surface-subtle",
