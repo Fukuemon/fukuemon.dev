@@ -10,8 +10,8 @@ describe("sameOriginFetch", () => {
     const guarded = sameOriginFetch(real, origin);
     await guarded("/go/", { redirect: "follow", method: "GET" });
     await guarded(new Request(`${origin}/a`));
-    expect(real.mock.calls[0]?.[1]).toEqual({ redirect: "error", method: "GET" });
-    expect(real.mock.calls[1]?.[1]).toEqual({ redirect: "error" });
+    expect(real.mock.calls[0]?.[1]).toStrictEqual({ redirect: "error", method: "GET" });
+    expect(real.mock.calls[1]?.[1]).toStrictEqual({ redirect: "error" });
   });
 
   it.each([["https://example.com/"], ["http://play.fukuemon.dev/"], ["//evil.example/x"]])(
@@ -22,4 +22,10 @@ describe("sameOriginFetch", () => {
       expect(real).not.toHaveBeenCalled();
     },
   );
+
+  it("URL にできない値は、送らずに失敗させる", async () => {
+    const real = vi.fn<typeof fetch>();
+    await expect(sameOriginFetch(real, origin)("http://[bad")).rejects.toThrow(TypeError);
+    expect(real).not.toHaveBeenCalled();
+  });
 });

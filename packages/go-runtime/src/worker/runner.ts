@@ -15,7 +15,11 @@ export type ToWorker = {
   input: { files: GoFiles; module: string; mode: "run" | "test"; package: string };
 };
 
-export type FromWorker = { type: "output"; chunk: string } | { type: "exit"; code: number };
+/** Web Worker からページに送る値。crashed は、WASM を動かせなかったことを表す。 */
+export type FromWorker =
+  | { type: "output"; chunk: string }
+  | { type: "exit"; code: number }
+  | { type: "crashed"; message: string };
 
 /** createGoRunner が使う Web Worker の操作。テストでは、同じ形の偽物を渡す。 */
 export type WorkerLike = {
@@ -31,7 +35,7 @@ export type GoRunnerOptions = {
   createWorker: () => WorkerLike;
 };
 
-const STOPPED = "Go の Web Worker が止まりました";
+const CRASHED = "Go の Web Worker が止まりました";
 
 function createStore<T>(initial: T): Store<T> & { set: (value: T) => void } {
   let value = initial;
@@ -98,7 +102,13 @@ export function createGoRunner({ compile, createWorker }: GoRunnerOptions): GoRu
       }
       if (stopped) return { kind: "stopped" };
       return new Promise<GoExit>((resolve) => {
-        const worker = createWorker();
+        let worker: WorkerLike;
+        try {
+          worker = createWorker();
+        } catch (error) {
+          resolve({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
+          return;
+        }
         const finish = (exit: GoExit) => {
           worker.terminate();
           current = undefined;
@@ -107,12 +117,17 @@ export function createGoRunner({ compile, createWorker }: GoRunnerOptions): GoRu
         current = { resolve: finish };
         worker.onmessage = ({ data }) => {
           if (data.type === "output") onOutput(data.chunk);
-          else finish({ kind: "exited", exitCode: data.code });
+          else if (data.type === "exit") finish({ kind: "exited", exitCode: data.code });
+          else finish({ kind: "failed", message: `${CRASHED}: ${data.message}` });
         };
         worker.onerror = ({ message }) => {
-          finish({ kind: "failed", message: message ? `${STOPPED}: ${message}` : STOPPED });
+          finish({ kind: "failed", message: message ? `${CRASHED}: ${message}` : CRASHED });
         };
-        worker.postMessage({ module, input });
+        try {
+          worker.postMessage({ module, input });
+        } catch (error) {
+          finish({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
+        }
       });
     };
 

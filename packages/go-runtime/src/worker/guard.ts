@@ -5,7 +5,12 @@
  */
 export function sameOriginFetch(realFetch: typeof fetch, origin: string): typeof fetch {
   return (input, init) => {
-    const url = new URL(input instanceof Request ? input.url : String(input), origin);
+    let url: URL;
+    try {
+      url = new URL(input instanceof Request ? input.url : String(input), origin);
+    } catch (error) {
+      return Promise.reject(error);
+    }
     if (url.origin !== origin) {
       return Promise.reject(new TypeError(`ほかの origin へは送れません: ${url.origin}`));
     }

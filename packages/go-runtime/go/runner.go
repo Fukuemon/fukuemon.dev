@@ -31,8 +31,8 @@ type Input struct {
 
 // newInterpreter は、訪問者のファイルだけを src/<Module>/ に置いたファイルシステムで、Yaegi を作る。
 // symbol は stdlib.Symbols だけを渡す。syscall、unsafe、unrestricted を渡すと、ページの JS に届くコードを動かせるためである (ADR-0063)。
+// stderr は、呼ぶ側が relativeWriter で包んで渡す。
 func newInterpreter(in Input, stdout, stderr io.Writer) (*interp.Interpreter, error) {
-	stderr = relativeWriter{stderr, in.Module}
 	files := fstest.MapFS{}
 	for name, contents := range in.Files {
 		files[path.Join("src", in.Module, name)] = &fstest.MapFile{Data: []byte(contents)}
@@ -115,9 +115,6 @@ type relativeWriter struct {
 }
 
 func (r relativeWriter) Write(p []byte) (int, error) {
-	if inner, ok := r.w.(relativeWriter); ok {
-		return inner.Write(p)
-	}
 	replaced := strings.ReplaceAll(string(p), path.Join("src", r.module)+"/", "")
 	if _, err := io.WriteString(r.w, replaced); err != nil {
 		return 0, err

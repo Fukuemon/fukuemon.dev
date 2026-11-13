@@ -27,6 +27,6 @@ describe("testPackages", () => {
       "internal/a/a_test.go": "",
       "util/util.go": "",
     };
-    expect(testPackages(files, "play")).toEqual(["play", "play/greet", "play/internal/a"]);
+    expect(testPackages(files, "play")).toStrictEqual(["play", "play/greet", "play/internal/a"]);
   });
 });

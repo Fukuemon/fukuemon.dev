@@ -57,11 +57,11 @@ describe("createGoRunner", () => {
   it("load は 1 度だけコンパイルし、段階を ready にする", async () => {
     const compile = vi.fn(() => Promise.resolve(module));
     const { runner } = setup(compile);
-    expect(runner.phase.getSnapshot()).toEqual({ kind: "idle" });
+    expect(runner.phase.getSnapshot()).toStrictEqual({ kind: "idle" });
     const loading = runner.load();
-    expect(runner.phase.getSnapshot()).toEqual({ kind: "loading" });
+    expect(runner.phase.getSnapshot()).toStrictEqual({ kind: "loading" });
     await Promise.all([loading, runner.load()]);
-    expect(runner.phase.getSnapshot()).toEqual({ kind: "ready" });
+    expect(runner.phase.getSnapshot()).toStrictEqual({ kind: "ready" });
     expect(compile).toHaveBeenCalledTimes(1);
   });
 
@@ -72,11 +72,11 @@ describe("createGoRunner", () => {
       .mockResolvedValue(module);
     const { runner, workers } = setup(compile);
     const failed: GoExit = await runner.run(files, () => {}).done;
-    expect(failed).toEqual({ kind: "failed", message: "Yaegi を読み込めませんでした: 404" });
-    expect(runner.phase.getSnapshot()).toEqual({ kind: "failed", message: "404" });
+    expect(failed).toStrictEqual({ kind: "failed", message: "Yaegi を読み込めませんでした: 404" });
+    expect(runner.phase.getSnapshot()).toStrictEqual({ kind: "failed", message: "404" });
     expect(workers).toHaveLength(0);
     await runner.load();
-    expect(runner.phase.getSnapshot()).toEqual({ kind: "ready" });
+    expect(runner.phase.getSnapshot()).toStrictEqual({ kind: "ready" });
     expect(compile).toHaveBeenCalledTimes(2);
   });
 
@@ -85,14 +85,14 @@ describe("createGoRunner", () => {
     const output: string[] = [];
     const execution = runner.run(files, (chunk) => output.push(chunk));
     const worker = await nextWorker(workers, 0);
-    expect(worker.sent[0]).toEqual({
+    expect(worker.sent[0]).toStrictEqual({
       module,
       input: { files, module: "example.com/app", mode: "run", package: "example.com/app" },
     });
     worker.emit({ type: "output", chunk: "hello\n" });
     worker.emit({ type: "exit", code: 3 });
-    expect(await execution.done).toEqual({ kind: "exited", exitCode: 3 });
-    expect(output).toEqual(["hello\n"]);
+    expect(await execution.done).toStrictEqual({ kind: "exited", exitCode: 3 });
+    expect(output).toStrictEqual(["hello\n"]);
     expect(worker.terminated).toBe(true);
   });
 
@@ -101,11 +101,11 @@ describe("createGoRunner", () => {
     const first = runner.run(files, () => {});
     const worker = await nextWorker(workers, 0);
     first.stop();
-    expect(await first.done).toEqual({ kind: "stopped" });
+    expect(await first.done).toStrictEqual({ kind: "stopped" });
     expect(worker.terminated).toBe(true);
     const second = runner.run(files, () => {});
     (await nextWorker(workers, 1)).emit({ type: "exit", code: 0 });
-    expect(await second.done).toEqual({ kind: "exited", exitCode: 0 });
+    expect(await second.done).toStrictEqual({ kind: "exited", exitCode: 0 });
   });
 
   it("読み込み中に止めたときは、読み込みを待たずに stopped を返し、Web Worker を作らない", async () => {
@@ -113,7 +113,7 @@ describe("createGoRunner", () => {
     const { runner, workers } = setup(() => new Promise((resolve) => (finish = resolve)));
     const execution = runner.run(files, () => {});
     execution.stop();
-    expect(await execution.done).toEqual({ kind: "stopped" });
+    expect(await execution.done).toStrictEqual({ kind: "stopped" });
     finish(module);
     await runner.load();
     expect(workers).toHaveLength(0);
@@ -123,7 +123,7 @@ describe("createGoRunner", () => {
     const { runner, workers } = setup();
     const execution = runner.run(files, () => {});
     (await nextWorker(workers, 0)).fail("out of memory");
-    expect(await execution.done).toEqual({
+    expect(await execution.done).toStrictEqual({
       kind: "failed",
       message: "Go の Web Worker が止まりました: out of memory",
     });
@@ -140,8 +140,8 @@ describe("createGoRunner", () => {
     const second = await nextWorker(workers, 1);
     expect(second.sent[0]?.input).toMatchObject({ mode: "test", package: "example.com/app/a" });
     second.emit({ type: "exit", code: 0 });
-    expect(await execution.done).toEqual({ kind: "exited", exitCode: 1 });
-    expect(output).toEqual([
+    expect(await execution.done).toStrictEqual({ kind: "exited", exitCode: 1 });
+    expect(output).toStrictEqual([
       "--- FAIL: TestX\n",
       "FAIL\texample.com/app\n",
       "ok  \texample.com/app/a\n",
@@ -153,37 +153,81 @@ describe("createGoRunner", () => {
     const execution = runner.test(files, () => {});
     await nextWorker(workers, 0);
     execution.stop();
-    expect(await execution.done).toEqual({ kind: "stopped" });
+    expect(await execution.done).toStrictEqual({ kind: "stopped" });
     expect(workers).toHaveLength(1);
   });
 
-  it("段階の変化を通知し、解除した後は通知しない。理由の無い異常終了と、Error でない失敗も文にする", async () => {
-    const { runner, workers } = setup(() => Promise.reject("offline"));
+  it("段階の変化を通知し、解除した後は通知しない", async () => {
+    const { runner } = setup(() => Promise.reject(new Error("offline")));
     const onChange = vi.fn();
     const unsubscribe = runner.phase.subscribe(onChange);
     await runner.load();
-    expect(onChange).toHaveBeenCalledTimes(2);
-    expect(runner.phase.getSnapshot()).toEqual({ kind: "failed", message: "offline" });
     unsubscribe();
     await runner.load();
     expect(onChange).toHaveBeenCalledTimes(2);
+  });
 
-    const ok = setup();
-    const execution = ok.runner.run(files, () => {});
-    (await nextWorker(ok.workers, 0)).fail("");
-    expect(await execution.done).toEqual({
+  it("Error でない失敗も、段階の文にする", async () => {
+    const { runner } = setup(() => Promise.reject("offline"));
+    await runner.load();
+    expect(runner.phase.getSnapshot()).toStrictEqual({ kind: "failed", message: "offline" });
+  });
+
+  it("理由の無い異常終了は、止まったことだけを文にする", async () => {
+    const { runner, workers } = setup();
+    const execution = runner.run(files, () => {});
+    (await nextWorker(workers, 0)).fail("");
+    expect(await execution.done).toStrictEqual({
       kind: "failed",
       message: "Go の Web Worker が止まりました",
     });
-    expect(workers).toHaveLength(0);
+  });
+
+  it("Web Worker が WASM を動かせなかったと知らせたら、failed を返す", async () => {
+    const { runner, workers } = setup();
+    const execution = runner.run(files, () => {});
+    (await nextWorker(workers, 0)).emit({ type: "crashed", message: "bad module" });
+    expect(await execution.done).toStrictEqual({
+      kind: "failed",
+      message: "Go の Web Worker が止まりました: bad module",
+    });
+  });
+
+  it("Web Worker を作れないときは、failed を返す", async () => {
+    const runner = createGoRunner({
+      compile: () => Promise.resolve(module),
+      createWorker: () => {
+        throw new Error("blocked");
+      },
+    });
+    expect(await runner.run(files, () => {}).done).toStrictEqual({
+      kind: "failed",
+      message: "Go の Web Worker が止まりました: blocked",
+    });
+  });
+
+  it("Web Worker に送れないときは、Web Worker を終了させて failed を返す", async () => {
+    const worker = fakeWorker();
+    worker.postMessage = () => {
+      throw new Error("DataCloneError");
+    };
+    const runner = createGoRunner({
+      compile: () => Promise.resolve(module),
+      createWorker: () => worker,
+    });
+    const exit = await runner.run(files, () => {}).done;
+    expect([exit, worker.terminated]).toStrictEqual([
+      { kind: "failed", message: "Go の Web Worker が止まりました: DataCloneError" },
+      true,
+    ]);
   });
 
   it("テストのファイルが無いときは、Web Worker を作らずに 0 で終える", async () => {
     const { runner, workers } = setup();
     const output: string[] = [];
     const exit = await runner.test({ "main.go": "package main" }, (c) => output.push(c)).done;
-    expect(exit).toEqual({ kind: "exited", exitCode: 0 });
-    expect(output).toEqual(["テストのファイル（_test.go）がありません\n"]);
+    expect(exit).toStrictEqual({ kind: "exited", exitCode: 0 });
+    expect(output).toStrictEqual(["テストのファイル（_test.go）がありません\n"]);
     expect(workers).toHaveLength(0);
   });
 });

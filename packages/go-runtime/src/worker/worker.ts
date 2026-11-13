@@ -25,5 +25,9 @@ scope.addEventListener("message", (event) => {
   globalThis.goRunnerInput = JSON.stringify(input);
   const go = new Go();
   go.exit = (code) => post({ type: "exit", code });
-  void WebAssembly.instantiate(module, go.importObject).then((instance) => go.run(instance));
+  WebAssembly.instantiate(module, go.importObject)
+    .then((instance) => go.run(instance))
+    .catch((error: unknown) => {
+      post({ type: "crashed", message: error instanceof Error ? error.message : String(error) });
+    });
 });
