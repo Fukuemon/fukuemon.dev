@@ -94,6 +94,8 @@ describe("ports", () => {
   it.each([
     ["http: の URL", "http://3001.example.test"],
     ["このページと同じ origin の URL", "https://play.example.test/preview"],
+    ["大文字のホスト名で書いた、このページと同じ origin の URL", "https://PLAY.example.test/"],
+    ["既定のポートを書いた、このページと同じ origin の URL", "https://play.example.test:443/"],
     ["javascript: の URL", "javascript:alert(1)"],
     ["URL でない文字列", "not a url"],
   ])("%s のポートは、一覧に出さない", async (_, url) => {
