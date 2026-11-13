@@ -4,7 +4,13 @@ import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 
 /** 木の 1 つの項目。children を持つ項目は枝で、開閉できる。 */
 export type TreeNode = {
   id: string;
+  /** タイプアヘッドで探す文字。content を渡さないときは、画面にもこの文字を描く。 */
   label: string;
+  /**
+   * label の代わりに描く中身。文字の一部を太字にするときに使う。読み上げる名前は、この中身の文字になる。
+   * label と同じ文字を描き、押せる要素を入れない。treeitem の中に、ほかの操作を置けないためである。
+   */
+  content?: ReactNode;
   children?: readonly TreeNode[];
   /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
   icon?: (isOpen: boolean) => ReactNode;
@@ -22,6 +28,8 @@ export type TreeViewProps = {
   onRequestRename?: (id: string) => void;
   /** 渡すと、項目で Delete のキーを押したときに呼ぶ。削除の確認を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
   onRequestDelete?: (id: string) => void;
+  /** compact は、項目の高さを 24px 以上、文字を 12px にする。コードを動かす画面のコンソールの値の木に使う。 */
+  density?: "default" | "compact";
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -63,6 +71,7 @@ export function TreeView({
   defaultExpandedIds = [],
   onRequestRename,
   onRequestDelete,
+  density = "default",
 }: TreeViewProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
   const visible = flatten(items, expanded);
@@ -148,7 +157,14 @@ export function TreeView({
     [onRequestRename && "F2", onRequestDelete && "Delete"].filter(Boolean).join(" ") || undefined;
 
   return (
-    <ul aria-label={label} className="flex flex-col text-body-dense text-text" role="tree">
+    <ul
+      aria-label={label}
+      className={clsx(
+        "flex flex-col text-text",
+        density === "compact" ? "text-compact" : "text-body-dense",
+      )}
+      role="tree"
+    >
       {visible.map(({ node, level, setSize, posInSet }, index) => {
         const isBranch = node.children !== undefined;
         const isOpen = expanded.has(node.id);
@@ -161,8 +177,11 @@ export function TreeView({
             aria-selected={onSelect ? node.id === selectedId : undefined}
             aria-setsize={setSize}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-1 rounded-control pr-2 transition-colors hover:bg-surface-subtle focus-visible:focus-ring",
+              // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
+              "flex items-start gap-1 rounded-control pr-2 transition-colors focus-visible:focus-ring",
+              density === "compact" ? "min-h-6 py-1" : "min-h-11 py-3",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
+              (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
             )}
             key={node.id}
             onClick={() => {
@@ -177,24 +196,39 @@ export function TreeView({
             }}
             role="treeitem"
             // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
-            style={{ paddingInlineStart: `${(level - 1) * 1.5 + 0.5}rem` }}
+            style={{
+              paddingInlineStart: `${(level - 1) * 1.5 + (density === "compact" ? 0 : 0.5)}rem`,
+            }}
             tabIndex={node.id === tabStopId ? 0 : -1}
           >
-            <svg
-              aria-hidden="true"
-              className={clsx(
-                "shrink-0 transition-transform",
-                isOpen && "rotate-90",
-                !isBranch && "invisible",
-              )}
-              height="16"
-              viewBox="0 0 16 16"
-              width="16"
+            <span
+              className={clsx("flex shrink-0 items-center", density === "compact" ? "h-4" : "h-5")}
             >
-              <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-            {node.icon?.(isOpen)}
-            {node.label}
+              <svg
+                aria-hidden="true"
+                className={clsx(
+                  "transition-transform",
+                  isOpen && "rotate-90",
+                  !isBranch && "invisible",
+                )}
+                height="16"
+                viewBox="0 0 16 16"
+                width="16"
+              >
+                <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            </span>
+            {node.icon && (
+              <span
+                className={clsx(
+                  "flex shrink-0 items-center",
+                  density === "compact" ? "h-4" : "h-5",
+                )}
+              >
+                {node.icon(isOpen)}
+              </span>
+            )}
+            {node.content ?? node.label}
           </li>
         );
       })}

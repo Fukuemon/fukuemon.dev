@@ -14,6 +14,9 @@ import * as Stories from "./TreeView.stories";
 規則の本文は、次の文書のセクションにある。
 
 - 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「TreeView」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の次の ID
+  - `TARGET-SIZE`
+  - `TEXT-MIN-SIZE`
 
 ## 状態
 
@@ -24,6 +27,17 @@ import * as Stories from "./TreeView.stories";
 ### 開いて選んでいる
 
 <Canvas of={Stories.Expanded} />
+
+### 中身を描く
+
+<Canvas of={Stories.WithContent} />
+
+### 詰めた項目（compact）
+
+コードを動かす画面のコンソールの値の木に使う。  
+項目の高さは 24px、文字は 12px である（ADR-0062）。
+
+<Canvas of={Stories.Compact} />
 
 ### フォーカス
 
