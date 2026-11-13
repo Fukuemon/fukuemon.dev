@@ -14,7 +14,10 @@ export type EntryKind = "file" | "directory";
 
 export type FileEntry = { path: string; kind: EntryKind };
 
-export type Change = { ok: true; workspace: GoWorkspace } | { ok: false; reason: string };
+/** 変更の結果。path は正規化した後のパスで、rename のときは移した後、from は移す前である。 */
+export type Change =
+  | { ok: true; workspace: GoWorkspace; path: string; from?: string }
+  | { ok: false; reason: string };
 
 /** 相対パスを、先頭と末尾の `/` と `./` を除いた形にする。`..`、空の階層、`\` を含むパスは undefined を返す。 */
 export function normalizePath(path: string): string | undefined {
@@ -35,6 +38,14 @@ const parentsOf = (path: string): string[] => {
 };
 
 const isUnder = (path: string, directory: string) => path.startsWith(`${directory}/`);
+
+/** path が target と同じか、target のディレクトリの下にあるか。 */
+export const isSameOrUnder = (path: string, target: string) =>
+  path === target || isUnder(path, target);
+
+/** path が from と同じか from の下にあるときに、from を to に置き換えたパスを返す。 */
+export const movePath = (path: string, from: string, to: string) =>
+  isSameOrUnder(path, from) ? to + path.slice(from.length) : path;
 
 const allDirectories = (workspace: GoWorkspace): Set<string> => {
   const directories = new Set<string>();
@@ -81,7 +92,11 @@ export function writeFile(workspace: GoWorkspace, rawPath: string, contents: str
     const reason = checkNew(workspace, path);
     if (reason) return failed(reason);
   }
-  return { ok: true, workspace: { ...workspace, files: { ...workspace.files, [path]: contents } } };
+  return {
+    ok: true,
+    path,
+    workspace: { ...workspace, files: { ...workspace.files, [path]: contents } },
+  };
 }
 
 export function createDirectory(workspace: GoWorkspace, rawPath: string): Change {
@@ -89,11 +104,12 @@ export function createDirectory(workspace: GoWorkspace, rawPath: string): Change
   if (!path) return failed(`「${rawPath}」はディレクトリのパスにできません`);
   const reason = checkNew(workspace, path);
   if (reason) return failed(reason);
-  return { ok: true, workspace: { ...workspace, directories: [...workspace.directories, path] } };
+  return {
+    ok: true,
+    path,
+    workspace: { ...workspace, directories: [...workspace.directories, path] },
+  };
 }
-
-const movePath = (path: string, from: string, to: string) =>
-  path === from ? to : isUnder(path, from) ? to + path.slice(from.length) : path;
 
 /** ファイルかディレクトリの名前を変える。ディレクトリのときは、下のファイルとディレクトリも移す。 */
 export function rename(workspace: GoWorkspace, rawFrom: string, rawTo: string): Change {
@@ -102,7 +118,7 @@ export function rename(workspace: GoWorkspace, rawFrom: string, rawTo: string): 
   const kind = from && kindOf(workspace, from);
   if (!from || !kind) return failed(`「${rawFrom}」はありません`);
   if (!to) return failed(`「${rawTo}」は名前にできません`);
-  if (to === from) return { ok: true, workspace };
+  if (to === from) return { ok: true, workspace, path: to, from };
   if (isUnder(to, from)) return failed("ディレクトリを、自分の下に移せません");
   const reason = checkNew(workspace, to);
   if (reason) return failed(reason);
@@ -110,7 +126,7 @@ export function rename(workspace: GoWorkspace, rawFrom: string, rawTo: string): 
     Object.entries(workspace.files).map(([path, contents]) => [movePath(path, from, to), contents]),
   );
   const directories = workspace.directories.map((path) => movePath(path, from, to));
-  return { ok: true, workspace: { files, directories } };
+  return { ok: true, workspace: { files, directories }, path: to, from };
 }
 
 /** ファイルかディレクトリを消す。ディレクトリのときは、下のファイルとディレクトリも消す。 */
@@ -122,7 +138,7 @@ export function remove(workspace: GoWorkspace, rawPath: string): Change {
   // 消したディレクトリの親が空になっても、一覧から消えないようにする
   const parent = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;
   const directories = [...workspace.directories.filter(keep), ...(parent ? [parent] : [])];
-  return { ok: true, workspace: { files, directories: [...new Set(directories)] } };
+  return { ok: true, path, workspace: { files, directories: [...new Set(directories)] } };
 }
 
 /** FileTree に渡す木。各階層で、ディレクトリを先に、名前の順で並べる。項目の id はパスである。 */

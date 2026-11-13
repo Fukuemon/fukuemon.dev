@@ -1,9 +1,6 @@
 import type { GoRunner } from "../index";
 import { createGoRunner } from "./runner";
 
-export { createGoRunner } from "./runner";
-export type { WorkerLike } from "./runner";
-
 // WASM は、Workers の静的なファイルの上限に収まるよう、ビルドで 2 つに分けてある (scripts/build-wasm.mjs)
 const parts = [
   new URL("../../wasm/yaegi-0.wasm", import.meta.url),

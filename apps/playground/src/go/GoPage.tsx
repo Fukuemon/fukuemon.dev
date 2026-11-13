@@ -16,9 +16,9 @@ import { Suspense, use, useRef, useState, useSyncExternalStore } from "react";
 import { goDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { GoEditor } from "./GoEditor";
-import { type Change, kindOf, toTree } from "./files";
+import { type Change, isSameOrUnder, kindOf, movePath, toTree } from "./files";
 import { exitLabel, lineKind, progressLabel } from "./output";
-import { type GoSession, createGoSessionOpener } from "./session";
+import { type GoSession, OUTPUT_LIMIT, createGoSessionOpener } from "./session";
 
 const openSession = createGoSessionOpener(createProjectLoader("go", goDefaultProject));
 
@@ -36,8 +36,6 @@ const join = (parent: string | undefined, name: string) => (parent ? `${parent}/
 const parentOf = (path: string) =>
   path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;
 const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
-const isSameOrUnder = (path: string, target: string) =>
-  path === target || path.startsWith(`${target}/`);
 
 function GoTool({ search, embedded }: { search: string; embedded: boolean }) {
   const load = use(openSession(search));
@@ -97,7 +95,7 @@ function OutputPane({ session }: { session: GoSession }) {
           </pre>
           {output.truncated && (
             <p className="font-sans text-caption text-code-comment">
-              出力が 1,000,000 文字を超えたので、後ろを捨てました。
+              出力が {OUTPUT_LIMIT.toLocaleString("ja-JP")} 文字を超えたので、後ろを捨てました。
             </p>
           )}
         </div>
@@ -123,7 +121,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const openTabs = tabs.filter((path) => Object.hasOwn(workspace.files, path));
   const shown = active !== undefined && openTabs.includes(active) ? active : openTabs[0];
 
-  const report = (change: Change) => {
+  const report = (change: Change): change is Extract<Change, { ok: true }> => {
     setProblem(change.ok ? undefined : change.reason);
     return change.ok;
   };
@@ -139,23 +137,23 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   };
 
   const create = (name: string, parent: string | undefined) => {
-    const path = join(parent, name);
-    if (report(session.write(path, ""))) {
-      setSelected(path);
-      openFile(path);
+    const change = session.write(join(parent, name), "");
+    if (report(change)) {
+      setSelected(change.path);
+      openFile(change.path);
     }
   };
 
   const createDirectory = (name: string, parent: string | undefined) => {
-    const path = join(parent, name);
-    if (report(session.createDirectory(path))) setSelected(path);
+    const change = session.createDirectory(join(parent, name));
+    if (report(change)) setSelected(change.path);
   };
 
-  const renameEntry = (from: string, name: string) => {
-    const to = join(parentOf(from), name);
-    if (!report(session.rename(from, to))) return;
-    const move = (path: string) =>
-      isSameOrUnder(path, from) ? to + path.slice(from.length) : path;
+  const renameEntry = (id: string, name: string) => {
+    const change = session.rename(id, join(parentOf(id), name));
+    if (!report(change)) return;
+    const { from = id, path: to } = change;
+    const move = (path: string) => movePath(path, from, to);
     for (const [path, state] of Array.from(states.current)) {
       if (!isSameOrUnder(path, from)) continue;
       states.current.delete(path);

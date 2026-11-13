@@ -92,6 +92,21 @@ function createStore<T>(initial: T): WritableStore<T> {
   };
 }
 
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === "string");
+
+/** IndexedDB から読んだ値が、ファイルとディレクトリの一式の形か。形でない値は、保存したファイルが無いときと同じに扱う。 */
+function isGoWorkspace(value: unknown): value is GoWorkspace {
+  if (typeof value !== "object" || value === null) return false;
+  const { files, directories } = value as Partial<Record<keyof GoWorkspace, unknown>>;
+  return (
+    typeof files === "object" &&
+    files !== null &&
+    Object.values(files).every((contents) => typeof contents === "string") &&
+    isStringArray(directories)
+  );
+}
+
 export type GoSessionOptions = {
   project: GoProject;
   embedId: string | undefined;
@@ -110,7 +125,7 @@ export function createGoSession({
   now = Date.now,
 }: GoSessionOptions): GoSession {
   const initial: GoWorkspace =
-    saved.kind === "saved"
+    saved.kind === "saved" && isGoWorkspace(saved.record)
       ? { files: saved.record.files, directories: saved.record.directories }
       : { files: project.files, directories: [] };
   const workspace = createStore(initial);

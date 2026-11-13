@@ -107,7 +107,12 @@ describe("rename", () => {
   });
 
   it("同じ名前にするときは、何も変えない", () => {
-    expect(rename(workspace, "main.go", "main.go")).toEqual({ ok: true, workspace });
+    expect(rename(workspace, "main.go", "main.go")).toEqual({
+      ok: true,
+      workspace,
+      path: "main.go",
+      from: "main.go",
+    });
   });
 
   it.each([
@@ -133,6 +138,15 @@ describe("remove", () => {
 
   it("無いパスは消さない", () => {
     expect(remove(workspace, "nope")).toEqual({ ok: false, reason: "「nope」はありません" });
+  });
+});
+
+describe("変更の結果のパス", () => {
+  it("正規化した後のパスを返し、rename は移す前のパスも返す", () => {
+    const created = writeFile(workspace, "./x/y.go/", "");
+    const moved = rename(workspace, "/greet/", "hello/");
+    expect(created.ok && created.path).toBe("x/y.go");
+    expect(moved.ok && [moved.from, moved.path]).toEqual(["greet", "hello"]);
   });
 });
 

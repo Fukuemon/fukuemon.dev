@@ -81,6 +81,17 @@ describe("createGoSession", () => {
     expect(session.open).toBe("b.go");
   });
 
+  it("保存した値が、ファイルとディレクトリの一式の形でないときは、プロジェクトのファイルで開く", () => {
+    for (const record of [
+      null,
+      { files: { "a.go": 1 }, directories: [] },
+      { files: {}, directories: "x" },
+    ]) {
+      const { session } = setup({ kind: "saved", record: record as unknown as GoRecord });
+      expect(session.workspace.getSnapshot().files).toEqual(project.files);
+    }
+  });
+
   it("IndexedDB を読めないときは canSave を false にする", () => {
     expect(setup({ kind: "unavailable" }).session.canSave).toBe(false);
   });
