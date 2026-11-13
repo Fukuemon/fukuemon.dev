@@ -53,11 +53,11 @@ function LevelIcon({ level }: { level: ConsoleLevel }) {
       aria-hidden="true"
       className={clsx("shrink-0", ICON_CLASS_NAME[level])}
       fill="none"
-      height="16"
+      height="14"
       stroke="currentColor"
       strokeWidth="1.5"
       viewBox="0 0 16 16"
-      width="16"
+      width="14"
     >
       {level === "debug" && (
         <g fill="currentColor" stroke="none">
@@ -90,11 +90,11 @@ function CheckIcon({ isChecked }: { isChecked: boolean }) {
       aria-hidden="true"
       className="shrink-0"
       fill="none"
-      height="16"
+      height="14"
       stroke="currentColor"
       strokeWidth="1.5"
       viewBox="0 0 16 16"
-      width="16"
+      width="14"
     >
       <rect height="13" width="13" x="1.5" y="1.5" />
       {isChecked && <path d="M4.5 8l2.5 2.5 4.5-5" strokeWidth="2" />}
@@ -108,22 +108,26 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
   return (
     <li
       className={clsx(
-        "flex gap-2 border-b border-l-2 border-b-border py-2 pr-4 pl-3.5 last:border-b-0",
+        "flex gap-2 border-b border-l-2 border-b-border py-0.5 pr-4 pl-3.5 last:border-b-0",
         ROW_CLASS_NAME[entry.level],
       )}
     >
-      <span className={clsx("flex h-5 items-center", startsWithTree && "mt-3")}>
+      <span className={clsx("flex h-4 items-center", startsWithTree && "mt-1")}>
         <LevelIcon level={entry.level} />
       </span>
       <span className="sr-only">{entry.level}</span>
       {/* 狭い幅では、時刻と出力元を値の下へ折り返し、値の幅を空ける */}
       <div className="flex min-w-0 flex-1 flex-wrap gap-x-4">
-        <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 gap-y-2 font-mono text-body-dense text-text">
+        <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 gap-y-1 font-mono text-compact text-text">
           {entry.args.map((arg, index) =>
             isExpandable(arg) ? (
               // oxlint-disable-next-line react/no-array-index-key -- 同じ値の引数が並ぶことがあり、並びも変わらない (context/conventions.md)
               <div className="w-full" key={index}>
-                <TreeView items={[toTreeNode(arg, `${entry.id}/${index}`)]} label="ログの値" />
+                <TreeView
+                  density="compact"
+                  items={[toTreeNode(arg, `${entry.id}/${index}`)]}
+                  label="ログの値"
+                />
               </div>
             ) : (
               // oxlint-disable-next-line react/no-array-index-key -- 同じ値の引数が並ぶことがあり、並びも変わらない (context/conventions.md)
@@ -135,8 +139,8 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
         </div>
         <span
           className={clsx(
-            "ml-auto flex h-5 shrink-0 items-center gap-2 text-caption text-text",
-            startsWithTree && "mt-3",
+            "ml-auto flex h-4 shrink-0 items-center gap-2 text-compact text-text",
+            startsWithTree && "mt-1",
           )}
         >
           {entry.time !== undefined && <span>{entry.time}</span>}
@@ -211,7 +215,7 @@ export function ConsoleEntryList({
           <button
             aria-pressed={isOn}
             className={clsx(
-              "flex min-h-11 cursor-pointer items-center gap-2 rounded-control px-3 text-label ink-press transition-colors hover:bg-surface-subtle focus-visible:z-10 focus-visible:focus-ring",
+              "flex min-h-7 cursor-pointer items-center gap-1.5 rounded-control px-2 text-label-compact ink-press transition-colors hover:bg-surface-subtle focus-visible:z-10 focus-visible:focus-ring",
               isOn ? "text-text" : "text-text-secondary",
             )}
             key={level}
@@ -220,7 +224,7 @@ export function ConsoleEntryList({
           >
             <CheckIcon isChecked={isOn} />
             {level}
-            <span className="text-caption">
+            <span className="text-compact">
               {counts[level]}
               <span className="sr-only"> 件</span>
             </span>

@@ -28,6 +28,8 @@ export type TreeViewProps = {
   onRequestRename?: (id: string) => void;
   /** 渡すと、項目で Delete のキーを押したときに呼ぶ。削除の確認を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
   onRequestDelete?: (id: string) => void;
+  /** compact は項目を 24px に詰める。コードを動かす画面のコンソールの値の木に使う。 */
+  density?: "default" | "compact";
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -69,6 +71,7 @@ export function TreeView({
   defaultExpandedIds = [],
   onRequestRename,
   onRequestDelete,
+  density = "default",
 }: TreeViewProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
   const visible = flatten(items, expanded);
@@ -168,7 +171,8 @@ export function TreeView({
             aria-setsize={setSize}
             className={clsx(
               // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
-              "flex min-h-11 items-start gap-1 rounded-control py-3 pr-2 transition-colors focus-visible:focus-ring",
+              "flex items-start gap-1 rounded-control pr-2 transition-colors focus-visible:focus-ring",
+              density === "compact" ? "min-h-6 py-1" : "min-h-11 py-3",
               "aria-selected:bg-primary-surface aria-selected:font-bold",
               (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
             )}
@@ -188,7 +192,9 @@ export function TreeView({
             style={{ paddingInlineStart: `${(level - 1) * 1.5 + 0.5}rem` }}
             tabIndex={node.id === tabStopId ? 0 : -1}
           >
-            <span className="flex h-5 shrink-0 items-center">
+            <span
+              className={clsx("flex shrink-0 items-center", density === "compact" ? "h-4" : "h-5")}
+            >
               <svg
                 aria-hidden="true"
                 className={clsx(
@@ -204,7 +210,14 @@ export function TreeView({
               </svg>
             </span>
             {node.icon && (
-              <span className="flex h-5 shrink-0 items-center">{node.icon(isOpen)}</span>
+              <span
+                className={clsx(
+                  "flex shrink-0 items-center",
+                  density === "compact" ? "h-4" : "h-5",
+                )}
+              >
+                {node.icon(isOpen)}
+              </span>
             )}
             {node.content ?? node.label}
           </li>

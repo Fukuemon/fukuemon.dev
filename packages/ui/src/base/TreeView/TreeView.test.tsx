@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
+import { TreeView } from "./TreeView";
 import * as stories from "./TreeView.stories";
 
 const { Collapsed, Expanded, WithContent } = composeStories(stories);
@@ -80,6 +81,19 @@ describe("TreeView", () => {
     await userEvent.click(item("src"));
     expect(item("src")).toHaveAttribute("aria-expanded", "true");
     expect(item("index.ts")).toBeInTheDocument();
+  });
+
+  it("density を compact にすると、項目は 24 px 以上 44 px 未満の高さになる", () => {
+    render(
+      <TreeView
+        density="compact"
+        items={[{ id: "src", label: "src", children: [{ id: "a", label: "a.ts" }] }]}
+        label="ファイル"
+      />,
+    );
+    const height = item("src").getBoundingClientRect().height;
+    expect(height).toBeGreaterThanOrEqual(24);
+    expect(height).toBeLessThan(44);
   });
 
   it("content を渡すと、label の代わりに content を描き、タイプアヘッドは label で探す", async () => {

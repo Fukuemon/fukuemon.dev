@@ -138,13 +138,13 @@ describe("ConsoleEntryList", () => {
     expect(root).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("ログレベルのボタンとツリーの項目は、44 px 以上の高さで押せる", () => {
+  it("ログレベルのボタンは 28 px、ツリーの項目は 24 px 以上の高さで押せる", () => {
     render(<Default />);
     for (const button of within(screen.getByRole("group")).getAllByRole("button")) {
-      expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(28);
     }
     for (const item of screen.getAllByRole("treeitem")) {
-      expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
     }
   });
 

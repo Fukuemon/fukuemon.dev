@@ -158,7 +158,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: `FileTree` と `ConsoleEntryList` が組む木の表示。
 - 使わない場面と、代わりに使うもの: ファイルの作成、名前の変更、削除まで扱うなら `FileTree`。入れ子の無い一覧には使わない。
-- 変種: なし。
+- 変種: 項目の高さの `default`（44px）と `compact`（24px）。`compact` は、コードを動かす画面のコンソールの値の木だけに使う。押せる領域を 44px より小さくする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 AA の 24×24 を守る。
 - 状態: 枝の開閉、選択、hover、フォーカス。
 - 内容の制約: `label` を木の名前に渡す。
   - 項目の `label` は、タイプアヘッドが探す文字列である。文字列の一部を太字にするために `content` を渡すときも、`label` と同じ文字列を描き、押せる要素を入れない。
