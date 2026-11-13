@@ -38,7 +38,7 @@ Astro のコンポーネントは静的な HTML を出すだけで、分岐は `
 ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-model-independence.md)
 
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象は、`src/features/top-garden/` の `season.ts`（季節と時間帯を返す）と `visit.ts`（最初の訪問かを返す）である。
+対象は、`src/features/top-garden/` の、墨の絵と署名の SVG を作るモジュールと、`season.ts`（季節と時間帯を返す）と `visit.ts`（最初の訪問かを返す）である。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  
