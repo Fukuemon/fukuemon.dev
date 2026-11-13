@@ -93,7 +93,7 @@ fukuemon.dev はダークを持つ。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字である（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
-- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062、ADR-0067（提案））。
+- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べ、隣の 13px の題とタブに文字の大きさをそろえるためである（ADR-0062、ADR-0067（提案））。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
   - ADR-0067（提案）: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](../../../docs/adr/0067-compact-text-tokens-in-dense-panes.md)
 
