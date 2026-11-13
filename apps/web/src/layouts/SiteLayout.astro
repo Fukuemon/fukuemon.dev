@@ -1,14 +1,13 @@
 ---
-import "../styles/global.css";
-import SiteHeader from "../components/SiteHeader.astro";
-import SiteFooter from "../components/SiteFooter.astro";
+import "../styles/site.css";
 
 interface Props {
   title: string;
   description: string;
-  current?: "posts" | "playground";
+  /** 検索エンジンに載せないページ。canonical を出さず、noindex を出す */
+  noindex?: boolean;
 }
-const { title, description, current } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 const url = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -20,22 +19,14 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <meta name="color-scheme" content="light dark" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={url} />
-    <link rel="alternate" type="application/rss+xml" title="fukuemon.dev" href="/rss.xml" />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={url} />
-    <meta property="og:site_name" content="fukuemon.dev" />
-    <meta property="og:locale" content="ja_JP" />
-    <meta name="twitter:card" content="summary" />
   </head>
-  <body class="flex min-h-dvh flex-col">
-    <a class="sr" href="#main">本文へスキップ</a>
-    <SiteHeader current={current} />
-    <main id="main" class="flex-1"><slot /></main>
-    <SiteFooter />
+  <body class="min-h-dvh bg-surface font-sans text-body text-text">
+    <a
+      class="sr-only border border-border-field bg-surface-raised text-label text-link underline underline-offset-4 focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:px-4 focus:py-4 focus-visible:focus-ring"
+      href="#main">本文へスキップ</a
+    >
+    <main id="main"><slot /></main>
   </body>
 </html>

@@ -1,7 +1,7 @@
 /*
  * fukuemon.dev のテーマ変数。Tailwind CSS のユーティリティの名前を、セマンティックトークンとプリミティブトークンに結ぶ。
- * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（adr/0024-tokens-of-fukuemon-dev.md）。
- * 角丸と影は 1 つずつだけ置く（adr/0028-radius-shadow-and-brush-motion.md）。
+ * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（docs/adr/0024-tokens-of-fukuemon-dev.md）。
+ * 角丸と影は 1 つずつだけ置く（docs/adr/0028-radius-shadow-and-brush-motion.md）。
  * 余白と動きの時間と緩急は、Tailwind のデフォルトの段をそのまま使う。デフォルトで組めない動きだけを、ここに animation として足す。
  */
 
@@ -89,7 +89,7 @@
   --color-code-ansi-white: var(--fd-color-code-ansi-white);
   --color-code-ansi-bright-white: var(--fd-color-code-ansi-bright-white);
 
-  /* 書体: 本文はゴシック、記事の題と見出しは明朝、コードは等幅（adr/0023-keep-art-and-key-color.md） */
+  /* 書体: 本文はゴシック、記事の題と見出しは明朝、コードは等幅（docs/adr/0023-keep-art-and-key-color.md） */
   --font-sans: var(--fd-primitive-font-family-sans);
   --font-heading: "Zen Old Mincho", var(--fd-primitive-font-family-sans);
   /* 等幅の和文の字は BIZ UDGothic で受ける */

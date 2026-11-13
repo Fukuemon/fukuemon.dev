@@ -1,4 +1,4 @@
-# isolation (COOP / COEP) は書かない。要るのは sandbox の playground の URL だけで、まだ実在しない (ADR-0006)
+# cross-origin isolation (COOP / COEP) は書かない。サイトの全体には返さない (ADR-0031)
 
 /*
   X-Content-Type-Options: nosniff

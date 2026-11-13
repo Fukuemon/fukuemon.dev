@@ -5,8 +5,6 @@ description: 記事とハンズオンに共通する schema、安定識別子 co
 status: stable
 governs:
   - packages/content-model/
-  - apps/web/src/content.config.ts
-  - apps/web/src/lib/content/
 verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
@@ -15,9 +13,9 @@ verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ## Overview
 
 Content Model は、記事とハンズオンを同じ一覧に載せ、互いを参照できるようにする。  
-[PRD の Success Metrics](../../PRD.md#success-metrics) のうち、種別で絞り込んだ一覧、片方向の記述で双方向に出る関連、Markdown 1 枚での追加を支える。  
-全体の構成は [Design Doc](../../design/DesignDoc.md#components) にある。  
-ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model-independence.md)
+[PRD の Success Metrics](../../docs/PRD.md#success-metrics) のうち、種別で絞り込んだ一覧、片方向の記述で双方向に出る関連、Markdown 1 枚での追加を支える。  
+全体の構成は [Design Doc](../../docs/design/DesignDoc.md#components) にある。  
+ADR-0002: [Content Model の Astro からの独立](../../docs/adr/0002-content-model-independence.md)
 
 ## Scope
 
@@ -31,10 +29,9 @@ ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model
 
 持たないものは次のとおり。
 
-- 一覧のページと詳細のページの表示。[Design System](../design-system/DesignDoc.md) が持つ。
-- ハンズオンの実行の方法と、進捗の保存。[ハンズオンと Interactive](../../apps/web/src/features/lab/DesignDoc.md) が持つ。
+- 一覧のページと詳細のページの表示。`apps/web` が持つ。
 - 分類（tag）ごとの索引のページ。分類は URL パラメータでの絞り込みにだけ使う。
-  - 設計不変量 8: [Design Doc](../../design/DesignDoc.md#種別と分類の切り分け)
+  - 設計不変量 8: [Design Doc](../../docs/design/DesignDoc.md#種別と分類の切り分け)
 - CMS や別のデータソースの実装。loader を差し替える点を 1 つにするところまでを持つ。
 
 ## Design
@@ -42,7 +39,7 @@ ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model
 ### 安定識別子
 
 Astro は `id` をファイルのパスから導いて占有するので、自前の安定した識別子は `contentId` として持つ。  
-ADR-0002: [Content Model の Astro からの独立](../../adr/0002-content-model-independence.md)
+ADR-0002: [Content Model の Astro からの独立](../../docs/adr/0002-content-model-independence.md)
 
 ```yaml
 contentId: rdbms-query-execution # 発行した後は変えない。記事とハンズオンのあいだで一意
@@ -87,12 +84,12 @@ export const portalBase = z.object({
 
 playground（`playgrounds`）の schema は `portalBase` を拡張せず、独立に定義する。  
 持つ属性は `contentId`、`title`、`description`、`status`、`runtime`、`setup?`、`presets?`、`order?` で、`tags`、日付、`related` は持たない。  
-`presets` と `order` は省略でき、既定は空の配列と 0 である。  
-playground の `contentId` は `buildContentGraph()` に渡さないので、ビルドは一意であることを確かめない。  
+`presets` と `order` は省略でき、デフォルトは空の配列と 0 である。  
+playground の `contentId` は `buildContentGraph()` に渡さないので、ビルドは一意であることを確認しない。  
 著者が playground どうしで重ならないようにする。  
 URL は `/playground/<path>` で `contentId` を含まないので、記事とハンズオンの `contentId` と重なってもよい。  
 `playgrounds/` の直下のディレクトリが分類になり、`<path>` は `postgres/shop` のように分類を含む。  
-ADR-0018: [playground の分類と URL](../../adr/0018-playground-groups-by-directory.md)
+ADR-0018: [playground の分類と URL](../../docs/adr/0018-playground-groups-by-directory.md)
 
 playground の frontmatter は、次のように書く。
 
@@ -110,13 +107,13 @@ presets:
 `playgrounds` は種別ではない。  
 一覧のタブにも RSS にも出ず、`ContentRef` にも写さない。  
 collection にするのは、playground を足す手順を、記事と同じ「Markdown 1 枚」に保つためである。  
-ADR-0009: [サイトのセクションと playground](../../adr/0009-site-sections-and-playground-collection.md)
+ADR-0009: [サイトのセクションと playground](../../docs/adr/0009-site-sections-and-playground-collection.md)
 
 記事は固有の属性を持たず、読了時間を出さない。  
 手で書くと本文の分量とずれる。ずれた数字があると、同じ行にある計測の値まで信用されなくなる。
 
 `difficulty` は `beginner`、`intermediate`、`advanced` のどれかである。  
-`interactive` の型は [ハンズオンと Interactive](../../apps/web/src/features/lab/DesignDoc.md#interactive-の型) が定める。
+`interactive` の型は [ADR-0006](../../docs/adr/0006-interactive-content-levels.md) が定める。
 
 ハンズオンは、手順の数を frontmatter に持たず、本文の `h2` から導く。  
 frontmatter に書くと本文と二重に管理することになり、手順を足したときに片方だけが古くなる。
@@ -125,13 +122,13 @@ frontmatter に書くと本文と二重に管理することになり、手順�
 
 分類を束ねる上位の分類の軸を持たない。  
 種別が 2 つなので、分類ごとの交差のページを作っても、相互参照（`related`）より多くのものは得られない。  
-種別と分類の分け方は [Design Doc](../../design/DesignDoc.md#種別と分類の切り分け) にある。
+種別と分類の分け方は [Design Doc](../../docs/design/DesignDoc.md#種別と分類の切り分け) にある。
 
 ### 相互参照のグラフ
 
 `related` は、ほかのコンテンツの `contentId` の配列にする。  
 Astro の `reference()` は使わない。  
-理由は [ADR-0002](../../adr/0002-content-model-independence.md) にある。
+理由は [ADR-0002](../../docs/adr/0002-content-model-independence.md) にある。
 
 次の図は、原稿に書いてある `related` の辺を示す。
 
@@ -264,7 +261,7 @@ frontmatter は種別を持たない。
    - 書くキーは、`contentId`、`title`、`description`、`tags`、`publishedAt`、`difficulty`、`duration` の 7 つ。
    - `status` を省くと `draft` になり、build は書き出さない。公開するときは `status: published` を書く。
 2. 関連があれば、`related` に相手の `contentId` を書く（片方向だけ）。
-3. ビルドが、`contentId` が一意であることと、`related` が解決できることを確かめる。
+3. ビルドが、`contentId` が一意であることと、`related` が解決できることを確認する。
 4. 該当する一覧（ハンズオンなら `/blog` と `/blog/labs`）と、相手の側の関連するコンテンツに、自動で現れる。
 
 索引のページを手で直す作業は生じない。
@@ -278,11 +275,7 @@ frontmatter は種別を持たない。
 - `packages/content-model/src/graph.ts`: `buildContentGraph()`
 - `packages/content-model/src/steps.ts`: 手順の型 `Step`
 - `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
-- `apps/web/src/content.config.ts`: collection の定義
-- `apps/web/src/lib/content/index.ts`: ページが `astro:content` の代わりに呼ぶ関数
-  - `ContentRef` を返す `listContent()`、`getContent()`、`getRelated()`
-  - entry を返す `listArticleEntries()`、`listLabEntries()`、`listPlaygrounds()`
-  - 本文を描画する `renderEntry()`、`renderPlayground()`
+- loader との結線（`apps/web/src/content.config.ts` と `apps/web/src/lib/content/`）は、まだ無い。
   - 公開するかを判定する `isPublic()`
 
 `isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
