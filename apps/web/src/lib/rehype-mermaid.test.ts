@@ -95,6 +95,19 @@ describe("置き換えないもの", () => {
   });
 });
 
+describe("図の中の画像とリンク", () => {
+  const SRC =
+    '```mermaid\nflowchart LR\n  A@{ img: "https://example.com/a.png", label: "画像", pos: "t", w: 60, h: 60 } --> B[箱]\n  click B "https://example.com/" "リンク"\n```';
+
+  it("外部の画像を描かない", () => {
+    expect(JSON.stringify(run(SRC))).not.toContain("example.com/a.png");
+  });
+
+  it("リンクは描く", () => {
+    expect(JSON.stringify(run(SRC))).toContain('"tagName":"a"');
+  });
+});
+
 it("構文の誤った図はビルドを失敗させる", () => {
   expect(() => run("```mermaid\nflowchart LR\n  A[ --> \n```")).toThrow();
 });

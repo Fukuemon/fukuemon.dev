@@ -42,7 +42,8 @@ function mermaidSource(pre: Element): string | undefined {
 }
 
 function toSvg(source: string, idPrefix: string): Element {
-  const { svg } = render(source, { fontFamily: FONT, idPrefix });
+  // 図の中の外部の画像を描くと、読者のブラウザが第三者のホストへ取りに行く。図の中のリンクは Pele のデフォルトのまま許す
+  const { svg } = render(source, { fontFamily: FONT, idPrefix, images: false });
   const el = fromHtml(svg, { fragment: true }).children.find(
     (c): c is Element => c.type === "element",
   );
