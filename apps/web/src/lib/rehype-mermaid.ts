@@ -46,6 +46,8 @@ function toSvg(source: string, idPrefix: string): Element {
   const el = fromHtml(svg, { fragment: true }).children.find(
     (c): c is Element => c.type === "element",
   );
-  if (!el) throw new Error(`Pele が SVG の要素を返さなかった: ${source}`);
+  if (!el) {
+    throw new Error(`Pele が SVG の要素を返さなかった: ${idPrefix} (${source.split("\n")[0]})`);
+  }
   return el;
 }
