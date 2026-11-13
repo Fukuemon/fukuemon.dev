@@ -34,4 +34,10 @@ describe("signSvg", () => {
       '<svg class="sign" aria-hidden="true" focusable="false" viewBox="0 0 10 5"><g transform="scale(2)"><path fill-rule="evenodd" d="M0 0H5V2Z"/></g></svg>',
     );
   });
+
+  it("class を渡すと、その class を付ける", () => {
+    expect(signSvg('<svg viewBox="0 0 1 1"></svg>', "h-10")).toBe(
+      '<svg class="h-10" aria-hidden="true" focusable="false" viewBox="0 0 1 1"></svg>',
+    );
+  });
 });
