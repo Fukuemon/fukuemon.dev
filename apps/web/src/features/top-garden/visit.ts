@@ -1,4 +1,4 @@
-type SeenStore = Pick<Storage, "getItem" | "setItem">;
+export type SeenStore = Pick<Storage, "getItem" | "setItem">;
 
 /**
  * 端末で初めてトップを開いたかを返し、開いたことを `fd-top-seen` に記録する。
