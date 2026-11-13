@@ -16,7 +16,7 @@ export type VsCodeTheme = {
 const ANSI_KEYS = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"] as const;
 
 /**
- * 生成したコードの色（code-theme.gen.json）から、VS Code の形式のテーマを作る（adr/0022-code-colors-from-tokens.md）。
+ * 生成したコードの色（code-theme.gen.json）から、VS Code の形式のテーマを作る（docs/adr/0022-code-colors-from-tokens.md）。
  * コメントは斜体、キーワードは太字にし、色だけで字句の種類を分けない。
  */
 export function toVsCodeTheme(name: CodeThemeName): VsCodeTheme {

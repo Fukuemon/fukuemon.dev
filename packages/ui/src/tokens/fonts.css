@@ -1,6 +1,6 @@
 /*
- * fukuemon.dev の書体。Fontsource の unicode-range の分割を self-host で配り、外部の CDN から読まない（adr/0023-keep-art-and-key-color.md）。
- * 和文の可変の書体は分割が重いので、静的なウェイトだけを読み込む（adr/0004-typography-static-weights.md）。
+ * fukuemon.dev の書体。Fontsource の unicode-range の分割を self-host で配り、外部の CDN から読まない（docs/adr/0023-keep-art-and-key-color.md）。
+ * 和文の可変の書体は分割が重いので、静的なウェイトだけを読み込む（docs/adr/0004-typography-static-weights.md）。
  * Fontsource の CSS は font-display: swap を持つ。
  */
 

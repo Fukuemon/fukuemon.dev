@@ -143,7 +143,7 @@ export function SearchBox({
         {isOpen && (
           <div
             aria-label={`${label}の候補`}
-            className="absolute inset-x-0 top-full z-10 mt-1 flex flex-col border border-border-field bg-surface-raised py-1"
+            className="absolute inset-x-0 top-full z-10 mt-1 flex animate-fade-in flex-col rounded-control border border-border-field bg-surface-raised py-1 shadow-raised"
             id={listboxId}
             // 候補を押す間に欄からフォーカスが外れると、blur で候補が閉じて押せなくなる
             onMouseDown={(event) => event.preventDefault()}
@@ -173,7 +173,7 @@ export function SearchBox({
         {/* 中身を変える前から置いておかないと、読み上げの道具が変化を拾わない */}
         <p
           aria-live="polite"
-          className="absolute inset-x-0 top-full z-10 mt-1 bg-surface-raised px-4 py-3 text-body-dense border border-border-field text-text-secondary empty:hidden"
+          className="absolute inset-x-0 top-full z-10 mt-1 animate-fade-in rounded-control border border-border-field bg-surface-raised px-4 py-3 text-body-dense text-text-secondary shadow-raised empty:hidden"
         >
           {isEmpty ? emptyMessage : undefined}
         </p>

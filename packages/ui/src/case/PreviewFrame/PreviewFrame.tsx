@@ -18,7 +18,7 @@ export type PreviewFrameProps = {
 
 /**
  * プレビューの URL の欄と、iframe を置く枠。
- * iframe は呼ぶ側が作る。sandbox の属性と、cross-origin isolation の下で読めるかは、プレビューを出す実行環境ごとに違うためである（apps/web/src/features/lab/DesignDoc.md）。
+ * iframe は呼ぶ側が作る。sandbox の属性と、cross-origin isolation の下で読めるかは、プレビューを出す実行環境ごとに違うためである（docs/adr/0034-playground-origin-and-embedding.md）。
  */
 export function PreviewFrame({
   title = "プレビュー",

@@ -9,7 +9,7 @@ export type BreadcrumbProps = {
 };
 
 /**
- * 今のページの位置を示すパンくずリスト。DADS のパンくずリストを元にする。
+ * 今のページの位置を示すパンくずリスト。DADS のパンくずリストを元にする。hover で、リンクの箱の下に筆の線を左から引く。
  * リンクは、押せる領域を 44 px にするため、文中のリンクの `Link` を使わずに `<a>` で描く。
  */
 export function Breadcrumb({ items }: BreadcrumbProps) {
@@ -27,7 +27,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
               ) : (
                 <>
                   <a
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-link underline underline-offset-4 visited:text-link-visited hover:decoration-2 focus-visible:focus-ring"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-link underline underline-offset-4 brush-hover visited:text-link-visited focus-visible:focus-ring"
                     href={item.href}
                   >
                     {item.label}

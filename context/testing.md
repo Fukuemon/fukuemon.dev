@@ -5,8 +5,6 @@ description: テストの種類ごとに保証すること、カバレッジを�
 status: draft
 governs:
   - packages/content-model/
-  - apps/web/vitest.config.ts
-  - e2e/
 verified_commit: ab2da87
 ---
 
@@ -16,13 +14,12 @@ verified_commit: ab2da87
 
 テストの種類ごとに、保証することと置き場は次のとおり。
 
-| 種類         | 対象                                                                | ツール                          | 保証すること                                                     |
-| ------------ | ------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------- |
-| unit         | `packages/content-model` の関係グラフと目次                         | Vitest                          | 関係グラフの構築と検証、目次の組み立ての分岐をすべて踏む         |
-| unit         | `apps/web` の Markdown の変換と、ハンズオンの実行まわりのモジュール | Vitest                          | カバレッジの対象のファイルで、分岐、関数、行、文の 90% を踏む    |
-| ビルドの検証 | `contentId` の重複と、解決できない `related`                        | ビルドそのもの                  | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる |
-| E2E          | なし                                                                | なし                            | なし                                                             |
-| 見た目の回帰 | スタイリングに触れる変更                                            | `e2e/shoot.ts` と `e2e/diff.ts` | 変更の前後で画面の見た目が意図せず変わらない                     |
+| 種類         | 対象                                                             | ツール                   | 保証すること                                                       |
+| ------------ | ---------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------ |
+| unit         | `packages/content-model` の関係グラフと目次                      | Vitest                   | 関係グラフの構築と検証、目次の組み立ての分岐をすべて踏む           |
+| ビルドの検証 | `contentId` の重複と、解決できない `related`                     | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる   |
+| E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`） | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す |
+| 見た目の回帰 | スタイリングに触れる変更                                         | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                       |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -38,26 +35,32 @@ Astro のコンポーネントは静的な HTML を出すだけで、分岐は `
 - `contentId` の重複の検出。誤ると、別のコンテンツが同じ ID を持ち、参照先が決まらなくなる。
 
 `packages/content-model` は Astro に依存しないので、Astro を起動せずに分岐を網羅できる。  
-ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-independence.md)
+ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-model-independence.md)
 
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象は、`lib/` の Markdown の変換と縦組みの変換と、`features/lab/` の進捗、起動材料、SQL の字句、セルの表示、カタログのモジュールである。
+対象のモジュールは、まだ無い。  
+最初のモジュールを足すときに、`apps/web` の `test:cov` の script と `vitest.config.ts` を足す。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  
-[PRD](../PRD.md#success-metrics) の成功条件に対応しない E2E を書かない。  
+[PRD](../docs/PRD.md#success-metrics) の成功条件に対応しない E2E を書かない。  
 増やすほど失敗しやすくなり、失敗したときに直す動機が働かない。
 
-見た目の回帰のチェックは、`e2e/pages.ts` の `PAGES` のページを明暗 2 つの配色と 2 つの幅で撮り、変更の前後を比べる。  
-手順は [ADR-0010](../adr/0010-tailwind-as-styling-base.md) の Verification の節にある。  
-変更の前を撮っておく必要があり CI では自動化できないので、`pnpm run check` に入れない。
+カタログの回帰の E2E は、Storybook の実験的な機能 `experimentalCodeExamples` に頼る Show code を確認する。  
+Storybook のバージョンを上げると動きが変わることがあり、画面を開かないと気づけないためである。  
+この E2E は、まだ `pnpm run check` と CI で実行しない。  
+CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/88) で行う。  
+それまでは、Storybook のバージョンを上げるときに、ビルドしたカタログを配信し、その URL を `BASE_URL` に渡して `pnpm --filter @fukuemon/ui e2e` で実行する。
+
+見た目の回帰のチェックは、E2E のエビデンスの静止画を、変更の前後で並べて比べる。  
+ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
+サイトの E2E の package（`packages/e2e`）は、まだ無い。
 
 ## Runtime Requirements
 
 - unit test は Node.js の上で動かし、ブラウザの環境を要求しない。
 - E2E を足すときは、ビルド済みの `dist/` を静的に配信して実行し、dev server を対象にしない。
   - Astro の dev と build で出力が違う場合があり、本番に近い側をチェックする。
-- 見た目の回帰の撮影には、Playwright の chromium が要る。`pnpm exec playwright install chromium` で入れる。
 - 実行に要る環境変数、ポート、外部のサービスは、未定。
 
 ## Mocking and Test Data
@@ -69,7 +72,6 @@ E2E を足すのは、ビルドは通るが表示の意味が誤っているケ�
 - 追加した分岐は、その分岐を誤ったときに失敗するテストで踏む。テストファーストは求めない。
 - `packages/content-model` と `apps/web` に新しい純粋なモジュールを足したら、テストと同時に `vitest.config.ts` のカバレッジの対象に加える。
 - スタイリングに触れる変更では、見た目の回帰をチェックする。
-- ページを足したら、`e2e/pages.ts` の `PAGES` に 1 行足す。
 - リリースの前には、CI の `pnpm run check` を通す。
   - deploy の条件は [operations.md](operations.md#deployment-conditions) にある。
 

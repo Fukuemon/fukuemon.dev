@@ -14,7 +14,7 @@ export type DisclosureProps = {
 export function Disclosure({ summary, children, defaultOpen = false }: DisclosureProps) {
   return (
     <details className="group border-y border-border" open={defaultOpen}>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-2 py-2 text-body-dense font-bold text-text hover:bg-surface-subtle focus-visible:focus-ring">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-control px-2 py-2 text-body-dense font-bold text-text hover:bg-surface-subtle focus-visible:focus-ring">
         <svg
           aria-hidden="true"
           className="shrink-0 transition-transform group-open:rotate-90"
