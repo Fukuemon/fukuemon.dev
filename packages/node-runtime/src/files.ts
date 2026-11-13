@@ -51,24 +51,29 @@ export async function createFiles(
 ): Promise<{ api: NodeRuntime["files"]; dispose: () => void }> {
   const tree = createStore<readonly FileEntry[]>(await listTree(files));
   const listeners = new Set<(paths: readonly string[]) => void>();
-  type Waiter = { resolve: () => void; reject: (error: unknown) => void };
-  let waiting: Waiter[] = [];
+  let waiting: (() => void)[] = [];
+  let reading: (() => void)[] = [];
   let running = false;
   let disposed = false;
+  const settle = (waiters: (() => void)[]) => {
+    for (const resolve of waiters) resolve();
+  };
 
-  // 呼んだ後に始まった 1 回の読み直しが終わると解決する。通知が続いても、ループの終わりを待たない
+  // 呼んだ後に始まった 1 回の読み直しが終わると解決する。通知が続いても、ループの終わりを待たない。
+  // 読み直しの失敗と購読者の例外は、ログに出して解決する。操作の成否は、操作そのものだけで決める
   const loop = async () => {
     running = true;
-    while (waiting.length > 0) {
-      const batch = waiting;
+    while (waiting.length > 0 && !disposed) {
+      reading = waiting;
       waiting = [];
-      const next = disposed ? undefined : await listTree(files).catch(() => undefined);
       try {
-        if (!disposed && next && !sameTree(next, tree.getSnapshot())) tree.set(next);
-        for (const waiter of batch) waiter.resolve();
+        const next = await listTree(files);
+        if (!disposed && !sameTree(next, tree.getSnapshot())) tree.set(next);
       } catch (error) {
-        for (const waiter of batch) waiter.reject(error);
+        console.error("ファイルのツリーを読み直せない", error);
       }
+      settle(reading);
+      reading = [];
     }
     running = false;
   };
@@ -86,15 +91,14 @@ export async function createFiles(
   };
 
   const refresh = () =>
-    new Promise<void>((resolve, reject) => {
-      waiting.push({ resolve, reject });
+    new Promise<void>((resolve) => {
+      if (disposed) return resolve();
+      waiting.push(resolve);
       if (!running) void loop();
     });
 
   const unwatch = files.watch((paths) => {
-    if (paths.some(changesTree)) {
-      refresh().catch((error: unknown) => console.error("ファイルのツリーを読み直せない", error));
-    }
+    if (paths.some(changesTree)) void refresh();
     for (const listener of listeners) listener(paths);
   });
 
@@ -130,6 +134,10 @@ export async function createFiles(
     },
     dispose: () => {
       disposed = true;
+      // 破棄した後の readdir が決着しなくても、待っている操作が終わるようにする
+      settle([...reading, ...waiting]);
+      reading = [];
+      waiting = [];
       unwatch();
       listeners.clear();
     },

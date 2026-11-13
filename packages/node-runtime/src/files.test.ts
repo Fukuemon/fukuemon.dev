@@ -148,6 +148,26 @@ describe("files", () => {
     expect(notified).toBeLessThan(20);
   });
 
+  it("ツリーの購読者が投げても、操作は成功として終わる", async () => {
+    const { runtime } = await bootFake();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    runtime.files.tree.subscribe(() => {
+      throw new Error("listener");
+    });
+    await expect(runtime.files.write("new.js", "")).resolves.toBeUndefined();
+  });
+
+  it("読み直しの途中で破棄しても、待っている操作は終わる", async () => {
+    const { runtime, created } = await bootFake();
+    const list = created.files.api.list;
+    created.files.api.list = (directory) =>
+      directory === "" ? new Promise(() => undefined) : list(directory);
+    const pending = runtime.files.createDirectory("dir");
+    await flush();
+    await runtime.dispose();
+    await expect(pending).resolves.toBeUndefined();
+  });
+
   it("ツリーの購読者が投げても、次の通知で読み直す", async () => {
     const { runtime, created } = await bootFake();
     vi.spyOn(console, "error").mockImplementation(() => undefined);

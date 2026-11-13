@@ -18,8 +18,6 @@ export function syncFile(
   let closed = false;
 
   const load = async () => {
-    // 書き込みの途中の通知は、読んでも捨てるので読まない
-    if (loaded && writing > 0) return;
     const text = await files.read(path).catch((error: unknown) => {
       console.error(`${path} を読めない`, error);
       return undefined;
