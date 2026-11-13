@@ -125,7 +125,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
   - 文中のリンクは、左右を 6px 空ける。フォーカスの表示が外へ 6px 広がり、前後の文字に重なるためである。
   - 記事の一覧の題のように文中に置かないリンクは、`isStandalone` を付けて左右を空けない。見出しや帯と左端をそろえるためである。
 - 操作できる要素と重なる面の角は、2px で丸める。テーマ変数に置く角丸の名前は、`rounded-control` の 1 つだけにする。
-  - 丸めるのは、`Button`、`IconButton`、枠のある `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。
+  - 丸めるのは、`Button`、`IconButton`、枠のある `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。`ConsoleEntryList` のログレベルのボタンも丸める。
   - `Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックの角は丸めない。罫で示す要素と、罫で区切る面のためである。
 - 面の上に重なる面（ダイアログ、メニュー、候補の一覧）は、`bg-surface-raised`、1px の `border-field` の枠、`shadow-raised` の影を組にして書く。
   - 影は、ぼかさずに右下へ 4px ずらす。ぼかした影は、ダークの面の上でほぼ見えないためである。
