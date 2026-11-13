@@ -28,7 +28,7 @@ export type TreeViewProps = {
   onRequestRename?: (id: string) => void;
   /** 渡すと、項目で Delete のキーを押したときに呼ぶ。削除の確認を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
   onRequestDelete?: (id: string) => void;
-  /** compact は項目を 24px に詰める。コードを動かす画面のコンソールの値の木に使う。 */
+  /** compact は項目を 24px に詰め、文字を 12px にする。コードを動かす画面のコンソールの値の木に使う。 */
   density?: "default" | "compact";
 };
 
@@ -157,7 +157,14 @@ export function TreeView({
     [onRequestRename && "F2", onRequestDelete && "Delete"].filter(Boolean).join(" ") || undefined;
 
   return (
-    <ul aria-label={label} className="flex flex-col text-body-dense text-text" role="tree">
+    <ul
+      aria-label={label}
+      className={clsx(
+        "flex flex-col text-text",
+        density === "compact" ? "text-compact" : "text-body-dense",
+      )}
+      role="tree"
+    >
       {visible.map(({ node, level, setSize, posInSet }, index) => {
         const isBranch = node.children !== undefined;
         const isOpen = expanded.has(node.id);

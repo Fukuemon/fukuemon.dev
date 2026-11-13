@@ -83,7 +83,7 @@ describe("TreeView", () => {
     expect(item("index.ts")).toBeInTheDocument();
   });
 
-  it("density を compact にすると、項目は 24 px 以上 44 px 未満の高さになる", () => {
+  it("density を compact にすると、項目は 24 px の高さになる", () => {
     render(
       <TreeView
         density="compact"
@@ -93,7 +93,7 @@ describe("TreeView", () => {
     );
     const height = item("src").getBoundingClientRect().height;
     expect(height).toBeGreaterThanOrEqual(24);
-    expect(height).toBeLessThan(44);
+    expect(height).toBeLessThan(26);
   });
 
   it("content を渡すと、label の代わりに content を描き、タイプアヘッドは label で探す", async () => {
