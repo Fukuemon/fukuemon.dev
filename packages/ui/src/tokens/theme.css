@@ -202,9 +202,10 @@
  * 疑似要素の筆の線は折り返すと最後の行にしか出ないので、背景で描く。背景は行をつないだ 1 本の帯として伸び、1 行目から順に罫が出る。
  * box-decoration-break を clone にすると、左右の余白が行ごとに付いて 2 行目の頭が下がるので、既定の slice のままにする。
  * 箱のリンクの中の文字の span に付けたときは、外のリンクの hover で伸ばす。
+ * 罫は文字のすぐ下に引き、行高 130% の折り返しでも次の行の文字に接しないようにする。下線を引くリンクでは link-rule-below-underline で下線の下へ離す。
  */
 @utility link-rule {
-  padding-block-end: 4px;
+  padding-block-end: var(--fd-link-rule-gap, 0px);
   background: linear-gradient(currentColor, currentColor) left bottom / 0% 2px no-repeat;
   transition: background-size 240ms cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -212,6 +213,11 @@
   a:hover & {
     background-size: 100% 2px;
   }
+}
+
+/* link-rule の罫を、underline-offset-4 の下線から離す。1px と 2px では罫が下線に重なった */
+@utility link-rule-below-underline {
+  --fd-link-rule-gap: 4px;
 }
 
 /* 箱のリンクの hover で、箱の下端に筆の線を左から引く。箱に付けるので、中の文字が折り返しても線は 1 本で崩れない */
