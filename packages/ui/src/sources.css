@@ -1,0 +1,12 @@
+/*
+ * packages/ui のコンポーネントのクラスを、使う側の Tailwind CSS の走査の対象に足す。
+ * Tailwind CSS は node_modules の下を走査しないので、workspace の package のクラスは、ここで足さないと出力されない。
+ * カタログだけで使う story と、文書とテストのファイルは外す。
+ */
+
+@source "./";
+@source not "./**/*.stories.tsx";
+@source not "./**/*.mdx";
+@source not "./**/*.md";
+@source not "./**/*.test.tsx";
+@source not "./test";

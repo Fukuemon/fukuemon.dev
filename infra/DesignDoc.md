@@ -16,8 +16,8 @@ verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 
 基盤は、Cloudflare の zone、Workers の custom domain、Terraform の state を置く R2 のバケットを、Terraform のコードで持つ。  
 Worker script と静的アセットの deploy は Wrangler が持ち、この文書の対象に入らない。  
-全体の構成は [Design Doc](../design/DesignDoc.md#components) にある。  
-ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)
+全体の構成は [Design Doc](../docs/design/DesignDoc.md#components) にある。  
+ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-workers-terraform-wrangler-boundary.md)
 
 ## Scope
 

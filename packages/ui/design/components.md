@@ -190,7 +190,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 記事の一覧の冒頭の挿絵。トップの挿絵は水墨の門の絵と立体の庭で、`ArtBand` を使わない（ADR-0026）。
 - 使わない場面と、代わりに使うもの: 記事の本文、コードを動かす画面、フッターには置かない（ADR-0026）。
-- 変種: 図柄の `kasumi`、`seigaiha`、`moonPine` と、置き方の `band`、`fill`。図柄ごとの向く場所は [挿絵の Design Doc](../../design-system/art/DesignDoc.md) にある。
+- 変種: 図柄の `kasumi`、`seigaiha`、`moonPine` と、置き方の `band`、`fill`。図柄ごとの向く場所は [挿絵の Design Doc](../src/art/DesignDoc.md) にある。
 - 状態: なし。読み込んだ直後に 1 回だけ動く。
 - 内容の制約: 挿絵は読み上げから外す。挿絵に意味を持たせない。
 - キーボード: なし。

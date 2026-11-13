@@ -14,12 +14,6 @@ export default defineConfig({
           output: ["dist/**"],
         },
       },
-      // astro build と 1 つのタスクにすると、原稿を変えても索引がキャッシュから戻り古くなる
-      "build:search": {
-        command: "pagefind --site dist",
-        dependsOn: ["build:site"],
-        cache: { input: [{ auto: true }, "!dist/pagefind/**"] },
-      },
     },
   },
 });
