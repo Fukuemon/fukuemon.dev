@@ -95,6 +95,9 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 | [ADR-0056](0056-article-figures-directory-and-name.md)          | 記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す                             |
 | [ADR-0057](0057-document-records-in-two-object-stores.md)       | 図とスライドは、一覧に出す値と中身を 2 つの object store に分けて、訪問者のファイルと別のデータベースに保存する                      |
 
+ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
+ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。
+
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
 ADR-0035（[HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する](0035-record-http-and-console-in-runtime.md)）は、ADR-0054 に置換した。
