@@ -37,11 +37,16 @@ describe("コードを動かす画面", () => {
     },
   );
 
-  it("幅 1280px では、ファイルの枠が端末の下端まで伸び、エディタが端末の上に余白なく続く", async () => {
+  it("幅 1280px では、ファイルの枠が端末の下端まで伸び、領域の間に隙間を空けない", async () => {
     await page.viewport(1280, 900);
     render(<LongData />);
     expect(Math.abs(rectOf("ファイル").bottom - rectOf("端末").bottom)).toBeLessThanOrEqual(1);
-    expect(Math.abs(rectOf("エディタ").bottom + 16 - rectOf("端末").top)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rectOf("エディタ").bottom - rectOf("端末").top)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rectOf("ファイル").right - rectOf("エディタ").left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rectOf("エディタ").right - rectOf("プレビュー").left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rectOf("プレビュー").bottom - rectOf("HTTP の流れ").top)).toBeLessThanOrEqual(
+      1,
+    );
   });
 
   it("幅 1280px、高さ 900px では、右の列が長くても、端末が最初の画面に収まる", async () => {

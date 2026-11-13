@@ -28,10 +28,11 @@ describe("EditorFrame", () => {
     expect(screen.queryByRole("region", { name: "server.js のコード" })).toBeNull();
   });
 
-  it("タブは 44 px 以上の高さで押せ、閉じられるタブは Delete のキーで閉じる", async () => {
+  it("タブは 32 px の高さと 13 px の文字で押せ、閉じられるタブは Delete のキーで閉じる（ADR-0062 の 28 px 以上）", async () => {
     render(<Closable />);
     const tab = screen.getByRole("tab", { name: "server.js" });
-    expect(tab.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    expect(tab.getBoundingClientRect().height).toBe(32);
+    expect(getComputedStyle(tab).fontSize).toBe("13px");
     tab.focus();
     await userEvent.keyboard("{Delete}");
     expect(screen.queryByRole("tab", { name: "server.js" })).toBeNull();
@@ -41,11 +42,13 @@ describe("EditorFrame", () => {
     render(<Default />);
     const engine = screen.getByRole("region", { name: "server.js のコード" });
     const colors = new Set(
-      [...engine.querySelectorAll("code span span")].map((span) => getComputedStyle(span).color),
+      [...engine.querySelectorAll("code > span > span:not([data-indent-guide])")].map(
+        (span) => getComputedStyle(span).color,
+      ),
     );
     expect(colors.size).toBeGreaterThanOrEqual(6);
-    const code = engine.querySelector("code");
-    expect(code && getComputedStyle(code).paddingRight).toBe("16px");
+    const line = engine.querySelector("code > span");
+    expect(line && getComputedStyle(line).paddingRight).toBe("16px");
   });
 
   it("選んだタブの下の罫を引く動きと、ファイルの印を出し、status を下の帯に出す", () => {

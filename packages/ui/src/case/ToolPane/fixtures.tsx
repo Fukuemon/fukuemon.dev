@@ -49,28 +49,77 @@ function highlight(line: string): ReactNode[] {
   return parts;
 }
 
+/** 行の頭の空白の数から、字下げの補助線を引く段の数を出す。字下げの 1 段は 2 文字である。 */
+const indentLevels = (line: string) => Math.floor((line.length - line.trimStart().length) / 2);
+
+/** 今いる行の最後の開き括弧と、それに対応する閉じ括弧の位置。括弧が無ければ undefined を返す。 */
+function findBracketPair(
+  lines: readonly string[],
+  activeLine: number,
+): [[number, number], [number, number]] | undefined {
+  const open = lines[activeLine]?.lastIndexOf("{") ?? -1;
+  if (open < 0) return undefined;
+  let depth = 0;
+  for (let row = activeLine; row < lines.length; row++) {
+    const line = lines[row] ?? "";
+    for (let col = row === activeLine ? open : 0; col < line.length; col++) {
+      if (line[col] === "{") depth++;
+      if (line[col] === "}") depth--;
+      if (depth === 0) {
+        return [
+          [activeLine, open],
+          [row, col],
+        ];
+      }
+    }
+  }
+  return undefined;
+}
+
 /**
  * カタログでエディタと端末のエンジンの代わりに置く、横に送れるコードの枠。受け取ったテーマの名前を data 属性に出す。
- * `source` は、行番号の溝と字句の色を付け、長い行を折り返さずに横に送る。行の右に 16px の余白を残す。
+ * `source` は、プレイグラウンドの CodeMirror 6 の表示（apps/playground/src/code-editor/extensions.ts）に合わせ、行番号、今いる行の薄い帯、字下げの縦の補助線、対応する括弧の枠を描く。
+ * 長い行を折り返さずに横に送り、行の右に 16px の余白を残す。
  */
 export function DummyEngine({
   label,
   theme,
   lines,
   variant = "plain",
+  activeLine = 3,
 }: {
   label: string;
   theme: VsCodeTheme;
   lines: readonly string[];
   variant?: "plain" | "source";
+  /** `source` で、カーソルを置いた行（0 から数える）。 */
+  activeLine?: number;
 }) {
   const isSource = variant === "source";
+  const brackets = isSource ? findBracketPair(lines, activeLine) : undefined;
+  const renderLine = (line: string, row: number) => {
+    const marks = (brackets ?? []).filter(([r]) => r === row).map(([, col]) => col);
+    if (marks.length === 0) return highlight(line);
+    const parts: ReactNode[] = [];
+    let last = 0;
+    for (const col of marks) {
+      parts.push(...highlight(line.slice(last, col)));
+      parts.push(
+        <span className="outline outline-1 outline-border-field" data-bracket key={`b${col}`}>
+          {line[col]}
+        </span>,
+      );
+      last = col + 1;
+    }
+    parts.push(...highlight(line.slice(last)));
+    return parts;
+  };
   return (
     <pre
       aria-label={label}
       className={clsx(
-        "min-h-48 flex-1 overflow-auto py-4 focus-visible:focus-ring",
-        isSource ? "flex" : "px-4",
+        "min-h-48 flex-1 overflow-auto focus-visible:focus-ring",
+        isSource ? "flex py-1" : "px-3 py-2",
       )}
       data-code-theme={theme.name}
       role="region"
@@ -80,15 +129,40 @@ export function DummyEngine({
         <>
           <span
             aria-hidden="true"
-            className="sticky left-0 shrink-0 select-none border-r border-border bg-code-surface px-3 text-right text-code-comment"
+            className="sticky left-0 z-10 shrink-0 select-none bg-code-surface text-right text-code-comment"
           >
-            {lines.map((_, index) => index + 1).join("\n")}
+            {lines.map((_, row) => (
+              <span
+                className={clsx(
+                  "block pr-2 pl-4",
+                  row === activeLine && "bg-surface text-code-text",
+                )}
+                // oxlint-disable-next-line react/no-array-index-key -- 行番号は並びそのもので、並びも変わらない (context/conventions.md)
+                key={row}
+              >
+                {row + 1}
+              </span>
+            ))}
           </span>
-          <code className="pr-4 pl-3">
-            {lines.map((line, index) => (
-              // oxlint-disable-next-line react/no-array-index-key -- 同じ中身の行が並ぶことがあり、並びも変わらない (context/conventions.md)
-              <span key={index}>
-                {highlight(line)}
+          <code className="min-w-max flex-1">
+            {lines.map((line, row) => (
+              <span
+                className={clsx("relative block pr-4 pl-2", row === activeLine && "bg-surface")}
+                data-active-line={row === activeLine || undefined}
+                // oxlint-disable-next-line react/no-array-index-key -- 同じ中身の行が並ぶことがあり、並びも変わらない (context/conventions.md)
+                key={row}
+              >
+                {Array.from({ length: indentLevels(line) }, (_, level) => (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 border-l border-border"
+                    data-indent-guide
+                    key={level}
+                    // 段の位置は文字の幅で決まり、決まった段を持たないので style で渡す
+                    style={{ left: `calc(0.5rem + ${level * 2}ch)` }}
+                  />
+                ))}
+                {renderLine(line, row)}
                 {"\n"}
               </span>
             ))}

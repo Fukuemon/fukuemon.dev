@@ -78,7 +78,7 @@ export function HttpExchangeSummary({
   const status = statusOf(exchange.status);
   return (
     <>
-      <span className="flex flex-wrap items-center gap-x-2 text-caption">
+      <span className="flex flex-wrap items-center gap-x-1.5 text-compact">
         <ActorName actors={actors} id={exchange.fromId} />
         <span aria-hidden="true" className="text-text-secondary">
           →
@@ -87,8 +87,8 @@ export function HttpExchangeSummary({
         <ActorName actors={actors} id={exchange.toId} />
       </span>
       <span className="flex w-full min-w-0 items-start gap-2">
-        <span className="shrink-0 font-mono text-code-dense font-bold">{exchange.method}</span>
-        <span className="min-w-0 flex-1 font-mono text-code-dense break-all">{exchange.url}</span>
+        <span className="shrink-0 font-mono text-code-compact font-bold">{exchange.method}</span>
+        <span className="min-w-0 flex-1 font-mono text-code-compact break-all">{exchange.url}</span>
         <StatusBadge label={status.label} tone={status.tone} />
       </span>
     </>
@@ -114,7 +114,7 @@ export function HttpExchangeList({
       : { kind: "ready" });
   return (
     <ToolPane state={paneState} title={title}>
-      <ol className="flex flex-col">
+      <ol className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         {exchanges.map((exchange) => {
           const isSelected = exchange.id === selectedId;
           return (
@@ -122,7 +122,7 @@ export function HttpExchangeList({
               <button
                 aria-current={isSelected ? "true" : undefined}
                 className={clsx(
-                  "flex min-h-11 w-full cursor-pointer flex-col gap-1 border-l-2 px-4 py-2 text-left hover:bg-surface-subtle focus-visible:focus-ring",
+                  "flex min-h-6 w-full cursor-pointer flex-col border-l-2 px-3 py-1 text-left hover:bg-surface-subtle focus-visible:focus-ring",
                   isSelected ? "border-primary bg-surface-subtle" : "border-transparent",
                 )}
                 onClick={() => onSelect(exchange.id)}

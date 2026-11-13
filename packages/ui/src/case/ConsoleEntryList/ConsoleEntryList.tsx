@@ -245,7 +245,7 @@ export function ConsoleEntryList({
         tabIndex={0}
       >
         {visible.length === 0 ? (
-          <p className="p-4 text-body-dense text-text-secondary">
+          <p className="p-3 text-body-compact text-text-secondary">
             選んだログレベルの行はありません。
           </p>
         ) : (

@@ -32,14 +32,20 @@ export function PreviewFrame({
       state={state ?? { kind: "ready" }}
       title={title}
       toolbar={
-        <div className="flex items-end gap-2 border-b border-border p-2">
+        <div className="flex items-end gap-1 border-b border-border p-1">
           <div className="min-w-0 flex-1">
-            <TextField isLabelHidden label="プレビューの URL" readOnly value={url} />
+            <TextField
+              density="compact"
+              isLabelHidden
+              label="プレビューの URL"
+              readOnly
+              value={url}
+            />
           </div>
           {onReload !== undefined && (
             <IconButton
               icon={
-                <svg aria-hidden="true" height="20" viewBox="0 0 20 20" width="20">
+                <svg aria-hidden="true" height="16" viewBox="0 0 20 20" width="16">
                   <path
                     d="M16 10a6 6 0 1 1-2-4.5M16 3v4h-4"
                     fill="none"
@@ -48,6 +54,7 @@ export function PreviewFrame({
                   />
                 </svg>
               }
+              density="compact"
               label="再読み込み"
               onClick={onReload}
             />

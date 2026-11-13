@@ -12,6 +12,7 @@ import { HttpExchangeList, type HttpExchange } from "../case/HttpExchangeList/Ht
 import { ACTORS, EXCHANGES, LONG_EXCHANGE } from "../case/HttpExchangeList/fixtures";
 import { PreviewFrame } from "../case/PreviewFrame/PreviewFrame";
 import { TerminalFrame } from "../case/TerminalFrame/TerminalFrame";
+import { ToolPaneGroup } from "../case/ToolPane/ToolPane";
 import { DummyEngine, DummyPreview, SOURCE_LINES, TERMINAL_LINES } from "../case/ToolPane/fixtures";
 
 const meta = {
@@ -54,7 +55,10 @@ const removeNode = (nodes: readonly TreeNode[], id: string): TreeNode[] =>
     .filter((node) => node.id !== id)
     .map((node) => (node.children ? { ...node, children: removeNode(node.children, id) } : node));
 
-/** ファイルのツリー、エディタ、端末、プレビュー、HTTP の流れ、コンソールを並べた画面。幅 48rem 未満では、領域を縦に積む。 */
+/**
+ * ファイルのツリー、エディタ、端末、プレビュー、HTTP の流れ、コンソールを、隙間なく 1px の罫で仕切って並べた画面。幅 48rem 未満では、領域を縦に積む。
+ * 罫は、ToolPaneGroup の中の領域が右と下に引く。
+ */
 function Playground({
   exchanges,
   consoleEntries,
@@ -76,81 +80,83 @@ function Playground({
           <h1 className="font-heading text-heading-md font-semibold">認可コードを受け取る</h1>
         </div>
       </header>
-      <main className="flex flex-col gap-4 p-4 md:flex-row md:items-start">
-        {/* 左の 2 列は、右の列の高さに伸びず、自分の中身の高さで止める。伸ばすと、エディタが伸びて端末が最初の画面の外へ出る */}
-        <div className="flex min-w-0 flex-col gap-4 md:flex-2 md:flex-row">
-          <div className="grid md:w-64 md:shrink-0">
-            <FileTree
-              defaultExpandedIds={["src"]}
-              items={files}
-              onCreate={() => {}}
-              onCreateDirectory={() => {}}
-              onDelete={setDeletingId}
-              onRename={() => {}}
-              onSelect={setFileId}
-              selectedId={fileId}
+      <ToolPaneGroup>
+        <main className="flex flex-col md:flex-row md:items-start">
+          {/* 左の 2 列は、右の列の高さに伸びず、自分の中身の高さで止める。伸ばすと、エディタが伸びて端末が最初の画面の外へ出る */}
+          <div className="flex min-w-0 flex-col md:flex-2 md:flex-row">
+            <div className="grid md:w-64 md:shrink-0">
+              <FileTree
+                defaultExpandedIds={["src"]}
+                items={files}
+                onCreate={() => {}}
+                onCreateDirectory={() => {}}
+                onDelete={setDeletingId}
+                onRename={() => {}}
+                onSelect={setFileId}
+                selectedId={fileId}
+              />
+              <ConfirmDialog
+                confirmLabel="削除する"
+                isOpen={deleting !== undefined}
+                onCancel={() => setDeletingId(undefined)}
+                onConfirm={() => {
+                  if (deletingId === undefined) return;
+                  setFiles(removeNode(files, deletingId));
+                  if (fileId === deletingId) setFileId(undefined);
+                  setDeletingId(undefined);
+                }}
+                title={`${deleting?.label ?? ""} を削除する`}
+              >
+                {deleting?.children
+                  ? `${deleting.label} と、中のファイルを全て削除する。`
+                  : `${deletingId} を削除する。`}
+                削除したファイルは戻せない。
+              </ConfirmDialog>
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <EditorFrame
+                files={openFiles}
+                onSelect={setFileId}
+                selectedId={fileId}
+                status={
+                  <>
+                    <span>JavaScript</span>
+                    <span>UTF-8 · 行 4、列 12</span>
+                  </>
+                }
+              >
+                {(theme, file) => (
+                  <DummyEngine
+                    label={`${file.label} のコード`}
+                    lines={SOURCE_LINES}
+                    theme={theme}
+                    variant="source"
+                  />
+                )}
+              </EditorFrame>
+              <TerminalFrame>
+                {(theme) => <DummyEngine label="端末の出力" lines={TERMINAL_LINES} theme={theme} />}
+              </TerminalFrame>
+            </div>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <PreviewFrame onReload={() => {}} url="https://client.example:3000/">
+              <DummyPreview />
+            </PreviewFrame>
+            <HttpExchangeList
+              actors={ACTORS}
+              exchanges={exchanges}
+              onSelect={setExchangeId}
+              selectedId={exchangeId}
             />
-            <ConfirmDialog
-              confirmLabel="削除する"
-              isOpen={deleting !== undefined}
-              onCancel={() => setDeletingId(undefined)}
-              onConfirm={() => {
-                if (deletingId === undefined) return;
-                setFiles(removeNode(files, deletingId));
-                if (fileId === deletingId) setFileId(undefined);
-                setDeletingId(undefined);
-              }}
-              title={`${deleting?.label ?? ""} を削除する`}
-            >
-              {deleting?.children
-                ? `${deleting.label} と、中のファイルを全て削除する。`
-                : `${deletingId} を削除する。`}
-              削除したファイルは戻せない。
-            </ConfirmDialog>
+            <HttpExchangeDetail actors={ACTORS} exchange={exchange} />
+            {/* コンソールの高さ（h-80）は仮の値で、画面の設計で決め直す */}
+            <div className="flex h-80 shrink-0 flex-col">
+              <ConsoleEntryList entries={consoleEntries} />
+            </div>
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-4">
-            <EditorFrame
-              files={openFiles}
-              onSelect={setFileId}
-              selectedId={fileId}
-              status={
-                <>
-                  <span>JavaScript</span>
-                  <span>UTF-8 · 行 4、列 12</span>
-                </>
-              }
-            >
-              {(theme, file) => (
-                <DummyEngine
-                  label={`${file.label} のコード`}
-                  lines={SOURCE_LINES}
-                  theme={theme}
-                  variant="source"
-                />
-              )}
-            </EditorFrame>
-            <TerminalFrame>
-              {(theme) => <DummyEngine label="端末の出力" lines={TERMINAL_LINES} theme={theme} />}
-            </TerminalFrame>
-          </div>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <PreviewFrame onReload={() => {}} url="https://client.example:3000/">
-            <DummyPreview />
-          </PreviewFrame>
-          <HttpExchangeList
-            actors={ACTORS}
-            exchanges={exchanges}
-            onSelect={setExchangeId}
-            selectedId={exchangeId}
-          />
-          <HttpExchangeDetail actors={ACTORS} exchange={exchange} />
-          {/* コンソールの高さ（h-80）は仮の値で、画面の設計で決め直す */}
-          <div className="flex h-80 shrink-0 flex-col">
-            <ConsoleEntryList entries={consoleEntries} />
-          </div>
-        </div>
-      </main>
+        </main>
+      </ToolPaneGroup>
     </div>
   );
 }

@@ -32,12 +32,15 @@ describe("PreviewFrame", () => {
     }
   });
 
-  it("再読み込みのボタンは 44 px 四方以上で押せ、押すと onReload を呼ぶ", async () => {
+  it("URL の欄は 28 px の高さと 13 px の文字、再読み込みのボタンは 28 px 四方で押せ、押すと onReload を呼ぶ（ADR-0062）", async () => {
     render(<Default />);
     const button = screen.getByRole("button", { name: "再読み込み" });
     const rect = button.getBoundingClientRect();
-    expect(rect.width).toBeGreaterThanOrEqual(44);
-    expect(rect.height).toBeGreaterThanOrEqual(44);
+    expect(rect.width).toBe(28);
+    expect(rect.height).toBe(28);
+    const field = screen.getByRole("textbox", { name: "プレビューの URL" });
+    expect(field.getBoundingClientRect().height).toBe(28);
+    expect(getComputedStyle(field).fontSize).toBe("13px");
     await userEvent.click(button);
     expect(Default.args.onReload).toHaveBeenCalledOnce();
   });
