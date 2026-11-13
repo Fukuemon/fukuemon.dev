@@ -4,7 +4,7 @@
 墨の絵と立体の庭の場面の両方が読む、庭の配置も持つ。
 トップのプロフィールの本文も持つ。
 墨の絵の SVG を作るモジュール（`layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`）は、React と DOM に依らない TypeScript で、ビルドのときに Node で動く。
-イントロの署名は、ヘッダーのロゴと同じファイルを [`components/sign/`](../../components/sign/README.md) から読む。
+`InkGate.astro` は、ヘッダーのロゴと同じ `sign.svg` を [`components/sign/`](../../components/sign/README.md) から読む。
 
 見た目の数値は、[トップの水墨の門と立体の庭の Design Doc](../../../../../docs/design/features/top-garden/DesignDoc.md) にある。
 Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/README.md) のコードから取った。
