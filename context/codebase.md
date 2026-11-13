@@ -160,7 +160,8 @@ package を切り出すのは、次のどちらかが成り立つときである
 ### apps/playground
 
 - ツールのページ（`apps/playground/src/` の `node/`、`sql/`、`go/`）どうしは import しない。2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
-  - チェックは Oxlint が行う。ツールのページの名前は、`oxlint.config.ts` の `PLAYGROUND_TOOLS` に並べる。ツールを足すときは、この一覧にも足す。
+  - チェックは Oxlint が行う。`oxlint.config.ts` と `apps/playground/vite.config.ts` は、`apps/playground/` の下の `index.html` を持つディレクトリを、ツールとして読む。
+  - ツールのページの中のディレクトリに、ほかのツールと同じ名前を付けない。Oxlint は、`../<ほかのツールの名前>/` の形の import を、ツールの間の参照として止める。
 - `@webcontainer/api` の import は、`packages/node-runtime/src/webcontainer/` の外では Oxlint が止める。
 - ディレクトリの分け方と import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 
