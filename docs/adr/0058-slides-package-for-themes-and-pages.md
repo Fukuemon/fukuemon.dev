@@ -33,7 +33,8 @@
   - Markdown とトークンの CSS から、ページ送りつきの 1 枚の HTML を組み立てる関数
 - package は、`@marp-team/marp-core` に依存する。React、`@fukuemon/ui`、workspace のほかの package には依存しない。
 - トークンの CSS は、呼ぶ側が文字列で渡す。package は、トークンのファイルを読まない。エディタと `apps/web` のビルドは、同じ `@fukuemon/ui` のトークンの CSS を渡す。
-- package の関数は、ブラウザと Node の両方で動く。DOM の API を使わない。
+- package が export する関数は、ブラウザと Node の両方で動く。DOM の API を使わない。組み立てたページに入れるスクリプトは、package の中の別のディレクトリに置き、ブラウザのコードとして型を確認する。
+- package は、テーマの CSS と、ページに入れる CSS とスクリプトを文字列にする Vite の plugin を export する。2 つのアプリのビルドの設定は、plugin を登録するだけにする。
 - エディタの「単独の HTML」の書き出しと、`apps/web` のビルドは、同じ関数で HTML を組み立てる。
 
 理由は、テーマと Marp の設定が 1 か所にあると、エディタのプレビューと、公開するスライドの見た目が食い違わないことである。
