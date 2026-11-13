@@ -143,7 +143,7 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
             startsWithTree && "mt-1",
           )}
         >
-          {entry.time !== undefined && <span>{entry.time}</span>}
+          {entry.time !== undefined && <span className="tabular-nums">{entry.time}</span>}
           <span>{entry.source}</span>
         </span>
       </div>
@@ -206,7 +206,7 @@ export function ConsoleEntryList({
   const toolbar = (
     <div
       aria-label="表示するログレベル"
-      className="flex flex-wrap border-b border-border px-1"
+      className="flex flex-wrap border-b border-border px-2 py-1"
       role="group"
     >
       {LEVELS.map((level) => {

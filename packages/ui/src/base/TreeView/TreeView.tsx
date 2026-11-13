@@ -196,7 +196,9 @@ export function TreeView({
             }}
             role="treeitem"
             // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
-            style={{ paddingInlineStart: `${(level - 1) * 1.5 + 0.5}rem` }}
+            style={{
+              paddingInlineStart: `${(level - 1) * 1.5 + (density === "compact" ? 0 : 0.5)}rem`,
+            }}
             tabIndex={node.id === tabStopId ? 0 : -1}
           >
             <span
