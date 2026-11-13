@@ -59,5 +59,5 @@
 ### Negative
 
 - package が 1 つ増え、依存の規約に行が増える。
-- ページ送りの HTML と CSS は、`@fukuemon/ui` のコンポーネントを使わずに、package の中に書く。見た目を `@fukuemon/ui` と合わせる作業は、手で行う。
+- ページ送りの HTML と CSS は、`@fukuemon/ui` のコンポーネントを使わずに、package の中に書く。フォーカスの輪、角、動きの時間は、トークンの CSS の変数を参照する。そのほかの見た目を `@fukuemon/ui` と合わせる作業は、手で行う。
 - marp-core のバージョンを上げるときは、エディタと `apps/web` のビルドの両方が、同時に変わる。
