@@ -143,6 +143,7 @@ flowchart TB
   go --> project
   go --> workspace
   go --> ui
+  go --> ai
   console --> database
   console --> ui
   runtime --> database

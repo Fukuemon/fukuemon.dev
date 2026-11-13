@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: AI からの操作
-description: AI のエージェントに公開する 15 個の操作の名前と入力と結果、許可のスイッチ、確認の画面、操作の記録の欄、localStorage のキーと期限、登録から実行までの流れ
+description: AI のエージェントに公開する操作の名前と入力と結果、許可のスイッチ、確認の画面、操作の記録の欄、localStorage のキーと期限、登録から実行までの流れ
 status: draft
 ---
 
@@ -22,13 +22,13 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 
 持つものは次のとおり。
 
-- 15 個の操作の名前、入力、結果の形
+- 21 個の操作の名前、入力、結果の形
 - 許可のスイッチの位置と文言、スイッチの状態の保存
 - 確認の画面の形と、確認を待つ間の動き
 - 操作の記録の欄の位置と、1 行に出す内容
 - `localStorage` のキーと値、期限の扱い
 - 登録、許可、確認、記録の処理の流れと、コードの置き場
-- ツールのページと `NodeRuntime` に、この機能が必要とするもの
+- ツールのページと実行環境に、この機能が必要とするもの
 
 持たないものは次のとおり。
 
@@ -41,13 +41,13 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 
 ### 操作を公開するページ
 
-操作を公開するツールは、Node の実行環境、スライドのエディタ、Excalidraw のツール、draw.io のツールの 4 つである。  
-この文書では、4 つを `node`、`slides`、`excalidraw`、`drawio` と呼ぶ。
+操作を公開するツールは、Node の実行環境、Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールの 5 つである。  
+この文書では、5 つを `node`、`go`、`slides`、`excalidraw`、`drawio` と呼ぶ。
 
 - 操作を登録するのは、トップレベルで開いたページだけである（ADR-0045 の Decision 3）。
   - 埋め込みかどうかは、`ai-operations/` の React の外のモジュールが、`window.self !== window.top` で判定する。判定は、この 1 か所に置く。
   - 埋め込みのときは、保存してあるスイッチの状態を読まず、スクリプトの読み込みと登録を行わない。ページはヘッダを出さないので、スイッチも出ない。
-- SQL だけを動かすツールと、Go を動かすツールは、操作を持たない。スイッチと操作の記録の欄を出さない。
+- SQL だけを動かすツールは、操作を持たない。スイッチと操作の記録の欄を出さない。
 
 ### コードの置き場
 
@@ -141,6 +141,12 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
 | `node`       | `node_write_file`           | ファイルを書く                           | 無い                           | 無い |
 | `node`       | `node_delete_file`          | ファイルを消す                           | 重大な操作                     | 出す |
 | `node`       | `node_run_command`          | コマンドを実行し、終了コードと出力を返す | 重大な操作、信頼できない内容   | 無い |
+| `go`         | `go_list_files`             | ファイルの一覧を返す                     | 読み取りだけ                   | 無い |
+| `go`         | `go_read_file`              | ファイルの中身を返す                     | 読み取りだけ、信頼できない内容 | 無い |
+| `go`         | `go_write_file`             | ファイルを書く                           | 無い                           | 無い |
+| `go`         | `go_delete_file`            | ファイルを消す                           | 重大な操作                     | 出す |
+| `go`         | `go_run`                    | ファイルを実行し、終了コードと出力を返す | 重大な操作、信頼できない内容   | 無い |
+| `go`         | `go_test`                   | テストを実行し、終了コードと出力を返す   | 重大な操作、信頼できない内容   | 無い |
 
 - 名前は、英小文字、数字、`_` だけで書く。
   - polyfill（`@mcp-b/global` 6.2.0）は、`[A-Za-z0-9_.-]` の 1〜128 文字でない名前の登録を拒否する。
@@ -157,15 +163,15 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
 
 `code` は、次の 7 つ。
 
-| `code`          | 返すとき                                                                                           |
-| --------------- | -------------------------------------------------------------------------------------------------- |
-| `invalid_input` | 入力が schema に合わない。パスが作業ディレクトリの外を指す。XML を読めない。識別子が重なる         |
-| `not_found`     | 指したファイルか要素が無い                                                                         |
-| `too_large`     | 入力か、読むファイルが、上限を超える                                                               |
-| `not_ready`     | 実行環境が起動していない。ツールの読み込みが終わっていない。開いている図かスライドが無い           |
-| `declined`      | 利用者が、確認の画面で断った。確認を待つ時間の上限を過ぎた。確認を待つ間に、スイッチがオフになった |
-| `timeout`       | コマンドが、時間の上限までに終わらなかった                                                         |
-| `failed`        | そのほかの失敗。`check` と `execute` が投げた例外は、`ai-operations/` が受けて、この値にする       |
+| `code`          | 返すとき                                                                                                    |
+| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| `invalid_input` | 入力が schema に合わない。パスが作業ディレクトリの外を指す。XML を読めない。識別子が重なる                  |
+| `not_found`     | 指したファイルか要素が無い                                                                                  |
+| `too_large`     | 入力か、読むファイルが、上限を超える                                                                        |
+| `not_ready`     | 実行環境が起動していない。ツールの読み込みが終わっていない。開いている図かスライドが無い。Go の実行中である |
+| `declined`      | 利用者が、確認の画面で断った。確認を待つ時間の上限を過ぎた。確認を待つ間に、スイッチがオフになった          |
+| `timeout`       | コマンドが、時間の上限までに終わらなかった                                                                  |
+| `failed`        | そのほかの失敗。`check` と `execute` が投げた例外は、`ai-operations/` が受けて、この値にする                |
 
 ### 入力と結果
 
@@ -207,6 +213,13 @@ type Inputs = {
   node_write_file: { path: string; contents: string };
   node_delete_file: { path: string };
   node_run_command: { command: string; args?: string[]; timeoutMs?: number };
+
+  go_list_files: { path?: string };
+  go_read_file: { path: string };
+  go_write_file: { path: string; contents: string };
+  go_delete_file: { path: string };
+  go_run: { timeoutMs?: number };
+  go_test: { timeoutMs?: number };
 };
 
 type NewElement = {
@@ -241,6 +254,12 @@ type NewElement = {
 | `node_write_file`           | `path`                                            |
 | `node_delete_file`          | `path`                                            |
 | `node_run_command`          | `exitCode`、`output`、`truncated`                 |
+| `go_list_files`             | `entries`（`{ path, kind }` の配列）、`truncated` |
+| `go_read_file`              | `path`、`contents`                                |
+| `go_write_file`             | `path`                                            |
+| `go_delete_file`            | `path`                                            |
+| `go_run`                    | `exitCode`、`output`、`truncated`                 |
+| `go_test`                   | `exitCode`、`output`、`truncated`                 |
 
 - `document` は、ページで開いている図かスライドの識別子と名前である（`{ id: string, name: string }`）。
 - `slides_set_theme` の `theme` に渡せる値は、スライドのエディタが持つテーマの名前の一覧から、`enum` として作る。この文書と操作の定義に、テーマの名前を書かない。
@@ -254,7 +273,7 @@ type NewElement = {
 - `drawio_add_cells` は、今の図にある `id` と同じ `id` の `mxCell` を渡されたときに、`invalid_input` を返す。
 - `entries` の `kind` は、`file` か `directory` である。
 - `markdown`、`xml`、`cells`、`contents` は、UTF-8 で 1 MB までである。超えるときは、`too_large` を返す。
-- 読み取りの結果のうち、大きさの上限を持つのは、`node_read_file` の `contents`、`node_list_files` の `entries`、`node_run_command` の `output` だけである。
+- 読み取りの結果のうち、大きさの上限を持つのは、ファイルの中身（`contents`）、ファイルの一覧（`entries`）、コマンドと Go の実行の `output` だけである。
 
 ### 操作の対象の図とスライド
 
@@ -295,6 +314,26 @@ type NewElement = {
   - コマンドが 0 でない終了コードで終了したときは、`ok` を `true` にし、`exitCode` にその値を入れる。
   - `output` は、端末の制御の文字を除いた出力の、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。
   - 時間と文字数の値は、実装のタスクで測って変えてよい。
+
+### Go のツールの操作
+
+`go` の操作は、Go を動かすツールのファイルと、`GoRunner` を使う。  
+ファイルの 4 つの操作の入力、結果、パスと大きさの規則は、`node` の同じ名前の操作と同じである。
+
+- `go_list_files`、`go_read_file`、`go_write_file`、`go_delete_file` は、`src/go/` の React の外のモジュールが持つファイルを読み書きする。エディタと、IndexedDB への保存は、利用者が書き換えたときと同じように動く。
+- `go_write_file` は、ファイルがあれば上書きし、無ければ作る。上書きの前に、確認を出さない。
+- `go_delete_file` は、確認を出す。
+- `go_run` は、保存してあるファイルを実行する。`go_test` は、保存してあるファイルのテストを実行する。画面の実行のボタンとテストのボタンと、同じものが動く。
+  - 入力でコードを受け取らない。エージェントは、先に `go_write_file` で書く。
+  - Yaegi の WASM を読み込んでいないときは、読み込んでから実行する。読み込みの時間は、`timeoutMs` に含めない。
+  - 出力は、出力のペインにも出す。利用者がボタンを押したときと、同じ表示にする。
+  - `timeoutMs` は、1,000 から 120,000 までの整数で、デフォルトは 30,000 である。上限までに終わらないときは、Worker を止めて、`timeout` を返す。このときの結果は、`error` のほかに、それまでの `output` と `truncated` を持つ。60 秒を超える値の扱いは、`node_run_command` と同じである。
+  - コンパイルのエラーと、テストの失敗は、`ok` を `true` にし、`exitCode` を 0 でない値にして、`output` にエラーを入れる。`go_test` は、出力（`=== RUN`、`--- PASS`、`--- FAIL`）をそのまま返し、テストごとの結果に分けない。
+  - `output` は、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。
+  - 実行中に、もう 1 つの `go_run` か `go_test` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。
+- `go_run` と `go_test` は、確認を出さない。Yaegi で動かすコードが、ページの `localStorage` と IndexedDB に届かないためである。
+  - Yaegi に渡す symbol を `stdlib.Symbols` だけにすると、Yaegi で動かすコードは、`syscall/js`、`syscall`、`unsafe` を import できない。
+  - Yaegi で動かすコードは、`net/http` を import できる。ブラウザの中で、外部へリクエストを送れるかは、実装のタスクで確認する。
 
 ### 許可のスイッチ
 
@@ -363,7 +402,7 @@ sequenceDiagram
 
 ### 確認の画面
 
-確認を出す 4 つの操作は、利用者が確定のボタンを押してから実行する。  
+確認を出す 5 つの操作は、利用者が確定のボタンを押してから実行する。  
 確認の画面は、`@fukuemon/ui` の `Dialog` で組む。  
 `ConfirmDialog` は、チェックボックスを置けないので使わない。  
 題、本文、ボタンの文、フォーカスは、`ConfirmDialog` の規則にそろえる。
@@ -376,6 +415,7 @@ sequenceDiagram
   | `excalidraw_clear` | 図「<名前>」の全ての要素を削除する   | 削除する     |
   | `drawio_write`     | 図「<名前>」の全体を置き換える       | 置き換える   |
   | `node_delete_file` | ファイル「<パス>」を削除する         | 削除する     |
+  | `go_delete_file`   | ファイル「<パス>」を削除する         | 削除する     |
 
 - 本文に、AI のエージェントが呼んだ操作であること、操作の名前、何が起きるかの文（`summary`）を書く。`excalidraw_clear` の `summary` は、消す要素の数を含む。
 - 本文に、元に戻せないことを書く。ツールの「元に戻す」が、エージェントの操作を戻せるかは、ツールごとに、実装のタスクで確認する。戻せるツールでは、この文を、「元に戻す」で戻せることの文に替える。
@@ -399,7 +439,7 @@ sequenceDiagram
 操作の記録の欄は、スイッチがオンの間だけ出す。
 
 - Node の実行環境では、下のペインのタブ（端末、コンソール、HTTP の一覧と同じ並び）に、「AI からの操作」のタブを足す。
-- スライドのエディタ、Excalidraw のツール、draw.io のツールでは、ページの下端に、開閉できる欄を置く。閉じている間は、題の「AI からの操作」と、最後の 1 行だけを出す。
+- Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールでは、ページの下端に、開閉できる欄を置く。閉じている間は、題の「AI からの操作」と、最後の 1 行だけを出す。
 - 欄の先頭に、`Disclosure` の「AI のエージェントのつなぎ方」を置く。relay を起動するときに渡す `--widget-origin <ページの origin>` を書く。本番では、`https://play.fukuemon.dev` になる。
 
 1 行は、1 回の呼び出しである。
@@ -422,7 +462,7 @@ sequenceDiagram
 
 スイッチのオンと、「このページでは今後尋ねない」の状態は、ツールごとに、`localStorage` の 1 つのキーに保存する。
 
-- キー: `fd-ai-operations:<ツール>`。`<ツール>` は、`node`、`slides`、`excalidraw`、`drawio` のどれかである。
+- キー: `fd-ai-operations:<ツール>`。`<ツール>` は、`node`、`go`、`slides`、`excalidraw`、`drawio` のどれかである。
 - 値: 次の形の JSON。
 
 ```ts
@@ -443,20 +483,30 @@ type StoredPermission = {
 - 同じツールを複数のタブで開いているときは、`storage` のイベントを受けて、ほかのタブが書いた値（スイッチと、「このページでは今後尋ねない」の両方）を、自分のタブにも反映する。
 - `localStorage` を読み書きできないときは、スイッチは、ページを開いている間だけ働き、状態を保存しない。
 
-### ツールのページと NodeRuntime に必要なもの
+### ツールのページと実行環境に必要なもの
 
-この機能を作るには、ツールのページと `NodeRuntime` に、次のものが必要である。  
+この機能を作るには、ツールのページと実行環境に、次のものが必要である。  
 持つのは、ツールごとの Design Doc と、プレイグラウンドの Design Doc である。
 
 - ツールのページは、ヘッダの右端に、スイッチを置く場所を持つ。
-- スライドのエディタ、Excalidraw のツール、draw.io のツールのページは、下端に、操作の記録の欄を置く場所を持つ。
+- Go を動かすツール、スライドのエディタ、Excalidraw のツール、draw.io のツールのページは、下端に、操作の記録の欄を置く場所を持つ。
 - Node の実行環境のページは、下のペインのタブの並びに、`ai-operations/` のコンポーネントを置ける。選択の状態の、下のペインのタブの値に、「AI からの操作」のタブを持つ。
-- ツールのページは、タイトル（`<title>`）に、開いているものの名前を入れる。図とスライドは、その名前である。Node の実行環境は、埋め込みの ID である。
-- ツールのディレクトリの名前は、`node`、`slides`、`excalidraw`、`drawio` である。
+- ツールのページは、タイトル（`<title>`）に、開いているものの名前を入れる。図とスライドは、その名前である。Node の実行環境と、Go を動かすツールは、埋め込みの ID である。
+- ツールのディレクトリの名前は、`node`、`go`、`slides`、`excalidraw`、`drawio` である。
 - `NodeRuntime` は、操作の実装のタスクまでに、次の 3 つを持つ。
   - `FileEntry` の、ファイルかディレクトリかの値。
   - 1 つのファイルの、大きさと、テキストとして読めるかの判定。`files.readAll` と同じ規則で、`maxBytes` は呼ぶ側が渡す。
   - `files.read` と `files.remove` が失敗したときに、パスが無いことを見分けられる値。
+- `@fukuemon/go-runtime` の `GoRunner` は、操作の実装のタスクまでに、次のものを持つ。
+  - ファイルの一式を渡して、実行するか、テストを実行する関数。
+  - 出力と、終了コード。
+  - 実行を止める手段。
+  - Yaegi に渡す symbol は、`stdlib.Symbols` だけにする。`syscall`、`unsafe`、`unrestricted` の symbol を渡さない。
+- `apps/playground/src/go/` は、React の外のモジュールに、次のものを持つ。
+  - ファイルの一覧、読み込み、書き込み、削除の関数。
+  - 実行中かどうかの値。
+  - Yaegi の読み込みを始める関数。
+- Go を動かすツールのページは、訪問者がファイルを足して消せる画面を持つ。
 
 ## Interface
 
