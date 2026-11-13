@@ -64,7 +64,11 @@ const theme = EditorView.theme({
     borderRadius: "var(--radius-control)",
     boxShadow: "var(--shadow-raised)",
   },
-  ".cm-tooltip-autocomplete > ul": { fontFamily: "var(--font-mono)", maxHeight: "264px" },
+  // 補完と検索の base theme は、クラスを 1 つ多く重ねたセレクタで書かれている。同じ重ね方にして上書きする
+  ".cm-tooltip.cm-tooltip-autocomplete > ul": {
+    fontFamily: "var(--font-mono)",
+    maxHeight: "264px",
+  },
   ".cm-searchMatch": { backgroundColor: "var(--color-info-surface)" },
   ".cm-searchMatch-selected": { outline: "2px solid var(--color-primary)" },
   ".cm-panels": {
@@ -73,14 +77,18 @@ const theme = EditorView.theme({
     fontFamily: "var(--font-sans)",
   },
   ".cm-panels-top": { borderBottom: "1px solid var(--color-border)" },
-  ".cm-search": { padding: "8px", fontSize: "var(--text-body-dense)" },
+  ".cm-panel.cm-search": { padding: "8px", fontSize: "var(--text-body-dense)" },
+  ".cm-panel.cm-search input, .cm-panel.cm-search button": { margin: 0 },
   ".cm-search-row": { display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" },
   ".cm-search-row + .cm-search-row": { marginTop: "8px" },
   ".cm-search-row .cm-textfield": { flex: "1 1 8rem", minWidth: 0 },
+  // 押された状態は、面の色に下罫を重ね、色だけで伝えない
   ".cm-button[aria-pressed=true]": {
     backgroundColor: "var(--color-primary-surface)",
     color: "var(--color-text)",
+    boxShadow: "inset 0 -2px 0 var(--color-primary)",
   },
+  // 入力欄は、packages/ui の TextField の boxed と同じ、薄い面と下罫にする
   ".cm-textfield": {
     minHeight: "44px",
     margin: 0,
@@ -88,12 +96,14 @@ const theme = EditorView.theme({
     fontSize: "inherit",
     fontFamily: "var(--font-mono)",
     color: "var(--color-text)",
-    backgroundColor: "var(--color-surface)",
-    border: "1px solid var(--color-border-field)",
-    borderRadius: "var(--radius-control)",
+    backgroundColor: "var(--color-surface-subtle)",
+    border: "none",
+    borderBottom: "1px solid var(--color-border-field)",
+    borderRadius: 0,
   },
   ".cm-button": {
     minHeight: "44px",
+    minWidth: "44px",
     margin: 0,
     padding: "0 12px",
     fontSize: "inherit",
@@ -104,18 +114,23 @@ const theme = EditorView.theme({
     border: "1px solid var(--color-border-field)",
     borderRadius: "var(--radius-control)",
   },
-  // パネルの入力欄とボタンは CodeMirror の DOM の中にあるので、クラスを付けられない。focus-ring のユーティリティと同じ値を書く。packages/ui/src/tokens/theme.css の focus-ring を変えたら、ここも直す
+  // 行へ移動のパネルは CodeMirror が組み、クラスを付けられない。検索パネルも同じクラスを使うので、focus-ring のユーティリティと同じ値を書く。packages/ui/src/tokens/theme.css の focus-ring を変えたら、ここも直す
   ".cm-textfield:focus-visible, .cm-button:focus-visible": {
     outline: "2px solid var(--fd-color-focus)",
     outlineOffset: "2px",
   },
   ".cm-button:active": { backgroundImage: "none", backgroundColor: "var(--color-surface-subtle)" },
-  // CodeMirror の既定は、閉じるボタンを右上に重ねる。ほかのボタンと同じ並びに戻す
-  ".cm-panel.cm-search [name=close]": { position: "static", color: "var(--color-text)" },
-  ".cm-tooltip-autocomplete > ul > li": {
-    display: "flex",
-    alignItems: "center",
+  // CodeMirror の既定は、閉じるボタンを右上に重ね、枠と余白を消す。ほかのボタンと同じ形に戻す
+  ".cm-panel.cm-search [name=close]": {
+    position: "static",
+    minWidth: "44px",
+    padding: "0 12px",
+    color: "var(--color-text)",
+    border: "1px solid var(--color-border-field)",
+  },
+  ".cm-tooltip.cm-tooltip-autocomplete > ul > li": {
     minHeight: "44px",
+    lineHeight: "44px",
     padding: "0 12px",
   },
   ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
@@ -153,6 +168,8 @@ const phrases = EditorState.phrases.of({
 export type CodeEditorOptions = {
   /** 入力欄の読み上げる名前。 */
   label: string;
+  /** 入力欄の操作の案内を書いた要素の id。読み上げで、入力欄に入ったときに伝える。 */
+  describedBy?: string;
   /** Ctrl か ⌘ と Enter のキーで呼ぶ。 */
   onRun?: () => void;
 };
@@ -164,7 +181,11 @@ export type CodeEditorOptions = {
  * 検索と置換のパネルは、Ctrl か ⌘ と F で上端に出す。パネルは search-panel.ts が組む。
  * フォーカスの表示は持たない。呼ぶ側が、入力欄を囲む要素に `has-[.cm-focused]:focus-ring` を付ける。
  */
-export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Extension[] {
+export function codeEditorExtensions({
+  label,
+  describedBy,
+  onRun,
+}: CodeEditorOptions): Extension[] {
   return [
     lineNumbers(),
     highlightActiveLineGutter(),
@@ -187,7 +208,10 @@ export function codeEditorExtensions({ label, onRun }: CodeEditorOptions): Exten
     }),
     syntaxHighlighting(highlight),
     theme,
-    EditorView.contentAttributes.of({ "aria-label": label }),
+    EditorView.contentAttributes.of({
+      "aria-label": label,
+      ...(describedBy !== undefined && { "aria-describedby": describedBy }),
+    }),
     ...(onRun
       ? [
           // 既定の keymap は Mod-Enter で空の行を足すので、それより先に受ける
