@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
+import { ConsoleEntryList } from "./ConsoleEntryList";
 import * as stories from "./ConsoleEntryList.stories";
 import { type ConsoleValue, preview } from "./consoleValue";
 
@@ -87,6 +88,37 @@ describe("ConsoleEntryList", () => {
     for (const item of screen.getAllByRole("treeitem")) {
       expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  it("最後の行が見えているときだけ、行が増えると一番下へ送る", async () => {
+    const entriesOf = (length: number) =>
+      Array.from({ length }, (_, index) => ({
+        id: String(index),
+        level: "log" as const,
+        source: "server.js",
+        args: [{ kind: "number" as const, value: index }],
+      }));
+    const many = entriesOf(30);
+    const added = (count: number) => entriesOf(30 + count);
+    const frame = (entries: typeof many) => (
+      <div className="h-48 overflow-y-auto" data-testid="frame">
+        <ConsoleEntryList entries={entries} />
+      </div>
+    );
+    const { rerender } = render(frame(many));
+    const box = screen.getByTestId("frame");
+    const isAtBottom = () => box.scrollHeight - box.scrollTop - box.clientHeight < 2;
+
+    box.scrollTop = box.scrollHeight;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    rerender(frame(added(1)));
+    await expect.poll(isAtBottom).toBe(true);
+
+    box.scrollTop = 0;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    rerender(frame(added(2)));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(box.scrollTop).toBe(0);
   });
 
   it("空、読み込み中、エラーでは、行の代わりに文を出す", () => {

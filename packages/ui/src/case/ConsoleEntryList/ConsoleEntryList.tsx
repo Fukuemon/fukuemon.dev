@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { useState } from "react";
+import { type Ref, useEffect, useRef, useState } from "react";
 
 import { TreeView } from "../../base/TreeView/TreeView";
 import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
@@ -20,7 +20,10 @@ export type ConsoleEntry = {
 
 export type ConsoleEntryListProps = {
   title?: string;
-  /** 起きた順に並べた行。上限と古い行の扱いは、呼ぶ側が決める。 */
+  /**
+   * 起きた順に並べた行。上限と古い行の扱いは、呼ぶ側が決める。
+   * スクロールする枠も呼ぶ側が持つ。最後の行が見えている間に行が増えると、新しい最後の行が見える位置まで送る。
+   */
   entries: readonly ConsoleEntry[];
   /** 最初に表示するログレベル。渡さないと、全てのログレベルを表示する。 */
   defaultLevels?: readonly ConsoleLevel[];
@@ -106,9 +109,10 @@ function CheckIcon({ isChecked }: { isChecked: boolean }) {
   );
 }
 
-function EntryRow({ entry }: { entry: ConsoleEntry }) {
+function EntryRow({ entry, ref }: { entry: ConsoleEntry; ref?: Ref<HTMLLIElement> }) {
   return (
     <li
+      ref={ref}
       className={clsx(
         "flex gap-2 border-b border-l-2 border-b-border px-4 py-2",
         ROW_CLASS_NAME[entry.level],
@@ -160,6 +164,22 @@ export function ConsoleEntryList({
     else next.add(level);
     setLevels(next);
   };
+
+  // スクロールする枠は呼ぶ側が持つので、枠を探さずに、最後の行が見えているかで一番下を見ているかを決める
+  const lastRowRef = useRef<HTMLLIElement>(null);
+  const isAtBottom = useRef(false);
+  const lastId = visible.at(-1)?.id;
+  useEffect(() => {
+    const row = lastRowRef.current;
+    if (!row) return;
+    if (isAtBottom.current) row.scrollIntoView({ block: "nearest" });
+    const observer = new IntersectionObserver(([observed]) => {
+      isAtBottom.current = observed?.isIntersecting ?? false;
+    });
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [lastId]);
+
   const paneState: ToolPaneState =
     state ??
     (entries.length === 0
@@ -202,7 +222,11 @@ export function ConsoleEntryList({
       ) : (
         <ol className="flex flex-col">
           {visible.map((entry) => (
-            <EntryRow entry={entry} key={entry.id} />
+            <EntryRow
+              entry={entry}
+              key={entry.id}
+              ref={entry.id === lastId ? lastRowRef : undefined}
+            />
           ))}
         </ol>
       )}
