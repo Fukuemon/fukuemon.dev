@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-export const PLAYGROUND_TOOLS = ["node", "sql", "go"] as const;
-
 const startCommandSchema = z.object({
   command: z.string().min(1),
   args: z.array(z.string()),
@@ -48,7 +46,7 @@ export const playgroundConfigSchema = z.discriminatedUnion("tool", [
   z.object({ tool: z.literal("go"), open: z.string().min(1) }),
 ]);
 
-export type PlaygroundTool = (typeof PLAYGROUND_TOOLS)[number];
 export type PlaygroundProject = z.infer<typeof playgroundProjectSchema>;
+export type PlaygroundTool = PlaygroundProject["tool"];
 export type PlaygroundConfig = z.infer<typeof playgroundConfigSchema>;
 export type StartCommand = z.infer<typeof startCommandSchema>;

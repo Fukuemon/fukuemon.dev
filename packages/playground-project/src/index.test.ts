@@ -10,36 +10,34 @@ const sqlProject = {
   initialSql: "create table t (id int);",
 };
 
+const start = [{ command: "node", args: ["index.js"], name: "server" }];
+
 describe("playgroundProjectSchema", () => {
   it("SQL のツールのプロジェクトを受け付ける", () => {
-    expect(playgroundProjectSchema.parse(sqlProject)).toEqual(sqlProject);
+    expect(playgroundProjectSchema.parse(sqlProject)).toStrictEqual(sqlProject);
   });
 
-  it("Node の実行環境のプロジェクトは start を求める", () => {
-    const node = { ...sqlProject, tool: "node" };
-    expect(playgroundProjectSchema.safeParse(node).success).toBe(false);
-    expect(
-      playgroundProjectSchema.safeParse({
-        ...node,
-        start: [{ command: "node", args: ["index.js"], name: "server" }],
-      }).success,
-    ).toBe(true);
+  it("start を持つ Node の実行環境のプロジェクトを受け付ける", () => {
+    const node = { ...sqlProject, tool: "node", start };
+    expect(playgroundProjectSchema.parse(node)).toStrictEqual(node);
   });
 
-  it("open が files に無いときは受け付けない", () => {
+  it.each([
+    ["start の無い Node の実行環境のプロジェクト", { ...sqlProject, tool: "node" }],
+    ["知らないツールのプロジェクト", { ...sqlProject, tool: "ruby" }],
+  ])("%s を受け付けない", (_, project) => {
+    expect(playgroundProjectSchema.safeParse(project).success).toBe(false);
+  });
+
+  it("open が files に無いときは、open の誤りにする", () => {
     const result = playgroundProjectSchema.safeParse({ ...sqlProject, open: "missing.sql" });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(["open"]);
-  });
-
-  it("知らないツールを受け付けない", () => {
-    expect(playgroundProjectSchema.safeParse({ ...sqlProject, tool: "ruby" }).success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.path)).toStrictEqual([["open"]]);
   });
 });
 
 describe("playgroundConfigSchema", () => {
   it("初期データの SQL をファイルのパスで受け付ける", () => {
     const config = { tool: "sql", open: "query.sql", initialSql: "seed.sql" };
-    expect(playgroundConfigSchema.parse(config)).toEqual(config);
+    expect(playgroundConfigSchema.parse(config)).toStrictEqual(config);
   });
 });

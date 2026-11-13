@@ -22,16 +22,24 @@ const fakeDatabase = (run: WorkerSqlDatabase["run"] = async () => response): Wor
   run,
 });
 
+const never = () => new Promise<SqlResponse>(() => {});
+
 describe("createSqlSession", () => {
-  it("初期データの SQL で DB を作り、open のファイルの中身を入力欄の初期値にする", () => {
+  it("初期データの SQL で DB を作る", () => {
     const create = vi.fn(() => fakeDatabase());
-    const session = createSqlSession(project, create);
-    expect(create).toHaveBeenCalledWith("create table t ();");
-    expect(session.query.getSnapshot()).toBe("select 1;");
-    expect(session.fileName).toBe("seed.sql");
+    createSqlSession(project, create);
+    expect(create.mock.calls).toStrictEqual([["create table t ();"]]);
   });
 
-  it("入力欄の SQL を変えると、購読した側に知らせる", () => {
+  it("open のファイルの名前と中身を、入力欄の初期値にする", () => {
+    const session = createSqlSession(project, () => fakeDatabase());
+    expect({ fileName: session.fileName, query: session.query.getSnapshot() }).toStrictEqual({
+      fileName: "seed.sql",
+      query: "select 1;",
+    });
+  });
+
+  it("入力欄の SQL を変えると、購読を外すまで知らせる", () => {
     const session = createSqlSession(project, () => fakeDatabase());
     const onChange = vi.fn();
     const unsubscribe = session.query.subscribe(onChange);
@@ -39,56 +47,67 @@ describe("createSqlSession", () => {
     unsubscribe();
     session.setQuery("select 3;");
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(session.query.getSnapshot()).toBe("select 3;");
   });
 
-  it("実行の間だけ、実行中にする", async () => {
-    let finish: (value: SqlResponse) => void = () => {};
-    const session = createSqlSession(project, () =>
-      fakeDatabase(() => new Promise((resolve) => (finish = resolve))),
-    );
-    const done = session.execute("select 1");
+  it("実行の間は、実行中にする", () => {
+    const session = createSqlSession(project, () => fakeDatabase(never));
+    void session.execute("select 1");
     expect(session.running.getSnapshot()).toBe(true);
-    finish(response);
-    expect(await done).toBe(response);
-    expect(session.running.getSnapshot()).toBe(false);
+  });
+
+  it("実行が終わったら、結果を返し、実行中を外す", async () => {
+    const session = createSqlSession(project, () => fakeDatabase());
+    const result = await session.execute("select 1");
+    expect({ result, running: session.running.getSnapshot() }).toStrictEqual({
+      result: response,
+      running: false,
+    });
   });
 
   it("実行中に呼んだときは、実行せずに error を返す", async () => {
-    const run = vi.fn(() => new Promise<SqlResponse>(() => {}));
+    const run = vi.fn(never);
     const session = createSqlSession(project, () => fakeDatabase(run));
     void session.execute("select 1");
-    expect(await session.execute("select 2")).toEqual({
-      error: { message: "前の SQL を実行している" },
-      ms: 0,
+    const second = await session.execute("select 2");
+    expect({ second, calls: run.mock.calls.length }).toStrictEqual({
+      second: { error: { message: "前の SQL を実行しています" }, ms: 0 },
+      calls: 1,
     });
-    expect(run).toHaveBeenCalledTimes(1);
   });
 
   it("load は、DB の読み込みを始める", async () => {
     const database = fakeDatabase();
     await createSqlSession(project, () => database).load();
-    expect(database.load).toHaveBeenCalled();
+    expect(database.load).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("createSessionOpener", () => {
   const opened: ProjectLoad<"sql"> = { kind: "opened", project, embedId: "a/b" };
 
-  it("同じプロジェクトの読み込みには、同じ Promise と SqlSession を返す", async () => {
+  it("同じプロジェクトの読み込みには、同じ Promise を返す", () => {
+    const load = Promise.resolve(opened);
+    const open = createSessionOpener(
+      () => load,
+      () => createSqlSession(project, () => fakeDatabase()),
+    );
+    expect(open("?project=a/b")).toBe(open("?project=a/b"));
+  });
+
+  it("同じプロジェクトの読み込みでは、SqlSession を 1 つだけ作る", async () => {
     const load = Promise.resolve(opened);
     const create = vi.fn(() => createSqlSession(project, () => fakeDatabase()));
     const open = createSessionOpener(() => load, create);
-    expect(open("?project=a/b")).toBe(open("?project=a/b"));
-    expect(await open("?project=a/b")).toMatchObject({ kind: "opened" });
+    await Promise.all([open("?project=a/b"), open("?project=a/b")]);
     expect(create).toHaveBeenCalledTimes(1);
   });
 
-  it("プロジェクトを開けなかったときは、SqlSession を作らない", async () => {
-    const create = vi.fn();
+  it("プロジェクトを開けなかったときは、開けなかった結果を返す", async () => {
     const failed: ProjectLoad<"sql"> = { kind: "failed", embedId: "a/b" };
+    const create = vi.fn();
     const open = createSessionOpener(() => Promise.resolve(failed), create);
-    expect(await open("?project=a/b")).toBe(failed);
-    expect(create).not.toHaveBeenCalled();
+    expect({ result: await open("?project=a/b"), created: create.mock.calls.length }).toStrictEqual(
+      { result: failed, created: 0 },
+    );
   });
 });

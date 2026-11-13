@@ -27,7 +27,7 @@ function createStore<T>(initial: T): WritableStore<T> {
 
 /**
  * SQL だけを動かすツールの、React の外の状態と操作。入力欄の SQL、実行中かどうか、DB を持つ。
- * 画面の実行のボタンと、AI からの操作（#123）は、どちらも execute を呼ぶ。
+ * 実行する処理は execute の 1 つにし、画面の実行のボタンのほかの呼び出し元も、これを呼ぶ。
  */
 export type SqlSession = {
   status: Store<DatabaseStatus>;
@@ -61,7 +61,7 @@ export function createSqlSession(
     setQuery: query.set,
     load: database.load,
     execute: async (sql) => {
-      if (running.getSnapshot()) return { error: { message: "前の SQL を実行している" }, ms: 0 };
+      if (running.getSnapshot()) return { error: { message: "前の SQL を実行しています" }, ms: 0 };
       running.set(true);
       try {
         return await database.run(sql);

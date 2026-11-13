@@ -12,7 +12,12 @@ export function formatCell(value: unknown): string {
   if (value instanceof Uint8Array) {
     return `\\x${Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
   }
-  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "object") {
+    // 安全な整数の範囲の外の int8 は bigint で届き、JSON.stringify は bigint で投げる
+    return JSON.stringify(value, (_, item: unknown) =>
+      typeof item === "bigint" ? item.toString() : item,
+    );
+  }
   return String(value as string | number | bigint | boolean);
 }
 

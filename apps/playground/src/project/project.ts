@@ -54,17 +54,15 @@ export function createProjectLoader<T extends PlaygroundTool>(
   defaultProject: Extract<PlaygroundProject, { tool: T }>,
   fetchJson: typeof fetch = fetch,
 ) {
+  const opened = Promise.resolve<ProjectLoad<T>>({ kind: "opened", project: defaultProject });
   const loads = new Map<string, Promise<ProjectLoad<T>>>();
   return (search: string): Promise<ProjectLoad<T>> => {
     const embedId = new URLSearchParams(search).get("project");
-    const key = embedId ?? "";
-    const cached = loads.get(key);
+    if (embedId === null) return opened;
+    const cached = loads.get(embedId);
     if (cached) return cached;
-    const load =
-      embedId === null
-        ? Promise.resolve<ProjectLoad<T>>({ kind: "opened", project: defaultProject })
-        : fetchProject(embedId, tool, fetchJson);
-    loads.set(key, load);
+    const load = fetchProject(embedId, tool, fetchJson);
+    loads.set(embedId, load);
     return load;
   };
 }

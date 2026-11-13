@@ -23,17 +23,24 @@ describe("projectUrl", () => {
 
 describe("fetchProject", () => {
   it("schema に合い、ツールが同じプロジェクトを開く", async () => {
-    const fetchJson = respond(sqlProject);
-    expect(await fetchProject("a/b", "sql", fetchJson)).toEqual({
+    expect(await fetchProject("a/b", "sql", respond(sqlProject))).toStrictEqual({
       kind: "opened",
       project: sqlProject,
       embedId: "a/b",
     });
-    expect(fetchJson).toHaveBeenCalledWith("https://fukuemon.dev/playground-projects/a/b.json");
+  });
+
+  it("埋め込みの ID の JSON の URL を取得する", async () => {
+    const fetchJson = respond(sqlProject);
+    await fetchProject("a/b", "sql", fetchJson);
+    expect(fetchJson.mock.calls).toStrictEqual([
+      ["https://fukuemon.dev/playground-projects/a/b.json"],
+    ]);
   });
 
   it.each([
     ["形の誤った埋め込みの ID", "../secret", respond(sqlProject)],
+    ["空の埋め込みの ID", "", respond(sqlProject)],
     ["404", "a/b", respond({}, { status: 404 })],
     ["schema に合わない JSON", "a/b", respond({ tool: "sql" })],
     ["ほかのツールのプロジェクト", "a/b", respond({ ...sqlProject, tool: "go" })],
@@ -44,7 +51,10 @@ describe("fetchProject", () => {
       vi.fn<typeof fetch>(async () => Promise.reject(new TypeError("offline"))),
     ],
   ])("%s は、開けなかったことにする", async (_, embedId, fetchJson) => {
-    expect(await fetchProject(embedId, "sql", fetchJson)).toEqual({ kind: "failed", embedId });
+    expect(await fetchProject(embedId, "sql", fetchJson)).toStrictEqual({
+      kind: "failed",
+      embedId,
+    });
   });
 
   it("形の誤った埋め込みの ID では、取得しない", async () => {
@@ -59,13 +69,24 @@ describe("createProjectLoader", () => {
 
   it("project が無いときは、デフォルトのプロジェクトを開く", async () => {
     const load = createProjectLoader("sql", defaultProject, respond(sqlProject));
-    expect(await load("")).toEqual({ kind: "opened", project: defaultProject });
+    expect(await load("")).toStrictEqual({ kind: "opened", project: defaultProject });
   });
 
-  it("同じ埋め込みの ID には、同じ Promise を返し、1 回だけ取得する", () => {
+  it("project が空のときは、デフォルトのプロジェクトを開かない", async () => {
+    const load = createProjectLoader("sql", defaultProject, respond(sqlProject));
+    expect(await load("?project=")).toStrictEqual({ kind: "failed", embedId: "" });
+  });
+
+  it("同じ埋め込みの ID には、同じ Promise を返す", () => {
+    const load = createProjectLoader("sql", defaultProject, respond(sqlProject));
+    expect(load("?project=a/b")).toBe(load("?project=a/b"));
+  });
+
+  it("同じ埋め込みの ID は、1 回だけ取得する", () => {
     const fetchJson = respond(sqlProject);
     const load = createProjectLoader("sql", defaultProject, fetchJson);
-    expect(load("?project=a/b")).toBe(load("?project=a/b"));
+    void load("?project=a/b");
+    void load("?project=a/b");
     expect(fetchJson).toHaveBeenCalledTimes(1);
   });
 });

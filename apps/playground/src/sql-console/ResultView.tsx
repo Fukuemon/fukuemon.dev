@@ -38,7 +38,7 @@ function RowsTable({ result }: { result: SqlResult }) {
   return (
     <div className="flex min-w-0 flex-col gap-4">
       {result.truncated && (
-        <Notice title="結果の行を切った" tone="warning">
+        <Notice title="結果の行を切りました" tone="warning">
           全体の {result.totalRows.toLocaleString()} 行のうち、先頭の{" "}
           {result.rows.length.toLocaleString()} 行を表示しています。
         </Notice>
@@ -138,16 +138,21 @@ export type ResultViewProps = { response: SqlResponse };
 export function ResultView({ response }: ResultViewProps) {
   if ("error" in response) {
     const { message, code, position } = response.error;
+    // SQLSTATE を持つのは Postgres が返したエラーだけである。読み込みの失敗と異常終了では、取り消した文は無い
+    if (code === undefined) {
+      return (
+        <Notice isAlert title="実行できませんでした" tone="danger">
+          <span className="font-mono whitespace-pre-wrap">{message}</span>
+        </Notice>
+      );
+    }
     return (
       <Notice isAlert title="SQL が失敗しました" tone="danger">
         <span className="font-mono whitespace-pre-wrap">{message}</span>
-        {(code !== undefined || position !== undefined) && (
-          <span className="block">
-            {code !== undefined && `SQLSTATE ${code}`}
-            {code !== undefined && position !== undefined && "、"}
-            {position !== undefined && `${position} 文字目`}
-          </span>
-        )}
+        <span className="block">
+          SQLSTATE {code}
+          {position !== undefined && `、${position} 文字目`}
+        </span>
         <span className="block">この実行の文は、全て取り消しました。</span>
       </Notice>
     );

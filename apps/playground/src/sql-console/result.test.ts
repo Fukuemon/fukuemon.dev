@@ -14,6 +14,7 @@ describe("formatCell", () => {
     [new Date(Number.NaN), "Invalid Date"],
     [new Uint8Array([0, 255]), "\\x00ff"],
     [{ a: [1] }, '{"a":[1]}'],
+    [[9223372036854775807n], '["9223372036854775807"]'],
   ])("%o を %s で出す", (value, expected) => {
     expect(formatCell(value)).toBe(expected);
   });
@@ -21,16 +22,18 @@ describe("formatCell", () => {
 
 describe("pageRange", () => {
   it("指定したページの行の範囲を返す", () => {
-    expect(pageRange(250, 100, 2)).toEqual({ pages: 3, page: 2, start: 200, end: 250 });
+    expect(pageRange(250, 100, 2)).toStrictEqual({ pages: 3, page: 2, start: 200, end: 250 });
   });
 
-  it("範囲の外のページは、端のページに寄せる", () => {
-    expect(pageRange(250, 100, 9).page).toBe(2);
-    expect(pageRange(250, 100, -1).page).toBe(0);
+  it.each([
+    ["最後より後のページ", 9, 2],
+    ["負のページ", -1, 0],
+  ])("%s は、端のページに寄せる", (_, page, expected) => {
+    expect(pageRange(250, 100, page).page).toBe(expected);
   });
 
   it("行が無いときも、1 ページにする", () => {
-    expect(pageRange(0, 100, 0)).toEqual({ pages: 1, page: 0, start: 0, end: 0 });
+    expect(pageRange(0, 100, 0)).toStrictEqual({ pages: 1, page: 0, start: 0, end: 0 });
   });
 });
 
@@ -47,19 +50,24 @@ describe("tablePage", () => {
       totalRows: 3,
       truncated: false,
     };
-    const page = tablePage(result, 2, 1);
-    expect(page.columns).toEqual([
-      { key: "c0", name: "a" },
-      { key: "c1", name: "a" },
-    ]);
-    expect(page.rows).toEqual([
-      {
-        key: "r2",
-        cells: [
-          { key: "r2c0", text: "3" },
-          { key: "r2c1", text: "y" },
-        ],
-      },
-    ]);
+    expect(tablePage(result, 2, 1)).toStrictEqual({
+      pages: 2,
+      page: 1,
+      start: 2,
+      end: 3,
+      columns: [
+        { key: "c0", name: "a" },
+        { key: "c1", name: "a" },
+      ],
+      rows: [
+        {
+          key: "r2",
+          cells: [
+            { key: "r2c0", text: "3" },
+            { key: "r2c1", text: "y" },
+          ],
+        },
+      ],
+    });
   });
 });

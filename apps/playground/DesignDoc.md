@@ -522,6 +522,7 @@ type SqlResult = {
 
 - 複数の文を 1 回で渡したときは、`results` に、文ごとの結果が入る。SQL の画面は、最後の文の結果を表示する。
 - 1 つの文が失敗したときは、全部を取り消す。SQL の画面は、エラーと、全部を取り消したことを表示する。
+  - SQL の画面が、全部を取り消したことを表示するのは、`error` が `code`（SQLSTATE）を持つときだけである。`code` を持たない `error`（PGlite の読み込みの失敗、Web Worker の異常終了）では、取り消した文は無いので、メッセージだけを出す。
 - 1 つの結果が 100,000 行を超えるときは、`rows` に先頭の 100,000 行を入れ、`totalRows` に全体の行の数を、`truncated` に `true` を入れる。SQL の画面は、切ったことと、全体の行の数を表示する。
 - SQL の画面は、結果をページ送りで表示する。1 ページの行の数は、訪問者が 10、50、100、500 から選ぶ。デフォルトは 100 である。
 - 結果の列が `QUERY PLAN` の 1 つだけのときは、実行計画として表示する。1 行で JSON の値のときは、`FORMAT JSON` の出力として、ノードの木（`TreeView`）と、`Planning Time` と `Execution Time` を出す。それ以外は、行をつないだテキストで出す。
@@ -546,7 +547,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。
 - Web Worker で動かす実装は、`SqlDatabase` に加えて、読み込みの段階の store（`idle`、`loading`、`seeding`、`ready`、`failed`）と、読み込みを始める関数を持つ。Web Worker は、最初に読み込みを始める関数か `run` を呼んだときに作る。
-- PGlite を読み込めないときと、初期データの SQL が失敗したときは、`run` が `error` を持つ値を返し、Web Worker を捨てる。次の `run` で、Web Worker を作り直す。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗した: ` で始める。
+- PGlite を読み込めないときと、初期データの SQL が失敗したときは、`run` が `error` を持つ値を返し、Web Worker を捨てる。次の `run` で、Web Worker を作り直す。Web Worker を作れないときも、同じに扱う。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
 - Web Worker を捨てる処理は、`@fukuemon/sql-runtime` の中の 1 つの関数に置く。実行を止める手段を公開するときは、この関数を使う。
 
 ## Interface

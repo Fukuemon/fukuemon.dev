@@ -1,5 +1,7 @@
 import type { SqlResult } from "@fukuemon/sql-runtime";
 
+import { formatCell } from "./result";
+
 /** 実行計画の木の 1 つのノード。label に、ノードの種類、対象、見積もり、実測、バッファを 1 行で書く。 */
 type PlanNode = { id: string; label: string; children?: PlanNode[] };
 
@@ -73,10 +75,12 @@ function parseJson(value: unknown): JsonPlan | undefined {
   }
   const top = Array.isArray(parsed) ? parsed[0] : undefined;
   if (!isRecord(top) || !isRecord(top.Plan)) return undefined;
+  const planningMs = num(top["Planning Time"]);
+  const executionMs = num(top["Execution Time"]);
   return {
     root: toNode(top.Plan, "0"),
-    planningMs: num(top["Planning Time"]),
-    executionMs: num(top["Execution Time"]),
+    ...(planningMs !== undefined && { planningMs }),
+    ...(executionMs !== undefined && { executionMs }),
   };
 }
 
@@ -91,5 +95,5 @@ export function toPlanView(result: SqlResult): PlanView | undefined {
     const plan = parseJson(cells[0]);
     if (plan) return { kind: "json", plan };
   }
-  return { kind: "text", text: cells.map(String).join("\n") };
+  return { kind: "text", text: cells.map(formatCell).join("\n") };
 }

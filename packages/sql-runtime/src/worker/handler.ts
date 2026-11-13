@@ -31,8 +31,17 @@ export function createHandler(
     const pg = await database;
     const response: SqlResponse = pg
       ? await runSql(pg, message.sql)
-      : { error: { message: "DB を起動していない" }, ms: 0 };
-    post({ type: "response", id: message.id, response });
+      : { error: { message: "DB を起動していません" }, ms: 0 };
+    try {
+      post({ type: "response", id: message.id, response });
+    } catch (error) {
+      // 結果に複製できない値があると、postMessage が投げる。投げたままだと、メインスレッドの run が解決しない
+      post({
+        type: "response",
+        id: message.id,
+        response: { error: toSqlError(error), ms: response.ms },
+      });
+    }
   };
 }
 
@@ -52,7 +61,7 @@ async function boot(
     post({ type: "seeding" });
     const response = await runSql(pg, initialSql);
     if ("error" in response) {
-      const message = `初期データの SQL が失敗した: ${response.error.message}`;
+      const message = `初期データの SQL が失敗しました: ${response.error.message}`;
       post({ type: "init-failed", error: { ...response.error, message } });
       return undefined;
     }

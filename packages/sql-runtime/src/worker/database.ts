@@ -1,4 +1,11 @@
-import type { DatabaseStatus, SqlDatabase, SqlError, SqlResponse, Store } from "../index";
+import {
+  type DatabaseStatus,
+  type SqlDatabase,
+  type SqlError,
+  type SqlResponse,
+  type Store,
+  toSqlError,
+} from "../index";
 import type { FromWorker, ToWorker } from "./handler";
 
 /** PGlite の読み込みの段階。画面は、読み込みの進み具合をこの値で出す。 */
@@ -26,6 +33,8 @@ export type WorkerDatabaseOptions = {
   createWorker: () => WorkerLike;
   initialSql?: string;
 };
+
+const STOPPED = "DB の Web Worker が止まりました";
 
 type WritableStore<T> = Store<T> & { set: (value: T) => void };
 
@@ -70,13 +79,28 @@ export function createWorkerDatabase({
     pending.clear();
   };
 
+  const failLoading = (error: SqlError) => {
+    phase.set({ kind: "failed", error });
+    discard(error.message);
+  };
+
   const boot = (): Promise<SqlError | undefined> => {
     if (booted) return booted;
-    const created = createWorker();
-    worker = created;
     phase.set({ kind: "loading" });
+    let created: WorkerLike;
+    try {
+      created = createWorker();
+    } catch (error) {
+      const failed = toSqlError(error);
+      failLoading(failed);
+      return Promise.resolve(failed);
+    }
+    worker = created;
     booted = new Promise((resolve) => {
+      // 捨てた Web Worker から遅れて届いたイベントで、作り直した Web Worker を壊さない
+      const isCurrent = () => worker === created;
       created.addEventListener("message", (event) => {
+        if (!isCurrent()) return;
         const message = (event as MessageEvent<FromWorker>).data;
         if (message.type === "seeding") phase.set({ kind: "seeding" });
         if (message.type === "ready") {
@@ -85,9 +109,8 @@ export function createWorkerDatabase({
           resolve(undefined);
         }
         if (message.type === "init-failed") {
-          phase.set({ kind: "failed", error: message.error });
           resolve(message.error);
-          discard(message.error.message);
+          failLoading(message.error);
         }
         if (message.type === "response") {
           pending.get(message.id)?.(message.response);
@@ -95,10 +118,9 @@ export function createWorkerDatabase({
         }
       });
       created.addEventListener("error", (event) => {
+        if (!isCurrent()) return;
         const detail = (event as ErrorEvent).message;
-        const reason = detail
-          ? `DB の Web Worker が止まった: ${detail}`
-          : "DB の Web Worker が止まった";
+        const reason = detail ? `${STOPPED}: ${detail}` : STOPPED;
         status.set({ kind: "stopped", reason });
         phase.set({ kind: "idle" });
         resolve({ message: reason });
@@ -119,7 +141,7 @@ export function createWorkerDatabase({
       const error = await boot();
       if (error) return { error, ms: 0 };
       const current = worker;
-      if (!current) return { error: { message: "DB の Web Worker が止まった" }, ms: 0 };
+      if (!current) return { error: { message: STOPPED }, ms: 0 };
       const id = nextId++;
       return new Promise<SqlResponse>((resolve) => {
         pending.set(id, resolve);
