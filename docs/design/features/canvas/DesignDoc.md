@@ -115,10 +115,14 @@ flowchart TB
   - まだ IndexedDB に書いていない中身を、図を切り替える前と、ページを閉じるときに書く処理
   - 開いている図を消したときに、次に開く図を決める処理
   - 新しく作るものの名前の連番
-  - 開いているものの中身を読み込む Promise。開くものが変わるたびに、新しい Promise に替える
+  - 開いているものの中身を読み込む Promise。開くものが変わるたびに、新しい Promise に替える。最初の保存で `id` が付いたときは、替えない
+  - 読み込みの番号の Store。Promise を替えるたびに進める。スライドのエディタが、エディタのコンポーネントを作り直す `key` に使う
+  - 最後の書き込みの結果の Store。ツールのページと、名前を変えるコンポーネントの書き込みの結果を持つ
+- ツールのページは、まだ `documents/` に渡していない中身を返す関数を、`documents/` に登録できる。`documents/` は、図を切り替える前と、ページを閉じるときに、この関数を呼び、返った中身を先に書く。
 - ツールのページは、`figures/` の読み込みと、自分の元データを取り出す処理をつないだ関数を作り、URL から消すクエリのキー（`figure`）と一緒に、`documents/` のモジュールに引数で渡す。
   - 関数は、クエリに `figure` が無い、エラー、読めた（図の名前と中身）、の 3 つを返し分ける。
   - `documents/` は、最初にこの関数を呼び、`figure` が無いときだけ、`doc` を読む。
+  - この関数は、省略できる。スライドのエディタは、渡さない。
   - クエリのキーは、`figures/` が、`@fukuemon/figures` の値を、そのまま公開する。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
@@ -438,7 +442,7 @@ sequenceDiagram
 ### 動くチェック
 
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。
-  - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` である。
+  - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` である。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground` の中の、`src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、`documents/` と `figures/` の間の import を止める。

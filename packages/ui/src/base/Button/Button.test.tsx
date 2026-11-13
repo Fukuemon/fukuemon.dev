@@ -19,6 +19,20 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledTimes(3);
   });
 
+  it("キーボードでフォーカスすると、要素から 2 px 離して墨の 2 px の輪を出す", async () => {
+    render(<Primary />);
+    const button = screen.getByRole("button", { name: "保存" });
+    await userEvent.tab();
+    expect(button).toHaveFocus();
+    const style = getComputedStyle(button);
+    expect(style.outlineStyle).toBe("solid");
+    expect(style.outlineWidth).toBe("2px");
+    expect(style.outlineOffset).toBe("2px");
+    render(<span className="text-text" data-testid="text" />);
+    expect(style.outlineColor).toBe(getComputedStyle(screen.getByTestId("text")).color);
+    expect(style.boxShadow).toBe("none");
+  });
+
   it("無効のときは aria-disabled を付け、フォーカスを受けるが onClick を呼ばない", async () => {
     const onClick = fn();
     render(<PrimaryDisabled onClick={onClick} />);

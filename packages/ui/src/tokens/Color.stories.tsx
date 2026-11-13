@@ -19,7 +19,7 @@ const GROUPS: { title: string; tokens: string[] }[] = [
       "current-page",
     ],
   },
-  { title: "フォーカス", tokens: ["focus-outline", "focus-halo"] },
+  { title: "フォーカス", tokens: ["focus"] },
   {
     title: "状態",
     tokens: [

@@ -32,7 +32,7 @@ export function PreviewFrame({
       state={state ?? { kind: "ready" }}
       title={title}
       toolbar={
-        <div className="flex items-end gap-2 border-b border-border p-2">
+        <div className="flex items-center gap-2 border-b border-border p-2">
           <div className="min-w-0 flex-1">
             <TextField isLabelHidden label="プレビューの URL" readOnly value={url} />
           </div>
