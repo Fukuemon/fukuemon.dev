@@ -244,9 +244,9 @@
   }
 }
 
-/* brush-hover の線を、aria-current="page" の要素では錆の色で常に出し、ページを開いたときに左から 1 回引く。サイトのヘッダーのナビが使う */
+/* brush-hover の線を、aria-current が page か true の要素では錆の色で常に出し、ページを開いたときに左から 1 回引く。サイトのヘッダーのナビが、今いるページとその下のページで使う */
 @utility brush-current {
-  &[aria-current="page"]::after {
+  &:is([aria-current="page"], [aria-current="true"])::after {
     background: var(--fd-color-current-page);
     clip-path: inset(0);
     animation: var(--animate-stroke);

@@ -4,9 +4,13 @@ export const SITE_NAV = [
 ] as const;
 
 /**
- * パスが、ヘッダーのナビのどの項目の配下かを返す。項目の `href` か、その下のパスなら、その `href` を返す。
- * どの項目の配下でもないパス（トップ、シリーズ、404）では `undefined` を返す。
+ * ヘッダーのリンクに付ける `aria-current` の値を返す。
+ * パスがリンクの `href` そのものなら `"page"`、その下のページ（記事の一覧の下の記事など）なら `"true"`、どちらでもなければ `undefined` を返す。
+ * トップ（`/`）は全てのパスの上にあるが、下のページでは `"true"` にしない。ロゴがトップを指すだけで、セクションではないためである。
  */
-export function currentNavHref(pathname: string): string | undefined {
-  return SITE_NAV.find(({ href }) => pathname === href || pathname.startsWith(`${href}/`))?.href;
+export function ariaCurrent(pathname: string, href: string): "page" | "true" | undefined {
+  const path = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
+  if (path === href) return "page";
+  if (href !== "/" && path.startsWith(`${href}/`)) return "true";
+  return undefined;
 }

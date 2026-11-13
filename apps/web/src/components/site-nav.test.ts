@@ -1,21 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { currentNavHref } from "./site-nav";
+import { ariaCurrent } from "./site-nav";
 
-describe("currentNavHref", () => {
+describe("ariaCurrent", () => {
   it.each([
-    ["/articles", "/articles"],
-    ["/articles/", "/articles"],
-    ["/articles/oauth/pkce", "/articles"],
-    ["/playground", "/playground"],
-    ["/playground/", "/playground"],
-  ])("%s は %s の項目に属する", (pathname, href) => {
-    expect(currentNavHref(pathname)).toBe(href);
+    ["/articles", "/articles", "page"],
+    ["/articles/", "/articles", "page"],
+    ["/articles/oauth/pkce", "/articles", "true"],
+    ["/playground", "/playground", "page"],
+    ["/", "/", "page"],
+  ])("%s で %s のリンクは %s", (pathname, href, expected) => {
+    expect(ariaCurrent(pathname, href)).toBe(expected);
   });
 
-  it.each(["/", "/404", "/series/oauth", "/articlesx", "/ink/"])(
-    "%s はどの項目にも属さない",
-    (pathname) => {
-      expect(currentNavHref(pathname)).toBeUndefined();
-    },
-  );
+  it.each([
+    ["/", "/articles"],
+    ["/series/oauth", "/articles"],
+    ["/articlesx", "/articles"],
+    ["/articles", "/"],
+    ["/404", "/"],
+  ])("%s で %s のリンクには付けない", (pathname, href) => {
+    expect(ariaCurrent(pathname, href)).toBeUndefined();
+  });
 });
