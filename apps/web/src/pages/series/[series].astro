@@ -21,7 +21,7 @@ const { href, title, description, articles } = Astro.props;
         ]}
       />
       <h1 class="font-heading text-heading-lg font-semibold">{title}</h1>
-      <p class="max-w-(--container-prose) text-body">{description}</p>
+      <p class="max-w-prose text-body">{description}</p>
       <ol class="flex flex-col">
         {articles.map((article, i) => <ArticleRow article={article} position={i + 1} />)}
       </ol>
