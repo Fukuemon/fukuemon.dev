@@ -34,6 +34,7 @@ export const MAX_ROWS = 100_000;
  * PGlite で SQL を実行し、文ごとの結果を返す。
  * 複数の文は 1 回の simple query で送るので、Postgres が 1 つの暗黙のトランザクションとして扱い、1 つが失敗すると全部を取り消す。
  * 1 つの結果が MAX_ROWS 行を超えるときは、先頭の MAX_ROWS 行だけを返す。
+ * 失敗したときは ROLLBACK を流す。SQL の中の BEGIN で始めたトランザクションが失敗したまま残ると、次の SQL が全て失敗するためである。
  */
 export async function runSql(
   pg: Pick<PGliteInterface, "exec">,
@@ -57,8 +58,23 @@ export async function runSql(
       ms: now() - started,
     };
   } catch (error) {
-    return { error: toSqlError(error), ms: now() - started };
+    const response = { error: toSqlError(error), ms: now() - started };
+    // トランザクションの外では、ROLLBACK は警告だけを出して何もしない
+    await pg.exec("rollback").catch(() => undefined);
+    return response;
   }
+}
+
+/** 最後の文のほかの結果から、行を除く。画面は最後の文の結果だけを出すので、Web Worker から送る量を減らす。 */
+export function keepLastRows(response: SqlResponse): SqlResponse {
+  if ("error" in response) return response;
+  const last = response.results.length - 1;
+  return {
+    ...response,
+    results: response.results.map((result, index) =>
+      index === last ? result : { ...result, rows: [], truncated: result.totalRows > 0 },
+    ),
+  };
 }
 
 export function toSqlError(error: unknown): SqlError {

@@ -1,7 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { MAX_ROWS, type SqlResponse, runSql, toSqlError } from "./index";
+import { MAX_ROWS, type SqlResponse, keepLastRows, runSql, toSqlError } from "./index";
 
 let pg: PGlite;
 
@@ -63,6 +63,11 @@ describe("runSql", () => {
     expect(lastRows(await runSql(pg, "select 2"))).toStrictEqual([[2]]);
   });
 
+  it("BEGIN の後の文が失敗しても、次の SQL を実行できる", async () => {
+    await runSql(pg, "begin; select * from missing;");
+    expect(lastRows(await runSql(pg, "select 3"))).toStrictEqual([[3]]);
+  });
+
   it("VACUUM ANALYZE を 1 つの文で実行できる", async () => {
     await runSql(pg, "create table vac (id int); insert into vac select generate_series(1, 10);");
     expect(lastRows(await runSql(pg, "vacuum analyze vac"))).toStrictEqual([]);
@@ -109,6 +114,29 @@ describe("runSql", () => {
     let tick = 0;
     const response = await runSql(pg, "select 1", () => (tick += 5));
     expect(response.ms).toBe(5);
+  });
+});
+
+describe("keepLastRows", () => {
+  const result = (rows: unknown[][]) => ({
+    fields: ["a"],
+    rows,
+    affectedRows: rows.length,
+    totalRows: rows.length,
+    truncated: false,
+  });
+
+  it("最後の文のほかの結果から、行を除く", () => {
+    const response = { results: [result([[1], [2]]), result([[3]])], ms: 1 };
+    expect(keepLastRows(response)).toStrictEqual({
+      results: [{ ...result([[1], [2]]), rows: [], truncated: true }, result([[3]])],
+      ms: 1,
+    });
+  });
+
+  it("エラーは、そのまま返す", () => {
+    const response = { error: { message: "x" }, ms: 0 };
+    expect(keepLastRows(response)).toBe(response);
   });
 });
 

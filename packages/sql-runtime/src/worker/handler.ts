@@ -1,6 +1,6 @@
 import type { PGliteInterface } from "@electric-sql/pglite";
 
-import { type SqlError, type SqlResponse, runSql, toSqlError } from "../index";
+import { type SqlError, type SqlResponse, keepLastRows, runSql, toSqlError } from "../index";
 
 export type ToWorker =
   | { type: "init"; initialSql?: string }
@@ -30,7 +30,7 @@ export function createHandler(
     }
     const pg = await database;
     const response: SqlResponse = pg
-      ? await runSql(pg, message.sql)
+      ? keepLastRows(await runSql(pg, message.sql))
       : { error: { message: "DB を起動していません" }, ms: 0 };
     try {
       post({ type: "response", id: message.id, response });
