@@ -22,6 +22,6 @@ export const processLabel = (info: ProcessInfo) =>
 
 /** 新しいシェルの名前。2 つ目からは番号を付け、端末のタブを見分けられるようにする。 */
 export function shellName(processes: readonly ProcessInfo[]): string {
-  const shells = processes.filter((info) => /^シェル( \d+)?$/.test(info.name)).length;
+  const shells = processes.filter((info) => info.kind === "shell").length;
   return shells === 0 ? "シェル" : `シェル ${shells + 1}`;
 }

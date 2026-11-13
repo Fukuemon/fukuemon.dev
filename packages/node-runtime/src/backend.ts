@@ -1,5 +1,7 @@
 import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
+type BackendBootOptions = Pick<BootOptions, "files">;
+
 export type DirectoryItem = { name: string; kind: "file" | "directory" };
 
 /** 作業ディレクトリのファイルの操作。パスは作業ディレクトリからの相対パスで、`""` は作業ディレクトリそのものである。 */
@@ -38,5 +40,5 @@ export type BackendInstance = {
 /** Node の実行環境の実装。node-runtime の直下は、この型だけを通して実装を使う。 */
 export type RuntimeBackend = {
   isSupported: () => boolean;
-  boot: (options: BootOptions) => Promise<BackendInstance>;
+  boot: (options: BackendBootOptions) => Promise<BackendInstance>;
 };

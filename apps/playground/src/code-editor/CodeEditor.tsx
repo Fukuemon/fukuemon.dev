@@ -1,5 +1,5 @@
 import { Compartment, EditorState, type Extension, Transaction } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
 import { useEffect, useRef } from "react";
 
 import { codeEditorExtensions } from "./extensions";
@@ -23,7 +23,8 @@ type CodeEditorProps = {
   /** 入力欄の読み上げる名前。 */
   label: string;
   initialText: string;
-  language?: Extension[];
+  /** codeEditorExtensions に足す拡張。言語の拡張と、ページに固有の keymap を渡す。 */
+  extensions?: Extension[];
   /**
    * 作ったときに 1 度だけ呼ぶ。渡すと、エディタは読み取り専用で始まり、setEditable で入力を受け付ける。
    * 渡さないときは、initialText を読み取り専用で出す。
@@ -32,15 +33,15 @@ type CodeEditorProps = {
 };
 
 /**
- * EditorFrame の中に置く、CodeMirror 6 のエディタ。拡張は codeEditorExtensions に、言語の拡張を足す。
+ * EditorFrame の中に置く、CodeMirror 6 のエディタ。拡張は codeEditorExtensions に、extensions を足す。
  * エディタは 1 度だけ作る。開くファイルを替えるときは、呼ぶ側が key を替えて作り直す。
  */
-export function CodeEditor({ label, initialText, language, connect }: CodeEditorProps) {
+export function CodeEditor({ label, initialText, extensions, connect }: CodeEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const initial = useRef({ label, initialText, language, connect });
+  const initial = useRef({ label, initialText, extensions, connect });
 
   useEffect(() => {
-    const { label, initialText, language = [], connect } = initial.current;
+    const { label, initialText, extensions = [], connect } = initial.current;
     const editable = new Compartment();
     let connection: EditorConnection | undefined;
     const view = new EditorView({
@@ -48,9 +49,7 @@ export function CodeEditor({ label, initialText, language, connect }: CodeEditor
       doc: initialText,
       extensions: [
         ...codeEditorExtensions({ label }),
-        ...language,
-        // 入力のたびに書き込むので、Ctrl か ⌘ と S のキーは何もしない。ブラウザがページを保存するのを止める
-        keymap.of([{ key: "Mod-s", run: () => true, preventDefault: true }]),
+        ...extensions,
         editable.of(EditorState.readOnly.of(true)),
         EditorView.updateListener.of((update) => {
           // 外から読んだ中身で置き換えたときは、input を呼ばない

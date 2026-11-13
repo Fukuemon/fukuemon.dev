@@ -3,8 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import { SUPPORTED_BROWSERS, bootFailureMessage, processLabel, shellName } from "./messages";
 
-const info = (name: string, status: ProcessInfo["status"] = { kind: "running" }): ProcessInfo => ({
+const info = (
+  name: string,
+  status: ProcessInfo["status"] = { kind: "running" },
+  kind: ProcessInfo["kind"] = "command",
+): ProcessInfo => ({
   id: name,
+  kind,
   name,
   status,
 });
@@ -31,11 +36,14 @@ describe("processLabel", () => {
   });
 });
 
+const shell = (name: string) => info(name, { kind: "running" }, "shell");
+
 describe("shellName", () => {
   it.each([
     ["シェルが無いときは、番号を付けない", [info("npm install")], "シェル"],
-    ["2 つ目のシェルは、2 を付ける", [info("シェル"), info("サーバー")], "シェル 2"],
-    ["3 つ目のシェルは、3 を付ける", [info("シェル"), info("シェル 2")], "シェル 3"],
+    ["2 つ目のシェルは、2 を付ける", [shell("シェル"), info("サーバー")], "シェル 2"],
+    ["名前で見分けず、シェルとして起動したプロセスを数える", [info("シェル")], "シェル"],
+    ["3 つ目のシェルは、3 を付ける", [shell("シェル"), shell("シェル 2")], "シェル 3"],
   ])("%s", (_, processes, expected) => {
     expect(shellName(processes)).toBe(expected);
   });

@@ -8,6 +8,9 @@ import { PREVIEW_TIMEOUT_MESSAGE, PREVIEW_TIMEOUT_MS, bootFailureMessage } from 
 const NO_PORTS: readonly OpenPort[] = [];
 const noPorts = { subscribe: () => () => undefined, getSnapshot: () => NO_PORTS };
 
+// 実装は、ポートが開くたびに一覧のオブジェクトを作り直すので、読み込まれなかった印はポートと URL の組で持つ
+const portKey = (port: OpenPort) => `${port.port} ${port.url}`;
+
 type PortFrameProps = {
   port: OpenPort;
   /** 再読み込みのたびに増やす。iframe を作り直す。 */
@@ -44,7 +47,7 @@ function PortFrame({ port, generation, onTimeout }: PortFrameProps) {
  * プレビューのペイン。待ち受けたポートをタブで並べ、選んだポートのページを iframe で出す。
  * 選んでいないポートの iframe も、Activity で隠して残す。タブを切り替えても、ページの状態が消えないためである。
  * 読み込まれないポートは、そのポートのパネルにだけ理由を出し、ほかのポートのタブと iframe は残す。
- * 読み込まれなかった印は、ポートの一覧が変わると消える。サーバーを起動し直したときに、印が残らないためである。
+ * 読み込まれなかった印は、そのポートが一覧から消えると消える。サーバーを起動し直したときに、印が残らないためである。
  */
 export function PreviewPane() {
   const { runtime, reason } = useRuntime();
@@ -52,15 +55,22 @@ export function PreviewPane() {
   const store = runtime?.ports ?? noPorts;
   const ports = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const [generations, setGenerations] = useState<ReadonlyMap<number, number>>(new Map());
-  const [timedOut, setTimedOut] = useState<ReadonlySet<OpenPort>>(new Set());
+  const [timedOut, setTimedOut] = useState<ReadonlySet<string>>(new Set());
+  const [shownPorts, setShownPorts] = useState(ports);
+  if (shownPorts !== ports) {
+    setShownPorts(ports);
+    const open = new Set(ports.map(portKey));
+    setTimedOut((current) => new Set([...current].filter((key) => open.has(key))));
+  }
   const active = ports.find((port) => port.port === selection.preview) ?? ports[0];
-  const activeTimedOut = active !== undefined && timedOut.has(active);
+  const activeTimedOut = active !== undefined && timedOut.has(portKey(active));
 
-  const onTimeout = (port: OpenPort) => setTimedOut((current) => new Set(current).add(port));
+  const onTimeout = (port: OpenPort) =>
+    setTimedOut((current) => new Set(current).add(portKey(port)));
   const reload = (port: OpenPort) => {
     setTimedOut((current) => {
       const next = new Set(current);
-      next.delete(port);
+      next.delete(portKey(port));
       return next;
     });
     setGenerations((current) => new Map(current).set(port.port, (current.get(port.port) ?? 0) + 1));

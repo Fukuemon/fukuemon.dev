@@ -15,6 +15,8 @@ export type ProcessStatus = { kind: "running" } | { kind: "exited"; code: number
 
 export type ProcessInfo = {
   id: string;
+  /** startShell で起動したプロセスは shell、start で起動したプロセスは command である。 */
+  kind: "shell" | "command";
   name: string;
   status: ProcessStatus;
 };

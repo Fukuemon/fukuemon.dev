@@ -9,7 +9,7 @@ describe("processes", () => {
     const { runtime } = await bootFake();
     const handle = await runtime.processes.start("node", ["index.js"], { name: "server" });
     expect(runtime.processes.list.getSnapshot()).toStrictEqual([
-      { id: handle.id, name: "server", status: { kind: "running" } },
+      { id: handle.id, kind: "command", name: "server", status: { kind: "running" } },
     ]);
   });
 
@@ -19,7 +19,7 @@ describe("processes", () => {
     created.processes[0]?.finish(0);
     await handle.exit;
     expect(runtime.processes.list.getSnapshot()).toStrictEqual([
-      { id: handle.id, name: "server", status: { kind: "exited", code: 0 } },
+      { id: handle.id, kind: "command", name: "server", status: { kind: "exited", code: 0 } },
     ]);
   });
 
@@ -27,6 +27,12 @@ describe("processes", () => {
     const { runtime } = await bootFake();
     await runtime.processes.start("npm", ["install"]);
     expect(runtime.processes.list.getSnapshot()[0]?.name).toBe("npm install");
+  });
+
+  it("startShell は、シェルとして一覧に入れる", async () => {
+    const { runtime } = await bootFake();
+    await runtime.processes.startShell({ name: "シェル" });
+    expect(runtime.processes.list.getSnapshot()[0]?.kind).toBe("shell");
   });
 
   it("startShell は、端末の大きさを渡して、シェルを起動する", async () => {

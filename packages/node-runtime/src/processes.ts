@@ -36,17 +36,20 @@ export function createProcesses(instance: BackendInstance): {
   const list = createStore<readonly ProcessInfo[]>([]);
   const tracked = new Map<string, ReturnType<typeof toHandle>>();
 
-  const track = (process: BackendProcess, name: string): ProcessHandle => {
+  const track = (
+    process: BackendProcess,
+    info: Pick<ProcessInfo, "kind" | "name">,
+  ): ProcessHandle => {
     const id = String(tracked.size + 1);
     const entry = toHandle(id, process, (code) =>
       list.set(
         list
           .getSnapshot()
-          .map((info) => (info.id === id ? { ...info, status: { kind: "exited", code } } : info)),
+          .map((item) => (item.id === id ? { ...item, status: { kind: "exited", code } } : item)),
       ),
     );
     tracked.set(id, entry);
-    list.set([...list.getSnapshot(), { id, name, status: { kind: "running" } }]);
+    list.set([...list.getSnapshot(), { id, ...info, status: { kind: "running" } }]);
     return entry.handle;
   };
 
@@ -55,15 +58,15 @@ export function createProcesses(instance: BackendInstance): {
       list,
       get: (id) => tracked.get(id)?.handle,
       start: async (command, args, options = {}) =>
-        track(
-          await instance.spawn(command, args, { terminal: options.terminal }),
-          options.name ?? [command, ...args].join(" "),
-        ),
+        track(await instance.spawn(command, args, { terminal: options.terminal }), {
+          kind: "command",
+          name: options.name ?? [command, ...args].join(" "),
+        }),
       startShell: async (options = {}) =>
-        track(
-          await instance.spawnShell({ terminal: options.terminal }),
-          options.name ?? SHELL_NAME,
-        ),
+        track(await instance.spawnShell({ terminal: options.terminal }), {
+          kind: "shell",
+          name: options.name ?? SHELL_NAME,
+        }),
     },
     dispose: () => {
       for (const { stop } of tracked.values()) stop();

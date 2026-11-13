@@ -1,11 +1,15 @@
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import type { Extension } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
 import type { NodeRuntime } from "@fukuemon/node-runtime";
 
 import { CodeEditor } from "../code-editor/CodeEditor";
 import { syncFile } from "./file-sync";
 import { languageOf } from "./language";
+
+// 入力のたびに書き込むので、Ctrl か ⌘ と S のキーは何もしない。ブラウザがページを保存するのを止める
+const noSave = keymap.of([{ key: "Mod-s", run: () => true, preventDefault: true }]);
 
 function languageExtension(path: string): Extension[] {
   const language = languageOf(path);
@@ -28,7 +32,7 @@ export function FileEditor({ path, files, initialText }: FileEditorProps) {
       connect={files && ((document) => syncFile(files, path, document))}
       initialText={files ? "" : initialText}
       label={path}
-      language={languageExtension(path)}
+      extensions={[...languageExtension(path), noSave]}
     />
   );
 }
