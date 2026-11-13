@@ -1,4 +1,4 @@
-# ADR-0048: Node の実行環境のモジュールを `apps/playground` の中に置き、記録を store で、操作を関数で公開する
+# ADR-0048: Node の実行環境のモジュールを `apps/playground` の中に置き、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する
 
 ## Status
 
@@ -31,12 +31,12 @@ Node の実行環境だけが、5 つの操作のインターフェース（`Nod
 SQL だけを動かすツールと、Go を動かすツールは、それぞれの小さいインターフェース（`SqlDatabase`、`GoRunner`）を持つ。
 
 - SQL と Go に、使わない操作（プロセス、ポート）を実装させないためである。
-- インターフェースの型は、シリアライズできる素の値だけを使う。`@webcontainer/api` の型を含めない。
+- store と関数が渡すデータは、シリアライズできる素の値だけにする。インターフェースの型に、`@webcontainer/api` の型を含めない。
 
 ### 2. 記録と操作の公開の形
 
 - 記録（ファイルのツリー、プロセスの一覧、ポート、HTTP の記録、コンソールの記録）は、種類ごとに、`subscribe` と `getSnapshot` を持つ store で公開する。画面は、`useSyncExternalStore` で読む。
-- プロセスの出力は、store にしない。今までの出力を返す `read` と、追加の出力を受ける `subscribe` で公開する。記録の行を除いた出力である。端末のエンジンは、`write` を呼んで出力を追加する、React の外のシステムのためである。
+- プロセスの出力は、store にしない。今までの出力を返す `read` と、追加の出力を受ける `subscribe` で公開する。`read` と `subscribe` が返すのは、記録の行を除いた出力である。端末のエンジンは、`write` を呼んで出力を追加する、React の外のシステムのためである。
 - ファイルの書き込みと、プロセスの起動は、関数で公開する。画面は、イベントハンドラから呼ぶ。
 - 起動は、関数が返す Promise で待つ。画面は、`Suspense` と `use` で待つ。Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つだけ作って持つ。
 - 実行環境を起動し直すときは、インスタンスを破棄し、新しいインスタンスを作る。
@@ -48,6 +48,11 @@ SQL だけを動かすツールと、Go を動かすツールは、それぞれ�
 実行環境のモジュールは、package にせず、`apps/playground/src/node-runtime/` に置く。
 
 - `@webcontainer/api` を import できるのは、`src/node-runtime/webcontainer/` だけにする。Oxlint の `no-restricted-imports` で止める。
+- `node-runtime/` の直下と、`webcontainer/` の間も、型で分ける。WebContainers に依る処理は、`webcontainer/` に置く。
+  - 動かせるかの判定、環境変数の組み立て、プレビューの iframe の属性
+  - プレビューからのメッセージの origin の確認、実行環境の中の Node が動かすファイルを置く処理
+  - 型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#webcontainer-が実装する型) にある。
+- `node-runtime/` が公開する起動の関数は 1 つにする。起動の Promise を埋め込みの ID ごとに持つ処理は、ツールのページのディレクトリ（`src/node/`）に置く。
 - `apps/playground/src/` は、関心ごとのディレクトリで分ける。実装の種類のディレクトリ（`components/`、`hooks/`、`utils/`）を作らない。
 - ツールのページのディレクトリ（`src/node/`、`src/sql/`、`src/go/`）は、互いに import しない。Oxlint の `no-restricted-imports` で止める。
 - そのほかのディレクトリの間の import の向きは、Design Doc に書き、lint では止めない。
@@ -113,5 +118,6 @@ Context の分け方の選択肢は次のとおり。
 ### Negative
 
 - `webcontainer/` の中は、WebContainers のバージョンという、画面と別の理由で変わる。この部分だけを見ると、package にする条件に当たる。境界は、lint で守る。
+- 実行環境の中の Node が動かすファイルと、標準入出力で SQL を送る処理は、実行環境が Node のプロセスを動かすことを前提にしている。Node のプロセスを持たない実行環境に差し替えるときは、`webcontainer/` に加えて、この 2 つも直す。
 - 記録の読み方が、store と、プロセスの出力の 2 つになる。
 - 上限を超えた古い記録は、消える。

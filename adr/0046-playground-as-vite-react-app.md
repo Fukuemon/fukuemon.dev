@@ -55,7 +55,7 @@ Astro のページに island を置く形にしない。
 
 ## Verification
 
-使い捨てのアプリを、workspace の中に作ってビルドした。ビルドは、Vite+ の `vp build` で流した。`vite build` では、流していない。  
+使い捨てのアプリを、workspace の中に作ってビルドした。ビルドは、Vite+ の `vp build` で実行した。`vite build` では、実行していない。  
 Vite+ 1.4.0、`@vitejs/plugin-react` 6.3.0、`@tailwindcss/vite` 4.3.3、React 19.2.8 である。
 
 - `build.rollupOptions.input` に、`node/index.html`、`sql/index.html`、`go/index.html` を渡した。ビルドは、`dist/node/index.html`、`dist/sql/index.html`、`dist/go/index.html` を出力した。

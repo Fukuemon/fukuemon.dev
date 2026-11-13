@@ -20,6 +20,8 @@
   - ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける](0046-playground-as-vite-react-app.md)
 - `fukuemon.dev` は、キャンバスの図のパスに、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
   - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](0040-canvas-figures-in-articles.md)
+- package を切り出すのは、2 つ以上の消費者が実在するか、消費する側と別の理由で変わるときである。`apps/playground` は、`apps/web` と `@fukuemon/content-model` に依存しない。
+  - [context/codebase.md](../context/codebase.md#packages)
 
 ## Decision
 
@@ -48,6 +50,7 @@ apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/
 | `database`   | `true` のときに、実行環境が DB のプロセスを起動する                  | `node`        |
 | `initialSql` | 初期データの SQL のファイルのパス。JSON には、ファイルの中身を入れる | `node`、`sql` |
 
+- `start` は、コマンド、引数の一覧、プロセスの名前を持つ値の配列で書く。ツールのページが、コマンドの文字列を引数に分ける処理を持たないためである。
 - 設定のファイルは、訪問者のファイルのツリーに出さない。
 - `playground/` のディレクトリは、シリーズとして扱わず、ディレクトリの入れ子の数に数えない。
 - `<記事>` のディレクトリを、記事の Markdown とどう対応させるかは、記事の形式の設計で決める。
@@ -57,12 +60,22 @@ apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/
 - `apps/web` のビルドが、プロジェクトごとに、初期ファイルと設定を 1 つの JSON にして出力する。
 - `fukuemon.dev` は、JSON のパスに、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
 - 記事の iframe の URL には、埋め込みの ID だけを書く（`https://play.fukuemon.dev/node/?project=<埋め込みの ID>`）。
-- ツールのページが、埋め込みの ID から JSON の URL を組み立てて、`fetch` する。URL に、JSON の URL を書かせない。
+- ツールのページが、埋め込みの ID から JSON の URL を組み立てて、`fetch` する。iframe の URL のクエリには、JSON の URL を書けない。
 - `project` のパラメータが無いときは、ツールのページが、運営者が用意したデフォルトのプロジェクトを開く。
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - `apps/web` のビルドは、設定の `tool` が `node` のプロジェクトを埋め込む記事の URL を集め、`_headers` に書く。
 
 URL に書けるのを埋め込みの ID だけにする理由は、他人が、自分の用意したファイルを読み込ませる URL を作れないようにするためである。
+
+### 4. JSON の形の置き場
+
+JSON と、設定のファイルの型と schema は、新しい package（`packages/playground-project`、`@fukuemon/playground-project`）に置く。
+
+- package は、型と schema だけを持つ。JSON を出力する処理と、読み込む処理は持たない。
+- `apps/web` のビルドは、この schema で、設定のファイルを検証する。`apps/playground` は、読んだ JSON を、同じ型で扱う。
+- package は、workspace のほかの package に依存しない。
+
+package にする理由は、JSON を書く側（`apps/web`）と、読む側（`apps/playground`）の 2 つが、同じ形を使うためである。
 
 ## 承認の条件
 
@@ -88,6 +101,14 @@ URL に書けるのを埋め込みの ID だけにする理由は、他人が、
 | 記事の frontmatter に書く                                    | 記事の設定が、1 か所にまとまる                                                 | 複数の埋め込みを置くときに、埋め込みごとに設定を分ける書き方を決めることになる |
 | 記事の本文で、埋め込みのコンポーネントに渡す属性に書く       | 埋め込む場所で、設定が読める                                                   | 起動のコマンドのような長い値を、属性に書く                                     |
 
+JSON の形の置き場の選択肢は次のとおり。
+
+| 選択肢                                                          | 強み                                                               | 弱み                                                       |
+| --------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------- |
+| **採用:** 型と schema だけを持つ package を作る                 | 書く側と読む側が、同じ形を使う。形を変えると、typecheck が失敗する | package が 1 つ増える                                      |
+| `apps/playground` が、`@fukuemon/content-model` に依存する      | package が増えない                                                 | `apps/playground` が、記事とシリーズの schema にも依存する |
+| 2 つのアプリが、形を別々に持ち、ビルドのときに 2 つの形を比べる | package の依存が増えない                                           | 同じ形を 2 か所に書く。比べる処理を作る                    |
+
 ## Consequences
 
 ### Positive
@@ -101,3 +122,4 @@ URL に書けるのを埋め込みの ID だけにする理由は、他人が、
 - `fukuemon.dev` が、プロジェクトの JSON のパスに、CORS のヘッダを返す。
 - ツールのページが、`fukuemon.dev` の JSON のパスの形を知っている。パスを変えるときは、2 つのアプリを直す。
 - 設定のファイルの schema と、ビルドのときの検証を作る。
+- package が 1 つ増える。

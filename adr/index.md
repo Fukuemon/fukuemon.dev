@@ -79,7 +79,7 @@ ADR-0025（[挿絵を、トークンの色で描く版画風の図柄に作り�
 | [ADR-0045](0045-ai-operations-permission-and-confirmation.md)   | AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す |
 | [ADR-0046](0046-playground-as-vite-react-app.md)                | プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける                                  |
 | [ADR-0047](0047-react-compiler-in-playground.md)                | React Compiler を、`apps/playground` にだけ入れる                                                                                    |
-| [ADR-0048](0048-node-runtime-interface-and-stores.md)           | Node の実行環境のモジュールを `apps/playground` の中に置き、記録を store で、操作を関数で公開する                                    |
+| [ADR-0048](0048-node-runtime-interface-and-stores.md)           | Node の実行環境のモジュールを `apps/playground` の中に置き、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する      |
 | [ADR-0049](0049-playground-projects-from-articles.md)           | 記事の埋め込みの初期ファイルと設定を、`apps/web` のビルドが JSON にし、ツールのページが埋め込みの ID で読む                          |
 | [ADR-0050](0050-save-visitor-files-in-indexeddb.md)             | 訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する                                                                       |
 | [ADR-0051](0051-node-runtime-boot-and-commands.md)              | Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす                      |

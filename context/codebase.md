@@ -107,9 +107,10 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/design-system` は、どこにも依存しない。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
-- `apps/web` は、`@fukuemon/content-model` と `@fukuemon/design-system` に依存する。`@fukuemon/ui` には、まだ依存しない。
+- `@fukuemon/playground-project` は、workspace のどの package にも依存しない。
+- `apps/web` は、`@fukuemon/content-model`、`@fukuemon/design-system`、`@fukuemon/playground-project` に依存する。`@fukuemon/ui` には、まだ依存しない。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
-- `apps/playground` は、`@fukuemon/ui` に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。
+- `apps/playground` は、`@fukuemon/ui` と `@fukuemon/playground-project` に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。
   - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
