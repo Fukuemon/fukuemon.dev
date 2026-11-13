@@ -88,12 +88,12 @@ export function createSessionOpener(
   const opened = new WeakMap<Promise<ProjectLoad<"sql">>, Promise<SqlSessionLoad>>();
   return (search: string): Promise<SqlSessionLoad> => {
     const load = loadProject(search);
-    const cached = opened.get(load);
-    if (cached) return cached;
-    const session = load.then(
-      (result): SqlSessionLoad =>
-        result.kind === "failed" ? result : { kind: "opened", session: create(result.project) },
-    );
+    const session =
+      opened.get(load) ??
+      load.then(
+        (result): SqlSessionLoad =>
+          result.kind === "failed" ? result : { kind: "opened", session: create(result.project) },
+      );
     opened.set(load, session);
     return session;
   };

@@ -62,9 +62,7 @@ export function createProjectLoader<T extends PlaygroundTool>(
   return (search: string): Promise<ProjectLoad<T>> => {
     const embedId = new URLSearchParams(search).get("project");
     if (embedId === null) return opened;
-    const cached = loads.get(embedId);
-    if (cached) return cached;
-    const load = fetchProject(embedId, tool, fetchJson);
+    const load = loads.get(embedId) ?? fetchProject(embedId, tool, fetchJson);
     loads.set(embedId, load);
     return load;
   };
