@@ -1,6 +1,6 @@
 import type { OpenPort } from "@fukuemon/node-runtime";
-import { PreviewFrame, Tabs } from "@fukuemon/ui";
-import { Activity, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Notice, PreviewFrame, Tabs } from "@fukuemon/ui";
+import { Activity, useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 
 import { useRuntime, useSelection } from "./context";
 import { PREVIEW_TIMEOUT_MESSAGE, PREVIEW_TIMEOUT_MS, bootFailureMessage } from "./messages";
@@ -13,20 +13,17 @@ type PortFrameProps = {
   /** 再読み込みのたびに増やす。iframe を作り直す。 */
   generation: number;
   /** iframe が PREVIEW_TIMEOUT_MS までに読み込まれないときに呼ぶ。 */
-  onTimeout: (port: number) => void;
+  onTimeout: (port: OpenPort) => void;
 };
 
 function PortFrame({ port, generation, onTimeout }: PortFrameProps) {
   // Activity で隠すと Effect が止まり、見せると動き直す。読み込んだ世代を持ち、見せ直したときに上限を数え直さない
   const loaded = useRef<number>(undefined);
-  const handlers = useRef({ onTimeout });
-  useEffect(() => {
-    handlers.current = { onTimeout };
+  const timeout = useEffectEvent(() => {
+    if (loaded.current !== generation) onTimeout(port);
   });
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loaded.current !== generation) handlers.current.onTimeout(port.port);
-    }, PREVIEW_TIMEOUT_MS);
+    const timer = setTimeout(timeout, PREVIEW_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [port.port, generation]);
   return (
@@ -46,6 +43,8 @@ function PortFrame({ port, generation, onTimeout }: PortFrameProps) {
 /**
  * プレビューのペイン。待ち受けたポートをタブで並べ、選んだポートのページを iframe で出す。
  * 選んでいないポートの iframe も、Activity で隠して残す。タブを切り替えても、ページの状態が消えないためである。
+ * 読み込まれないポートは、そのポートのパネルにだけ理由を出し、ほかのポートのタブと iframe は残す。
+ * 読み込まれなかった印は、ポートの一覧が変わると消える。サーバーを起動し直したときに、印が残らないためである。
  */
 export function PreviewPane() {
   const { runtime, reason } = useRuntime();
@@ -53,40 +52,31 @@ export function PreviewPane() {
   const store = runtime?.ports ?? noPorts;
   const ports = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const [generations, setGenerations] = useState<ReadonlyMap<number, number>>(new Map());
-  const [timedOut, setTimedOut] = useState<ReadonlySet<number>>(new Set());
+  const [timedOut, setTimedOut] = useState<ReadonlySet<OpenPort>>(new Set());
   const active = ports.find((port) => port.port === selection.preview) ?? ports[0];
+  const activeTimedOut = active !== undefined && timedOut.has(active);
 
-  const onTimeout = (port: number) => setTimedOut((current) => new Set(current).add(port));
-  const reload = (port: number) => {
+  const onTimeout = (port: OpenPort) => setTimedOut((current) => new Set(current).add(port));
+  const reload = (port: OpenPort) => {
     setTimedOut((current) => {
       const next = new Set(current);
       next.delete(port);
       return next;
     });
-    setGenerations((current) => new Map(current).set(port, (current.get(port) ?? 0) + 1));
+    setGenerations((current) => new Map(current).set(port.port, (current.get(port.port) ?? 0) + 1));
   };
-
-  const state =
-    reason !== undefined
-      ? ({
-          kind: "error",
-          title: "プレビューを開けません",
-          message: bootFailureMessage(reason),
-        } as const)
-      : active === undefined
-        ? ({ kind: "loading", label: "サーバーが待ち受けるのを待っています" } as const)
-        : timedOut.has(active.port)
-          ? ({
-              kind: "error",
-              title: "プレビューを開けません",
-              message: PREVIEW_TIMEOUT_MESSAGE,
-            } as const)
-          : undefined;
 
   const frames = (
     <div className="flex min-h-0 flex-1 flex-col *:min-h-48 *:w-full *:flex-1">
+      {activeTimedOut && (
+        <div className="p-4">
+          <Notice isAlert title="プレビューを開けません" tone="danger">
+            {PREVIEW_TIMEOUT_MESSAGE}
+          </Notice>
+        </div>
+      )}
       {ports.map((port) => (
-        <Activity key={port.port} mode={port.port === active?.port ? "visible" : "hidden"}>
+        <Activity key={port.port} mode={port === active && !activeTimedOut ? "visible" : "hidden"}>
           <PortFrame
             generation={generations.get(port.port) ?? 0}
             onTimeout={onTimeout}
@@ -99,8 +89,14 @@ export function PreviewPane() {
 
   return (
     <PreviewFrame
-      onReload={active && (() => reload(active.port))}
-      state={state}
+      onReload={active && (() => reload(active))}
+      state={
+        reason !== undefined
+          ? { kind: "error", title: "プレビューを開けません", message: bootFailureMessage(reason) }
+          : active === undefined
+            ? { kind: "loading", label: "サーバーが待ち受けるのを待っています" }
+            : undefined
+      }
       url={active?.url ?? ""}
     >
       {active && (

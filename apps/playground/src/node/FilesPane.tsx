@@ -1,9 +1,8 @@
-import type { NodeRuntime } from "@fukuemon/node-runtime";
 import { ConfirmDialog, FileTree, Notice } from "@fukuemon/ui";
 import { useState, useSyncExternalStore } from "react";
 
 import { useRuntime, useSelection } from "./context";
-import { childPath, projectEntries, renamedPath, toTreeNodes } from "./tree";
+import { childPath, nameError, projectEntries, renamedPath, toTreeNodes } from "./tree";
 
 const noTree = { subscribe: () => () => undefined, getSnapshot: () => undefined };
 
@@ -16,15 +15,21 @@ export function FilesPane() {
   const entries = live ?? projectEntries(project.files);
   const [removing, setRemoving] = useState<string>();
   const [failure, setFailure] = useState<string>();
-
   const kinds = new Map(entries.map((entry) => [entry.path, entry.kind]));
   const files = runtime?.files;
-  const run = (operation: (f: NodeRuntime["files"]) => Promise<void>) => {
-    if (!files) return;
+
+  const run = (operation: () => Promise<void>) => {
     setFailure(undefined);
-    operation(files).catch((error: unknown) => {
+    operation().catch((error: unknown) => {
       setFailure(error instanceof Error ? error.message : String(error));
     });
+  };
+
+  /** 名前を確かめてから、新しいパスへの操作を実行する。使えない名前のときは、理由を出して実行しない。 */
+  const runNamed = (name: string, path: string, operation: () => Promise<void>) => {
+    const invalid = nameError(name, path, new Set(kinds.keys()));
+    if (invalid !== undefined) setFailure(invalid);
+    else run(operation);
   };
 
   return (
@@ -33,31 +38,35 @@ export function FilesPane() {
         items={toTreeNodes(entries)}
         onCreate={
           files &&
-          ((name, parentId) =>
-            run(async (f) => {
-              const path = childPath(parentId, name);
-              await f.write(path, "");
+          ((name, parentId) => {
+            const path = childPath(parentId, name);
+            runNamed(name, path, async () => {
+              await files.write(path, "");
               dispatch({ type: "select-item", path, isFile: true });
-            }))
+            });
+          })
         }
         onCreateDirectory={
           files &&
-          ((name, parentId) =>
-            run(async (f) => {
-              const path = childPath(parentId, name);
-              await f.createDirectory(path);
+          ((name, parentId) => {
+            const path = childPath(parentId, name);
+            runNamed(name, path, async () => {
+              await files.createDirectory(path);
               dispatch({ type: "select-item", path, isFile: false });
-            }))
+            });
+          })
         }
         onDelete={files && setRemoving}
         onRename={
           files &&
-          ((id, name) =>
-            run(async (f) => {
-              const to = renamedPath(id, name);
-              await f.rename(id, to);
+          ((id, name) => {
+            const to = renamedPath(id, name);
+            if (to === id) return;
+            runNamed(name, to, async () => {
+              await files.rename(id, to);
               dispatch({ type: "renamed", from: id, to });
-            }))
+            });
+          })
         }
         onSelect={(path) =>
           dispatch({ type: "select-item", path, isFile: kinds.get(path) === "file" })
@@ -76,9 +85,9 @@ export function FilesPane() {
         onConfirm={() => {
           const path = removing;
           setRemoving(undefined);
-          if (path === undefined) return;
-          run(async (f) => {
-            await f.remove(path);
+          if (path === undefined || !files) return;
+          run(async () => {
+            await files.remove(path);
             dispatch({ type: "removed", path });
           });
         }}

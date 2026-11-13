@@ -69,7 +69,7 @@ function toBackendProcess(process: WebContainerProcess): BackendProcess {
   };
 }
 
-function createFiles(container: WebContainer): BackendFiles {
+function createBackendFiles(container: WebContainer): BackendFiles {
   const fs = container.fs;
   return {
     list: async (directory) => {
@@ -162,7 +162,7 @@ export const webContainerBackend: RuntimeBackend = {
       const ports = createPorts(container);
       await ports.ready();
       return {
-        files: createFiles(container),
+        files: createBackendFiles(container),
         spawn: async (command, args, options = {}) =>
           toBackendProcess(
             await container.spawn(command, [...args], {

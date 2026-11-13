@@ -46,7 +46,7 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
       const openFiles = state.openFiles.filter((path) => path !== action.path);
       const activeFile =
         state.activeFile === action.path
-          ? (openFiles[Math.min(index, openFiles.length - 1)] ?? undefined)
+          ? openFiles[Math.min(index, openFiles.length - 1)]
           : state.activeFile;
       return { ...state, openFiles, activeFile };
     }

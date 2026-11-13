@@ -14,7 +14,7 @@ function languageExtension(path: string): Extension[] {
   return [javascript({ jsx: language.jsx, typescript: language.typescript })];
 }
 
-export type FileEditorProps = {
+type FileEditorProps = {
   path: string;
   /** 渡すと、実行環境のファイルを読み、入力を書き込む。渡さないときは、initialText を読み取り専用で出す。 */
   files?: NodeRuntime["files"];
@@ -29,7 +29,6 @@ export function FileEditor({ path, files, initialText }: FileEditorProps) {
       initialText={files ? "" : initialText}
       label={path}
       language={languageExtension(path)}
-      readOnly={files === undefined}
     />
   );
 }

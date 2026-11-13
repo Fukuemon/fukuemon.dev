@@ -1,5 +1,5 @@
 import { BootError, type NodeRuntime, type ProcessHandle } from "@fukuemon/node-runtime";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { type NodeProject, createRuntimeStarter, startProject } from "./session";
@@ -35,6 +35,14 @@ function fakeRuntime(installExit: number) {
   return { runtime, calls };
 }
 
+beforeEach(() => {
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("startProject", () => {
   it("シェル、npm install、起動のコマンドの順に起動し、起動のコマンドの終了を待たない", async () => {
     const { runtime, calls } = fakeRuntime(0);
@@ -57,21 +65,39 @@ describe("startProject", () => {
 describe("createRuntimeStarter", () => {
   const runtime = {} as NodeRuntime;
 
-  it("初期ファイルで起動し、プロセスの起動を待たずに running を返す", async () => {
-    const boot = vi.fn(async () => runtime);
+  it("プロセスの起動を待たずに、running を返す", async () => {
     const start = vi.fn(() => new Promise<void>(() => undefined));
-    expect(await createRuntimeStarter(boot, start)(project)).toStrictEqual({
+    expect(await createRuntimeStarter(async () => runtime, start)(project)).toStrictEqual({
       kind: "running",
       runtime,
     });
-    expect(boot).toHaveBeenCalledWith({ files: project.files });
-    expect(start).toHaveBeenCalledWith(runtime, project);
   });
 
-  it("同じプロジェクトには、同じ Promise を返し、1 回だけ起動する", () => {
+  it("プロジェクトの初期ファイルで起動する", async () => {
+    const boot = vi.fn(async () => runtime);
+    await createRuntimeStarter(boot, async () => undefined)(project);
+    expect(boot.mock.calls).toStrictEqual([[{ files: project.files }]]);
+  });
+
+  it("起動した実行環境で、プロジェクトのプロセスを起動する", async () => {
+    const start = vi.fn(async () => undefined);
+    await createRuntimeStarter(async () => runtime, start)(project);
+    expect(start.mock.calls).toStrictEqual([[runtime, project]]);
+  });
+
+  it("同じプロジェクトには、同じ Promise を返す", () => {
+    const startRuntime = createRuntimeStarter(
+      async () => runtime,
+      async () => undefined,
+    );
+    expect(startRuntime(project)).toBe(startRuntime(project));
+  });
+
+  it("同じプロジェクトでは、1 回だけ起動する", () => {
     const boot = vi.fn(async () => runtime);
     const startRuntime = createRuntimeStarter(boot, async () => undefined);
-    expect(startRuntime(project)).toBe(startRuntime(project));
+    void startRuntime(project);
+    void startRuntime(project);
     expect(boot).toHaveBeenCalledTimes(1);
   });
 
@@ -94,6 +120,9 @@ describe("createRuntimeStarter", () => {
   it("プロセスの起動が失敗しても、running のまま返す", async () => {
     const boot = vi.fn(async () => runtime);
     const start = vi.fn(async () => Promise.reject(new Error("spawn")));
-    expect(await createRuntimeStarter(boot, start)(project)).toMatchObject({ kind: "running" });
+    expect(await createRuntimeStarter(boot, start)(project)).toStrictEqual({
+      kind: "running",
+      runtime,
+    });
   });
 });

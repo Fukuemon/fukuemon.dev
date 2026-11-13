@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { childPath, isWithin, projectEntries, renamedPath, toTreeNodes } from "./tree";
+import {
+  childPath,
+  isWithin,
+  nameError,
+  nameOf,
+  projectEntries,
+  renamedPath,
+  toTreeNodes,
+} from "./tree";
 
 describe("toTreeNodes", () => {
   it("パスの一覧を、ディレクトリの下に入れた木にし、一覧の順を保つ", () => {
@@ -70,5 +78,48 @@ describe("isWithin", () => {
     ["a.js", "src", false],
   ])("%s は %s の下か: %s", (path, base, expected) => {
     expect(isWithin(path, base)).toBe(expected);
+  });
+});
+
+describe("nameOf", () => {
+  it.each([
+    ["index.js", "index.js"],
+    ["src/lib/a.js", "a.js"],
+  ])("%s の名前は %s", (path, expected) => {
+    expect(nameOf(path)).toBe(expected);
+  });
+});
+
+describe("nameError", () => {
+  const existing = new Set(["index.js", "src"]);
+
+  it.each([
+    ["新しい名前", "a.js", "a.js", undefined],
+    [
+      "同じパスの項目がある名前",
+      "index.js",
+      "index.js",
+      "index.js は既にあります。別の名前にしてください。",
+    ],
+    [
+      "/ を含む名前",
+      "a/b.js",
+      "a/b.js",
+      "名前に / を含めることと、. と .. だけの名前にすることはできません。",
+    ],
+    [
+      ". だけの名前",
+      ".",
+      ".",
+      "名前に / を含めることと、. と .. だけの名前にすることはできません。",
+    ],
+    [
+      ".. だけの名前",
+      "..",
+      "src/..",
+      "名前に / を含めることと、. と .. だけの名前にすることはできません。",
+    ],
+  ])("%s", (_, name, path, expected) => {
+    expect(nameError(name, path, existing)).toBe(expected);
   });
 });

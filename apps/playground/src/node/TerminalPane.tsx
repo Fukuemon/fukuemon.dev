@@ -1,6 +1,6 @@
 import type { ProcessInfo } from "@fukuemon/node-runtime";
 import { IconButton, Tabs, TerminalFrame } from "@fukuemon/ui";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { useRuntime, useSelection } from "./context";
 import { bootFailureMessage, processLabel, shellName } from "./messages";
@@ -18,13 +18,24 @@ export function TerminalPane() {
   const store = runtime?.processes.list ?? noProcesses;
   const processes = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const themeName = useSyncExternalStore(colorScheme.subscribe, colorScheme.getSnapshot);
-  const selected = processes.find((info) => info.id === selection.terminal) ?? processes[0];
+  // 選んでいないときは、0 でない終了コードで終わったプロセスを先に出す。npm install の失敗に気づけるようにする
+  const selected =
+    processes.find((info) => info.id === selection.terminal) ??
+    processes.find((info) => info.status.kind === "exited" && info.status.code !== 0) ??
+    processes[0];
   const handle = selected && runtime?.processes.get(selected.id);
 
-  const openShell = async () => {
+  const [opening, setOpening] = useState(false);
+  const openShell = () => {
     if (!runtime) return;
-    const shell = await runtime.processes.startShell({ name: shellName(processes) });
-    dispatch({ type: "select-terminal", id: shell.id });
+    setOpening(true);
+    runtime.processes
+      .startShell({ name: shellName(processes) })
+      .then(
+        (shell) => dispatch({ type: "select-terminal", id: shell.id }),
+        (error: unknown) => console.error("シェルを起動できない", error),
+      )
+      .finally(() => setOpening(false));
   };
 
   return (
@@ -37,8 +48,9 @@ export function TerminalPane() {
                 <path d="M10 4v12M4 10h12" fill="none" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             }
+            disabled={opening}
             label="新しい端末"
-            onClick={() => void openShell().catch(() => undefined)}
+            onClick={openShell}
           />
         )
       }

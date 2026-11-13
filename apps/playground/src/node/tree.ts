@@ -4,7 +4,8 @@ import type { TreeNode } from "@fukuemon/ui";
 type MutableNode = { id: string; label: string; children?: MutableNode[] };
 
 const parentOf = (path: string) => path.slice(0, Math.max(0, path.lastIndexOf("/")));
-const nameOf = (path: string) => path.slice(path.lastIndexOf("/") + 1);
+/** パスの最後の名前。 */
+export const nameOf = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 
 /** 実行環境のファイルの一覧を、FileTree の木にする。項目の id は、作業ディレクトリからのパスである。一覧の順を保つ。 */
 export function toTreeNodes(entries: readonly FileEntry[]): TreeNode[] {
@@ -47,4 +48,20 @@ export function projectEntries(files: Readonly<Record<string, string>>): FileEnt
       .sort()
       .map((path): FileEntry => ({ path, kind: "file" })),
   ];
+}
+
+/**
+ * 新しい項目と、名前を変えた項目の名前を確かめ、使えないときは理由の文を返す。
+ * 同じパスの項目があるときは、上書きしない。`/` を含む名前と、`.` と `..` は、ほかのディレクトリを指すので断る。
+ */
+export function nameError(
+  name: string,
+  path: string,
+  existing: ReadonlySet<string>,
+): string | undefined {
+  if (name.includes("/") || name === "." || name === "..") {
+    return "名前に / を含めることと、. と .. だけの名前にすることはできません。";
+  }
+  if (existing.has(path)) return `${path} は既にあります。別の名前にしてください。`;
+  return undefined;
 }

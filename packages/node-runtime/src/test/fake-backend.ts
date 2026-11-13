@@ -5,7 +5,8 @@ import type {
   DirectoryItem,
   RuntimeBackend,
 } from "../backend";
-import type { OpenPort, TerminalSize } from "../types";
+import { bootWithBackend } from "../runtime";
+import type { NodeRuntime, OpenPort, TerminalSize } from "../types";
 
 /** テストから操作するプロセス。出力を流し、終了させる。 */
 export type FakeProcess = BackendProcess & {
@@ -224,3 +225,23 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
     },
   };
 }
+
+export const initialFiles = {
+  "package.json": "{}",
+  "index.js": "console.log(1)",
+  "src/app.js": "",
+};
+
+/** テスト用の実装で、initialFiles を持つ実行環境を起動する。 */
+export async function bootFake() {
+  const fake = createFakeBackend();
+  const runtime = await bootWithBackend(fake.backend, { files: initialFiles });
+  const created = fake.instances[0];
+  if (!created) throw new Error("起動していない");
+  return { fake, runtime, created };
+}
+
+export const treePaths = (runtime: NodeRuntime) =>
+  runtime.files.tree.getSnapshot().map((entry) => entry.path);
+
+export const flush = () => new Promise((resolve) => setTimeout(resolve, 0));

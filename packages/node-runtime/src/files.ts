@@ -58,18 +58,22 @@ export async function createFiles(
   const refresh = (): Promise<void> => {
     pending = true;
     refreshing ??= (async () => {
-      while (pending && !disposed) {
-        pending = false;
-        const next = await listTree(files).catch(() => undefined);
-        if (!disposed && next && !sameTree(next, tree.getSnapshot())) tree.set(next);
+      try {
+        while (pending && !disposed) {
+          pending = false;
+          const next = await listTree(files).catch(() => undefined);
+          if (!disposed && next && !sameTree(next, tree.getSnapshot())) tree.set(next);
+        }
+      } finally {
+        // 購読者が投げても、次の通知で読み直せるようにする
+        refreshing = undefined;
       }
-      refreshing = undefined;
     })();
     return refreshing;
   };
 
   const unwatch = files.watch((paths) => {
-    void refresh();
+    refresh().catch((error: unknown) => console.error("ファイルのツリーを読み直せない", error));
     for (const listener of listeners) listener(paths);
   });
 

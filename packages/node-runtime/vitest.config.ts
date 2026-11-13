@@ -4,13 +4,9 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      include: [
-        "src/files.ts",
-        "src/output.ts",
-        "src/processes.ts",
-        "src/runtime.ts",
-        "src/store.ts",
-      ],
+      include: ["src/**/*.ts"],
+      // WebContainers はブラウザでしか動かないので、webcontainer/ と、それを import する index.ts は対象に入れない
+      exclude: ["src/webcontainer/**", "src/index.ts", "src/test/**", "src/**/*.test.ts"],
       thresholds: { branches: 90, functions: 90, lines: 90, statements: 90 },
       reporter: ["text-summary"],
     },

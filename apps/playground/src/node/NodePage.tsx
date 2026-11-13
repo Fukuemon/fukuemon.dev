@@ -33,7 +33,7 @@ function Pane({ fallback, children }: { fallback: ReactNode; children: ReactNode
   );
 }
 
-function Workspace({ project }: { project: NodeProject }) {
+function NodeLayout({ project }: { project: NodeProject }) {
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   return (
     <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
@@ -106,7 +106,7 @@ function NodeTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  return <Workspace project={load.project} />;
+  return <NodeLayout project={load.project} />;
 }
 
 /** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。 */
