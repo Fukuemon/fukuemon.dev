@@ -14,7 +14,7 @@ const config: StorybookConfig = {
   framework: "@storybook/react-vite",
   features: {
     // Show code の source を、描画のたびに作らずビルドのときに作る。Docs の最初の描画の途中でテーマを切り替えると、
-    // 描画のたびに作る source が消え、Show code が story の定義（args）を出すためである（#75）
+    // 描画のたびに作る source が消え、Show code が story の定義（args）を出すためである
     experimentalCodeExamples: true,
   },
   // _headers を storybook-static の直下に置き、Workers Static Assets に読ませる

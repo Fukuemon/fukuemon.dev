@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { docsFrame, sourcePanels } from "../selectors/storybook-docs";
 
-const STORIES = [
+// Button.stories.tsx の export の名前と、Docs のページに並ぶ順
+const BUTTON_STORIES = [
   "Primary",
   "PrimaryHover",
   "PrimaryFocus",
@@ -14,29 +15,23 @@ const STORIES = [
   "Small",
 ];
 
-test.describe("カタログの Docs のページ", () => {
-  test("Docs のページを開いた直後にテーマを選んだ場合、全ての story の Show code が story の JSX を出すこと", async ({
-    page,
-  }) => {
-    await page.goto("/?path=/docs/コンポーネント-base-button--docs");
-    // Docs のページが story を描き終える前に選ぶ。描いている途中で globals が変わると、描画のときに作る source が消える
-    await page.getByRole("button", { name: /^Theme/ }).click();
-    await page
-      .getByRole("listbox", { name: "Theme" })
-      .getByRole("option", { name: "ダーク" })
-      .click();
+test("Button の Docs のページを開いた直後にテーマを選ぶと、全ての story の Show code が story のソースから作ったコードを出す", async ({
+  page,
+}) => {
+  await page.goto("/?path=/docs/コンポーネント-base-button--docs");
+  // Docs のページが story を描き終える前に選び、描画の途中で globals が変わる場面にする
+  await page.getByRole("button", { name: /^Theme/ }).click();
+  await page
+    .getByRole("listbox", { name: "Theme" })
+    .getByRole("option", { name: "ダーク" })
+    .click();
 
-    const frame = docsFrame(page);
-    const showCode = frame.getByRole("switch", { name: "Show code" });
-    await expect(showCode).toHaveCount(STORIES.length);
-    for (let i = 0; i < STORIES.length; i++) await showCode.first().click();
+  const frame = docsFrame(page);
+  const showCode = frame.getByRole("switch", { name: "Show code" });
+  // 押した switch は名前が Hide code に変わるので、first() は毎回まだ開いていない次の switch を指す
+  for (let i = 0; i < BUTTON_STORIES.length; i++) await showCode.first().click();
 
-    const panels = sourcePanels(frame);
-    await expect(panels).toHaveCount(STORIES.length);
-    for (const [i, name] of STORIES.entries()) {
-      await expect(panels.nth(i)).toHaveText(
-        new RegExp(`^const ${name} = \\(\\) =>[\\s\\S]*<Button`),
-      );
-    }
-  });
+  await expect(sourcePanels(frame)).toHaveText(
+    BUTTON_STORIES.map((name) => new RegExp(`^const ${name} = \\(\\) =>[\\s\\S]*<Button`)),
+  );
 });
