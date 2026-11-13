@@ -53,7 +53,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 - 挿絵の層の濃さ（`--fd-art-*`）は、色ではなく不透明度の値を直に持つ。挿絵は `text` と `surface` の色だけで塗り、濃さをこの値で決めるためである。コントラストのチェックは読まない。
 - 見出しの明朝のウェイト（テーマ変数の `--font-weight-semibold`）は、600 を直に持つ。明朝は 600 の 1 つだけを読み込むためである（ADR-0023）。
 
-ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../../adr/0024-tokens-of-fukuemon-dev.md)
+ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
 ## テーマ
 
@@ -89,7 +89,7 @@ fukuemon.dev はダークを持つ。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
 
-ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../adr/0023-keep-art-and-key-color.md)
+ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
 
 ## レイアウト、区切り、重なり、動き
 
@@ -127,4 +127,4 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 - 筆の線の形は、テーマ変数のファイルの `--fd-mask-brush`（`:root` に置く SVG）にあり、`stroke-brush` と `brush-hover` だけが読む。サイトのヘッダーのナビ（`apps/web/src/styles/site.css`）は、`apps/web` が `@fukuemon/ui` に依存しないので、同じ SVG を写して持つ。
 - 動きを減らす設定での止め方は、テーマ変数のファイル（`src/tokens/theme.css`）の末尾の 1 か所にある（`MOTION-REDUCE`）。罫と筆の線を引く動きは、止めると全長の線が最初から出る。`Button` の読み込み中の印は、濃い 3 つの点で止まる。
 
-ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../adr/0028-radius-shadow-and-brush-motion.md)
+ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../docs/adr/0028-radius-shadow-and-brush-motion.md)

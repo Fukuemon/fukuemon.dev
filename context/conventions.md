@@ -6,7 +6,7 @@ status: stable
 governs:
   - package.json
   - lefthook.yml
-  - .oxlintrc.json
+  - oxlint.config.ts
   - .oxfmtrc.jsonc
   - packages/config/
 verified_commit: 63b37ad
@@ -35,11 +35,10 @@ verified_commit: 63b37ad
 
 コードの中のコメントは、Why not を主に書く。  
 書かないと、あとで誰かが不用意に単純化し、不具合を入れる。  
-このリポジトリで Why not を書くべき箇所の典型は次の 3 つ。
+このリポジトリで Why not を書くべき箇所の典型は次の 2 つ。
 
 - `contentId` を Astro の `id` に載せない理由。Astro が `id` を占有し、`slug` を schema に置けない。
 - 関係に `reference()` を使わない理由。collection をまたぎ、Content Model を Astro に依存させないため。
-- `tokens.css` のトークンを `@theme static` に置き、素のカスタムプロパティとして出力する理由。Expressive Code が挿す CSS はこのリポジトリのビルドを通らないため。
 
 Why not のコメントには、該当する ADR へのリンクを 1 行添える。
 
@@ -50,7 +49,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 変更の経緯と issue の番号。コミットと ADR が持つ。
 - spec と issue の引用。spec は issue を閉じるときに消える作業文書で、リンクが宙に浮く。
 
-理由を残すときのリンク先は、`adr/`、`context/`、feature の Design Doc に限る。
+理由を残すときのリンク先は、`docs/adr/`、`context/`、feature の Design Doc に限る。
 
 ## Documents
 
@@ -71,9 +70,6 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - 手順の指示は「〜する」「〜を確認する」と書き、「〜してください」と書かない。
   - リポジトリの文書（context、PRD、Design Doc、ADR など）も、`である` 調で書く。
 - サイトの UI の文言（ボタン、状態の表示、空の状態の案内）は、`ですます` 調で書く。
-- 原稿の textlint の設定は `apps/web/src/content/.textlintrc.json` に置く。
-  - ルートの `.textlintrc.json` に、`.mdx` を読むプラグインと、原稿だけに許す語を足している。
-  - textlint は、実行したディレクトリの設定を 1 つだけ読み、ディレクトリごとに設定を重ねない。原稿には `--config` で原稿の設定を渡す。
 - 記事は `articles/` に、ハンズオンは `labs/` に置く。frontmatter に種別を書かない。
 - 実行パネルを置く記事とハンズオンは `.mdx` で書き、置かないものは `.md` で書く。
   - `interactive.level` が `local` のハンズオンは実行パネルを持たないので、`.md` で書く。
@@ -90,9 +86,21 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 ## Styling
 
 `packages/ui` のコンポーネントと、`packages/ui` で組む画面は、[packages/ui/DESIGN.md](../packages/ui/DESIGN.md) と、そこから指す 3 つの文書の規則に従う。  
-この節の規則は、今のサイト（`apps/web` と `packages/design-system`）のスタイリングに当たる。
+このセクションには、`apps/web` のスタイリングの規則のうち、`packages/ui` の文書に無いものを書く。
 
-層の順とトークンの層は [Design System の Design Doc](../packages/design-system/DesignDoc.md#配布と層) にある。
+トークンの層は [デザインシステム（packages/ui）の Design Doc の「トークンの層」](../packages/ui/DesignDoc.md#トークンの層) に、層の順は [ADR-0055](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md#1-preflight-を読む) にある。
+
+### サイトの共通の CSS
+
+- サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
+- `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css`、`theme.css`、`sources.css` を読む。`sources.css` のほかは、カタログの `preview.css` と同じ形にする。
+  - ADR-0055: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md)
+- `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
+- `packages/ui` のコンポーネントのクラスは、`@fukuemon/ui/sources.css` の `@source` が、Tailwind CSS の走査の対象に足す。Tailwind CSS は `node_modules` の下を走査しないためである。story、文書、テストは対象から外す。
+- 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
+  - フォーカスしたときだけ左上に出し、重なる面（`bg-surface-raised` と `border-border-field`）、`text-label`、`focus-visible:focus-ring` で描く。押せる範囲は 44×44 CSS px 以上にする。
+- 検索エンジンに載せないページ（404 など）は、`SiteLayout.astro` に `noindex` を渡す。canonical を出さず、`<meta name="robots" content="noindex">` を出す。
+- `scroll-padding-block-start` は、画面の上に固定のヘッダを置くときに、ヘッダの高さに合わせて決める。
 
 ### 状態の書き方
 
@@ -115,23 +123,27 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - `<dialog>` に `display` を当てるときは、`[open]` に限定する。
   - UA のデフォルトの `dialog:not([open]) { display: none }` に勝ち、閉じている窓が画面に出る。
 
-### 配色の切り替え
-
-- 色は `light-dark(明, 暗)` で 1 度だけ書く。
-- 選択子を明暗で分けて、同じ色の値を 2 度書かない。
-  - システム設定用と明示指定用に同じ値を並べると、片方だけを直した誤りに、実行時まで気づけない。
-  - `check-contrast.ts` は、`tokens.css` の `@theme static` の 1 箇所だけを読む。
-- 色でないもの（`mix-blend-mode` など）を明暗で分けるときだけ、`@media (prefers-color-scheme: dark)` で分ける。
-  - 配色を手で切り替える仕組みは持たないので、システム設定の 1 本だけで足りる。
-
 ### 当たり判定
 
-規則は [Design System の Design Doc](../packages/design-system/DesignDoc.md#当たり判定と読み上げ) にある。
+規則は [packages/ui の DESIGN.md の「アクセシビリティ」](../packages/ui/DESIGN.md#アクセシビリティ) にある。
 
 - 触る端末だけで寸法を変えるときは、`pointer-coarse:` を使う。
-  - `hover: none` は Expressive Code の写しボタンだけに使う。EC の規則が cascade layer の外にあり、markup から当てられない。
-- `.hit-up` の当たり判定は疑似要素が持つ。
-  - `getBoundingClientRect()` は疑似要素を含めないので、測るときは `::after` の `top` と `bottom` を差し引いて足す。
+- 押せる範囲を疑似要素で広げるユーティリティを、サイトの CSS に持たない。押せる範囲は `packages/ui` のコンポーネントが持つ。
+
+## React
+
+React の誤りのうち、lint で止まるものは Oxlint の規則に任せる。  
+有効にしている規則は `oxlint.config.ts` にある。  
+このセクションには、lint で止まらない書き方を書く。
+
+- props が変わったときに state を初期の値に戻すのは、`key` で行う。Effect の中で `setState` を呼んで戻さない。
+- 利用者の操作で起きる処理は、イベントハンドラに書く。Effect に書かない。
+- 外部の store を購読するときは、`useSyncExternalStore` で書く。
+- Effect の中で、最新の props を読むだけの処理は、`useEffectEvent` に分ける。依存の配列に入れると Effect が再実行されるので、入れない。
+- 端末の値（`localStorage`、端末の日付、画面の幅）で描く island は、次のどちらかで書く。
+  - `useSyncExternalStore` の 3 つ目の引数に、サーバーで描くときの値を渡す。
+  - `client:only` で置き、サーバーで描かない。
+- マウントの後に Effect で `setState` を呼んで描き直す形を使わない。1 度目の描画の後に端末の値で描き直すので、画面がちらつく。
 
 ## Shared Configuration
 
@@ -142,12 +154,12 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 | ----------------- | -------------------------------------------- | ---------------------------------------------- |
 | tsconfig          | `@fukuemon/config` の `./tsconfig/base.json` | 各 package が `extends` する                   |
 | Astro の tsconfig | `apps/web/tsconfig.json`                     | `astro/tsconfigs/strict` を直接 `extends` する |
-| lint と依存規約   | ルートの `.oxlintrc.json`                    | ルートからリポジトリ全体に 1 回掛ける          |
+| lint と依存規約   | ルートの `oxlint.config.ts`                  | ルートからリポジトリ全体に 1 回掛ける          |
 | 未使用の検出      | ルートの `package.json` の `knip`            | ルートから 1 回掛ける                          |
 | format            | ルートの `.oxfmtrc.jsonc`                    | ルートからリポジトリ全体に 1 回掛ける          |
 | vitest            | 各 package の `vitest.config.ts`             | 対象の列挙が package ごとに違うので共有しない  |
 
-- `no-restricted-imports` の依存規約は、ルートの `.oxlintrc.json` だけに置く。package ごとに書くと、片方だけが更新される。
+- `no-restricted-imports` の依存規約は、ルートの `oxlint.config.ts` だけに置く。package ごとに書くと、片方だけが更新される。
 - 依存規約をチェックするために、独自の oxlint プラグインを作らない。
   - 層が増えて `no-restricted-imports` の列挙が読めなくなったら作る。
 - package ごとに変わるコマンドは、その package の `package.json` の scripts に置く。ルートは `pnpm -r` で束ねるだけにする。
@@ -163,42 +175,44 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - lint、typecheck、test を pre-commit で実行しない。`pnpm run check` と CI が担う。
 - pre-commit は、ステージしたファイルに Oxfmt を掛ける。
   - Oxfmt は `.astro` を扱わないので、`.astro` は整形されない。
-- 見た目の回帰のチェック（`shot` と `shot:diff`）は `check` に入れない。理由は [testing.md](testing.md#test-types-and-guarantees) にある。
 
 ### チェックのツールに合わせる書き方
 
 - `.astro` の `<script>` は、1 ファイルに 1 つだけにする。
   - knip は最初の `<script>` しか読まず、2 つ目の import を追跡しない。
   - `type="application/json"` のようなデータの置き場を足すときは、module の `<script>` より後ろに書く。
-- `.oxlintrc.json` の `overrides` の各 entry は、そのファイル群に要る禁止をすべて自分で持つ。
+- `oxlint.config.ts` の `overrides` の各 entry は、そのファイル群に要る禁止をすべて自分で持つ。
   - `overrides` は同じ規則名を後勝ちで上書きし、前の entry と合流しない。
   - entry を足したら、各方向について違反するファイルを 1 つ置き、`pnpm run lint` が失敗することを確認する。
 - 配色のチェックは、対象のトークンが見つからないことを失敗として扱う。
-  - `packages/design-system/check-contrast.ts` は、存在しないトークンを `errors` に積む。
+  - `scripts/check-contrast.mjs` は、色に解決できないトークンと、CSS にない `--root` のブロックを失敗にする。
 
 ## Check Exclusions
 
 除外を足すときは、理由をこの節に書く。  
 設定ファイルのコメントだけに残さない。
 
-- knip は、`/pagefind/pagefind.js` を解決できない import として扱わない（`ignoreUnresolved`）。Pagefind が `astro build` の後に `dist/` へ作るファイルで、ソースの時点では存在しないため。
 - knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
-- knip は、`apps/web` の `pagefind` を未使用の依存として扱わない（`ignoreDependencies`）。knip は `vite.config.ts` の `run.tasks` のコマンドから knip が知るコマンドだけを読み、`pagefind` を読まないため。
+- knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
-- knip は、textlint の規則とプラグインのパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則とプラグインの名前で読み込み、import されないため。
-- 原稿の textlint は、ai-words-ja の `実測` と `走ら` を指摘しない（`allows`）。
-  - どちらも、ハンズオンの手順の見出し（`見積もりと実測を並べる`、`VACUUM を走らせる`）にあり、手順の見出しは書き換えないと決めている。
-  - `実測` は、`EXPLAIN ANALYZE` が返す実際の値を指す語として定着している。
-  - `allows` は検出した語だけと照らし、前後の文脈で絞れないため、語の形で除外する。
+- knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
   - 承認した ADR-0026 の題と、PRD の性能の要求の行にあり、言い換えると承認した文が変わる。
   - 比喩として使う `門` も通るので、レビューで見る。
-- `design/prototypes/` の試作は、knip（`ignore`）と Oxfmt（`ignorePatterns`）の対象から外す。
+- `docs/design/prototypes/` の試作は、knip（`ignore`）と Oxfmt（`ignorePatterns`）の対象から外す。
   - 試作は、設計の判断の基準として写したまま残すソースで、サイトのコードから import されない。
   - 試作のビルドのスクリプトは、CSS を文字列の位置で切る。整形すると、エラーを出さずに違う HTML を書く。
-- oxlint は、`design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three の束で、Git で追跡しないため。
+- oxlint は、`docs/design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three の束で、Git で追跡しないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。
+- Oxlint は、`packages/ui/.storybook/` の `react/rules-of-hooks` と `react/exhaustive-deps` を見ない。
+  - decorator の中の `useEffect` は、`storybook/preview-api` の hook で、React の hook ではない。
+  - decorator の名前は小文字で始まるので、`rules-of-hooks` は、コンポーネントの外で hook を呼んだと見なす。
+- Oxlint の `react/no-array-index-key` を、次の 2 か所だけで、行ごとのコメントで抑制する。
+  - `packages/ui/src/case/HttpExchangeDetail/HttpExchangeDetail.tsx` のヘッダの行。同じ名前のヘッダが並ぶことがあり、名前だけでは key が重なる。
+  - `packages/ui/src/case/ToolPane/fixtures.tsx` のコードの行。同じ中身の行が並ぶことがあり、中身だけでは key が重なる。
+  - どちらの一覧も、描いた後に並びが変わらない。
+- Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 

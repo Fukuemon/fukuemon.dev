@@ -1,0 +1,135 @@
+# ADR-0048: Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する
+
+## Status
+
+承認
+
+## Context
+
+実行環境と画面の間のインターフェースの形と、実行環境のモジュールの置き場を決める必要がある。
+
+- WebContainers の API を呼ぶコードを、1 つのモジュールに閉じる。実行環境と画面の間を、5 つの操作（ファイル、プロセス、ポートと URL、HTTP の記録、コンソールの記録）を持つインターフェースで分ける。
+  - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
+- HTTP の流れとコンソールの記録は、preload が、プレフィックスを付けた 1 行の JSON にして、プロセスの出力に出す。実行環境のモジュールが、記録の行を抜き出し、端末には、残りの出力を出す。
+  - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](0054-record-http-and-console-with-prefixed-lines.md)
+- SQL だけを動かすツールと、Go を動かすツールは、WebContainers を使わない。
+  - ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](0037-go-with-yaegi.md)
+- プレイグラウンドのアプリは、ツールごとに 1 つの React のツリーを持つ。
+  - ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける](0046-playground-as-vite-react-app.md)
+- React は、外部の store の購読を、`useSyncExternalStore` で書くよう勧めている。Effect の中で `setState` を呼んで値を写す形を、勧めていない。
+  - 出典: [useSyncExternalStore（react.dev）](https://react.dev/reference/react/useSyncExternalStore)
+  - 出典: [You Might Not Need an Effect（react.dev）](https://react.dev/learn/you-might-not-need-an-effect)
+- package を切り出すのは、2 つ以上の消費者が実在するか、消費する側と別の理由で変わるときである。消費者が 1 つでも、自分のバージョン、自分のテスト、自分の理由で変わるものは、package にする。
+  - [context/codebase.md](../../context/codebase.md#packages)
+- `packages/ui` の Case は、表示に要る値を props で受け取る。`PreviewFrame` は iframe を作らず、呼ぶ側が作る。
+
+## Decision
+
+### 1. インターフェースを持つ単位
+
+Node の実行環境だけが、5 つの操作のインターフェース（`NodeRuntime`）を持つ。  
+SQL だけを動かすツールと、Go を動かすツールは、それぞれの小さいインターフェース（`SqlDatabase`、`GoRunner`）を持つ。
+
+- SQL と Go に、使わない操作（プロセス、ポート）を実装させないためである。
+- store と関数が渡すデータは、シリアライズできる素の値だけにする。インターフェースの型に、`@webcontainer/api` の型を含めない。
+
+### 2. 記録と操作の公開の形
+
+- 記録（ファイルのツリー、プロセスの一覧、ポート、HTTP の記録、コンソールの記録）は、種類ごとに、`subscribe` と `getSnapshot` を持つ store で公開する。画面は、`useSyncExternalStore` で読む。
+- プロセスの出力は、store にしない。今までの出力を返す `read` と、追加の出力を受ける `subscribe` で公開する。`read` と `subscribe` が返すのは、記録の行を除いた出力である。端末のエンジンは、`write` を呼んで出力を追加する、React の外のシステムのためである。
+- ファイルの書き込みと、プロセスの起動は、関数で公開する。画面は、イベントハンドラから呼ぶ。
+- 起動は、関数が返す Promise で待つ。画面は、`Suspense` と `use` で待つ。Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。
+- 実行環境を起動し直すときは、インスタンスを破棄し、新しいインスタンスを作る。React の外のモジュールが、起動の Promise を新しいものに替える。
+
+型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#noderuntime) にある。
+
+### 3. モジュールの置き場
+
+実行環境の処理は、実行環境ごとの package に置く。
+
+- Node の実行環境の処理は、`@fukuemon/node-runtime`（`packages/node-runtime`）に置く。
+- Go のコードを実行する処理は、`@fukuemon/go-runtime`（`packages/go-runtime`）に置く。
+- PGlite で SQL を実行する処理は、`@fukuemon/sql-runtime`（`packages/sql-runtime`）に置く。
+  - ADR-0053: [DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る](0053-pglite-database-in-playground.md)
+- `@fukuemon/node-runtime` は、`@fukuemon/sql-runtime` に依存する。逆の向きの依存は無い。
+- 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
+- `@fukuemon/node-runtime` は、実行環境の中の Node が動かすスクリプトを束ねる Vite の plugin を export する。`apps/playground` の `vite.config` は、plugin を登録するだけにする。package が、アプリのビルドの設定に依らないようにするためである。
+- `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけにする。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
+- リポジトリの中で、`@webcontainer/api` を import できるのは、`packages/node-runtime/src/webcontainer/` だけにする。Oxlint の `no-restricted-imports` で止める。
+- `node-runtime/`（`packages/node-runtime/src/`）の直下と、`webcontainer/` の間も、型で分ける。WebContainers に依る処理は、`webcontainer/` に置く。
+  - 動かせるかの判定、環境変数の組み立て、プレビューの iframe の属性
+  - プレビューからのメッセージの origin の確認、実行環境の中の Node が動かすファイルを置く処理
+  - 型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#webcontainer-が実装する型) にある。
+- `@fukuemon/node-runtime` が公開する起動の関数は 1 つにする。起動の Promise を埋め込みの ID ごとに持つ処理は、`apps/playground` の、ツールのページのディレクトリ（`src/node/`）に置く。
+- `apps/playground/src/` は、関心ごとのディレクトリで分ける。実装の種類のディレクトリ（`components/`、`hooks/`、`utils/`）を作らない。
+- ツールのページのディレクトリ（`src/node/`、`src/sql/`、`src/go/`）は、互いに import しない。Oxlint の `no-restricted-imports` で止める。
+- そのほかのディレクトリの間の import の向きは、Design Doc に書き、lint では止めない。
+
+package にする理由は、実行環境の処理が、React と `apps/playground` に依存せず、依存するライブラリ（WebContainers、PGlite、Yaegi）のバージョンと、自分のテストで変わるためである。  
+3 つの package を使うアプリは、`apps/playground` の 1 つだけである。  
+`@fukuemon/sql-runtime` は、`@fukuemon/node-runtime` も使う。
+
+### 4. 画面の状態
+
+- 1 つのツールのページの状態は、props と Context で渡す。ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは入れない。
+- Context は 2 つにする。実行環境のインスタンスを渡す Context と、画面の選択の状態（選んだファイル、開いているタブ、選んだ HTTP のやり取り、下のペインのタブ）を渡す Context である。
+- 実行環境を読んで props に変換するコンポーネントを、ペインごとに 1 つ作り、ページのレイアウトの直下に置く。`packages/ui` の Case と、表示のコンポーネントは、実行環境の型を import しない。
+- `Suspense` の境界は、ペインごとに置く。
+- タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。記録は、隠している間も store が持ち、件数に上限を置く。
+
+## Considered Options
+
+インターフェースを持つ単位の選択肢は次のとおり。
+
+| 選択肢                                                             | 強み                                   | 弱み                                         |
+| ------------------------------------------------------------------ | -------------------------------------- | -------------------------------------------- |
+| **採用:** Node だけが 5 つの操作を持ち、SQL と Go は小さい型を持つ | SQL と Go に、使わない操作を実装しない | インターフェースが 3 つになる                |
+| 3 つのツールが、同じ 1 つのインターフェースを実装する              | 画面のコードが、ツールに依らない       | SQL と Go は、5 つの操作の大半を空で実装する |
+
+store を分ける単位の選択肢は次のとおり。
+
+| 選択肢                                              | 強み                                                            | 弱み                                                                       |
+| --------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **採用:** 記録の種類ごとに store を分ける           | HTTP の記録が増えても、ファイルのツリーのペインは再描画されない | store が 5 つになる                                                        |
+| 実行環境の全体を 1 つの store にし、selector で読む | store が 1 つで済む                                             | selector の結果の参照を保つ処理が要る                                      |
+| store を作らず、イベントを React の reducer に送る  | 実行環境の側が小さい                                            | Effect の中で購読して `setState` を呼ぶ形になる                            |
+| プロセスの出力も、文字列の store にする             | 読み方が 1 つになる                                             | 出力のたびに、全体の文字列を作り直す。端末のエンジンが、差分を自分で求める |
+
+モジュールの置き場の選択肢は次のとおり。
+
+| 選択肢                                                            | 強み                                                                                                                          | 弱み                                                                                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **採用:** 実行環境ごとに、3 つの package にする                   | 画面のコードが `@webcontainer/api` を import できないことを、package の依存で保てる。実行環境ごとに、依存とテストを分けられる | package が 3 つ増える。package を使うアプリは `apps/playground` の 1 つで、型を変えるときに、package とアプリの両方を直す |
+| SQL の処理だけを package にする                                   | package が 1 つで済む                                                                                                         | `@webcontainer/api` を import できる範囲を守る手段が、lint だけになる                                                     |
+| 1 つの package にまとめ、エントリーポイントを実行環境ごとに分ける | package が 1 つで済む                                                                                                         | WebContainers、PGlite、Yaegi の依存が、1 つの package に入る                                                              |
+| `apps/playground/src/` に置く                                     | package が増えない                                                                                                            | 境界を守る手段が、lint だけになる。実行環境の中の Node が動かすファイルの tsconfig を、アプリの中で分ける                 |
+
+実行環境を起動し直すときの形の選択肢は次のとおり。
+
+| 選択肢                                      | 強み                                       | 弱み                                             |
+| ------------------------------------------- | ------------------------------------------ | ------------------------------------------------ |
+| **採用:** インスタンスを作り直す            | 古い記録と購読が、インスタンスごと無くなる | Context の値が変わり、全てのペインが再描画される |
+| インスタンスを保ち、中の store を初期化する | Context の値が変わらない                   | 全ての store に、初期化の処理が要る              |
+
+Context の分け方の選択肢は次のとおり。
+
+| 選択肢                                          | 強み                                                               | 弱み                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **採用:** 実行環境と、選択の状態の 2 つに分ける | 選択が変わっても、実行環境だけを読むコンポーネントは再描画されない | Context が 2 つになる                                        |
+| 1 つにする                                      | 書く量が少ない                                                     | 選択が変わるたびに、Context を読む全てのペインが再描画される |
+| Context を使わず、props で渡す                  | 依存が全て見える                                                   | レイアウトのコンポーネントが、使わない props を中継する      |
+
+## Consequences
+
+### Positive
+
+- 画面のコードは、実行環境を差し替えても変わらない。
+- 画面は、Effect の中で `setState` を呼ばずに、記録を読む。
+
+### Negative
+
+- package が 3 つ増える。package を使うアプリは `apps/playground` の 1 つなので、インターフェースの型を変えるときは、package とアプリの両方を直す。
+- `node-runtime/` の直下と `webcontainer/` の間の境界は、package の依存では守れない。`@webcontainer/api` の import は lint で止める。そのほかの import の向きは、Design Doc に書き、lint では止めない。
+- 実行環境の中の Node が動かすファイルと、標準入出力で SQL を送る処理は、実行環境が Node のプロセスを動かすことを前提にしている。Node のプロセスを持たない実行環境に差し替えるときは、`webcontainer/` に加えて、この 2 つも直す。
+- 記録の読み方が、store と、プロセスの出力の 2 つになる。
+- 上限を超えた古い記録は、消える。

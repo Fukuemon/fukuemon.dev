@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// packages/ui のコードの色のセマンティックトークンを、テーマごとに色の値まで解決し、code-theme.gen.json に書き出す（adr/0022-code-colors-from-tokens.md）。
+// packages/ui のコードの色のセマンティックトークンを、テーマごとに色の値まで解決し、code-theme.gen.json に書き出す（docs/adr/0022-code-colors-from-tokens.md）。
 // CSS の変数を読まないエンジン（Expressive Code、エディタ、端末）のテーマは、この JSON から作る。
 // 使い方: node scripts/build-code-theme.mjs [--check]
 //   --check は書き出さず、書き出すはずの中身と今のファイルを比べる。CI で生成物のずれを見つけるのに使う
