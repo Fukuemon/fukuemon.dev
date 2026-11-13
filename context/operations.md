@@ -85,6 +85,10 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
   - ADR-0034: [cross-origin isolation のヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md#2-プレイグラウンドでヘッダを返すパス)
 - `fukuemon.dev` の本番を作り直したサイトに切り替えるまでは、すべてのパスに `X-Robots-Tag: noindex` を返す。
   - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。
+- すべてのパスに、カタログと同じ `X-Content-Type-Options`、`Referrer-Policy`、`Strict-Transport-Security` を返す。
+  - `Strict-Transport-Security` は、`play.fukuemon.dev` を直接開いた訪問者にも届くように返す。apex の `includeSubDomains` は、先に `fukuemon.dev` を開いた訪問者にしか届かない。
+- 埋め込める親のページを `frame-ancestors` で絞るかは、記事の埋め込みの [#101](https://github.com/Fukuemon/fukuemon.dev/issues/101) で決める。
+  - `fukuemon.dev` と同じ `frame-ancestors 'self'` を返すと、記事の iframe の埋め込みが動かない。
 - `/` は、`apps/playground/public/_redirects` で `https://fukuemon.dev/playground` へリダイレクトする。
 
 ## Deployment Conditions
