@@ -16,6 +16,13 @@ describe("PreviewFrame", () => {
     expect(screen.getByTitle("プレビューの画面")).toBeInTheDocument();
   });
 
+  it("URL の欄の面と再読み込みのボタンは、上下の中央がそろう", () => {
+    render(<Default />);
+    const field = screen.getByRole("textbox", { name: "プレビューの URL" }).getBoundingClientRect();
+    const button = screen.getByRole("button", { name: "再読み込み" }).getBoundingClientRect();
+    expect(field.top + field.height / 2).toBe(button.top + button.height / 2);
+  });
+
   it("ダミーの中身の色は、開いている画面のテーマの地の色と文字の色にそろう", () => {
     const srcDocOf = () => screen.getByTitle("プレビューの画面").getAttribute("srcdoc") ?? "";
     const { unmount } = render(<Default />);

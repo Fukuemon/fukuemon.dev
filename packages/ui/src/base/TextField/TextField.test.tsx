@@ -72,7 +72,7 @@ describe("TextField", () => {
     expect(style.borderBottomColor).toBe(colorOf("text-danger"));
   });
 
-  it("boxed の欄は、無効のときに面を無効の色にする", () => {
+  it("boxed の欄は、無効のときに面を無効の色にし、下罫を飾りの罫の色に替える", () => {
     render(<Disabled />);
     const style = getComputedStyle(
       faceOf(screen.getByRole("textbox", { name: "リダイレクト先の URL" })),
@@ -81,6 +81,7 @@ describe("TextField", () => {
     expect(style.backgroundColor).toBe(
       getComputedStyle(screen.getByTestId("disabled")).backgroundColor,
     );
+    expect(style.borderBottomColor).toBe(colorOf("text-border"));
   });
 
   it("誤りがあれば欄を aria-invalid にし、誤りの文を説明に結ぶ。role=alert は付けない", () => {

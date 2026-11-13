@@ -156,7 +156,7 @@ export function FileTree({
       toolbar={
         editing && (
           <form
-            className="flex items-end gap-2 border-b border-border p-2"
+            className="flex items-end gap-3 border-b border-border p-2"
             key={editing.kind === "rename" ? editing.node.id : editing.kind}
             onSubmit={handleSubmit}
           >

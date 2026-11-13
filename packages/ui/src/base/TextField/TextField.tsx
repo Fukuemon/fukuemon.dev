@@ -67,7 +67,7 @@ export function TextField({
             className={clsx(
               "absolute inset-x-0 inset-y-0.5 rounded-control border-b border-border-field bg-surface-subtle",
               "peer-focus-visible:focus-ring peer-aria-invalid:border-b-2 peer-aria-invalid:border-danger",
-              "peer-disabled:bg-surface-disabled",
+              "peer-disabled:border-border peer-disabled:bg-surface-disabled",
             )}
           />
         </div>
