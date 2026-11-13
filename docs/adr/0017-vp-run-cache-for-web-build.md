@@ -47,7 +47,7 @@ vite-plus 1.3.0 の同梱のツールと `vp env` には、次の事実がある
 - 2 つのタスクに分けると、原稿を変えたときに Pagefind も実行し直す。1 つのタスクにまとめると、原稿を変えても索引がキャッシュから戻り、古くなる。
 
 `build:site` の出力は `dist/**` と明示する。  
-自動の記録は `dist/_astro/` を拾わず、`dist/` を消した後のキャッシュヒットで、HTML だけが戻り資産が欠けた。原因は確かめていない。
+自動の記録は `dist/_astro/` を拾わず、`dist/` を消した後のキャッシュヒットで、HTML だけが戻り資産が欠けた。原因は確認していない。
 
 `vite-plus` は、`vite.config.ts` を持ち `vp` を呼ぶ `apps/web` の devDependencies に宣言する。
 
@@ -106,8 +106,8 @@ ADR-0003 の Decision 4 の撤退の条件と、Turborepo へ切り替える選�
 
 ## Verification
 
-`pnpm --filter @fukuemon/web run build` を、キャッシュを消してから続けて実行して確かめた。  
-macOS の手元の結果で、CI の Linux では確かめていない。
+`pnpm --filter @fukuemon/web run build` を、キャッシュを消してから続けて実行して確認した。  
+macOS の手元の結果で、CI の Linux では確認していない。
 
 - `apps/web/src/content/` の原稿を 1 つ変えると、`build:site` が原稿の変更でキャッシュを外し、`build:search` も実行し直す。
 - `packages/design-system/styles/tokens.css` を変えると、`build:site` が `tokens.css` の変更でキャッシュを外し、`build:search` も実行し直す。

@@ -50,7 +50,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 ### Astro の制約
 
-ツールのバージョンの所在は [context/tech-stack.md](../context/tech-stack.md#toolchain) にある。
+ツールのバージョンの所在は [context/tech-stack.md](../../context/tech-stack.md#toolchain) にある。
 
 `id` は Astro がファイルのパスから導いて占有するので、安定した識別子は `contentId` という別の名前で持つ。  
 ADR-0002: [Content Model の Astro からの独立](../adr/0002-content-model-independence.md)
@@ -121,14 +121,14 @@ flowchart TD
 ```
 
 `apps/web` の中では、`astro:content` に触れるのを、collection を結ぶ設定と、正規化のレイヤだけにする。  
-依存してよい向き、禁止する依存、チェックの手段は [context/codebase.md](../context/codebase.md#dependency-rules) にある。
+依存してよい向き、禁止する依存、チェックの手段は [context/codebase.md](../../context/codebase.md#dependency-rules) にある。
 
 機能ごとの設計は次の文書にある。
 
-- [Content Model](../packages/content-model/DesignDoc.md): schema、`contentId`、関係グラフ、`ContentRef` への正規化
-- [UI](../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
+- [Content Model](../../packages/content-model/DesignDoc.md): schema、`contentId`、関係グラフ、`ContentRef` への正規化
+- [UI](../../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
 - [トップの庭](features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
-- [基盤](../infra/DesignDoc.md): Terraform の構成、state backend、deploy と apply の流れ
+- [基盤](../../infra/DesignDoc.md): Terraform の構成、state backend、deploy と apply の流れ
 
 ## Interfaces
 
@@ -167,7 +167,7 @@ ADR-0030: [種別、形式、シリーズ](../adr/0030-articles-format-and-serie
 | `/rss.xml`                  | RSS                                                                    |
 
 描画の実装の詳細を URL に含めない。  
-URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
+URL の規約は [context/codebase.md](../../context/codebase.md#url) にある。
 
 ### 運営者が書くファイル
 
@@ -178,21 +178,21 @@ URL の規約は [context/codebase.md](../context/codebase.md#url) にある。
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
 
-書き方は [context/conventions.md](../context/conventions.md) にある。
+書き方は [context/conventions.md](../../context/conventions.md) にある。
 
 ## Cross-Cutting Concerns
 
 ### 設計不変量
 
 将来を可能にしているのは、次の 8 点である。  
-依存規約の本文は [context/codebase.md](../context/codebase.md#dependency-rules) にある。  
+依存規約の本文は [context/codebase.md](../../context/codebase.md#dependency-rules) にある。  
 変えるときは ADR を書く。  
 この 8 点のほかに、将来のための先行投資をしない。
 
 | #   | 不変量                                                                                                                                    | 何を可能にするか                                                                  | 根拠                                                           |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | `contentId` の不変。[context/domain/content.md](../context/domain/content.md#prohibitions) の取り決め                                     | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 2   | 関連の片方向の辺。[context/domain/content.md](../context/domain/content.md#invariants) の取り決め                                         | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 1   | `contentId` の不変。[context/domain/content.md](../../context/domain/content.md#prohibitions) の取り決め                                  | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
+| 2   | 関連の片方向の辺。[context/domain/content.md](../../context/domain/content.md#invariants) の取り決め                                      | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
 | 3   | 依存規約 1。ページとコンポーネントは `astro:content` を直接参照しない                                                                     | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
 | 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                                                               | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
 | 5   | 画面の色、字、余白は、`@fukuemon/ui` のトークンから取る。画面のコードに値を直接書かない                                                   | 配色と版面を、トークンの変更だけで変えられる                                      | [ADR-0024](../adr/0024-tokens-of-fukuemon-dev.md)              |
@@ -228,7 +228,33 @@ island は、読むことに要らない機能にだけ使う。
 
 ### 動き
 
-サイト全体の動きの規則は [Design System の Design Doc](../packages/design-system/DesignDoc.md) にある。
+**動きは、状態の変化を伝えるときだけに使う**。  
+規則はサイト全体で共通である。
+
+- 位置を動かさない。位置が動くと、罫の位置が確定するまで読み始められない。
+- 動きのために配る JavaScript は 0 バイトにする。
+- 5 秒を超えて続く動きは、5 秒以内に止める。WCAG 2.2 の 2.2.2 は、自動で始まり、5 秒を超えて続き、ほかの内容と並んで出る動きに、止める手段を求める。
+  - 出典: [Understanding SC 2.2.2: Pause, Stop, Hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)
+
+OS で動きを減らす設定にした訪問者への止め方と、動きの時間と緩急のユーティリティは、[デザインシステム（packages/ui）の Design Doc の「動き」](../../packages/ui/DesignDoc.md#動き) にある。
+
+#### トップの庭の例外
+
+**トップの庭は、位置を動かさない規則と、配る JavaScript を 0 バイトにする規則の例外にする**。  
+庭は 2 回目以降の訪問にも出すので、例外は最初の訪問に限らない。  
+動きを減らす設定のときは、庭を出さず、同じ本文をふつうのページとして出す。
+
+- three を配る。場面の束は別のファイルにし、庭を出すときだけ読み込む。
+- カメラが動く。最初の訪問で門をくぐるときと、文から文へ移るときに動く。
+- 舞う物（桜の花びら、蛍、紅葉、雪）が動き続ける。庭の中の「動きを止める」のボタンで止める。
+- 最初の訪問だけに、約 8 秒のイントロを出す。イントロは画面の全体を使い、ほかの内容と並ばない。「飛ばす」のボタンと Esc と Tab で、動かさずに最後の状態にする。
+
+イントロと舞う物は、5 秒以内に止める規則の例外にする。  
+イントロは、画面の全体を使ってほかの内容と並ばず、「飛ばす」のボタンで止められるためである。  
+舞う物は、「動きを止める」のボタンで止められるためである。
+
+ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../adr/0026-sumi-gate-and-garden-on-top.md)  
+イントロの各段の時間は [トップの水墨の門と立体の庭の Design Doc](features/top-garden/DesignDoc.md) にある。
 
 ### 配信
 
@@ -236,13 +262,13 @@ island は、読むことに要らない機能にだけ使う。
 - 新しいサイトは、プレビューの Worker に、develop への push で check が通ったときにデプロイする。
 - カタログとドキュメントサイトは、develop への push で check が通ったときにデプロイする。
 
-deploy と apply の条件は [context/operations.md](../context/operations.md#deployment-conditions) にある。
+deploy と apply の条件は [context/operations.md](../../context/operations.md#deployment-conditions) にある。
 
 ### 検証
 
 - E2E は、配信した状態のサイトを、ブラウザで操作して確認する。サイトのコードを import しない。
 - E2E は、録画と字幕のエビデンスを撮れる形で書く。
-- テストの種類と保証の範囲は [context/testing.md](../context/testing.md) にある。
+- テストの種類と保証の範囲は [context/testing.md](../../context/testing.md) にある。
 
 ### 条件つきで追加する機能の形
 
@@ -258,7 +284,7 @@ deploy と apply の条件は [context/operations.md](../context/operations.md#d
 - コメントは、バックエンドを持たない外部のサービスで追加する。
 - 問い合わせのフォームの送信を受ける口は、同じ Worker への POST 1 本にする。
   - データを保持するリソースが Terraform の管轄に加わる。
-  - Terraform から Wrangler へ値を渡す方法は、[context/operations.md](../context/operations.md#terraform-と-wrangler-の管轄) の条件のとおりに定める。
+  - Terraform から Wrangler へ値を渡す方法は、[context/operations.md](../../context/operations.md#terraform-と-wrangler-の管轄) の条件のとおりに定める。
 
 ADR-0008: [読者の identity を前提とする機能を作らない](../adr/0008-no-reader-identity.md)
 

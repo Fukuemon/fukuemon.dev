@@ -81,7 +81,7 @@ Geist Mono は Google Fonts にないので、どちらにしても Fontsource �
 - Google Fonts の CSS API の値は、次の手順で測った。
   - `https://fonts.googleapis.com/css2?family=<Family>:wght@<weights>` を Chrome の User-Agent で取得する。
   - `src: url(...)` が指す woff2 のサイズを測る。
-- Google Fonts のフォントが `cross-origin-resource-policy: cross-origin` を返し、COEP の下でも読めることを計測で確かめた。
+- Google Fonts のフォントが `cross-origin-resource-policy: cross-origin` を返し、COEP の下でも読めることを計測で確認した。
 
 ## Considered Options
 
@@ -95,7 +95,7 @@ Geist Mono は Google Fonts にないので、どちらにしても Fontsource �
 | BIZ UDMincho                                                                                                       | 判読性が高い                                                                           | 和のテイストが出ない。Noto Serif JP と同じ理由で退ける                                                                                                                     |
 | 欧文に STIX Two Text（参考サイトと同じ）                                                                           | 「論文」らしさが最も強い。参考サイトの質感をそのまま再現できる                         | Times 系で、和より学術に寄る。参考サイトとの差が弱まる。オールドスタイル明朝と骨格を揃える点でも EB Garamond に劣る                                                        |
 | 欧文の専用書体を入れず、Zen Old Mincho が内蔵する Latin を使う                                                     | 追加のダウンロードがない。和文と欧文の骨格が完全に一致する                             | 欧文だけを見た品質が専用書体に劣る。本文に技術用語が頻繁に出てくるので、その差が常に目に入る                                                                               |
-| Google Fonts の CDN を使う                                                                                         | 導入が最も簡単。CDN のキャッシュに乗る可能性がある                                     | サードパーティのヘッダの方針に依存する。今 CORP を返すことは確かめたが、変わらない保証がない。Geist Mono がないので Fontsource と併用になり、取得元が 2 系統になる         |
+| Google Fonts の CDN を使う                                                                                         | 導入が最も簡単。CDN のキャッシュに乗る可能性がある                                     | サードパーティのヘッダの方針に依存する。今 CORP を返すことは確認したが、変わらない保証がない。Geist Mono がないので Fontsource と併用になり、取得元が 2 系統になる         |
 
 ## Consequences
 

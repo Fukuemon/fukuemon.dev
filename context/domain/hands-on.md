@@ -7,7 +7,7 @@ status: stable
 
 # ハンズオン
 
-形式、実行環境、実行環境を足す手順の設計は [ハンズオンと Interactive の Design Doc](../../apps/web/src/features/lab/DesignDoc.md) にある。
+種別を記事の 1 つにし、構成を記事の形式で表す決定は [ADR-0030](../../docs/adr/0030-articles-format-and-series.md) にある。
 
 ## States and Transitions
 

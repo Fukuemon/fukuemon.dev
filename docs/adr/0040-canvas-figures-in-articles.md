@@ -17,7 +17,7 @@
   - ADR-0039: [キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する](0039-canvas-drawio-and-excalidraw.md)
 - draw.io は、図の XML を入れた SVG（`xmlsvg`）を書き出す。Excalidraw は、scene を入れた SVG を書き出す。どちらのエディタも、書き出した SVG をファイルとして開ける。
 - サイトは、OS の設定でライトとダークを切り替える。サイトに、テーマを切り替える操作を置かない。`data-theme` の属性は、Storybook だけが使う。
-  - 出典: [トークンの文書](../packages/ui/design/tokens.md)
+  - 出典: [トークンの文書](../../packages/ui/design/tokens.md)
 - プレイグラウンドでは、他人が用意したコードを、訪問者の操作なしに動かさない。運営者が用意した初期ファイルは、この条件の対象にしない。他人が用意したものを読み込む機能を追加するときは、決め直す。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
 - リポジトリは公開で、コードと記事の本文を MIT License で公開している。

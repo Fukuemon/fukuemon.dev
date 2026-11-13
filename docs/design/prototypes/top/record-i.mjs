@@ -1,4 +1,4 @@
-// 使い方: node design/prototypes/top/build-i.mjs の後に、node design/prototypes/top/record-i.mjs [video] [still] [measure]（リポジトリの直下で流す）
+// 使い方: node docs/design/prototypes/top/build-i.mjs の後に、node docs/design/prototypes/top/record-i.mjs [video] [still] [measure]（リポジトリの直下で流す）
 // 門をくぐって庭へ入る形（i-mon.html）を録画し、コマの一覧と静止画の一覧を作り、LCP、FPS、設定ごとの状態を測る。
 // 結果の数値は checks/2026-11-12-i-mon-measure.json に書く。
 import { createRequire } from "node:module";
@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const { chromium } = createRequire(join(here, "../../../package.json"))("playwright");
+const { chromium } = createRequire(join(here, "../../../../package.json"))("playwright");
 const url = (q) => `file://${join(here, "i-mon.html")}?${q}`;
 const gpu = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"];
 const want = (k) => process.argv.length < 3 || process.argv.includes(k);

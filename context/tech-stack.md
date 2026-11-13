@@ -21,42 +21,40 @@ npm のパッケージのバージョンは、各 package の `package.json` に
 Node.js、uv、apm、similarity-ts のバージョンは、`mise.toml` に書いてある。  
 pnpm のバージョンは、ルートの `package.json` の `packageManager` に書いてある。
 
-- ADR-0011: [ツールのバージョンを mise で固定する](../adr/0011-pin-tool-versions-with-mise.md)
+- ADR-0011: [ツールのバージョンを mise で固定する](../docs/adr/0011-pin-tool-versions-with-mise.md)
 
 ツールごとの役割と、使い方の取り決めは次のとおり。
 
 - Astro は、全画面を描画する framework として使う。
   - 描画は Astro のページとして自前で組み、Starlight は使わない。
-  - ADR-0001: [Starlight の採否](../adr/0001-starlight-as-docs-renderer.md)
-- React と `@astrojs/react` は、実行パネルとサイドバーの island だけに使う。
+  - ADR-0001: [Starlight の採否](../docs/adr/0001-starlight-as-docs-renderer.md)
+- React は、`packages/ui` のコンポーネントと、`apps/web` の island に使う。
 - Tailwind CSS と `@tailwindcss/vite` は、CSS のスタイリングの基盤として使う。
   - preflight は読まない。
   - トークンは `@theme static` に置き、Expressive Code の `styleOverrides` から参照できる素のカスタムプロパティとして残す。
-  - ADR-0010: [Tailwind CSS の採用](../adr/0010-tailwind-as-styling-base.md)
+  - ADR-0010: [Tailwind CSS の採用](../docs/adr/0010-tailwind-as-styling-base.md)
   - `packages/ui` は、トークンを `@theme inline` のテーマ変数に置き、Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す。層の分け方は [packages/ui/DesignDoc.md](../packages/ui/DesignDoc.md#トークンの層) にある。
 - Storybook は、`packages/ui` のカタログに使う。a11y、docs、vitest、themes のアドオンと、hover の見た目を出す `storybook-addon-pseudo-states` を使う。
   - story は、Vitest のブラウザのモードでテストとして動かす。ブラウザは Playwright の chromium を使う。
-  - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../adr/0021-ui-components-and-catalog.md)
-- `astro-expressive-code` は、コードブロックの描画に使う。スタイリングは `styleOverrides` から指定する。
-- Pele（`pele`）は、Mermaid の図をビルド時に SVG へ変換する。ブラウザを使わない。
-  - バージョンは範囲で書かず、1 つに固定する。上げるときは、図の見た目を撮って比べる。
-  - ADR-0016: [mermaid の図を、ビルドでも島でも Pele で SVG にする](../adr/0016-render-mermaid-with-pele.md)
-- `pagefind` は、全文検索の索引を `astro build` の後に作る。
-- `@electric-sql/pglite` は、ハンズオンの実行環境として Worker で動かす。COOP と COEP を要求しない。
+  - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
-- 型のチェックには、`apps/web` では `astro check` を、`packages/content-model` では `tsc` を使う。
+  - Oxlint の設定は、ルートの `oxlint.config.ts` に書く。
+  - 組み込みのプラグインは、デフォルトの `eslint`、`typescript`、`unicorn`、`oxc` に、`react`、`jsx-a11y`、`import` を加えて有効にする。`plugins` を書くとデフォルトのプラグインが外れるので、デフォルトのプラグインも並べる。
+  - 外部のプラグインは、`jsPlugins` で `eslint-plugin-better-tailwindcss` を読む。
+  - react-doctor は差分だけを見るので、全てのファイルに掛ける React の規則は Oxlint が持つ。
+- 型のチェックには、`apps/web` では `astro check` を、`packages/content-model` と `packages/ui` では `tsc` を使う。
   - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
 - knip は、未使用の export、依存、ファイルの検出に使う。
 - Vitest は unit test に使う。
-- Playwright は、見た目の回帰のチェック（`e2e/`）で画面を撮るのに使う。
+- Playwright は、`packages/ui` の story のテストと、トップの試作の録画に使う。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
 - Wrangler は、サイトの Worker（`apps/web`）とカタログの Worker（`packages/ui`）の deploy に使う。
 - 品質のチェックには、react-doctor、knip、similarity-ts、Lefthook を使う。
   - 各ツールをチェックのどこで実行するかは [conventions.md](conventions.md#shared-configuration) にある。
-  - ADR-0007: [品質のチェックの採否](../adr/0007-quality-gates.md)
+  - ADR-0007: [品質のチェックの採否](../docs/adr/0007-quality-gates.md)
 
 パッケージマネージャーが管理しないツールのバージョンの決め方は次のとおり。
 
@@ -66,7 +64,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - similarity-ts は、GitHub のリリースにある prebuilt のバイナリを、mise の `github` backend で入れる。npm にも mise の registry にもないため。
 
 Bun と Biome は使わない。  
-ADR-0007: [品質のチェックの採否](../adr/0007-quality-gates.md)
+ADR-0007: [品質のチェックの採否](../docs/adr/0007-quality-gates.md)
 
 ツールを足すときは、次の方針に従う。
 
@@ -77,7 +75,7 @@ ADR-0007: [品質のチェックの採否](../adr/0007-quality-gates.md)
 ### Vite+ の取り決め
 
 Vite+（`vite-plus`）は、`apps/web` の build を `vp run` でキャッシュすることだけに使う。  
-ADR-0017: [Vite+ の適用範囲](../adr/0017-vp-run-cache-for-web-build.md)
+ADR-0017: [Vite+ の適用範囲](../docs/adr/0017-vp-run-cache-for-web-build.md)
 
 - `apps/web` の build のコマンドは、`apps/web/vite.config.ts` の `run.tasks` に置く。
   - `apps/web/package.json` の `build` の script は、`vp run` でタスクを呼ぶだけにする。
@@ -87,7 +85,7 @@ ADR-0017: [Vite+ の適用範囲](../adr/0017-vp-run-cache-for-web-build.md)
 - タスクの `cache.output` は、成果物のディレクトリを明示する。
   - `astro build` では、自動の記録が `dist/_astro/` を拾わない。
 - Astro の dev と build は、Astro の CLI が担う。`vp dev` と `vp build` で Astro を置き換えない。
-  - ADR-0003: [monorepo と Vite+ の採否](../adr/0003-monorepo-and-vite-plus.md)
+  - ADR-0003: [monorepo と Vite+ の採否](../docs/adr/0003-monorepo-and-vite-plus.md)
 - `vp lint`、`vp fmt`、`vp test`、`vp check`、`vp install`、`vp env` は使わない。
   - Oxlint、Oxfmt、Vitest は devDependencies に宣言したバージョンを実行する。vite-plus の同梱のバージョンとは別に上がる。
   - Node.js のバージョンは mise が固定する。
@@ -102,11 +100,9 @@ Vite+ を外す手順は、ADR-0017 の Decision 7 にある。
 
 ## Upgrade Checks
 
-- Astro のメジャーバージョンを上げるときは、`apps/web/src/lib/content/` のアダプタを直す。
-  - アダプタの外に変更が広がるなら、[codebase.md](codebase.md#dependency-rules) の規約 1 か規約 3 が破られている。
 - `vite-plus` か Astro を上げるときと、`apps/web/vite.config.ts` のタスクを変えるときは、build のキャッシュを次の 4 点で確認する。
-  1. `apps/web/src/content/` のファイルを 1 つ変えて `pnpm --filter @fukuemon/web run build` を実行し、キャッシュが外れる。
-  2. `packages/design-system/` のトークンを変えて実行し、キャッシュが外れる。
+  1. `apps/web/src/` のファイルを 1 つ変えて `pnpm --filter @fukuemon/web run build` を実行し、キャッシュが外れる。
+  2. `packages/ui/src/tokens/` のトークンを変えて実行し、キャッシュが外れる。
   3. 何も変えずに 2 回目を実行し、キャッシュが当たる。
   4. `apps/web/dist/` を消して実行し、`dist/` のファイルの一覧が、キャッシュを使わない build の後と一致する。
 - 4 点のどれかを満たさなければ、キャッシュを無効にするか、Turborepo へ切り替える。

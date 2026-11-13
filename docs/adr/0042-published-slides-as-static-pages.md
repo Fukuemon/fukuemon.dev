@@ -16,7 +16,7 @@
 - marp-core の出力は、全てのスライドを縦に並べた HTML で、ページ送りを持たない。
 - marp-cli の `bespoke` のテンプレートは、ページ送り、進み具合のバー、発表者の画面を持つ。
 - サイトは、OS の設定でライトとダークを切り替える。サイトに、テーマを切り替える操作を置かない。
-  - 出典: [トークンの文書](../packages/ui/design/tokens.md)
+  - 出典: [トークンの文書](../../packages/ui/design/tokens.md)
 - Node の実行環境を埋め込む記事の URL には、`COOP: same-origin` と `COEP: require-corp` を返す。
   - ADR-0034: [cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す](0034-playground-origin-and-embedding.md)
 

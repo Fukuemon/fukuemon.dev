@@ -28,7 +28,7 @@ verified_commit: 01101c7
 
 基盤の設定は Terraform が、アプリの deploy と runtime の設定は Wrangler が管理する。  
 1 つのリソースを両方から管理しない。  
-ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)  
+ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-workers-terraform-wrangler-boundary.md)  
 管轄はこの表で決め、リソースが増減したら表を直す。
 
 | リソース                                                    | 管轄                            | 使うか   |
@@ -60,7 +60,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - cross-origin isolation をサイト全体に掛けない。`/playground/*` のうち、`sandbox` の playground の URL だけに掛ける。
   - 全体に掛けると、CORP を返さない第三者のリソースが一律にブロックされる。
   - ヘッダは、該当する `sandbox` の playground が実在してから書く。PGlite の playground には掛けない。
-  - ADR-0006: [手を動かす場所の 4 分類](../adr/0006-interactive-content-levels.md)
+  - ADR-0006: [手を動かす場所の 4 分類](../docs/adr/0006-interactive-content-levels.md)
 - HTML に `Cache-Control` を書かない。Workers Static Assets のデフォルト値に任せる。
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
 - HSTS に `includeSubDomains` を付ける。HTTP で公開するサブドメインが要るときは外す。
@@ -69,7 +69,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 
 - サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
 - カタログの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-catalog workflow が行う。初回の deploy と出し直しは、運用者が deploy-catalog workflow を `workflow_dispatch` で `develop` から手で起動する。
-  - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../adr/0021-ui-components-and-catalog.md)
+  - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
 - Terraform の apply は、運用者が apply workflow を `workflow_dispatch` で手で起動したときだけ行う。
   - 起動には、`infra` environment の protection rules の承認が要る。
   - 差分は 2 回の起動で確認する。`mode=plan` で起動して plan を読み、納得してから `mode=apply` で起動し直す。

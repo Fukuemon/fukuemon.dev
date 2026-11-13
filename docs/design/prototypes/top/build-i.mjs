@@ -1,4 +1,4 @@
-// 使い方: node design/prototypes/top/build-i.mjs（リポジトリの直下で流す）
+// 使い方: node docs/design/prototypes/top/build-i.mjs（リポジトリの直下で流す）
 // 門をくぐって立体の庭のプロフィールへ入る形の試作 i-mon.html と、場面の束 vendor/i-scene.bundle.js を書く。
 // 試作では URL の引数で上書きできる。
 //   ?visit=first|garden|html（最初の訪問、2 回目に庭を出す形、2 回目にふつうの HTML を出す形）
@@ -14,7 +14,7 @@ import { brush, render } from "./src/h-strokes.mjs";
 import { DESIGN, GATE, GATE_Z, WALL, STEPS, STEP_R, MOUNTAINS, STATIONS, project } from "./src/i-layout.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = join(here, "../../..");
+const root = join(here, "../../../..");
 const shared = readFileSync(join(here, "src", "shared.css"), "utf8");
 const tokens = shared.slice(0, shared.indexOf("* { box-sizing"));
 const logo = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="9" r="3.5" fill="currentColor"/><path d="M4 19Q9 12 13 16T20 15V20H4Z" fill="currentColor"/></svg>';

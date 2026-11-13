@@ -35,7 +35,7 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 | **react-doctor**  | React 固有の診断 (correctness / performance / a11y / 設計)。0–100 のスコア |
 | **knip**          | 未使用の export / 依存 / ファイルの検出                                    |
 | **similarity-ts** | コード重複の検出                                                           |
-| Oxlint + Oxfmt    | 既定の lint / format (Vite+ 同梱)                                          |
+| Oxlint + Oxfmt    | デフォルトの lint / format (Vite+ 同梱)                                    |
 | Lefthook          | pre-commit のチェック                                                      |
 
 出典: [React Doctor](https://www.react.doctor/)
@@ -56,7 +56,7 @@ CI には組み込むが、**Island が実在してから「スコアを下げ�
 
 **汎用ルールと Design System の衝突が予想される。**  
 衝突したルールは `react-doctor rules disable` で個別に無効化する。  
-**無効化の理由は [context/conventions.md](../context/conventions.md#check-exclusions) に記録する。**  
+**無効化の理由は [context/conventions.md](../../context/conventions.md#check-exclusions) に記録する。**  
 無効化そのものは記録されないためである。
 
 **開発時のみ `npx` で実行し、成果物の依存に入れない。** バージョンが 0.9.x で 1.0 未満であり、ルールセットが安定していない。  
@@ -78,7 +78,7 @@ ADR-0002: [関係を `contentId` の辺として持ち、Content Model を Astro
 
 similarity-ts は cargo 製の外部バイナリで、`vp env` の管理外にある。  
 **未インストールの環境では、チェックは「通った」のではなく「実行されなかった」。**  
-CI では存在を確かめ、欠けていれば警告として報告する。
+CI では存在を確認し、欠けていれば警告として報告する。
 
 ## Considered Options
 

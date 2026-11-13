@@ -22,7 +22,7 @@
   - Commercial Usage のページは「Licensing is required for production usage of the API in a commercial, for-profit setting.」と書く。
     - 出典: [WebContainers: Commercial Usage](https://webcontainers.io/enterprise)
   - 紹介のページは「Always free for Open Source」と書く。fukuemon.dev のリポジトリは公開で、コードと記事の本文を MIT License で公開している。
-    - [LICENSE](../LICENSE)
+    - [LICENSE](../../LICENSE)
     - 出典: [WebContainers: Introduction](https://webcontainers.io/guides/introduction)
 - WebContainers の実行環境の本体は、StackBlitz の CDN から読み込む。自分のサイトから配れない。
 - WebContainers は、cross-origin isolation を求める。
@@ -45,7 +45,7 @@ StackBlitz に問い合わせずに、WebContainers を使う。
 - fukuemon.dev は、収益のない個人のサイトである。Commercial Usage のページの読みでは、ライセンスが要らない。利用規約の読みでは、本番で公開するサイトとして、ライセンスが要る。
 - 運営者は、Commercial Usage のページの読みで使うと判断した。
 - リポジトリのコードと記事の本文は、MIT License で公開している。紹介のページの「Always free for Open Source」に当たる見込みを上げるためである。当たるかは、StackBlitz に確認していない。
-  - [LICENSE](../LICENSE)
+  - [LICENSE](../../LICENSE)
 
 StackBlitz が API の利用を止めたときは、実行環境を差し替える。
 

@@ -22,19 +22,19 @@ three は、バージョン 0.187.0 を使う。
 2. three 0.187.0 を `vendor/three/` に展開する。
 
    ```sh
-   mkdir -p design/prototypes/top/vendor/three
-   npm pack three@0.187.0 --pack-destination design/prototypes/top/vendor
-   tar -xzf design/prototypes/top/vendor/three-0.187.0.tgz -C design/prototypes/top/vendor/three --strip-components=1
-   rm design/prototypes/top/vendor/three-0.187.0.tgz
+   mkdir -p docs/design/prototypes/top/vendor/three
+   npm pack three@0.187.0 --pack-destination docs/design/prototypes/top/vendor
+   tar -xzf docs/design/prototypes/top/vendor/three-0.187.0.tgz -C docs/design/prototypes/top/vendor/three --strip-components=1
+   rm docs/design/prototypes/top/vendor/three-0.187.0.tgz
    ```
 
 3. `i-mon.html` と、場面の束 `vendor/i-scene.bundle.js` を書く。
 
    ```sh
-   node design/prototypes/top/build-i.mjs
+   node docs/design/prototypes/top/build-i.mjs
    ```
 
-4. `design/prototypes/top/i-mon.html` をブラウザで開く。`file://` のまま動く。
+4. `docs/design/prototypes/top/i-mon.html` をブラウザで開く。`file://` のまま動く。
 
 `build-i.mjs` は、墨の絵の SVG、CSS、`head` のスクリプトを `i-mon.html` に書き直す。  
 ソースを変えずに流したときは、`i-mon.html` は変わらない。
@@ -61,12 +61,13 @@ GPU は ANGLE の Metal のレンダラーを使うので、macOS で流す。
 
 ```sh
 pnpm --filter @fukuemon/ui exec playwright install chromium
-mkdir -p design/prototypes/top/checks design/prototypes/top/frames
-node design/prototypes/top/record-i.mjs
+mkdir -p docs/design/prototypes/top/checks docs/design/prototypes/top/frames
+node docs/design/prototypes/top/record-i.mjs
 ```
 
 - 引数に `video`、`still`、`measure` を付けると、その部分だけを流す。
-- 録画の mp4 は `design/prototypes/top/` に、静止画の一覧は `checks/` に、コマの一覧は `frames/` に、測定の値は `checks/2026-11-12-i-mon-measure.json` に書く。どれも Git で追跡しない。
+- 録画の mp4 は `docs/design/prototypes/top/` に、静止画の一覧は `checks/` に、コマの一覧は `frames/` に置く。
+- 測定の値は `checks/2026-11-12-i-mon-measure.json` に書く。どれも Git で追跡しない。
 
 ## 署名を差し替える
 
@@ -79,9 +80,9 @@ node design/prototypes/top/record-i.mjs
 - 書体から作り直すときは、書体のファイルを取得して、`src/sign-path.py` で輪郭を取り出す。
 
   ```sh
-  mkdir -p design/prototypes/top/vendor/fonts
-  curl -fsSL -o design/prototypes/top/vendor/fonts/GreatVibes-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/greatvibes/GreatVibes-Regular.ttf
-  uv run --with fonttools python -I design/prototypes/top/src/sign-path.py design/prototypes/top/vendor/fonts/GreatVibes-Regular.ttf Fukuemon design/prototypes/top/src/sign.svg
+  mkdir -p docs/design/prototypes/top/vendor/fonts
+  curl -fsSL -o docs/design/prototypes/top/vendor/fonts/GreatVibes-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/greatvibes/GreatVibes-Regular.ttf
+  uv run --with fonttools python -I docs/design/prototypes/top/src/sign-path.py docs/design/prototypes/top/vendor/fonts/GreatVibes-Regular.ttf Fukuemon docs/design/prototypes/top/src/sign.svg
   ```
 
   - 字の送りは、書体の送り幅だけを使う。カーニングと合字は当てない。

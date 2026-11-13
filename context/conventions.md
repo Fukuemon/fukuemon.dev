@@ -6,7 +6,7 @@ status: stable
 governs:
   - package.json
   - lefthook.yml
-  - .oxlintrc.json
+  - oxlint.config.ts
   - .oxfmtrc.jsonc
   - packages/config/
 verified_commit: 63b37ad
@@ -35,11 +35,10 @@ verified_commit: 63b37ad
 
 コードの中のコメントは、Why not を主に書く。  
 書かないと、あとで誰かが不用意に単純化し、不具合を入れる。  
-このリポジトリで Why not を書くべき箇所の典型は次の 3 つ。
+このリポジトリで Why not を書くべき箇所の典型は次の 2 つ。
 
 - `contentId` を Astro の `id` に載せない理由。Astro が `id` を占有し、`slug` を schema に置けない。
 - 関係に `reference()` を使わない理由。collection をまたぎ、Content Model を Astro に依存させないため。
-- `tokens.css` のトークンを `@theme static` に置き、素のカスタムプロパティとして出力する理由。Expressive Code が挿す CSS はこのリポジトリのビルドを通らないため。
 
 Why not のコメントには、該当する ADR へのリンクを 1 行添える。
 
@@ -92,7 +91,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 `packages/ui` のコンポーネントと、`packages/ui` で組む画面は、[packages/ui/DESIGN.md](../packages/ui/DESIGN.md) と、そこから指す 3 つの文書の規則に従う。  
 この節の規則は、今のサイト（`apps/web` と `packages/design-system`）のスタイリングに当たる。
 
-層の順とトークンの層は [Design System の Design Doc](../packages/design-system/DesignDoc.md#配布と層) にある。
+層の順とトークンの層は [デザインシステム（packages/ui）の Design Doc の「トークンの層」](../packages/ui/DesignDoc.md#トークンの層) にある。
 
 ### 状態の書き方
 
@@ -126,12 +125,27 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 ### 当たり判定
 
-規則は [Design System の Design Doc](../packages/design-system/DesignDoc.md#当たり判定と読み上げ) にある。
+規則は [packages/ui の DESIGN.md の「アクセシビリティ」](../packages/ui/DESIGN.md#アクセシビリティ) にある。
 
 - 触る端末だけで寸法を変えるときは、`pointer-coarse:` を使う。
   - `hover: none` は Expressive Code の写しボタンだけに使う。EC の規則が cascade layer の外にあり、markup から当てられない。
 - `.hit-up` の当たり判定は疑似要素が持つ。
   - `getBoundingClientRect()` は疑似要素を含めないので、測るときは `::after` の `top` と `bottom` を差し引いて足す。
+
+## React
+
+React の誤りのうち、lint で止まるものは Oxlint の規則に任せる。  
+有効にしている規則は `oxlint.config.ts` にある。  
+この節には、lint で止まらない書き方を書く。
+
+- props が変わったときに state を初期の値に戻すのは、`key` で行う。Effect の中で `setState` を呼んで戻さない。
+- 利用者の操作で起きる処理は、イベントハンドラに書く。Effect に書かない。
+- 外部の store を購読するときは、`useSyncExternalStore` で書く。
+- Effect の中で、最新の props を読むだけの処理は、`useEffectEvent` に分ける。依存の配列に入れて、Effect を張り直させない。
+- 端末の値（`localStorage`、端末の日付、画面の幅）で描く island は、次のどちらかで書く。
+  - `useSyncExternalStore` の 3 つ目の引数に、サーバーで描くときの値を渡す。
+  - `client:only` で置き、サーバーで描かない。
+- マウントの後に Effect で `setState` を呼んで描き直す形を使わない。サーバーで描いた HTML と 1 度目の描画が食い違い、画面がちらつく。
 
 ## Shared Configuration
 
@@ -142,12 +156,12 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 | ----------------- | -------------------------------------------- | ---------------------------------------------- |
 | tsconfig          | `@fukuemon/config` の `./tsconfig/base.json` | 各 package が `extends` する                   |
 | Astro の tsconfig | `apps/web/tsconfig.json`                     | `astro/tsconfigs/strict` を直接 `extends` する |
-| lint と依存規約   | ルートの `.oxlintrc.json`                    | ルートからリポジトリ全体に 1 回掛ける          |
+| lint と依存規約   | ルートの `oxlint.config.ts`                  | ルートからリポジトリ全体に 1 回掛ける          |
 | 未使用の検出      | ルートの `package.json` の `knip`            | ルートから 1 回掛ける                          |
 | format            | ルートの `.oxfmtrc.jsonc`                    | ルートからリポジトリ全体に 1 回掛ける          |
 | vitest            | 各 package の `vitest.config.ts`             | 対象の列挙が package ごとに違うので共有しない  |
 
-- `no-restricted-imports` の依存規約は、ルートの `.oxlintrc.json` だけに置く。package ごとに書くと、片方だけが更新される。
+- `no-restricted-imports` の依存規約は、ルートの `oxlint.config.ts` だけに置く。package ごとに書くと、片方だけが更新される。
 - 依存規約をチェックするために、独自の oxlint プラグインを作らない。
   - 層が増えて `no-restricted-imports` の列挙が読めなくなったら作る。
 - package ごとに変わるコマンドは、その package の `package.json` の scripts に置く。ルートは `pnpm -r` で束ねるだけにする。
@@ -163,27 +177,25 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - lint、typecheck、test を pre-commit で実行しない。`pnpm run check` と CI が担う。
 - pre-commit は、ステージしたファイルに Oxfmt を掛ける。
   - Oxfmt は `.astro` を扱わないので、`.astro` は整形されない。
-- 見た目の回帰のチェック（`shot` と `shot:diff`）は `check` に入れない。理由は [testing.md](testing.md#test-types-and-guarantees) にある。
 
 ### チェックのツールに合わせる書き方
 
 - `.astro` の `<script>` は、1 ファイルに 1 つだけにする。
   - knip は最初の `<script>` しか読まず、2 つ目の import を追跡しない。
   - `type="application/json"` のようなデータの置き場を足すときは、module の `<script>` より後ろに書く。
-- `.oxlintrc.json` の `overrides` の各 entry は、そのファイル群に要る禁止をすべて自分で持つ。
+- `oxlint.config.ts` の `overrides` の各 entry は、そのファイル群に要る禁止をすべて自分で持つ。
   - `overrides` は同じ規則名を後勝ちで上書きし、前の entry と合流しない。
   - entry を足したら、各方向について違反するファイルを 1 つ置き、`pnpm run lint` が失敗することを確認する。
 - 配色のチェックは、対象のトークンが見つからないことを失敗として扱う。
-  - `packages/design-system/check-contrast.ts` は、存在しないトークンを `errors` に積む。
+  - `scripts/check-contrast.mjs` は、色に解決できないトークンと、CSS にない `--root` のブロックを失敗にする。
 
 ## Check Exclusions
 
 除外を足すときは、理由をこの節に書く。  
 設定ファイルのコメントだけに残さない。
 
-- knip は、`/pagefind/pagefind.js` を解決できない import として扱わない（`ignoreUnresolved`）。Pagefind が `astro build` の後に `dist/` へ作るファイルで、ソースの時点では存在しないため。
 - knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
-- knip は、`apps/web` の `pagefind` を未使用の依存として扱わない（`ignoreDependencies`）。knip は `vite.config.ts` の `run.tasks` のコマンドから knip が知るコマンドだけを読み、`pagefind` を読まないため。
+- knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則とプラグインのパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則とプラグインの名前で読み込み、import されないため。
 - 原稿の textlint は、ai-words-ja の `実測` と `走ら` を指摘しない（`allows`）。
@@ -194,10 +206,10 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
   - 承認した ADR-0026 の題と、PRD の性能の要求の行にあり、言い換えると承認した文が変わる。
   - 比喩として使う `門` も通るので、レビューで見る。
-- `design/prototypes/` の試作は、knip（`ignore`）と Oxfmt（`ignorePatterns`）の対象から外す。
+- `docs/design/prototypes/` の試作は、knip（`ignore`）と Oxfmt（`ignorePatterns`）の対象から外す。
   - 試作は、設計の判断の基準として写したまま残すソースで、サイトのコードから import されない。
   - 試作のビルドのスクリプトは、CSS を文字列の位置で切る。整形すると、エラーを出さずに違う HTML を書く。
-- oxlint は、`design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three の束で、Git で追跡しないため。
+- oxlint は、`docs/design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three の束で、Git で追跡しないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。
 
 チェックが実行されなかったことを、通ったとして扱わない。

@@ -5,8 +5,8 @@
 構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024 にある。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
-- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../adr/0021-ui-components-and-catalog.md)
-- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
+- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
 カタログは https://design.fukuemon.dev で開ける。  
 ローカルでは、リポジトリのルートで `pnpm --filter @fukuemon/ui storybook` を流し、`http://localhost:6106` を開く。
@@ -61,7 +61,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | くすんだ緑、藍、錆の差し色         | 緑は主の色と内部のリンク、藍は外部のリンクと情報、錆は目次の現在地と注意 | [トークン](design/tokens.md)の「色」                               |
 | 記事の題と見出しの明朝             | 記事の題、見出し、小見出し、ダイアログの題                               | [トークン](design/tokens.md)の「文字」                             |
 | 角丸と影を使わない、罫線の版面     | 全ての画面。重なる面は 1px の枠、読み込み中の印も罫で示す                | [トークン](design/tokens.md)の「レイアウト、区切り、重なり、動き」 |
-| 版画風の挿絵                       | 記事の一覧の冒頭だけ。トップは水墨の門の絵と立体の庭にする               | [挿絵の Design Doc](../design-system/art/DesignDoc.md)、`ArtBand`  |
+| 版画風の挿絵                       | 記事の一覧の冒頭だけ。トップは水墨の門の絵と立体の庭にする               | [挿絵の Design Doc](src/art/DesignDoc.md)、`ArtBand`               |
 | 罫を引く動き                       | 選んだタブの罫、検索の欄のフォーカスの罫、読み込み中の印                 | [トークン](design/tokens.md)の「レイアウト、区切り、重なり、動き」 |
 
 ## 画面を作るときの原則

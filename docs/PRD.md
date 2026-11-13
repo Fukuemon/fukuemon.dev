@@ -250,7 +250,7 @@ Success Metrics の「記事を読める」「記事の追加が 1 枚で済む�
   - 許可していない人がドキュメントサイトの URL を開くと、認証の画面になる。
 - 公開に関わる Cloudflare の設定が、Dashboard の上の属人的な設定として残らない。
   - ドメイン、DNS、配信先、ドキュメントサイトのアクセスの認証の設定が、リポジトリに書いた定義と一致する。
-  - 確認した結果は [基盤の Design Doc の Verification](infra/DesignDoc.md#verification) にある。
+  - 確認した結果は [基盤の Design Doc の Verification](../infra/DesignDoc.md#verification) にある。
 
 ## Open Questions / Risks
 

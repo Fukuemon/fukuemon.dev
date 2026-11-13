@@ -6,9 +6,9 @@
 
 ## Context
 
-- 本サイトの中核価値は、読んで理解する段階と手を動かして確かめる段階が地続きになることにある。
+- 本サイトの中核価値は、読んで理解する段階と手を動かして確認する段階が地続きになることにある。
   - 記事とハンズオンを 1 つの一覧に載せ、コンテンツ同士の関連をたどれることが要件になる。
-  - 相互参照グラフの設計は [packages/content-model/DesignDoc.md](../packages/content-model/DesignDoc.md) が持つ。
+  - 相互参照グラフの設計は [packages/content-model/DesignDoc.md](../../packages/content-model/DesignDoc.md) が持つ。
 - Astro 6 (2026-03) で legacy content collections が撤去され、識別子は `id` に一本化された。
   - **content schema に `slug` を定義すると、ビルドが `ContentSchemaContainsSlugError` で失敗する。**
   - `id` は Astro がファイルパスから導出して占有するため、自前の安定識別子を `id` に載せることもできない。
@@ -17,7 +17,7 @@
   - 将来コンテンツを別の collection や別のデータソースへ移すと、参照の記述をすべて書き換えることになる。
 - 本文の描画レイヤは将来差し替えうる。データソースも Markdown から別の形へ移りうる。
   - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む](0001-starlight-as-docs-renderer.md)
-- 運用者は 1 名でレビューによる職務分離が成立しないため、規約は機械で確かめられる形にする必要がある。
+- 運用者は 1 名でレビューによる職務分離が成立しないため、規約は機械で確認できる形にする必要がある。
 
 ## Decision
 
@@ -28,7 +28,7 @@ contentId: rdbms-query-execution # 発行後は変更しない。全 collection 
 path: hands-on/rdbms-query-execution # URL パス。改名可能
 ```
 
-`contentId` の重複はビルド時に確かめ、見つかればビルドを失敗させる。
+`contentId` の重複はビルド時に確認し、見つかればビルドを失敗させる。
 
 ### 2. 関係は `contentId` から `contentId` への片方向の辺として持ち、`reference()` を使わない
 

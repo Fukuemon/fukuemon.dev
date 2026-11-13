@@ -101,7 +101,7 @@ CI に chromium の取得が加わることは許容する。
 
 ### デザインは既存の決定に従う
 
-セクションを増やしても、デザインの基準は [design-system](../packages/design-system/DesignDoc.md) のままにする。  
+セクションを増やしても、デザインの基準は [design-system](../design/DesignDoc.md) のままにする。  
 「角丸を使わず、影で奥行きを作らない」「紙に刷った版面の見えを保つ」を about と playground にも適用する。
 
 動きは状態の変化を伝えるときだけに使う。  
