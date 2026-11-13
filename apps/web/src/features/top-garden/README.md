@@ -30,11 +30,11 @@ SVG の大きさの上限は gzip で 40 KB で、ユニットテストが確認
 
 ## 署名を差し替える
 
-署名は `sign.svg` から読む。
+署名の輪郭は `sign.svg` に置き、`signSvg` がファイルの中身から HTML に置く `svg` を作る。
 `sign.svg` は、`viewBox` と、輪郭を塗った `path` を 1 本だけ持つ形にする。
 運営者の自筆の署名に替えるときは、同じ形の SVG でこのファイルを置き換える。
 
-線（`stroke`）で描いた SVG と、`path` が 2 本以上ある SVG を置くと、`signSvg` が例外を投げ、ビルドが止まる。
+線（`stroke`）で描いた SVG と、`path` が 2 本以上ある SVG を渡すと、`signSvg` は例外を投げる。
 線で描いた形は、塗っても字にならないためである。
 
 今の `sign.svg` は、書体 Great Vibes の輪郭を、試作の `design/prototypes/top/src/sign-path.py` で取り出したものである。
