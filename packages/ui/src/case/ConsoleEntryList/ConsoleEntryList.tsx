@@ -121,10 +121,12 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
         <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 gap-y-2 font-mono text-body-dense text-text">
           {entry.args.map((arg, index) =>
             isExpandable(arg) ? (
+              // oxlint-disable-next-line react/no-array-index-key -- 同じ値の引数が並ぶことがあり、並びも変わらない (context/conventions.md)
               <div className="w-full" key={index}>
                 <TreeView items={[toTreeNode(arg, `${entry.id}/${index}`)]} label="ログの値" />
               </div>
             ) : (
+              // oxlint-disable-next-line react/no-array-index-key -- 同じ値の引数が並ぶことがあり、並びも変わらない (context/conventions.md)
               <span className="wrap-anywhere whitespace-pre-wrap" key={index}>
                 {preview(arg)}
               </span>
