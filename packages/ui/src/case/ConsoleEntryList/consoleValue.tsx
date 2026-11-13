@@ -98,9 +98,7 @@ export function preview(value: ConsoleValue, isNested = false): string {
   }
 }
 
-type Child = { key: string; value: ConsoleValue };
-
-const childrenOf = (value: ConsoleValue): Child[] => {
+const childrenOf = (value: ConsoleValue): ConsoleProperty[] => {
   switch (value.kind) {
     case "array":
     case "set":
