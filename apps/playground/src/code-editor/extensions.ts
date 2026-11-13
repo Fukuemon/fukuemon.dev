@@ -31,7 +31,7 @@ import { createSearchPanel } from "./search-panel";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
 
 // 色は packages/ui のテーマ変数を読み、ライトとダークをトークンの側で切り替える (docs/adr/0022-code-colors-from-tokens.md)
-// 今いる行は選んだ行の面（surface-subtle）、選択の範囲は状態の薄い面（primary-surface）にする (packages/ui/DesignDoc.md のコードの色)
+// アクティブ行は選んだ行の面（surface-subtle）、選択の範囲は状態の薄い面（primary-surface）にする (packages/ui/DesignDoc.md のコードの色)
 // 補完の一覧は、トークンの文書の「重なり」の組にする。CodeMirror の既定の色を残すと、ダークで読めない
 const theme = EditorView.theme({
   "&": {

@@ -68,6 +68,14 @@ describe("runSql", () => {
     expect(lastRows(await runSql(pg, "select 3"))).toStrictEqual([[3]]);
   });
 
+  it("ROLLBACK も失敗するときは、元のエラーを返す", async () => {
+    const broken = { exec: () => Promise.reject(new Error("broken")) };
+    expect(await runSql(broken, "select 1", () => 0)).toStrictEqual({
+      error: { message: "broken" },
+      ms: 0,
+    });
+  });
+
   it("VACUUM ANALYZE を 1 つの文で実行できる", async () => {
     await runSql(pg, "create table vac (id int); insert into vac select generate_series(1, 10);");
     expect(lastRows(await runSql(pg, "vacuum analyze vac"))).toStrictEqual([]);
@@ -129,7 +137,7 @@ describe("keepLastRows", () => {
   it("最後の文のほかの結果から、行を除く", () => {
     const response = { results: [result([[1], [2]]), result([[3]])], ms: 1 };
     expect(keepLastRows(response)).toStrictEqual({
-      results: [{ ...result([[1], [2]]), rows: [], truncated: true }, result([[3]])],
+      results: [{ ...result([[1], [2]]), rows: [] }, result([[3]])],
       ms: 1,
     });
   });

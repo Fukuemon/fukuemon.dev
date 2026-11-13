@@ -72,7 +72,7 @@ export function keepLastRows(response: SqlResponse): SqlResponse {
   return {
     ...response,
     results: response.results.map((result, index) =>
-      index === last ? result : { ...result, rows: [], truncated: result.totalRows > 0 },
+      index === last ? result : { ...result, rows: [] },
     ),
   };
 }

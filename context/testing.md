@@ -75,6 +75,7 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 ## Runtime Requirements
 
 - unit test は Node.js の上で動かし、ブラウザの環境を要求しない。
+  - 例外は、`apps/playground/src/code-editor/search-panel.ts` のテストである。CodeMirror のパネルは DOM を組むので、jsdom の上で動かす。
 - E2E を足すときは、ビルド済みの `dist/` を静的に配信して実行し、dev server を対象にしない。
   - Astro の dev と build で出力が違う場合があり、本番に近い側をチェックする。
 - 実行に要る環境変数、ポート、外部のサービスは、未定。

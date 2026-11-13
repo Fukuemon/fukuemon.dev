@@ -199,6 +199,22 @@ describe("createWorkerDatabase", () => {
 });
 
 describe("createHandler", () => {
+  it("最後の文のほかの結果の行を、送らない", async () => {
+    const posted: FromWorker[] = [];
+    const handle = createHandler(
+      () => PGlite.create(),
+      (message) => posted.push(message),
+    );
+    await handle({ type: "init" });
+    await handle({ type: "run", id: 1, sql: "select 1; select 2;" });
+    const last = posted.at(-1);
+    expect(
+      last?.type === "response" && "results" in last.response
+        ? last.response.results.map((result) => result.rows)
+        : undefined,
+    ).toStrictEqual([[], [[2]]]);
+  });
+
   it("init の前の run には、error を返す", async () => {
     const post = vi.fn();
     await createHandler(() => PGlite.create(), post)({ type: "run", id: 1, sql: "select 1" });
