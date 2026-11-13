@@ -19,7 +19,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { extname, join, relative, resolve, sep } from "node:path";
 
 // 画面とコンポーネントのコードの置き場
-const TARGETS = ["./packages/ui/src", "./apps/web/src"];
+const TARGETS = ["./packages/ui/src", "./apps/web/src", "./apps/playground/src"];
 // トークンの層のファイルと生成物のように、原則の外にある置き場
 const EXCLUDES = ["./packages/ui/src/tokens"];
 const EXTENSIONS = [

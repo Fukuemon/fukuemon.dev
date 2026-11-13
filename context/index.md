@@ -18,7 +18,7 @@
 - [fukuemon.dev Design Doc](../docs/design/DesignDoc.md) — 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、サイト全体の動きの規則とトップの庭の例外、条件つきで足す機能の形（draft）
 - [AI からの操作](../docs/design/features/ai-operations/DesignDoc.md) — AI のエージェントに公開する操作の名前と入力と結果、許可のスイッチ、確認の画面、操作の記録の欄、localStorage のキーと期限、登録から実行までの流れ（draft）
 - [トップの水墨の門と立体の庭](../docs/design/features/top-garden/DesignDoc.md) — トップの最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル（draft）
-- [プレイグラウンド](../docs/design/features/playground/DesignDoc.md) — apps/playground の構成とパス、ディレクトリ、実行環境のインターフェースの型、状態の置き場、プロジェクトと保存の形、起動の流れ、SQL を送る形式（draft）
+- [プレイグラウンド](../apps/playground/DesignDoc.md) — apps/playground の構成とパス、ディレクトリ、実行環境のインターフェースの型、状態の置き場、プロジェクトと保存の形、起動の流れ、SQL を送る形式（draft）
 - [基盤](../infra/DesignDoc.md) — Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 - [Content Model](../packages/content-model/DesignDoc.md) — 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef の型、loader との結線
 - [挿絵](../packages/ui/src/art/DesignDoc.md) — 挿絵を置く場所、版画風の挿絵の図柄と版の仕様、色と濃さのトークン、動きの層、生成器と ArtBand の使い方

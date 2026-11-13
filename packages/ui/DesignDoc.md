@@ -36,7 +36,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 
 持たないものは次のとおり。
 
-- Domain のコンポーネント。サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置は、`apps/web` の `features/<機能>/components` に置く。
+- Domain のコンポーネント。サイトの帯と記事の一覧の行は `apps/web` の `features/<機能>/` に、プレイグラウンドの画面の配置は `apps/playground/src/` の関心ごとのディレクトリに置く。
 - エディタと端末のエンジン（CodeMirror、xterm.js など）の選択と結び付け。プレイグラウンドの要求の prototype で決める。`packages/ui` は枠とテーマだけを持つ。
 - 記事の Markdown の描画と、Mermaid の図の SVG への変換。サイトの基盤の要求で扱う。
 - 縦組み。
@@ -257,12 +257,12 @@ HTTP の流れの表示には、新しい色のトークンを作らず、状態
 
 - 出典: [BCD Design によるコンポーネントの分類](https://qiita.com/misuken/items/19f9f603ab165e228fe1)
 
-| 分類     | 置き場                                     | 例                                                       |
-| -------- | ------------------------------------------ | -------------------------------------------------------- |
-| Base     | `packages/ui/src/base/<名前>/`             | `Button`、`Tabs`、`TreeView`                             |
-| Case     | `packages/ui/src/case/<名前>/`             | `SearchBox`、`FileTree`、`HttpExchangeList`              |
-| パターン | `packages/ui/src/patterns/`                | まだ無い                                                 |
-| Domain   | `apps/web/src/features/<機能>/components/` | サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置 |
+| 分類     | 置き場                                                             | 例                                                       |
+| -------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| Base     | `packages/ui/src/base/<名前>/`                                     | `Button`、`Tabs`、`TreeView`                             |
+| Case     | `packages/ui/src/case/<名前>/`                                     | `SearchBox`、`FileTree`、`HttpExchangeList`              |
+| パターン | `packages/ui/src/patterns/`                                        | まだ無い                                                 |
+| Domain   | `apps/web/src/features/<機能>/`、`apps/playground/src/<関心ごと>/` | サイトの帯、記事の一覧の行、プレイグラウンドの画面の配置 |
 
 パターンは、コンポーネントの組み合わせが 2 つ以上の画面に出たときに、`src/patterns/` に置く。  
 `src/patterns/` には、まだパターンが無い。

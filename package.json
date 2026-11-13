@@ -25,7 +25,7 @@
     "build:art": "node scripts/build-art.mjs",
     "check:art": "node scripts/build-art.mjs --check",
     "check:worker-name": "bash scripts/check-worker-name.sh",
-    "check:deploy": "pnpm --filter @fukuemon/web exec wrangler deploy --dry-run && pnpm --filter @fukuemon/ui exec wrangler deploy --dry-run",
+    "check:deploy": "pnpm --filter @fukuemon/web exec wrangler deploy --dry-run && pnpm --filter @fukuemon/ui exec wrangler deploy --dry-run && pnpm --filter @fukuemon/playground exec wrangler deploy --dry-run",
     "build:storybook": "pnpm --filter @fukuemon/ui build-storybook",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run check:doctor && pnpm run check:similarity && pnpm run check:contrast && pnpm run check:raw-values && pnpm run check:utilities && pnpm run check:tokens && pnpm run check:art && pnpm run check:worker-name && pnpm run test && pnpm run test:ui && pnpm run build && pnpm run build:storybook && pnpm run check:deploy",
     "infra:init": "terraform -chdir=infra/cloudflare init",
@@ -65,6 +65,11 @@
       ".": {
         "entry": [
           "scripts/check-contrast.mjs"
+        ]
+      },
+      "apps/playground": {
+        "entry": [
+          "src/*/main.tsx"
         ]
       },
       "packages/ui": {

@@ -12,7 +12,7 @@ status: draft
 AI からの操作は、利用者がつないだ AI のエージェントに、プレイグラウンドのツールの操作を公開する機能である。  
 利用者は、ツールのページのスイッチで操作を許可し、エージェントが行った操作を、操作の記録の欄で見る。
 
-アプリの構成とツールのページは [プレイグラウンドの Design Doc](../playground/DesignDoc.md) にある。  
+アプリの構成とツールのページは [プレイグラウンドの Design Doc](../../../../apps/playground/DesignDoc.md) にある。  
 方式と、許可と確認の形は、次の ADR が決めている。
 
 - ADR-0044: [AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする](../../../adr/0044-ai-operations-with-webmcp.md)

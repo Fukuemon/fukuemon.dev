@@ -41,7 +41,7 @@ SQL だけを動かすツールと、Go を動かすツールは、それぞれ�
 - 起動は、関数が返す Promise で待つ。画面は、`Suspense` と `use` で待つ。Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。
 - 実行環境を起動し直すときは、インスタンスを破棄し、新しいインスタンスを作る。React の外のモジュールが、起動の Promise を新しいものに替える。
 
-型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#noderuntime) にある。
+型は、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#noderuntime) にある。
 
 ### 3. モジュールの置き場
 
@@ -59,7 +59,7 @@ SQL だけを動かすツールと、Go を動かすツールは、それぞれ�
 - `node-runtime/`（`packages/node-runtime/src/`）の直下と、`webcontainer/` の間も、型で分ける。WebContainers に依る処理は、`webcontainer/` に置く。
   - 動かせるかの判定、環境変数の組み立て、プレビューの iframe の属性
   - プレビューからのメッセージの origin の確認、実行環境の中の Node が動かすファイルを置く処理
-  - 型は、[プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md#webcontainer-が実装する型) にある。
+  - 型は、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#webcontainer-が実装する型) にある。
 - `@fukuemon/node-runtime` が公開する起動の関数は 1 つにする。起動の Promise を埋め込みの ID ごとに持つ処理は、`apps/playground` の、ツールのページのディレクトリ（`src/node/`）に置く。
 - `apps/playground/src/` は、関心ごとのディレクトリで分ける。実装の種類のディレクトリ（`components/`、`hooks/`、`utils/`）を作らない。
 - ツールのページのディレクトリ（`src/node/`、`src/sql/`、`src/go/`）は、互いに import しない。Oxlint の `no-restricted-imports` で止める。

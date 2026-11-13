@@ -19,7 +19,7 @@ AI のエージェントからの操作を、SQL だけを動かすツール（`
 - SQL だけを動かすツールは、PGlite を Web Worker で動かす。SQL だけを動かすツールは、DB の中身を保存しない。Web Worker を作り直すと、DB は初期の状態に戻る。保存するのは、入力欄の SQL だけである。
   - ADR-0053: [DB の記事は PGlite を使い、Node のコードからは Unix ドメインソケットで `pg` から接続し、SQL は DB のプロセスの標準入出力で送る](0053-pglite-database-in-playground.md)
 - SQL だけを動かすツールの PGlite も、訪問者が実行のボタンを押してから読み込む。
-  - 出典: [プレイグラウンドの Design Doc](../design/features/playground/DesignDoc.md)
+  - 出典: [プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md)
 - Go を動かすツールは、訪問者のファイルを IndexedDB に保存する。
   - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
 - プレイグラウンドでは、訪問者が動かしたコードが、同じ origin に保存した図とスライドにアクセスできることを受け入れる。条件は、他人が用意したコードを、訪問者の操作なしに動かさないことである。

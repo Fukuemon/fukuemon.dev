@@ -18,7 +18,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { extname, join, relative, resolve, sep } from "node:path";
 
 // 画面とコンポーネントのコードの置き場
-const TARGETS = ["./packages/ui/src", "./apps/web/src"];
+const TARGETS = ["./packages/ui/src", "./apps/web/src", "./apps/playground/src"];
 // 値とプリミティブトークンの名前を持ってよい置き場。トークンの層のファイル、生成物（API のクライアントのように、生成し直して差分を見るもの）、
 // 色の値を並べるトークンのカタログのページの 3 つを並べる。生成物とトークンのカタログのページは、画面のコードではない
 const EXCLUDES = ["./packages/ui/src/tokens"];
