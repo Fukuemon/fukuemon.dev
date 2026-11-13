@@ -157,7 +157,12 @@ export function ConsoleEntryList({
   state,
 }: ConsoleEntryListProps) {
   const [levels, setLevels] = useState<ReadonlySet<ConsoleLevel>>(() => new Set(defaultLevels));
-  const visible = entries.filter((entry) => levels.has(entry.level));
+  const visible: ConsoleEntry[] = [];
+  const counts: Record<ConsoleLevel, number> = { debug: 0, log: 0, info: 0, warn: 0, error: 0 };
+  for (const entry of entries) {
+    counts[entry.level] += 1;
+    if (levels.has(entry.level)) visible.push(entry);
+  }
   const toggle = (level: ConsoleLevel) => {
     const next = new Set(levels);
     if (next.has(level)) next.delete(level);
@@ -193,7 +198,6 @@ export function ConsoleEntryList({
     >
       {LEVELS.map((level) => {
         const isOn = levels.has(level);
-        const count = entries.filter((entry) => entry.level === level).length;
         return (
           <button
             aria-pressed={isOn}
@@ -208,7 +212,7 @@ export function ConsoleEntryList({
             <CheckIcon isChecked={isOn} />
             {level}
             <span className="text-caption">
-              {count}
+              {counts[level]}
               <span className="sr-only"> 件</span>
             </span>
           </button>
