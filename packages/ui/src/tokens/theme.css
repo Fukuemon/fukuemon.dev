@@ -193,26 +193,19 @@
     center / 100% 100% no-repeat;
 }
 
-/* リンクの hover で、下線の下に筆の線を左から引く */
-@utility link-brush {
-  position: relative;
+/*
+ * 文中のリンクの hover で、下線の下に 2px の罫を左から引く。
+ * 疑似要素の筆の線は折り返すと最後の行にしか出ないので、背景で描き、box-decoration-break で行ごとに伸ばす。
+ */
+@utility link-rule {
+  padding-block-end: 4px;
+  background: linear-gradient(currentColor, currentColor) left bottom / 0% 2px no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 240ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    bottom: -5px;
-    height: 4px;
-    background: currentColor;
-    mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E")
-      center / 100% 100% no-repeat;
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path 240ms cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-  }
-
-  &:hover::after {
-    clip-path: inset(0);
+  &:hover {
+    background-size: 100% 2px;
   }
 }
 
