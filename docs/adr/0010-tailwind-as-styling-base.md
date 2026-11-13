@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」を ADR-0055 に置換）
 
 ## Context
 

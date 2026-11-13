@@ -42,15 +42,18 @@
 
 ## 書体、トークン、コンポーネント
 
-| ADR                                           | 題                                                                                                                                                                   |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-0004](0004-typography-static-weights.md) | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
-| [ADR-0019](0019-latin-font-stix-two-text.md)  | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
-| [ADR-0023](0023-keep-art-and-key-color.md)    | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
-| [ADR-0010](0010-tailwind-as-styling-base.md)  | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
-| [ADR-0024](0024-tokens-of-fukuemon-dev.md)    | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
-| [ADR-0021](0021-ui-components-and-catalog.md) | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
-| [ADR-0022](0022-code-colors-from-tokens.md)   | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
+| ADR                                                      | 題                                                                                                                                                                   |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-0004](0004-typography-static-weights.md)            | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
+| [ADR-0019](0019-latin-font-stix-two-text.md)             | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
+| [ADR-0023](0023-keep-art-and-key-color.md)               | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
+| [ADR-0010](0010-tailwind-as-styling-base.md)             | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
+| [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md) | サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う                                                                  |
+| [ADR-0024](0024-tokens-of-fukuemon-dev.md)               | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
+| [ADR-0021](0021-ui-components-and-catalog.md)            | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
+| [ADR-0022](0022-code-colors-from-tokens.md)              | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
+
+ADR-0010 の Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」は、ADR-0055 に置換した。
 
 ADR-0020（[トークンを、DADS の値をコピーしたプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、ライトとダークをセマンティックトークンで切り替える](0020-design-tokens-from-dads.md)）は、ADR-0024 に置換した。
 
@@ -111,6 +114,7 @@ flowchart TB
     A0019["ADR-0019"]
     A0023["ADR-0023"]
     A0010["ADR-0010"]
+    A0055["ADR-0055"]
     A0024["ADR-0024"]
     A0021["ADR-0021"]
     A0022["ADR-0022"]
@@ -199,6 +203,9 @@ flowchart TB
   A0045 --> A0031
   A0045 --> A0034
   A0045 --> A0044
+  A0055 --> A0010
+  A0055 --> A0024
+  A0055 --> A0029
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  
