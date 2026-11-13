@@ -58,7 +58,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 記事の中の例の切り替え、エディタのファイルのタブ、狭い画面での 2 つのペインの切り替え。
 - 使わない場面と、代わりに使うもの: 内容を開いて閉じるだけなら `Disclosure`。ページを移るなら `Link`。
-- 変種: パネルの余白の `padded` と `flush`。タブごとの `closable`。密度の `default` と `compact`（タブ 32px、閉じるボタン 28px、筆の線 2px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
+- 変種: パネルの余白の `padded` と `flush`。タブごとの `closable`。密度の `default` と `compact`（タブ 32px、閉じるボタン 28px、筆の線 3px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: デフォルト、hover、フォーカス、選択。選んだタブの下には、緑の筆の線を左から 1 回引く。
 - 内容の制約: `label` をタブの並びの名前に渡す。
 - キーボード: 左右の矢印のキーで隣のタブへ移り、端から反対の端へ回る。Home と End で端のタブへ移る。
@@ -116,7 +116,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: HTTP の状態コードと、記事の種別。
 - 使わない場面と、代わりに使うもの: 押せる操作には使わない。文で知らせるなら `Notice`。
-- 変種: `neutral`、`info`、`success`、`warning`、`danger`。HTTP の状態コードへの当て方は [Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)にある。
+- 変種: `neutral`、`info`、`success`、`warning`、`danger`。密度の `default` と `compact`（12px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。HTTP の状態コードへの当て方は [Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)にある。
 - 状態: なし（押せない表示）。
 - 内容の制約: `label` を必ず渡す。色だけで意味を伝えない（`STATE-NOT-COLOR-ONLY`）。
 - キーボード: なし。
@@ -163,7 +163,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: `FileTree` と `ConsoleEntryList` が組む木の表示。
 - 使わない場面と、代わりに使うもの: ファイルの作成、名前の変更、削除まで扱うなら `FileTree`。入れ子の無い一覧には使わない。
-- 変種: 項目の高さの `default`（44px）と `compact`（24px）。`compact` は、コードを動かす画面のコンポーネントだけに使う。押せる領域を 44×44 CSS px 以上にする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする（ADR-0062）。`compact` の文字は、`textSize` で 12px（コンソールの値の木）か 13px（ファイルの木）にする。13px では、選んだ項目を太字にしない。
+- 変種: 項目の高さの `default`（44px）と `compact`（24px）。`compact` は、コードを動かす画面のコンポーネントだけに使う。押せる領域を 44×44 CSS px 以上にする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする（ADR-0062）。`compact` の文字は、`textSize` で 12px（コンソールの値の木）か 13px（ファイルの木）にする。13px では、選んだ項目を太字にせず、面の色と左の 2px の `primary` の罫で示す。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 - 状態: 枝の開閉、選択、hover、フォーカス。
 - 内容の制約: `label` を木の名前に渡す。

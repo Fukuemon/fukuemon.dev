@@ -32,7 +32,7 @@ export type TreeViewProps = {
   density?: "default" | "compact";
   /**
    * density が compact のときの文字。compact は 12px（コンソールの値の木）、body-compact は 13px（ファイルの木）にする。
-   * body-compact では、選んだ項目を太字にせず、面の色だけで示す。太字にすると名前の幅が変わり、行が揺れるためである。
+   * body-compact では、選んだ項目を太字にせず、面の色と左の 2px の主の色の罫で示す。太字にすると名前の幅が変わり、行が揺れるためである。
    */
   textSize?: "compact" | "body-compact";
 };
@@ -189,7 +189,9 @@ export function TreeView({
               "flex items-start gap-1 rounded-control pr-2 transition-colors focus-visible:focus-ring",
               isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
               "aria-selected:bg-primary-surface",
-              !isBodyCompact && "aria-selected:font-bold",
+              isBodyCompact
+                ? "border-l-2 border-transparent aria-selected:border-primary"
+                : "aria-selected:font-bold",
               (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
             )}
             key={node.id}

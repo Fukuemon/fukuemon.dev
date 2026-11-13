@@ -57,7 +57,7 @@ const removeNode = (nodes: readonly TreeNode[], id: string): TreeNode[] =>
 
 /**
  * ファイルのツリー、エディタ、端末、プレビュー、HTTP の流れ、コンソールを、隙間なく 1px の罫で仕切って並べた画面。幅 48rem 未満では、領域を縦に積む。
- * 罫は、ToolPaneGroup の中の領域が右と下に引く。
+ * 罫は、ToolPaneGroup の中の領域が四方に引き、左と上へ 1px ずらして隣と重ねる。ヘッダーの墨の罫は領域の罫の上に描き、左端は 1px 空けて罫を画面の中に入れる。
  */
 function Playground({
   exchanges,
@@ -75,13 +75,13 @@ function Playground({
   const exchange = exchanges.find((e) => e.id === exchangeId);
   return (
     <div className="min-h-screen bg-surface text-text">
-      <header className="border-b-2 border-text px-6">
+      <header className="relative z-10 border-b-2 border-text px-6">
         <div className="flex min-h-16 items-center">
           <h1 className="font-heading text-heading-md font-semibold">認可コードを受け取る</h1>
         </div>
       </header>
       <ToolPaneGroup>
-        <main className="flex flex-col md:flex-row md:items-start">
+        <main className="flex flex-col pl-px md:flex-row md:items-start">
           {/* 左の 2 列は、右の列の高さに伸びず、自分の中身の高さで止める。伸ばすと、エディタが伸びて端末が最初の画面の外へ出る */}
           <div className="flex min-w-0 flex-col md:flex-2 md:flex-row">
             <div className="grid md:w-64 md:shrink-0">

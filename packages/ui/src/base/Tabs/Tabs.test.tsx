@@ -83,7 +83,7 @@ describe("Tabs", () => {
     expect(screen.queryByRole("tab", { name: "server.ts" })).toBeNull();
   });
 
-  it("density を compact にすると、タブは 32 px、閉じるボタンは 28 px で押せ、筆の線は 2px になる（ADR-0062）", () => {
+  it("density を compact にすると、タブは 32 px、閉じるボタンは 28 px で押せ、筆の線は 3px になる（ADR-0062）", () => {
     render(<Compact />);
     const tab = screen.getAllByRole("tab")[0] as HTMLElement;
     expect(tab.getBoundingClientRect().height).toBe(32);
@@ -91,6 +91,6 @@ describe("Tabs", () => {
     const close = tab.parentElement?.querySelector("button[aria-hidden]");
     expect(close?.getBoundingClientRect().height).toBe(28);
     const stroke = tab.parentElement?.querySelector("span[aria-hidden]");
-    expect(stroke?.getBoundingClientRect().height).toBe(2);
+    expect(stroke?.getBoundingClientRect().height).toBe(3);
   });
 });

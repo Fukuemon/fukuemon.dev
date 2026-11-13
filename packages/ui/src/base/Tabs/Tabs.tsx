@@ -25,7 +25,7 @@ export type TabsProps = {
    */
   panel?: "padded" | "flush";
   /**
-   * compact は、タブを 32 px の高さと 13 px の文字、閉じるボタンを 28 px、選んだタブの筆の線を 2 px にする。
+   * compact は、タブを 32 px の高さと 13 px の文字、閉じるボタンを 28 px、選んだタブの筆の線を 3 px にする。
    * コードを動かす画面のエディタのタブに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
    */
   density?: "default" | "compact";
@@ -92,7 +92,7 @@ export function Tabs({
                   aria-hidden="true"
                   className={clsx(
                     "pointer-events-none absolute inset-x-0 bottom-0 animate-stroke bg-primary stroke-brush",
-                    isCompact ? "h-0.5" : "h-1",
+                    isCompact ? "h-0.75" : "h-1",
                   )}
                 />
               )}

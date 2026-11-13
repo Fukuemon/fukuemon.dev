@@ -57,7 +57,9 @@ function ActorName({ actors, id }: { actors: readonly HttpActor[]; id: string })
 }
 
 /** 状態コードの印の種類と文字。packages/ui/DesignDoc.md の「HTTP の流れの色」の対応に従う。 */
-const statusOf = (status: number | undefined): Required<StatusBadgeProps> => {
+const statusOf = (
+  status: number | undefined,
+): Required<Pick<StatusBadgeProps, "tone" | "label">> => {
   if (status === undefined) return { tone: "danger", label: "届かなかった" };
   const label = String(status);
   if (status >= 500) return { tone: "danger", label };
@@ -89,7 +91,7 @@ export function HttpExchangeSummary({
       <span className="flex w-full min-w-0 items-start gap-2">
         <span className="shrink-0 font-mono text-code-compact font-bold">{exchange.method}</span>
         <span className="min-w-0 flex-1 font-mono text-code-compact break-all">{exchange.url}</span>
-        <StatusBadge label={status.label} tone={status.tone} />
+        <StatusBadge density="compact" label={status.label} tone={status.tone} />
       </span>
     </>
   );
@@ -122,7 +124,7 @@ export function HttpExchangeList({
               <button
                 aria-current={isSelected ? "true" : undefined}
                 className={clsx(
-                  "flex min-h-6 w-full cursor-pointer flex-col border-l-2 px-3 py-1 text-left hover:bg-surface-subtle focus-visible:focus-ring",
+                  "flex min-h-6 w-full cursor-pointer flex-col border-l-2 py-1 pr-3 pl-2.5 text-left hover:bg-surface-subtle focus-visible:focus-ring",
                   isSelected ? "border-primary bg-surface-subtle" : "border-transparent",
                 )}
                 onClick={() => onSelect(exchange.id)}
