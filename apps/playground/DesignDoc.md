@@ -81,6 +81,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ
     go/                   Go を動かすツールのページ
     sql-console/          SQL の入力欄と、結果の表
+    code-editor/          EditorFrame に、エディタのエンジンを渡すコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
     ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
@@ -95,6 +96,8 @@ packages/
 
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
   - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
+  - スライドのエディタのディレクトリ（`slides/`）と、`@fukuemon/slides` への import の向きは、[スライドの Design Doc](../../docs/design/features/slides/DesignDoc.md#ディレクトリと依存) にある。Oxlint は、`slides/` も、ツールのページの間の import を止める対象にする。
+- `code-editor/` は、Node の実行環境のページ（`src/node/`）と、スライドのエディタのページ（`src/slides/`）が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
@@ -121,6 +124,7 @@ flowchart TB
   sql["src/sql"]
   go["src/go"]
   console["sql-console"]
+  editor["code-editor"]
   runtime["@fukuemon/node-runtime"]
   database["@fukuemon/sql-runtime"]
   runner["@fukuemon/go-runtime"]
@@ -132,6 +136,7 @@ flowchart TB
 
   node --> runtime
   node --> console
+  node --> editor
   node --> project
   node --> workspace
   node --> database
@@ -151,6 +156,7 @@ flowchart TB
   go --> ai
   console --> database
   console --> ui
+  editor --> ui
   runtime --> database
   workspace --> project
   project --> pp
@@ -164,7 +170,7 @@ flowchart TB
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
 - Oxlint の `no-restricted-imports` が止める import は、次の 3 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` の間の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` の間の import
   - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
 
 ### NodeRuntime
@@ -560,7 +566,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 
 - Oxlint の `no-restricted-imports`: 次の 3 つの import を止める。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
-  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` の間の import
+  - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` の間の import
   - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
 - package の依存の宣言と knip: 次の 3 つを確認する。
   - `apps/playground` が、`@webcontainer/api` を import しないこと
