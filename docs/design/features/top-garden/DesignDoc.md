@@ -212,3 +212,4 @@ status: draft
 | `localStorage` の `fd-top-seen` | 端末でトップを開いたことがある         |
 
 - 動きを減らす設定のときは、`stage-on` を付けず、場面の束を読み込まない。
+- `localStorage` を読めないか書けない端末では、最初の訪問かを判定できないので、`intro` を付けず、庭だけを出す。
