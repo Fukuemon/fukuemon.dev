@@ -1,0 +1,50 @@
+import type { FileEntry } from "@fukuemon/node-runtime";
+import type { TreeNode } from "@fukuemon/ui";
+
+type MutableNode = { id: string; label: string; children?: MutableNode[] };
+
+const parentOf = (path: string) => path.slice(0, Math.max(0, path.lastIndexOf("/")));
+const nameOf = (path: string) => path.slice(path.lastIndexOf("/") + 1);
+
+/** 実行環境のファイルの一覧を、FileTree の木にする。項目の id は、作業ディレクトリからのパスである。一覧の順を保つ。 */
+export function toTreeNodes(entries: readonly FileEntry[]): TreeNode[] {
+  const roots: MutableNode[] = [];
+  const directories = new Map<string, MutableNode>();
+  for (const entry of entries) {
+    const node: MutableNode = { id: entry.path, label: nameOf(entry.path) };
+    if (entry.kind === "directory") {
+      node.children = [];
+      directories.set(entry.path, node);
+    }
+    const parent = directories.get(parentOf(entry.path));
+    (parent?.children ?? roots).push(node);
+  }
+  return roots;
+}
+
+/** 親のディレクトリのパスと名前から、新しい項目のパスを作る。 */
+export const childPath = (parentId: string | undefined, name: string) =>
+  parentId === undefined ? name : `${parentId}/${name}`;
+
+/** 項目の名前を変えたときの、新しいパス。ディレクトリは変えない。 */
+export const renamedPath = (path: string, name: string) =>
+  childPath(parentOf(path) || undefined, name);
+
+/** path が base そのものか、base のディレクトリの下にあるか。 */
+export const isWithin = (path: string, base: string) =>
+  path === base || path.startsWith(`${base}/`);
+
+/** 初期ファイルの一覧。実行環境を起動できなかったときに、読み取り専用のツリーに使う。 */
+export function projectEntries(files: Readonly<Record<string, string>>): FileEntry[] {
+  const directories = new Set<string>();
+  for (const path of Object.keys(files)) {
+    const parts = path.split("/");
+    for (let i = 1; i < parts.length; i++) directories.add(parts.slice(0, i).join("/"));
+  }
+  return [
+    ...[...directories].sort().map((path): FileEntry => ({ path, kind: "directory" })),
+    ...Object.keys(files)
+      .sort()
+      .map((path): FileEntry => ({ path, kind: "file" })),
+  ];
+}

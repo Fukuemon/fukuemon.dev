@@ -28,3 +28,26 @@ export const sqlDefaultProject = {
   open: "query.sql",
   initialSql: INITIAL_SQL,
 } satisfies PlaygroundProject;
+
+const SERVER = `import { createServer } from "node:http";
+
+const server = createServer((request, response) => {
+  response.setHeader("Content-Type", "text/html; charset=utf-8");
+  response.end("<h1>Hello from Node</h1><p>" + request.method + " " + request.url + "</p>");
+});
+
+server.listen(3000, () => console.log("3000 番で待ち受けています"));
+`;
+
+/** `project` を付けずに開いたときの、Node の実行環境のプロジェクト。開いた直後に、3000 番のサーバーを動かす。 */
+export const nodeDefaultProject = {
+  tool: "node",
+  version: "default-1",
+  files: {
+    "package.json":
+      JSON.stringify({ name: "playground", private: true, type: "module" }, null, 2) + "\n",
+    "index.js": SERVER,
+  },
+  open: "index.js",
+  start: [{ command: "node", args: ["index.js"], name: "サーバー" }],
+} satisfies PlaygroundProject;
