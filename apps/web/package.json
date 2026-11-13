@@ -23,7 +23,8 @@
     "hast-util-from-html": "2.0.3",
     "pele": "1.13.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
@@ -32,6 +33,7 @@
     "@types/hast": "^3.0.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "@types/three": "0.187.0",
     "@vitest/coverage-v8": "^4.1.11",
     "remark-gfm": "4.0.1",
     "remark-parse": "11.0.0",
