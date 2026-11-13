@@ -44,10 +44,14 @@ export type GoRunner = {
 /** ルートに go.mod が無いときと、go.mod に module の行が無いときの、ルートのディレクトリの import のパス。 */
 export const DEFAULT_MODULE = "play";
 
-/** ルートの go.mod の module の行から、ルートのディレクトリの import のパスを読む。 */
+/**
+ * ルートの go.mod の module の行から、ルートのディレクトリの import のパスを読む。
+ * `.` と `..` と空の階層を含む名前は、Yaegi に渡すファイルの置き場を外へ向けるので、DEFAULT_MODULE にする。
+ */
 export function moduleName(files: GoFiles): string {
-  const line = files["go.mod"]?.match(/^\s*module\s+"?([^\s"]+)"?\s*(?:\/\/.*)?$/m);
-  return line?.[1] ?? DEFAULT_MODULE;
+  const name = files["go.mod"]?.match(/^\s*module\s+"?([^\s"]+)"?\s*(?:\/\/.*)?$/m)?.[1];
+  const valid = name?.split("/").every((s) => s !== "" && s !== "." && s !== "..");
+  return name !== undefined && valid ? name : DEFAULT_MODULE;
 }
 
 /** テストのファイル（_test.go）を持つディレクトリの import のパスを、名前の順で返す。 */

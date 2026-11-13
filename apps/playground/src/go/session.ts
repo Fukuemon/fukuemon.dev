@@ -101,15 +101,24 @@ function createStore<T>(initial: T): WritableStore<T> {
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
 
-/** IndexedDB から読んだ値が、ファイルとディレクトリの一式の形か。形でない値は、保存したファイルが無いときと同じに扱う。 */
-function isGoFileSet(value: unknown): value is GoFileSet {
+const isNormalPath = (path: string) => normalizePath(path) === path;
+
+/**
+ * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
+ * パスは、ファイルの操作が書くのと同じ、正規化した形だけを受ける。
+ */
+function isGoRecord(value: unknown): value is GoRecord {
   if (typeof value !== "object" || value === null) return false;
-  const { files, directories } = value as Partial<Record<keyof GoFileSet, unknown>>;
+  const { files, directories, version } = value as Partial<Record<keyof GoRecord, unknown>>;
   return (
+    typeof version === "string" &&
     typeof files === "object" &&
     files !== null &&
-    Object.values(files).every((contents) => typeof contents === "string") &&
-    isStringArray(directories)
+    Object.entries(files).every(
+      ([path, contents]) => isNormalPath(path) && typeof contents === "string",
+    ) &&
+    isStringArray(directories) &&
+    directories.every(isNormalPath)
   );
 }
 
@@ -131,14 +140,14 @@ export function createGoSession({
   now = Date.now,
 }: GoSessionOptions): GoSession {
   const initial: GoFileSet =
-    saved.kind === "saved" && isGoFileSet(saved.record)
+    saved.kind === "saved" && isGoRecord(saved.record)
       ? { files: saved.record.files, directories: saved.record.directories }
       : { files: project.files, directories: [] };
   const fileSet = createStore(initial);
   const saveFailed = createStore(false);
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   const version =
-    saved.kind === "saved" && isGoFileSet(saved.record) ? saved.record.version : project.version;
+    saved.kind === "saved" && isGoRecord(saved.record) ? saved.record.version : project.version;
   const running = createStore(false);
   const output = createStore<GoOutput>({
     kind: undefined,

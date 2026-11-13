@@ -7,6 +7,8 @@ describe("moduleName", () => {
     ["module の行", "module example.com/hello\n\ngo 1.22\n", "example.com/hello"],
     ["引用符と行末のコメント", 'module "example.com/q" // 名前\n', "example.com/q"],
     ["module の行が無い", "go 1.22\n", DEFAULT_MODULE],
+    ["親の階層を含む名前", "module ../../x\n", DEFAULT_MODULE],
+    ["空の階層を含む名前", "module a//b\n", DEFAULT_MODULE],
   ])("%s", (_, goMod, expected) => {
     expect(moduleName({ "go.mod": goMod })).toBe(expected);
   });
