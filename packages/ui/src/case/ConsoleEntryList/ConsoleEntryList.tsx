@@ -148,7 +148,8 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
 /**
  * `console.*` の出力を、起きた順に並べたコンソール。行ごとに、ログレベルの印、値、時刻、出力元を出す。
  * 題の下のボタンで、表示するログレベルを選ぶ。配列、オブジェクト、`Error`、`Map`、`Set` は、TreeView で開いて中を見られる。
- * 高さは呼ぶ側が決め、行の領域はコンポーネントがスクロールさせる。親は、高さの決まった縦方向の flex か grid にする。
+ * 高さは呼ぶ側が決める。高さを決めたときは、行の領域だけをスクロールさせる。親は、高さの決まった縦方向の flex か grid にする。
+ * 高さを決めない親では、行の数だけ伸び、ページはスクロールしない。
  * 一番下を見ている間に行が増えると、行の領域を一番下まで送る。
  */
 export function ConsoleEntryList({
@@ -186,10 +187,14 @@ export function ConsoleEntryList({
     if (!rows) return;
     isAtBottom.current = rows.scrollHeight - rows.scrollTop - rows.clientHeight < 2;
   };
-  // 読み込み中とエラーの間は行の領域が消えるので、戻ったときも一番下へ送る
+  // 読み込み中とエラーの間は行の領域が消え、作り直すと先頭に戻る。一番下を見ている扱いに戻し、戻ったときは一番下へ送る
   useEffect(() => {
     const rows = rowsRef.current;
-    if (rows && isAtBottom.current) rows.scrollTop = rows.scrollHeight;
+    if (!rows) {
+      isAtBottom.current = true;
+      return;
+    }
+    if (isAtBottom.current) rows.scrollTop = rows.scrollHeight;
   }, [lastId, paneState.kind]);
   const toolbar = (
     <div

@@ -241,6 +241,17 @@ describe("ConsoleEntryList", () => {
       rerender(frame(30));
       await expect.poll(distanceToBottom).toBeLessThan(2);
     });
+
+    it("上へ戻した後に読み込み中を挟むと、一番下を見ている扱いに戻り、行が増えると一番下へ送る", async () => {
+      const { rerender } = render(frame(30));
+      rows().scrollTop = 0;
+      await nextFrames(3);
+      rerender(frame(30, { kind: "loading", label: "実行環境を起動しています" }));
+      rerender(frame(30));
+      await expect.poll(distanceToBottom).toBeLessThan(2);
+      rerender(frame(31));
+      await expect.poll(distanceToBottom).toBeLessThan(2);
+    });
   });
 
   it("空、読み込み中、エラーでは、行の代わりに文を出す", () => {
