@@ -90,11 +90,11 @@ apps/playground/
 - キャンバスとスライドのエディタは、追加するときに、`src/` の同じ階層に並べる。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
 - `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
-- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`apps/playground` の依存と同じにする。2 つの `package.json` の PGlite のバージョンが同じことは、テストで比べる。
+- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`apps/playground` の依存と同じにする。テストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
-  - 直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
-  - `webcontainer/` が直下から import するのは、型だけである。
-  - `guest/` は、直下と `webcontainer/` を import しない。
+  - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
+  - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
+  - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
 
 次の図は、ディレクトリの間で許す import の向きを示す。矢印の無い組は、import しない。
 
@@ -135,7 +135,7 @@ flowchart TB
 ```
 
 - `src/node/`、`sql-console/`、`node-runtime/` が `database/` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
-  - `guest/` の DB のプロセスのスクリプトだけは、`database/` の、PGlite で SQL を実行して結果の形にする関数を import する。この関数は、PGlite の型だけを import するファイルに分けて置き、ブラウザのコードの tsconfig と、`guest/` の tsconfig の両方の対象に入れる。
+  - `guest/` の DB のプロセスのスクリプトだけは、`database/` の、PGlite で SQL を実行して結果の形にする関数を import する。この関数は、PGlite から型だけを import するファイルに置く。このファイルを、ブラウザのコードの tsconfig と、`guest/` の tsconfig の両方の対象に入れる。
 - `node-runtime/` は、`project/` を import しない。`BootOptions` は、プロジェクトの型を使わない。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
@@ -215,13 +215,13 @@ type OutputLog = {
 - `node-runtime/` が公開する起動の関数は、`bootNodeRuntime` だけである。Promise を埋め込みの ID ごとに持つ処理は、`src/node/` に置く。
 - `webcontainer/` の `spawn` が、接続先の環境変数と `NODE_OPTIONS` を組み立てて、プロセスに渡す。画面は、環境変数を渡さない。渡す値は、[実行環境が追加するファイルとプロセス](#実行環境が追加するファイルとプロセス) にある。
 - 実行環境が自分で起動するプロセス（DB のプロセス、DB の依存の `npm install`）は、`processes.list` に入れない。
-- 端末のシェルは、`processes.startShell` で起動する。シェルのコマンドは、`webcontainer/` が決める。画面は、シェルのコマンドの名前を持たない。
+- 端末のシェルは、`processes.startShell` で起動する。起動するシェルのプログラムは、`webcontainer/` が決める。画面は、シェルのプログラムの名前を持たない。
 - `start` を呼ばないコンポーネントは、`processes.get` で、プロセスの出力を読む。
 - `files.changes` は、ファイルの中身が変わったことの通知である。保存と、エディタで開いているファイルの更新に使う。
-- `files.readAll` は、作業ディレクトリのファイルを、パス、サイズ、テキストの中身で返す。`exclude` に当たるパスは読まない。`maxBytes` を超えるファイルと、テキストとして読めないファイルは、`text` が `null` になる。`exclude` に当たるかの判定、`maxBytes` の判定、テキストかどうかの判定は、`node-runtime/` の直下が持つ。
+- `files.readAll` は、作業ディレクトリのファイルを、パス、サイズ、テキストの中身で返す。`exclude` に当たるパスは読まない。`maxBytes` を超えるファイルと、テキストとして読めないファイルは、`text` が `null` になる。`exclude` に当たるかの判定、`maxBytes` を超えるかの判定、テキストかどうかの判定は、`node-runtime/` の直下が持つ。
 - `FileEntry` は、パスを持つ。画面は、パスを、`FileTree` の項目の `id` に使う。
 - `OpenPort` は、ポート、URL、プレビューの iframe に付ける属性（`sandbox`、`allow`）を持つ。属性の値は、`webcontainer/` が決める。
-- プレビューに入れるスクリプトから `postMessage` で送られるコンソールの記録を受けて、`consoleEntries` に入れる処理は、`node-runtime/` が持つ。スクリプトの中身と、メッセージの形は、`node-runtime/` の直下が持ち、`BackendBootOptions` の `previewScript` で `webcontainer/` に渡す。メッセージの origin の確認は、`webcontainer/` が行う。
+- プレビューに入れるスクリプトから `postMessage` で送られるコンソールの記録を受けて、`consoleEntries` に入れる処理は、`node-runtime/` が持つ。スクリプトの中身と、メッセージの形は、`node-runtime/` の直下が持つ。`node-runtime/` の直下は、スクリプトの中身を、`BackendBootOptions` の `previewScript` で `webcontainer/` に渡す。メッセージの origin の確認は、`webcontainer/` が行う。
 - `database` は、DB を使うプロジェクトのときだけある。DB のプロセスの状態は、`database` の `status` で公開し、`NodeRuntime` には持たせない。
 - 実行環境を起動し直すときは、`dispose` を呼び、`bootNodeRuntime` で新しいインスタンスを作る。
 
@@ -269,12 +269,12 @@ type BackendProcess = {
 
 名前は、実装のときに変えてよい。
 
-- `BackendFiles` は、ファイルとディレクトリの一覧（種類を持つ）、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store と `files.readAll` は、`node-runtime/` の直下が、この操作から組み立てる。
+- `BackendFiles` は、ファイルかディレクトリかを持つ一覧、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store と `files.readAll` は、`node-runtime/` の直下が、この操作から組み立てる。
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
   - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
-  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`cwd` は、DB の依存の `npm install` を `guestDirectory` で実行するときに渡す。
-  - `spawnShell`: シェルのコマンドの決定と、シェルの起動。環境変数は、`spawn` と同じ値を渡す。
+  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
+  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
@@ -375,12 +375,12 @@ Node の実行環境は、次のとおり保存する。
 
 - レコードは、ファイルのパスと中身の一覧、保存した時刻、初期ファイルのバージョンを持つ。DB を使うプロジェクトでは、SQL のペインの入力欄の SQL も持つ。
 - `src/node/` が、`files.changes` の通知を受けて、`files.readAll` の結果を `workspace/` に渡す。
-- `src/node/` は、ファイルの一覧と、SQL のペインの入力欄の SQL を合わせて、1 つのレコードとして `workspace/` に渡す。`workspace/` は、レコードの全体を書き換える。
+- `src/node/` は、`files.readAll` の結果と、SQL のペインの入力欄の SQL を合わせて、1 つのレコードとして `workspace/` に渡す。`workspace/` は、保存してあるレコードを、受け取ったレコードで丸ごと置き換える。
 - ADR-0050 の承認の条件の確認で、`files.changes` が、コマンドの作ったファイルを通知しないと分かったときは、`src/node/` が、5 秒ごとに `files.readAll` を呼び、前回と中身が違うときに保存する。5 秒は、測っていない値で、実装のタスクで測って変えてよい。
 - 保存しないファイルの規則は、`src/node/` の 1 か所に置き、`files.readAll` の引数で渡す。`exclude` に `node_modules` を、`maxBytes` に 1 MB を渡す。
 - 1 つのファイルが 1 MB を超えるものと、テキストとして読めないもの（`text` が `null` のもの）は、保存しない。
 - 保存したバージョンと、プロジェクトの JSON のバージョンが違うときは、保存したファイルを開き、「初期の状態に戻す」の操作を出す。
-- `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`NodePage` が、保存したファイルが無いときと同じに扱って初期ファイルで起動し、保存できないことを画面に出す。
+- `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。
 - 実行環境が追加するファイルは、作業ディレクトリの外にあるので、保存の対象に入らない。
   - ADR-0052: [実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す](../../../adr/0052-runtime-files-outside-workdir.md)
 
@@ -406,7 +406,7 @@ sequenceDiagram
     S-->>P: 保存したファイル、無し、または読めない
   end
   opt IndexedDB を読めない
-    P-->>V: 保存できないことを表示する。保存したファイルが無いときと同じに進む
+    P-->>V: 保存できないことを表示する
   end
   alt JSON を読めない、埋め込みの ID に当たるプロジェクトが無い
     P-->>V: エラーと、一覧へのリンクを表示する
@@ -421,7 +421,7 @@ sequenceDiagram
       alt npm install が失敗する
         R-->>V: 端末に npm install の出力を出す。起動のコマンドは実行しない
       else 成功する
-        alt 保存したファイルが無い
+        alt 保存したファイルが無い、または IndexedDB を読めない
           P->>R: 起動のコマンドを実行する
           R-->>V: 端末の出力、プレビュー、HTTP の記録
         else 保存したファイルがある
@@ -500,7 +500,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - レスポンス: 行頭にプレフィックスを付けた、1 行の JSON。`id` と、`SqlResponse` の値を持つ。
 - `node-runtime/` は、`id` でリクエストとレスポンスを対応づける。プレフィックスの無い行（DB のプロセスのログと、入力のエコー）は捨てる。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
-- `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことを出す。エラーの文の隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
+- `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
 - SQL だけを動かすツールの `status` は、いつも `ready` である。
 
 ## Interface
