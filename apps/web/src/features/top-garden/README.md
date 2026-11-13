@@ -3,7 +3,7 @@
 このディレクトリは、トップの最初の訪問に出す墨の絵と署名の SVG を作るコードを持つ。
 墨の絵と立体の庭の場面の両方が読む、庭の配置も持つ。
 墨の絵と署名の SVG を作るモジュール（`layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`、`sign.ts`）は、React と DOM に依らない TypeScript で、ビルドのときに Node で動く。
-`season.ts`、`visit.ts`、`stage.ts` の関数は、文字列にしてトップの `head` の inline script に埋め込み、ブラウザで表示の前に動く。
+`season.ts` と `visit.ts` の関数と、`stage.ts` の `applyStage` と `readOverride` は、文字列にしてトップの `head` の inline script に埋め込み、ブラウザで表示の前に動く。
 
 見た目の数値は、[トップの水墨の門と立体の庭の Design Doc](../../../../../docs/design/features/top-garden/DesignDoc.md) にある。
 Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/README.md) のコードから取った。
