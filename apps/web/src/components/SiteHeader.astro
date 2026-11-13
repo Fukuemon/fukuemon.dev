@@ -16,7 +16,7 @@ const current = currentNavHref(Astro.url.pathname);
           SITE_NAV.map(({ label, href }) => (
             <li>
               <a
-                class="brush-hover inline-block py-2 whitespace-nowrap text-text focus-visible:focus-ring aria-[current=page]:after:animate-stroke aria-[current=page]:after:bg-current-page aria-[current=page]:after:[clip-path:inset(0)]"
+                class="brush-hover brush-current inline-block py-2 whitespace-nowrap text-text focus-visible:focus-ring"
                 href={href}
                 aria-current={href === current ? "page" : undefined}
               >

@@ -187,7 +187,7 @@
   box-shadow: 0 0 0 2px var(--fd-color-focus-halo);
 }
 
-/* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う。apps/web/src/styles/site.css のヘッダーのナビに写しがあるので、変えたら写しも直す */
+/* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う */
 :root {
   --fd-mask-brush: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E");
 }
@@ -241,6 +241,15 @@
 
   &:hover::after {
     clip-path: inset(0);
+  }
+}
+
+/* brush-hover の線を、aria-current="page" の要素では錆の色で常に出し、ページを開いたときに左から 1 回引く。サイトのヘッダーのナビが使う */
+@utility brush-current {
+  &[aria-current="page"]::after {
+    background: var(--fd-color-current-page);
+    clip-path: inset(0);
+    animation: var(--animate-stroke);
   }
 }
 
