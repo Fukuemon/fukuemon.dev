@@ -146,11 +146,11 @@ describe("FileTree", () => {
   it("新しい項目の欄と「作る」ボタンは、上端と下端がそろう", async () => {
     render(<NoSelection />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
-    const face = screen.getByRole("textbox").nextElementSibling as HTMLElement;
-    const field = face.getBoundingClientRect();
+    // 欄は、40 px の見た目の上下に 2 px ずつ押せる範囲を広げている（TextField の文書コメント）
+    const field = screen.getByRole("textbox").getBoundingClientRect();
     const button = screen.getByRole("button", { name: "作る" }).getBoundingClientRect();
-    expect(button.top).toBe(field.top);
-    expect(button.bottom).toBe(field.bottom);
+    expect(button.top).toBe(field.top + 2);
+    expect(button.bottom).toBe(field.bottom - 2);
   });
 
   it("題の右の操作と木の項目は、44 px 四方以上で押せる", () => {

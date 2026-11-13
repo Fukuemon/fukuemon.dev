@@ -5,7 +5,8 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TextField.stories";
 
-const { Default, WithDescription, Error, LabelHidden, Underline } = composeStories(stories);
+const { Default, WithDescription, Error, Disabled, LabelHidden, Underline } =
+  composeStories(stories);
 
 const colorOf = (className: string) => {
   render(<span className={className} data-testid={className} />);
@@ -58,6 +59,7 @@ describe("TextField", () => {
     const style = getComputedStyle(faceOf(input));
     expect(style.outlineStyle).toBe("solid");
     expect(style.outlineWidth).toBe("2px");
+    expect(style.outlineOffset).toBe("2px");
     expect(style.outlineColor).toBe(colorOf("text-text"));
   });
 
@@ -68,6 +70,17 @@ describe("TextField", () => {
     );
     expect(style.borderBottomWidth).toBe("2px");
     expect(style.borderBottomColor).toBe(colorOf("text-danger"));
+  });
+
+  it("boxed の欄は、無効のときに面を無効の色にする", () => {
+    render(<Disabled />);
+    const style = getComputedStyle(
+      faceOf(screen.getByRole("textbox", { name: "リダイレクト先の URL" })),
+    );
+    render(<span className="bg-surface-disabled" data-testid="disabled" />);
+    expect(style.backgroundColor).toBe(
+      getComputedStyle(screen.getByTestId("disabled")).backgroundColor,
+    );
   });
 
   it("誤りがあれば欄を aria-invalid にし、誤りの文を説明に結ぶ。role=alert は付けない", () => {
