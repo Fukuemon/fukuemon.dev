@@ -9,6 +9,7 @@ export type LinkProps = Omit<ComponentPropsWithRef<"a">, "className" | "style"> 
 
 /**
  * 文中のリンク。下線を引き、hover で下線の下に 2px の罫を左から引く。折り返したリンクでは行ごとに引く。内部のリンクは link、外部のリンクは link-external の色にする。訪問済みのリンクは色で分けない。
+ * フォーカスの表示は外へ 6px 広がるので、左右に 6px を空け、前後の文字に重ねない。
  * JavaScript なしで動く `<a>` だけを出す。
  */
 export function Link({ isExternal = false, children, ...props }: LinkProps) {
@@ -16,7 +17,7 @@ export function Link({ isExternal = false, children, ...props }: LinkProps) {
     <a
       {...props}
       className={clsx(
-        "link-rule underline underline-offset-4 focus-visible:focus-ring",
+        "mx-1.5 link-rule underline underline-offset-4 focus-visible:focus-ring",
         isExternal ? "text-link-external" : "text-link visited:text-link-visited",
       )}
       rel={isExternal ? "noopener noreferrer" : props.rel}
