@@ -98,6 +98,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
 - `packages/ui` のコンポーネントのクラスは、`@fukuemon/ui/sources.css` の `@source` が、Tailwind CSS の走査の対象に足す。Tailwind CSS は `node_modules` の下を走査しないためである。story、文書、テストは対象から外す。
 - 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
+  - フォーカスしたときだけ左上に出し、重なる面（`bg-surface-raised` と `border-border-field`）、`text-label`、`focus-visible:focus-ring` で描く。押せる範囲は 44×44 CSS px 以上にする。
 - 検索エンジンに載せないページ（404 など）は、`SiteLayout.astro` に `noindex` を渡す。canonical を出さず、`<meta name="robots" content="noindex">` を出す。
 - `scroll-padding-block-start` は、画面の上に固定のヘッダを置くときに、ヘッダの高さに合わせて決める。
 
