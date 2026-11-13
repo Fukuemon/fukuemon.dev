@@ -5,7 +5,7 @@
 
 /*
  * fukuemon.dev のプリミティブトークン。セマンティックトークン（semantic.css）とテーマ変数（theme.css）が参照する値だけを持つ。
- * 値は fukuemon.dev が決める。地と罫と差し色は旧サイトの値で、生成りの紙に墨で刷る向きの温かい灰と、くすんだ緑、藍、錆を持つ（adr/0024-tokens-of-fukuemon-dev.md）。
+ * 値は fukuemon.dev が決める。地と罫と差し色は旧サイトの値で、生成りの紙に墨で刷る向きの温かい灰と、くすんだ緑、藍、錆を持つ（docs/adr/0024-tokens-of-fukuemon-dev.md）。
  * 名前は --fd-primitive-color-<色>-<段> にする。段は、数が大きいほど暗い。
  * フォーカスの色、書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
  * 出典: https://github.com/digital-go-jp/design-tokens
@@ -140,7 +140,7 @@
 /*
  * fukuemon.dev のセマンティックトークン。値は持たず、プリミティブトークン（primitive.css）を参照するだけにする。
  * テーマごとに参照先を替える。このファイルはライトの値を持ち、ダークの値は semantic-dark.css にある。
- * 組み合わせはコントラストのチェックで確かめる（adr/0024-tokens-of-fukuemon-dev.md）。
+ * 組み合わせはコントラストのチェックで確かめる（docs/adr/0024-tokens-of-fukuemon-dev.md）。
  * コンポーネントと画面は、この層を Tailwind のユーティリティ（theme.css）を通して使い、プリミティブトークンの名前を直に書かない。
  */
 
@@ -199,7 +199,7 @@
   --fd-color-categorical-5: var(--fd-primitive-color-ochre-700);
   --fd-color-categorical-6: var(--fd-primitive-color-blue-700);
 
-  /* コード: 記事のコードブロック、エディタ、端末の字句。どの色も code-surface の上で 4.5:1 以上（adr/0022-code-colors-from-tokens.md）
+  /* コード: 記事のコードブロック、エディタ、端末の字句。どの色も code-surface の上で 4.5:1 以上（docs/adr/0022-code-colors-from-tokens.md）
      端末の bright の色は、ライトの面で読めるよう、通常の色より暗い階調にする */
   --fd-color-code-surface: var(--fd-primitive-color-sumi-75);
   --fd-color-code-text: var(--fd-primitive-color-sumi-900);

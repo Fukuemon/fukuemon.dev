@@ -23,8 +23,6 @@ __pycache__/
 .DS_Store
 *.local
 
-# Pagefind の索引 (build 成果物)
-dist/pagefind/
 .ai-out/
 
 # デザインの検討用モック (実装の正本ではない)

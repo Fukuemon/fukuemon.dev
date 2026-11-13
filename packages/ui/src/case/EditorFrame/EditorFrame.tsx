@@ -27,7 +27,7 @@ export type EditorFrameProps = {
 
 /**
  * ファイルのタブと、エディタのエンジンを置く枠。エンジンは持たず、コードの面の色と等幅の文字の中に children を描く。
- * CSS の変数を読めるエンジンは面の色をそのまま継ぎ、色の値を求めるエンジンは children が受け取るテーマを使う（adr/0022-code-colors-from-tokens.md）。
+ * CSS の変数を読めるエンジンは面の色をそのまま継ぎ、色の値を求めるエンジンは children が受け取るテーマを使う（docs/adr/0022-code-colors-from-tokens.md）。
  */
 export function EditorFrame({
   title = "エディタ",

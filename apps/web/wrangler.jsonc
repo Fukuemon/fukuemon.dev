@@ -5,5 +5,7 @@
   // ハンドラを持たないため main を置かない (ADR-0005)
   "assets": {
     "directory": "./dist",
+    // 書かないと、無い URL に本文の無い 404 を返し、404.html を出さない
+    "not_found_handling": "404-page",
   },
 }

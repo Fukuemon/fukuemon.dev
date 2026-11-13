@@ -18,7 +18,7 @@ export type TerminalFrameProps = {
 
 /**
  * 端末の題と、端末のエンジンを置く枠。エンジンは持たず、コードの面の色と等幅の文字の中に children を描く。
- * 色の値を求めるエンジン（xterm.js など）は、children が受け取るテーマを使う（adr/0022-code-colors-from-tokens.md）。
+ * 色の値を求めるエンジン（xterm.js など）は、children が受け取るテーマを使う（docs/adr/0022-code-colors-from-tokens.md）。
  */
 export function TerminalFrame({
   title = "端末",

@@ -9,6 +9,6 @@
     // スクリプトが書き出す生成物。整形すると生成の --check が食い違う
     "packages/ui/src/tokens/*.gen.*",
     // 試作のソース。build-i.mjs が shared.css を文字列の位置で切るので、整形すると違う HTML を書く
-    "design/prototypes/",
+    "docs/design/prototypes/",
   ],
 }

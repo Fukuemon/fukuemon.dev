@@ -6,20 +6,9 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       // ファイル単位で明示列挙する。列挙し忘れると何もゲートしない
-      include: [
-        "src/components/side.ts",
-        "src/lib/tate.ts",
-        "src/lib/remark-lab.ts",
-        "src/lib/rehype-lab-steps.ts",
-        "src/lib/rehype-mermaid.ts",
-        "src/features/lab/steps/progress.ts",
-        "src/features/lab/steps/bootSpec.ts",
-        "src/features/lab/editor/sql-tokens.ts",
-        "src/features/lab/runtime/cell.ts",
-        "src/features/lab/catalog/catalog.ts",
-      ],
+      include: ["src/features/top-garden/season.ts", "src/features/top-garden/visit.ts"],
       thresholds: { branches: 90, functions: 90, lines: 90, statements: 90 },
-      reporter: ["text-summary", "text"],
+      reporter: ["text-summary"],
     },
   },
 });

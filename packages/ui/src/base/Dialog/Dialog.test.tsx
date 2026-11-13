@@ -1,5 +1,5 @@
 import { composeStories } from "@storybook/react-vite";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
@@ -13,7 +13,12 @@ describe("Dialog", () => {
     const opener = screen.getByRole("button", { name: "記録を消す" });
     await userEvent.click(opener);
     const dialog = screen.getByRole("dialog", { name: "HTTP の記録を消す" });
-    expect(dialog).toBeVisible();
+    // 開いた直後は濃度が 0 から上がる途中なので、見えるまで待つ
+    await waitFor(() => expect(dialog).toBeVisible());
+    expect(getComputedStyle(dialog).animationName).toBe("fd-fade-in");
+    const stroke = dialog.querySelector("span[aria-hidden]");
+    if (!(stroke instanceof HTMLElement)) throw new Error("上端の筆の線が無い");
+    expect(getComputedStyle(stroke).animationName).toBe("fd-draw-stroke");
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(opener).toHaveFocus();

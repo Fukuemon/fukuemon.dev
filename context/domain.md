@@ -27,7 +27,7 @@ status: stable
 - 実行パネル: 本文の中でコードを実行するコンポーネント。`run` を付けたコードフェンスから作る。
 - 手を動かす場所: ハンズオンの frontmatter の `interactive.level`。`embedded`（ページの中）と `local`（読者の端末）がある。
   - `sandbox`（WebContainers と WebVM）は設計だけを決めてある。
-  - ADR-0006: [手を動かす場所の 4 分類](../adr/0006-interactive-content-levels.md)
+  - ADR-0006: [手を動かす場所の 4 分類](../docs/adr/0006-interactive-content-levels.md)
 - 実行環境: `embedded` のハンズオンでコードを動かす環境。frontmatter の `interactive.runtime` で選ぶ。
 - `setup`: `embedded` のハンズオンで、実行パネルが最初に 1 度だけ流す準備のコード。
 

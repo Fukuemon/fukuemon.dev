@@ -1,6 +1,7 @@
 /*
  * fukuemon.dev のテーマ変数。Tailwind CSS のユーティリティの名前を、セマンティックトークンとプリミティブトークンに結ぶ。
- * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（adr/0024-tokens-of-fukuemon-dev.md）。
+ * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（docs/adr/0024-tokens-of-fukuemon-dev.md）。
+ * 角丸と影は 1 つずつだけ置く（docs/adr/0028-radius-shadow-and-brush-motion.md）。
  * 余白と動きの時間と緩急は、Tailwind のデフォルトの段をそのまま使う。デフォルトで組めない動きだけを、ここに animation として足す。
  */
 
@@ -88,7 +89,7 @@
   --color-code-ansi-white: var(--fd-color-code-ansi-white);
   --color-code-ansi-bright-white: var(--fd-color-code-ansi-bright-white);
 
-  /* 書体: 本文はゴシック、記事の題と見出しは明朝、コードは等幅（adr/0023-keep-art-and-key-color.md） */
+  /* 書体: 本文はゴシック、記事の題と見出しは明朝、コードは等幅（docs/adr/0023-keep-art-and-key-color.md） */
   --font-sans: var(--fd-primitive-font-family-sans);
   --font-heading: "Zen Old Mincho", var(--fd-primitive-font-family-sans);
   /* 等幅の和文の字は BIZ UDGothic で受ける */
@@ -128,10 +129,35 @@
   /* ヘッダーと本文の外枠の幅。一覧と記事の列はこの中に置き、文字の列は prose に抑える */
   --container-page: 68rem;
 
+  /* 操作できる要素と、重なる面の角 */
+  --radius-control: 2px;
+  /* 重なる面の影。ぼかさずに右下へずらし、ライトとダークの両方で見えるようにする */
+  --shadow-raised: 4px 4px 0 color-mix(in srgb, var(--fd-color-text) 24%, transparent);
+
   /* 読み込み中の印。罫が左から伸びて右へ抜ける。1 周 1600ms */
   --animate-loading: fd-loading-stroke 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  /* 検索の欄のフォーカスの罫。緑の罫が左から 1 回引かれる */
+  /* 罫を左から 1 回引く。選んだタブ、検索の欄のフォーカス、ダイアログの上端で使う */
   --animate-stroke: fd-draw-stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* 重なる面が、濃度を上げて出る */
+  --animate-fade-in: fd-fade-in 150ms ease-out;
+}
+
+@keyframes fd-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 止めた後は元のスタイルの濃い点に戻す。動きを減らす設定では、3 つの点が濃いまま並ぶ */
+@keyframes fd-loading-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.25;
+  }
 }
 
 /* 終わりの形を書かず、要素の元のスタイル（全長の罫）で止める。動きを減らす設定でも、罫は全長で残る */
@@ -161,11 +187,121 @@
   box-shadow: 0 0 0 2px var(--fd-color-focus-halo);
 }
 
+/* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う。apps/web/src/styles/site.css のヘッダーのナビに写しがあるので、変えたら写しも直す */
+:root {
+  --fd-mask-brush: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E");
+}
+
+/* 罫を筆の線の形にする。入りを太くし、終わりを払う。罫を引く動き（animate-stroke）と重ねて使う */
+@utility stroke-brush {
+  mask: var(--fd-mask-brush) center / 100% 100% no-repeat;
+}
+
+/*
+ * 折り返すリンクの文字の hover で、2px の罫を左から引く。
+ * 疑似要素の筆の線は折り返すと最後の行にしか出ないので、背景で描く。背景は行をつないだ 1 本の帯として伸び、1 行目から順に罫が出る。
+ * 罫が行ごとに出るのは、インラインの要素に付けたときだけである。flex の子のようにブロックの箱になった要素では、罫は最後の行の下にだけ、箱の幅で出る。
+ * box-decoration-break を clone にすると、左右の余白が行ごとに付いて 2 行目の頭が下がるので、既定の slice のままにする。
+ * 箱のリンクの中の文字の span に付けたときは、外のリンクの hover で伸ばす。
+ * 罫は文字のすぐ下に引き、行高 130% の折り返しでも次の行の文字に接しないようにする。下線を引くリンクでは link-rule-below-underline で下線の下へ離す。
+ * SeriesPager の題のように、下線を引く要素の中の span に付けたときは、罫が下線に重なり、hover で下線が太くなる形に見える。
+ */
+@utility link-rule {
+  padding-block-end: var(--fd-link-rule-gap, 0px);
+  background: linear-gradient(currentColor, currentColor) left bottom / 0% 2px no-repeat;
+  transition: background-size 240ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover,
+  a:hover & {
+    background-size: 100% 2px;
+  }
+}
+
+/* link-rule の罫を 4px 下げ、underline-offset-4 の下線の下に置く。1px と 2px では、罫が下線に重なる */
+@utility link-rule-below-underline {
+  --fd-link-rule-gap: 4px;
+}
+
+/* 箱のリンクの hover で、箱の下端に筆の線を左から引く。箱に付けるので、中の文字が折り返しても線は 1 本で崩れない */
+@utility brush-hover {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 4px;
+    background: currentColor;
+    mask: var(--fd-mask-brush) center / 100% 100% no-repeat;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    clip-path: inset(0);
+  }
+}
+
+/* ボタンを押すと、文字の色の墨がにじんで消える。押している間は遷移を切り、離すと広がって薄れる */
+@utility ink-press {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+        circle,
+        color-mix(in srgb, currentColor 34%, transparent) 0%,
+        color-mix(in srgb, currentColor 18%, transparent) 45%,
+        transparent 70%
+      )
+      center / 320% 320% no-repeat;
+    opacity: 0;
+    transition:
+      background-size 360ms ease-out,
+      opacity 480ms ease-out;
+  }
+
+  &:not([aria-disabled], [aria-busy]):active::before {
+    background-size: 0% 0%;
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* ボタンの中の読み込み中の印。3 つの点が左から順に薄くなる。止まっても「…」と読める */
+@utility loading-dots {
+  display: inline-flex;
+  gap: 6px;
+
+  & > * {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: fd-loading-dot 1200ms ease-in-out infinite;
+  }
+
+  & > :nth-child(2) {
+    animation-delay: 200ms;
+  }
+
+  & > :nth-child(3) {
+    animation-delay: 400ms;
+  }
+}
+
 /* OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
-  *::after {
+  *::after,
+  *::backdrop {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
