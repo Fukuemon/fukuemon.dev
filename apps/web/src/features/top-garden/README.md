@@ -25,13 +25,13 @@ Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/REA
 | `season.ts`            | 端末の日付と時刻から、季節と時間帯を返す                                                                                                          |
 | `visit.ts`             | 端末で初めてトップを開いたかを返す                                                                                                                |
 | `stage.ts`             | 季節と時間帯を `html` の属性に、庭を出すかと最初の訪問かを class に書く。URL の引数を読む関数と、`head` の inline script を組み立てる関数も持つ   |
-| `TopStageScript.astro` | `stage.ts` が組み立てた inline script を、トップの `head` に置く。場面の束の URL を渡す                                                           |
+| `TopStageScript.astro` | `stage.ts` が組み立てた inline script を、トップの `head` に置く。場面のバンドルの URL を渡す                                                     |
 | `scene-colors.ts`      | 時間帯ごとの場面の色と光の表、季節の木の葉の色、2 つを掛け合わせて場面の色を決める関数。場面の色の値は、このファイルだけに書く                    |
 | `scene-parts.ts`       | 石、木、灯籠を作る関数と、canvas に描いた絵をテクスチャにする関数。石、木、灯籠は、後から絵やモデルに差し替えられるよう、物ごとに関数を分けてある |
 | `scene.ts`             | 配置と場面の色から、門、塀、飛び石、石、池、灯籠、松、季節の木、空、遠景、地面を組み立てる                                                        |
 | `ink-pass.ts`          | 場面を描いた絵に、墨の輪郭線、淡彩、紙の質感、端の余白を重ねる全画面のパス                                                                        |
 | `garden.ts`            | canvas に庭を描く。WebGL を使えないときは何も描かない                                                                                             |
-| `garden-entry.ts`      | 場面の束で最初に動くファイル。庭を描けないときは、`stage-on` と `intro` を外してふつうのページに戻す                                              |
+| `garden-entry.ts`      | 場面のバンドルで最初に動くファイル。庭を描けないときは、`stage-on` と `intro` を外してふつうのページに戻す                                        |
 | `GardenStage.astro`    | 庭を描く canvas を置く。`stage-on` が付いたときだけ、画面の全体に出す                                                                             |
 | `OFL.txt`              | 書体 Great Vibes のライセンスの全文                                                                                                               |
 

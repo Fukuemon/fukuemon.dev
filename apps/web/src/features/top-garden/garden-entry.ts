@@ -1,5 +1,5 @@
-// 場面の束で最初に動くファイル。トップの head の inline script が、庭を出すときだけ読み込む。
-// 庭を描けないときは、束の読み込みに失敗したときと同じく、ふつうのページに戻す。
+// 場面のバンドルで最初に動くファイル。トップの head の inline script が、庭を出すときだけ読み込む。
+// 庭を描けないときは、バンドルの読み込みに失敗したときと同じく、ふつうのページに戻す。
 // 描く途中で例外が出たときも、ページが canvas に覆われたままにならないよう、ふつうのページに戻す。
 import { startGarden } from "./garden";
 import type { Season, TimeOfDay } from "./season";
@@ -19,6 +19,6 @@ function boot(): void {
   if (!drawn) root.classList.remove("stage-on", "intro");
 }
 
-// 紙と墨の色は、スタイルシートのトークンから読む。束はスタイルシートより先に動くことがあるので、load を待つ。
+// 紙と墨の色は、スタイルシートのトークンから読む。バンドルはスタイルシートより先に動くことがあるので、load を待つ。
 if (document.readyState === "complete") boot();
 else addEventListener("load", boot, { once: true });
