@@ -14,6 +14,7 @@ export default defineConfig({
         "src/features/top-garden/layout.ts",
         "src/features/top-garden/season.ts",
         "src/components/sign/sign.ts",
+        "src/features/top-garden/stage.ts",
         "src/features/top-garden/visit.ts",
       ],
       thresholds: { branches: 90, functions: 90, lines: 90, statements: 90 },
