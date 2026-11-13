@@ -90,12 +90,13 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
 - `@fukuemon/playground-project` は、workspace のどの package にも依存しない。
-- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project` に依存してよい。
+- `@fukuemon/figures` は、workspace のどの package にも依存せず、React にも依存しない。
+- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project`、`@fukuemon/figures` に依存してよい。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
 - `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
-- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
+- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project`、`@fukuemon/figures` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
   - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 

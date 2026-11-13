@@ -76,10 +76,16 @@ apps/playground/
     drawio/               draw.io のツールのページ。iframe との postMessage、XML の読み書き
     excalidraw/           Excalidraw のツールのページ。scene の読み書き、書体の配信の設定
     documents/            図とスライドの保存、一覧のダイアログ、名前を変える操作と消す操作のコンポーネント
-    figures/              記事の図の名前の検証、URL の組み立て、読み込み
+    figures/              記事の図の読み込み
+
+packages/
+  figures/src/           図の名前の規則、ファイルの名前と URL のパスの形
 ```
 
-次の図は、キャンバスのディレクトリの間で許す import の向きを示す。矢印の無い組は、import しない。
+図の名前の規則と、ファイルの名前と URL のパスの形は、`packages/figures`（`@fukuemon/figures`）に置く。`apps/web` のビルドと、`figures/` が使う。  
+ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+
+次の図は、キャンバスのディレクトリと package の間で許す import の向きを示す。矢印の無い組は、import しない。
 
 ```mermaid
 flowchart TB
@@ -88,6 +94,7 @@ flowchart TB
   documents["documents"]
   figures["figures"]
   ui["@fukuemon/ui"]
+  fp["@fukuemon/figures"]
 
   drawio --> documents
   drawio --> figures
@@ -96,6 +103,7 @@ flowchart TB
   excalidraw --> figures
   excalidraw --> ui
   documents --> ui
+  figures --> fp
 ```
 
 - `documents/` は、ツールの種類ごとの処理を持たない。`data` と、ツールが `DocumentContent` に足した値を、解釈せずに、そのまま読み書きする。
@@ -108,6 +116,8 @@ flowchart TB
 - 記事の図を読み込む関数は、ツールのページが、`documents/` のモジュールに引数で渡す。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
+- `@fukuemon/figures` は、workspace のほかの package と、React に依存しない。`fetch` と、SVG を読む処理を持たない。
+- `@fukuemon/figures` を import するのは、`apps/playground` では `figures/` だけである。`documents/` は、import しない。
 - `documents/` と `figures/` は、`project/` と、実行環境の package を import しない。`Store` の型は、`documents/` が、`@fukuemon/sql-runtime` の `Store` と同じ形で定義する。形を変えるときは、両方を直す。
 - `documents/` のコンポーネントは、画面に出す語（「図」か「スライド」）と、新しく作るものの名前の付け方を、props で受ける。
 - `@excalidraw/excalidraw` を import するのは、`src/excalidraw/` だけである。
@@ -135,7 +145,8 @@ flowchart TB
   - 空の名前と、空白だけの名前は、確定しない。ほかの図と同じ名前は、確定できる。
   - 図の名前のボタンの読み上げの名前は、「名前を変える: <図の名前>」にする。
   - 一覧のダイアログの中で名前を変えている間の Esc は、名前の変更だけを取り消し、ダイアログを閉じない。
-- 「ファイル」のメニューは、ActionMenu で作る。開くボタンには、「ファイル」の文字を出す。ActionMenu は、開くボタンに文字を出す props を持つ。
+- 「ファイル」のメニューは、ActionMenu で作る。開くボタンには、「ファイル」の文字を出す。
+  - 開くボタンに文字を出す props は、今の ActionMenu に無い。キャンバスの実装のタスクが、`@fukuemon/ui` に足す。
 - 「ファイル」のメニューは、ファイルを開く、ファイルに保存、SVG を書き出す、の 3 つを持つ。
 - 保存の状態は、最後に保存した時刻を、文で出す。時刻が変わっても、読み上げない。
 - 保存できないときは、ヘッダの下に、Notice（`danger`、`isAlert`）で、保存できないことと理由を出す。保存の容量が足りないときは、図を消すと容量が空くことを、文に入れる。
@@ -233,6 +244,7 @@ type DocumentStore = {
 
 - 一覧は、そのツールの図だけを出す。
 - 一覧は、Dialog の中に、Table で作る。「新しい図」は、Dialog の `footer` に置く。
+  - Table の使う場面（[components.md](../../../../packages/ui/design/components.md)）に、行ごとの操作を持つ一覧は、今は無い。キャンバスの実装のタスクが足す。
 - 行の名前を押すと、その図を開き、ダイアログを閉じる。
   - 行の名前は、`?doc=<id>` を `href` に持つ Link にする。ページは、押したときに、ページを読み込み直さずに図を切り替える。新しいタブで開く操作は、ブラウザに任せる。
 - 行の「⋯」のボタンの読み上げの名前は、`<図の名前> の操作` にする。「消す」は、ActionMenu の `isDanger` の項目にする。
@@ -325,6 +337,7 @@ apps/web/src/content/figures/
 ```
 
 - ファイルの名前は、`<名前>.drawio.svg` か `<名前>.excalidraw.svg` である。`<名前>` は、小文字の英数字とハイフンだけにする（`^[a-z0-9][a-z0-9-]*$`）。
+- ビルドは、ファイルの名前の検証、出力するパスの組み立て、「キャンバスで開く」のリンクの組み立てに、`@fukuemon/figures` を使う。
 - 画像のパスは、記事のファイルからの相対パスで書く。ビルドは、記事のファイルの場所からパスを解決し、解決した先が `content/figures/` の直下のファイルのときに、記事の図として扱う。
 
 `apps/web` のビルドは、記事の図を指す画像を、次のとおり置き換える。  
@@ -335,7 +348,7 @@ apps/web/src/content/figures/
 - 「キャンバスで開く」のリンクの先は、`https://play.fukuemon.dev/<ツール>/?figure=<名前>` である。
   - リンクの読み上げの名前に、図の代替テキストを入れる（例: 「VPC の構成をキャンバスで開く」）。1 つの記事に複数の図があっても、リンクを見分けられるようにするためである。
   - リンクは、同じタブで開く。
-- 図が本文の幅に収まらないときは、縮めずに、横にスクロールする枠に入れる。図の中の文字が、小さくなりすぎないようにするためである。枠は、記事の表と同じ形にする。
+- 図が本文の幅に収まらないときは、縮めずに、横にスクロールする枠に入れる。図の中の文字が、小さくなりすぎないようにするためである。枠のキーボードの操作は、`@fukuemon/ui` の Table の、幅に収まらない表の枠と同じにする。Tab のキーで枠にフォーカスし、左右の矢印のキーで横にスクロールする。
 - Excalidraw の図で、運営者が選んだ色は、ダークでもライトの色のままである。運営者は、図を置くときに、ライトとダークの両方で読めることを確認する。
 - インラインにする SVG は、色の値を、トークンの CSS 変数に置き換える。
   - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](../../../adr/0040-canvas-figures-in-articles.md)
@@ -382,11 +395,11 @@ sequenceDiagram
   end
 ```
 
-- 名前の検証、URL の組み立て、`fetch` は、`figures/` が持つ。`figures/` は、SVG の文字列を返す。
+- `figures/` は、`@fukuemon/figures` で名前を検証し、URL のパスを組み立てて、`fetch` する。`figures/` は、SVG の文字列を返す。
 - SVG から元データを取り出して、そのツールの形式かを確認する処理は、ツールのページが持つ。「ファイルを開く」と同じ関数を使う。
-- ツールのページは、`figures/` に、図の名前と、自分のツールの拡張子（`drawio` か `excalidraw`）を渡す。`figures/` は、ツールの種類の型を持たない。
-- `figures/` は、名前が `^[a-z0-9][a-z0-9-]*$` に合わないときは、`fetch` しない。
-- URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
+- ツールのページは、`figures/` に、図の名前と、自分のツール（`drawio` か `excalidraw`）を渡す。図を描いたツールの型は、`@fukuemon/figures` が持つ。`figures/` と `documents/` は、互いの型を使わない。
+- `figures/` は、名前が規則に合わないときは、`fetch` しない。
+- URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
 - `fetch` は、リダイレクトを辿らない。
 - 開いただけでは、IndexedDB に保存しない。最初に編集したときに、新しい図として保存する。同じリンクを開くたびに、一覧に図が増えないようにするためである。
   - ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
@@ -400,6 +413,7 @@ sequenceDiagram
 
 - `apps/playground/drawio/`、`apps/playground/excalidraw/`: ツールのエントリーポイント。
 - `apps/playground/src/drawio/`、`src/excalidraw/`、`src/documents/`、`src/figures/`: キャンバスのコード。
+- `packages/figures/`: 図の名前の規則と、ファイルの名前と URL のパスの形。
 - `apps/web/src/content/figures/<名前>.drawio.svg`、`<名前>.excalidraw.svg`: 運営者が置く、記事の図。
 - `apps/web/src/lib/`: 記事の図を指す画像を置き換えるプラグインと、図を `/figures/` に出力する処理。
 - `apps/web/public/_headers`: `/figures/*` に返す `Access-Control-Allow-Origin`。
