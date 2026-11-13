@@ -24,7 +24,7 @@ AI のエージェントからの操作を、SQL だけを動かすツール（`
   - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
 - プレイグラウンドでは、訪問者が動かしたコードが、同じ origin に保存した図とスライドにアクセスできることを受け入れる。条件は、他人が用意したコードを、訪問者の操作なしに動かさないことである。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
-- Go のコードは、WebContainers の中で動かさず、`play.fukuemon.dev` の origin で動かす。Web Worker の中で動くコードは、`localStorage` を読めず、IndexedDB を読める。
+- Go のコードは、WebContainers の中で動かさず、`play.fukuemon.dev` のページで動かす。ページの Web Worker の中で動くコードは、`localStorage` を読めず、IndexedDB を読める。
 
 ## Decision
 
@@ -83,7 +83,7 @@ ADR-0045 の Decision 6 と同じく、エージェントの操作で読み込�
 ## 承認の条件
 
 次の 2 つを、ブラウザの中で確認する。  
-条件を満たせないときは、Go を実行する操作と、テストを実行する操作に、ページが確認を出す形に、Decision 2 を変える。
+2 つの条件のどちらかを満たせないときは、Decision 2 を変え、Go を実行する操作とテストを実行する操作に、ページが確認を出す。
 
 - Yaegi に渡す symbol を `stdlib.Symbols` だけにした WASM で、Yaegi で動かすコードの `syscall/js`、`syscall`、`unsafe` の import が失敗すること。Decision 2 が、Go を実行する操作に確認を出さないのは、この条件を前提にする。
 - ディレクトリで複数の package に分けたファイルの import を、Yaegi の WASM で解決できること。Decision 1 が、ファイルをディレクトリに分けて持つ形にするのは、この条件を前提にする。

@@ -355,15 +355,15 @@ flowchart TB
   - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
   - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値を、props で受ける。`status` は、`useSyncExternalStore` で読む。
-  - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` の待ちの状態、入力欄の値を渡す。
+  - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
-  - SQL だけを動かすツールは、AI からの操作が時間の上限で DB を初期の状態に戻したことを表す値も、`sql-console/` のコンポーネントの、省略できる props で渡す。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、DB を初期の状態に戻したことを表示する。`SqlPane` は、渡さない。
+  - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
-- 実行のボタンの待ちの状態は、Node の実行環境では、`useTransition` で持つ。
-- SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。
+- Node の実行環境では、実行のボタンの、実行中かどうかの値を、`useTransition` で持つ。
+- SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。
 - SQL だけを動かすツールの PGlite と、Go を動かすツールの Yaegi は、訪問者が実行のボタンを押したときと、AI からの操作の `sql_run_query`、`go_run`、`go_test` が呼ばれたときに読み込む。ページを開いたときには、読み込まない。
   - ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../docs/adr/0063-ai-operations-for-sql-and-go.md)
 
@@ -490,7 +490,8 @@ sequenceDiagram
 
 ### SQL
 
-SQL の画面（`sql-console/`）は、props で受けた SQL を実行する関数に SQL を渡し、結果を表示する。  
+SQL の画面（`sql-console/`）は、SQL を実行する関数を props で受ける。  
+この関数に SQL を渡し、結果を表示する。  
 SQL を実行する関数は、`SqlDatabase` の `run` を呼ぶ。  
 `SqlDatabase` の実装は 2 つである。
 
