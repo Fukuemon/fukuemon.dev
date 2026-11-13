@@ -55,6 +55,7 @@
 | [ADR-0021](0021-ui-components-and-catalog.md)            | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
 | [ADR-0022](0022-code-colors-from-tokens.md)              | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
 | [ADR-0062](0062-dense-text-and-targets-in-playground.md) | コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                           |
+| [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)      | コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引き、13px の文字のトークンを 2 つ足す                                                               |
 
 ADR-0010 の Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」は、ADR-0055 に置換した。
 
@@ -142,6 +143,7 @@ flowchart TB
     A0010["ADR-0010"]
     A0055["ADR-0055"]
     A0062["ADR-0062"]
+    A0066["ADR-0066"]
     A0024["ADR-0024"]
     A0028["ADR-0028"]
     A0061["ADR-0061"]
@@ -303,6 +305,8 @@ flowchart TB
   A0059 --> A0042
   A0062 --> A0024
   A0062 --> A0028
+  A0066 --> A0061
+  A0066 --> A0062
   A0063 --> A0031
   A0063 --> A0037
   A0063 --> A0044
