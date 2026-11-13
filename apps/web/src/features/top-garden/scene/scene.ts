@@ -27,9 +27,9 @@ import {
   STEPS,
   WALL,
   ridgeY,
-} from "./layout";
+} from "../layout";
 import { CLEAR, mixHex, type ScenePalette } from "./scene-colors";
-import { rng } from "./rng";
+import { rng } from "../rng";
 import { canvasTexture, lantern, rock, tree, type TreeLeaf } from "./scene-parts";
 
 type BoxSpec = readonly [number, number, number, number, number, number];

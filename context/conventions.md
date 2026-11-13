@@ -199,7 +199,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 除外を足すときは、理由をこの節に書く。  
 設定ファイルのコメントだけに残さない。
 
-- knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
+- knip は、`terraform`、`similarity-ts`、`go` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
 - knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
@@ -221,12 +221,13 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - `packages/ui/src/case/ConsoleEntryList/ConsoleEntryList.tsx` の 1 行の値の並び。`console.*` に同じ値の引数を渡すことがあり、値だけでは key が重なる。
   - どの一覧も、描いた後に並びが変わらない。
 - Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
-- 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
+- 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
   - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。
 - 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
   - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
-- Oxlint の `import/default` を、`apps/web/src/features/top-garden/TopStageScript.astro` の `?worker&url` の import の 1 行だけで抑制する。
+- Oxlint の `import/default` は、`?worker&url` の import の 1 行だけで抑制する。
+  - 対象は `apps/web/src/features/top-garden/stage/TopStageScript.astro` である。
   - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
 
 チェックが実行されなかったことを、通ったとして扱わない。

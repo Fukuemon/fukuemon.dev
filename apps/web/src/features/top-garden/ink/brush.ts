@@ -1,5 +1,5 @@
-import { ridgeY, type Peak, type Vec2 } from "./layout";
-import { rng } from "./rng";
+import { ridgeY, type Peak, type Vec2 } from "../layout";
+import { rng } from "../rng";
 
 export type Layer = "far" | "mid" | "near";
 

@@ -1,6 +1,6 @@
 // 場面の色の表。場面のほかでは使わないので、デザインシステムのトークンの対象の外に置く。
 // 色の値は、このファイルのほかに書かない。check:raw-values は、このファイルとそのテストを対象から外す。
-import type { Season, TimeOfDay } from "./season";
+import type { Season, TimeOfDay } from "../stage/season";
 
 /** 空に描く日か月。位置と半径は、設計の画面（1600 × 900）の px */
 interface Orb {

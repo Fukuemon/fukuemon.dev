@@ -1,13 +1,15 @@
+import "../playground.css";
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+
+import { GoPage } from "./GoPage";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root が無い");
 
 createRoot(root).render(
   <StrictMode>
-    <main>
-      <h1>Go の実行環境</h1>
-    </main>
+    <GoPage embedded={window.self !== window.top} search={window.location.search} />
   </StrictMode>,
 );

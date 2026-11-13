@@ -1,7 +1,7 @@
 import type { Layer, Stroke, Tint } from "./brush";
-import { rng } from "./rng";
+import { rng } from "../rng";
 import { inkArt, type InkArt } from "./ink-art";
-import { DESIGN } from "./layout";
+import { DESIGN } from "../layout";
 
 /** 試作の時刻（ms）に掛ける倍率。試作と同じ値である。 */
 const TIME_SCALE = 3150 / 3900;

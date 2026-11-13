@@ -9,10 +9,10 @@ import {
   WebGLRenderer,
 } from "three";
 import { createInkPass } from "./ink-pass";
-import { PAPER_PAD, PX, STATIONS } from "./layout";
+import { PAPER_PAD, PX, STATIONS } from "../layout";
 import { scenePalette } from "./scene-colors";
 import { buildGarden } from "./scene";
-import type { SeasonTime } from "./season";
+import type { SeasonTime } from "../stage/season";
 
 // 和紙の文の大きさ（px）の仮の値。文を和紙に置くときに、文の要素の大きさを測った値に替える。
 // 幅は Design Doc の「和紙の文」の 25rem と 17.5rem で、高さは試作の名乗りの文を測った値である。

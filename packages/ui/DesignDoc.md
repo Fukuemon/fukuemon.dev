@@ -42,7 +42,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - 縦組み。
 - トップの立体の庭の場面の色。
   - 時間帯ごとに 20 個を超える色を使い、場面のほかでは使わないので、トークンにしない。
-  - 値は `apps/web/src/features/top-garden/scene-colors.ts` だけに書く。
+  - 値は `apps/web/src/features/top-garden/scene/scene-colors.ts` だけに書く。
   - 表は [トップの水墨の門と立体の庭の Design Doc](../../docs/design/features/top-garden/DesignDoc.md#時間帯ごとの場面の色) にある。
 
 ## Design
