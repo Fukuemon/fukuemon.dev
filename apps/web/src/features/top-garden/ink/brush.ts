@@ -1,4 +1,5 @@
-import type { Peak, Vec2 } from "./layout";
+import { ridgeY, type Peak, type Vec2 } from "../layout";
+import { rng } from "../rng";
 
 export type Layer = "far" | "mid" | "near";
 
@@ -33,19 +34,6 @@ export interface Tint {
   readonly x: number;
   readonly y: number;
   readonly r: number;
-}
-
-export type Rng = () => number;
-
-/** 種から、0 以上 1 未満の値を決まった順に返す乱数（mulberry32）を作る。 */
-export function rng(seed: number): Rng {
-  let s = seed;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 /** 点の列を Catmull-Rom の曲線でつなぎ、step（px）ほどの間隔で取り直す。 */
@@ -135,8 +123,7 @@ export function brush(seed: number): Brush {
     alpha: number,
     t0: number,
   ): void {
-    const y = (x: number) =>
-      base - peaks.reduce((s, p) => s + p[1] * Math.exp(-Math.pow((x - p[0]) / p[2], 2)), 0);
+    const y = (x: number) => ridgeY({ peaks, base }, x);
     for (let k = -1; k < n; k++) {
       const pts: Vec2[] = [];
       for (let x = x0; x <= x1; x += 45) {

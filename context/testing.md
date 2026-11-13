@@ -23,9 +23,10 @@ verified_commit: ab2da87
 | unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む                                  |
 | unit         | `packages/go-runtime` の Yaegi で Go を動かす処理（`go/`）                         | `go test`                | `syscall/js`、`syscall`、`unsafe`、`os/exec` の import が失敗すること、ディレクトリの package の import を解決できること、終了コードとテストの関数を集められることを確認する |
 | unit         | `packages/go-runtime` の `GoRunner` と、Web Worker の `fetch` の差し替え           | Vitest                   | Web Worker のモックで、実行、止める、package ごとのテスト、読み込みと Web Worker の失敗と、ほかの origin へのリクエストを止める処理を踏む                                    |
-| unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画の木、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                                  |
+| unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                              |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                                                           |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                                                 |
+| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                 |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -44,19 +45,19 @@ Astro のコンポーネントは静的な HTML を出すだけで、分岐は `
 ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-model-independence.md)
 
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象は、`src/features/top-garden/` の次のモジュール。
+対象は、次のモジュール。
 
-- 墨の絵と署名の SVG を作る `layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`、`sign.ts`
-- 季節と時間帯を返す `season.ts`
-- 最初の訪問かを返す `visit.ts`
-- 季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
+- `src/features/top-garden/` の、墨の絵の SVG を作る `layout.ts` と `rng.ts`（直下）と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`
+- `src/features/top-garden/scene/` の、時間帯と季節から場面の色を決める `scene-colors.ts`
+- `src/features/top-garden/stage/` の、季節と時間帯を返す `season.ts`、最初の訪問かを返す `visit.ts`、季節と時間帯を `html` に書き庭を出すかを決める `stage.ts`
+- `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
+- `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
 
 `apps/playground`、`packages/sql-runtime`、`packages/go-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-`packages/playground-project` には 100% を求める。  
-`apps/playground`、`packages/sql-runtime`、`packages/go-runtime` のカバレッジの対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。  
-React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
-`packages/sql-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。`Worker` と `import.meta.url` に依り、Node の上では動かないためである。中身は、テストする `database.ts` と `handler.ts` を結ぶだけにする。  
-`packages/go-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` も、`Worker` と `import.meta.url` に依り Node の上では動かないので、対象に入れない。中身は、テストする `runner.ts`、`guard.ts`、`parts.ts` を結ぶだけにする。  
+`packages/playground-project` には、100% を求める。  
+`apps/playground` と `packages/go-runtime` の対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
+`packages/sql-runtime` と `packages/go-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。  
+2 つは `Worker` と `import.meta.url` を使い、Node では動かないためである。2 つのファイルは、テストする `database.ts` と `handler.ts`（`go-runtime` では `runner.ts`、`guard.ts`、`parts.ts`）を呼ぶだけにする。  
 `packages/go-runtime` の `test` の script は、Vitest の後に `go test` を実行するので、`mise.toml` の Go が要る。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
@@ -74,9 +75,15 @@ CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/8
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
 サイトの E2E の package（`packages/e2e`）は、まだ無い。
 
+トップの庭は、Playwright のスクリーンショットの比較で確認する。  
+庭は WebGL で描き、目で比べても色の小さな違いに気づけないためである。  
+spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。  
+実行の方法は [E2E のテスト](testing/e2e.md) にある。
+
 ## Runtime Requirements
 
 - unit test は Node.js の上で動かし、ブラウザの環境を要求しない。
+  - 例外は、`apps/playground/src/code-editor/search-panel.ts` のテストである。CodeMirror のパネルは DOM を組むので、jsdom の上で動かす。
 - E2E を足すときは、ビルド済みの `dist/` を静的に配信して実行し、dev server を対象にしない。
   - Astro の dev と build で出力が違う場合があり、本番に近い側をチェックする。
 - 実行に要る環境変数、ポート、外部のサービスは、未定。

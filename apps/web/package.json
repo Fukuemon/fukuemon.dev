@@ -10,7 +10,8 @@
     "deploy": "wrangler deploy",
     "typecheck": "astro check",
     "test": "vitest run",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:visual": "playwright test -c e2e/playwright.config.ts"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.6",
@@ -18,13 +19,16 @@
     "@fukuemon/ui": "workspace:*",
     "astro": "^7.2.9",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@playwright/test": "1.64.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "@types/three": "0.187.0",
     "@vitest/coverage-v8": "^4.1.11",
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.2",

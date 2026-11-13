@@ -40,6 +40,10 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - エディタと端末のエンジン（CodeMirror、xterm.js など）の選択と結び付け。プレイグラウンドの要求の prototype で決める。`packages/ui` は枠とテーマだけを持つ。
 - 記事の Markdown の描画と、Mermaid の図の SVG への変換。サイトの基盤の要求で扱う。
 - 縦組み。
+- トップの立体の庭の場面の色。
+  - 時間帯ごとに 20 個を超える色を使い、場面のほかでは使わないので、トークンにしない。
+  - 値は `apps/web/src/features/top-garden/scene/scene-colors.ts` だけに書く。
+  - 表は [トップの水墨の門と立体の庭の Design Doc](../../docs/design/features/top-garden/DesignDoc.md#時間帯ごとの場面の色) にある。
 
 ## Design
 
@@ -79,7 +83,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 ### 色
 
 地は生成り、文字は墨、罫は温かい灰にする。  
-差し色は、くすんだ緑、藍、錆の 3 つにする。主の色（`primary`）と内部のリンクはくすんだ緑、外部のリンク（`link-external`）は藍、目次の現在地（`current-page`）は錆にする。訪問済みのリンクは、色で分けない。  
+差し色は、くすんだ緑、藍、錆の 3 つにする。主の色（`primary`）と内部のリンクはくすんだ緑、外部のリンク（`link-external`）は藍、目次の現在地とサイトのヘッダーのナビの今いるページ（`current-page`）は錆にする。訪問済みのリンクは、色で分けない。  
 状態の色は、DADS の色相のとおり、成功を緑、エラーを赤に当て、注意を錆、情報を藍にする。どの値も、生成りの地の上で選ぶ。
 
 - 出典: [DADS の色](https://design.digital.go.jp/dads/foundations/color/)
