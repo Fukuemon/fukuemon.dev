@@ -63,4 +63,10 @@ describe("buildRss", () => {
       document([item("/articles/x", "&lt;script&gt;&amp;&quot;&apos;", "a &lt; b &gt; c")]),
     );
   });
+
+  it("題に XML 1.0 で使えない制御文字があると、ビルドを失敗させる", () => {
+    expect(() => buildRss(CHANNEL, [ref("/articles/x", { title: "a\u000Bb" })])).toThrow(
+      "XML に書けない文字がある",
+    );
+  });
 });

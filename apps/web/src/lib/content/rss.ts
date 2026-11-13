@@ -17,7 +17,19 @@ const ESCAPES: Record<string, string> = {
   "'": "&apos;",
 };
 
+/** XML 1.0 の Char の範囲か。タブ、改行、復帰を除く制御文字と、U+FFFE と U+FFFF を外す */
+function isXmlChar(code: number): boolean {
+  if (code < 0x20) return code === 0x09 || code === 0x0a || code === 0x0d;
+  return code !== 0xfffe && code !== 0xffff;
+}
+
+/** XML 1.0 で使えない文字があると throw する。黙って落とすと、題が変わったまま配られるためである */
 function escapeXml(text: string): string {
+  for (let i = 0; i < text.length; i++) {
+    if (!isXmlChar(text.charCodeAt(i))) {
+      throw new Error(`XML に書けない文字がある: ${JSON.stringify(text)}`);
+    }
+  }
   return text.replace(/[&<>"']/g, (c) => ESCAPES[c] as string);
 }
 
