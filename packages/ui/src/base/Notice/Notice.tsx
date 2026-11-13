@@ -10,7 +10,7 @@ export type NoticeProps = {
   children?: ReactNode;
   /** true のときは `role="alert"` にし、出た時点で読み上げる。実行のエラーのように、後から出す知らせに使う。 */
   isAlert?: boolean;
-  /** compact は、余白を 8px、題と本文を 13px、印を 16px にする。コードを動かす画面の領域の中に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact は、余白を 8px、題と本文を 13px、印を 16px にする。コードを動かす画面の領域の中に使う（docs/adr/0062-dense-text-and-targets-in-playground.md、docs/adr/0067-compact-text-tokens-in-dense-panes.md）。 */
   density?: "default" | "compact";
 };
 

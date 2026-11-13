@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 export type LoadingProps = {
   /** 待っていることを表す文。印が止まっていても伝わるよう、必ず渡して画面に出す。 */
   label: string;
-  /** compact は文を 13px にし、罫と文の間を 8px にする。コードを動かす画面の領域の中に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact は文を 13px にし、罫と文の間を 8px にする。コードを動かす画面の領域の中に使う（docs/adr/0062-dense-text-and-targets-in-playground.md、docs/adr/0067-compact-text-tokens-in-dense-panes.md）。 */
   density?: "default" | "compact";
 };
 
