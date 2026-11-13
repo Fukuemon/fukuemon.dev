@@ -1,0 +1,9 @@
+# 本番の切り替えまで、検索エンジンに載せない
+/*
+  X-Robots-Tag: noindex
+
+# cross-origin isolation は Node の実行環境のパスにだけ返す。全体に返すと、別の origin の iframe を読むツールが動かない (ADR-0034)
+/node/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: cross-origin
