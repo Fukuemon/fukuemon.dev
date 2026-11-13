@@ -11,7 +11,7 @@ export type LinkProps = Omit<ComponentPropsWithRef<"a">, "className" | "style"> 
 
 /**
  * 内部と外部のリンク。下線を引き、hover で下線の下に 2px の罫を左から引く。文中のリンクが折り返したときは行ごとに引く。文中に置かないリンクを flex の子にして折り返したときは、最後の行の下にだけ引く。内部のリンクは link、外部のリンクは link-external の色にする。訪問済みのリンクは色で分けない。
- * フォーカスの表示は外へ 6px 広がるので、文中では左右に 6px を空け、前後の文字に重ねない。文中に置かないリンクでは空けず、見出しや帯と左端をそろえる。
+ * フォーカスの表示は外へ 4px 広がるので、文中では左右に 6px を空け、前後の文字に重ねない。文中に置かないリンクでは空けず、見出しや帯と左端をそろえる。
  * JavaScript なしで動く `<a>` だけを出す。
  */
 export function Link({ isExternal = false, isStandalone = false, children, ...props }: LinkProps) {

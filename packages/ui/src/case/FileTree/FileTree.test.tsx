@@ -143,6 +143,18 @@ describe("FileTree", () => {
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
   });
 
+  it("新しい項目の欄と「作る」ボタンは、28 px の高さで上端と下端がそろい、間が 12 px 空く（ADR-0062）", async () => {
+    render(<NoSelection />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    const field = screen.getByRole("textbox").getBoundingClientRect();
+    const button = screen.getByRole("button", { name: "作る" }).getBoundingClientRect();
+    expect(field.height).toBe(28);
+    expect(button.top).toBe(field.top);
+    expect(button.bottom).toBe(field.bottom);
+    // フォーカスの輪（外へ 4 px）とボタンの枠を離すため、欄とボタンの間は 12 px にする
+    expect(button.left - field.right).toBe(12);
+  });
+
   it("題の右の操作は 28 px 四方、木の項目は 24 px の高さと 13 px の文字で押せる（ADR-0062）", () => {
     render(<Default />);
     const targets = [

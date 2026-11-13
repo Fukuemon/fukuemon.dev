@@ -5,7 +5,16 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TextField.stories";
 
-const { WithDescription, Error, LabelHidden, Underline, Compact } = composeStories(stories);
+const { Default, WithDescription, Error, Disabled, LabelHidden, Underline, Compact } =
+  composeStories(stories);
+
+const colorOf = (className: string) => {
+  render(<span className={className} data-testid={className} />);
+  return getComputedStyle(screen.getByTestId(className)).color;
+};
+
+/** boxed の欄の後ろに重ねた、面と下罫の要素。 */
+const faceOf = (input: HTMLElement) => input.nextElementSibling as HTMLElement;
 
 describe("TextField", () => {
   it("見出しを名前にし、補足を説明に結ぶ。欄は 44 px 以上の高さで押せる", () => {
@@ -14,6 +23,74 @@ describe("TextField", () => {
     expect(input).toHaveAccessibleDescription("認可サーバーに登録した URL と同じにする");
     expect(input).toBeRequired();
     expect(input.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  });
+
+  it("boxed の欄は、4 辺の枠を持たず、40 px の薄い面と 1 px の下罫で示す", () => {
+    render(<Default />);
+    const input = screen.getByRole("textbox", { name: "リダイレクト先の URL" });
+    const face = faceOf(input);
+    const style = getComputedStyle(face);
+    expect(face.getBoundingClientRect().height).toBe(40);
+    expect(style.borderTopWidth).toBe("0px");
+    expect(style.borderLeftWidth).toBe("0px");
+    expect(style.borderRightWidth).toBe("0px");
+    expect(style.borderBottomWidth).toBe("1px");
+    expect(style.borderBottomColor).toBe(colorOf("text-border-field"));
+    expect(style.backgroundColor).toBe(colorOf("text-surface-subtle"));
+    expect(getComputedStyle(input).boxShadow).toBe("none");
+  });
+
+  it("boxed の欄は、面の上下の 1 px 外を押しても欄にフォーカスが移る", async () => {
+    render(<Default />);
+    const input = screen.getByRole("textbox", { name: "リダイレクト先の URL" });
+    const rect = faceOf(input).getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    expect(document.elementFromPoint(x, rect.top - 1)).toBe(input);
+    expect(document.elementFromPoint(x, rect.bottom + 1)).toBe(input);
+    await userEvent.click(input, { position: { x: rect.width / 2, y: 1 } });
+    expect(input).toHaveFocus();
+  });
+
+  it("boxed の欄は、キーボードでフォーカスすると面に墨の 2 px の輪を出す", async () => {
+    render(<Default />);
+    const input = screen.getByRole("textbox", { name: "リダイレクト先の URL" });
+    await userEvent.tab();
+    expect(input).toHaveFocus();
+    const style = getComputedStyle(faceOf(input));
+    expect(style.outlineStyle).toBe("solid");
+    expect(style.outlineWidth).toBe("2px");
+    expect(style.outlineOffset).toBe("2px");
+    expect(style.outlineColor).toBe(colorOf("text-text"));
+  });
+
+  it("boxed の欄は、誤りがあると下罫を赤の 2 px にする", () => {
+    render(<Error />);
+    const style = getComputedStyle(
+      faceOf(screen.getByRole("textbox", { name: "リダイレクト先の URL" })),
+    );
+    expect(style.borderBottomWidth).toBe("2px");
+    expect(style.borderBottomColor).toBe(colorOf("text-danger"));
+  });
+
+  it("boxed の欄は、無効のときに面を無効の色にし、下罫を飾りの罫の色に替える", () => {
+    render(<Disabled />);
+    const style = getComputedStyle(
+      faceOf(screen.getByRole("textbox", { name: "リダイレクト先の URL" })),
+    );
+    render(<span className="bg-surface-disabled" data-testid="disabled" />);
+    expect(style.backgroundColor).toBe(
+      getComputedStyle(screen.getByTestId("disabled")).backgroundColor,
+    );
+    expect(style.borderBottomColor).toBe(colorOf("text-border"));
+  });
+
+  it("boxed の欄は、無効と誤りが重なると、下罫を飾りの罫の色の 1 px にする", () => {
+    render(<Disabled error="URL の形式が正しくありません" />);
+    const style = getComputedStyle(
+      faceOf(screen.getByRole("textbox", { name: "リダイレクト先の URL" })),
+    );
+    expect(style.borderBottomWidth).toBe("1px");
+    expect(style.borderBottomColor).toBe(colorOf("text-border"));
   });
 
   it("誤りがあれば欄を aria-invalid にし、誤りの文を説明に結ぶ。role=alert は付けない", () => {
