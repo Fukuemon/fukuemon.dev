@@ -195,12 +195,17 @@ flowchart TD
     subgraph web ["apps/web"]
         config["content.config.ts<br/>loader と schema の結線"]
         loader["lib/content/articles-loader.ts<br/>読み込み後のシリーズのチェック"]
+        articles["lib/content/articles.ts<br/>記事のページのパスと本文"]
+        pages["lib/content/article-pages.ts<br/>isPublic() / planArticlePages()"]
     end
     ac["astro:content"]
     config --> ac
     config --> schema
     config --> loader
     loader --> series
+    articles --> ac
+    articles --> pages
+    pages --> schema
     graph --> types
 ```
 
@@ -253,6 +258,8 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 
 `isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
 `planArticlePages()` は、シリーズの位置と前後を、`isPublic()` を通った記事だけで数える。  
+シリーズの所属と読む順は、Astro の `id` の先頭のディレクトリ名と `order` から、`planArticlePages()` が導く。  
+`planSeries()` の結果は、ビルドのチェックにだけ使う。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
 
