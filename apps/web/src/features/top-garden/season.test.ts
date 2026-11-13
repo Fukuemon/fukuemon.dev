@@ -1,3 +1,4 @@
+import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 import { seasonOf, timeOfDayOf } from "./season";
 
@@ -34,5 +35,14 @@ describe("timeOfDayOf", () => {
     [23, 59, "night"],
   ] as const)("%i 時 %i 分は %s", (h, min, time) => {
     expect(timeOfDayOf(dateAt(h, min))).toBe(time);
+  });
+});
+
+describe("inline script に埋め込む形", () => {
+  it("2 つの関数は、文字列から作り直しても、外の名前を参照せずに動く", () => {
+    const season = runInNewContext(`(${seasonOf.toString()})`) as typeof seasonOf;
+    const time = runInNewContext(`(${timeOfDayOf.toString()})`) as typeof timeOfDayOf;
+    const d = new Date(2026, 10, 13, 20);
+    expect([season(d), time(d)]).toStrictEqual(["autumn", "night"]);
   });
 });

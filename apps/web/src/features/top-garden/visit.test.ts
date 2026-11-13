@@ -1,5 +1,6 @@
+import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { SEEN_KEY, takeFirstVisit } from "./visit";
+import { takeFirstVisit } from "./visit";
 
 function memory() {
   const items = new Map<string, string>();
@@ -22,7 +23,7 @@ describe("takeFirstVisit", () => {
   it("開いたことを fd-top-seen に記録する", () => {
     const store = memory();
     takeFirstVisit(() => store);
-    expect(store.items.get(SEEN_KEY)).toBe("1");
+    expect(store.items.get("fd-top-seen")).toBe("1");
   });
 
   it("同じ端末で 2 回目に開いたときは false を返す", () => {
@@ -41,5 +42,12 @@ describe("takeFirstVisit", () => {
 
   it("書けない端末では、false を返す", () => {
     expect(takeFirstVisit(() => ({ ...memory(), setItem: fail }))).toBe(false);
+  });
+});
+
+describe("inline script に埋め込む形", () => {
+  it("文字列から作り直しても、外の名前を参照せずに初めての訪問を返す", () => {
+    const take = runInNewContext(`(${takeFirstVisit.toString()})`) as typeof takeFirstVisit;
+    expect(take(() => memory())).toBe(true);
   });
 });
