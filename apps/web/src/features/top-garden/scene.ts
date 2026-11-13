@@ -32,12 +32,16 @@ import { canvasTexture, lantern, rng, rock, tree, type TreeLeaf } from "./scene-
 
 type BoxSpec = readonly [number, number, number, number, number, number];
 
+/** 空。上端から地平へ、空の色から霞の色へ移るグラデーションの板 */
 function sky(C: ScenePalette): Mesh {
+  const stops: readonly (readonly [number, string])[] = [
+    [0, C.skyTop],
+    [0.7, C.sky],
+    [1, C.mist],
+  ];
   const map = canvasTexture(4, 256, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, C.skyTop);
-    gr.addColorStop(0.7, C.sky);
-    gr.addColorStop(1, C.mist);
+    for (const [at, color] of stops) gr.addColorStop(at, color);
     g.fillStyle = gr;
     g.fillRect(0, 0, w, h);
   });
