@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
+import { SplitPane } from "../../base/SplitPane/SplitPane";
 import {
   type ConsoleEntry,
   ConsoleEntryList,
@@ -10,6 +11,7 @@ import {
 } from "./ConsoleEntryList";
 import * as stories from "./ConsoleEntryList.stories";
 import { type ConsoleValue, preview } from "./consoleValue";
+import { MANY_ENTRIES } from "./fixtures";
 
 const { Default, ErrorOnly, FixedHeight, Empty, Loading, Error } = composeStories(stories);
 
@@ -156,6 +158,43 @@ describe("ConsoleEntryList", () => {
     expect(levelButton(/^debug/).getBoundingClientRect().bottom).toBeLessThanOrEqual(
       rows.getBoundingClientRect().top,
     );
+  });
+
+  describe("components.md に書いた親の形で、行の領域だけをスクロールする", () => {
+    const expectRowsScroll = () => {
+      const rows = screen.getByRole("region", { name: "ログの行" });
+      expect(rows.scrollHeight).toBeGreaterThan(rows.clientHeight);
+      expect(levelButton(/^debug/).getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        rows.getBoundingClientRect().top,
+      );
+    };
+
+    it("高さを持つ grid の親", () => {
+      render(
+        <div className="grid h-96">
+          <ConsoleEntryList entries={MANY_ENTRIES} />
+        </div>,
+      );
+      expectRowsScroll();
+    });
+
+    it("SplitPane の領域で、flex h-full flex-col の要素で包んだとき", () => {
+      render(
+        <div className="h-96">
+          <SplitPane
+            label="仕切り"
+            orientation="vertical"
+            primary={<p>上の領域</p>}
+            secondary={
+              <div className="flex h-full flex-col">
+                <ConsoleEntryList entries={MANY_ENTRIES} />
+              </div>
+            }
+          />
+        </div>,
+      );
+      expectRowsScroll();
+    });
   });
 
   describe("一番下への送り", () => {

@@ -20,11 +20,7 @@ export type ConsoleEntry = {
 
 export type ConsoleEntryListProps = {
   title?: string;
-  /**
-   * 起きた順に並べた行。上限と古い行の扱いは、呼ぶ側が決める。
-   * 高さは呼ぶ側が決め、行の領域はコンポーネントがスクロールさせる。親は、高さを持つ flex の縦並びか grid にする。
-   * 一番下を見ている間に行が増えると、行の領域を一番下まで送る。
-   */
+  /** 起きた順に並べた行。上限と古い行の扱いは、呼ぶ側が決める。 */
   entries: readonly ConsoleEntry[];
   /** 最初に表示するログレベル。渡さないと、全てのログレベルを表示する。 */
   defaultLevels?: readonly ConsoleLevel[];
@@ -146,6 +142,8 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
 /**
  * `console.*` の出力を、起きた順に並べたコンソール。行ごとに、ログレベルの印、値、出力元を出す。
  * 題の下のボタンで、表示するログレベルを選ぶ。配列、オブジェクト、`Error`、`Map`、`Set` は、TreeView で開いて中を見られる。
+ * 高さは呼ぶ側が決め、行の領域はコンポーネントがスクロールさせる。親は、高さを持つ flex の縦並びか grid にする。
+ * 一番下を見ている間に行が増えると、行の領域を一番下まで送る。
  */
 export function ConsoleEntryList({
   title = "コンソール",
