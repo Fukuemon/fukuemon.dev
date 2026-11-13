@@ -19,8 +19,8 @@ const levelButton = (name: RegExp) => screen.getByRole("button", { name });
 const treeItem = (name: string | RegExp) => screen.getByRole("treeitem", { name });
 
 /**
- * 描画のフレームを count 回待つ。IntersectionObserver の知らせは描画の後に届くので、
- * スクロールした後に数フレーム待てば、コンポーネントの observer の知らせが届いている。
+ * 描画のフレームを count 回待つ。scroll イベントは描画の前に届くので、
+ * scrollTop を変えた後に数フレーム待てば、コンポーネントが scroll イベントを受け取っている。
  */
 const nextFrames = (count: number) =>
   new Promise<void>((resolve) => {
@@ -80,6 +80,15 @@ describe("ConsoleEntryList", () => {
     expect(treeItem('name: "山田 花子"')).toBeInTheDocument();
     await userEvent.click(treeItem(/^session: \{expiresAt/));
     expect(treeItem("refresh: true")).toBeInTheDocument();
+  });
+
+  it("ログレベルを外して戻すと、その行の値の木は閉じている", async () => {
+    render(<Default />);
+    await userEvent.click(treeItem(/^\{id: 42/));
+    expect(treeItem(/^\{id: 42/)).toHaveAttribute("aria-expanded", "true");
+    await userEvent.click(levelButton(/^info/));
+    await userEvent.click(levelButton(/^info/));
+    expect(treeItem(/^\{id: 42/)).toHaveAttribute("aria-expanded", "false");
   });
 
   it("Map を開くと「key => 値」で、Error を開くとスタックの行で出す", async () => {
@@ -176,6 +185,15 @@ describe("ConsoleEntryList", () => {
       rerender(frame(32));
       await nextFrames(3);
       expect(rows().scrollTop).toBe(0);
+    });
+
+    it("高さを決めない親では、行が増えてもページを送らない", async () => {
+      const { rerender } = render(<ConsoleEntryList entries={entriesOf(60)} />);
+      expect(document.documentElement.scrollHeight).toBeGreaterThan(window.innerHeight);
+      window.scrollTo(0, 0);
+      rerender(<ConsoleEntryList entries={entriesOf(61)} />);
+      await nextFrames(3);
+      expect(window.scrollY).toBe(0);
     });
 
     it("読み込み中から同じ行に戻ったときも、一番下を見せる", async () => {
