@@ -1,4 +1,5 @@
 ---
+import SiteHeader from "../components/SiteHeader.astro";
 import "../styles/site.css";
 
 interface Props {
@@ -21,12 +22,14 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <slot name="head" />
   </head>
   <body class="min-h-dvh bg-surface font-sans text-body text-text">
     <a
       class="sr-only border border-border-field bg-surface-raised text-label text-link underline underline-offset-4 focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:px-4 focus:py-4 focus-visible:focus-ring"
       href="#main">本文へスキップ</a
     >
+    <SiteHeader />
     <main id="main"><slot /></main>
   </body>
 </html>

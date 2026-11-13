@@ -47,6 +47,11 @@ import * as Stories from "./Text.stories";
         "表のセル、入力欄の値、ファイルのツリーの行",
       ],
       ["text-label", "font-sans text-label", "ボタン、タブ"],
+      [
+        "text-label-compact",
+        "font-sans text-label-compact",
+        "コードを動かす画面のコンソールのログレベルのボタン（ADR-0062）",
+      ],
       ["text-caption", "font-sans text-caption", "補足、図の説明、時刻"],
     ].map(([name, cls, use]) => (
       <div key={name} className="flex flex-col gap-1">
@@ -75,6 +80,12 @@ import * as Stories from "./Text.stories";
         "font-mono text-code-dense",
         "HTTP のヘッダと本文、端末の狭い表示",
         "content-type: application/json",
+      ],
+      [
+        "text-compact",
+        "font-mono text-compact",
+        "コードを動かす画面のコンソールの値、時刻、出力元、行の数（ADR-0062）",
+        "10:00:00.120 server.js",
       ],
     ].map(([name, cls, use, sample]) => (
       <div key={name} className="flex flex-col gap-1">

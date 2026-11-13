@@ -24,7 +24,7 @@ import * as Stories from "./Color.stories";
   />
   <ColorItem
     title="surface-subtle"
-    subtitle="押せる行とボタンの hover の面、neutral の状態のラベルの面、HTTP の流れの一覧の選んだ行の面"
+    subtitle="押せる行とボタンの hover の面、TextField の boxed の入力欄の面、neutral の状態のラベルの面、HTTP の流れの一覧の選んだ行の面"
     colors={{ "surface-subtle": "var(--fd-color-surface-subtle)" }}
   />
   <ColorItem
@@ -74,7 +74,7 @@ import * as Stories from "./Color.stories";
 <ColorPalette>
   <ColorItem
     title="border"
-    subtitle="飾りの区切りの罫。押せるものと入力欄の境界には使わない"
+    subtitle="飾りの区切りの罫と、無効の boxed の入力欄の下罫。押せるものと、有効の入力欄の境界には使わない"
     colors={{ border: "var(--fd-color-border)" }}
   />
   <ColorItem
@@ -124,14 +124,9 @@ import * as Stories from "./Color.stories";
 
 <ColorPalette>
   <ColorItem
-    title="focus-outline"
-    subtitle="フォーカスの表示の外側の枠。画面のコードは focus-ring のユーティリティで書き、この名前を直に使わない"
-    colors={{ "focus-outline": "var(--fd-color-focus-outline)" }}
-  />
-  <ColorItem
-    title="focus-halo"
-    subtitle="フォーカスの表示の、要素に接する輪。focus-ring のユーティリティが使う"
-    colors={{ "focus-halo": "var(--fd-color-focus-halo)" }}
+    title="focus"
+    subtitle="フォーカスの表示の墨の輪。画面のコードは focus-ring のユーティリティで書き、この名前を直に使わない"
+    colors={{ focus: "var(--fd-color-focus)" }}
   />
 </ColorPalette>
 
@@ -140,7 +135,7 @@ import * as Stories from "./Color.stories";
 <ColorPalette>
   <ColorItem
     title="danger"
-    subtitle="エラーの文と印、データを失う操作のボタンの面"
+    subtitle="エラーの文と印、データを失う操作のボタンの面、コンソールの error の行の印と罫"
     colors={{ danger: "var(--fd-color-danger)" }}
   />
   <ColorItem
@@ -150,17 +145,17 @@ import * as Stories from "./Color.stories";
   />
   <ColorItem
     title="danger-surface"
-    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面"
     colors={{ "danger-surface": "var(--fd-color-danger-surface)" }}
   />
   <ColorItem
     title="warning"
-    subtitle="注意の文と印"
+    subtitle="注意の文と印、コンソールの warn の行の印と罫"
     colors={{ warning: "var(--fd-color-warning)" }}
   />
   <ColorItem
     title="warning-surface"
-    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面"
     colors={{ "warning-surface": "var(--fd-color-warning-surface)" }}
   />
   <ColorItem
@@ -170,17 +165,17 @@ import * as Stories from "./Color.stories";
   />
   <ColorItem
     title="success-surface"
-    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面"
     colors={{ "success-surface": "var(--fd-color-success-surface)" }}
   />
   <ColorItem
     title="info"
-    subtitle="情報の文と印、コードの系統のファイルの印"
+    subtitle="情報の文と印、コードの系統のファイルの印、コンソールの info の行の印"
     colors={{ info: "var(--fd-color-info)" }}
   />
   <ColorItem
     title="info-surface"
-    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地"
+    subtitle="danger、warning、success、info の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面"
     colors={{ "info-surface": "var(--fd-color-info-surface)" }}
   />
 </ColorPalette>

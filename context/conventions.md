@@ -203,10 +203,11 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - Oxlint は、`packages/ui/.storybook/` の `react/rules-of-hooks` と `react/exhaustive-deps` を見ない。
   - decorator の中の `useEffect` は、`storybook/preview-api` の hook で、React の hook ではない。
   - decorator の名前は小文字で始まるので、`rules-of-hooks` は、コンポーネントの外で hook を呼んだと見なす。
-- Oxlint の `react/no-array-index-key` を、次の 2 か所だけで、行ごとのコメントで抑制する。
+- Oxlint の `react/no-array-index-key` を、次の 3 か所だけで、行ごとのコメントで抑制する。
   - `packages/ui/src/case/HttpExchangeDetail/HttpExchangeDetail.tsx` のヘッダの行。同じ名前のヘッダが並ぶことがあり、名前だけでは key が重なる。
   - `packages/ui/src/case/ToolPane/fixtures.tsx` のコードの行。同じ中身の行が並ぶことがあり、中身だけでは key が重なる。
-  - どちらの一覧も、描いた後に並びが変わらない。
+  - `packages/ui/src/case/ConsoleEntryList/ConsoleEntryList.tsx` の 1 行の値の並び。`console.*` に同じ値の引数を渡すことがあり、値だけでは key が重なる。
+  - どの一覧も、描いた後に並びが変わらない。
 - Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
 
 チェックが実行されなかったことを、通ったとして扱わない。

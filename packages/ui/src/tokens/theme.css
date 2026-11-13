@@ -43,8 +43,7 @@
   --color-link-external: var(--fd-color-link-external);
   --color-current-page: var(--fd-color-current-page);
 
-  --color-focus-outline: var(--fd-color-focus-outline);
-  --color-focus-halo: var(--fd-color-focus-halo);
+  --color-focus: var(--fd-color-focus);
 
   --color-danger: var(--fd-color-danger);
   --color-danger-hover: var(--fd-color-danger-hover);
@@ -95,7 +94,7 @@
   /* 等幅の和文の字は BIZ UDGothic で受ける */
   --font-mono: "Noto Sans Mono", "BIZ UDGothic", monospace;
 
-  /* 文字: 用途の名前で置く。14px より小さい文字を置かない */
+  /* 文字: 用途の名前で置く。14px より小さい文字は、下の compact の 2 つだけにする */
   --text-caption: var(--fd-primitive-font-size-14);
   --text-caption--line-height: var(--fd-primitive-line-height-130);
   --text-body-dense: var(--fd-primitive-font-size-16);
@@ -116,6 +115,12 @@
   --text-code--line-height: var(--fd-primitive-line-height-170);
   --text-code-dense: var(--fd-primitive-font-size-14);
   --text-code-dense--line-height: var(--fd-primitive-line-height-130);
+  /* compact: コードを動かす画面のコンポーネントだけに使う 12px と 13px（docs/adr/0062-dense-text-and-targets-in-playground.md） */
+  --text-compact: var(--fd-primitive-font-size-12);
+  --text-compact--line-height: var(--fd-primitive-line-height-130);
+  --text-label-compact: var(--fd-primitive-font-size-13);
+  --text-label-compact--line-height: var(--fd-primitive-line-height-100);
+  --text-label-compact--font-weight: var(--fd-primitive-font-weight-700);
 
   --font-weight-normal: var(--fd-primitive-font-weight-400);
   --font-weight-bold: var(--fd-primitive-font-weight-700);
@@ -136,7 +141,7 @@
 
   /* 読み込み中の印。罫が左から伸びて右へ抜ける。1 周 1600ms */
   --animate-loading: fd-loading-stroke 1600ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  /* 罫を左から 1 回引く。選んだタブ、検索の欄のフォーカス、ダイアログの上端で使う */
+  /* 罫を左から 1 回引く。選んだタブ、検索の欄のフォーカス、ダイアログの上端、ヘッダーのナビの今いるページで使う */
   --animate-stroke: fd-draw-stroke 320ms cubic-bezier(0.4, 0, 0.2, 1);
   /* 重なる面が、濃度を上げて出る */
   --animate-fade-in: fd-fade-in 150ms ease-out;
@@ -180,14 +185,13 @@
   }
 }
 
-/* フォーカスの表示は、このユーティリティだけで書く。黄色の輪が要素に接し、その外に黒の枠を置く */
+/* フォーカスの表示は、このユーティリティだけで書く。要素から 2px 離して、墨の 2px の輪を 1 重に引く */
 @utility focus-ring {
-  outline: 4px solid var(--fd-color-focus-outline);
+  outline: 2px solid var(--fd-color-focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--fd-color-focus-halo);
 }
 
-/* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う。apps/web/src/styles/site.css のヘッダーのナビに写しがあるので、変えたら写しも直す */
+/* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う */
 :root {
   --fd-mask-brush: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E");
 }
@@ -241,6 +245,15 @@
 
   &:hover::after {
     clip-path: inset(0);
+  }
+}
+
+/* brush-hover の線を、aria-current が page か true の要素では錆の色で常に出し、ページを開いたときに左から 1 回引く。サイトのヘッダーのナビが、今いるページとその下のページで使う */
+@utility brush-current {
+  &:is([aria-current="page"], [aria-current="true"])::after {
+    background: var(--fd-color-current-page);
+    clip-path: inset(0);
+    animation: var(--animate-stroke);
   }
 }
 

@@ -30,6 +30,8 @@
     --fd-color-link-external: var(--fd-primitive-color-indigo-300);
     --fd-color-current-page: var(--fd-primitive-color-rust-300);
 
+    --fd-color-focus: var(--fd-primitive-color-sumi-25);
+
     --fd-color-danger: var(--fd-primitive-color-crimson-300);
     --fd-color-danger-hover: var(--fd-primitive-color-crimson-200);
     --fd-color-danger-surface: var(--fd-primitive-color-crimson-900);
@@ -105,6 +107,8 @@
   --fd-color-link-visited: var(--fd-primitive-color-green-300);
   --fd-color-link-external: var(--fd-primitive-color-indigo-300);
   --fd-color-current-page: var(--fd-primitive-color-rust-300);
+
+  --fd-color-focus: var(--fd-primitive-color-sumi-25);
 
   --fd-color-danger: var(--fd-primitive-color-crimson-300);
   --fd-color-danger-hover: var(--fd-primitive-color-crimson-200);

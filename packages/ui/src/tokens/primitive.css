@@ -2,7 +2,7 @@
  * fukuemon.dev のプリミティブトークン。セマンティックトークン（semantic.css）とテーマ変数（theme.css）が参照する値だけを持つ。
  * 値は fukuemon.dev が決める。地と罫と差し色は旧サイトの値で、生成りの紙に墨で刷る向きの温かい灰と、くすんだ緑、藍、錆を持つ（docs/adr/0024-tokens-of-fukuemon-dev.md）。
  * 名前は --fd-primitive-color-<色>-<段> にする。段は、数が大きいほど暗い。
- * フォーカスの色、書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
+ * 書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
  * 出典: https://github.com/digital-go-jp/design-tokens
  *
  * MIT License
@@ -113,13 +113,11 @@
   --fd-primitive-color-blue-300: #9fb4e8;
   --fd-primitive-color-blue-700: #34508f;
 
-  /* フォーカス: DADS の黄色と黒 */
-  --fd-primitive-color-yellow-300: #ffd43d;
-  --fd-primitive-color-black: #000000;
-
   --fd-primitive-font-weight-400: 400;
   --fd-primitive-font-weight-700: 700;
   --fd-primitive-font-family-sans: "Noto Sans JP", sans-serif;
+  --fd-primitive-font-size-12: 0.75rem;
+  --fd-primitive-font-size-13: 0.8125rem;
   --fd-primitive-font-size-14: 0.875rem;
   --fd-primitive-font-size-16: 1rem;
   --fd-primitive-font-size-18: 1.125rem;

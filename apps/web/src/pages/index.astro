@@ -1,7 +1,10 @@
 ---
+import Profile from "../features/top-garden/Profile.astro";
+import TopStageScript from "../features/top-garden/TopStageScript.astro";
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
 <SiteLayout title="fukuemon.dev" description="Fukuemon の技術記事を公開しています。">
-  <h1 class="px-4 py-8 font-heading text-heading-lg font-semibold">fukuemon.dev</h1>
+  <TopStageScript slot="head" />
+  <Profile />
 </SiteLayout>
