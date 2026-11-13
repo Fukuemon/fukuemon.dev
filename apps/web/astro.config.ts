@@ -16,7 +16,7 @@ export default defineConfig({
     build: { assetsInlineLimit: (file) => (/\.woff2?$/.test(file) ? false : undefined) },
   },
   markdown: {
-    // 既定の Sätteri は rehype のプラグインを動かさないので、unified の処理に替える。
+    // デフォルトの Sätteri は rehype のプラグインを動かさないので、unified の処理に替える。
     // rehypeMermaid は Expressive Code より前に動き、素の <pre><code> のまま図を拾う
     processor: unified({ rehypePlugins: [rehypeMermaid, rehypeJaLinebreak] }),
   },
