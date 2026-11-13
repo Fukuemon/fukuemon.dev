@@ -1,5 +1,5 @@
 import { composeStories } from "@storybook/react-vite";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { fn } from "storybook/test";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
@@ -22,7 +22,8 @@ const openDialog = async (onConfirm = fn()) => {
 describe("ConfirmDialog", () => {
   it("開くと、題と本文に失うものの名前を出し、やめるのボタンにフォーカスを当てる", async () => {
     const { dialog } = await openDialog();
-    expect(dialog).toBeVisible();
+    // 開いた直後は濃度が 0 から上がる途中なので、見えるまで待つ
+    await waitFor(() => expect(dialog).toBeVisible());
     expect(dialog).toHaveTextContent("src/server.js を削除する。");
     expect(screen.getByRole("button", { name: "やめる" })).toHaveFocus();
   });

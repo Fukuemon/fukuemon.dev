@@ -75,3 +75,24 @@ export const ReadToEnd: Story = {
     documentElement.scrollTop = documentElement.scrollHeight;
   },
 };
+export const LongHeading: Story = {
+  name: "長い見出しの hover",
+  args: {
+    headings: [
+      { id: "overview", label: "認可コードフローの流れ", level: 2 },
+      {
+        id: "long",
+        label: "認可サーバーがクライアントにコードを返し、クライアントがトークンと引き換えるまで",
+        level: 2,
+      },
+    ],
+  },
+  parameters: { pseudo: { hover: true } },
+  decorators: [
+    (Story) => (
+      <div className="w-64">
+        <Story />
+      </div>
+    ),
+  ],
+};

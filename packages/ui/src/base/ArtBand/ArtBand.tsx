@@ -20,13 +20,13 @@ export type ArtBandProps = {
   layout?: ArtBandLayout;
 };
 
-// 動きの層は、読み込んだ直後の 1 回だけ動いて止まる。WCAG 2.2.2 の 5 秒より短くする
+// 動きの層は、読み込んだ直後の 1 回だけ濃度を上げて出る。位置は動かさず、WCAG 2.2.2 の 5 秒より短くする
 const MOTIFS: Record<ArtMotif, { plate: string; motion?: { svg: string; className: string } }> = {
   kasumi: {
     plate: kasumi,
     motion: {
       svg: kasumiMotion,
-      className: "transition-transform duration-4000 ease-out starting:-translate-x-16",
+      className: "transition-opacity duration-4000 ease-out starting:opacity-0",
     },
   },
   seigaiha: { plate: seigaiha },

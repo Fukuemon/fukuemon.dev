@@ -1,10 +1,11 @@
 import { composeStories } from "@storybook/react-vite";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
+import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Link.stories";
 
-const { Default, External } = composeStories(stories);
+const { Default, Wrapped, Standalone, External } = composeStories(stories);
 
 const colorOf = (className: string) => {
   render(<span className={className} data-testid={className} />);
@@ -26,5 +27,43 @@ describe("Link", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     expect(getComputedStyle(link).color).toBe(colorOf("text-link-external"));
     expect(getComputedStyle(link).color).not.toBe(colorOf("text-link"));
+  });
+
+  it("フォーカスの表示が外へ広がる幅だけ左右を空け、前後の文字に重ねない", async () => {
+    render(<Default />);
+    const link = screen.getByRole("link", { name: "認可コードフローの記事" });
+    await userEvent.tab();
+    expect(link).toHaveFocus();
+    const style = getComputedStyle(link);
+    const extent = Number.parseFloat(style.outlineOffset) + Number.parseFloat(style.outlineWidth);
+    expect(extent).toBeGreaterThan(0);
+    expect(Number.parseFloat(style.marginLeft)).toBeGreaterThanOrEqual(extent);
+    expect(Number.parseFloat(style.marginRight)).toBeGreaterThanOrEqual(extent);
+  });
+
+  it("文中でないリンクは左右を空けず、フォーカスの表示を隣の日付に重ねない", async () => {
+    render(<Standalone />);
+    const link = screen.getByRole("link", { name: "認可コードフローの記事" });
+    const style = getComputedStyle(link);
+    expect(style.marginLeft).toBe("0px");
+    expect(style.marginRight).toBe("0px");
+    await userEvent.tab();
+    expect(link).toHaveFocus();
+    const focused = getComputedStyle(link);
+    const extent =
+      Number.parseFloat(focused.outlineOffset) + Number.parseFloat(focused.outlineWidth);
+    const date = screen.getByText("2026-11-13");
+    expect(link.getBoundingClientRect().right + extent).toBeLessThanOrEqual(
+      date.getBoundingClientRect().left,
+    );
+  });
+
+  it("hover すると、折り返したリンクのどの行にも 2px の罫を引く", async () => {
+    render(<Wrapped />);
+    const link = screen.getByRole("link", { name: /認可コードフロー/ });
+    expect(link.getClientRects().length).toBeGreaterThan(1);
+    expect(getComputedStyle(link).backgroundSize).toBe("0% 2px");
+    await userEvent.hover(link);
+    await expect.poll(() => getComputedStyle(link).backgroundSize).toBe("100% 2px");
   });
 });

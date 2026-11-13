@@ -31,14 +31,18 @@ describe("ArtBand", () => {
     expect(svg.getBoundingClientRect().height).toBe(120);
   });
 
-  it("動きの層は、5 秒以内に終わる 1 回だけの遷移で動く", () => {
-    const { container } = render(<ArtBand layout="fill" motif="kasumi" />);
-    const layers = container.querySelectorAll('[data-motif="kasumi"] > div');
-    expect(layers).toHaveLength(2);
-    const style = getComputedStyle(layers[1]);
-    expect(style.animationName).toBe("none");
-    const seconds = Number.parseFloat(style.transitionDuration);
-    expect(seconds).toBeGreaterThan(0);
-    expect(seconds).toBeLessThanOrEqual(5);
+  it("動きの層は、5 秒以内に終わる 1 回だけの遷移で濃度を上げて出て、位置を動かさない", () => {
+    for (const motif of ["kasumi", "moonPine"] as const) {
+      const { container, unmount } = render(<ArtBand layout="fill" motif={motif} />);
+      const layers = container.querySelectorAll(`[data-motif="${motif}"] > div`);
+      expect(layers).toHaveLength(2);
+      const style = getComputedStyle(layers[1]);
+      expect(style.animationName).toBe("none");
+      expect(style.transitionProperty).toBe("opacity");
+      const seconds = Number.parseFloat(style.transitionDuration);
+      expect(seconds).toBeGreaterThan(0);
+      expect(seconds).toBeLessThanOrEqual(5);
+      unmount();
+    }
   });
 });
