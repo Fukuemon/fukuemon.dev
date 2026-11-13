@@ -255,13 +255,10 @@ sequenceDiagram
   participant S as @fukuemon/slides
 
   V->>P: ページを開く
-  P->>D: doc のスライドか、最後に更新したスライドを読む
+  P->>D: doc のスライドを読む。doc が無いか、当たるスライドが無いときは、最後に更新したスライドを読む
   alt IndexedDB を読めない
     D-->>P: 読めない
     P-->>V: ひな形を開き、保存できないことを表示する
-  else doc のスライドが無い
-    D-->>P: 無い
-    P-->>V: エラーと、一覧を開く操作を表示する
   else 保存したスライドが 1 つも無い
     D-->>P: 無い
     P-->>V: ひな形を開く
