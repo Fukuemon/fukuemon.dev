@@ -6,7 +6,8 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading, SecondaryLoading, Small } = composeStories(stories);
+const { Primary, PrimaryDisabled, Loading, SecondaryLoading, DangerLoading, Small } =
+  composeStories(stories);
 
 describe("Button", () => {
   it("押すと onClick を呼ぶ。Enter と Space でも押せる", async () => {
@@ -38,6 +39,26 @@ describe("Button", () => {
     expect(button).toHaveAttribute("aria-busy", "true");
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("読み込み中の主と danger のボタンは、hover で色を変えない", async () => {
+    for (const Story of [Loading, DangerLoading]) {
+      const { unmount } = render(<Story />);
+      const button = screen.getByRole("button");
+      const before = getComputedStyle(button).backgroundColor;
+      await userEvent.hover(button);
+      expect(button).toHaveAttribute("aria-busy", "true");
+      expect(getComputedStyle(button).backgroundColor).toBe(before);
+      unmount();
+    }
+  });
+
+  it("読み込み中でない主のボタンは、hover で色を変える", async () => {
+    render(<Primary />);
+    const button = screen.getByRole("button", { name: "保存" });
+    const before = getComputedStyle(button).backgroundColor;
+    await userEvent.hover(button);
+    await expect.poll(() => getComputedStyle(button).backgroundColor).not.toBe(before);
   });
 
   it("読み込み中の印の 3 つの点は、ボタンの文の色で動く", () => {

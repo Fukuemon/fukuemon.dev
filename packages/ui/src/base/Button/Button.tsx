@@ -13,9 +13,9 @@ type ButtonStyleOptions = {
 };
 
 const variantClassName: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-text-inverse not-aria-disabled:hover:bg-primary-hover",
+  primary: "bg-primary text-text-inverse not-aria-disabled:not-aria-busy:hover:bg-primary-hover",
   secondary: "bg-surface text-primary ring-1 ring-border-field ring-inset",
-  danger: "bg-danger text-text-inverse not-aria-disabled:hover:bg-danger-hover",
+  danger: "bg-danger text-text-inverse not-aria-disabled:not-aria-busy:hover:bg-danger-hover",
 };
 
 const sizeClassName: Record<ButtonSize, string> = {
