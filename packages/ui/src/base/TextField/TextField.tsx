@@ -22,7 +22,7 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
 
 /**
  * 1 行の文字の入力欄。見出し、補足、誤りの文を欄に結ぶ。
- * 欄の高さは 48px で、押せる領域は 44px より大きい。
+ * `boxed` の欄は、見た目の高さが 40px で、押せる領域は上下に 2px ずつ広げた 44px である。
  */
 export function TextField({
   label,
@@ -51,18 +51,27 @@ export function TextField({
         </p>
       )}
       {appearance === "boxed" ? (
-        <input
-          {...props}
-          aria-describedby={describedBy}
-          aria-invalid={error === undefined ? undefined : true}
-          className={clsx(
-            "h-12 rounded-control bg-surface px-4 text-body-dense text-text ring-1 ring-border-field ring-inset",
-            "focus-visible:focus-ring aria-invalid:ring-2 aria-invalid:ring-danger",
-            "disabled:bg-surface-disabled disabled:text-text-disabled",
-          )}
-          id={id}
-          required={required}
-        />
+        // 押せる範囲を見た目の外へ広げるため、欄は 44px で透明にし、40px の面と下罫を後ろに重ねて描く。
+        // input は疑似要素を持てないので、面は兄弟の要素にし、欄の状態を peer で受ける
+        <div className="relative isolate -my-0.5">
+          <input
+            {...props}
+            aria-describedby={describedBy}
+            aria-invalid={error === undefined ? undefined : true}
+            className="peer relative z-10 h-11 w-full bg-transparent px-3 text-body-dense text-text outline-none disabled:text-text-disabled"
+            id={id}
+            required={required}
+          />
+          <span
+            aria-hidden
+            className={clsx(
+              "absolute inset-x-0 inset-y-0.5 rounded-control border-b border-border-field bg-surface-subtle",
+              "peer-focus-visible:focus-ring peer-aria-invalid:border-b-2 peer-aria-invalid:border-danger",
+              "peer-disabled:border-border peer-disabled:bg-surface-disabled",
+              "peer-disabled:peer-aria-invalid:border-b peer-disabled:peer-aria-invalid:border-border",
+            )}
+          />
+        </div>
       ) : (
         <div className="group relative flex items-center gap-2">
           {leading !== undefined && (

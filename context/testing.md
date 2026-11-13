@@ -43,7 +43,12 @@ Astro のコンポーネントは静的な HTML を出すだけで、分岐は `
 ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-model-independence.md)
 
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象は、`src/features/top-garden/` の、墨の絵と署名の SVG を作るモジュールと、`season.ts`（季節と時間帯を返す）と `visit.ts`（最初の訪問かを返す）である。
+対象は、`src/features/top-garden/` の次のモジュール。
+
+- 墨の絵と署名の SVG を作る `layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`、`sign.ts`
+- 季節と時間帯を返す `season.ts`
+- 最初の訪問かを返す `visit.ts`
+- 季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
 
 `apps/playground`、`packages/sql-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には 100% を求める。  
