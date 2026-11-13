@@ -70,10 +70,20 @@ describe("_headers", () => {
     },
   );
 
+  const COMMON: Record<string, string> = {
+    "x-robots-tag": "noindex",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+  };
+
   it.each(["/", "/node/", "/sql/", "/go/", "/assets/node-abc.js"])(
-    "%s に noindex を返す",
+    "%s に noindex、nosniff、Referrer-Policy、HSTS を返す",
     (path) => {
-      expect(headersFor(path).get("x-robots-tag")).toBe("noindex");
+      const headers = headersFor(path);
+      expect(
+        Object.fromEntries(Object.keys(COMMON).map((name) => [name, headers.get(name)])),
+      ).toStrictEqual(COMMON);
     },
   );
 });
