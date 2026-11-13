@@ -2,7 +2,7 @@
 // 庭を描く canvas を置く。html に class stage-on が付いたときだけ、画面の全体に出す。
 ---
 
-<div class="garden-stage" data-garden-stage aria-hidden="true">
+<div class="garden-stage bg-surface" data-garden-stage aria-hidden="true">
   <canvas></canvas>
 </div>
 
@@ -20,7 +20,6 @@
     inset: 0;
     z-index: 20;
     display: block;
-    background: var(--fd-color-surface);
   }
 
   canvas {
