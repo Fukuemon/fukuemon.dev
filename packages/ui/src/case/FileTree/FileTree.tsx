@@ -170,7 +170,7 @@ export function FileTree({
                 onKeyDown={handleKeyDown}
               />
             </div>
-            <Button type="submit" variant="secondary">
+            <Button size="S" type="submit" variant="secondary">
               {editing.kind === "rename" ? "変える" : "作る"}
             </Button>
           </form>

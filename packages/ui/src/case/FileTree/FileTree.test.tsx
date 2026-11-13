@@ -143,6 +143,16 @@ describe("FileTree", () => {
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
   });
 
+  it("新しい項目の欄と「作る」ボタンは、上端と下端がそろう", async () => {
+    render(<NoSelection />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    const face = screen.getByRole("textbox").nextElementSibling as HTMLElement;
+    const field = face.getBoundingClientRect();
+    const button = screen.getByRole("button", { name: "作る" }).getBoundingClientRect();
+    expect(button.top).toBe(field.top);
+    expect(button.bottom).toBe(field.bottom);
+  });
+
   it("題の右の操作と木の項目は、44 px 四方以上で押せる", () => {
     render(<Default />);
     const targets = [
