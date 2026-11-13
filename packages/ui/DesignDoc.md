@@ -319,6 +319,11 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 ページは、はじめに、トークン、コンポーネント、パターン、画面の 5 つに分ける。
 
 - story は、コンポーネントの状態ごとに 1 つ置く。
+- トークンとコンポーネントのページは、story に説明の MDX を付ける。
+  - MDX のページの構成は、カタログの文書（`design/catalog.md`）の「カタログのページ」にある。
+- MDX のページの背景と文字と、ページに iframe で埋めた story は、ツールバーで選んだテーマで描く。
+  - Storybook の Docs のページは固定の色で描かれ、iframe の story はツールバーのテーマを受け取らないためである。
+  - 描き方は `.storybook/preview.ts` と `.storybook/preview.css` にある。
 - 全ての story で、Storybook の a11y のアドオン（axe）を動かし、違反をテストの失敗にする。
 - カタログに載せるのは、コンポーネントとダミーデータだけにする。
 - カタログは、サイトとは別の Worker に、`design.fukuemon.dev` で公開する。ドメインは `infra/cloudflare/` の Terraform で持ち、develop で check の workflow が通ったときに出す。
@@ -340,9 +345,11 @@ DADS から外れる点と理由は次のとおり。
   - 閉じるボタンはマウスで押すためのもので、読み上げと Tab のキーの順から外す。タブの並び（`role="tablist"`）の中に、タブ以外の操作を置けないためである。
   - キーボードと読み上げでは、選んだタブで Delete のキーを押して閉じる。閉じられるタブは `aria-keyshortcuts="Delete"` を持つ。
   - マウスの中ボタンのクリックでも閉じる。Ctrl+W は、ブラウザのタブを閉じるキーと衝突するので割り当てない。
-- `TreeView` に、APG の Tree View が必須にしない操作を 2 つ足す。
+- `TreeView` に、APG の Tree View が必須にしない操作を 3 つ足す。
   - 文字を打つと、その文字で始まる項目へ移る（タイプアヘッド）。長い木で目的の項目へ早く移るためである。
-  - `onRequestRename` を渡すと、項目で F2 のキーを押して名前の変更を呼べる。項目は `aria-keyshortcuts="F2"` を持つ。Delete のキーでの削除は割り当てない。確認のダイアログが無く、誤って消すのを防げないためである。
+  - `onRequestRename` を渡すと、項目で F2 のキーを押して名前の変更を呼べる。項目は `aria-keyshortcuts="F2"` を持つ。
+  - `onRequestDelete` を渡すと、項目で Delete のキーを押して削除の確認を呼べる。項目は `aria-keyshortcuts="Delete"` を持つ。両方を渡すと、`aria-keyshortcuts` は `"F2 Delete"` になる。
+  - 削除の確認は呼ぶ側が `ConfirmDialog` で行うので、キーを押しただけでは消えない。`Tabs` の Delete は表示を閉じる操作で、木の Delete は確認を開く操作である。キーの意味は、フォーカスのあるコンポーネントで決まる。
 - `Button` の見た目の種類を、`primary`、`secondary`、`danger` の 3 つにする。
   - DADS の文字だけのボタンは持たない。文字だけの操作は `Link` か `IconButton` で足りるためである。
   - `danger` は、ファイルの削除のように、データを失う操作を確定するボタンに使う。DADS のボタンには、この種類がない。

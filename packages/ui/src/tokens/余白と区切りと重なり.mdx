@@ -1,0 +1,81 @@
+import { Canvas, Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Shape.stories";
+
+<Meta of={Stories} />
+
+# 余白と区切りと重なり
+
+画面のコードが余白、区切りの罫、重なる面、フォーカスの表示を書くときのユーティリティを、見本と使う場面で並べる。
+
+- 使う場面と規則: `packages/ui/design/tokens.md` の「レイアウト、区切り、重なり、動き」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `SPACING-SCALE`、`FOCUS-ONE`
+- 値: `src/tokens/theme.css`
+
+## 余白
+
+Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全ての余白。ブロックの間は 8px の倍数（偶数の段）にする
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    {[
+      ["gap-2", "h-4 w-2 bg-primary", "8px"],
+      ["gap-4", "h-4 w-4 bg-primary", "16px"],
+      ["gap-6", "h-4 w-6 bg-primary", "24px"],
+      ["gap-8", "h-4 w-8 bg-primary", "32px"],
+    ].map(([name, cls, px]) => (
+      <div key={name} className="flex items-center gap-4">
+        <span className="w-16 font-mono text-code-dense">{name}</span>
+        <span aria-hidden="true" className={cls} />
+        <span className="font-mono text-code-dense text-text-secondary">{px}</span>
+      </div>
+    ))}
+  </div>
+</Unstyled>
+
+## 区切り
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
+    <div className="flex flex-col gap-2">
+      <span aria-hidden="true" className="h-0 w-64 border-t-2 border-text" />
+      <p className="font-mono text-code-dense text-text-secondary">
+        border-b-2 border-text、border-t-2 border-text: ヘッダーの下と表の頭の上の墨の罫
+      </p>
+    </div>
+    <div className="flex flex-col gap-2">
+      <span aria-hidden="true" className="h-0 w-64 border-t border-border" />
+      <p className="font-mono text-code-dense text-text-secondary">
+        border-b border-border（向きは場所に合わせる）: ほかの区切りの罫
+      </p>
+    </div>
+  </div>
+</Unstyled>
+
+## 重なり
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface-subtle p-6 text-text">
+    <span aria-hidden="true" className="size-16 border border-border-field bg-surface-raised" />
+    <p className="font-mono text-code-dense text-text-secondary">
+      bg-surface-raised border border-border-field: ダイアログ、メニュー、候補の一覧
+    </p>
+  </div>
+</Unstyled>
+
+## フォーカス
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <span className="focus-ring w-fit bg-primary px-4 py-3 text-label text-text-inverse">
+      フォーカスの表示
+    </span>
+    <p className="font-mono text-code-dense text-text-secondary">
+      focus-visible:focus-ring: 全ての操作できる要素のフォーカスの表示（FOCUS-ONE）
+    </p>
+  </div>
+</Unstyled>
+
+## story の見本
+
+<Canvas of={Stories.Overview} />

@@ -15,9 +15,9 @@
 
 ## Design Doc
 
-- [fukuemon.dev PRD](../PRD.md) — 技術記事とハンズオンを 1 つのサイトで公開し、読んで理解する段階と手を動かして確認する段階を同じサイトの中でつなぐ（draft）
+- [fukuemon.dev PRD](../PRD.md) — 訪問者がコードを書いて動かしながら、技術の仕組みを体系的に学べる個人の技術サイト。記事、シリーズ、記事に埋め込む図と実行環境、プレイグラウンドを提供する（draft）
 - [ハンズオンと Interactive](../apps/web/src/features/lab/DesignDoc.md) — ハンズオンの形式（手順の分割、進捗、本文の中の実行）、手を動かす場所の 4 分類、cross-origin isolation の URL ごとの分離、実行環境の性質と足し方
-- [fukuemon.dev Design Doc](../design/DesignDoc.md) — 技術記事とハンズオンの静的サイトの全体像。C4 の L2、モジュールの責務と依存、設計不変量、URL の構成、条件つきで足す機能の形（draft）
+- [fukuemon.dev Design Doc](../design/DesignDoc.md) — 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、条件つきで足す機能の形（draft）
 - [トップの水墨の門と立体の庭](../design/features/top-garden/DesignDoc.md) — トップの最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル（draft）
 - [基盤](../infra/DesignDoc.md) — Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 - [Content Model](../packages/content-model/DesignDoc.md) — 記事とハンズオンに共通する schema、安定識別子 contentId、相互参照のグラフ、ContentRef への正規化、loader との結線

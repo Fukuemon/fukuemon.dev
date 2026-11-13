@@ -33,7 +33,7 @@
 | 画面のコードで書くユーティリティの名前                               | `src/tokens/theme.css`                                                                                |
 | 静的なファイルが読むトークンの CSS                                   | `src/tokens/tokens.gen.css`（生成物）                                                                 |
 | エンジンに渡すコードの色                                             | `src/tokens/code-theme.gen.json`（生成物）と、VS Code の形式のテーマを作る `src/tokens/code-theme.ts` |
-| コンポーネントの props と振る舞い                                    | `src/base/`、`src/case/` のコードとカタログ                                                           |
+| コンポーネントの props と振る舞い                                    | `src/base/`、`src/case/` のコードと、カタログのコンポーネントのページの「props」と「状態」            |
 | 構成の判断と、却下した案                                             | リポジトリのルートの `adr/`                                                                           |
 
 ## 元にしたデザインシステムとの関係

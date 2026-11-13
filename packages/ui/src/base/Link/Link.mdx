@@ -1,0 +1,39 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { Link } from "./Link";
+import * as Stories from "./Link.stories";
+
+<Meta of={Stories} />
+
+# Link
+
+本文の内部と外部のリンク。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「Link」
+- 決まっていない選択: `packages/ui/DESIGN.md` の「決まっていない選択」の、`Link` を `TARGET-SIZE` の対象にするか
+
+## 状態
+
+### 内部のリンク
+
+<Canvas of={Stories.Default} />
+
+### hover
+
+<Canvas of={Stories.Hover} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+### 外部のリンク
+
+<Canvas of={Stories.External} />
+
+## props
+
+<ArgTypes of={Link} />

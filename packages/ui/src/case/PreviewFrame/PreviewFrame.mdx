@@ -1,0 +1,42 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { PreviewFrame } from "./PreviewFrame";
+import * as Stories from "./PreviewFrame.stories";
+
+<Meta of={Stories} />
+
+# PreviewFrame
+
+プレビューの URL の欄と、iframe を置く枠。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「PreviewFrame」
+
+## 状態
+
+### 開いている
+
+<Canvas of={Stories.Default} />
+
+### 空
+
+<Canvas of={Stories.Empty} />
+
+### 読み込み中
+
+<Canvas of={Stories.Loading} />
+
+### エラー
+
+<Canvas of={Stories.Error} />
+
+### 長い URL
+
+<Canvas of={Stories.LongUrl} />
+
+## props
+
+<ArgTypes of={PreviewFrame} />

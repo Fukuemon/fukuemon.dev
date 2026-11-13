@@ -75,17 +75,48 @@ describe("FileTree", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "app.js の操作" }));
     await userEvent.click(screen.getByRole("menuitem", { name: "削除" }));
+    await userEvent.click(screen.getByRole("button", { name: "削除する" }));
     expect(Default.args.onDelete).toHaveBeenCalledWith("src/server.js");
     expect(labels()).not.toContain("app.js");
   });
 
-  it("木の項目で F2 のキーを押すと、その項目の名前を変える欄が開く。Delete のキーでは消さない", async () => {
+  it("木の項目で Delete のキーを押すと、その項目の名前を題にした確認のダイアログが開く。やめると閉じ、フォーカスが項目に戻る", async () => {
     render(<Default />);
     const item = screen.getByRole("treeitem", { name: "package.json" });
-    expect(item).toHaveAttribute("aria-keyshortcuts", "F2");
     item.focus();
     await userEvent.keyboard("{Delete}");
+    const dialog = screen.getByRole("dialog", { name: "package.json を削除する" });
+    expect(dialog).toBeInTheDocument();
     expect(Default.args.onDelete).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "やめる" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(item).toHaveFocus();
+    expect(labels()).toContain("package.json");
+    expect(Default.args.onDelete).not.toHaveBeenCalled();
+  });
+
+  it("木の項目で Delete のキーを押して確認のダイアログで確定すると、項目を消す", async () => {
+    render(<Default />);
+    screen.getByRole("treeitem", { name: "package.json" }).focus();
+    await userEvent.keyboard("{Delete}");
+    await userEvent.click(screen.getByRole("button", { name: "削除する" }));
+    expect(Default.args.onDelete).toHaveBeenCalledWith("package.json");
+    expect(labels()).not.toContain("package.json");
+  });
+
+  it("onDelete を渡さないときは、Delete のキーでダイアログを開かない", async () => {
+    render(<ReadOnly />);
+    const [item] = screen.getAllByRole("treeitem");
+    item!.focus();
+    await userEvent.keyboard("{Delete}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("木の項目で F2 のキーを押すと、その項目の名前を変える欄が開く", async () => {
+    render(<Default />);
+    const item = screen.getByRole("treeitem", { name: "package.json" });
+    expect(item).toHaveAttribute("aria-keyshortcuts", "F2 Delete");
+    item.focus();
     await userEvent.keyboard("{F2}");
     const field = screen.getByRole("textbox", { name: "新しい名前" });
     expect(field).toHaveFocus();
