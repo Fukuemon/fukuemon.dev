@@ -20,27 +20,38 @@ const ref = (href: string, over: Partial<ContentRef> = {}): ContentRef => ({
   ...over,
 });
 
+const document = (items: string[]) =>
+  [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0">',
+    "<channel>",
+    "<title>fukuemon.dev</title>",
+    "<link>https://fukuemon.dev/</link>",
+    "<description>技術の記事</description>",
+    "<language>ja</language>",
+    ...items,
+    "</channel>",
+    "</rss>",
+    "",
+  ].join("\n");
+
+const item = (path: string, title: string, description: string) =>
+  `<item><title>${title}</title><link>https://fukuemon.dev${path}</link>` +
+  `<guid isPermaLink="true">https://fukuemon.dev${path}</guid>` +
+  `<description>${description}</description>` +
+  "<pubDate>Sat, 14 Nov 2026 00:00:00 GMT</pubDate></item>";
+
 describe("buildRss", () => {
-  it("チャンネルの題、サイトの URL、説明、言語を書く", () => {
-    const xml = buildRss(CHANNEL, []);
-    expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-    expect(xml).toContain('<rss version="2.0">');
-    expect(xml).toContain("<title>fukuemon.dev</title>");
-    expect(xml).toContain("<link>https://fukuemon.dev/</link>");
-    expect(xml).toContain("<description>技術の記事</description>");
-    expect(xml).toContain("<language>ja</language>");
-    expect(xml).not.toContain("<item>");
+  it("記事が無いときは、チャンネルの題、サイトの URL、説明、言語だけを書く", () => {
+    expect(buildRss(CHANNEL, [])).toBe(document([]));
   });
 
   it("記事ごとに、絶対の URL の link と guid、説明、RFC 822 の日付を持つ item を、渡した順に書く", () => {
-    const xml = buildRss(CHANNEL, [ref("/articles/b"), ref("/articles/a")]);
-    expect(xml.match(/<item>/g)).toHaveLength(2);
-    expect(xml.indexOf("/articles/b")).toBeLessThan(xml.indexOf("/articles/a"));
-    expect(xml).toContain(
-      "<item><title>題 /articles/b</title><link>https://fukuemon.dev/articles/b</link>" +
-        '<guid isPermaLink="true">https://fukuemon.dev/articles/b</guid>' +
-        "<description>説明 /articles/b</description>" +
-        "<pubDate>Sat, 14 Nov 2026 00:00:00 GMT</pubDate></item>",
+    expect(buildRss(CHANNEL, [ref("/articles/b"), ref("/articles/a")])).toBe(
+      document([
+        item("/articles/b", "題 /articles/b", "説明 /articles/b"),
+        item("/articles/a", "題 /articles/a", "説明 /articles/a"),
+      ]),
     );
   });
 
@@ -48,7 +59,8 @@ describe("buildRss", () => {
     const xml = buildRss(CHANNEL, [
       ref("/articles/x", { title: `<script>&"'`, description: "a < b > c" }),
     ]);
-    expect(xml).toContain("<title>&lt;script&gt;&amp;&quot;&apos;</title>");
-    expect(xml).toContain("<description>a &lt; b &gt; c</description>");
+    expect(xml).toBe(
+      document([item("/articles/x", "&lt;script&gt;&amp;&quot;&apos;", "a &lt; b &gt; c")]),
+    );
   });
 });

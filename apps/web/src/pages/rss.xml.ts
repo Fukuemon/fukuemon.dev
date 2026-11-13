@@ -3,7 +3,7 @@ import { getArticleList } from "../lib/content/articles";
 import { buildRss } from "../lib/content/rss";
 
 export const GET: APIRoute = async ({ site }) => {
-  if (site === undefined) throw new Error("astro.config.ts に site がありません");
+  if (site === undefined) throw new Error("astro.config.ts に site が無い");
   const items = await getArticleList();
   const xml = buildRss(
     {

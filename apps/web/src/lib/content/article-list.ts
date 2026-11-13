@@ -2,7 +2,7 @@ import type { ArticleData, ContentRef, SeriesData } from "@fukuemon/content-mode
 import { type ArticleSource, articleHref, isPublic, orderOf, seriesDir } from "./article-pages";
 
 /** 一覧、シリーズのページ、RSS を組むのに要る、記事の 1 本の値。記事のページの値に、一覧に出す項目を足す */
-export type ListArticleSource = ArticleSource & {
+export type ArticleListSource = ArticleSource & {
   data: Pick<ArticleData, "contentId" | "description" | "tags" | "publishedAt" | "format">;
 };
 
@@ -17,8 +17,9 @@ export type SeriesSource = {
 export type SeriesLink = Pick<ContentRef, "title" | "href">;
 
 /** 一覧の 1 行。記事がシリーズに入っていれば、シリーズの題とページへのリンクを持つ */
-export type ArticleListItem = { ref: ContentRef; series?: SeriesLink };
+type ArticleListItem = { ref: ContentRef; series?: SeriesLink };
 
+/** シリーズのページが描く値 */
 export type SeriesPage = {
   name: string;
   href: string;
@@ -28,11 +29,11 @@ export type SeriesPage = {
   articles: ContentRef[];
 };
 
-export function seriesHref(name: string): string {
+function seriesHref(name: string): string {
   return `/series/${name}`;
 }
 
-export function toContentRef(a: ListArticleSource): ContentRef {
+function toContentRef(a: ArticleListSource): ContentRef {
   const { contentId, format, title, description, tags, publishedAt } = a.data;
   return {
     contentId,
@@ -46,9 +47,14 @@ export function toContentRef(a: ListArticleSource): ContentRef {
   };
 }
 
-/** 新しい順。同じ日の記事は href の順にして、ビルドごとに並びが変わらないようにする */
+/**
+ * 新しい順。同じ日の記事は href の順にして、ビルドごとに並びが変わらないようにする。
+ * localeCompare は実行する環境のロケールで結果が変わるので、コードポイントで比べる
+ */
 function byNewest(a: ContentRef, b: ContentRef): number {
-  return b.date.getTime() - a.date.getTime() || a.href.localeCompare(b.href);
+  const byDate = b.date.getTime() - a.date.getTime();
+  if (byDate !== 0) return byDate;
+  return a.href < b.href ? -1 : 1;
 }
 
 function seriesLinks(series: readonly SeriesSource[]): Map<string, SeriesLink> {
@@ -60,7 +66,7 @@ function seriesLinks(series: readonly SeriesSource[]): Map<string, SeriesLink> {
  * シリーズの題が引けない記事があると throw する。題の無いシリーズ名を一覧に出さないためである。
  */
 export function listArticles(
-  articles: readonly ListArticleSource[],
+  articles: readonly ArticleListSource[],
   series: readonly SeriesSource[],
   isDev: boolean,
 ): ArticleListItem[] {
@@ -77,23 +83,41 @@ export function listArticles(
     });
 }
 
+function assertSeriesDefined(
+  dirs: Iterable<string | undefined>,
+  series: readonly SeriesSource[],
+): void {
+  const names = new Set(series.map((s) => s.name));
+  for (const dir of dirs) {
+    if (dir !== undefined && !names.has(dir)) throw new Error(`シリーズの題が無い: ${dir}`);
+  }
+}
+
 /**
  * 書き出すシリーズのページを組む。記事は `order` の昇順に並べる。
  * 公開した記事が 1 本も無いシリーズは返さない。記事の無いページを書き出さないためである。
+ * `index.md` の無いディレクトリの記事があると throw する。記事がどのページにも出ないまま、ビルドが通るのを防ぐ。
  */
 export function planSeriesPages(
-  articles: readonly ListArticleSource[],
+  articles: readonly ArticleListSource[],
   series: readonly SeriesSource[],
   isDev: boolean,
 ): SeriesPage[] {
   const shown = articles.filter((a) => isPublic(a.data.status, isDev));
   const byDir = Map.groupBy(shown, (a) => seriesDir(a.id));
-  return series.flatMap(({ name, data }) => {
-    const members = byDir.get(name);
-    if (members === undefined) return [];
-    const articles = members.toSorted((a, b) => orderOf(a) - orderOf(b)).map(toContentRef);
-    return [
-      { name, href: seriesHref(name), title: data.title, description: data.description, articles },
-    ];
+  assertSeriesDefined(byDir.keys(), series);
+  return series.flatMap((s) => {
+    const members = byDir.get(s.name);
+    return members === undefined ? [] : [toSeriesPage(s, members)];
   });
+}
+
+function toSeriesPage({ name, data }: SeriesSource, members: ArticleListSource[]): SeriesPage {
+  return {
+    name,
+    href: seriesHref(name),
+    title: data.title,
+    description: data.description,
+    articles: members.toSorted((a, b) => orderOf(a) - orderOf(b)).map(toContentRef),
+  };
 }

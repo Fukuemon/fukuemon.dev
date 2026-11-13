@@ -12,6 +12,19 @@ export type ArticlePageProps = {
   series?: ArticleSeries;
 };
 
+async function loadArticlesAndSeries() {
+  const [articles, series] = await Promise.all([
+    getCollection("articles"),
+    getCollection("series"),
+  ]);
+  // series の glob は `<series>/index.md` を読み、id はディレクトリ名から始まる
+  const seriesSources: SeriesSource[] = series.map((s) => ({
+    name: s.id.split("/")[0] as string,
+    data: s.data,
+  }));
+  return { articles, series: seriesSources };
+}
+
 /** 記事のページの `getStaticPaths` が返す、書き出す記事のパスと props */
 export async function getArticlePaths() {
   const { articles, series } = await loadArticlesAndSeries();
@@ -38,19 +51,6 @@ export async function renderArticle(id: string) {
   if (!entry) throw new Error(`記事が見つからない: ${id}`);
   const { Content } = await render(entry);
   return Content;
-}
-
-async function loadArticlesAndSeries() {
-  const [articles, series] = await Promise.all([
-    getCollection("articles"),
-    getCollection("series"),
-  ]);
-  // series の glob は `<series>/index.md` を読み、id はディレクトリ名から始まる
-  const seriesSources: SeriesSource[] = series.map((s) => ({
-    name: s.id.split("/")[0] as string,
-    data: s.data,
-  }));
-  return { articles, series: seriesSources };
 }
 
 /** 記事の一覧と RSS に載せる記事を、新しい順に返す */

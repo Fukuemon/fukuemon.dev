@@ -1,6 +1,6 @@
 import type { ContentRef } from "@fukuemon/content-model";
 
-export type RssChannel = {
+type RssChannel = {
   title: string;
   description: string;
   /** BCP 47 の言語タグ */
