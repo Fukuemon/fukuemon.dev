@@ -94,13 +94,14 @@ https://play.fukuemon.dev/excalidraw/?figure=vpc
 
 図の名前の規則と、ファイルの名前と URL のパスの形は、新しい package（`packages/figures`、`@fukuemon/figures`）に置く。
 
-- package は、次の 4 つを持つ。
+- package は、次の 5 つを持つ。
   - 図を描いたツールの型（`drawio`、`excalidraw`）
   - 名前が Decision 1 の規則に合うかを返す関数
   - 名前とツールから、ファイルの名前（`<名前>.<ツール>.svg`）と、URL のパス（`/figures/<名前>.<ツール>.svg`）を組み立てる関数
   - ファイルの名前を、名前とツールに分ける関数
-- package は、SVG を読む処理、`fetch`、origin の値を持たない。
-- `apps/web` のビルドは、この package で、ファイルの名前を検証し、出力するパスと、「キャンバスで開く」のリンクを組み立てる。`apps/playground` は、同じ package で、`figure` の値を検証し、`fetch` する URL のパスを組み立てる。
+  - 名前とツールから、「キャンバスで開く」のリンクのパスとクエリ（`/<ツール>/?figure=<名前>`）を組み立てる関数と、クエリから名前を読む関数
+- package は、SVG を読む処理、`fetch`、2 つのアプリの origin の値を持たない。
+- `apps/web` のビルドは、この package で、ファイルの名前を検証し、出力するパスと、「キャンバスで開く」のリンクを組み立てる。`apps/playground` は、同じ package で、クエリから `figure` の値を読んで検証し、`fetch` する URL のパスを組み立てる。
 - package は、workspace のほかの package と、React に依存しない。
 
 package にする理由は、図を出力する側（`apps/web`）と、読む側（`apps/playground`）の 2 つが、同じ規則と同じパスの形を使うためである。
@@ -160,5 +161,6 @@ Markdown の書き方の選択肢は次のとおり。
 - サイトの URL と、`Access-Control-Allow-Origin` を返すパスが、1 つずつ増える。
 - 図の名前を変えると、その図を指す記事の Markdown と、訪問者が保存した「キャンバスで開く」のリンクが、古い名前を指す。
 - workspace の package が、1 つ増える。
+- SVG の中の元データが、どのツールのものかを見分ける処理は、`apps/web` のビルドと、`apps/playground` のツールのページの 2 か所が持つ。ビルドは見分けるだけで、ツールのページは元データを取り出すためである。
 - ビルドに、画像の記法を置き換える処理と、拡張子と元データの一致を確認する処理が増える。
 - 1 つの記事に複数の図をインラインで入れたときに、SVG の中の `id` が重なるかは、確認していない。

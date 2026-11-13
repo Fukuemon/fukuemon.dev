@@ -113,10 +113,10 @@ flowchart TB
   - まだ IndexedDB に書いていない中身を、図を切り替える前と、ページを閉じるときに書く処理
   - 開いている図を消したときに、次に開く図を決める処理
   - 新しく作るものの名前の連番
-- 記事の図を読み込む関数は、ツールのページが、`documents/` のモジュールに引数で渡す。
+- 記事の図を読み込む関数と、URL から消すクエリのキー（`figure`）は、ツールのページが、`documents/` のモジュールに引数で渡す。
 - `documents/` と `figures/` は、互いを import しない。2 つをつなぐ処理は、ツールのページが持つ。
 - `documents/` と `workspace/`（訪問者のファイルの保存）は、互いを import しない。
-- `@fukuemon/figures` は、workspace のほかの package と、React に依存しない。`fetch` と、SVG を読む処理を持たない。
+- `@fukuemon/figures` は、workspace のほかの package と、React に依存しない。`fetch`、SVG を読む処理、origin の値を持たない。
 - `@fukuemon/figures` を import するのは、`apps/playground` では `figures/` だけである。`documents/` は、import しない。
 - `documents/` と `figures/` は、`project/` と、実行環境の package を import しない。`Store` の型は、`documents/` が、`@fukuemon/sql-runtime` の `Store` と同じ形で定義する。形を変えるときは、両方を直す。
 - `documents/` のコンポーネントは、画面に出す語（「図」か「スライド」）と、新しく作るものの名前の付け方を、props で受ける。
@@ -337,7 +337,7 @@ apps/web/src/content/figures/
 ```
 
 - ファイルの名前は、`<名前>.drawio.svg` か `<名前>.excalidraw.svg` である。`<名前>` は、小文字の英数字とハイフンだけにする（`^[a-z0-9][a-z0-9-]*$`）。
-- ビルドは、ファイルの名前の検証、出力するパスの組み立て、「キャンバスで開く」のリンクの組み立てに、`@fukuemon/figures` を使う。
+- ビルドは、ファイルの名前の検証、出力するパスの組み立て、「キャンバスで開く」のリンクのパスとクエリの組み立てに、`@fukuemon/figures` を使う。`play.fukuemon.dev` の origin は、ビルドが足す。
 - 画像のパスは、記事のファイルからの相対パスで書く。ビルドは、記事のファイルの場所からパスを解決し、解決した先が `content/figures/` の直下のファイルのときに、記事の図として扱う。
 
 `apps/web` のビルドは、記事の図を指す画像を、次のとおり置き換える。  
@@ -395,9 +395,10 @@ sequenceDiagram
   end
 ```
 
-- `figures/` は、`@fukuemon/figures` で名前を検証し、URL のパスを組み立てて、`fetch` する。`figures/` は、SVG の文字列を返す。
+- `figures/` は、`@fukuemon/figures` で、クエリの `figure` から名前を読んで検証し、URL のパスを組み立てて、`fetch` する。`figures/` は、SVG の文字列を返す。
 - SVG から元データを取り出して、そのツールの形式かを確認する処理は、ツールのページが持つ。「ファイルを開く」と同じ関数を使う。
 - ツールのページは、`figures/` に、図の名前と、自分のツール（`drawio` か `excalidraw`）を渡す。図を描いたツールの型は、`@fukuemon/figures` が持つ。`figures/` と `documents/` は、互いの型を使わない。
+  - package の型の値は、`ToolKind` の `slides` を除く値と同じ語である。2 つの型は import でつながらないので、ツールのページが、同じ文字列を両方に渡す。
 - `figures/` は、名前が規則に合わないときは、`fetch` しない。
 - URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
 - `fetch` は、リダイレクトを辿らない。
@@ -430,4 +431,5 @@ sequenceDiagram
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。
   - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/` である。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import を止める。
+- Oxlint の `no-restricted-imports`: `apps/playground/src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
 - `apps/web` のビルド: 図を指す画像の代替テキスト、ファイルの有無、ファイルの名前、拡張子と元データの一致を確認する。
