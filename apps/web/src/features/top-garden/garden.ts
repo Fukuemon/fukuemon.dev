@@ -1,5 +1,5 @@
 // 庭を canvas に描く。場面を描き、全画面のパスで画風を付ける。
-// 舞う物が無い間は場面が動かないので、開いたときと画面の大きさが変わったときだけ描く。
+// パーティクルが無い間は場面が動かないので、開いたときと画面の大きさが変わったときだけ描く。
 import {
   FramebufferTexture,
   PCFSoftShadowMap,
@@ -41,15 +41,14 @@ export function startGarden(stage: HTMLElement, opts: SeasonTime): boolean {
 
   const C = scenePalette(opts.time, opts.season);
   const scene = buildGarden(C, renderer.capabilities.getMaxAnisotropy());
-  const cs = getComputedStyle(document.documentElement);
-  const paper = cs.getPropertyValue("--fd-color-surface").trim();
-  const ink = cs.getPropertyValue("--fd-color-text").trim();
-  const pass = createInkPass({
-    paper,
-    ink,
-    sky: C.sky,
-    edge: opts.time === "night" ? C.mist : paper,
-  });
+  /** 紙と墨の色を、今のテーマのトークンから読む */
+  const inkColors = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const paper = cs.getPropertyValue("--fd-color-surface").trim();
+    const ink = cs.getPropertyValue("--fd-color-text").trim();
+    return { paper, ink, sky: C.sky, edge: opts.time === "night" ? C.mist : paper };
+  };
+  const pass = createInkPass(inkColors());
 
   const camera = new PerspectiveCamera(46, 1, 0.05, 400);
   const narrow = matchMedia("(max-width: 640px)");
@@ -97,6 +96,10 @@ export function startGarden(stage: HTMLElement, opts: SeasonTime): boolean {
   }
 
   addEventListener("resize", resize);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    pass.setColors(inkColors());
+    draw();
+  });
   resize();
   return true;
 }

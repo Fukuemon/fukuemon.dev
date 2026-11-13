@@ -59,25 +59,36 @@ export interface InkPass {
   readonly camera: OrthographicCamera;
   /** 場面を描いた絵を受け取るテクスチャと、画面の大きさを渡す */
   setTarget(texture: FramebufferTexture, pixelRatio: number, w: number, h: number): void;
+  /** 紙、墨、端の余白、空の色を替える。次に描くときから使う */
+  setColors(colors: InkPassColors): void;
 }
 
 const srgb = (c: string) => new Color(c).convertLinearToSRGB(); // design-system-allow: three の Color のコンストラクタで、色の値ではない
 const luminance = (c: Color) => c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722;
 
+const colorUniforms = (colors: InkPassColors) => ({
+  uPaper: srgb(colors.paper),
+  uInkCol: srgb(colors.ink),
+  // 輪郭線は暗い色で引く。ダークのテーマは墨が明るいので、紙の色で引く。
+  uLine: srgb(luminance(srgb(colors.ink)) < 0.5 ? colors.ink : colors.paper),
+  uEdge: srgb(colors.edge),
+  uSky: luminance(srgb(colors.sky)),
+});
+
 /** 全画面のパスを作る。淡彩の絵（uTint が 1）を出す */
 export function createInkPass(colors: InkPassColors): InkPass {
+  const C = colorUniforms(colors);
   const U = {
     tScene: { value: null as FramebufferTexture | null },
     uPx: { value: new Vector2() },
     uAspect: { value: 1 },
     uTint: { value: 1 },
     uVig: { value: 0.8 },
-    uPaper: { value: srgb(colors.paper) },
-    uInkCol: { value: srgb(colors.ink) },
-    // 輪郭線は暗い色で引く。ダークのテーマは墨が明るいので、紙の色で引く。
-    uLine: { value: srgb(luminance(srgb(colors.ink)) < 0.5 ? colors.ink : colors.paper) },
-    uEdge: { value: srgb(colors.edge) },
-    uSky: { value: luminance(srgb(colors.sky)) },
+    uPaper: { value: C.uPaper },
+    uInkCol: { value: C.uInkCol },
+    uLine: { value: C.uLine },
+    uEdge: { value: C.uEdge },
+    uSky: { value: C.uSky },
   };
   const mesh = new Mesh(
     new PlaneGeometry(2, 2),
@@ -100,6 +111,14 @@ export function createInkPass(colors: InkPassColors): InkPass {
       U.tScene.value = texture;
       U.uPx.value.set(pixelRatio / texture.image.width, pixelRatio / texture.image.height);
       U.uAspect.value = w / h;
+    },
+    setColors(next) {
+      const c = colorUniforms(next);
+      U.uPaper.value = c.uPaper;
+      U.uInkCol.value = c.uInkCol;
+      U.uLine.value = c.uLine;
+      U.uEdge.value = c.uEdge;
+      U.uSky.value = c.uSky;
     },
   };
 }
