@@ -69,7 +69,7 @@ apps/playground/
   src/
     slides/               スライドのエディタのページ。レイアウト、プレビュー、書き出し、ファイルを開く処理、documents/ に Markdown を渡す時点を決める React の外のモジュール
     documents/            名前を付けた図とスライドの保存、開いているものの状態、一覧のコンポーネント。キャンバスのツールと共有する
-    code-editor/          EditorFrame に、エディタのエンジンを渡すコンポーネント。Node の実行環境のページと共有する
+    code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント。Node の実行環境のページと sql-console/ と共有する
 
 apps/web/
   src/content/slides/     運営者が公開するスライドの Markdown
@@ -100,7 +100,6 @@ flowchart TB
   page --> editor
   page --> ui
   documents --> ui
-  editor --> ui
   web --> slides
   web -->|トークンの CSS| ui
   slides --> marp
@@ -533,7 +532,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 - `apps/playground/src/documents/`: 名前を付けた図とスライドの保存と、一覧のコンポーネント。
 - `packages/slides/`: テーマ、テンプレート、Marp の設定、ページを組み立てる関数。
 - `apps/web/src/content/slides/<slug>.md`: 運営者が公開するスライドの Markdown。
-- `apps/playground/src/code-editor/`: `EditorFrame` に、エディタのエンジンを渡すコンポーネント。
+- `apps/playground/src/code-editor/`: CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント。
 - `apps/web/src/lib/content/`: slug の一覧と Markdown を読む関数。
 - `apps/web/src/pages/slides/`: `/slides/<slug>` の HTML を出力するエンドポイント。
 - `apps/web/src/lib/`: `::slides` を処理するプラグイン。ディレクティブの解析に、`remark-directive` を使う。

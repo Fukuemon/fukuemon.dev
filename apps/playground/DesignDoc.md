@@ -81,7 +81,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
     go/                   Go を動かすツールのページ
     sql-console/          SQL の入力欄、結果の表、実行計画の木
-    code-editor/          ツールのエディタに共通の、CodeMirror 6 の拡張の組み立てと、EditorFrame にエディタのエンジンを渡すコンポーネント
+    code-editor/          ツールのエディタに共通の、CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
     ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
@@ -97,7 +97,7 @@ packages/
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
   - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
   - スライドのエディタのディレクトリ（`slides/`）と、`@fukuemon/slides` への import の向きは、[スライドの Design Doc](../../docs/design/features/slides/DesignDoc.md#ディレクトリと依存) にある。Oxlint は、`slides/` も、ツールのページの間の import を止める対象にする。
-- `code-editor/` は、Node の実行環境のページ（`src/node/`）と、スライドのエディタのページ（`src/slides/`）が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
+- `code-editor/` は、Node の実行環境のページ（`src/node/`）、スライドのエディタのページ（`src/slides/`）、`sql-console/` が共有する。エディタのコンポーネントを `EditorFrame` の中に置くのは、呼ぶ側である。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
@@ -157,7 +157,6 @@ flowchart TB
   console --> database
   console --> codeeditor
   console --> ui
-  codeeditor --> ui
   runtime --> database
   workspace --> project
   project --> pp
@@ -332,7 +331,7 @@ type BackendProcess = {
 ```mermaid
 flowchart TB
   page["NodePage<br/>プロジェクトと保存したファイルを読み、起動する"]
-  ctx["2 つの Context<br/>実行環境のインスタンス、画面の選択の状態"]
+  ctx["2 つの Context<br/>開いたプロジェクトと起動の Promise、画面の選択の状態"]
   layout["レイアウト"]
   files["FilesPane"]
   editor["EditorPane"]
@@ -355,8 +354,8 @@ flowchart TB
 ```
 
 - Context は 2 つで、`src/node/` に定義する。
-  - 実行環境のインスタンスを渡す Context。値が変わるのは、実行環境を起動し直すときだけである。
-  - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` が `useReducer` で持つ。
+  - 開いたプロジェクトと、実行環境の起動の Promise を渡す Context。値が変わるのは、実行環境を起動し直すときだけである。
+  - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` がプロジェクトを読んだ後に描く `NodeLayout` が、`useReducer` で持つ。
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
@@ -396,7 +395,7 @@ Node の実行環境のページは、次のとおり組む。
 
 - ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末を置く。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
 - `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case の読み込み中を出す。
-- `src/node/` の React の外のモジュールが、プロジェクトごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
+- `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
 - ファイルとディレクトリを消す前に、`ConfirmDialog` で確認する。
 - エディタは、開いたファイルをタブで並べる。入力のたびに、実行環境のファイルに書き込む。コマンドがファイルを書き換えたときは、`files.changes` の通知を受けて、エディタの中身を置き換える。自分が書き込んでいる間の通知では、置き換えない。
