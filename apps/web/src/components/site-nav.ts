@@ -1,12 +1,7 @@
-export interface SiteNavItem {
-  label: string;
-  href: string;
-}
-
-export const SITE_NAV: readonly SiteNavItem[] = [
+export const SITE_NAV = [
   { label: "記事", href: "/articles" },
   { label: "プレイグラウンド", href: "/playground" },
-];
+] as const;
 
 /**
  * パスが、ヘッダーのナビのどの項目の配下かを返す。項目の `href` か、その下のパスなら、その `href` を返す。
