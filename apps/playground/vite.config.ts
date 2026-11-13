@@ -17,6 +17,8 @@ export default defineConfig({
   optimizeDeps: { exclude: ["@electric-sql/pglite"] },
   worker: { format: "es" },
   build: {
+    // フォントを CSS に埋めると、使わない文字の範囲まで描画を止める CSS と一緒に配る。apps/web と同じ扱いにする
+    assetsInlineLimit: (file) => (/\.woff2?$/.test(file) ? false : undefined),
     rollupOptions: {
       input: Object.fromEntries(
         tools.map((tool) => [tool, join(import.meta.dirname, tool, "index.html")]),
