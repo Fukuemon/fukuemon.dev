@@ -5,14 +5,12 @@ import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { progressLabel } from "./progress";
-import { type SqlSession, createSessionRegistry, createSqlSession } from "./session";
+import { type SqlSession, createSessionOpener } from "./session";
 
-const loadProject = createProjectLoader("sql", sqlDefaultProject);
-
-const sessionFor = createSessionRegistry();
+const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
 
 function SqlTool({ search }: { search: string }) {
-  const load = use(loadProject(search));
+  const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
       <Notice title="プロジェクトを開けませんでした" tone="danger">
@@ -22,27 +20,22 @@ function SqlTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  const { project } = load;
-  const session = sessionFor(load.embedId ?? "", () =>
-    createSqlSession(project.files[project.open] ?? "", project.initialSql),
-  );
-  return <SqlSessionView session={session} />;
+  return <SqlSessionView session={load.session} />;
 }
 
 function SqlSessionView({ session }: { session: SqlSession }) {
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
-  const phase = useSyncExternalStore(
-    session.database.phase.subscribe,
-    session.database.phase.getSnapshot,
-  );
+  const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
   return (
     <SqlConsole
       onChange={session.setQuery}
       onRun={session.execute}
       progress={progressLabel(phase, running)}
       running={running}
-      status={session.database.status}
+      fileName={session.fileName}
+      status={session.status}
+      stoppedHint="次に実行すると、DB を初期の状態から作り直します。"
       value={query}
     />
   );

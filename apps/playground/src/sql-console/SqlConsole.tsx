@@ -13,14 +13,26 @@ export type SqlConsoleProps = {
   onRun: (sql: string) => Promise<SqlResponse>;
   running: boolean;
   status: Store<DatabaseStatus>;
+  /** DB が止まったときに、止まった理由の後に出す、復帰の案内。 */
+  stoppedHint?: string;
+  /** 入力欄のタブに出すファイルの名前。 */
+  fileName: string;
   /** 渡すと、待っている段階として出す（PGlite の読み込み、初期データ、実行）。 */
   progress?: string;
 };
 
-const FILE = { id: "query.sql", label: "query.sql" };
-
 /** SQL の入力欄、実行のボタン、結果の表と実行計画。 */
-export function SqlConsole({ value, onChange, onRun, running, status, progress }: SqlConsoleProps) {
+export function SqlConsole({
+  value,
+  onChange,
+  onRun,
+  running,
+  status,
+  stoppedHint,
+  fileName,
+  progress,
+}: SqlConsoleProps) {
+  const file = { id: fileName, label: fileName };
   const database = useSyncExternalStore(status.subscribe, status.getSnapshot);
   const [shown, setShown] = useState<{ id: number; response: SqlResponse }>();
 
@@ -33,7 +45,7 @@ export function SqlConsole({ value, onChange, onRun, running, status, progress }
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <div className="flex h-72 min-h-0 flex-col">
-        <EditorFrame files={[FILE]} onSelect={() => {}} selectedId={FILE.id} title="SQL">
+        <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
           {() => <SqlEditor onChange={onChange} onRun={() => void run()} value={value} />}
         </EditorFrame>
       </div>
@@ -49,7 +61,7 @@ export function SqlConsole({ value, onChange, onRun, running, status, progress }
         {progress !== undefined && <Loading label={progress} />}
         {database.kind === "stopped" && (
           <Notice isAlert title="DB が止まりました" tone="danger">
-            {database.reason}。次に実行すると、DB を初期の状態から作り直します。
+            {database.reason}。{stoppedHint}
           </Notice>
         )}
         {shown && <ResultView key={shown.id} response={shown.response} />}

@@ -347,7 +347,7 @@ flowchart TB
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
   - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
-  - `sql-console/` のコンポーネントは、入力欄の値、実行する関数、実行中かどうか、`database` の `status` を props で受ける。`status` は `useSyncExternalStore` で読む。実行の結果は、このコンポーネントが持ち、表に出す。
+  - `sql-console/` のコンポーネントは、入力欄の値、入力欄のファイルの名前、実行する関数、実行中かどうか、`database` の `status`、DB が止まったときの復帰の案内を props で受ける。復帰の動きは `SqlDatabase` の実装ごとに違うので、案内の文は呼ぶ側が渡す。`status` は `useSyncExternalStore` で読む。実行の結果は、このコンポーネントが持ち、表に出す。
   - `SqlPane` は、`NodeRuntime` の `database` の `run` と `status` と、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
@@ -363,6 +363,7 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - 実行中かどうかの store。
   - `SqlDatabase` を Web Worker で動かす実装（`@fukuemon/sql-runtime`）と、PGlite の読み込みを始める関数。
   - 実行する関数。実行中かどうかの値を変え、`SqlDatabase` の `run` を呼び、`SqlResponse` を返す。実行中に呼んだときは、実行せずに `error` を持つ値を返す。
+- 同じモジュールが、ページの URL のクエリからプロジェクトを読み、埋め込みの ID の SqlSession を返す関数を持つ。ページは、この関数の Promise を `use` で読む。
 - ページは、このモジュールの値を `useSyncExternalStore` で読み、`sql-console/` のコンポーネントに渡す。
 - 入力欄のエディタは、CodeMirror 6 にする。色は、`packages/ui` のテーマ変数（`--color-code-*`）を読む。Ctrl か ⌘ と Enter で実行する。
 - 実行のボタンを押してから結果が出るまで、待っている段階を `Loading` で出す。段階は、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つである。
