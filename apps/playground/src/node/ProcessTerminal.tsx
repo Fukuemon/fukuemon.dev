@@ -32,8 +32,12 @@ export function ProcessTerminal({ handle, theme }: { handle: ProcessHandle; them
     terminal.write(handle.output.read());
     const unsubscribe = handle.output.subscribe((chunk) => terminal.write(chunk));
     const input = terminal.onData((data) => handle.write(data));
+    let size = "";
     const resize = () => {
       fit.fit();
+      // 仕切りを引いている間は、列と行が変わらない通知も来る
+      if (size === `${terminal.cols}x${terminal.rows}`) return;
+      size = `${terminal.cols}x${terminal.rows}`;
       handle.resize({ cols: terminal.cols, rows: terminal.rows });
     };
     const observer = new ResizeObserver(resize);

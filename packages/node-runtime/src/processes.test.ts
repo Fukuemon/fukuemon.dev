@@ -120,6 +120,12 @@ describe("createOutputLog", () => {
     log.append("defg");
     expect(log.read()).toBe("cdefg");
   });
+
+  it("上限の 2 倍を超えて足しても、読むと上限の文字数にする", () => {
+    const log = createOutputLog(3);
+    for (const chunk of ["ab", "cd", "ef", "gh"]) log.append(chunk);
+    expect(log.read()).toBe("fgh");
+  });
 });
 
 describe("createStore", () => {

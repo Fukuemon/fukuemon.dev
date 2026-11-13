@@ -51,29 +51,50 @@ export async function createFiles(
 ): Promise<{ api: NodeRuntime["files"]; dispose: () => void }> {
   const tree = createStore<readonly FileEntry[]>(await listTree(files));
   const listeners = new Set<(paths: readonly string[]) => void>();
-  let refreshing: Promise<void> | undefined;
-  let pending = false;
+  type Waiter = { resolve: () => void; reject: (error: unknown) => void };
+  let waiting: Waiter[] = [];
+  let running = false;
   let disposed = false;
 
-  const refresh = (): Promise<void> => {
-    pending = true;
-    refreshing ??= (async () => {
+  // 呼んだ後に始まった 1 回の読み直しが終わると解決する。通知が続いても、ループの終わりを待たない
+  const loop = async () => {
+    running = true;
+    while (waiting.length > 0) {
+      const batch = waiting;
+      waiting = [];
+      const next = disposed ? undefined : await listTree(files).catch(() => undefined);
       try {
-        while (pending && !disposed) {
-          pending = false;
-          const next = await listTree(files).catch(() => undefined);
-          if (!disposed && next && !sameTree(next, tree.getSnapshot())) tree.set(next);
-        }
-      } finally {
-        // 購読者が投げても、次の通知で読み直せるようにする
-        refreshing = undefined;
+        if (!disposed && next && !sameTree(next, tree.getSnapshot())) tree.set(next);
+        for (const waiter of batch) waiter.resolve();
+      } catch (error) {
+        for (const waiter of batch) waiter.reject(error);
       }
-    })();
-    return refreshing;
+    }
+    running = false;
   };
 
+  // node_modules のパッケージの中身の変更は、パッケージのディレクトリがツリーにあれば、ツリーを変えない
+  const changesTree = (path: string) => {
+    const parts = path.split("/");
+    for (let i = 1; i < parts.length; i++) {
+      const ancestor = parts.slice(0, i).join("/");
+      if (!shouldDescend(ancestor)) {
+        return !tree.getSnapshot().some((entry) => entry.path === ancestor);
+      }
+    }
+    return true;
+  };
+
+  const refresh = () =>
+    new Promise<void>((resolve, reject) => {
+      waiting.push({ resolve, reject });
+      if (!running) void loop();
+    });
+
   const unwatch = files.watch((paths) => {
-    refresh().catch((error: unknown) => console.error("ファイルのツリーを読み直せない", error));
+    if (paths.some(changesTree)) {
+      refresh().catch((error: unknown) => console.error("ファイルのツリーを読み直せない", error));
+    }
     for (const listener of listeners) listener(paths);
   });
 
@@ -96,7 +117,13 @@ export async function createFiles(
         },
       },
       read: async (path) => decoder.decode(await files.readFile(path)),
-      write: thenRefresh(files.writeFile),
+      // 既にあるファイルの中身を書いても、ツリーは変わらない
+      write: async (path, contents) => {
+        const exists = tree.getSnapshot().some((entry) => entry.path === path);
+        await (exists
+          ? files.writeFile(path, contents)
+          : thenRefresh(files.writeFile)(path, contents));
+      },
       createDirectory: thenRefresh(files.mkdir),
       rename: thenRefresh(files.rename),
       remove: thenRefresh(files.remove),

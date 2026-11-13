@@ -116,6 +116,38 @@ describe("files", () => {
     expect(runtime.files.tree.getSnapshot()).toBe(before);
   });
 
+  it("既にあるファイルに書くときは、操作の後に読み直さない", async () => {
+    const { runtime, created } = await bootFake();
+    const callsBefore = created.files.api.listCalls;
+    await runtime.files.write("index.js", "changed");
+    await flush();
+    // 書き込みの通知による 1 回（ルートと src の 2 回の list）だけになる
+    expect(created.files.api.listCalls - callsBefore).toBe(2);
+  });
+
+  it("node_modules のパッケージの中身だけの通知では、読み直さない", async () => {
+    const { created } = await bootFake();
+    created.files.putFromCommand("node_modules/cookie/index.js", "");
+    await flush();
+    const callsBefore = created.files.api.listCalls;
+    created.files.putFromCommand("node_modules/cookie/lib/a.js", "");
+    await flush();
+    expect(created.files.api.listCalls - callsBefore).toBe(0);
+  });
+
+  it("通知が続いても、操作は自分の後の 1 回の読み直しで終わる", async () => {
+    const { runtime, created } = await bootFake();
+    const list = created.files.api.list;
+    let notified = 0;
+    // 読み直すたびに、コマンドがファイルを作り続ける
+    created.files.api.list = async (directory) => {
+      if (directory === "" && notified < 20) created.files.putFromCommand(`n${notified++}.txt`, "");
+      return list(directory);
+    };
+    await runtime.files.createDirectory("dir");
+    expect(notified).toBeLessThan(20);
+  });
+
   it("ツリーの購読者が投げても、次の通知で読み直す", async () => {
     const { runtime, created } = await bootFake();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
