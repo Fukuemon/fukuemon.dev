@@ -89,8 +89,14 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/config` は、どこにも依存しない。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
-- `apps/web` は、`@fukuemon/ui` と `@fukuemon/content-model` に依存してよい。
+- `@fukuemon/playground-project` は、workspace のどの package にも依存しない。
+- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project` に依存してよい。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
+- `@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
+- `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
+- `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
+- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` と、実行環境の 3 つの package に依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
+  - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
 island の framework は React の 1 つに絞る。  
@@ -104,6 +110,7 @@ hydrate するページはその framework のランタイムを配るので、2
 - サーバー側の永続的な状態を持たない。読者の identity を前提にする機能を作らない。
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
+- プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#保存) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [docs/design/DesignDoc.md](../docs/design/DesignDoc.md#設計不変量)
@@ -145,6 +152,7 @@ package を切り出すのは、次のどちらかが成り立つときである
 - コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に、パターンを `packages/ui/src/patterns/` に置く。
   - story とテストは、コンポーネントと同じディレクトリに置く。
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/` の関心ごとのディレクトリに置く。
+  - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。
 - カタログの Worker の設定は `packages/ui/wrangler.jsonc` に、カタログが返すレスポンスヘッダは `packages/ui/.storybook/public/_headers` に置く。
 
 ### infra
@@ -165,5 +173,7 @@ ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-
 
 - `/docs/` の配下に入れない。描画の実装の詳細を URL に出さない。
 - 古いサイトの URL（`/blog`、`/labs/<path>` など）は転送しない。`public/_redirects` を置かない。
-- プレイグラウンドのツールは、`fukuemon.dev` に置かず、プレイグラウンドのサブドメインに置く。
+- `/playground` は、プレイグラウンドの一覧に使う。ツールは `fukuemon.dev` に置かず、`play.fukuemon.dev` に置く。cross-origin isolation のヘッダは、Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
+  - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
+- `/playground-projects/*` は、記事に埋め込む実行環境のプロジェクトの JSON に使う。

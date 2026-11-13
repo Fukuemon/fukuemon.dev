@@ -29,6 +29,10 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - 描画は Astro のページとして自前で組み、Starlight は使わない。
   - ADR-0001: [Starlight の採否](../docs/adr/0001-starlight-as-docs-renderer.md)
 - React は、`packages/ui` のコンポーネントと、`apps/web` の island に使う。`@astrojs/react` は、`packages/ui` のコンポーネントを Astro のページに `client:*` なしで描くのにも使う。
+- `apps/playground` は、Vite の React のアプリで、画面の全体を React で描く。React Compiler を、`apps/playground` のビルドにだけ入れる。
+  - ADR-0046: [プレイグラウンドのアプリの構成](../docs/adr/0046-playground-as-vite-react-app.md)
+  - ADR-0047: [React Compiler を入れる範囲](../docs/adr/0047-react-compiler-in-playground.md)
+- `@webcontainer/api` は、Node の実行環境の package（`@fukuemon/node-runtime`）だけに使う。import できるディレクトリは、[プレイグラウンドの Design Doc](../docs/design/features/playground/DesignDoc.md#ディレクトリ) にある。
 - Tailwind CSS と `@tailwindcss/vite` は、CSS のスタイリングの基盤として使う。
   - サイトの共通の CSS は preflight を読み、`@theme static` を使わない。
   - ADR-0010: [Tailwind CSS の採用](../docs/adr/0010-tailwind-as-styling-base.md)
@@ -37,6 +41,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Storybook は、`packages/ui` のカタログに使う。a11y、docs、vitest、themes のアドオンと、hover の見た目を出す `storybook-addon-pseudo-states` を使う。
   - story は、Vitest のブラウザのモードでテストとして動かす。ブラウザは Playwright の chromium を使う。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
+- `@electric-sql/pglite` は、プレイグラウンドで、`@fukuemon/sql-runtime` が SQL だけを動かすツールに使う。Node の実行環境の中の DB のプロセスには、`@fukuemon/node-runtime` の `guest/` の `package.json` に書いた同じバージョンを、実行環境の中で `npm install` する。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
@@ -51,7 +56,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Playwright は、`packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）、トップの試作の録画に使う。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
-- Wrangler は、サイトの Worker（`apps/web`）とカタログの Worker（`packages/ui`）の deploy に使う。
+- Wrangler は、サイトの Worker（`apps/web`）、カタログの Worker（`packages/ui`）、プレイグラウンドの Worker（`apps/playground`）の deploy に使う。
 - 品質のチェックには、react-doctor、knip、similarity-ts、Lefthook を使う。
   - 各ツールをチェックのどこで実行するかは [conventions.md](conventions.md#shared-configuration) にある。
   - ADR-0007: [品質のチェックの採否](../docs/adr/0007-quality-gates.md)
