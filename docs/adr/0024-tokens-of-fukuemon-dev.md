@@ -21,11 +21,14 @@ fukuemon.dev のデザインシステムのトークンの持ち方と、値の�
 
 ## Decision
 
-トークンを 3 つの層に分け、`packages/ui/src/tokens/` に置く。値は fukuemon.dev が決める。
+トークンを 3 つの層に分け、`packages/ui/src/tokens/` に置く。値は fukuemon.dev が決める。  
+フォーカスの色の判断は、ADR-0060 にある。
+
+- ADR-0060: [フォーカスの色を、DADS の値で持つ](0060-focus-color-from-dads.md)
 
 - プリミティブトークンは、fukuemon.dev の値を持つ。
   - 地と罫と差し色は、旧サイトの `packages/design-system/styles/tokens.css` の値を使う。生成りの地、墨の文字、温かい灰の罫、くすんだ緑、藍、錆である。
-  - フォーカスの色、書体の太さ、文字の大きさ、行高は、DADS の `@digital-go-jp/design-tokens` 2.1.0 の値を使う。ファイルの冒頭に、出典の URL と MIT License の表示を残す。
+  - 書体の太さ、文字の大きさ、行高は、DADS の `@digital-go-jp/design-tokens` 2.1.0 の値を使う。ファイルの冒頭に、出典の URL と MIT License の表示を残す。
   - 名前は `--fd-primitive-` で始める。
 - セマンティックトークンは、役割の名前を `--fd-color-` で始め、プリミティブトークンを参照する。
 - テーマ変数は、Tailwind CSS の `@theme inline` に置き、Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す。セマンティックトークンを通らない書き方を、画面のコードで書けなくするためである。

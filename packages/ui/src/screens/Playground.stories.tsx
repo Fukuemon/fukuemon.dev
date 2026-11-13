@@ -3,6 +3,8 @@ import { useState } from "react";
 
 import type { TreeNode } from "../base/TreeView/TreeView";
 import { ConfirmDialog } from "../case/ConfirmDialog/ConfirmDialog";
+import { type ConsoleEntry, ConsoleEntryList } from "../case/ConsoleEntryList/ConsoleEntryList";
+import { ENTRIES, LONG_ENTRY } from "../case/ConsoleEntryList/fixtures";
 import { type EditorFile, EditorFrame } from "../case/EditorFrame/EditorFrame";
 import { FileTree } from "../case/FileTree/FileTree";
 import { HttpExchangeDetail } from "../case/HttpExchangeDetail/HttpExchangeDetail";
@@ -52,8 +54,14 @@ const removeNode = (nodes: readonly TreeNode[], id: string): TreeNode[] =>
     .filter((node) => node.id !== id)
     .map((node) => (node.children ? { ...node, children: removeNode(node.children, id) } : node));
 
-/** ファイルのツリー、エディタ、端末、プレビュー、HTTP の流れを並べた画面。幅 48rem 未満では、領域を縦に積む。 */
-function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
+/** ファイルのツリー、エディタ、端末、プレビュー、HTTP の流れ、コンソールを並べた画面。幅 48rem 未満では、領域を縦に積む。 */
+function Playground({
+  exchanges,
+  consoleEntries,
+}: {
+  exchanges: readonly HttpExchange[];
+  consoleEntries: readonly ConsoleEntry[];
+}) {
   const [files, setFiles] = useState<readonly TreeNode[]>(FILES);
   const [fileId, setFileId] = useState<string | undefined>("src/server.js");
   const [deletingId, setDeletingId] = useState<string | undefined>(undefined);
@@ -137,6 +145,10 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
             selectedId={exchangeId}
           />
           <HttpExchangeDetail actors={ACTORS} exchange={exchange} />
+          {/* コンソールの高さ（h-80）は仮の値で、画面の設計で決め直す */}
+          <div className="flex h-80 shrink-0 flex-col">
+            <ConsoleEntryList entries={consoleEntries} />
+          </div>
         </div>
       </main>
     </div>
@@ -145,10 +157,15 @@ function Playground({ exchanges }: { exchanges: readonly HttpExchange[] }) {
 
 export const Default: Story = {
   name: "コードを動かす画面",
-  render: () => <Playground exchanges={EXCHANGES} />,
+  render: () => <Playground consoleEntries={ENTRIES} exchanges={EXCHANGES} />,
 };
 
 export const LongData: Story = {
   name: "長い URL とヘッダ",
-  render: () => <Playground exchanges={[...EXCHANGES, LONG_EXCHANGE]} />,
+  render: () => (
+    <Playground
+      consoleEntries={[...ENTRIES, LONG_ENTRY]}
+      exchanges={[...EXCHANGES, LONG_EXCHANGE]}
+    />
+  ),
 };

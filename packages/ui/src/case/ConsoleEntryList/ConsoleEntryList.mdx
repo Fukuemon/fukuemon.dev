@@ -1,0 +1,70 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { ConsoleEntryList } from "./ConsoleEntryList";
+import * as Stories from "./ConsoleEntryList.stories";
+
+<Meta of={Stories} />
+
+# ConsoleEntryList
+
+`console.*` の出力を起きた順に並べ、ログレベルで絞って、値を開いて見るコンソール。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「ConsoleEntryList」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の次の ID
+  - `STATE-NOT-COLOR-ONLY`
+  - `TARGET-SIZE`
+  - `TEXT-MIN-SIZE`
+
+## 状態
+
+### ログレベルごと
+
+<Canvas of={Stories.Default} />
+
+### 値を開いている
+
+<Canvas of={Stories.Expanded} />
+
+### hover
+
+<Canvas of={Stories.Hover} />
+
+### 高さを決めた枠
+
+<Canvas of={Stories.FixedHeight} />
+
+### error だけを表示
+
+<Canvas of={Stories.ErrorOnly} />
+
+### 選んだログレベルの行が無い
+
+<Canvas of={Stories.NoMatch} />
+
+### 空
+
+<Canvas of={Stories.Empty} />
+
+### 読み込み中
+
+<Canvas of={Stories.Loading} />
+
+### エラー
+
+<Canvas of={Stories.Error} />
+
+### 長い値
+
+<Canvas of={Stories.LongValue} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+## props
+
+<ArgTypes of={ConsoleEntryList} />

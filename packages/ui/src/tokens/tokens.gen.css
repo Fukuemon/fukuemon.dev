@@ -7,7 +7,7 @@
  * fukuemon.dev のプリミティブトークン。セマンティックトークン（semantic.css）とテーマ変数（theme.css）が参照する値だけを持つ。
  * 値は fukuemon.dev が決める。地と罫と差し色は旧サイトの値で、生成りの紙に墨で刷る向きの温かい灰と、くすんだ緑、藍、錆を持つ（docs/adr/0024-tokens-of-fukuemon-dev.md）。
  * 名前は --fd-primitive-color-<色>-<段> にする。段は、数が大きいほど暗い。
- * フォーカスの色、書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
+ * 書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
  * 出典: https://github.com/digital-go-jp/design-tokens
  *
  * MIT License
@@ -118,13 +118,11 @@
   --fd-primitive-color-blue-300: #9fb4e8;
   --fd-primitive-color-blue-700: #34508f;
 
-  /* フォーカス: DADS の黄色と黒 */
-  --fd-primitive-color-yellow-300: #ffd43d;
-  --fd-primitive-color-black: #000000;
-
   --fd-primitive-font-weight-400: 400;
   --fd-primitive-font-weight-700: 700;
   --fd-primitive-font-family-sans: "Noto Sans JP", sans-serif;
+  --fd-primitive-font-size-12: 0.75rem;
+  --fd-primitive-font-size-13: 0.8125rem;
   --fd-primitive-font-size-14: 0.875rem;
   --fd-primitive-font-size-16: 1rem;
   --fd-primitive-font-size-18: 1.125rem;
@@ -175,9 +173,8 @@
   --fd-color-link-external: var(--fd-primitive-color-indigo-700);
   --fd-color-current-page: var(--fd-primitive-color-rust-700);
 
-  /* フォーカス: DADS の 2 重の表示。要素に接する黄色の輪と、その外の黒の枠。ダークでも替えない */
-  --fd-color-focus-outline: var(--fd-primitive-color-black);
-  --fd-color-focus-halo: var(--fd-primitive-color-yellow-300);
+  /* フォーカス: 墨の 1 重の輪。文字と同じ墨にし、テーマごとに替える */
+  --fd-color-focus: var(--fd-primitive-color-sumi-900);
 
   /* 状態: 文字の色と、同じ系統の薄い面の組。色相は、エラーは赤、成功は緑、注意は錆、情報は藍にする */
   --fd-color-danger: var(--fd-primitive-color-crimson-700);
@@ -266,6 +263,8 @@
     --fd-color-link-external: var(--fd-primitive-color-indigo-300);
     --fd-color-current-page: var(--fd-primitive-color-rust-300);
 
+    --fd-color-focus: var(--fd-primitive-color-sumi-25);
+
     --fd-color-danger: var(--fd-primitive-color-crimson-300);
     --fd-color-danger-hover: var(--fd-primitive-color-crimson-200);
     --fd-color-danger-surface: var(--fd-primitive-color-crimson-900);
@@ -341,6 +340,8 @@
   --fd-color-link-visited: var(--fd-primitive-color-green-300);
   --fd-color-link-external: var(--fd-primitive-color-indigo-300);
   --fd-color-current-page: var(--fd-primitive-color-rust-300);
+
+  --fd-color-focus: var(--fd-primitive-color-sumi-25);
 
   --fd-color-danger: var(--fd-primitive-color-crimson-300);
   --fd-color-danger-hover: var(--fd-primitive-color-crimson-200);

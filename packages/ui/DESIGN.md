@@ -2,11 +2,12 @@
 
 この文書は、fukuemon.dev の画面とコンポーネントのコードを書く人が、書く前に読む規則である。  
 値は fukuemon.dev が決め、アクセシビリティ、タイポグラフィ、配色、レイアウトの指標と参考に、デジタル庁デザインシステム（DADS）を使う。  
-構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028 にある。
+構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028、ADR-0062にある。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
 - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
 - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 
 カタログは https://design.fukuemon.dev で開ける。  
 ローカルでは、リポジトリのルートで `pnpm --filter @fukuemon/ui storybook` を流し、`http://localhost:6106` を開く。
@@ -46,7 +47,6 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | 余白の段               | 使う側に任せる                                 | Tailwind のデフォルトの段（1 段 4px）。ブロックの間は 8px の倍数                                                                                                                               |
 | 角丸と影               | コンポーネントごとに値を持つ                   | 角丸は 2px の 1 つだけを、操作できる要素と重なる面に使う。影は、ずらした影の 1 つだけを、重なる面に使う。外れる理由は [トークン](design/tokens.md)の「レイアウト、区切り、重なり、動き」にある |
 | コントラスト           | 変えない（文字 4.5:1、文字でないもの 3:1）     | 確認: `pnpm run check:contrast`。ライト、OS の設定のダーク、Storybook のダークの 3 つの条件で見る                                                                                              |
-| フォーカスの表示       | 変えない（黄色の輪と黒の枠の 2 重の表示）      | 確認: `pnpm run check:utilities`（`FOCUS-ONE`）と `pnpm run check:contrast`                                                                                                                    |
 | 状態の色相と意味の対応 | 変えない（成功は緑、エラーは赤、注意は黄か橙） | 確認: レビュー。注意だけを錆にする理由は [トークン](design/tokens.md)の「色」にある                                                                                                            |
 
 ### 個性として残すもの
@@ -71,17 +71,22 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - `STATE-NOT-COLOR-ONLY`: 状態を色だけで伝えない。エラーと注意には、文と印を色と一緒に出す。
   - 確認: レビューで、色を見分けられない人がエラーの場所と内容を読み取れるかを見る。
 - `TEXT-MIN-SIZE`: 14px より小さい文字を使わない。本文と操作の文字は 16px にし、14px は補足だけに使う。
-  - 確認: `pnpm run check:utilities`
+  - 例外: コードを動かす画面のコンポーネントは、コードと操作のラベルを 13px、コンソールの値と補足を 12px まで小さくしてよい（`text-compact`、`text-label-compact`）。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062）。
+    - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
+  - 確認: `pnpm run check:utilities`。2 つのトークンをコードを動かす画面の外で使っていないかは、レビューで見る。
 - `PRIMARY-ACTION-ONE`: 主のボタンは、1 つの画面かダイアログに 1 つまでにする。
   - 確認: レビューで、画面の主の操作が 1 つに決まるかを見る。
-- `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティだけを使い、コンポーネントごとに色や太さを変えない。例外は、検索の欄（`TextField` の `appearance="underline"`）の緑の罫だけで、理由は DesignDoc の「フォーカスの表示」に書いた。
+- `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティ（墨の 2px の 1 重の輪）だけを使い、コンポーネントごとに色や太さを変えない。例外は、検索の欄（`TextField` の `appearance="underline"`）の緑の罫だけで、理由は DesignDoc の「フォーカスの表示」に書いた。
+  - DADS は、黄色の輪と黒の枠の 2 重の表示を求める。墨の輪にする理由は、DesignDoc の「フォーカスの表示」にある。
   - 確認: `pnpm run check:utilities`
 - `TARGET-SIZE`: 押せる領域は 44×44 CSS px 以上にする。WCAG 2.2 の AA（2.5.8）の 24×24 より厳しい、AAA（2.5.5）の値を選んでいる。見た目を小さくするときは、見た目の外に押せる領域を広げる。
   - 例外: `Link` は対象にせず、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。本文の中の文字のリンクを 44×44 CSS px にすると、行の高さが崩れるためである。
-  - 確認: `pnpm run test:ui` の component の project で、コンポーネントごとの、名前に「44 px」を含むテストが見る。例は、`src/base/Button/Button.test.tsx` の「S のボタンは、見た目の外まで 44×44 px 以上を押せる」である。カタログのアクセシビリティの自動チェックは、押せる領域の大きさを確認しない。
+  - 例外: コードを動かす画面のコンポーネントは、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。木の行と開閉の要約（`Disclosure`）は 24px、ボタン、入力欄、タブは 28〜32px にする（ADR-0062）。
+    - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
+  - 確認: `pnpm run test:ui` の component の project で、コンポーネントごとの、名前に「44 px」を含むテストが見る。コードを動かす画面の例外のコンポーネントでは、名前に「24 px」か「28 px」を含むテストが見る。例は、`src/base/Button/Button.test.tsx` の「S のボタンは、見た目の外まで 44×44 px 以上を押せる」である。カタログのアクセシビリティの自動チェックは、押せる領域の大きさを確認しない。
 - `SPACING-SCALE`: 余白は、トークンの文書の「レイアウト、区切り、重なり、動き」の表の余白の段のユーティリティだけで書く。任意値（`p-[13px]` のような書き方）を書かない。
   - 確認: `pnpm run check:utilities`
-  - 入力欄と、その見出し、補足の文、誤りの文の間は、`gap-2`（8px）以上にする。フォーカスの表示（`focus-ring`）は、欄の外へ 6px 広がる。狭いと、フォーカスの表示が近くの文字に重なる。
+  - 入力欄と、その見出し、補足の文、誤りの文の間は、`gap-2`（8px）以上にする。フォーカスの表示（`focus-ring`）は、欄の外へ 4px 広がる。狭いと、フォーカスの表示が近くの文字に重なる。
     - 確認: レビューで、欄と近くの文字の間が、その段以上かを見る。
 - `LAYOUT-OVERFLOW`: レイアウトのブレークポイントの幅ごとに、ページの横方向のオーバーフローを出さない。長い文字とデータの多い状態でも出さない。
   - 確認: ページの全体の幅は、`pnpm run test:ui` の `src/screens/Playground.test.tsx` の、名前に `LAYOUT-OVERFLOW` を含むテストで見る。320px、767px、768px、1280px の幅を見る。内側の領域で切れた文字とボタンは、撮った画像をレビューで見る。
@@ -92,18 +97,18 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 
 ### 原則と確認の方法の対応
 
-| ID                     | 確認の方法                                                  | チェックが見ないもの                                                                                                                        |
-| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `COLOR-TOKEN`          | `pnpm run check:raw-values`                                 | 文字、動きの時間と緩急の値                                                                                                                  |
-| `STATE-NOT-COLOR-ONLY` | レビュー                                                    |                                                                                                                                             |
-| `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                  | クラスの名前を文字列の連結で組み立てた書き方                                                                                                |
-| `PRIMARY-ACTION-ONE`   | レビュー                                                    |                                                                                                                                             |
-| `FOCUS-ONE`            | `pnpm run check:utilities`                                  | クラスの名前を文字列の連結で組み立てた書き方                                                                                                |
-| `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」を含むテスト）           | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
-| `SPACING-SCALE`        | `pnpm run check:utilities`                                  | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
-| `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト） | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
-| `MOTION-TOKEN`         | `pnpm run check:utilities`                                  | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方 |
-| `MOTION-REDUCE`        | レビュー                                                    |                                                                                                                                             |
+| ID                     | 確認の方法                                                                    | チェックが見ないもの                                                                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COLOR-TOKEN`          | `pnpm run check:raw-values`                                                   | 文字、動きの時間と緩急の値                                                                                                                  |
+| `STATE-NOT-COLOR-ONLY` | レビュー                                                                      |                                                                                                                                             |
+| `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                                    | `text-compact` と `text-label-compact` を、コードを動かす画面の外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方               |
+| `PRIMARY-ACTION-ONE`   | レビュー                                                                      |                                                                                                                                             |
+| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | クラスの名前を文字列の連結で組み立てた書き方                                                                                                |
+| `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
+| `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
+| `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
+| `MOTION-TOKEN`         | `pnpm run check:utilities`                                                    | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方 |
+| `MOTION-REDUCE`        | レビュー                                                                      |                                                                                                                                             |
 
 ## 画面を作るときの手順
 
@@ -162,7 +167,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | 文字のコントラスト           | 4.5:1 以上                                                                                                                                                                          | `pnpm run check:contrast`                                                                                                        |
 | 文字でないもののコントラスト | 入力欄と押せる枠の境界、フォーカスの表示が 3:1 以上                                                                                                                                 | `pnpm run check:contrast`（`border-field`、フォーカスの表示の組）                                                                |
 | フォーカスの見え方           | 全ての操作できる要素で、フォーカスの表示を出す                                                                                                                                      | `pnpm run check:utilities`（`FOCUS-ONE`）と、レビュー                                                                            |
-| ターゲットの大きさ           | 44×44 CSS px 以上。AA の 2.5.8 の 24×24 より厳しい、このプロダクトの選択（AAA の 2.5.5）                                                                                            | `pnpm run test:ui`（`TARGET-SIZE`）                                                                                              |
+| ターゲットの大きさ           | 44×44 CSS px 以上。AA の 2.5.8 の 24×24 より厳しい、このプロダクトの選択（AAA の 2.5.5）。コードを動かす画面は例外で、24×24 以上（ADR-0062）                                        | `pnpm run test:ui`（`TARGET-SIZE`）                                                                                              |
 | キーボードの操作             | コンポーネントの文書のとおりに動く                                                                                                                                                  | `pnpm run test:ui` のコンポーネントのテスト                                                                                      |
 | 入力の誤りの伝え方           | 欄ごとの誤りの文は `aria-describedby` で欄に結び付け、`role="alert"` を付けない。送った後は最初の誤りの欄へフォーカスを移す。送れなかったときの文だけを `role="alert"` で読み上げる | `pnpm run test:ui` の `TextField` のテスト（欄ごとの誤りの文）。送った後のフォーカスの移り方と、送れなかったときの文は、レビュー |
 | 動きを減らす設定             | 設定が `reduce` のとき、位置、大きさ、回転を動かすアニメーションと遷移、スクロールに合わせた動きを止める。このプロダクトの選択（AAA の 2.3.3）                                      | レビュー（`MOTION-REDUCE`）                                                                                                      |
