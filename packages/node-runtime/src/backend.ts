@@ -1,4 +1,4 @@
-import type { OpenPort, TerminalSize } from "./types";
+import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
 export type DirectoryItem = { name: string; kind: "file" | "directory" };
 
@@ -35,10 +35,8 @@ export type BackendInstance = {
   teardown: () => Promise<void>;
 };
 
-type BackendBootOptions = { files: Readonly<Record<string, string>> };
-
 /** Node の実行環境の実装。node-runtime の直下は、この型だけを通して実装を使う。 */
 export type RuntimeBackend = {
   isSupported: () => boolean;
-  boot: (options: BackendBootOptions) => Promise<BackendInstance>;
+  boot: (options: BootOptions) => Promise<BackendInstance>;
 };

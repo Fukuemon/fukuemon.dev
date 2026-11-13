@@ -38,12 +38,6 @@ export type StartOptions = { name?: string; terminal?: TerminalSize };
 /** 待ち受けたポート。sandbox と allow は、プレビューの iframe に付ける属性の値である。 */
 export type OpenPort = { port: number; url: string; sandbox: string; allow: string };
 
-/** HTTP の記録。中身は、記録を取る preload と一緒に決める。 */
-export type HttpRecord = { id: string };
-
-/** コンソールの記録。中身は、記録を取るスクリプトと一緒に決める。 */
-export type ConsoleRecord = { id: string };
-
 export type NodeRuntime = {
   files: {
     tree: Store<readonly FileEntry[]>;
@@ -65,8 +59,10 @@ export type NodeRuntime = {
     startShell: (options?: StartOptions) => Promise<ProcessHandle>;
   };
   ports: Store<readonly OpenPort[]>;
-  httpExchanges: Store<readonly HttpRecord[]>;
-  consoleEntries: Store<readonly ConsoleRecord[]>;
+  /** HTTP の記録。記録を取る preload を足すまでは、空のままである。 */
+  httpExchanges: Store<readonly never[]>;
+  /** コンソールの記録。記録を取るスクリプトを足すまでは、空のままである。 */
+  consoleEntries: Store<readonly never[]>;
   dispose: () => Promise<void>;
 };
 

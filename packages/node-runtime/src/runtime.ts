@@ -2,14 +2,7 @@ import type { BackendInstance, RuntimeBackend } from "./backend";
 import { createFiles } from "./files";
 import { createProcesses } from "./processes";
 import { createStore } from "./store";
-import {
-  BootError,
-  type BootOptions,
-  type ConsoleRecord,
-  type HttpRecord,
-  type NodeRuntime,
-  type OpenPort,
-} from "./types";
+import { BootError, type BootOptions, type NodeRuntime, type OpenPort } from "./types";
 
 /** bootNodeRuntime を呼んでから、Promise が解決するまでの上限。 */
 const BOOT_TIMEOUT_MS = 30_000;
@@ -26,8 +19,8 @@ async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime
     files: files.api,
     processes: processes.api,
     ports,
-    httpExchanges: createStore<readonly HttpRecord[]>([]),
-    consoleEntries: createStore<readonly ConsoleRecord[]>([]),
+    httpExchanges: createStore<readonly never[]>([]),
+    consoleEntries: createStore<readonly never[]>([]),
     dispose: () => {
       disposed ??= (async () => {
         unsubscribePorts();

@@ -6,9 +6,7 @@ export { BootError } from "./types";
 export type {
   BootFailureReason,
   BootOptions,
-  ConsoleRecord,
   FileEntry,
-  HttpRecord,
   NodeRuntime,
   OpenPort,
   OutputLog,
