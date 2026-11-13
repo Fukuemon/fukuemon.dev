@@ -45,7 +45,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
 - `@electric-sql/pglite` は、プレイグラウンドで、`@fukuemon/sql-runtime` が SQL だけを動かすツールに使う。Node の実行環境の中の DB のプロセスには、`@fukuemon/node-runtime` の `guest/` の `package.json` に書いた同じバージョンを、実行環境の中で `npm install` する。
 - Go と Yaegi は、プレイグラウンドの Go を動かすツールに使う。`@fukuemon/go-runtime` の `build` の script が、Yaegi で訪問者のコードを動かす WASM を、`mise.toml` の Go でビルドする。`wasm_exec.js` は、同じ Go のものをコミットする。
-  - Go を上げるときは、`$(go env GOROOT)/lib/wasm/wasm_exec.js` を `packages/go-runtime/src/worker/vendor/` にコピーする。ビルドの script は、2 つが違うと失敗する。
+  - Go のバージョンを上げるときは、`$(go env GOROOT)/lib/wasm/wasm_exec.js` を `packages/go-runtime/src/worker/vendor/` にコピーする。ビルドの script は、2 つが違うと失敗する。
   - ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](../docs/adr/0037-go-with-yaegi.md)
 - CodeMirror 6 は、プレイグラウンドのツールの入力欄のエディタに使う。色は、`packages/ui` のテーマ変数を読む。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
