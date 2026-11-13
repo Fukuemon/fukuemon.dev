@@ -43,11 +43,9 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 対象は、次のモジュール。
 
-- `src/features/top-garden/` の、墨の絵の SVG を作る `layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`
-- `src/features/top-garden/` の、季節と時間帯を返す `season.ts`
-- `src/features/top-garden/` の、時間帯と季節から場面の色を決める `scene-colors.ts`
-- `src/features/top-garden/` の、最初の訪問かを返す `visit.ts`
-- `src/features/top-garden/` の、季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
+- `src/features/top-garden/` の、墨の絵の SVG を作る `layout.ts` と `rng.ts`（直下）と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`
+- `src/features/top-garden/scene/` の、時間帯と季節から場面の色を決める `scene-colors.ts`
+- `src/features/top-garden/stage/` の、季節と時間帯を返す `season.ts`、最初の訪問かを返す `visit.ts`、季節と時間帯を `html` に書き庭を出すかを決める `stage.ts`
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
 - `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
 

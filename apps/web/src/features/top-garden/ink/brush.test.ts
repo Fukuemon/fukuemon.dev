@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { brush, sample } from "./brush";
-import { rng } from "./rng";
+import { rng } from "../rng";
 
 const take = (seed: number) => Array.from({ length: 8 }, rng(seed));
 

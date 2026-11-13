@@ -24,8 +24,8 @@ const TARGETS = ["./packages/ui/src", "./apps/web/src", "./apps/playground/src"]
 // トップの庭の場面の色の表は、トークンの対象の外に置く（packages/ui/DesignDoc.md）
 const EXCLUDES = [
   "./packages/ui/src/tokens",
-  "./apps/web/src/features/top-garden/scene-colors.ts",
-  "./apps/web/src/features/top-garden/scene-colors.test.ts",
+  "./apps/web/src/features/top-garden/scene/scene-colors.ts",
+  "./apps/web/src/features/top-garden/scene/scene-colors.test.ts",
 ];
 // プリミティブトークンの変数の名前の接頭辞
 const BASE_PREFIXES = ["--fd-primitive-"];
