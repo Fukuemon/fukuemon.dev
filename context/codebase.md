@@ -131,7 +131,7 @@ Expressive Code の規則は cascade layer に属さないので、上書きす�
   - ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-terraform-wrangler-boundary.md)
 - サーバー側の永続的な状態を持たない。読者の identity を前提にする機能を作らない。
   - ADR-0008: [読者の identity を持たない](../adr/0008-no-reader-identity.md)
-- クライアント側の状態は `localStorage` に置き、ハンズオンの進捗とサイドバーの開閉だけを持つ。
+- `fukuemon.dev`（`apps/web`）のクライアント側の状態は `localStorage` に置き、ハンズオンの進捗とサイドバーの開閉だけを持つ。
   - 進捗のキーは `lab:<contentId>` にし、値に完了した手順の index の一覧と最後に開いた手順を持つ。
   - サイドバーの開閉のキーは、`components/Side.astro` の props の `id` から `side:<id>` にする。
   - サイドバーの開閉は、`components/Side.astro` の inline script が描画の前に同期で読む。
