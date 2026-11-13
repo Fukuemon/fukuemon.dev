@@ -21,6 +21,9 @@
 - プレイグラウンドでは、他人が用意したコードを、訪問者の操作なしに動かさない。運営者が用意した初期ファイルは、この条件の対象にしない。他人が用意したものを読み込む機能を追加するときは、決め直す。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
 - リポジトリは公開で、コードと記事の本文を MIT License で公開している。
+- Excalidraw が書き出す SVG には、使った文字の書体が入る。書体の Excalifont と Xiaolai は、OFL-1.1 である。
+  - 出典: [Excalifont](https://plus.excalidraw.com/excalifont)
+  - 出典: [lxgw/kose-font](https://github.com/lxgw/kose-font/tree/172d9dbe94ade82b5316e0989e3aa286b7041baf)
 - AWS は、アイコンを構成図を作るために使うことを認めている。AWS のアイコンの再配布の条件と、Google Cloud のアイコンの利用条件は、読んだページに無かった。
   - 「We allow customers and partners to use these toolkits and assets to create architecture diagrams.」
   - 出典: [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/)
@@ -57,11 +60,13 @@
 - 運営者が置いた図だけを開けるので、ADR-0031 の Decision 4 の「運営者が用意した初期ファイル」と同じ扱いにする。Decision 4 は決め直さない。
 - fukuemon.dev は、図のパスに、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
 
-### 4. 第三者のアイコンが入った図
+### 4. 第三者のアイコンと書体が入った図
 
 図のファイルを置くディレクトリを 1 つ決める。  
 `LICENSE` か README に、そのディレクトリの図に入っている第三者のアイコンを、MIT License の対象から外すと書く。  
 アイコンの利用条件の原文は、運営者が確認する。
+
+Excalidraw の SVG に入る書体（Excalifont、Xiaolai。OFL-1.1）も、同じ記述で、MIT License の対象から外す。
 
 ## Verification
 

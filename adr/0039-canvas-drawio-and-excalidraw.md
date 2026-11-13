@@ -57,6 +57,9 @@ Excalidraw は、`@excalidraw/excalidraw` をバンドルして、自分のペ�
 書体も、`window.EXCALIDRAW_ASSET_PATH` に自分のパスを渡して、自分で配る。  
 デフォルトのままでは、書体を `esm.sh` から読み込むためである。
 
+Excalidraw の画面の Library のボタンは隠す。  
+このボタンは、Excalidraw の外部のサイトのライブラリを開くためである。
+
 ### 4. クラウドのアイコン
 
 AWS と Google Cloud のアイコンは、draw.io の内蔵のライブラリを使う。  
@@ -94,6 +97,7 @@ Excalidraw には、クラウドのアイコンを配らない。
 - draw.io の `merge` のアクションに `mxGraphModel` を渡すと、図形が足されず、図が渡した中身に置き換わった。
 - Excalidraw の最初に読む JavaScript は、brotli で 362 KB だった。日本語の文字を描くと、デフォルトでは `esm.sh` に 18 件のリクエストが出た。
 - Excalidraw の書体の Excalifont と Xiaolai のファイルは、ライセンスの文を中に持たない。npm のパッケージの `fonts/` にも、ライセンスのファイルは無い。
+- Excalidraw の Library のボタンを隠す設定は、試作していない。
 - draw.io の PDF への書き出しは試していない。Embed Mode のメニューから訪問者が選べるかと、メニューを隠せるかは未確認である。
 - `embed.diagrams.net` を自分のサイトに埋め込むことへの利用条件は、読んだページに無かった。
 
