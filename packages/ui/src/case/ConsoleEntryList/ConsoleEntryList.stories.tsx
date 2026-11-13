@@ -21,6 +21,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { name: "ログレベルごと" };
+export const Expanded: Story = {
+  name: "値を開いている",
+  play: async ({ canvas, userEvent }) => {
+    for (const name of [/^\{id: 42/, /^session:/, /^TypeError/, /^Map\(2\)/]) {
+      await userEvent.click(canvas.getByRole("treeitem", { name }));
+    }
+  },
+};
 export const ErrorOnly: Story = { name: "error だけを表示", args: { defaultLevels: ["error"] } };
 export const NoMatch: Story = { name: "選んだログレベルの行が無い", args: { defaultLevels: [] } };
 export const Empty: Story = { name: "空", args: { entries: [] } };

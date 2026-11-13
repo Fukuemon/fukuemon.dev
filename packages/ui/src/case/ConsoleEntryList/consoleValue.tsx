@@ -38,7 +38,7 @@ const sizeOf = (value: ConsoleValue): number => {
 
 /** 開いて中を見られる値か。中身の無い配列とオブジェクトは、1 行で全てが見えるので開かない。 */
 export const isExpandable = (value: ConsoleValue): boolean =>
-  value.kind === "error" ? value.stack !== undefined : sizeOf(value) > 0;
+  value.kind === "error" ? Boolean(value.stack) : sizeOf(value) > 0;
 
 /**
  * 値を 1 行の文字にする。DevTools のコンソールに合わせ、入れ子の中の文字列は引用符で囲み、
@@ -98,16 +98,24 @@ export function preview(value: ConsoleValue, isNested = false): string {
   }
 }
 
-const childrenOf = (value: ConsoleValue): ConsoleProperty[] => {
+/** 開いた値の 1 つの子。separator は、key と値の間に置く文字である。 */
+type TreeEntry = { key: string; separator: string; value: ConsoleValue };
+
+const childrenOf = (value: ConsoleValue): TreeEntry[] => {
   switch (value.kind) {
     case "array":
     case "set":
-      return value.items.map((item, index) => ({ key: String(index), value: item }));
+      return value.items.map((item, index) => ({
+        key: String(index),
+        separator: ":",
+        value: item,
+      }));
     case "object":
-      return value.entries.map((entry) => ({ key: entry.key, value: entry.value }));
+      return value.entries.map((entry) => ({ ...entry, separator: ":" }));
     case "map":
       return value.entries.map((entry) => ({
-        key: `${preview(entry.key, true)} =>`,
+        key: preview(entry.key, true),
+        separator: " =>",
         value: entry.value,
       }));
     default:
@@ -124,14 +132,24 @@ const stackNodes = (id: string, stack: string): TreeNode[] =>
 
 /**
  * 値を TreeView の項目にする。開ける値は枝に、ほかは葉にする。
- * key を渡すと、項目を「key: 値」の形にし、key を太字にする。
+ * key を渡すと、項目を「key: 値」の形にし、key を太字にする。Map の子は、separator で「key => 値」にする。
  */
-export function toTreeNode(value: ConsoleValue, id: string, key?: string): TreeNode {
+export function toTreeNode(
+  value: ConsoleValue,
+  id: string,
+  key?: string,
+  separator = ":",
+): TreeNode {
   const text = preview(value, key !== undefined && !isExpandable(value));
-  const label = key === undefined ? text : `${key}: ${text}`;
+  const label = key === undefined ? text : `${key}${separator} ${text}`;
   const content = (
     <span className="font-mono wrap-anywhere">
-      {key !== undefined && <span className="font-bold">{key}:</span>}
+      {key !== undefined && (
+        <span className="font-bold">
+          {key}
+          {separator}
+        </span>
+      )}
       {key !== undefined && " "}
       {text}
     </span>
@@ -141,7 +159,7 @@ export function toTreeNode(value: ConsoleValue, id: string, key?: string): TreeN
     value.kind === "error"
       ? stackNodes(id, value.stack ?? "")
       : childrenOf(value).map((child, index) =>
-          toTreeNode(child.value, `${id}/${index}`, child.key),
+          toTreeNode(child.value, `${id}/${index}`, child.key, child.separator),
         );
   return { id, label, content, children };
 }

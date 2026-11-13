@@ -169,22 +169,22 @@ export function ConsoleEntryList({
   const lastRowRef = useRef<HTMLLIElement>(null);
   const isAtBottom = useRef(false);
   const lastId = visible.at(-1)?.id;
-  useEffect(() => {
-    const row = lastRowRef.current;
-    if (!row) return;
-    if (isAtBottom.current) row.scrollIntoView({ block: "nearest" });
-    const observer = new IntersectionObserver(([observed]) => {
-      isAtBottom.current = observed?.isIntersecting ?? false;
-    });
-    observer.observe(row);
-    return () => observer.disconnect();
-  }, [lastId]);
-
   const paneState: ToolPaneState =
     state ??
     (entries.length === 0
       ? { kind: "empty", message: "まだログがありません。" }
       : { kind: "ready" });
+  // 読み込み中とエラーの間は行の要素が消えるので、戻ったときに作り直した要素を見直す
+  useEffect(() => {
+    const row = lastRowRef.current;
+    if (!row) return;
+    if (isAtBottom.current) row.scrollIntoView({ block: "nearest" });
+    const observer = new IntersectionObserver((records) => {
+      isAtBottom.current = records.at(-1)?.isIntersecting ?? false;
+    });
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [lastId, paneState.kind]);
   const toolbar = (
     <div
       aria-label="表示するログレベル"
@@ -207,7 +207,10 @@ export function ConsoleEntryList({
           >
             <CheckIcon isChecked={isOn} />
             {level}
-            <span className="text-caption">{count}</span>
+            <span className="text-caption">
+              {count}
+              <span className="sr-only"> 件</span>
+            </span>
           </button>
         );
       })}

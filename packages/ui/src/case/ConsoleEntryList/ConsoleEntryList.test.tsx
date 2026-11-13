@@ -3,76 +3,117 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
-import { ConsoleEntryList } from "./ConsoleEntryList";
+import { type ConsoleEntry, ConsoleEntryList } from "./ConsoleEntryList";
 import * as stories from "./ConsoleEntryList.stories";
 import { type ConsoleValue, preview } from "./consoleValue";
 
 const { Default, ErrorOnly, Empty, Loading, Error } = composeStories(stories);
 
 const rows = () => within(screen.getByRole("list")).getAllByRole("listitem");
-const filter = (name: RegExp) => screen.getByRole("button", { name });
+const row = (index: number) => rows()[index] as HTMLElement;
+const levelButton = (name: RegExp) => screen.getByRole("button", { name });
+const treeItem = (name: string | RegExp) => screen.getByRole("treeitem", { name });
+
+/**
+ * 描画のフレームを count 回待つ。IntersectionObserver の知らせは描画の後に届くので、
+ * スクロールした後に数フレーム待てば、コンポーネントの observer の知らせが届いている。
+ */
+const nextFrames = (count: number) =>
+  new Promise<void>((resolve) => {
+    const step = (rest: number) =>
+      rest === 0 ? resolve() : requestAnimationFrame(() => step(rest - 1));
+    step(count);
+  });
 
 describe("ConsoleEntryList", () => {
   it("行ごとに、ログレベルの名前と印を出し、warn と error の行には状態の色を当てる", () => {
     render(<Default />);
-    const levels = rows().map((row) => row.querySelector(".sr-only")?.textContent);
-    expect(levels).toEqual(["デバッグ", "ログ", "情報", "警告", "エラー", "ログ", "ログ"]);
-    expect(rows()[3]).toHaveClass("border-warning", "bg-warning-surface");
-    expect(rows()[4]).toHaveClass("border-danger", "bg-danger-surface");
-    expect(rows()[4]?.querySelector("svg")).toHaveClass("text-danger");
+    const levels = rows().map((item) => item.querySelector(".sr-only")?.textContent);
+    expect(levels).toStrictEqual(["デバッグ", "ログ", "情報", "警告", "エラー", "ログ", "ログ"]);
+    expect(row(3)).toHaveClass("border-warning", "bg-warning-surface");
+    expect(row(4)).toHaveClass("border-danger", "bg-danger-surface");
+    expect(row(4).querySelector("svg")).toHaveClass("text-danger");
   });
 
-  it("行に出力元を出す", () => {
-    render(<Default />);
-    expect(within(rows()[2] as HTMLElement).getByText("プレビュー")).toBeInTheDocument();
-    expect(within(rows()[0] as HTMLElement).getByText("server.js")).toBeInTheDocument();
+  it("行に、時刻があれば時刻を、出力元を出す", () => {
+    const entries: ConsoleEntry[] = [
+      { id: "1", level: "log", source: "server.js", time: "10:00:00.120", args: [] },
+      { id: "2", level: "log", source: "プレビュー", args: [] },
+    ];
+    render(<ConsoleEntryList entries={entries} />);
+    expect(row(0)).toHaveTextContent("10:00:00.120server.js");
+    expect(row(1)).toHaveTextContent(/^ログプレビュー$/);
   });
 
   it("ログレベルのボタンを押すと、そのログレベルの行を隠し、もう 1 回押すと戻す", async () => {
     render(<Default />);
-    expect(filter(/^log/)).toHaveAttribute("aria-pressed", "true");
-    expect(filter(/^log/)).toHaveAccessibleName("log 3");
-    await userEvent.click(filter(/^log/));
-    expect(filter(/^log/)).toHaveAttribute("aria-pressed", "false");
+    expect(levelButton(/^log/)).toHaveAttribute("aria-pressed", "true");
+    expect(levelButton(/^log/)).toHaveAccessibleName("log 3 件");
+    await userEvent.click(levelButton(/^log/));
+    expect(levelButton(/^log/)).toHaveAttribute("aria-pressed", "false");
     expect(rows()).toHaveLength(4);
-    await userEvent.click(filter(/^log/));
+    await userEvent.click(levelButton(/^log/));
     expect(rows()).toHaveLength(7);
   });
 
   it("error だけを選ぶと、error の行だけを表示する", () => {
     render(<ErrorOnly />);
     expect(rows()).toHaveLength(1);
-    expect(rows()[0]).toHaveTextContent("TypeError: Cannot read properties of undefined");
+    expect(row(0)).toHaveTextContent("TypeError: Cannot read properties of undefined");
   });
 
   it("全てのログレベルを外すと、行の代わりに文を出す", async () => {
     render(<ErrorOnly />);
-    await userEvent.click(filter(/^error/));
+    await userEvent.click(levelButton(/^error/));
     expect(screen.getByText("選んだログレベルの行はありません。")).toBeInTheDocument();
   });
 
   it("入れ子のオブジェクトを開くと、項目の名前と値をツリーで出す", async () => {
     render(<Default />);
-    const root = screen.getByRole("treeitem", { name: /^\{id: 42/ });
+    const root = treeItem(/^\{id: 42/);
     expect(root).toHaveAttribute("aria-expanded", "false");
     await userEvent.click(root);
-    expect(screen.getByRole("treeitem", { name: 'name: "山田 花子"' })).toBeInTheDocument();
-    const session = screen.getByRole("treeitem", { name: /^session: \{expiresAt/ });
-    await userEvent.click(session);
-    expect(screen.getByRole("treeitem", { name: "refresh: true" })).toBeInTheDocument();
+    expect(treeItem('name: "山田 花子"')).toBeInTheDocument();
+    await userEvent.click(treeItem(/^session: \{expiresAt/));
+    expect(treeItem("refresh: true")).toBeInTheDocument();
   });
 
-  it("キーボードだけで、フィルタを切り替え、ツリーを開閉できる", async () => {
+  it("Map を開くと「key => 値」で、Error を開くとスタックの行で出す", async () => {
+    render(<Default />);
+    await userEvent.click(treeItem(/^Map\(2\)/));
+    expect(treeItem('"client.example" => 2')).toBeInTheDocument();
+    await userEvent.click(treeItem(/^TypeError/));
+    expect(treeItem(/^at callback \(\/home\/project\/src\/callback\.js/)).toBeInTheDocument();
+  });
+
+  it("中身の無い配列と、stack の無い Error は、ツリーにせず 1 行で出す", () => {
+    const entries: ConsoleEntry[] = [
+      {
+        id: "1",
+        level: "error",
+        source: "server.js",
+        args: [
+          { kind: "array", items: [] },
+          { kind: "error", name: "Error", message: "x", stack: "" },
+        ],
+      },
+    ];
+    render(<ConsoleEntryList entries={entries} />);
+    expect(screen.queryByRole("tree")).toBeNull();
+    expect(row(0)).toHaveTextContent("Array(0) []Error: x");
+  });
+
+  it("キーボードだけで、ログレベルを切り替え、ツリーを開閉できる", async () => {
     render(<Default />);
     await userEvent.tab();
-    expect(filter(/^debug/)).toHaveFocus();
+    expect(levelButton(/^debug/)).toHaveFocus();
     await userEvent.keyboard(" ");
-    expect(filter(/^debug/)).toHaveAttribute("aria-pressed", "false");
+    expect(levelButton(/^debug/)).toHaveAttribute("aria-pressed", "false");
     expect(rows()).toHaveLength(6);
     await userEvent.keyboard("{Enter}");
-    expect(filter(/^debug/)).toHaveAttribute("aria-pressed", "true");
+    expect(levelButton(/^debug/)).toHaveAttribute("aria-pressed", "true");
     for (let i = 0; i < 5; i++) await userEvent.tab();
-    const root = screen.getByRole("treeitem", { name: /^\{id: 42/ });
+    const root = treeItem(/^\{id: 42/);
     expect(root).toHaveFocus();
     await userEvent.keyboard("{ArrowRight}");
     expect(root).toHaveAttribute("aria-expanded", "true");
@@ -80,7 +121,7 @@ describe("ConsoleEntryList", () => {
     expect(root).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("フィルタのボタンとツリーの項目は、44 px 以上の高さで押せる", () => {
+  it("ログレベルのボタンとツリーの項目は、44 px 以上の高さで押せる", () => {
     render(<Default />);
     for (const button of within(screen.getByRole("group")).getAllByRole("button")) {
       expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
@@ -91,33 +132,30 @@ describe("ConsoleEntryList", () => {
   });
 
   it("最後の行が見えているときだけ、行が増えると一番下へ送る", async () => {
-    const entriesOf = (length: number) =>
+    const entriesOf = (length: number): ConsoleEntry[] =>
       Array.from({ length }, (_, index) => ({
         id: String(index),
-        level: "log" as const,
+        level: "log",
         source: "server.js",
-        args: [{ kind: "number" as const, value: index }],
+        args: [{ kind: "number", value: index }],
       }));
-    const many = entriesOf(30);
-    const added = (count: number) => entriesOf(30 + count);
-    const frame = (entries: typeof many) => (
+    const frame = (length: number) => (
       <div className="h-48 overflow-y-auto" data-testid="frame">
-        <ConsoleEntryList entries={entries} />
+        <ConsoleEntryList entries={entriesOf(length)} />
       </div>
     );
-    const { rerender } = render(frame(many));
+    const { rerender } = render(frame(30));
     const box = screen.getByTestId("frame");
-    const isAtBottom = () => box.scrollHeight - box.scrollTop - box.clientHeight < 2;
 
     box.scrollTop = box.scrollHeight;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    rerender(frame(added(1)));
-    await expect.poll(isAtBottom).toBe(true);
+    await nextFrames(3);
+    rerender(frame(31));
+    await expect.poll(() => box.scrollHeight - box.scrollTop - box.clientHeight).toBeLessThan(2);
 
     box.scrollTop = 0;
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    rerender(frame(added(2)));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await nextFrames(3);
+    rerender(frame(32));
+    await nextFrames(3);
     expect(box.scrollTop).toBe(0);
   });
 
@@ -135,23 +173,44 @@ describe("ConsoleEntryList", () => {
 });
 
 describe("preview", () => {
+  const numbers = (count: number): ConsoleValue[] =>
+    Array.from({ length: count }, (_, value) => ({ kind: "number", value }));
   const cases: [ConsoleValue, boolean, string][] = [
     [{ kind: "string", value: "a" }, false, "a"],
     [{ kind: "string", value: "a" }, true, '"a"'],
     [{ kind: "number", value: -0 }, false, "-0"],
     [{ kind: "bigint", value: "10" }, false, "10n"],
+    [{ kind: "boolean", value: false }, false, "false"],
+    [{ kind: "null" }, false, "null"],
+    [{ kind: "undefined" }, false, "undefined"],
     [{ kind: "symbol", description: "id" }, false, "Symbol(id)"],
     [{ kind: "function", name: "" }, false, "ƒ (anonymous)()"],
+    [{ kind: "function", name: "render" }, false, "ƒ render()"],
+    [{ kind: "text", value: "<div>" }, false, "<div>"],
+    [{ kind: "circular" }, false, "[Circular]"],
     [{ kind: "array", items: [] }, true, "Array(0)"],
+    [{ kind: "array", items: numbers(6) }, false, "Array(6) [0, 1, 2, 3, 4, …]"],
+    [{ kind: "set", items: numbers(2) }, false, "Set(2) {0, 1}"],
+    [{ kind: "set", items: numbers(2) }, true, "Set(2)"],
     [
       {
-        kind: "array",
-        items: [1, 2, 3, 4, 5, 6].map((value) => ({ kind: "number", value }) as const),
+        kind: "map",
+        entries: [{ key: { kind: "string", value: "a" }, value: { kind: "number", value: 0 } }],
       },
       false,
-      "Array(6) [1, 2, 3, 4, 5, …]",
+      'Map(1) {"a" => 0}',
     ],
+    [{ kind: "map", entries: [] }, true, "Map(0)"],
+    [{ kind: "object", entries: [] }, true, "{…}"],
     [{ kind: "object", className: "Foo", entries: [] }, true, "Foo {…}"],
+    [
+      {
+        kind: "object",
+        entries: numbers(6).map((value, index) => ({ key: `k${index}`, value })),
+      },
+      false,
+      "{k0: 0, k1: 1, k2: 2, k3: 3, k4: 4, …}",
+    ],
     [{ kind: "error", name: "Error", message: "x" }, false, "Error: x"],
   ];
   it.each(cases)("%j を、入れ子の中か %s で 1 行の文字にする", (value, isNested, expected) => {
