@@ -37,7 +37,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - サーバー側の永続的な状態。訪問者の identity を前提にする機能を作らないので、求める機能がない。
 - サイト全体の SPA 化。
 - 設計不変量のほかに、将来のために先に作っておくもの。
-- 実行環境の方式と、プレイグラウンドのツールの設計。実行環境の方式を決める ADR と、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md) が持つ。
+- 実行環境の方式と、プレイグラウンドのツールの設計。実行環境の方式を決める ADR と、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md) が持つ。
 
 ## Assumptions and Constraints
 
@@ -140,7 +140,7 @@ flowchart TD
 - [Content Model](../../packages/content-model/DesignDoc.md): schema、`contentId`、関係グラフ、`ContentRef` への正規化
 - [UI](../../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
 - [トップの庭](features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
-- [プレイグラウンド](features/playground/DesignDoc.md): アプリの構成、パス、実行環境のインターフェース、プロジェクトと保存の形
+- [プレイグラウンド](../../apps/playground/DesignDoc.md): アプリの構成、パス、実行環境のインターフェース、プロジェクトと保存の形
 - [基盤](../../infra/DesignDoc.md): Terraform の構成、state backend、deploy と apply の流れ
 
 ## Interfaces
@@ -153,7 +153,7 @@ ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-work
 プレイグラウンドは 1 つのアプリ（`apps/playground`）で、全てのツールを `play.fukuemon.dev` に置く。  
 cross-origin isolation のヘッダは、Node の実行環境のパス（`/node/*`）にだけ返す。  
 ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../adr/0034-playground-origin-and-embedding.md)  
-ツールのパスは、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md#アプリとパス) にある。
+ツールのパスは、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#アプリとパス) にある。
 
 | ホスト名              | 置くもの                                       | アクセスできる人                           |
 | --------------------- | ---------------------------------------------- | ------------------------------------------ |
@@ -193,7 +193,7 @@ URL の規約は [context/codebase.md](../../context/codebase.md#url) にある�
 - 読む順は、記事の frontmatter の `order` で決まる。
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
-- 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事のディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](features/playground/DesignDoc.md#プロジェクト) にある。
+- 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事のディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#プロジェクト) にある。
 
 書き方は [context/conventions.md](../../context/conventions.md) にある。
 
