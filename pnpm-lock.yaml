@@ -71,6 +71,21 @@ importers:
 
   apps/playground:
     dependencies:
+      '@codemirror/lang-sql':
+        specifier: 6.10.0
+        version: 6.10.0
+      '@fukuemon/playground-project':
+        specifier: workspace:*
+        version: link:../../packages/playground-project
+      '@fukuemon/sql-runtime':
+        specifier: workspace:*
+        version: link:../../packages/sql-runtime
+      '@fukuemon/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      codemirror:
+        specifier: 6.0.2
+        version: 6.0.2
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -84,6 +99,9 @@ importers:
       '@rolldown/plugin-babel':
         specifier: ^0.3.1
         version: 0.3.1(@babel/core@7.29.7)(@babel/runtime@7.29.10)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))(rolldown@1.2.19)
+      '@tailwindcss/vite':
+        specifier: ^4.3.3
+        version: 4.3.3(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -102,6 +120,9 @@ importers:
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.3
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -177,6 +198,44 @@ importers:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
+    devDependencies:
+      '@fukuemon/config':
+        specifier: workspace:*
+        version: link:../config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.11
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/browser-preview@5.0.5(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/playground-project:
+    dependencies:
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@fukuemon/config':
+        specifier: workspace:*
+        version: link:../config
+      '@vitest/coverage-v8':
+        specifier: ^4.1.11
+        version: 4.1.11(vitest@4.1.11)
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/browser-preview@5.0.5(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/sql-runtime:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.16
+        version: 0.5.16
     devDependencies:
       '@fukuemon/config':
         specifier: workspace:*
@@ -632,6 +691,33 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@codemirror/autocomplete@6.20.4':
+    resolution: {integrity: sha512-yF8RhOf2SXlg00+qtupzLhrglcas61boqaONiNcbPIebHCpJocpqTBA6dyrtUrQO47hqyTdeob/3XnYilT7TaQ==}
+
+  '@codemirror/commands@6.11.1':
+    resolution: {integrity: sha512-O/4hG3SC1YwcmQ0d2UVNDs+AsaNWd1iHVxbTeEBuqH+6bExAiPK3iS/BvpY6rZGURALv4ZD3sIgcCmRvw3ehBg==}
+
+  '@codemirror/lang-sql@6.10.0':
+    resolution: {integrity: sha512-6ayPkEd/yRw0XKBx5uAiToSgGECo/GY2NoJIHXIIQh1EVwLuKoU8BP/qK0qH5NLXAbtJRLuT73hx7P9X34iO4w==}
+
+  '@codemirror/language@6.13.1':
+    resolution: {integrity: sha512-zfvU2r3TyylQLMj/te+5CnQ0rSqZi8B1oTCBbQkagcLW4Xc6imab6qN+pEJhsuNOLaJqiRyBXp9UhWA1DhVvDw==}
+
+  '@codemirror/lint@6.9.8':
+    resolution: {integrity: sha512-qNvtcE73xUto/D1RvtgSRI4A1Hg8ekxlvtZpjHpdpisLBnhyu82EUEJMEgaxkjuQCA8vqnrylENWKOsEDCOHcw==}
+
+  '@codemirror/search@6.7.2':
+    resolution: {integrity: sha512-gUYkYhT2+n/+VGZ+8EzE5WFkYZUZYm1VOKDudIsNqh42uRVQJ0a6Yss9sdKT3MeOYfuL1N6AZA57oza0Oyr0LA==}
+
+  '@codemirror/state@6.7.6':
+    resolution: {integrity: sha512-kAz+AncRtKuIknedxT1bq4XwXv4UowhbkHU1myPrtVb/jZtImWuV5BXzv5vK6i3kYACsdiZiQKFQQ5Mq7elW8w==}
+
+  '@codemirror/streamparser@6.0.0':
+    resolution: {integrity: sha512-JTFPF6xrfjt0mnfGPgzcLiMwYmvIyNaoizp8BYzv8FE8KrT6GBGDZ190rtt+O7Wke3gG/MFHyiY9YGNeimof4w==}
+
+  '@codemirror/view@6.43.15':
+    resolution: {integrity: sha512-HHsfpqFeHyXLs983pSRe38Xajs0vFWZQ2BuX0m7Ki8w3jZ5iD8cuR3lBz2/5/X53Dhf32SBHKh6rtSTB6tKeGw==}
+
   '@commitlint/cli@21.2.3':
     resolution: {integrity: sha512-5yOX6IRjcrIReCxpyAd04hgI/yhUMpVBJ/ouwFV0wk9yx5+fYRDWZWJ5h55Tbedgfol+5m2mU5nqzbB8g3v0vQ==}
     engines: {node: '>=22.12.0'}
@@ -727,6 +813,9 @@ packages:
 
   '@dual-bundle/import-meta-resolve@4.2.1':
     resolution: {integrity: sha512-id+7YRUgoUX6CgV0DtuhirQWodeeA7Lf4i2x71JS/vtA5pRb/hIGWlw+G6MeXvsM+MXrz0VAydTGElX1rAfgPg==}
+
+  '@electric-sql/pglite@0.5.16':
+    resolution: {integrity: sha512-Nj8KcIsJL748W408U2N8q4+9IlONdpRIU8MJypIAAINMJ5nqKyqpX7Mgg/5XKkXiAib3AoZGR6hnJFlrlLBrcg==}
 
   '@emmetio/abbreviation@2.3.3':
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -1476,6 +1565,18 @@ packages:
 
   '@kvs/types@2.2.2':
     resolution: {integrity: sha512-5lmBuah+wOdypBf0O9t6BoHrnq5hX5MlhEPTDPBNKN38ayQwVc5gYgJOBR3Dg4EF7OwL+1c7JNtWXQEJXXVXlg==}
+
+  '@lezer/common@1.5.5':
+    resolution: {integrity: sha512-Pw7PVCndruF1pb3ebCxpSVpkMHSDjwRCLcTRw+RizUKco5QbWylwq2g4lnG/RYN7yTTQDXE9F77MwtkAyphrjg==}
+
+  '@lezer/highlight@1.2.5':
+    resolution: {integrity: sha512-O1GMVKgtf5YspFaRzpmqkVgMtIk2HG9uMAbH6wdAIdNh3TVzCsch/+cRi+6l2//UGDKe6NB9BW3cvuR5ezMQ0w==}
+
+  '@lezer/lr@1.4.12':
+    resolution: {integrity: sha512-On9HU4oMMiHPMkQDgoTnGahjgG5n/MkN38CgG77sMraKLL+3JBbeQNi1FcCXV9QRqwF9/BUXP3caHyJC1fBOTQ==}
+
+  '@marijn/find-cluster-break@1.0.4':
+    resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
 
   '@mdx-js/react@3.1.1':
     resolution: {integrity: sha512-f++rKLQgUVYDAtECQ6fn/is15GkEH9+nZPM3MS0RcxVqoTfawHvDlSCH7JbMhAM6uJ32v3eXLvLmLvjGu7PTQw==}
@@ -3639,6 +3740,9 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
+  codemirror@6.0.2:
+    resolution: {integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==}
+
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
@@ -3706,6 +3810,9 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  crelt@1.0.7:
+    resolution: {integrity: sha512-aK6BbWfhf4U/wCcLHKPJl/xa6VkVstRaPywWtMKGwuOLc/wZTyQYuoxgvZnNsBvv7Kg3YTBQYYBCggcviQczuA==}
 
   crossws@0.3.5:
     resolution: {integrity: sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA==}
@@ -5250,6 +5357,9 @@ packages:
   structured-source@4.0.0:
     resolution: {integrity: sha512-qGzRFNJDjFieQkl/sVOI2dUjHKRyL9dAJi2gCPGJLbJHBIkyOHxjuocpIEfbLioX+qSJpvbYdT49/YCdMznKxA==}
 
+  style-mod@4.1.4:
+    resolution: {integrity: sha512-XXWIQt633/EpAFx8aZDOTjBzrCaGmhvEQlQo6MVPfa2OzO2cWo+4hV9h+6UkHYlXGfy+ODXKUdP7Pthmcu5ATw==}
+
   supports-color@10.2.2:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
     engines: {node: '>=18'}
@@ -5851,6 +5961,9 @@ packages:
   vscode-uri@3.2.0:
     resolution: {integrity: sha512-m2gXo3bn0G1kT9InzMf07fTbqMbGtyckj3bH5ktLO+1Ssv+yiATZ4dhwaQv9UZWxJh6E9IFGnQyjgWVDWVBDrg==}
 
+  w3c-keyname@2.2.8:
+    resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
+
   walk-up-path@4.0.0:
     resolution: {integrity: sha512-3hu+tD8YzSLGuFYtPRb48vdhKMi0KQV5sn+uWr8+7dMEq/2G/dtLrdDinkLjqq5TIbIBjYJ4Ax/n3YiaW7QM8A==}
     engines: {node: 20 || >=22}
@@ -6409,6 +6522,64 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260828.1':
     optional: true
 
+  '@codemirror/autocomplete@6.20.4':
+    dependencies:
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      '@lezer/common': 1.5.5
+
+  '@codemirror/commands@6.11.1':
+    dependencies:
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      '@lezer/common': 1.5.5
+
+  '@codemirror/lang-sql@6.10.0':
+    dependencies:
+      '@codemirror/autocomplete': 6.20.4
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@lezer/common': 1.5.5
+      '@lezer/highlight': 1.2.5
+      '@lezer/lr': 1.4.12
+
+  '@codemirror/language@6.13.1':
+    dependencies:
+      '@codemirror/state': 6.7.6
+      '@codemirror/streamparser': 6.0.0
+      '@codemirror/view': 6.43.15
+      '@lezer/common': 1.5.5
+      '@lezer/highlight': 1.2.5
+      '@lezer/lr': 1.4.12
+      style-mod: 4.1.4
+
+  '@codemirror/lint@6.9.8':
+    dependencies:
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      crelt: 1.0.7
+
+  '@codemirror/search@6.7.2':
+    dependencies:
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      crelt: 1.0.7
+
+  '@codemirror/state@6.7.6':
+    dependencies:
+      '@marijn/find-cluster-break': 1.0.4
+
+  '@codemirror/streamparser@6.0.0': {}
+
+  '@codemirror/view@6.43.15':
+    dependencies:
+      '@codemirror/state': 6.7.6
+      crelt: 1.0.7
+      style-mod: 4.1.4
+      w3c-keyname: 2.2.8
+
   '@commitlint/cli@21.2.3(@types/node@26.6.5)(conventional-commits-parser@7.1.3)(typescript@6.0.2)':
     dependencies:
       '@commitlint/config-conventional': 21.2.3
@@ -6535,6 +6706,8 @@ snapshots:
   '@ctrl/tinycolor@4.2.0': {}
 
   '@dual-bundle/import-meta-resolve@4.2.1': {}
+
+  '@electric-sql/pglite@0.5.16': {}
 
   '@emmetio/abbreviation@2.3.3':
     dependencies:
@@ -7110,6 +7283,18 @@ snapshots:
       '@kvs/types': 2.2.2
 
   '@kvs/types@2.2.2': {}
+
+  '@lezer/common@1.5.5': {}
+
+  '@lezer/highlight@1.2.5':
+    dependencies:
+      '@lezer/common': 1.5.5
+
+  '@lezer/lr@1.4.12':
+    dependencies:
+      '@lezer/common': 1.5.5
+
+  '@marijn/find-cluster-break@1.0.4': {}
 
   '@mdx-js/react@3.1.1(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
@@ -8365,7 +8550,7 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
-      '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))(vitest@5.0.5)
+      '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))(vitest@4.1.11)
       vitest: 4.1.11(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
@@ -8397,6 +8582,24 @@ snapshots:
       - utf-8-validate
       - vite
     optional: true
+
+  '@vitest/browser@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))(vitest@4.1.11)':
+    dependencies:
+      '@blazediff/core': 1.10.0
+      '@vitest/mocker': 5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))
+      '@vitest/ui': 5.0.5(vitest@4.1.11)
+      '@vitest/utils': 5.0.5
+      magic-string: 1.4.5
+      pngjs: 7.0.0
+      sirv: 3.0.2
+      tinyrainbow: 3.2.0
+      vitest: 4.1.11(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))
+      ws: 8.22.0
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
 
   '@vitest/browser@5.0.5(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))(vitest@5.0.5)':
     dependencies:
@@ -8538,6 +8741,16 @@ snapshots:
   '@vitest/spy@4.1.11': {}
 
   '@vitest/spy@5.0.5': {}
+
+  '@vitest/ui@5.0.5(vitest@4.1.11)':
+    dependencies:
+      '@vitest/utils': 5.0.5
+      fflate: 0.8.3
+      flatted: 3.4.4
+      pathe: 2.0.3
+      sirv: 3.0.2
+      tinyrainbow: 3.2.0
+      vitest: 4.1.11(@types/node@26.6.5)(@vitest/browser-playwright@5.0.5(playwright@1.64.1)(vite@8.2.2(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@5.0.5))(@vitest/browser-preview@5.0.5)(@vitest/coverage-v8@4.1.11)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@volar/typescript@2.4.31(typescript@6.0.2))(esbuild@0.28.2)(jiti@2.7.0)(typescript@6.0.2)(yaml@2.9.1))
 
   '@vitest/ui@5.0.5(vitest@5.0.5)':
     dependencies:
@@ -8995,6 +9208,16 @@ snapshots:
 
   clsx@2.1.1: {}
 
+  codemirror@6.0.2:
+    dependencies:
+      '@codemirror/autocomplete': 6.20.4
+      '@codemirror/commands': 6.11.1
+      '@codemirror/language': 6.13.1
+      '@codemirror/lint': 6.9.8
+      '@codemirror/search': 6.7.2
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -9047,6 +9270,8 @@ snapshots:
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 6.0.2
+
+  crelt@1.0.7: {}
 
   crossws@0.3.5:
     dependencies:
@@ -10978,6 +11203,8 @@ snapshots:
     dependencies:
       boundary: 2.0.0
 
+  style-mod@4.1.4: {}
+
   supports-color@10.2.2: {}
 
   supports-color@7.2.0:
@@ -11791,6 +12018,8 @@ snapshots:
   vscode-nls@5.2.0: {}
 
   vscode-uri@3.2.0: {}
+
+  w3c-keyname@2.2.8: {}
 
   walk-up-path@4.0.0: {}
 

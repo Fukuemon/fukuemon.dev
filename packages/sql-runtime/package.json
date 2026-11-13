@@ -1,0 +1,24 @@
+{
+  "name": "@fukuemon/sql-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.16"
+  },
+  "devDependencies": {
+    "@fukuemon/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.1.11",
+    "typescript": "6.0.2",
+    "vitest": "^4.1.11"
+  }
+}

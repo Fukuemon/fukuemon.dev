@@ -13,18 +13,25 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
+    "@codemirror/lang-sql": "6.10.0",
+    "@fukuemon/playground-project": "workspace:*",
+    "@fukuemon/sql-runtime": "workspace:*",
+    "@fukuemon/ui": "workspace:*",
+    "codemirror": "6.0.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@fukuemon/config": "workspace:*",
     "@rolldown/plugin-babel": "^0.3.1",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.3.0",
     "@vitest/coverage-v8": "^4.1.11",
     "babel-plugin-react-compiler": "^1.0.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "6.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:",
