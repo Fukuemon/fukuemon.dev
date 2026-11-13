@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TreeView.stories";
 
-const { Collapsed, Expanded } = composeStories(stories);
+const { Collapsed, Compact, Expanded, WithContent } = composeStories(stories);
 
 const item = (name: string) => screen.getByRole("treeitem", { name });
 
@@ -80,5 +80,21 @@ describe("TreeView", () => {
     await userEvent.click(item("src"));
     expect(item("src")).toHaveAttribute("aria-expanded", "true");
     expect(item("index.ts")).toBeInTheDocument();
+  });
+
+  it("density を compact にすると、項目は 24 px の高さと 12 px の文字になる", () => {
+    render(<Compact />);
+    const height = item("src").getBoundingClientRect().height;
+    expect(height).toBeGreaterThanOrEqual(24);
+    expect(height).toBeLessThan(26);
+    expect(getComputedStyle(item("src")).fontSize).toBe("12px");
+  });
+
+  it("content を渡すと、label の代わりに content を描き、タイプアヘッドは label で探す", async () => {
+    render(<WithContent />);
+    expect(item("user: {id: 42}").querySelector(".font-bold")).toHaveTextContent("user:");
+    await userEvent.tab();
+    await userEvent.keyboard("n");
+    expect(item("名前の項目")).toHaveFocus();
   });
 });

@@ -54,7 +54,7 @@ describe("コードを動かす画面", () => {
   it("ファイルの削除を選ぶと確認のダイアログを出し、やめると木に残り、確定すると木から消える", async () => {
     await page.viewport(1280, 900);
     render(<Default />);
-    const tree = screen.getByRole("tree");
+    const tree = screen.getByRole("tree", { name: "ファイル" });
     const openMenu = () =>
       userEvent.click(screen.getByRole("button", { name: "server.js の操作" }));
 

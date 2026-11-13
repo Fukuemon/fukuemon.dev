@@ -32,6 +32,17 @@ export { TreeView } from "./base/TreeView/TreeView";
 export type { TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
 export { ConfirmDialog } from "./case/ConfirmDialog/ConfirmDialog";
 export type { ConfirmDialogProps } from "./case/ConfirmDialog/ConfirmDialog";
+export { ConsoleEntryList } from "./case/ConsoleEntryList/ConsoleEntryList";
+export type {
+  ConsoleEntry,
+  ConsoleEntryListProps,
+  ConsoleLevel,
+} from "./case/ConsoleEntryList/ConsoleEntryList";
+export type {
+  ConsoleMapEntry,
+  ConsoleProperty,
+  ConsoleValue,
+} from "./case/ConsoleEntryList/consoleValue";
 export { EditorFrame } from "./case/EditorFrame/EditorFrame";
 export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFrame";
 export { FileTree } from "./case/FileTree/FileTree";

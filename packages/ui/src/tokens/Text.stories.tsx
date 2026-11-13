@@ -42,6 +42,18 @@ function TextTokens() {
         <code className="font-mono text-code-dense text-text-secondary">code-dense（等幅）</code>
         <p className="font-mono text-code-dense">content-type: application/json</p>
       </section>
+      <section className="flex flex-col gap-2">
+        <code className="font-mono text-code-dense text-text-secondary">
+          compact（コードを動かす画面だけ）
+        </code>
+        <p className="font-mono text-compact">10:00:00.120 server.js</p>
+      </section>
+      <section className="flex flex-col gap-2">
+        <code className="font-mono text-code-dense text-text-secondary">
+          label-compact（コードを動かす画面だけ）
+        </code>
+        <p className="text-label-compact">error 1</p>
+      </section>
     </div>
   );
 }

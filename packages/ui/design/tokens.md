@@ -32,12 +32,12 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 | 操作       | `current-page`       | 目次の現在地                                                                                                                  |
 | フォーカス | `focus-outline`      | フォーカスの表示の外側の枠。画面のコードは `focus-ring` のユーティリティで書き、この名前を直に使わない                        |
 | フォーカス | `focus-halo`         | フォーカスの表示の、要素に接する輪。`focus-ring` のユーティリティが使う                                                       |
-| 状態       | `danger`             | エラーの文と印、データを失う操作のボタンの面                                                                                  |
+| 状態       | `danger`             | エラーの文と印、データを失う操作のボタンの面、コンソールの error の行の印と罫                                                 |
 | 状態       | `danger-hover`       | `danger` のボタンの hover の面                                                                                                |
-| 状態       | `warning`            | 注意の文と印                                                                                                                  |
+| 状態       | `warning`            | 注意の文と印、コンソールの warn の行の印と罫                                                                                  |
 | 状態       | `success`            | 成功の文と印                                                                                                                  |
-| 状態       | `info`               | 情報の文と印、コードの系統のファイルの印                                                                                      |
-| 状態       | `<状態>-surface`     | `danger`、`warning`、`success`、`info` の薄い面。注意書きと状態のラベルの地                                                   |
+| 状態       | `info`               | 情報の文と印、コードの系統のファイルの印、コンソールの info の行の印                                                          |
+| 状態       | `<状態>-surface`     | `danger`、`warning`、`success`、`info` の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面              |
 | 区別       | `categorical-1`〜`6` | 意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる                                      |
 | コード     | `code-surface` など  | 記事のコードブロック、エディタ、端末の字句。当てる字句の表は [Design Doc の「コードの色」](../DesignDoc.md#コードの色) にある |
 
@@ -47,6 +47,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
   - 主の色の緑と成功の緑が並ぶ画面では、成功を文と印でも伝える（`STATE-NOT-COLOR-ONLY`）。
 - 訪問済みのリンクは、色で分けない。DADS は訪問済みのリンクの色を分けるが、旧サイトと同じく内部のリンクの色を 1 つに保つ（ADR-0024）。
 - HTTP の状態コードに当てる状態の色は、[Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)の表にある。新しい色のトークンを作らない。
+- コンソールのログレベルに当てる状態の色は、[Design Doc の「コンソールのログレベルの色」](../DesignDoc.md#コンソールのログレベルの色)の表にある。新しい色のトークンを作らない。
 
 セマンティックトークンがプリミティブトークンを参照しない例外は、次の 2 つ。
 
@@ -73,21 +74,26 @@ fukuemon.dev はダークを持つ。
 
 ## 文字
 
-| ユーティリティ    | DADS のスタイル        | 使う場面                                   |
-| ----------------- | ---------------------- | ------------------------------------------ |
-| `text-caption`    | Dns-14N-130            | 補足、図の説明、時刻                       |
-| `text-body-dense` | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行 |
-| `text-body`       | Std-16N-170            | 記事の本文                                 |
-| `text-label`      | Oln-16B-100            | ボタン、タブ                               |
-| `text-heading-sm` | Std-18B-160            | 記事の小見出し、ダイアログの題             |
-| `text-heading-md` | Std-20B-150            | 記事の見出し                               |
-| `text-heading-lg` | Std-28B-150            | 記事の題                                   |
-| `text-code`       | 等幅の 16px のスタイル | コードブロック、エディタ、端末             |
-| `text-code-dense` | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示        |
+| ユーティリティ       | DADS のスタイル        | 使う場面                                                 |
+| -------------------- | ---------------------- | -------------------------------------------------------- |
+| `text-caption`       | Dns-14N-130            | 補足、図の説明、時刻                                     |
+| `text-body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行               |
+| `text-body`          | Std-16N-170            | 記事の本文                                               |
+| `text-label`         | Oln-16B-100            | ボタン、タブ                                             |
+| `text-heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                           |
+| `text-heading-md`    | Std-20B-150            | 記事の見出し                                             |
+| `text-heading-lg`    | Std-28B-150            | 記事の題                                                 |
+| `text-code`          | 等幅の 16px のスタイル | コードブロック、エディタ、端末                           |
+| `text-code-dense`    | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示                      |
+| `text-compact`       | 12px のスタイル        | コードを動かす画面のコンソールの値、時刻、出力元、行の数 |
+| `text-label-compact` | 太字の 13px のスタイル | コードを動かす画面のコンソールのログレベルのボタン       |
 
 - 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0023）。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
+- 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
+- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062）。
+  - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 
 ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
 
