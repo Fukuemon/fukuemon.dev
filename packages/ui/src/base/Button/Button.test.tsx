@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading, SecondaryLoading, DangerLoading, Small } =
+const { Primary, PrimaryDisabled, Loading, SecondaryLoading, DangerLoading, Small, ExtraSmall } =
   composeStories(stories);
 
 describe("Button", () => {
@@ -96,5 +96,12 @@ describe("Button", () => {
     // 見た目の上端と下端の 1px 外を押しても、ボタンに当たる
     expect(document.elementFromPoint(centerX, rect.top - 1)).toBe(button);
     expect(document.elementFromPoint(centerX, rect.bottom + 1)).toBe(button);
+  });
+
+  it("XS のボタンは 28 px の高さと 13 px の文字で押せる（ADR-0062）", () => {
+    render(<ExtraSmall />);
+    const button = screen.getByRole("button", { name: "作る" });
+    expect(button.getBoundingClientRect().height).toBe(28);
+    expect(getComputedStyle(button).fontSize).toBe("13px");
   });
 });

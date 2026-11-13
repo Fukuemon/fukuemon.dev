@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Disclosure.stories";
 
-const { Closed } = composeStories(stories);
+const { Closed, Compact } = composeStories(stories);
 
 describe("Disclosure", () => {
   it("静的に描いた HTML に、要約と中身の文字がある", () => {
@@ -36,5 +36,12 @@ describe("Disclosure", () => {
     expect(summary).toHaveFocus();
     await userEvent.keyboard("{Enter}");
     expect(summary.closest("details")).toHaveAttribute("open");
+  });
+
+  it("density を compact にすると、要約は 24 px の高さと 13 px の文字で押せる（ADR-0062）", () => {
+    render(<Compact />);
+    const summary = document.querySelector("summary") as Element;
+    expect(summary.getBoundingClientRect().height).toBe(24);
+    expect(getComputedStyle(summary).fontSize).toBe("13px");
   });
 });

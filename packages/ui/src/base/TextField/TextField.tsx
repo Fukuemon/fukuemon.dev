@@ -18,11 +18,16 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
   appearance?: "boxed" | "underline";
   /** `underline` の欄の左に置く印。装飾なので読み上げから外す。 */
   leading?: ReactNode;
+  /**
+   * compact は、欄を 28 px の高さ、値と見出しを 13 px にする。`appearance="boxed"` だけに効く。
+   * コードを動かす画面の帯に置く欄（プレビューの URL、ファイルの名前）に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
+   */
+  density?: "default" | "compact";
 };
 
 /**
  * 1 行の文字の入力欄。見出し、補足、誤りの文を欄に結ぶ。
- * 欄の高さは 48px で、押せる領域は 44px より大きい。
+ * 欄の高さは 48px で、押せる領域は 44px より大きい。density が compact のときは 28px にする。
  */
 export function TextField({
   label,
@@ -32,16 +37,25 @@ export function TextField({
   isLabelHidden = false,
   appearance = "boxed",
   leading,
+  density = "default",
   ...props
 }: TextFieldProps) {
+  const isCompact = density === "compact" && appearance === "boxed";
   const id = useId();
   const descriptionId = description === undefined ? undefined : `${id}-description`;
   const errorId = error === undefined ? undefined : `${id}-error`;
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className={clsx("text-label text-text", isLabelHidden && "sr-only")} htmlFor={id}>
+    <div className={clsx("flex flex-col", isCompact ? "gap-1" : "gap-2")}>
+      <label
+        className={clsx(
+          isCompact ? "text-label-compact" : "text-label",
+          "text-text",
+          isLabelHidden && "sr-only",
+        )}
+        htmlFor={id}
+      >
         {label}
         {required && <span className="ml-2 text-caption text-danger">必須</span>}
       </label>
@@ -56,7 +70,8 @@ export function TextField({
           aria-describedby={describedBy}
           aria-invalid={error === undefined ? undefined : true}
           className={clsx(
-            "h-12 rounded-control bg-surface px-4 text-body-dense text-text ring-1 ring-border-field ring-inset",
+            "rounded-control bg-surface text-text ring-1 ring-border-field ring-inset",
+            isCompact ? "h-7 px-2 text-body-compact" : "h-12 px-4 text-body-dense",
             "focus-visible:focus-ring aria-invalid:ring-2 aria-invalid:ring-danger",
             "disabled:bg-surface-disabled disabled:text-text-disabled",
           )}

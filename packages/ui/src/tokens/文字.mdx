@@ -50,7 +50,12 @@ import * as Stories from "./Text.stories";
       [
         "text-label-compact",
         "font-sans text-label-compact",
-        "コードを動かす画面のコンソールのログレベルのボタン（ADR-0062）",
+        "コードを動かす画面の題、タブ、ボタン、開閉の要約（ADR-0062）",
+      ],
+      [
+        "text-body-compact",
+        "font-sans text-body-compact",
+        "コードを動かす画面のファイルの木の行、入力欄の値、表のセル（ADR-0062）",
       ],
       ["text-caption", "font-sans text-caption", "補足、図の説明、時刻"],
     ].map(([name, cls, use]) => (
@@ -86,6 +91,12 @@ import * as Stories from "./Text.stories";
         "font-mono text-compact",
         "コードを動かす画面のコンソールの値、時刻、出力元、行の数（ADR-0062）",
         "10:00:00.120 server.js",
+      ],
+      [
+        "text-code-compact",
+        "font-mono text-code-compact",
+        "コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダ（ADR-0062）",
+        'const 値 = fetch("/api");',
       ],
     ].map(([name, cls, use, sample]) => (
       <div key={name} className="flex flex-col gap-1">

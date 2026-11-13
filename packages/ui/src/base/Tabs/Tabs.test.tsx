@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Tabs.stories";
 
-const { Closable, Fixed, Flush } = composeStories(stories);
+const { Closable, Fixed, Flush, Compact } = composeStories(stories);
 
 describe("Tabs", () => {
   it("flush のパネルは Tab のキーの順に入らず、タブの次に中身へ移る", async () => {
@@ -81,5 +81,16 @@ describe("Tabs", () => {
     expect(rect.height).toBeGreaterThanOrEqual(44);
     await userEvent.click(close!);
     expect(screen.queryByRole("tab", { name: "server.ts" })).toBeNull();
+  });
+
+  it("density を compact にすると、タブは 32 px、閉じるボタンは 28 px で押せ、筆の線は 2px になる（ADR-0062）", () => {
+    render(<Compact />);
+    const tab = screen.getAllByRole("tab")[0] as HTMLElement;
+    expect(tab.getBoundingClientRect().height).toBe(32);
+    expect(getComputedStyle(tab).fontSize).toBe("13px");
+    const close = tab.parentElement?.querySelector("button[aria-hidden]");
+    expect(close?.getBoundingClientRect().height).toBe(28);
+    const stroke = tab.parentElement?.querySelector("span[aria-hidden]");
+    expect(stroke?.getBoundingClientRect().height).toBe(2);
   });
 });

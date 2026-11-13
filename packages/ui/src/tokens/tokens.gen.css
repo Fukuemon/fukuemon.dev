@@ -135,6 +135,8 @@
   --fd-primitive-line-height-100: 1;
   --fd-primitive-line-height-130: 1.3;
   --fd-primitive-line-height-150: 1.5;
+  /* DADS に無い値。13px の等幅の文字を 20px の行に置き、VS Code と StackBlitz に近い行の間隔にする */
+  --fd-primitive-line-height-154: 1.54;
   --fd-primitive-line-height-160: 1.6;
   --fd-primitive-line-height-170: 1.7;
 }

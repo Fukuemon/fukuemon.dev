@@ -19,3 +19,7 @@ export const Closed: Story = { name: "閉じている" };
 export const Open: Story = { name: "開いている", args: { defaultOpen: true } };
 export const Hover: Story = { name: "hover", parameters: { pseudo: { hover: true } } };
 export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };
+export const Compact: Story = {
+  name: "compact",
+  args: { density: "compact", defaultOpen: true },
+};

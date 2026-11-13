@@ -30,6 +30,11 @@ export type TreeViewProps = {
   onRequestDelete?: (id: string) => void;
   /** compact は、項目の高さを 24px 以上、文字を 12px にする。コードを動かす画面のコンソールの値の木に使う。 */
   density?: "default" | "compact";
+  /**
+   * density が compact のときの文字。compact は 12px（コンソールの値の木）、body-compact は 13px（ファイルの木）にする。
+   * body-compact では、選んだ項目を太字にせず、面の色だけで示す。太字にすると名前の幅が変わり、行が揺れるためである。
+   */
+  textSize?: "compact" | "body-compact";
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -72,7 +77,10 @@ export function TreeView({
   onRequestRename,
   onRequestDelete,
   density = "default",
+  textSize = "compact",
 }: TreeViewProps) {
+  const isCompact = density === "compact";
+  const isBodyCompact = isCompact && textSize === "body-compact";
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
   const visible = flatten(items, expanded);
   const [focusedId, setFocusedId] = useState<string | undefined>(undefined);
@@ -161,7 +169,7 @@ export function TreeView({
       aria-label={label}
       className={clsx(
         "flex flex-col text-text",
-        density === "compact" ? "text-compact" : "text-body-dense",
+        isBodyCompact ? "text-body-compact" : isCompact ? "text-compact" : "text-body-dense",
       )}
       role="tree"
     >
@@ -179,8 +187,9 @@ export function TreeView({
             className={clsx(
               // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
               "flex items-start gap-1 rounded-control pr-2 transition-colors focus-visible:focus-ring",
-              density === "compact" ? "min-h-6 py-1" : "min-h-11 py-3",
-              "aria-selected:bg-primary-surface aria-selected:font-bold",
+              isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
+              "aria-selected:bg-primary-surface",
+              !isBodyCompact && "aria-selected:font-bold",
               (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
             )}
             key={node.id}
@@ -197,13 +206,11 @@ export function TreeView({
             role="treeitem"
             // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
             style={{
-              paddingInlineStart: `${(level - 1) * 1.5 + (density === "compact" ? 0 : 0.5)}rem`,
+              paddingInlineStart: `${(level - 1) * 1.5 + (isCompact ? 0 : 0.5)}rem`,
             }}
             tabIndex={node.id === tabStopId ? 0 : -1}
           >
-            <span
-              className={clsx("flex shrink-0 items-center", density === "compact" ? "h-4" : "h-5")}
-            >
+            <span className={clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5")}>
               <svg
                 aria-hidden="true"
                 className={clsx(
@@ -219,12 +226,7 @@ export function TreeView({
               </svg>
             </span>
             {node.icon && (
-              <span
-                className={clsx(
-                  "flex shrink-0 items-center",
-                  density === "compact" ? "h-4" : "h-5",
-                )}
-              >
+              <span className={clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5")}>
                 {node.icon(isOpen)}
               </span>
             )}
