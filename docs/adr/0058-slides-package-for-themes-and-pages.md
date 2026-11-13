@@ -32,6 +32,7 @@
   - 行の番号から何枚目のスライドかを求める関数と、スライドの後ろに断片を足す編集を返す関数
   - Markdown とトークンの CSS から、ページ送りつきの 1 枚の HTML を組み立てる関数
 - package は、`@marp-team/marp-core` に依存する。React、`@fukuemon/ui`、workspace のほかの package には依存しない。
+- ページに入れる CSS は、色、フォーカスの輪、角、動きの時間を、トークンの CSS の変数で参照する。値を書かない。
 - トークンの CSS は、呼ぶ側が文字列で渡す。package は、トークンのファイルを読まない。エディタと `apps/web` のビルドは、同じ `@fukuemon/ui` のトークンの CSS を渡す。
 - package が export する関数は、ブラウザと Node の両方で動く。DOM の API を使わない。組み立てたページに入れるスクリプトは、package の中の別のディレクトリに置き、ブラウザのコードとして型を確認する。
 - package は、テーマの CSS と、ページに入れる CSS とスクリプトを文字列にする Vite の plugin を export する。2 つのアプリのビルドの設定は、plugin を登録するだけにする。
@@ -59,5 +60,5 @@
 ### Negative
 
 - package が 1 つ増え、依存の規約に行が増える。
-- ページ送りの HTML と CSS は、`@fukuemon/ui` のコンポーネントを使わずに、package の中に書く。フォーカスの輪、角、動きの時間は、トークンの CSS の変数を参照する。そのほかの見た目を `@fukuemon/ui` と合わせる作業は、手で行う。
+- ページ送りの HTML と CSS は、`@fukuemon/ui` のコンポーネントを使わずに、package の中に書く。トークンの CSS の変数に無い見た目を `@fukuemon/ui` と合わせる作業は、手で行う。
 - marp-core のバージョンを上げるときは、エディタと `apps/web` のビルドの両方が、同時に変わる。
