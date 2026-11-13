@@ -182,7 +182,8 @@ URL の一覧は [docs/design/DesignDoc.md](../docs/design/DesignDoc.md#url-の�
 ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-series.md)
 
 - `/docs/` の配下に入れない。描画の実装の詳細を URL に出さない。
-- 古いサイトの URL（`/blog`、`/labs/<path>` など）は転送しない。`public/_redirects` を置かない。
+- 古いサイトの URL（`/blog`、`/labs/<path>` など）は転送しない。`apps/web/public/_redirects` を置かない。
+  - `play.fukuemon.dev` の `/` のリダイレクトは、[operations.md](operations.md#レスポンスヘッダ) にある。
 - `/playground` は、プレイグラウンドの一覧に使う。ツールは `fukuemon.dev` に置かず、`play.fukuemon.dev` に置く。cross-origin isolation のヘッダは、Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)

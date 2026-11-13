@@ -3,6 +3,9 @@ type: feature-design
 title: プレイグラウンド
 description: apps/playground の構成とパス、ディレクトリ、実行環境のインターフェースの型、状態の置き場、プロジェクトと保存の形、起動の流れ、SQL を送る形式
 status: draft
+governs:
+  - apps/playground/
+verified_commit: unverified
 ---
 
 # プレイグラウンド
