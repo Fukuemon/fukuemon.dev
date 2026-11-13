@@ -63,13 +63,15 @@ const TEXT_PAIRS = [
 ];
 
 // 文字でないもの（入力欄と押せるものの枠、フォーカスの表示）と、その下の面の組。3:1 以上
-const NON_TEXT_PAIRS = SURFACES.flatMap((bg) => [
-  ["border-field", bg],
-  ["primary", bg],
-  ["danger", bg],
-  // フォーカスの表示は、要素から離して引く墨の輪が、面に対して 3:1 以上を保つ
-  ["focus", bg],
-]);
+const NON_TEXT_PAIRS = [
+  ...SURFACES.flatMap((bg) => [
+    ["border-field", bg],
+    ["primary", bg],
+    ["danger", bg],
+  ]),
+  // フォーカスの表示は、要素から離して引く墨の輪が、輪の乗る面（選んだ行とコードの面を含む）に対して 3:1 以上を保つ
+  ...[...SURFACES, "primary-surface", "code-surface"].map((bg) => ["focus", bg]),
+];
 
 const MAX_DEPTH = 10;
 const roots = [];
