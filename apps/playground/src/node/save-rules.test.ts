@@ -1,7 +1,7 @@
 import type { FileContents } from "@fukuemon/node-runtime";
 import { describe, expect, it } from "vitest";
 
-import { SAVE_LIMIT, isUnsaved, restartFiles, saveFiles } from "./save-rules";
+import { SAVE_LIMIT, isExcludedFromSave, filesForRestart, filesToSave } from "./save-rules";
 
 const file = (path: string, text: string | null = "x", size = 1): FileContents => ({
   path,
@@ -10,7 +10,7 @@ const file = (path: string, text: string | null = "x", size = 1): FileContents =
   text,
 });
 
-describe("isUnsaved", () => {
+describe("isExcludedFromSave", () => {
   it.each([
     "node_modules/a/index.js",
     ".git/HEAD",
@@ -25,21 +25,21 @@ describe("isUnsaved", () => {
     ".npmrc",
     "a/.netrc",
   ])("%s は保存しない", (path) => {
-    expect(isUnsaved(path)).toBe(true);
+    expect(isExcludedFromSave(path)).toBe(true);
   });
 
   it.each(["index.js", "build/index.js", "src/env.ts", ".environment", "a/.envrc", "distance.js"])(
     "%s は保存する",
     (path) => {
-      expect(isUnsaved(path)).toBe(false);
+      expect(isExcludedFromSave(path)).toBe(false);
     },
   );
 });
 
-describe("restartFiles", () => {
+describe("filesForRestart", () => {
   it("テキストとして読めないファイルと、規則に合わないパスを除き、保存しないファイルとリンクは残す", () => {
     expect(
-      restartFiles([
+      filesForRestart([
         file("a.js", "a"),
         file("big.bin", null, 2_000_000),
         file("__proto__"),
@@ -50,10 +50,10 @@ describe("restartFiles", () => {
   });
 });
 
-describe("saveFiles", () => {
+describe("filesToSave", () => {
   it("保存しないディレクトリの下のもの、シークレットのファイル、リンク、テキストとして読めないものを除く", () => {
     expect(
-      saveFiles([
+      filesToSave([
         file("a.js", "a"),
         file("dist/a.js"),
         file(".env.local"),
@@ -65,17 +65,17 @@ describe("saveFiles", () => {
 
   it("保存しないディレクトリの下のものは、上限に数えない", () => {
     const entries = Array.from({ length: SAVE_LIMIT.files + 1 }, (_, i) => file(`dist/${i}.js`));
-    expect(saveFiles(entries).kind).toBe("within");
+    expect(filesToSave(entries).kind).toBe("within");
   });
 
   it.each([
     ["ファイルの数", Array.from({ length: SAVE_LIMIT.files + 1 }, (_, i) => file(`${i}.js`))],
     ["大きさの合計", [file("a.bin", null, SAVE_LIMIT.bytes), file("b.js", "b")]],
   ])("%s が上限を超えたら over-limit を返す", (_, entries) => {
-    expect(saveFiles(entries)).toStrictEqual({ kind: "over-limit" });
+    expect(filesToSave(entries)).toStrictEqual({ kind: "over-limit" });
   });
 
   it("上限ちょうどなら保存する", () => {
-    expect(saveFiles([file("a.bin", null, SAVE_LIMIT.bytes)]).kind).toBe("within");
+    expect(filesToSave([file("a.bin", null, SAVE_LIMIT.bytes)]).kind).toBe("within");
   });
 });

@@ -440,27 +440,76 @@ describe("保存しないファイル", () => {
     expect(fake.readAll).not.toHaveBeenCalled();
   });
 
-  it("上限を超えたら、保存せずに前のレコードを残し、overLimit を立てる。下回ったら保存して戻す", async () => {
+  /** 作業ディレクトリのファイルを、保存の上限を超える数にする。 */
+  const fillOverLimit = (fake: Fake) => {
+    for (let i = 0; i < SAVE_LIMIT.files; i++) fake.contents.set(`f/${i}.txt`, "");
+  };
+
+  it("上限を超えたら、保存せずに前のレコードを残し、overLimit を立てる", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    fillOverLimit(latest());
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect({ saves: saves.length, overLimit: session.overLimit.getSnapshot() }).toStrictEqual({
+      saves: 0,
+      overLimit: true,
+    });
+  });
+
+  it("上限を超えた後に下回ったら、保存して overLimit を戻す", async () => {
     const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
     await settle(session);
     const fake = latest();
-    for (let i = 0; i < SAVE_LIMIT.files; i++) fake.contents.set(`f/${i}.txt`, "");
+    fillOverLimit(fake);
     fake.change("index.js", "c");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
-    const over = { saves: saves.length, overLimit: session.overLimit.getSnapshot() };
     for (let i = 0; i < SAVE_LIMIT.files; i++) fake.contents.delete(`f/${i}.txt`);
     fake.change("index.js", "d");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
     expect({
-      over,
-      under: {
-        saves: saves.map((record) => record.files),
-        overLimit: session.overLimit.getSnapshot(),
-      },
-    }).toStrictEqual({
-      over: { saves: 0, overLimit: true },
-      under: { saves: [{ "index.js": "d" }], overLimit: false },
-    });
+      saves: saves.map((record) => record.files),
+      overLimit: session.overLimit.getSnapshot(),
+    }).toStrictEqual({ saves: [{ "index.js": "d" }], overLimit: false });
+  });
+
+  it("初期の状態に戻すと、overLimit を戻す", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    fillOverLimit(latest());
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    await session.reset();
+    expect(session.overLimit.getSnapshot()).toBe(false);
+  });
+
+  it("保存のための読み込みには上限を渡し、起動し直すときの読み込みには渡さない", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const fake = latest();
+    fake.change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    await session.restart();
+    expect(fake.readAll.mock.calls.map(([options]) => options?.limit)).toStrictEqual([
+      SAVE_LIMIT,
+      undefined,
+    ]);
+  });
+
+  it("初期の状態に戻した後に、前の実行環境の保存の読み込みが終わっても、overLimit を立てない", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const fake = latest();
+    let fail: () => void = () => undefined;
+    fake.readAll.mockImplementationOnce(
+      () => new Promise((_, reject) => (fail = () => reject(new ReadLimitError()))),
+    );
+    fake.change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    await session.reset();
+    fail();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(session.overLimit.getSnapshot()).toBe(false);
   });
 
   it("上限を超えたまま起動し直しても、保存しない", async () => {

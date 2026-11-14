@@ -215,18 +215,26 @@ describe("files.readAll", () => {
     expect(file?.text).toBeNull();
   });
 
-  it("ファイルでもディレクトリでもないもの（リンク）は、kind を other にして、指す先の中身を返す。ツリーには、ファイルとして出す", async () => {
+  it("ファイルでもディレクトリでもないもの（リンク）は、kind を other にして、指す先の中身を返す", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("link.txt", "ab");
+    const file = (await runtime.files.readAll(options)).find((entry) => entry.path === "link.txt");
+    expect(file).toStrictEqual({ path: "link.txt", kind: "other", size: 2, text: "ab" });
+  });
+
+  it("ファイルでもディレクトリでもないもの（リンク）は、ツリーにファイルとして出す", async () => {
     const { runtime, created } = await bootFake();
     created.files.putLink("link.txt", "ab");
     await flush();
-    const file = (await runtime.files.readAll(options)).find((entry) => entry.path === "link.txt");
-    expect({
-      file,
-      tree: runtime.files.tree.getSnapshot().find((entry) => entry.path === "link.txt"),
-    }).toStrictEqual({
-      file: { path: "link.txt", kind: "other", size: 2, text: "ab" },
-      tree: { path: "link.txt", kind: "file" },
-    });
+    const entry = runtime.files.tree.getSnapshot().find(({ path }) => path === "link.txt");
+    expect(entry).toStrictEqual({ path: "link.txt", kind: "file" });
+  });
+
+  it("exclude に当たるものは、limit に数えない", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand("node_modules/a/index.js", "1234567890");
+    const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
+    expect(files).toHaveLength(3);
   });
 
   it.each([

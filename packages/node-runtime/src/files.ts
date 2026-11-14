@@ -36,7 +36,7 @@ async function listTree(files: BackendFiles, directory = ""): Promise<FileEntry[
   const entries: FileEntry[] = [];
   for (const item of items) {
     const path = join(directory, item.name);
-    // ツリーは、ファイルでもディレクトリでもないもの（リンク）を、ファイルとして出す
+    // リンクは、指す先を開けるかを一覧の時点で分けられないので、ツリーではファイルとして出す
     entries.push({ path, kind: item.kind === "directory" ? "directory" : "file" });
     if (item.kind === "directory" && shouldDescend(path)) {
       entries.push(...(await listTree(files, path)));
@@ -63,14 +63,14 @@ function readAllFiles(
   files: BackendFiles,
   { exclude, maxBytes, limit }: ReadAllOptions,
 ): Promise<FileContents[]> {
-  const count = { files: 0, bytes: 0, over: false };
-  // 超えたら、並べて読んでいるほかの枝も、次の一覧と読み込みを始めない
+  const count = { files: 0, bytes: 0 };
+  // 数は増えるだけなので、超えた後に一覧か読み込みを終えた枝は、ここで止まり、次の一覧と読み込みを始めない
   const check = () => {
-    if (limit && (count.files > limit.files || count.bytes > limit.bytes)) count.over = true;
-    if (count.over) throw new ReadLimitError();
+    if (limit && (count.files > limit.files || count.bytes > limit.bytes)) {
+      throw new ReadLimitError();
+    }
   };
   const read = async (directory: string): Promise<FileContents[]> => {
-    check();
     const items = [...(await files.list(directory))]
       .filter((item) => !isExcludedPath(join(directory, item.name), exclude))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -81,7 +81,6 @@ function readAllFiles(
       items.map(async (item): Promise<FileContents[]> => {
         const path = join(directory, item.name);
         if (item.kind === "directory") return read(path);
-        check();
         // 一覧を読んだ後に消えたファイルと、指す先を読めないリンクは、読まずに飛ばす
         const bytes = await files.readFile(path).catch(() => undefined);
         if (!bytes) return [];

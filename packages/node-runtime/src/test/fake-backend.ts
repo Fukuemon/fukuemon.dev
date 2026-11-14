@@ -126,6 +126,7 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
         if (within(path, from)) {
           files.delete(path);
           putFile(to + path.slice(from.length), contents);
+          if (others.delete(path)) others.add(to + path.slice(from.length));
         }
       }
       for (const path of Array.from(directories)) {
@@ -137,7 +138,12 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
       notify([from, to]);
     },
     remove: async (path) => {
-      for (const file of files.keys()) if (within(file, path)) files.delete(file);
+      for (const file of files.keys()) {
+        if (within(file, path)) {
+          files.delete(file);
+          others.delete(file);
+        }
+      }
       for (const directory of directories)
         if (within(directory, path)) directories.delete(directory);
       notify([path]);

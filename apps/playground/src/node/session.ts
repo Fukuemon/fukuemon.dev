@@ -18,7 +18,13 @@ import {
   createWorkspace,
 } from "../workspace/workspace";
 import { shellName } from "./messages";
-import { RESTART_READ, SAVE_READ, isUnsaved, restartFiles, saveFiles } from "./save-rules";
+import {
+  RESTART_READ,
+  SAVE_READ,
+  isExcludedFromSave,
+  filesForRestart,
+  filesToSave,
+} from "./save-rules";
 
 export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["project"];
 
@@ -179,9 +185,9 @@ export function createNodeSession({
       ),
   });
 
-  // 上限を超えたときは、前に保存したレコードを残す
+  // 上限を超えたときは、前に保存したレコードを残す (ADR-0070)
   const persist = (entries: readonly FileContents[]) => {
-    const saving = saveFiles(entries);
+    const saving = filesToSave(entries);
     overLimit.set(saving.kind === "over-limit");
     if (saving.kind === "over-limit") return;
     const { files } = saving;
@@ -193,15 +199,17 @@ export function createNodeSession({
   const readForSave = async (runtime: NodeRuntime) => {
     // 読み込みが終わらないと、次の保存が始まらないので、上限で諦める
     const entries = await withTimeout(runtime.files.readAll(SAVE_READ), READ_TIMEOUT_MS).catch(
-      (error: unknown) => {
-        if (error instanceof ReadLimitError) overLimit.set(true);
-        else console.error("保存のために作業ディレクトリを読めない", error);
-        return undefined;
-      },
+      (error: unknown) => (error instanceof ReadLimitError ? "over-limit" : error),
     );
+    // 破棄した実行環境の読み込みが後から終わっても、今の実行環境の状態を書き換えない
+    if (current.runtime !== runtime) return undefined;
+    if (entries === "over-limit") overLimit.set(true);
+    else if (!Array.isArray(entries))
+      console.error("保存のために作業ディレクトリを読めない", entries);
+    if (!Array.isArray(entries)) return undefined;
     // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
-    if (entries) lastRead = restartFiles(entries);
-    return entries;
+    lastRead = filesForRestart(entries);
+    return entries as readonly FileContents[];
   };
 
   const watchForSave = (instance: Instance, runtime: NodeRuntime) => {
@@ -227,7 +235,7 @@ export function createNodeSession({
       reading = false;
     };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
-      if (!instance.touched || paths.every(isUnsaved)) return;
+      if (!instance.touched || paths.every(isExcludedFromSave)) return;
       // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
       const at = Date.now();
       firstChange ??= at;
@@ -400,7 +408,7 @@ export function createNodeSession({
     if (!old.runtime) return { files: bootFiles, touched: old.touched };
     try {
       const entries = await withTimeout(old.runtime.files.readAll(RESTART_READ), READ_TIMEOUT_MS);
-      const files = restartFiles(entries);
+      const files = filesForRestart(entries);
       lastRead = files;
       if (old.touched) persist(entries);
       return { files, touched: old.touched };
