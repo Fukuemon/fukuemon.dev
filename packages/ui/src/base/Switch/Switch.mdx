@@ -1,0 +1,50 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { Switch } from "./Switch";
+import * as Stories from "./Switch.stories";
+
+<Meta of={Stories} />
+
+# Switch
+
+オンとオフを切り替えるスイッチ。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「Switch」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の次の ID
+  - `STATE-NOT-COLOR-ONLY`
+  - `FOCUS-ONE`
+  - `TARGET-SIZE`
+
+## 状態
+
+### オフ
+
+<Canvas of={Stories.Off} />
+
+### オン
+
+<Canvas of={Stories.On} />
+
+### hover
+
+<Canvas of={Stories.Hover} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+### 無効
+
+<Canvas of={Stories.Disabled} />
+
+### オンの無効
+
+<Canvas of={Stories.OnDisabled} />
+
+## props
+
+<ArgTypes of={Switch} />
