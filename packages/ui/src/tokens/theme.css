@@ -321,7 +321,7 @@
 
 @utility forced-edge-hidden {
   @media (forced-colors: active) {
-    border-color: Canvas !important;
+    border-left-color: Canvas !important;
   }
 }
 

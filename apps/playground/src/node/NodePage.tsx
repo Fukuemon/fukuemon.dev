@@ -144,7 +144,7 @@ function HttpPanes({ orientation = "horizontal" }: { orientation?: "horizontal" 
   );
 }
 
-/** PC の配置。ファイルの木、エディタ、プレビュー、下のタブ（端末と HTTP の流れ）を並べ、仕切りで幅と高さを変える。 */
+/** PC の配置。ファイルの木、エディタ、プレビュー、下のタブ（端末、コンソール、HTTP の流れ）を並べ、仕切りで幅と高さを変える。 */
 function WidePanes() {
   return (
     // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
