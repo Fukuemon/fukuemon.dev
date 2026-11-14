@@ -171,12 +171,27 @@ describe("createStdioDatabase", () => {
 
 /** DB のプロセスの依存の npm install を code で終わらせ、DB のプロセスは ready を出して、SQL に answer で答える。 */
 function databaseBackend(
-  options: { install?: number; answer?: (sql: string) => unknown; ready?: boolean } = {},
+  options: {
+    install?: number;
+    installOutput?: readonly string[];
+    answer?: (sql: string) => unknown;
+    ready?: boolean;
+  } = {},
 ) {
   return createFakeBackend({
     onSpawn: (process) => {
       if (process.command === "npm") {
-        queueMicrotask(() => process.finish(options.install ?? 0));
+        const finish = () => process.finish(options.install ?? 0);
+        const output = options.installOutput;
+        if (output === undefined) {
+          queueMicrotask(finish);
+          return;
+        }
+        // spawn を待った側が出力を購読してから出す
+        setTimeout(() => {
+          for (const chunk of output) process.emit(chunk);
+          finish();
+        });
         return;
       }
       if (process.command !== "node") return;
@@ -275,6 +290,28 @@ describe("bootWithBackend の DB", () => {
         message: ((error as BootError).cause as Error).message,
         tornDown: fake.instances[0]?.state.tornDown,
       }).toStrictEqual({ isBootError: true, reason: "failed", message, tornDown: true });
+    },
+  );
+
+  it.each([
+    [
+      "出力が短い",
+      ["npm ERR! code ENOTFOUND\n", "npm ERR! network\n"],
+      "npm ERR! code ENOTFOUND\nnpm ERR! network\n",
+    ],
+    [
+      "出力が 4096 文字を超える",
+      ["a".repeat(5000), "b".repeat(96)],
+      "a".repeat(4000) + "b".repeat(96),
+    ],
+  ])(
+    "依存の npm install が失敗し、%sときは、出力の末尾の 4096 文字までを cause に入れる",
+    async (_, installOutput, tail) => {
+      const fake = databaseBackend({ install: 1, installOutput });
+      const error = await failure(
+        bootWithBackend(fake.backend, { files: initialFiles, database: true }),
+      );
+      expect(((error as BootError).cause as Error).cause).toBe(tail);
     },
   );
 

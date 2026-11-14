@@ -568,6 +568,7 @@ sequenceDiagram
 - 図の `NodePage` の手順のうち、`bootNodeRuntime` の呼び出し、`npm install`、起動のコマンドの実行は、起動の Promise を持つ `src/node/` のモジュールが進める。React のコンポーネントは、Effect の中でプロセスを起動しない。
 - `bootNodeRuntime` は、DB を使うプロジェクトのときに、DB のプロセスの依存を入れ、DB のプロセスを起動し、初期データの SQL を実行してから、Promise を解決する。30 秒は、`bootNodeRuntime` を呼んでから、Promise が解決するまでの時間で判定する。
 - 30 秒で終わらないときは、`bootNodeRuntime` が、作りかけのインスタンスを破棄してから、Promise を失敗させる。
+- DB の依存の `npm install` が失敗したときは、Promise を失敗させる。失敗の Error の `cause` に、`npm install` の出力の末尾の 4096 文字を入れる。画面の文は、ほかの起動の失敗と同じにする。原因は、ブラウザのコンソールで読む。
 - 起動が失敗したときは、端末とプレビューのペインに、動かせない理由と、対応するブラウザを出す。
 - `npm install` が 0 でない終了コードで終了したときは、起動のコマンドを実行しない。端末に、`npm install` の出力が残る。
 - 起動のコマンドが複数あるときは、`start` の順に起動する。前のコマンドの終了を待たない。

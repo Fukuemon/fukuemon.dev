@@ -146,10 +146,20 @@ export function createStdioDatabase(process: BackendProcess): {
   };
 }
 
-/** spawn が 0 でない終了コードで終わったときに投げる。 */
+/** 失敗したときに cause に入れる、出力の末尾の文字数。 */
+const FAILED_OUTPUT_TAIL = 4096;
+
+/**
+ * spawn が 0 でない終了コードで終わったときに投げる。
+ * 画面には出さない原因をコンソールで読めるよう、出力の末尾の FAILED_OUTPUT_TAIL 文字を、投げる Error の cause に入れる。
+ */
 async function runToEnd(process: BackendProcess, what: string) {
-  const code = await process.exit;
-  if (code !== 0) throw new Error(`${what}が失敗した: ${code}`);
+  let tail = "";
+  const unsubscribe = process.output.subscribe((chunk) => {
+    tail = (tail + chunk).slice(-FAILED_OUTPUT_TAIL);
+  });
+  const code = await process.exit.finally(unsubscribe);
+  if (code !== 0) throw new Error(`${what}が失敗した: ${code}`, { cause: tail });
 }
 
 /**
