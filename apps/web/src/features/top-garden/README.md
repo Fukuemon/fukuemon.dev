@@ -48,7 +48,7 @@ Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/REA
 | `scene/ink-pass.ts`          | 場面を描いた絵に、墨の輪郭線、淡彩、紙の質感、端の余白を重ねる全画面のパス                                                                                                             |
 | `scene/garden.ts`            | canvas に庭を描く。プロフィールの 4 つのセクションを CSS3DRenderer で和紙の位置に置く。カメラが動く間だけフレームごとに描く。WebGL を使えないときは何も描かない                        |
 | `scene/garden-entry.ts`      | 場面のバンドルで最初に動くファイル。庭の中のボタン、矢印キー、セクションへのフォーカスを和紙の間の移動につなぐ。庭を描けないときは、`stage-on` と `intro` を外してふつうのページに戻す |
-| `scene/GardenStage.astro`    | canvas と庭の中のボタンを置く。`stage-on` が付いたときだけ、画面の全体に出す                                                                                                           |
+| `scene/GardenStage.astro`    | canvas と、庭の中のボタンと、画面の上端と下端の霞を置く。`stage-on` が付いたときだけ、画面の全体に出す                                                                                 |
 
 ## 同じシードから同じ絵ができる
 
