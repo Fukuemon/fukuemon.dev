@@ -1,15 +1,16 @@
 import { Link, Notice, PageLoading } from "@fukuemon/ui";
-import { Suspense, use, useSyncExternalStore } from "react";
+import { Suspense, use, useRef, useSyncExternalStore } from "react";
 
 import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { bootLabel, progressLabel } from "./progress";
+import { ResetControl } from "./ResetControl";
 import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
 
-function SqlTool({ search }: { search: string }) {
+function SqlTool({ search, onReset }: { search: string; onReset: () => void }) {
   const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
@@ -22,10 +23,10 @@ function SqlTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  return <SqlSessionView session={load.session} />;
+  return <SqlSessionView onReset={onReset} session={load.session} />;
 }
 
-function SqlSessionView({ session }: { session: SqlSession }) {
+function SqlSessionView({ session, onReset }: { session: SqlSession; onReset: () => void }) {
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
@@ -47,6 +48,7 @@ function SqlSessionView({ session }: { session: SqlSession }) {
           このブラウザでは IndexedDB を使えないので、ページを閉じると変えた SQL が消えます。
         </Notice>
       )}
+      <ResetControl disabled={running} onReset={onReset} session={session} />
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
         onChange={session.setQuery}
@@ -64,13 +66,19 @@ function SqlSessionView({ session }: { session: SqlSession }) {
 
 /** SQL だけを動かすツールのページ。埋め込みのときは、ページのヘッダを出さない。 */
 export function SqlPage({ search, embedded }: { search: string; embedded: boolean }) {
+  const mainRef = useRef<HTMLElement>(null);
   return (
-    <main className="mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4">
+    <main
+      className="mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4 outline-none"
+      ref={mainRef}
+      tabIndex={-1}
+    >
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">SQL の実行環境</h1>
       )}
       <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
-        <SqlTool search={search} />
+        {/* 戻すとボタンが消え、閉じた <dialog> はフォーカスを body に落とす。ページに移す */}
+        <SqlTool onReset={() => mainRef.current?.focus()} search={search} />
       </Suspense>
     </main>
   );
