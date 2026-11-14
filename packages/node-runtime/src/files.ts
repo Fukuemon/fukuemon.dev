@@ -59,6 +59,9 @@ function decodeText(bytes: Uint8Array): string | null {
 export const isExcludedPath = (path: string, exclude: readonly string[]) =>
   path.split("/").some((segment) => exclude.includes(segment));
 
+/** files.readAll が同時に読むファイルの数。上限を超えた後に読み続けるのは、この数までになる。 */
+const READ_CONCURRENCY = 32;
+
 function readAllFiles(
   files: BackendFiles,
   { exclude, maxBytes, limit }: ReadAllOptions,
@@ -70,18 +73,39 @@ function readAllFiles(
       throw new ReadLimitError();
     }
   };
+  // ツリーの全体で、同時に読むファイルの数を絞る。並べて発行した読み込みは、上限を超えても取り消せないためである
+  let active = 0;
+  const waiting: (() => void)[] = [];
+  const acquire = async () => {
+    if (active < READ_CONCURRENCY) active += 1;
+    else await new Promise<void>((resolve) => waiting.push(resolve));
+  };
+  const release = () => {
+    const next = waiting.shift();
+    if (next) next();
+    else active -= 1;
+  };
+  const readFile = async (path: string) => {
+    await acquire();
+    try {
+      check();
+      return await files.readFile(path).catch(() => undefined);
+    } finally {
+      release();
+    }
+  };
   const read = async (directory: string): Promise<FileContents[]> => {
     const items = [...(await files.list(directory))]
       .filter((item) => !isExcludedPath(join(directory, item.name), exclude))
       .sort((a, b) => a.name.localeCompare(b.name));
     check();
-    // 1 回ずつの往復を待つと、ファイルの数だけ待ち時間が積み重なるので、1 つのディレクトリの中は並べて読む
+    // 1 回ずつの往復を待つと、ファイルの数だけ待ち時間が積み重なるので、並べて読む
     const entries = await Promise.all(
       items.map(async (item): Promise<FileContents[]> => {
         const path = join(directory, item.name);
         if (item.kind === "directory") return read(path);
         // 一覧を読んだ後に消えたファイルと、指す先を読めないリンクは、読まずに飛ばす
-        const bytes = await files.readFile(path).catch(() => undefined);
+        const bytes = await readFile(path);
         if (!bytes) return [];
         count.files += 1;
         count.bytes += bytes.byteLength;

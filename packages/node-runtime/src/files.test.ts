@@ -272,6 +272,18 @@ describe("files.readAll", () => {
     expect(limited).toBeLessThan(all);
   });
 
+  it("limit を超えたら、待っているファイルを読まない", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++) created.files.putFromCommand(`many/${i}.txt`, "");
+    const readFile = vi.spyOn(created.files.api, "readFile");
+    await expect(
+      runtime.files.readAll({ ...options, limit: { files: 1, bytes: 100 } }),
+    ).rejects.toBeInstanceOf(ReadLimitError);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    // 同時に読む数（32）と、超えるまでに読んだ分だけを読む
+    expect(readFile.mock.calls.length).toBeLessThan(40);
+  });
+
   it("limit の数と大きさちょうどなら、読み終える", async () => {
     const { runtime } = await bootFake();
     const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
