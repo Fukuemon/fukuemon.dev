@@ -342,6 +342,9 @@ describe("preview", () => {
     render(<Default />);
     const rows = screen.getByRole("region", { name: "ログの行" });
     rows.focus();
-    expect(getComputedStyle(rows).outlineOffset).toBe("-2px");
+    const ring = getComputedStyle(rows.parentElement as HTMLElement, "::after");
+    expect(ring.outlineOffset).toBe("-2px");
+    expect(ring.outlineStyle).toBe("solid");
+    expect(getComputedStyle(rows).outlineStyle).toBe("none");
   });
 });

@@ -201,6 +201,22 @@
   outline-offset: -2px;
 }
 
+/* ペインの全体を占める、フォーカスできるスクロールする領域の外側の要素に付ける。直下の領域自身の輪は消し、領域にフォーカスが来たときだけ、輪を外側の要素の内側に重ねて引く。スクロールする領域自身の輪は、中の行の背景に隠れて欠ける（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
+@utility focus-ring-frame {
+  position: relative;
+  & > :focus-visible {
+    outline: none;
+  }
+  &:has(> :focus-visible)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    outline: 2px solid var(--fd-color-focus);
+    outline-offset: -2px;
+  }
+}
+
 /* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う */
 :root {
   --fd-mask-brush: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E");

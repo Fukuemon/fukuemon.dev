@@ -78,6 +78,9 @@ describe("EditorFrame", () => {
     render(<Default />);
     const engine = screen.getByRole("region", { name: "server.js のコード" });
     engine.focus();
-    expect(getComputedStyle(engine).outlineOffset).toBe("-2px");
+    const ring = getComputedStyle(engine.parentElement as HTMLElement, "::after");
+    expect(ring.outlineOffset).toBe("-2px");
+    expect(ring.outlineStyle).toBe("solid");
+    expect(getComputedStyle(engine).outlineStyle).toBe("none");
   });
 });

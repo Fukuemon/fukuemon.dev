@@ -115,63 +115,62 @@ export function DummyEngine({
     return parts;
   };
   return (
-    <pre
-      aria-label={label}
-      className={clsx(
-        "min-h-48 flex-1 overflow-auto focus-visible:focus-ring-inset",
-        isSource ? "flex py-1" : "px-3 py-2",
-      )}
-      data-code-theme={theme.name}
-      role="region"
-      tabIndex={0}
-    >
-      {isSource ? (
-        <>
-          <span
-            aria-hidden="true"
-            className="sticky left-0 z-10 shrink-0 select-none bg-code-surface text-right text-code-comment"
-          >
-            {lines.map((_, row) => (
-              <span
-                className={clsx(
-                  "block pr-2 pl-4",
-                  row === activeLine && "bg-surface text-code-text",
-                )}
-                // oxlint-disable-next-line react/no-array-index-key -- 行番号は並びそのもので、並びも変わらない (context/conventions.md)
-                key={row}
-              >
-                {row + 1}
-              </span>
-            ))}
-          </span>
-          <code className="min-w-max flex-1">
-            {lines.map((line, row) => (
-              <span
-                className={clsx("relative block pr-4 pl-2", row === activeLine && "bg-surface")}
-                data-active-line={row === activeLine || undefined}
-                // oxlint-disable-next-line react/no-array-index-key -- 同じ中身の行が並ぶことがあり、並びも変わらない (context/conventions.md)
-                key={row}
-              >
-                {Array.from({ length: indentLevels(line) }, (_, level) => (
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-y-0 border-l border-border"
-                    data-indent-guide
-                    key={level}
-                    // 段の位置は文字の幅で決まり、決まった段を持たないので style で渡す
-                    style={{ left: `calc(0.5rem + ${level * 2}ch)` }}
-                  />
-                ))}
-                {renderLine(line, row)}
-                {"\n"}
-              </span>
-            ))}
-          </code>
-        </>
-      ) : (
-        lines.join("\n")
-      )}
-    </pre>
+    <div className="flex min-h-48 flex-1 flex-col focus-ring-frame">
+      <pre
+        aria-label={label}
+        className={clsx("min-h-0 flex-1 overflow-auto", isSource ? "flex py-1" : "px-3 py-2")}
+        data-code-theme={theme.name}
+        role="region"
+        tabIndex={0}
+      >
+        {isSource ? (
+          <>
+            <span
+              aria-hidden="true"
+              className="sticky left-0 z-10 shrink-0 select-none bg-code-surface text-right text-code-comment"
+            >
+              {lines.map((_, row) => (
+                <span
+                  className={clsx(
+                    "block pr-2 pl-4",
+                    row === activeLine && "bg-surface text-code-text",
+                  )}
+                  // oxlint-disable-next-line react/no-array-index-key -- 行番号は並びそのもので、並びも変わらない (context/conventions.md)
+                  key={row}
+                >
+                  {row + 1}
+                </span>
+              ))}
+            </span>
+            <code className="min-w-max flex-1">
+              {lines.map((line, row) => (
+                <span
+                  className={clsx("relative block pr-4 pl-2", row === activeLine && "bg-surface")}
+                  data-active-line={row === activeLine || undefined}
+                  // oxlint-disable-next-line react/no-array-index-key -- 同じ中身の行が並ぶことがあり、並びも変わらない (context/conventions.md)
+                  key={row}
+                >
+                  {Array.from({ length: indentLevels(line) }, (_, level) => (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-y-0 border-l border-border"
+                      data-indent-guide
+                      key={level}
+                      // 段の位置は文字の幅で決まり、決まった段を持たないので style で渡す
+                      style={{ left: `calc(0.5rem + ${level * 2}ch)` }}
+                    />
+                  ))}
+                  {renderLine(line, row)}
+                  {"\n"}
+                </span>
+              ))}
+            </code>
+          </>
+        ) : (
+          lines.join("\n")
+        )}
+      </pre>
+    </div>
   );
 }
 
