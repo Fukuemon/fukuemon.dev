@@ -91,6 +91,20 @@ describe("プロジェクトのディレクトリを読む", () => {
       "initialSql は、プロジェクトのファイルを指す: ../q.sql",
     ],
     [
+      "ドットで始まるファイルがある",
+      { "playground.json": config({ tool: "go", open: "main.go" }), "main.go": "", ".env": "A=1" },
+      "ドットで始まるファイルかディレクトリがある: .env",
+    ],
+    [
+      "ドットで始まるディレクトリの下にファイルがある",
+      {
+        "playground.json": config({ tool: "go", open: "main.go" }),
+        "main.go": "",
+        ".config/a.json": "{}",
+      },
+      "ドットで始まるファイルかディレクトリがある: .config/a.json",
+    ],
+    [
       "UTF-8 として読めないファイルがある",
       {
         "playground.json": config({ tool: "go", open: "main.go" }),

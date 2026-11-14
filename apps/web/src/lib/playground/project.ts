@@ -29,11 +29,20 @@ export const PLAYGROUND_LANG = "playground";
 export const embedUrl = (origin: string, tool: PlaygroundTool, id: string) =>
   `${origin}/${tool}/?project=${id}`;
 
+/**
+ * プロジェクトのファイルのパスを並べる。全てのファイルを公開の JSON に入れるので、
+ * ドットで始まる区切りを含むファイル（`.env` など）があると失敗する。黙って除くと、置いたつもりのファイルが消える
+ */
 function listFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true, recursive: true })
+  const paths = readdirSync(dir, { withFileTypes: true, recursive: true })
     .filter((entry) => entry.isFile())
     .map((entry) => relative(dir, join(entry.parentPath, entry.name)).split(sep).join("/"))
     .sort();
+  const hidden = paths.filter((path) => path.split("/").some((segment) => segment.startsWith(".")));
+  if (hidden.length > 0) {
+    throw new Error(`${dir} に、ドットで始まるファイルかディレクトリがある: ${hidden.join(", ")}`);
+  }
+  return paths;
 }
 
 const utf8 = new TextDecoder("utf-8", { fatal: true });
