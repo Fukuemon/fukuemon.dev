@@ -14,12 +14,12 @@ https://fukuemon.dev
 
 ## Running
 
-| コマンド               | 用途                                                        |
-| ---------------------- | ----------------------------------------------------------- |
-| `pnpm run dev`         | 開発サーバー                                                |
-| `pnpm run build`       | ビルド (Astro + Pagefind の索引。`vp run` でキャッシュする) |
-| `pnpm run check`       | 品質のチェック一式                                          |
-| `pnpm run infra:check` | Terraform の書式と構文 (要 Terraform)                       |
+| コマンド               | 用途                                      |
+| ---------------------- | ----------------------------------------- |
+| `pnpm run dev`         | 開発サーバー                              |
+| `pnpm run build`       | ビルド (Astro。`vp run` でキャッシュする) |
+| `pnpm run check`       | 品質のチェック一式                        |
+| `pnpm run infra:check` | Terraform の書式と構文 (要 Terraform)     |
 
 `check` が通すチェックと順序は、ルートの `package.json` の `check` にある。
 `infra:check` は Terraform を必要とするため `pnpm run check` には含めない。

@@ -28,7 +28,7 @@
   - ADR-0015: [ハンズオンの手順の画面へのまとめを、remark ではなく rehype のプラグインに置く](0015-lab-steps-in-rehype.md)
 - 本文の検索を、一覧のページに置く。Pagefind の索引を最初から作る。
   - ADR-0012: [本文の検索を、一覧の 3 ページに dialog として置く](0012-search-dialog-on-listing.md)
-  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む](0001-starlight-as-docs-renderer.md)
+  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code で組む](0001-starlight-as-docs-renderer.md)
 - about は、トップが兼ねる。
   - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](0026-sumi-gate-and-garden-on-top.md)
 - 安定した識別子の `contentId` と、片方向の関連を持つ。
