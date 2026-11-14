@@ -77,6 +77,40 @@ export function keepLastRows(response: SqlResponse): SqlResponse {
   };
 }
 
+/** セルを、JSON で送っても表に出す文字列が変わらない値にする。表は、日時を ISO 8601 で、bytea を `\x` で始まる 16 進数で出す。 */
+function toJsonCell(value: unknown): unknown {
+  if (typeof value === "bigint") return value.toString();
+  if (value instanceof Date)
+    return Number.isNaN(value.getTime()) ? "Invalid Date" : value.toISOString();
+  if (value instanceof Uint8Array) {
+    return `\\x${Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  }
+  if (typeof value === "object" && value !== null) {
+    // 配列と JSON の中の bigint は、JSON.stringify が投げるので文字列にする。表も、同じ文字列で出す
+    return JSON.parse(
+      JSON.stringify(value, (_, item: unknown) =>
+        typeof item === "bigint" ? item.toString() : item,
+      ),
+    ) as unknown;
+  }
+  return value;
+}
+
+/**
+ * 結果を、JSON.stringify で送れる値にする。DB のプロセスは、結果を標準出力の 1 行の JSON で送る。
+ * bigint、Date、Uint8Array は JSON で型が残らないので、表に出す文字列にしてから送る。
+ */
+export function toJsonResponse(response: SqlResponse): SqlResponse {
+  if ("error" in response) return response;
+  return {
+    ...response,
+    results: response.results.map((result) => ({
+      ...result,
+      rows: result.rows.map((row) => row.map(toJsonCell)),
+    })),
+  };
+}
+
 export function toSqlError(error: unknown): SqlError {
   if (!(error instanceof Error)) return { message: String(error) };
   const { code, position } = error as Error & { code?: unknown; position?: unknown };
