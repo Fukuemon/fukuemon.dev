@@ -14,6 +14,9 @@ import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
  */
 export type FileTreeResult = { id: string } | { error: string };
 
+/** 呼ぶ側が非同期に決めるときは、Promise で返す。FileTree は、決まるまで欄を開いたまま、確定を重ねて受けない。 */
+export type FileTreeOutcome = FileTreeResult | Promise<FileTreeResult>;
+
 export type FileTreeProps = {
   title?: string;
   /** ファイルとディレクトリの木。children を持つ項目がディレクトリである。項目の名前は label で描き、content を使わない。 */
@@ -22,11 +25,11 @@ export type FileTreeProps = {
   onSelect: (id: string) => void;
   defaultExpandedIds?: readonly string[];
   /** 渡すと、新しいファイルのボタンを出す。parentId は、選んだディレクトリか、選んだファイルのディレクトリである。 */
-  onCreate?: (name: string, parentId: string | undefined) => FileTreeResult;
+  onCreate?: (name: string, parentId: string | undefined) => FileTreeOutcome;
   /** 渡すと、新しいディレクトリのボタンを出す。parentId は onCreate と同じ決め方である。 */
-  onCreateDirectory?: (name: string, parentId: string | undefined) => FileTreeResult;
+  onCreateDirectory?: (name: string, parentId: string | undefined) => FileTreeOutcome;
   /** 渡すと、選んだ項目の操作のメニューに、名前の変更を足す。名前を変えずに確定したときは呼ばない。 */
-  onRename?: (id: string, name: string) => FileTreeResult;
+  onRename?: (id: string, name: string) => FileTreeOutcome;
   /** 渡すと、選んだ項目の操作のメニューに、削除を足し、木の項目の Delete のキーでも呼ぶ。確認は呼ぶ側が行う。 */
   onDelete?: (id: string) => void;
   /** 渡すと、木の代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
@@ -43,6 +46,9 @@ const FIELD_LABEL: Record<Editing["kind"], string> = {
   directory: "新しいディレクトリの名前",
   rename: "新しい名前",
 };
+
+/** 呼ぶ側の Promise が失敗したときに、欄の下に出す理由。 */
+const REJECTED_MESSAGE = "名前を確認できませんでした。もう一度試してください。";
 
 type Found = { node: TreeNode; parent: TreeNode | undefined };
 
@@ -82,7 +88,7 @@ type NameFieldProps = {
   selectionEnd: number;
   siblings: readonly string[];
   /** 確定した名前を渡す。呼ぶ側が名前を断ったときは、理由の文を返す。 */
-  onCommit: (name: string) => string | undefined;
+  onCommit: (name: string) => string | undefined | Promise<string | undefined>;
   onCancel: () => void;
 };
 
@@ -105,6 +111,9 @@ function NameField({
   const inputRef = useRef<HTMLInputElement>(null);
   // Enter か Esc で終えた後に、欄が外れて blur が届いても、2 度目の確定ややめるを呼ばない
   const isDone = useRef(false);
+  const isBusyRef = useRef(false);
+  const blurredWhileBusy = useRef(false);
+  const [isBusy, setBusy] = useState(false);
   const errorId = useId();
 
   useEffect(() => {
@@ -113,22 +122,40 @@ function NameField({
   }, [selectionEnd]);
 
   const cancel = () => {
-    if (isDone.current) return;
+    // 呼ぶ側が決める前にやめると、決まった後の操作だけが実行される。決まるまでは、やめるを受けない
+    if (isDone.current || isBusyRef.current) return;
     isDone.current = true;
     onCancel();
   };
 
-  const submit = (isBlur: boolean) => {
-    if (isDone.current) return;
-    const name = value.trim();
-    if (name !== "" && name === initialValue) return cancel();
-    const problem = problemOf(name, siblings) ?? onCommit(name);
+  const finish = (problem: string | undefined, isBlur: boolean) => {
     if (problem === undefined) {
       isDone.current = true;
       return;
     }
     if (isBlur) return cancel();
     setError(problem);
+  };
+
+  const submit = (isBlur: boolean) => {
+    if (isDone.current || isBusyRef.current) return;
+    const name = value.trim();
+    if (name !== "" && name === initialValue) return cancel();
+    const invalid = problemOf(name, siblings);
+    if (invalid !== undefined) return finish(invalid, isBlur);
+    const outcome = onCommit(name);
+    if (!(outcome instanceof Promise)) return finish(outcome, isBlur);
+    // 呼ぶ側が決めるまで、確定を重ねて受けない。待つ間にフォーカスが外れたときは、断られたらやめる
+    isBusyRef.current = true;
+    blurredWhileBusy.current = false;
+    setBusy(true);
+    void outcome
+      .catch(() => REJECTED_MESSAGE)
+      .then((problem) => {
+        isBusyRef.current = false;
+        setBusy(false);
+        finish(problem, isBlur || blurredWhileBusy.current);
+      });
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -147,6 +174,7 @@ function NameField({
     // 欄の枠と余白の分だけ左へ寄せ、欄の中の名前を、ふだんの行の名前と同じ位置に描く
     <span className="-ml-1 flex flex-col">
       <input
+        aria-busy={isBusy || undefined}
         aria-describedby={error === undefined ? undefined : errorId}
         aria-invalid={error === undefined ? undefined : true}
         aria-label={label}
@@ -160,7 +188,9 @@ function NameField({
         )}
         onBlur={() => {
           // ほかのウィンドウへ移ったときは、戻ると欄にフォーカスが戻るので、確定もやめるもしない
-          if (document.hasFocus()) submit(true);
+          if (!document.hasFocus()) return;
+          if (isBusyRef.current) blurredWhileBusy.current = true;
+          else submit(true);
         }}
         onChange={(event) => {
           setValue(event.target.value);
@@ -218,8 +248,11 @@ export function FileTree({
   if (editingTargetId !== undefined && editingTarget === undefined) setEdit({});
   const selected = selectedId === undefined ? undefined : find(items, selectedId);
 
-  const startRename = (id: string) => setEdit({ editing: { kind: "rename", id } });
+  // 呼ぶ側が決めるまでは、別の欄を開かない。決まった後の更新が、後から開いた欄を閉じるのを防ぐ
+  const [isDeciding, setDeciding] = useState(false);
+  const startRename = (id: string) => !isDeciding && setEdit({ editing: { kind: "rename", id } });
   const startCreate = (kind: "file" | "directory") => {
+    if (isDeciding) return;
     const parent = selected?.node.children ? selected.node : selected?.parent;
     setAwaitingFirst(false);
     setEdit({ editing: { kind, parentId: parent?.id } });
@@ -242,8 +275,15 @@ export function FileTree({
     });
   }
 
-  const commit = (name: string): string | undefined => {
-    const result =
+  const settle = (result: FileTreeResult | undefined): string | undefined => {
+    if (result !== undefined && "error" in result) return result.error;
+    setEdit({ focusAfterEdit: result?.id });
+    if (items.length === 0 && result !== undefined) setAwaitingFirst(true);
+    return undefined;
+  };
+
+  const commit = (name: string): string | undefined | Promise<string | undefined> => {
+    const outcome =
       editing?.kind === "file"
         ? onCreate?.(name, editing.parentId)
         : editing?.kind === "directory"
@@ -251,10 +291,11 @@ export function FileTree({
           : editing?.kind === "rename"
             ? onRename?.(editing.id, name)
             : undefined;
-    if (result !== undefined && "error" in result) return result.error;
-    setEdit({ focusAfterEdit: result?.id });
-    if (items.length === 0 && result !== undefined) setAwaitingFirst(true);
-    return undefined;
+    if (!(outcome instanceof Promise)) return settle(outcome);
+    setDeciding(true);
+    return outcome.then(settle).finally(() => {
+      setDeciding(false);
+    });
   };
 
   const cancel = () => {

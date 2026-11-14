@@ -54,7 +54,7 @@ export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFram
 export { FileTree } from "./case/FileTree/FileTree";
 export { FileDrawer } from "./case/FileDrawer/FileDrawer";
 export type { FileDrawerProps } from "./case/FileDrawer/FileDrawer";
-export type { FileTreeProps, FileTreeResult } from "./case/FileTree/FileTree";
+export type { FileTreeOutcome, FileTreeProps, FileTreeResult } from "./case/FileTree/FileTree";
 export { HttpExchangeDetail } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export type { HttpExchangeDetailProps } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export { HttpExchangeList } from "./case/HttpExchangeList/HttpExchangeList";
