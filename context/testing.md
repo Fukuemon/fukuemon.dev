@@ -72,6 +72,7 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - 原稿から埋め込みの名前を集める `playground/embeds.ts`
 - プロジェクトの JSON のページを並べ、2 本の記事が同じプロジェクトを指すと throw する `playground/project-pages.ts`
 - Node の実行環境を埋め込むページに、cross-origin isolation のヘッダを返す規則を出力の `_headers` に足す `playground/isolation-headers.ts`
+- ビルドの出力を複製し、複製の `_headers` に noindex を足す `preview-assets.ts`
 
 `apps/playground`、`packages/sql-runtime`、`packages/go-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には、100% を求める。  

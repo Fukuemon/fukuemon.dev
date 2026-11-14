@@ -149,11 +149,12 @@ CI では、apply の workflow が `TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_
   - プレビューの Worker は custom domain を持たず、Terraform の変数に名前が無いので、比べない
 - `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンドの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を読む
 - check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 2 つを含む `pnpm run check` を実行する
-- workflow は次の 4 つ
+- workflow は次の 5 つ
   - apply: `.github/workflows/apply.yml`
   - deploy: `.github/workflows/deploy.yml`
   - deploy-catalog: `.github/workflows/deploy-catalog.yml`
   - deploy-playground: `.github/workflows/deploy-playground.yml`
+  - deploy-preview: `.github/workflows/deploy-preview.yml`
 
 ## Verification
 
