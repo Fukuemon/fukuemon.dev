@@ -83,8 +83,7 @@
  * Expressive Code の display: flex に勝って grid にするため、層の外に置き、.prose で詳細度を上げる。
  */
 .prose .expressive-code pre {
-  @apply scroll-fade-end;
-  --fd-scroll-fade-bg: var(--color-code-surface);
+  @apply scroll-fade-end scroll-fade-code;
 }
 
 /*

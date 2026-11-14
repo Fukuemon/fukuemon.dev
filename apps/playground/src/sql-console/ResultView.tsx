@@ -119,7 +119,7 @@ function ResultBody({ result }: { result: SqlResult }) {
     return (
       <section
         aria-label="実行計画"
-        className="overflow-x-auto bg-code-surface focus-visible:focus-ring"
+        className="scroll-fade-end scroll-fade-code overflow-x-auto bg-code-surface focus-visible:focus-ring"
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 横に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
         tabIndex={0}
       >
