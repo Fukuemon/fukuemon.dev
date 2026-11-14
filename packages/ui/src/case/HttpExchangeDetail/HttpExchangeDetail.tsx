@@ -16,8 +16,8 @@ export type HttpExchangeDetailProps = {
   actors: readonly HttpActor[];
   /** 渡さないときは、行き来を選ぶよう案内する。 */
   exchange?: HttpExchange;
-  /** 渡すと、詳細の代わりに読み込み中かエラーを出す。 */
-  state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
+  /** 渡すと、詳細の代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
+  state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
 };
 
 const COOKIE_HEADERS = new Set(["cookie", "set-cookie"]);

@@ -37,7 +37,8 @@
     "infra:bootstrap:init": "terraform -chdir=infra/bootstrap init",
     "infra:bootstrap:apply": "terraform -chdir=infra/bootstrap apply",
     "test:visual": "pnpm --filter @fukuemon/e2e run test:visual",
-    "check:garden-bundle": "node scripts/check-garden-bundle.mjs"
+    "check:garden-bundle": "node scripts/check-garden-bundle.mjs",
+    "measure:top": "node scripts/measure-top-lighthouse.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
@@ -45,6 +46,7 @@
     "eslint-plugin-better-tailwindcss": "4.11.0",
     "knip": "^6.32.2",
     "lefthook": "^2.2.1",
+    "lighthouse": "13.6.0",
     "oxfmt": "^0.48.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",
@@ -58,7 +60,7 @@
     "typescript": "6.0.2"
   },
   "engines": {
-    "node": ">=22.18.0"
+    "node": ">=22.19.0"
   },
   "packageManager": "pnpm@10.27.0",
   "knip": {
@@ -90,7 +92,6 @@
       "go"
     ],
     "ignoreDependencies": [
-      "playwright",
       "textlint-rule-no-mix-dearu-desumasu",
       "textlint-rule-preset-ai-words-ja",
       "textlint-rule-prh",

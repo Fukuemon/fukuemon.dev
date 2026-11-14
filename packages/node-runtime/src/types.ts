@@ -40,6 +40,32 @@ export type StartOptions = { name?: string; terminal?: TerminalSize };
 /** 待ち受けたポート。sandbox と allow は、プレビューの iframe に付ける属性の値である。 */
 export type OpenPort = { port: number; url: string; sandbox: string; allow: string };
 
+/** 記録した本文。上限を超えた分は記録せず、truncated を立てる。テキストとして読めないものは、text が null である。 */
+export type HttpBody = { text: string | null; size: number; truncated: boolean };
+
+/** 記録したリクエストかレスポンスの、ヘッダと本文。omittedHeaders は、上限を超えて捨てたヘッダの数である。 */
+type HttpMessageRecord = {
+  headers: readonly { name: string; value: string }[];
+  omittedHeaders?: number;
+  body?: HttpBody;
+};
+
+/** 実行環境の中のサーバーが受けた、1 つのリクエストとレスポンス。response が無いものは、レスポンスを返す前に切れた。 */
+export type HttpRecord = {
+  id: string;
+  /** 送った側と受けた側。id は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `process`、訪問者が送信元のヘッダに付けた値が `header:<値>` である。 */
+  from: { id: string; name: string };
+  to: { id: string; name: string };
+  method: string;
+  url: string;
+  /** 記録の行の URL が上限を超え、先頭だけを持つ。 */
+  urlTruncated?: boolean;
+  startedAt: number;
+  durationMs: number;
+  request: HttpMessageRecord;
+  response?: HttpMessageRecord & { status: number };
+};
+
 export type NodeRuntime = {
   files: {
     tree: Store<readonly FileEntry[]>;
@@ -63,8 +89,8 @@ export type NodeRuntime = {
     startShell: (options?: StartOptions) => Promise<ProcessHandle>;
   };
   ports: Store<readonly OpenPort[]>;
-  /** HTTP の記録。記録を取る preload を足すまでは、空のままである。 */
-  httpExchanges: Store<readonly never[]>;
+  /** HTTP の記録。リクエストを受けた順に並べ、古いものから捨てる。 */
+  httpExchanges: Store<readonly HttpRecord[]>;
   /** コンソールの記録。記録を取るスクリプトを足すまでは、空のままである。 */
   consoleEntries: Store<readonly never[]>;
   dispose: () => Promise<void>;

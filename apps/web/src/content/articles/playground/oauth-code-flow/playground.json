@@ -1,0 +1,8 @@
+{
+  "tool": "node",
+  "open": "client.js",
+  "start": [
+    { "command": "node", "args": ["auth-server.js"], "name": "認可サーバー" },
+    { "command": "node", "args": ["client.js"], "name": "クライアント" }
+  ]
+}
