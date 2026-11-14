@@ -54,6 +54,11 @@ const server = createServer(async (request, response) => {
         client_id: "demo-client",
       }),
     });
+    if (!tokenResponse.ok) {
+      response.writeHead(502, { "Content-Type": "text/html; charset=utf-8" });
+      response.end("<h1>トークンを受け取れませんでした</h1>");
+      return;
+    }
     const session = random();
     sessions.set(session, await tokenResponse.json());
     response.writeHead(302, {
