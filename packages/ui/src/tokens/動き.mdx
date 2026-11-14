@@ -1,0 +1,106 @@
+import { Canvas, Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Motion.stories";
+
+<Meta of={Stories} />
+
+# 動き
+
+画面のコードが動きを付けるときのユーティリティを、見本と使う場面で並べる。
+時間で進む動きは、ページを開いたときと hover のときに見える。
+OS で動きを減らす設定にすると、時間で進む動きは全て止まり、元の形で出る。
+
+- 使う場面と規則: `packages/ui/design/tokens.md` の「レイアウト、区切り、重なり、動き」
+- 動きを付ける操作、長さ、付けない所: `packages/ui/DesignDoc.md` の「動き」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `MOTION-TOKEN`、`MOTION-REDUCE`
+- 値: `src/tokens/theme.css`
+
+## 色と回転の切り替え
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <button
+      type="button"
+      className="w-fit border border-border px-4 py-2 text-label transition-colors hover:bg-primary-surface"
+    >
+      hover で色が替わる
+    </button>
+    <p className="font-mono text-code-dense text-text-secondary">
+      transition-colors: 木の行、タブ、タブの閉じるボタンの色の切り替え（150ms）
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      transition-transform と rotate-90: ファイルの木と Disclosure の山形の開閉、Switch
+      のつまみの移動（150ms）
+    </p>
+  </div>
+</Unstyled>
+
+## 罫と筆の線を引く
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <span aria-hidden="true" className="h-1 w-64 animate-stroke bg-primary stroke-brush" />
+    <p className="font-mono text-code-dense text-text-secondary">
+      animate-stroke と stroke-brush:
+      選んだタブの下、検索の欄のフォーカス、ダイアログの上端、ヘッダーのナビの今いるページ（320ms、1
+      回）
+    </p>
+    <a href="#motion" className="w-fit">
+      <span className="link-rule">hover で罫が引かれるリンク</span>
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      link-rule: Link、目次の見出し、前後の記事の題の hover（240ms）
+    </p>
+    <a href="#motion" className="brush-hover w-fit pb-1">
+      hover で筆の線が引かれるリンク
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      brush-hover: パンくずリストとヘッダーのナビの hover（240ms）
+    </p>
+  </div>
+</Unstyled>
+
+## 出る
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface-subtle p-6 text-text">
+    <div className="w-64 animate-fade-in border border-border-field bg-surface-raised p-4 shadow-raised">
+      濃度を上げて出る面
+    </div>
+    <p className="font-mono text-code-dense text-text-secondary">
+      animate-fade-in: ダイアログ、メニュー、候補の一覧（150ms）
+    </p>
+  </div>
+</Unstyled>
+
+## 処理中の印
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <span
+      aria-hidden="true"
+      className="relative h-0.5 w-24 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-primary"
+    />
+    <p className="font-mono text-code-dense text-text-secondary">
+      animate-loading: Loading の罫と、PageLoading の筆の線（1 周 1600ms）
+    </p>
+    <span aria-hidden="true" className="loading-dots text-text">
+      <span />
+      <span />
+      <span />
+    </span>
+    <p className="font-mono text-code-dense text-text-secondary">
+      loading-dots: Button の読み込み中の 3 つの点（1 周 1200ms）
+    </p>
+  </div>
+</Unstyled>
+
+## 動きを付けない所
+
+- 位置と配置は動かさない。
+- フォーカスの表示、入力した文字、誤りの文には、動きを付けない。
+- 動きのために JavaScript を配らない。
+
+## story の見本
+
+<Canvas of={Stories.Overview} />
