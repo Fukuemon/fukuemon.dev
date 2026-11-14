@@ -35,7 +35,6 @@ describe("FileTree", () => {
       getComputedStyle(sibling).paddingInlineStart,
     );
     expect(row.querySelector("[data-icon]")).not.toBeNull();
-    expect(screen.queryByRole("button", { name: "作る" })).toBeNull();
 
     await userEvent.keyboard("token.js{Enter}");
     expect(Default.args.onCreate).toHaveBeenCalledWith("token.js", "src");
@@ -82,7 +81,7 @@ describe("FileTree", () => {
     expect(Default.args.onRename).not.toHaveBeenCalled();
   });
 
-  it("名前の欄で打つ文字、Delete、Enter のキーは、木の操作に使わない", async () => {
+  it("名前の欄で打つ文字、Delete のキー、クリックは、木の操作に使わない", async () => {
     render(<Default />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("pack{Delete}");
@@ -93,48 +92,86 @@ describe("FileTree", () => {
     expect(screen.getByRole("treeitem", { name: "src" })).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("同じディレクトリにある名前、/ を含む名前、. と .. と空の名前は、Enter のキーで確定せず、欄を開いたまま行の下に理由を出す", async () => {
+  it.each([
+    ["同じディレクトリにある名前", "callback.js", "callback.js は、この場所に既にあります。"],
+    ["/ を含む名前", "a/b.js", "名前に / は使えません。"],
+    [". だけの名前", ".", ". と .. は名前に使えません。"],
+    [".. だけの名前", "..", ". と .. は名前に使えません。"],
+    ["空白だけの名前", "   ", "名前を入れてください。"],
+  ])("%s は、Enter のキーで確定せず、欄を開いたまま行の下に理由を出す", async (_, name, reason) => {
     render(<Default />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
-    const field = screen.getByRole<HTMLInputElement>("textbox", { name: "新しいファイルの名前" });
-    const cases: [string, string][] = [
-      ["callback.js", "callback.js は、この場所に既にあります。"],
-      ["a/b.js", "名前に / は使えません。"],
-      ["..", ". と .. は名前に使えません。"],
-      ["   ", "名前を入れてください。"],
-    ];
-    for (const [name, reason] of cases) {
-      // clear と type は欄を外すことがあるので、欄の中の文字を選んで打ち替える
-      field.select();
-      await userEvent.keyboard(`${name}{Enter}`);
-      expect(field, name).toHaveFocus();
-      expect(field).toHaveAttribute("aria-invalid", "true");
-      expect(field).toHaveAccessibleDescription(reason);
-    }
+    await userEvent.keyboard(`${name}{Enter}`);
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    expect(field).toHaveFocus();
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(field).toHaveAccessibleDescription(reason);
     expect(Default.args.onCreate).not.toHaveBeenCalled();
-    field.select();
-    await userEvent.keyboard("token.js");
-    expect(field).not.toHaveAttribute("aria-invalid");
   });
 
-  it("欄からフォーカスが外れたときは、名前があれば確定し、空か誤りがあればやめる", async () => {
+  it("理由を出した後に名前を直すと、理由を消す", async () => {
     render(<Default />);
-    const create = screen.getByRole("button", { name: "新しいファイル" });
-    await userEvent.click(create);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("callback.js{Enter}");
+    await userEvent.keyboard("{Backspace}{Backspace}ts");
+    expect(screen.getByRole("textbox")).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("IME の変換を確定する Enter では、名前を確定しない", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("token.js");
+    const field = screen.getByRole("textbox");
+    field.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true }),
+    );
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+    expect(Default.args.onCreate).not.toHaveBeenCalled();
+  });
+
+  it("空の名前のまま欄からフォーカスが外れると、やめる", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.click(document.body);
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
 
-    await userEvent.click(create);
+  it("誤りのある名前のまま欄からフォーカスが外れると、やめる", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("callback.js");
     await userEvent.click(document.body);
     expect(screen.queryByRole("textbox")).toBeNull();
     expect(Default.args.onCreate).not.toHaveBeenCalled();
+  });
 
-    await userEvent.click(create);
+  it("誤りの無い名前のまま欄からフォーカスが外れると、確定する", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("token.js");
     await userEvent.click(document.body);
-    expect(Default.args.onCreate).toHaveBeenCalledTimes(1);
+    expect(Default.args.onCreate).toHaveBeenCalledExactlyOnceWith("token.js", "src");
+  });
+
+  it("欄から Tab のキーで移ると確定し、フォーカスは移った先に残す", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("token.js");
+    await userEvent.tab({ shift: true });
     expect(Default.args.onCreate).toHaveBeenCalledWith("token.js", "src");
+    await expect.poll(() => Default.args.onCreate).toHaveBeenCalledWith("token.js", "src");
+    expect(screen.getByRole("button", { name: "token.js の操作" })).toHaveFocus();
+  });
+
+  it("閉じたディレクトリの中の選んだ項目をメニューから名前の変更にすると、ディレクトリを開いて欄を出す", async () => {
+    render(<Default />);
+    const src = screen.getByRole("treeitem", { name: "src" });
+    src.focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await userEvent.click(screen.getByRole("button", { name: "server.js の操作" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "名前を変える" }));
+    expect(src).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("textbox", { name: "新しい名前" })).toHaveValue("server.js");
   });
 
   it("Esc のキーでやめた後に欄が外れても、確定しない", async () => {

@@ -15,7 +15,7 @@ export type TreeNode = {
   label: string;
   /**
    * label の代わりに描く中身。文字の一部を太字にするときに使う。読み上げる名前は、この中身の文字になる。
-   * label と同じ文字を描き、押せる要素を入れない。treeitem の中に、ほかの操作を置けないためである。
+   * label と同じ文字を描き、押せる要素を入れない。treeitem の中に、ほかの操作を置けないためである。名前の欄は、TreeViewProps の editor で描く。
    */
   content?: ReactNode;
   children?: readonly TreeNode[];
@@ -179,7 +179,10 @@ export function TreeView({
   useEffect(() => {
     if (!isEditing) return;
     const selectedAtStart = readSelectedId();
-    return () => restoreFocus(selectedAtStart);
+    // blur での確定は、フォーカスが次の要素へ移る前に描き直すので、移り終えた後に見る
+    return () => {
+      window.setTimeout(() => restoreFocus(selectedAtStart), 0);
+    };
   }, [isEditing]);
 
   const isFromEditor = (event: { target: EventTarget }) =>
@@ -313,7 +316,7 @@ export function TreeView({
   if (editor?.kind === "insert") {
     const parentIndex = visible.findIndex((v) => v.node.id === editor.parentId);
     const parent = visible[parentIndex];
-    // 親がまだ開いていない描画では、足す場所が無いので行を出さない（次の描画で開く）
+    // 親が木に無いときは、足す場所が無いので行を出さない
     if (editor.parentId === undefined || parent !== undefined) {
       rows.splice(
         parentIndex + 1,
@@ -322,7 +325,8 @@ export function TreeView({
         <li
           aria-level={parent ? parent.level + 1 : 1}
           className={rowClassName}
-          key="tree-editor"
+          // 項目の id と重ならない key にする
+          key={"\0editor"}
           role="treeitem"
           style={indent(parent ? parent.level + 1 : 1)}
         >

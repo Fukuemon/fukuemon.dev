@@ -121,8 +121,8 @@ function NameField({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    // IME の変換を確定する Enter では、名前を確定しない
-    if (event.nativeEvent.isComposing) return;
+    // IME の変換を確定する Enter では、名前を確定しない。Safari は変換を確定する Enter を、isComposing を外し keyCode を 229 にして送る
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     if (event.key === "Enter") {
       event.preventDefault();
       submit(false);
@@ -143,7 +143,10 @@ function NameField({
           "h-5 w-full min-w-0 rounded-control border bg-surface px-1 text-body-compact text-text outline-none",
           error === undefined ? "border-primary" : "border-danger",
         )}
-        onBlur={() => submit(true)}
+        onBlur={() => {
+          // ほかのウィンドウへ移ったときは、戻ると欄にフォーカスが戻るので、確定もやめるもしない
+          if (document.hasFocus()) submit(true);
+        }}
         onChange={(event) => {
           setValue(event.target.value);
           if (error !== undefined) setError(problemOf(event.target.value.trim(), siblings));
@@ -181,7 +184,12 @@ export function FileTree({
   onDelete,
   state,
 }: FileTreeProps) {
-  const [editing, setEditing] = useState<Editing | undefined>(undefined);
+  const [editingState, setEditing] = useState<Editing | undefined>(undefined);
+  // 欄を開いている間に、名前を変える項目か作る場所が木から消えたら、欄を閉じたものとして扱う
+  const editingTarget =
+    editingState?.kind === "rename" ? editingState.node.id : editingState?.parentId;
+  const editing =
+    editingTarget === undefined || find(items, editingTarget) ? editingState : undefined;
   const selected = selectedId === undefined ? undefined : find(items, selectedId);
 
   const startRename = (id: string) => {
