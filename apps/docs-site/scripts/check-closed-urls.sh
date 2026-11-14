@@ -34,6 +34,13 @@ while :; do
   dir="$(dirname "$dir")"
 done
 
+# wrangler deploy の --domain、--routes、--config などの引数も、apply を通らずに Access の外の URL を作るおそれがある
+deploy="$(jq -r '.scripts.deploy // ""' "$APP/package.json")"
+if [ "$deploy" != "wrangler deploy" ]; then
+  echo "package.json の deploy が wrangler deploy ではありません。引数を足さない。" >&2
+  status=1
+fi
+
 # ブロックコメントの中の行は、下の行ごとの確認では除けない
 if grep -qF '/*' "$WRANGLER"; then
   echo "wrangler.jsonc にブロックコメントがあります。コメントは // で書く。" >&2

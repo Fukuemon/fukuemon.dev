@@ -8,16 +8,16 @@ Cloudflare Access が、許可したメールアドレスの人だけを通す�
 
 ## 構成
 
-| ファイル                                      | 持つもの                                                                                                                                        |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `zensical.toml`（リポジトリのルート）         | サイトの名前、`docs/` の読み方、ナビゲーション、Markdown の拡張                                                                                 |
-| `pyproject.toml` と `uv.lock`（ルート）       | Zensical と Markdown の拡張のバージョン                                                                                                         |
-| `apps/docs-site/wrangler.jsonc`               | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false`                                                                 |
-| `apps/docs-site/scripts/check-closed-urls.sh` | `workers_dev` と `preview_urls` が `false` であること、`route` と `routes` が無いこと、ほかに wrangler の設定ファイルが無いこと、noindex の確認 |
-| `apps/docs-site/public/_headers`              | レスポンスヘッダ。ビルドの後に `dist/` へコピーする                                                                                             |
-| `infra/cloudflare/access.tf`                  | Access のアプリケーションとポリシー                                                                                                             |
-| `infra/cloudflare/workers_domain.tf`          | custom domain の `docs.<zone>`                                                                                                                  |
-| `.github/workflows/deploy-docs.yml`           | develop で check が通ったときの配信                                                                                                             |
+| ファイル                                      | 持つもの                                                                                                                                                                                      |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zensical.toml`（リポジトリのルート）         | サイトの名前、`docs/` の読み方、ナビゲーション、Markdown の拡張                                                                                                                               |
+| `pyproject.toml` と `uv.lock`（ルート）       | Zensical と Markdown の拡張のバージョン                                                                                                                                                       |
+| `apps/docs-site/wrangler.jsonc`               | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false`                                                                                                               |
+| `apps/docs-site/scripts/check-closed-urls.sh` | `workers_dev` と `preview_urls` が `false` であること、`route` と `routes` が無いこと、ほかに wrangler の設定ファイルが無いこと、`deploy` が `wrangler deploy` だけであること、noindex の確認 |
+| `apps/docs-site/public/_headers`              | レスポンスヘッダ。ビルドの後に `dist/` へコピーする                                                                                                                                           |
+| `infra/cloudflare/access.tf`                  | Access のアプリケーションとポリシー                                                                                                                                                           |
+| `infra/cloudflare/workers_domain.tf`          | custom domain の `docs.<zone>`                                                                                                                                                                |
+| `.github/workflows/deploy-docs.yml`           | develop で check が通ったときの配信                                                                                                                                                           |
 
 - `zensical.toml` はリポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs_dir` を読まない。
 - `pyproject.toml` と `uv.lock` もルートに置く。uv は、`zensical.toml` と同じディレクトリで依存を解決する。
