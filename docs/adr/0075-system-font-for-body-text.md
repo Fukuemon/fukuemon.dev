@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -16,6 +16,8 @@
 - 運営者は、和の感じを残すと決めた。書体は変えてよいとした。
 - DADS の書体は Noto Sans JP と Noto Sans Mono で、選んだ理由は可読性と視認性の高いサンセリフであることである。システムの書体を使うことは制限していない。
   - 出典: [DADS のタイポグラフィ](https://design.digital.go.jp/dads/foundations/typography/)
+- 本文には、`PostgreSQL`、`EXPLAIN`、`Buffers` のような欧文の技術用語が、ほぼ全ての段落に出てくる。欧文の字の大きさと線の太さが和文とずれると、技術用語だけが小さく薄く見える。
+- 欧文の Web フォントの STIX Two Text は、Fontsource の roman と italic の woff2 の合計が 263 KiB、latin の分割だけで 58 KiB である。
 - Zen Old Mincho は、仮名の重心が現代の明朝より低いオールドスタイル明朝である。起筆と終筆に筆意は残るが、活字なので筆文字に当たらない。
   - 出典: [googlefonts/zen-oldmincho](https://github.com/googlefonts/zen-oldmincho)
 - 和文の可変の書体は、1 つの分割がウェイトの軸を持つので重い。Noto Serif JP の可変は、1 つの分割が平均 56 KB だった。Zen Old Mincho の静的なウェイトは、1 つの分割が平均 20 KB だった。
@@ -38,19 +40,15 @@ Web フォントは、記事の題と見出しの明朝と、等幅だけにす�
 | 等幅             | Noto Sans Mono                                                                                                        | 400 / 700 | Fontsource の分割を self-host する                             |
 | 等幅の中の和文   | BIZ UDGothic                                                                                                          | 400 / 700 | Fontsource の分割を self-host する                             |
 
-- 本文の `font-family` の値は、Verification の計測に使った値である。どの書体も無い端末は、ブラウザの `sans-serif` で描く。
+- 本文の `font-family` の値は、Verification の計測に使った値で始める。Windows と Android の端末で、本文がどの書体で描かれるかと記事のページの見た目を確認し、その結果で並べる書体と順を直す。どの書体も無い端末は、ブラウザの `sans-serif` で描く。
 - 本文の `font-family` の値は、プリミティブトークンの `--fd-primitive-font-family-sans` の 1 か所に置く。テーマ変数の `--font-sans` と `--font-heading` は、この値を参照する。
-- 本文の欧文は、システムフォントの和文の書体が持つ Latin で描く。欧文の Web フォントを足すと、本文で Web フォントの取得がまた起きるためである。
+- 欧文の専用の書体を使わない。本文の欧文は、システムフォントの和文の書体が持つ Latin で描く。記事の題と見出しの欧文は Zen Old Mincho が持つ Latin で、等幅の欧文は Noto Sans Mono で描く。欧文の Web フォントを足すと、本文で Web フォントの取得がまた起きるためである。和文の書体が持つ Latin は、和文と大きさと太さがそろう。
 - 和の感じは、記事の題と見出しの明朝で残す。主の色で和の感じを残す判断は ADR-0024 に、挿絵で残す判断は ADR-0026 にある。
   - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](0024-tokens-of-fukuemon-dev.md)
   - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](0026-sumi-gate-and-garden-on-top.md)
 - 和文の Web フォントに、可変の書体を使わない。和文の Web フォントは書体ごとに 1 つか 2 つのウェイトしか使わないので、ウェイトの軸の分だけ転送量を増やす理由がない。
 - Web フォントは Fontsource で self-host し、外部の CDN から読まない。同一オリジンから配信すれば、COEP の下でもサードパーティのヘッダの方針に左右されない。
-- どの Web フォントも `font-display: swap` にし、`size-adjust` で差し替えのずれを抑える。和文の分割は preload しない。
-
-## 承認の条件
-
-- Windows と Android の端末で、本文が `font-family` のどの書体で描かれるかと、記事のページの見た目を確認する。確認の結果で、`font-family` に並べる書体と順を直す。
+- どの Web フォントも `font-display: swap` にする。`size-adjust` は使わない。本文は Web フォントを読み込まないので、差し替えのずれが起きないためである。和文の分割は preload しない。
 
 ## Verification
 
@@ -86,6 +84,7 @@ Web フォントは、記事の題と見出しの明朝と、等幅だけにす�
 | Noto Sans JP の分割を残し、各分割を使う字だけにする（サブセット（分割のまま）の案。見出しの明朝と同じ処理） | 見出しの明朝の処理をそのまま使える                                                                                                                                                                                                                                | Performance は 82 で、90 に届かない。リクエストの数と、レンダリングを妨げる CSS の `@font-face` が減らない                                                                                         |
 | 今の構成（Noto Sans JP の分割をそのまま配信する）                                                           | DADS と同じ書体で、字形がどの端末でも同じになる                                                                                                                                                                                                                   | Performance が 75、LCP が 5.71 秒で、要求に届かない                                                                                                                                                |
 | BIZ UD の一族でそろえる（本文 BIZ UDPGothic、見出し BIZ UDPMincho）                                         | 本文、見出し、等幅の字形がそろう                                                                                                                                                                                                                                  | 和の感じが弱い。本文の Web フォントの取得が残り、今の構成と同じ理由で要求に届かない見込みである（測っていない）                                                                                    |
+| 欧文に STIX Two Text を足す                                                                                 | x-height と濃度が和文に近く、技術用語が和文と同じ大きさと黒さで読める                                                                                                                                                                                             | 本文で Web フォントの取得が戻る。latin の分割だけで 58 KiB ある                                                                                                                                    |
 | 本文も明朝（Zen Old Mincho）                                                                                | 和の感じが最も強い                                                                                                                                                                                                                                                | 本文の字が多く、読み込む量が最も大きい。DADS がサンセリフを選んだ理由とも合わない                                                                                                                  |
 
 ## Consequences
@@ -100,7 +99,8 @@ Web フォントは、記事の題と見出しの明朝と、等幅だけにす�
 
 - 本文の見た目が、端末に入っている書体ごとに変わる。Hiragino Sans、Yu Gothic、Meiryo、Noto Sans CJK JP のどれで描くかで、字の幅、行の折り返し、太さが違う。
 - DADS の書体から、本文も外れる。DADS のコンポーネントの見た目は、システムフォントで描いた状態で確認する。
-- 記事の題と見出しは、Zen Old Mincho が読み込まれるまで本文の `font-family` の書体で描かれ、読み込まれた後に明朝へ差し替わる。
+- 記事の題と見出しは、Zen Old Mincho が読み込まれるまで本文の `font-family` の書体で描かれ、読み込まれた後に明朝へ差し替わる。`size-adjust` を使わないので、差し替わるときに字の幅と行の折り返しがずれる。
+- 欧文の字形と大きさが、端末の和文の書体で変わる。
 - LCP の 2.5 秒には、この決定だけでは届かない。2.5 秒を超える分は、庭のバンドルの取得によると推測する。
 - レンダリングを妨げる CSS には、見出しの明朝と等幅の `@font-face` が 384 件残る。
 - 見た目の回帰テストでは、スクリーンショットの本文が、テストを実行する環境に入っている書体で描かれる。
