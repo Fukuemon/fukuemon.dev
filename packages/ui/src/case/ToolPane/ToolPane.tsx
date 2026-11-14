@@ -33,10 +33,16 @@ export type ToolPaneProps = {
 
 const JoinedContext = createContext(false);
 
+const TabPanelContext = createContext<{ isFlush: boolean } | undefined>(undefined);
+
 /**
- * true の間、題を読み上げだけに残す。狭い配置でペインを 1 つずつ出すときは、タブのラベルが同じ名前を出すので、題を重ねて出さない（PaneTabs が渡す）。
+ * 中に置いた ToolPane を、PaneTabs のタブで 1 つずつ出すペインとして描かせる。PaneTabs が使う。
+ * 題は読み上げだけに残す。タブのラベルが同じ名前を出すためである。
+ * flush のときは、面の角を丸めない。記事の埋め込みで、面を枠いっぱいに置くためである（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  */
-export const PaneTitleHiddenContext = createContext(false);
+export function ToolPaneTabPanel({ flush, children }: { flush: boolean; children: ReactNode }) {
+  return <TabPanelContext value={{ isFlush: flush }}>{children}</TabPanelContext>;
+}
 
 /**
  * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は四方に 1px の罫を引き、左と上へ 1px ずらして隣の罫に重ねる。
@@ -65,13 +71,15 @@ export function ToolPane({
 }: ToolPaneProps) {
   const titleId = useId();
   const isJoined = use(JoinedContext);
-  const isTitleHidden = use(PaneTitleHiddenContext);
+  const tabPanel = use(TabPanelContext);
+  const isTitleHidden = tabPanel !== undefined;
   const hasActions = actions !== undefined && state.kind !== "pending";
   return (
     <section
       aria-labelledby={titleId}
       className={clsx(
-        "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-pane bg-surface-pane text-text scroll-fade-pane",
+        "flex min-h-0 min-w-0 flex-col overflow-hidden bg-surface-pane text-text scroll-fade-pane",
+        !tabPanel?.isFlush && "rounded-pane",
         // 面の塗りが消えるハイコントラストのときだけ、枠でペインを区切る（docs/adr/0073-layered-panes-and-radius-in-playground.md）
         "forced-colors:border",
         isJoined && "-mt-px -ml-px",

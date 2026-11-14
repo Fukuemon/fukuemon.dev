@@ -166,6 +166,7 @@ package を切り出すのは、次のどちらかが成り立つときである
   - story とテストは、コンポーネントと同じディレクトリに置く。
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/` の関心ごとのディレクトリに置く。
   - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。
+- React に依存しない、ブラウザの判定と設定の関数は、`packages/ui/src/platform/` に置き、サブパスの export で配る。ページの読み込みの初めのスクリプトが、React のコンポーネントを読まずに呼べるようにするためである。
 - カタログの Worker の設定は `packages/ui/wrangler.jsonc` に、カタログが返すレスポンスヘッダは `packages/ui/.storybook/public/_headers` に置く。
 
 ### apps/playground

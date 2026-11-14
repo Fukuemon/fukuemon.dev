@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
+import { ToolPane } from "../ToolPane/ToolPane";
+import { PaneTabs } from "./PaneTabs";
 import * as stories from "./PaneTabs.stories";
 
 const { Bottom, Start, Top } = composeStories(stories);
@@ -54,4 +56,28 @@ describe("PaneTabs", () => {
       unmount();
     }
   });
+
+  it.each([
+    [false, "10px"],
+    [true, "0px"],
+  ])(
+    "flush が %s のとき、中のペインの題を読み上げだけに残し、面の角を %s で丸める",
+    (flush, radius) => {
+      render(
+        <PaneTabs
+          flush={flush}
+          items={[
+            { id: "a", label: "出力", icon: null, content: <ToolPane title="出力">中身</ToolPane> },
+          ]}
+          label="ペイン"
+          onSelect={() => {}}
+          placement="top"
+          selectedId="a"
+        />,
+      );
+      const pane = screen.getByRole("region", { name: "出力" });
+      expect(getComputedStyle(pane).borderTopLeftRadius).toBe(radius);
+      expect(screen.getByRole("heading", { name: "出力" })).toHaveClass("sr-only");
+    },
+  );
 });

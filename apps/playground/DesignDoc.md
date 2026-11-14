@@ -86,7 +86,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
     go/                   Go を動かすツールのページ。ファイル、実行中かどうか、出力、実行とテストの関数を持つ React の外のモジュール
     sql-console/          SQL の入力欄、結果の表、実行計画のツリー
-    layout/               3 つのツールのページが共有する配置の判定（useLayoutMode）と、下のタブの帯の印
+    layout/               3 つのツールのページが共有する配置の判定（useLayoutMode）と、狭い配置のタブとドロワーのボタンの印
     code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
@@ -106,6 +106,7 @@ packages/
   - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
   - スライドのエディタのディレクトリ（`slides/`）と、`@fukuemon/slides` への import の向きは、[スライドの Design Doc](../../docs/design/features/slides/DesignDoc.md#ディレクトリと依存) にある。Oxlint は、`slides/` も、ツールのページの間の import を止める対象にする。
 - `code-editor/` は、Node の実行環境のページ（`src/node/`）、スライドのエディタのページ（`src/slides/`）、Go を動かすツールのページ（`src/go/`）、`sql-console/` が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
+- `layout/` は、3 つのツールのページのディレクトリと `sql-console/` が共有する。`layout/` は、React のほかに何も import しない。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
@@ -133,6 +134,7 @@ flowchart TB
   go["src/go"]
   console["sql-console"]
   codeeditor["code-editor"]
+  layout["layout"]
   runtime["@fukuemon/node-runtime"]
   database["@fukuemon/sql-runtime"]
   runner["@fukuemon/go-runtime"]
@@ -150,6 +152,7 @@ flowchart TB
   node --> database
   node --> ui
   node --> ai
+  node --> layout
   ai --> ui
   sql --> console
   sql --> database
@@ -157,15 +160,18 @@ flowchart TB
   sql --> workspace
   sql --> ui
   sql --> ai
+  sql --> layout
   go --> runner
   go --> codeeditor
   go --> project
   go --> workspace
   go --> ui
   go --> ai
+  go --> layout
   console --> database
   console --> codeeditor
   console --> ui
+  console --> layout
   runtime --> database
   workspace --> project
   project --> pp

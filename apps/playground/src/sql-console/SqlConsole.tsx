@@ -104,7 +104,13 @@ export function SqlConsole({
             label: "入力",
             icon: EDITOR_ICON,
             content: (
-              <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-pane bg-surface-pane p-2">
+              <div
+                className={
+                  embedded
+                    ? "flex min-h-0 flex-1 flex-col gap-3 bg-surface-pane p-2"
+                    : "flex min-h-0 flex-1 flex-col gap-3 rounded-pane bg-surface-pane p-2"
+                }
+              >
                 <div className="grid min-h-0 flex-1 has-[.cm-focused]:focus-ring">{editor}</div>
                 {runRow}
               </div>
@@ -115,7 +121,13 @@ export function SqlConsole({
             label: "結果",
             icon: RESULT_ICON,
             content: (
-              <div className="min-h-0 flex-1 overflow-auto rounded-pane bg-surface-pane p-2 scroll-fade-pane">
+              <div
+                className={
+                  embedded
+                    ? "min-h-0 flex-1 overflow-auto bg-surface-pane p-2 scroll-fade-pane"
+                    : "min-h-0 flex-1 overflow-auto rounded-pane bg-surface-pane p-2 scroll-fade-pane"
+                }
+              >
                 {results}
               </div>
             ),

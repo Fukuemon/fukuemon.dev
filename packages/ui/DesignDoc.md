@@ -389,18 +389,21 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `HttpExchangeDetail` | 1 つの行き来のヘッダ、Cookie、本文                                                      |
 | `ConsoleEntryList`   | `console.*` の出力の一覧。ログレベルで絞り、値を `TreeView` で開いて見せる              |
 | `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む |
+| `PaneTabs`           | 狭い配置で、ペインを 1 つずつ切り替えるタブの帯。下、左、上に置く                       |
+| `FileDrawer`         | 狭い配置で、ファイルの木を画面の左から重ねて出す引き出し                                |
 
-コードを動かす画面の Case は、どれも `ToolPane` の領域として描き、次の形にそろえる。
+コードを動かす画面の Case のうち、`PaneTabs`、`FileDrawer`、`ConfirmDialog` を除くものは、`ToolPane` の領域として描き、次の形にそろえる。
 
-- 領域は、VS Code と DevTools のように隙間なく並べ、1px の `border` の罫で仕切る。
-  - 並べる側は `ToolPaneGroup` で囲み、領域の間を空けない。
-  - 中の `ToolPane` は、四方の罫を左と上へ 1px ずらして隣の罫に重ねる。高さのそろわない並びでも、罫は 2 重にならない。
-- 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
+- 領域は、地（`surface-ground`）の上に重ねた紙の面（`surface-pane`）にし、10px（`rounded-pane`）で丸める。四方の枠を引かず、面と地の濃さの差で区切る（ADR-0073）。
+  - ハイコントラストのときだけ、面に 1px の枠を引く。
+  - `PaneTabs` のタブの中に置いた領域は、題を読み上げだけに残す。`flush` の `PaneTabs` の中では、面の角を丸めない。
+- 題の帯は 28px（触る端末では 44px）で、題は `text-compact` の薄い墨にする。下の状態の帯は 24px で、`text-compact` にする。ペインの中の罫は、タブの帯の下だけに引く。
 - 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
   - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
     - `pending` の領域は、操作と、題の下の帯（ファイルのタブ、URL の欄）も出さない。待ちの間にこれらへフォーカスすると、待ちが終わって領域が描き直されたときに、フォーカスが失われるためである。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
+  - 触る端末（`pointer: coarse`）では、上の押せる要素と木の行を 44px にする。コンポーネントが `pointer-coarse:` の variant で自分で替える（ADR-0071）。
 
 ### カタログ
 

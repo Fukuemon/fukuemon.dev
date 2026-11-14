@@ -51,12 +51,16 @@ function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: 
 
 /** SQL だけを動かすツールのページ。埋め込みのときは、ページのヘッダを出さない。 */
 export function SqlPage({ search, embedded }: { search: string; embedded: boolean }) {
+  const mode = useLayoutMode();
   return (
     <main
       className={
-        useLayoutMode() === "wide"
+        mode === "wide"
           ? "mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4"
-          : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
+          : // 記事に埋め込んだ狭い配置では、地を出さず、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+            embedded
+            ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
+            : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
       }
     >
       {!embedded && (

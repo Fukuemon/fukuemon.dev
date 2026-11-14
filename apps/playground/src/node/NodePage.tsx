@@ -60,7 +60,7 @@ function Pane({
       <div
         className={[
           "flex size-full flex-col [&>section]:flex-1",
-          flush ? "[&>section]:rounded-none" : "rounded-pane",
+          !flush && "rounded-pane",
           editorFocusRing &&
             (flush ? "has-[.cm-focused]:focus-ring-inset" : "has-[.cm-focused]:focus-ring"),
         ]
