@@ -129,7 +129,7 @@ ADR-0035（[HTTP の流れとコンソールを、実行環境の中の Node の
 ADR-0050（[訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)）は、ADR-0077 に置換した。  
 ADR-0051（[Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす](0051-node-runtime-boot-and-commands.md)）は、ADR-0076 に置換した。  
 ADR-0069（[Node の実行環境を起動し直すときに、作業ディレクトリを読めなければ、前に起動したときのファイルで起動する](0069-node-runtime-commands-without-visitor-action.md)）は、ADR-0076 に置換した。  
-ADR-0070（[Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける](0070-node-save-targets.md)）は、ADR-0076 と ADR-0077 に置換した。
+ADR-0070（[Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける](0070-node-save-targets.md)）は、ADR-0076 と ADR-0077 に置換した。起動し直すときに渡すファイルの決定は ADR-0076 に、ほかは ADR-0077 にある。
 
 ## ADR の間の依存
 

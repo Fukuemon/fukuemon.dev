@@ -22,7 +22,7 @@ Node の実行環境で、訪問者の作業ディレクトリのうち、どの
   - 出典: [State Partitioning（MDN）](https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/State_Partitioning)
 - Node の実行環境は WebContainers で動かし、作業ディレクトリのファイルの一覧と中身は、WebContainers の `fs` で読む。
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
-- 訪問者のシェルは制限が無く、訪問者は作業ディレクトリに、どの名前のファイルでも、シンボリックリンクでも作れる。
+- 訪問者のシェルは制限が無く、訪問者は作業ディレクトリに、どの名前のファイルでも、シンボリックリンクでも作れる。「実行環境を起動し直す」の操作では、破棄する前の実行環境から読んだ、作業ディレクトリのファイルで起動する。
   - ADR-0076: [Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かし、起動し直すときに作業ディレクトリを読めなければ前に起動したときのファイルで起動する](0076-node-runtime-boot-commands-and-restart.md)
 - 実行環境が追加するファイルは、作業ディレクトリの外（`/tmp/fukuemon-playground/`）に置く。
   - ADR-0052: [実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す](0052-runtime-files-outside-workdir.md)
