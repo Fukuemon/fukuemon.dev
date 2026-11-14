@@ -6,10 +6,15 @@ export type WorkspaceLoad<T> =
   | { kind: "saved"; record: T }
   | { kind: "unavailable" };
 
+/** 値と、値が変わったことの購読。React の useSyncExternalStore で読む。 */
+export type Store<T> = { subscribe: (onChange: () => void) => () => void; getSnapshot: () => T };
+
 export type Workspace<T> = {
   load: () => Promise<WorkspaceLoad<T>>;
   /** 保存してあるレコードを、丸ごと置き換える。IndexedDB を読めなかった後は、書き込まない。 */
   save: (record: T) => Promise<void>;
+  /** 保存してあるレコードを消す。IndexedDB を読めなかった後は、何もしない。 */
+  clear: () => Promise<void>;
 };
 
 const DATABASE = "fukuemon-playground";
@@ -63,17 +68,90 @@ export function createWorkspace<T>(
         return { kind: "unavailable" };
       }
     },
-    save: async (record) => {
-      if (unavailable) return;
-      const db = await connect();
-      const transaction = db.transaction(STORE, "readwrite");
-      transaction.objectStore(STORE).put(record, key);
-      // 容量の超過は commit のときに起きるので、トランザクションの終わりで結果を決める
-      await new Promise<void>((resolve, reject) => {
-        transaction.addEventListener("complete", () => resolve());
-        transaction.addEventListener("abort", () => reject(transaction.error));
-        transaction.addEventListener("error", () => reject(transaction.error));
+    save: (record) => write((store) => store.put(record, key)),
+    clear: () => write((store) => store.delete(key)),
+  };
+
+  async function write(operation: (store: IDBObjectStore) => void) {
+    if (unavailable) return;
+    const db = await connect();
+    const transaction = db.transaction(STORE, "readwrite");
+    operation(transaction.objectStore(STORE));
+    // 容量の超過は commit のときに起きるので、トランザクションの終わりで結果を決める
+    await new Promise<void>((resolve, reject) => {
+      transaction.addEventListener("complete", () => resolve());
+      transaction.addEventListener("abort", () => reject(transaction.error));
+      transaction.addEventListener("error", () => reject(transaction.error));
+    });
+  }
+}
+
+/** 保存の列。保存の途中に来たレコードは、最新の 1 件だけを持ち、保存が終わってから書く。 */
+export type Saver<T> = {
+  save: (record: T) => void;
+  /** 待っているレコードを捨て、途中の保存が終わってから、保存してあるレコードを消す。 */
+  clear: () => Promise<void>;
+  /** 最後の保存が失敗したときは true である。次の保存が通ると false に戻る。 */
+  failed: Store<boolean>;
+};
+
+/**
+ * Workspace への書き込みを 1 列に並べる。1 文字の入力ごとに書き込みを重ねないためと、消した後に古い保存が書き戻さないためである。
+ */
+export function createSaver<T>(workspace: Workspace<T>): Saver<T> {
+  const failed = createStore(false);
+  let queued: { record: T } | undefined;
+  let tail = Promise.resolve();
+  let draining = false;
+  // clear の後に来た保存を、clear の前の列が書かないように、clear のたびに世代を進める
+  let generation = 0;
+  const drain = async (own: number) => {
+    while (queued && own === generation) {
+      const { record } = queued;
+      queued = undefined;
+      await workspace.save(record).then(
+        () => failed.set(false),
+        () => failed.set(true),
+      );
+    }
+    if (own === generation) draining = false;
+  };
+  return {
+    save: (record) => {
+      queued = { record };
+      if (draining) return;
+      draining = true;
+      const own = generation;
+      tail = tail.then(() => drain(own));
+    },
+    clear: () => {
+      queued = undefined;
+      generation++;
+      draining = false;
+      const cleared = tail.then(async () => {
+        await workspace.clear();
+        failed.set(false);
       });
+      tail = cleared.catch(() => undefined);
+      return cleared;
+    },
+    failed,
+  };
+}
+
+function createStore<T>(initial: T): Store<T> & { set: (value: T) => void } {
+  let value = initial;
+  const listeners = new Set<() => void>();
+  return {
+    subscribe: (onChange) => {
+      listeners.add(onChange);
+      return () => listeners.delete(onChange);
+    },
+    getSnapshot: () => value,
+    set: (next) => {
+      if (Object.is(next, value)) return;
+      value = next;
+      for (const listener of listeners) listener();
     },
   };
 }

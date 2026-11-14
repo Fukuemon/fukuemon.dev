@@ -6,6 +6,7 @@ export { BootError } from "./types";
 export type {
   BootFailureReason,
   BootOptions,
+  FileContents,
   FileEntry,
   NodeRuntime,
   OpenPort,
@@ -13,6 +14,7 @@ export type {
   ProcessHandle,
   ProcessInfo,
   ProcessStatus,
+  ReadAllOptions,
   StartOptions,
   Store,
   TerminalSize,

@@ -1,6 +1,6 @@
 import type { BackendFiles } from "./backend";
 import { createStore } from "./store";
-import type { FileEntry, NodeRuntime } from "./types";
+import type { FileContents, FileEntry, NodeRuntime, ReadAllOptions } from "./types";
 
 const NODE_MODULES = "node_modules";
 
@@ -36,6 +36,44 @@ async function listTree(files: BackendFiles, directory = ""): Promise<FileEntry[
     }
   }
   return entries;
+}
+
+/** NUL を含むものと、UTF-8 として正しくないものは、テキストとして読めないとみなす。 */
+function decodeText(bytes: Uint8Array): string | null {
+  if (bytes.includes(0)) return null;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return null;
+  }
+}
+
+async function readAllFiles(
+  files: BackendFiles,
+  { exclude, maxBytes }: ReadAllOptions,
+  directory = "",
+): Promise<FileContents[]> {
+  const excluded = new Set(exclude);
+  const items = [...(await files.list(directory))]
+    .filter((item) => !excluded.has(item.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const result: FileContents[] = [];
+  for (const item of items) {
+    const path = join(directory, item.name);
+    if (item.kind === "directory") {
+      result.push(...(await readAllFiles(files, { exclude, maxBytes }, path)));
+      continue;
+    }
+    // 一覧を読んだ後に消えたファイルは、読まずに飛ばす
+    const bytes = await files.readFile(path).catch(() => undefined);
+    if (!bytes) continue;
+    result.push({
+      path,
+      size: bytes.byteLength,
+      text: bytes.byteLength > maxBytes ? null : decodeText(bytes),
+    });
+  }
+  return result;
 }
 
 const sameTree = (a: readonly FileEntry[], b: readonly FileEntry[]) =>
@@ -121,6 +159,7 @@ export async function createFiles(
         },
       },
       read: async (path) => decoder.decode(await files.readFile(path)),
+      readAll: (options) => readAllFiles(files, options),
       // 既にあるファイルの中身を書いても、ツリーは変わらない
       write: async (path, contents) => {
         const exists = tree.getSnapshot().some((entry) => entry.path === path);

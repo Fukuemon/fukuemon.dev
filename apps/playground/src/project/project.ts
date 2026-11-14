@@ -1,10 +1,12 @@
 import {
   type PlaygroundProject,
   type PlaygroundTool,
+  isSafeFilePath,
   playgroundProjectSchema,
 } from "@fukuemon/playground-project";
 
 export type { PlaygroundTool };
+export { isSafeFilePath };
 
 export const SITE_ORIGIN = "https://fukuemon.dev";
 

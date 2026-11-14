@@ -8,6 +8,12 @@ export type BootOptions = {
   files: Readonly<Record<string, string>>;
 };
 
+/** files.readAll で読まないパスと、中身を読まないファイルの大きさ。exclude は、パスの区切りの 1 つと一致する名前である。 */
+export type ReadAllOptions = { exclude: readonly string[]; maxBytes: number };
+
+/** 作業ディレクトリの 1 つのファイル。maxBytes を超えるファイルと、テキストとして読めないファイルは、text が null である。 */
+export type FileContents = { path: string; size: number; text: string | null };
+
 /** 作業ディレクトリのファイルかディレクトリ。path は作業ディレクトリからの相対パスで、区切りは `/` である。 */
 export type FileEntry = { path: string; kind: "file" | "directory" };
 
@@ -45,6 +51,8 @@ export type NodeRuntime = {
     tree: Store<readonly FileEntry[]>;
     changes: { subscribe: (onChange: (paths: readonly string[]) => void) => () => void };
     read: (path: string) => Promise<string>;
+    /** 作業ディレクトリのファイルを、パスの順に全て読む。exclude に当たるパスは読まない。 */
+    readAll: (options: ReadAllOptions) => Promise<readonly FileContents[]>;
     write: (path: string, contents: string) => Promise<void>;
     createDirectory: (path: string) => Promise<void>;
     rename: (from: string, to: string) => Promise<void>;

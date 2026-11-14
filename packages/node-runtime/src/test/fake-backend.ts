@@ -145,7 +145,7 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
   return {
     api,
     /** 実行環境の中のコマンドがファイルを作ったときと同じく、操作の関数を通さずに書いて、通知を出す。 */
-    putFromCommand: (path: string, contents: string) => {
+    putFromCommand: (path: string, contents: string | Uint8Array) => {
       putFile(path, contents);
       notify([path]);
     },

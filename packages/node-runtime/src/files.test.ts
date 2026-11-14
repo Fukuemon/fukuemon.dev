@@ -182,3 +182,45 @@ describe("files", () => {
     expect(treePaths(runtime)).toContain("b.txt");
   });
 });
+
+describe("files.readAll", () => {
+  const options = { exclude: ["node_modules"], maxBytes: 4 };
+
+  it("作業ディレクトリのファイルを、パスと大きさと中身で、パスの順に返す", async () => {
+    const { runtime } = await bootFake();
+    expect(await runtime.files.readAll({ ...options, maxBytes: 100 })).toStrictEqual([
+      { path: "index.js", size: 14, text: "console.log(1)" },
+      { path: "package.json", size: 2, text: "{}" },
+      { path: "src/app.js", size: 0, text: "" },
+    ]);
+  });
+
+  it("exclude の名前に当たるディレクトリは、入れ子のものも読まない", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand("node_modules/a/index.js", "");
+    created.files.putFromCommand("src/node_modules/b/index.js", "");
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["index.js", "package.json", "src/app.js"]);
+  });
+
+  it.each([
+    ["maxBytes を超えるファイル", "big.txt", "12345"],
+    ["NUL を含むファイル", "nul.bin", new Uint8Array([0x61, 0])],
+    ["UTF-8 として正しくないファイル", "bad.bin", new Uint8Array([0xff])],
+  ])("%s は、text を null にして返す", async (_, path, contents) => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand(path, contents);
+    const file = (await runtime.files.readAll(options)).find((entry) => entry.path === path);
+    expect(file?.text).toBeNull();
+  });
+
+  it("一覧を読んだ後に消えたファイルは、飛ばして返す", async () => {
+    const { runtime, created } = await bootFake();
+    const readFile = created.files.api.readFile;
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "index.js" ? Promise.reject(new Error("ENOENT")) : readFile(path),
+    );
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["package.json", "src/app.js"]);
+  });
+});
