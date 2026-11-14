@@ -50,13 +50,15 @@ function Pane({
   );
 }
 
-function NodeLayout({ session }: { session: NodeSession }) {
+const title = <h1 className="font-heading text-heading-sm text-text">Node の実行環境</h1>;
+
+function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boolean }) {
   const { project } = session;
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   return (
     <RuntimeContext value={{ project, runtime }}>
-      <Toolbar session={session} />
+      <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
         <div className="min-h-0 flex-1">
           <SplitPane
@@ -114,31 +116,31 @@ function NodeLayout({ session }: { session: NodeSession }) {
   );
 }
 
-function NodeTool({ search }: { search: string }) {
+function NodeTool({ search, embedded }: { search: string; embedded: boolean }) {
   const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
-      <Notice title="プロジェクトを開けませんでした" tone="danger">
-        {isEmbedId(load.embedId)
-          ? `埋め込みの ID「${load.embedId}」のプロジェクトを読めませんでした。`
-          : "プロジェクトを読めませんでした。"}{" "}
-        <Link href={`${SITE_ORIGIN}/playground`}>プレイグラウンドの一覧</Link>
-        から開き直してください。
-      </Notice>
+      <>
+        {!embedded && title}
+        <Notice title="プロジェクトを開けませんでした" tone="danger">
+          {isEmbedId(load.embedId)
+            ? `埋め込みの ID「${load.embedId}」のプロジェクトを読めませんでした。`
+            : "プロジェクトを読めませんでした。"}{" "}
+          <Link href={`${SITE_ORIGIN}/playground`}>プレイグラウンドの一覧</Link>
+          から開き直してください。
+        </Notice>
+      </>
     );
   }
-  return <NodeLayout session={load.session} />;
+  return <NodeLayout embedded={embedded} session={load.session} />;
 }
 
 /** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。 */
 export function NodePage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
     <main className="flex h-dvh min-w-0 flex-col gap-2 p-2">
-      {!embedded && (
-        <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
-      )}
       <Suspense fallback={<Loading label="プロジェクトを読み込んでいます" />}>
-        <NodeTool search={search} />
+        <NodeTool embedded={embedded} search={search} />
       </Suspense>
     </main>
   );
