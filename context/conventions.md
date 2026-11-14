@@ -225,6 +225,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - E2E の lint の規則（`e2e-authoring-rule`）は、`packages/e2e/visual/` に掛けない。
   - 規則は `tests/` の下だけを見る。
   - 庭と表の枠の spec は、`getByRole`、CSS のセレクタ、`getAttribute` を使う。規則に合わせるには、spec の書き直しと `apps/web` への `data-testid` の追加が要り、動作を変えない移動を超えるため。
+  - コードブロックのコピーの吹き出しの spec は、CSS のセレクタ（`.expressive-code`、`.feedback`、`.ec-line .code`）を使う。Expressive Code が出力する DOM に `data-testid` を付けられないため。
 - knip は、記事に埋め込む実行環境の初期ファイル（`apps/web/src/content/articles/**/playground/**`）を見ない（`ignore`）。訪問者の実行環境で動くファイルで、サイトのコードから import されないため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。

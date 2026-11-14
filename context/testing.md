@@ -102,13 +102,14 @@ Storybook のバージョンを上げる pull request でも、CI が同じ E2E 
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
 サイトの E2E の package は `packages/e2e` で、spec は `packages/e2e/tests/specs/` に置く。  
 `packages/e2e` は、ビルドした `apps/web/dist/` を配信して実行する。実行の方法は [E2E のテスト](testing/e2e.md#running-tests) にある。  
-トップの庭の見た目の回帰と、記事のページの表と図の枠の spec は、`packages/e2e/visual/specs/` に置く。  
+トップの庭の見た目の回帰、記事のページの表と図の枠、コードブロックのコピーの吹き出しの spec は、`packages/e2e/visual/specs/` に置く。  
 `tests/` の外なので、E2E の lint の規則は掛からない。
 
 記事のページの表、図、コードブロックの枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
-あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  
-コードブロックのコピーの吹き出しが、1 行目の字とボタンに重ならないことも、ブラウザで描いて矩形を比べる E2E（`code-copy-feedback.spec.ts`）で確認する。
-`scroll-box-fade.spec.ts`、`code-copy-feedback.spec.ts`、`packages/e2e` の一覧から記事を開く spec は、検証用の原稿に依存する。
+あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。
+
+コードブロックのコピーの吹き出しが、1 行目の字とボタンの枠に重ならないことも、ブラウザで描画して矩形を比べる E2E（`code-copy-feedback.spec.ts`）で確認する。  
+`scroll-box-fade.spec.ts`、`code-copy-feedback.spec.ts`、`packages/e2e` の一覧から記事を開く spec は、検証用の原稿に依存する。  
 原稿を消すときに、spec が開く記事を差し替える。
 
 トップの庭は、Playwright のスクリーンショットの比較で確認する。  

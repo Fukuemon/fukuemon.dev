@@ -106,7 +106,7 @@
   @apply rounded-control duration-150;
   transform: none;
   transition-property: opacity;
-  /* コードの 1 行目の字に重ならないよう、ボタンの上 (ファイル名の帯) に出す。矢印はボタンの向きを指せないので外す */
+  /* コードの 1 行目の字に重ならないよう、ボタンの上に出す。ファイル名の帯のない枠では、枠の上の外に出る。矢印はボタンの向きを指せないので外す */
   position: absolute;
   inset-block-end: calc(100% + 0.25rem);
   inset-inline-end: 0;
