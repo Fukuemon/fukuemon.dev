@@ -4,6 +4,7 @@ title: 本文と図とコードブロック
 description: 本文、コードブロック、Mermaid の図の描画を確認する検証用の記事である。
 tags: [検証]
 status: published
+verificationOnly: true
 publishedAt: 2026-11-14
 order: 1
 ---

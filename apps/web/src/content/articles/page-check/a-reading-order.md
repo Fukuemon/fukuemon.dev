@@ -4,6 +4,7 @@ title: 読む順の確認
 description: ファイル名と公開の日付の順ではなく、order の順にシリーズのページへ並ぶことを確認する検証用の記事である。
 tags: [検証, シリーズ]
 status: published
+verificationOnly: true
 publishedAt: 2026-11-12
 order: 3
 ---

@@ -26,7 +26,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # 検証用の記事を、一覧、RSS、記事のページから外す (context/operations.md)
       - run: pnpm --filter @fukuemon/web run build
+        env:
+          SITE_ENV: production
 
       - name: Cloudflare へ配信する
         run: pnpm --filter @fukuemon/web run deploy

@@ -68,6 +68,7 @@ export const articleSchema = z.object({
   updatedAt: z.coerce.date().optional(),
   related: z.array(z.string()).default([]), // ほかの記事の contentId
   repository: z.object({ url: z.string().url(), path: z.string().optional() }).optional(),
+  verificationOnly: z.boolean().default(false),
   format: z.enum(["page"]).default("page"),
   order: z.number().int().optional(), // シリーズの中の読む順
 });
@@ -245,6 +246,7 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 1. 著者が `apps/web/src/content/articles/<name>.md` を作り、frontmatter を書く。
    - 書くキーは、`contentId`、`title`、`description`、`tags`、`publishedAt` の 5 つ。
    - `status` を省くと `draft` になり、build は書き出さない。公開するときは `status: published` を書く。
+   - 検証用の原稿には `verificationOnly: true` を書く。本番の build は書き出さない。
    - シリーズに入れるときは、`articles/<series>/` に置き、`order` を書く。
 2. 関連があれば、`related` に相手の `contentId` を書く（片方向だけ）。
 3. 新しいシリーズを作るときだけ、`articles/<series>/index.md` に `title` と `description` を書く。
@@ -274,7 +276,10 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
   - 一覧と RSS が使う `getArticleList()`
   - シリーズのページが使う `getSeriesPaths()`
 
-`isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
+`isPublic()` は、実行の種類（`SiteMode`）ごとに通す記事を決める。  
+dev server はすべてを通す。  
+本番の build（`SITE_ENV=production`）は、`status` が `published` で、`verificationOnly` が `true` でないものだけを通す。  
+プレビューと手元の build は、`status` が `published` のものを、`verificationOnly` を問わず通す。  
 `planArticlePages()` は、シリーズの位置と前後を、`isPublic()` を通った記事だけで数える。  
 シリーズの所属と読む順は、Astro の `id` の先頭のディレクトリ名と `order` から、`planArticlePages()` が導く。  
 `listArticles()` は、`isPublic()` を通った記事を、公開の日付の新しい順に返す。  

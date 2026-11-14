@@ -4,6 +4,7 @@ title: SQL のツールを埋め込む記事
 description: 記事の中で SQL のツールを開けることと、開いた後も外部の画像が表示されたままであることを確認する検証用の記事である。
 tags: [検証]
 status: published
+verificationOnly: true
 publishedAt: 2026-11-13
 ---
 

@@ -1,7 +1,7 @@
 import { getCollection, getEntry, render } from "astro:content";
 import { assertContentGraph } from "./article-graph";
 import { listArticles, planSeriesPages, type SeriesSource } from "./article-list";
-import { type ArticleSeries, isPublic, planArticlePages } from "./article-pages";
+import { type ArticleSeries, type SiteMode, isPublic, planArticlePages } from "./article-pages";
 import { planProjectPages } from "../playground/project-pages";
 
 /** 記事のページが描く値。Astro のエントリの形をページに出さない (docs/adr/0002-content-model-independence.md) */
@@ -13,6 +13,12 @@ export type ArticlePageProps = {
   updatedAt?: Date;
   series?: ArticleSeries;
 };
+
+/** build の種類。SITE_ENV=production の build だけが、検証用の記事を外す (context/operations.md) */
+function siteMode(): SiteMode {
+  if (import.meta.env.DEV) return "dev";
+  return process.env["SITE_ENV"] === "production" ? "production" : "preview";
+}
 
 async function loadArticlesAndSeries() {
   const [articles, series] = await Promise.all([
@@ -32,7 +38,7 @@ async function loadArticlesAndSeries() {
 export async function getArticlePaths() {
   const { articles, series } = await loadArticlesAndSeries();
   const titles = new Map(series.map((s) => [s.name, s.data.title]));
-  return planArticlePages(articles, titles, import.meta.env.DEV).map(({ article, series }) => {
+  return planArticlePages(articles, titles, siteMode()).map(({ article, series }) => {
     const { title, description, publishedAt, updatedAt } = article.data;
     return {
       params: { slug: article.id },
@@ -59,13 +65,13 @@ export async function renderArticle(id: string) {
 /** 記事の一覧と RSS に載せる記事を、新しい順に返す */
 export async function getArticleList() {
   const { articles, series } = await loadArticlesAndSeries();
-  return listArticles(articles, series, import.meta.env.DEV);
+  return listArticles(articles, series, siteMode());
 }
 
 /** シリーズのページの `getStaticPaths` が返す、書き出すシリーズのパスと props */
 export async function getSeriesPaths() {
   const { articles, series } = await loadArticlesAndSeries();
-  return planSeriesPages(articles, series, import.meta.env.DEV).map((page) => ({
+  return planSeriesPages(articles, series, siteMode()).map((page) => ({
     params: { series: page.name },
     props: page,
   }));
@@ -76,7 +82,7 @@ export async function getPlaygroundProjectPaths() {
   const { articles } = await loadArticlesAndSeries();
   return planProjectPages(
     articles
-      .filter((a) => isPublic(a.data.status, import.meta.env.DEV))
+      .filter((a) => isPublic(a.data, siteMode()))
       .map((a) => ({ id: a.id, filePath: a.filePath, contentId: a.data.contentId, body: a.body })),
   );
 }

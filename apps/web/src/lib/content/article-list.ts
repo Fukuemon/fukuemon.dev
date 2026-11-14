@@ -1,5 +1,12 @@
 import type { ArticleData, ContentRef, SeriesData } from "@fukuemon/content-model";
-import { type ArticleSource, articleHref, isPublic, orderOf, seriesDir } from "./article-pages";
+import {
+  type ArticleSource,
+  type SiteMode,
+  articleHref,
+  isPublic,
+  orderOf,
+  seriesDir,
+} from "./article-pages";
 
 /** 一覧、シリーズのページ、RSS を組むのに要る、記事 1 本の id と frontmatter。記事のページの値に、一覧に出す項目を足す */
 export type ArticleListSource = ArticleSource & {
@@ -66,9 +73,9 @@ function seriesLinks(series: readonly SeriesSource[]): Map<string, SeriesLink> {
 export function listArticles(
   articles: readonly ArticleListSource[],
   series: readonly SeriesSource[],
-  isDev: boolean,
+  mode: SiteMode,
 ): ArticleListItem[] {
-  const refs = articles.filter((a) => isPublic(a.data.status, isDev)).map(toContentRef);
+  const refs = articles.filter((a) => isPublic(a.data, mode)).map(toContentRef);
   assertSeriesDefined(
     refs.map((ref) => ref.series),
     series,
@@ -99,9 +106,9 @@ function assertSeriesDefined(
 export function planSeriesPages(
   articles: readonly ArticleListSource[],
   series: readonly SeriesSource[],
-  isDev: boolean,
+  mode: SiteMode,
 ): SeriesPage[] {
-  const shown = articles.filter((a) => isPublic(a.data.status, isDev));
+  const shown = articles.filter((a) => isPublic(a.data, mode));
   const byDir = Map.groupBy(shown, (a) => seriesDir(a.id));
   assertSeriesDefined(byDir.keys(), series);
   return series.flatMap((s) => {

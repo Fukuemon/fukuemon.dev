@@ -18,6 +18,8 @@ export const articleSchema = z.object({
   updatedAt: z.coerce.date().optional(),
   related: z.array(z.string()).default([]),
   repository: z.object({ url: z.string().url(), path: z.string().optional() }).optional(),
+  /** 検証用の原稿。status が published でも、本番の build では書き出さない */
+  verificationOnly: z.boolean().default(false),
   format: z.enum(ARTICLE_FORMATS).default("page"),
   /** シリーズの中の読む順。小さいほど前。シリーズに入れない記事は書かない */
   order: z.number().int().optional(),

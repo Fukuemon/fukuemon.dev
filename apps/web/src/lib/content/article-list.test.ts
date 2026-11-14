@@ -18,6 +18,7 @@ const article = (
     description: `説明 ${id}`,
     tags: ["検証"],
     status: "published",
+    verificationOnly: false,
     publishedAt: new Date(publishedAt),
     format: "page",
     ...over,
@@ -39,7 +40,7 @@ describe("listArticles", () => {
     const items = listArticles(
       [article("rdbms/btree", "2026-11-01", { order: 1 })],
       [RDBMS],
-      false,
+      "production",
     );
     expect(items).toStrictEqual([
       {
@@ -59,7 +60,7 @@ describe("listArticles", () => {
   });
 
   it("シリーズに入れない記事は、series を持たず、シリーズのリンクも付けない", () => {
-    const items = listArticles([article("standalone", "2026-11-01")], [], false);
+    const items = listArticles([article("standalone", "2026-11-01")], [], "production");
     expect(items).toStrictEqual([
       {
         ref: {
@@ -85,7 +86,7 @@ describe("listArticles", () => {
         article("new", "2026-11-10"),
       ],
       [],
-      false,
+      "production",
     );
     expect(listedHrefs(items)).toStrictEqual([
       "/articles/new",
@@ -103,24 +104,55 @@ describe("listArticles", () => {
         article("published", "2026-11-01"),
       ],
       [],
-      false,
+      "production",
     );
     expect(listedHrefs(items)).toStrictEqual(["/articles/published"]);
   });
 
+  it("本番の build では、検証用の記事を外し、記事が 1 本も無ければ空にする", () => {
+    const items = listArticles(
+      [article("check", "2026-11-01", { verificationOnly: true })],
+      [],
+      "production",
+    );
+    expect(items).toStrictEqual([]);
+  });
+
+  it("プレビューと手元の build では、検証用の記事も載せる", () => {
+    const items = listArticles(
+      [article("check", "2026-11-01", { verificationOnly: true })],
+      [],
+      "preview",
+    );
+    expect(listedHrefs(items)).toStrictEqual(["/articles/check"]);
+  });
+
+  it("本番の build では、検証用の記事だけのシリーズのページを書き出さない", () => {
+    const pages = planSeriesPages(
+      [article("rdbms/a", "2026-11-01", { order: 1, verificationOnly: true })],
+      [RDBMS],
+      "production",
+    );
+    expect(pages).toStrictEqual([]);
+  });
+
   it("dev server では、公開していない記事も載せる", () => {
-    const items = listArticles([article("draft", "2026-11-01", { status: "draft" })], [], true);
+    const items = listArticles([article("draft", "2026-11-01", { status: "draft" })], [], "dev");
     expect(listedHrefs(items)).toStrictEqual(["/articles/draft"]);
   });
 
   it("同じ日の記事は、大文字を小文字より先にする。ロケールの照合順に依らない", () => {
-    const items = listArticles([article("a", "2026-11-01"), article("B", "2026-11-01")], [], false);
+    const items = listArticles(
+      [article("a", "2026-11-01"), article("B", "2026-11-01")],
+      [],
+      "production",
+    );
     expect(listedHrefs(items)).toStrictEqual(["/articles/B", "/articles/a"]);
   });
 
   it("index.md の無いディレクトリの記事があると、ビルドを失敗させる", () => {
     expect(() =>
-      listArticles([article("unknown/a", "2026-11-01", { order: 1 })], [RDBMS], false),
+      listArticles([article("unknown/a", "2026-11-01", { order: 1 })], [RDBMS], "production"),
     ).toThrow("シリーズの題が無い: unknown");
   });
 });
@@ -130,7 +162,7 @@ describe("planSeriesPages", () => {
     const pages = planSeriesPages(
       [article("rdbms/btree", "2026-11-01", { order: 1 })],
       [RDBMS],
-      false,
+      "production",
     );
     expect(pages).toStrictEqual([
       {
@@ -163,7 +195,7 @@ describe("planSeriesPages", () => {
         article("standalone", "2026-11-01"),
       ],
       [RDBMS],
-      false,
+      "production",
     );
     expect(pageHrefs(pages)).toStrictEqual([
       {
@@ -180,7 +212,7 @@ describe("planSeriesPages", () => {
         article("rdbms/draft", "2026-11-01", { order: 2, status: "draft" }),
       ],
       [RDBMS],
-      false,
+      "production",
     );
     expect(pageHrefs(pages)).toStrictEqual([
       { name: "rdbms", articles: ["/articles/rdbms/first"] },
@@ -191,7 +223,7 @@ describe("planSeriesPages", () => {
     const pages = planSeriesPages(
       [article("rdbms/draft", "2026-11-01", { order: 1, status: "draft" })],
       [RDBMS],
-      false,
+      "production",
     );
     expect(pages).toStrictEqual([]);
   });
@@ -200,7 +232,7 @@ describe("planSeriesPages", () => {
     const pages = planSeriesPages(
       [article("rdbms/draft", "2026-11-01", { order: 1, status: "draft" })],
       [RDBMS],
-      true,
+      "dev",
     );
     expect(pageHrefs(pages)).toStrictEqual([
       { name: "rdbms", articles: ["/articles/rdbms/draft"] },
@@ -209,7 +241,7 @@ describe("planSeriesPages", () => {
 
   it("index.md の無いディレクトリの記事があると、ビルドを失敗させる", () => {
     expect(() =>
-      planSeriesPages([article("unknown/a", "2026-11-01", { order: 1 })], [RDBMS], false),
+      planSeriesPages([article("unknown/a", "2026-11-01", { order: 1 })], [RDBMS], "production"),
     ).toThrow("シリーズの題が無い: unknown");
   });
 
@@ -217,7 +249,7 @@ describe("planSeriesPages", () => {
     const pages = planSeriesPages(
       [article("unknown/a", "2026-11-01", { order: 1, status: "draft" })],
       [RDBMS],
-      false,
+      "production",
     );
     expect(pages).toStrictEqual([]);
   });
@@ -230,7 +262,7 @@ describe("planSeriesPages", () => {
         article("other/draft", "2026-11-01", { order: 1, status: "draft" }),
       ],
       [other, RDBMS],
-      false,
+      "production",
     );
     expect(pageHrefs(pages)).toStrictEqual([
       { name: "rdbms", articles: ["/articles/rdbms/first"] },
@@ -242,7 +274,7 @@ describe("planSeriesPages", () => {
       planSeriesPages(
         [article("rdbms/a", "2026-11-01", { order: 1 }), article("rdbms/b", "2026-11-01")],
         [RDBMS],
-        false,
+        "production",
       ),
     ).toThrow("シリーズの記事に order が無い: rdbms/b");
   });
