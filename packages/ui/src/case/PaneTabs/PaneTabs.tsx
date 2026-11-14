@@ -1,6 +1,8 @@
 import { clsx } from "clsx";
 import { type KeyboardEvent, type ReactNode, useId, useRef } from "react";
 
+import { PaneTitleHiddenContext } from "../ToolPane/ToolPane";
+
 /** 切り替えるペインの 1 つ。 */
 export type PaneTabItem = {
   id: string;
@@ -23,6 +25,8 @@ export type PaneTabsProps = {
   selectedId: string;
   onSelect: (id: string) => void;
   placement: PaneTabsPlacement;
+  /** 地を出さない記事の埋め込みで、帯を浮かせず、ペインとの境に罫を 1 本引く（docs/adr/0073-layered-panes-and-radius-in-playground.md）。 */
+  flush?: boolean;
   /** タブの並びの先頭に置く操作（ファイルのドロワーを開くボタン）。タブの並びの外に置く。 */
   leading?: ReactNode;
 };
@@ -39,6 +43,7 @@ export function PaneTabs({
   onSelect,
   placement,
   leading,
+  flush = false,
 }: PaneTabsProps) {
   const baseId = useId();
   const tabRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -72,8 +77,9 @@ export function PaneTabs({
       className={clsx(
         "flex shrink-0 bg-surface-pane",
         // 下と左の帯は、地の上に浮かせた角の丸い紙にする。枠の上の帯は、ペインの面と続け、下の罫だけで分ける（docs/adr/0073-layered-panes-and-radius-in-playground.md）
-        placement === "bottom" && "mt-1.5 rounded-sheet",
-        placement === "start" && "mr-1.5 flex-col rounded-sheet",
+        placement === "bottom" && (flush ? "border-t border-border" : "mt-1.5 rounded-sheet"),
+        placement === "start" &&
+          (flush ? "flex-col border-r border-border" : "mr-1.5 flex-col rounded-sheet"),
         placement === "top" && "items-center border-b border-border",
       )}
     >
@@ -161,7 +167,7 @@ export function PaneTabs({
             key={item.id}
             role="tabpanel"
           >
-            {item.content}
+            <PaneTitleHiddenContext value>{item.content}</PaneTitleHiddenContext>
           </div>
         ))}
       </div>

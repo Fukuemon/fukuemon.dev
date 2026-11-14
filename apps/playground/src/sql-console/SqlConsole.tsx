@@ -123,6 +123,7 @@ export function SqlConsole({
         ]}
         label="ペイン"
         onSelect={(id) => setPane(id === "result" ? "result" : "input")}
+        flush={embedded}
         placement={mode === "short" ? "start" : embedded ? "top" : "bottom"}
         selectedId={pane}
       />

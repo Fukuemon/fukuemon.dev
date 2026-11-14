@@ -34,6 +34,11 @@ export type ToolPaneProps = {
 const JoinedContext = createContext(false);
 
 /**
+ * true の間、題を読み上げだけに残す。狭い配置でペインを 1 つずつ出すときは、タブのラベルが同じ名前を出すので、題を重ねて出さない（PaneTabs が渡す）。
+ */
+export const PaneTitleHiddenContext = createContext(false);
+
+/**
  * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は四方に 1px の罫を引き、左と上へ 1px ずらして隣の罫に重ねる。
  * 隣の領域と高さや幅がそろわない並びでも、領域の間の罫は 1px になる。並べ方（flex、grid）は呼ぶ側が書き、領域の間の隙間を空けない。
  */
@@ -60,6 +65,8 @@ export function ToolPane({
 }: ToolPaneProps) {
   const titleId = useId();
   const isJoined = use(JoinedContext);
+  const isTitleHidden = use(PaneTitleHiddenContext);
+  const hasActions = actions !== undefined && state.kind !== "pending";
   return (
     <section
       aria-labelledby={titleId}
@@ -70,13 +77,22 @@ export function ToolPane({
         isJoined && "-mt-px -ml-px",
       )}
     >
-      <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 pr-1 pl-3">
-        <h2 className="text-compact whitespace-nowrap text-text-secondary" id={titleId}>
+      <div
+        className={clsx(
+          "flex flex-wrap items-center justify-between gap-x-2 pr-1 pl-3",
+          isTitleHidden && !hasActions ? "sr-only" : "min-h-7",
+        )}
+      >
+        <h2
+          className={clsx(
+            "text-compact whitespace-nowrap text-text-secondary",
+            isTitleHidden && "sr-only",
+          )}
+          id={titleId}
+        >
           {title}
         </h2>
-        {actions !== undefined && state.kind !== "pending" && (
-          <div className="flex items-center">{actions}</div>
-        )}
+        {hasActions && <div className="ml-auto flex items-center">{actions}</div>}
       </div>
       {state.kind !== "pending" && toolbar}
       <div

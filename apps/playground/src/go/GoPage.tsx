@@ -429,6 +429,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
               <IconButton icon={FOLDER_ICON} label="ファイル" onClick={() => setDrawerOpen(true)} />
             }
             onSelect={(id) => setPane(id === "output" ? "output" : "editor")}
+            flush={embedded}
             placement={mode === "short" ? "start" : embedded ? "top" : "bottom"}
             selectedId={pane}
           />

@@ -188,6 +188,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
           <IconButton icon={FOLDER_ICON} label="ファイル" onClick={() => setDrawerOpen(true)} />
         }
         onSelect={(id) => setPane(NARROW_PANES.find((name) => name === id) ?? "editor")}
+        flush={embedded}
         placement={mode === "short" ? "start" : embedded ? "top" : "bottom"}
         selectedId={pane}
       />
