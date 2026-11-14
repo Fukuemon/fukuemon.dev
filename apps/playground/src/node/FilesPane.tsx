@@ -35,9 +35,7 @@ export function FilesPane() {
     path: string,
     operation: () => Promise<void>,
   ): Promise<FileTreeResult> => {
-    const invalid = await nameErrorInRuntime(name, path, new Set(kinds.keys()), (target) =>
-      files.exists(target),
-    );
+    const invalid = await nameErrorInRuntime(name, path, kinds, (target) => files.exists(target));
     if (invalid !== undefined) return { error: invalid };
     run(operation);
     return { id: path };

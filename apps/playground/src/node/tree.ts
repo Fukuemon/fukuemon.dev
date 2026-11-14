@@ -60,7 +60,7 @@ const existsMessage = (path: string) => `${path} は既にあります。別の�
 export function nameError(
   name: string,
   path: string,
-  existing: ReadonlySet<string>,
+  existing: { has: (path: string) => boolean },
 ): string | undefined {
   if (name.trim() === "") return "名前を入れてください。";
   if (name.includes("/") || name === "." || name === "..") {
@@ -77,7 +77,7 @@ export function nameError(
 export async function nameErrorInRuntime(
   name: string,
   path: string,
-  existing: ReadonlySet<string>,
+  existing: { has: (path: string) => boolean },
   exists: (path: string) => Promise<boolean>,
 ): Promise<string | undefined> {
   const invalid = nameError(name, path, existing);
