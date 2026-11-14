@@ -158,15 +158,24 @@ test.describe("画面の幅の変更", () => {
     await page.setViewportSize({ width: 1000, height: 700 });
     await expectAt(page, "profile");
     const box = (await card(page, "profile").boundingBox())!;
-    const clip = { x: box.x - 120, y: box.y - 90, width: box.width + 240, height: 140 };
+    const clip = {
+      x: box.x - 120,
+      y: Math.max(0, box.y - 90),
+      width: box.width + 240,
+      height: 140,
+    };
     const widened = await page.screenshot({ clip });
     const fresh = await browser.newPage({
       viewport: { width: 1000, height: 700 },
       colorScheme: "light",
     });
-    await openGarden(fresh);
-    await expectAt(fresh, "profile");
-    expect(await meanDiff(page, widened, await fresh.screenshot({ clip }))).toBeLessThan(3);
+    try {
+      await openGarden(fresh);
+      await expectAt(fresh, "profile");
+      expect(await meanDiff(page, widened, await fresh.screenshot({ clip }))).toBeLessThan(3);
+    } finally {
+      await fresh.close();
+    }
   });
 });
 
@@ -232,6 +241,24 @@ test.describe("描く途中の例外", () => {
     });
     await page.clock.setFixedTime(AUTUMN_NOON);
     await page.goto("/");
+    await expect(page.locator("[data-garden-stage]")).toBeHidden();
+    await expect(page.locator("main [data-garden-card]")).toHaveCount(4);
+    await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
+  });
+
+  test("幅 1440px から 390px に変えたときに和紙を掛け直す途中で例外が出ると、ふつうのページに戻り、セクションにインラインのスタイルが残らない", async ({
+    page,
+  }) => {
+    await openGarden(page);
+    await page.evaluate(() => {
+      Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+        configurable: true,
+        get() {
+          throw new Error("測る途中の失敗");
+        },
+      });
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator("[data-garden-stage]")).toBeHidden();
     await expect(page.locator("main [data-garden-card]")).toHaveCount(4);
     await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
