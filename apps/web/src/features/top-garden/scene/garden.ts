@@ -126,19 +126,29 @@ export function startGarden(
       o.rotation.y = st.rot;
       o.scale.setScalar(1 / PX);
       cssScene.add(o);
-      const w = el.offsetWidth / PX;
-      const h = el.offsetHeight / PX;
-      hangPaper(scene, C, st, w, h, boughFrom[i]!);
       return {
-        w,
-        h,
+        w: 0,
+        h: 0,
+        unhang: () => {},
         c: new Vector3(...st.pos),
         n: new Vector3(Math.sin(st.rot), 0, Math.cos(st.rot)),
       };
     });
-    // 光と影を落とす物は動かないので、影は最初のフレームで 1 回だけ描く。
+    /** 和紙の大きさをセクションの大きさから測り、和紙と枝を掛け直す */
+    const hang = (): void => {
+      slots.forEach((p, i) => {
+        p.unhang();
+        p.w = cards[i]!.offsetWidth / PX;
+        p.h = cards[i]!.offsetHeight / PX;
+        p.unhang = hangPaper(scene, C, STATIONS[i]!, p.w, p.h, boughFrom[i]!);
+      });
+      // 光と影を落とす物は掛け直すまで動かないので、影は掛けた後の最初のフレームで 1 回だけ描く。
+      renderer.shadowMap.needsUpdate = true;
+    };
     renderer.shadowMap.autoUpdate = false;
-    renderer.shadowMap.needsUpdate = true;
+    hang();
+    // セクションの幅は、このブレークポイントをまたいだときだけ変わる（top-garden の Design Doc の「和紙の文」）
+    const wide = matchMedia("(min-width: 48rem)");
 
     const fov = () => (portrait() ? 62 : 46);
     /** `i` 番目の和紙を、画面に収まる距離から正面に見るカメラの位置 */
@@ -220,6 +230,14 @@ export function startGarden(
       "change",
       () => {
         pass.setColors(inkColors());
+        kick();
+      },
+      on,
+    );
+    wide.addEventListener(
+      "change",
+      () => {
+        hang();
         kick();
       },
       on,

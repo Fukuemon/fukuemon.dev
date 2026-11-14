@@ -23,6 +23,7 @@ const CORD = 0.42;
  * @param pw 和紙の幅（m）
  * @param ph 和紙の高さ（m）
  * @param boughFrom 枝を伸ばし始める、和紙を掛ける木の幹の点
+ * @returns 足した和紙と枝を `scene` から外し、GPU のメモリを解放する関数
  */
 export function hangPaper(
   scene: Scene,
@@ -31,7 +32,7 @@ export function hangPaper(
   pw: number,
   ph: number,
   boughFrom: Vector3,
-): void {
+): () => void {
   const wood = new MeshLambertMaterial({ color: C.wood });
   const g = new Group();
   const paper = new Mesh(new PlaneGeometry(pw, ph), new MeshBasicMaterial({ color: C.paper }));
@@ -76,4 +77,12 @@ export function hangPaper(
   );
   bough.castShadow = true;
   scene.add(bough);
+
+  return () => {
+    scene.remove(g, bough);
+    for (const m of [...g.children, bough] as Mesh[]) {
+      m.geometry.dispose();
+      (m.material as MeshBasicMaterial | MeshLambertMaterial).dispose();
+    }
+  };
 }

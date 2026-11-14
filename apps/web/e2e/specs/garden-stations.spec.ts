@@ -127,6 +127,25 @@ test.describe("幅 390px", () => {
   });
 });
 
+test.describe("画面の幅の変更", () => {
+  test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
+
+  // 和紙を測り直さないと、カメラが横長のときの和紙の幅で距離を決め、和紙が画面の幅より小さく見える
+  test("幅 1440px で開いた庭を幅 390px にすると、和紙を測り直し、和紙が画面の幅の 8 割以上で収まる", async ({
+    page,
+  }) => {
+    await openGarden(page);
+    await expectAt(page, "profile");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expectAt(page, "profile");
+    const paper = (await card(page, "profile").boundingBox())!;
+    expect({
+      inside: paper.x >= 0 && paper.x + paper.width <= 390,
+      wide: paper.width >= 390 * 0.8,
+    }).toStrictEqual({ inside: true, wide: true });
+  });
+});
+
 test.describe("幅 320px", () => {
   test.use({ viewport: { width: 320, height: 640 }, colorScheme: "light" });
 
