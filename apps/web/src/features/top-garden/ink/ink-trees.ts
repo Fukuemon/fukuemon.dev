@@ -80,82 +80,65 @@ function visibleRuns(pts: readonly Vec2[]): Vec2[][] {
   return runs.filter((r) => r.length >= 4);
 }
 
+const DRY = { dry: 0.55, tin: 0.04, tout: 0.25 } as const;
+
+/** 枝の先の葉を描く。松は扇の形、紅葉は丸い弧を重ねた形にする */
+function leaves(B: Brush, R: () => number, c: Vec3, r: number, pine: boolean, t0: number): void {
+  if (pine) {
+    if (visible([c[0], c[1]]))
+      B.needles(c[0], c[1] - r * 0.1, r * 0.8, t0, { layer: "mid", tint: false });
+    return;
+  }
+  for (let q = 0; q < 4; q++) {
+    const cx = c[0] + (R() - 0.5) * r * 1.4,
+      cy = c[1] - r * 0.15 + (R() - 0.5) * r * 0.9,
+      rr = r * (0.28 + R() * 0.18),
+      a0 = Math.PI * (0.9 + R() * 0.3);
+    const arc: Vec2[] = [];
+    for (let j = 0; j <= 6; j++) {
+      const an = a0 + (j / 6) * Math.PI * 1.1;
+      arc.push([cx + Math.cos(an) * rr, cy + Math.sin(an) * rr * 0.8]);
+    }
+    for (const run of visibleRuns(arc))
+      B.add("mid", run, { w: 3, a: 0.5, dry: 0.6, tin: 0.1, tout: 0.4, t0: t0 + q * 30, dur: 140 });
+  }
+}
+
+/** 1 本の木を、幹、枝、葉の順に描く */
+function drawTree(B: Brush, R: () => number, tree: InkTree, start: number): void {
+  const local = TRUNK.map(([x, y, z]) => [x * tree.dir, y, z] as Vec3);
+  const screen = (p: Vec3): Vec3 =>
+    project([tree.at[0] + p[0] * tree.s, p[1] * tree.s, tree.at[1] + p[2] * tree.s]);
+  const xy = (p: Vec3): Vec2 => {
+    const q = screen(p);
+    return [q[0], q[1]];
+  };
+  const px = screen(local[0]!)[2];
+  for (const run of visibleRuns(local.map(xy)))
+    B.add("mid", run, { w: Math.max(3, 0.22 * px * tree.s), a: 0.8, ...DRY, t0: start, dur: 320 });
+  TREE_PADS.forEach(([u, dx, oz, size], k) => {
+    const a = along(local, u);
+    const tip: Vec3 = [a[0] + dx * tree.dir, a[1] + 0.15, a[2] + oz];
+    const mid: Vec3 = [(a[0] + tip[0]) / 2, a[1] + 0.25, (a[2] + tip[2]) / 2];
+    const bt = start + 220 + k * 70;
+    for (const run of visibleRuns([a, mid, tip].map(xy)))
+      B.add("mid", run, { w: Math.max(2, 0.08 * px * tree.s), a: 0.7, ...DRY, t0: bt, dur: 180 });
+    const c = screen(tip);
+    // 立体の葉は、枝の先から葉の広がりの半径に散らばる
+    leaves(B, R, c, size * tree.s * c[2] * 0.9, tree.pine, bt + 160);
+  });
+}
+
 /**
  * 立体の庭の木を、最初のカメラで投影した位置に、奥の木から順に、幹、枝、葉の順で描く。
  * 形は、立体の木（scene/scene-parts.ts の tree）と同じ幹の点と枝の位置から作る。
  * @param t0 最初の木を描き始める時刻（ms、試作の時刻の尺度）
- * @returns 最後の線を描き終える時刻（ms、試作の時刻の尺度）
  */
-export function addTrees(B: Brush, t0: number): number {
+export function addTrees(B: Brush, t0: number): void {
   const R = rng(TREE_SEED);
   const trees: InkTree[] = [
     ...OTHER_TREES.map((t) => ({ ...t, pine: true })),
     ...STATIONS.map(({ tree: t }) => ({ at: t.at, s: t.s, dir: t.dir, pine: t.leaf === "pine" })),
   ].sort((a, b) => a.at[1] - b.at[1]);
-  let end = t0;
-  trees.forEach((tree, i) => {
-    const start = t0 + i * TREE_GAP;
-    const world = (p: Vec3): Vec3 => [
-      tree.at[0] + p[0] * tree.s,
-      p[1] * tree.s,
-      tree.at[1] + p[2] * tree.s,
-    ];
-    const trunk3 = TRUNK.map(([x, y, z]) => world([x * tree.dir, y, z]));
-    const px = project(trunk3[0]!)[2];
-    const trunk = trunk3.map((p) => project(p).slice(0, 2) as unknown as Vec2);
-    const dry = { dry: 0.55, tin: 0.04, tout: 0.25 };
-    for (const run of visibleRuns(trunk)) {
-      B.add("mid", run, {
-        w: Math.max(3, 0.22 * px * tree.s),
-        a: 0.8,
-        ...dry,
-        t0: start,
-        dur: 320,
-      });
-      end = Math.max(end, start + 320);
-    }
-    TREE_PADS.forEach(([u, dx, oz, size], k) => {
-      const a = along(
-        TRUNK.map(([x, y, z]) => [x * tree.dir, y, z] as Vec3),
-        u,
-      );
-      const tip: Vec3 = [a[0] + dx * tree.dir, a[1] + 0.15, a[2] + oz];
-      const mid: Vec3 = [(a[0] + tip[0]) / 2, a[1] + 0.25, (a[2] + tip[2]) / 2];
-      const branch = [a, mid, tip].map((p) => project(world(p)).slice(0, 2) as unknown as Vec2);
-      const bt = start + 220 + k * 70;
-      for (const run of visibleRuns(branch)) {
-        B.add("mid", run, { w: Math.max(2, 0.08 * px * tree.s), a: 0.7, ...dry, t0: bt, dur: 180 });
-        end = Math.max(end, bt + 180);
-      }
-      const c = project(world(tip));
-      // 立体の葉は、枝の先から葉の広がりの半径に散らばる
-      const r = size * tree.s * c[2] * 0.9;
-      const lt = bt + 160;
-      if (tree.pine) {
-        // 松の葉は、枝の先に広がる扇にする
-        if (!visible([c[0], c[1]])) return;
-        B.needles(c[0], c[1] - r * 0.1, r * 0.8, lt, { layer: "mid", tint: false });
-        end = Math.max(end, lt + 16 * 11 + 110);
-        return;
-      }
-      // 紅葉の葉の塊は、丸い弧を重ねて描く
-      for (let q = 0; q < 4; q++) {
-        const cx = c[0] + (R() - 0.5) * r * 1.4,
-          cy = c[1] - r * 0.15 + (R() - 0.5) * r * 0.9,
-          rr = r * (0.28 + R() * 0.18),
-          a0 = Math.PI * (0.9 + R() * 0.3);
-        const arc: Vec2[] = [];
-        for (let j = 0; j <= 6; j++) {
-          const an = a0 + (j / 6) * Math.PI * 1.1;
-          arc.push([cx + Math.cos(an) * rr, cy + Math.sin(an) * rr * 0.8]);
-        }
-        const at = lt + q * 30;
-        for (const run of visibleRuns(arc)) {
-          B.add("mid", run, { w: 3, a: 0.5, dry: 0.6, tin: 0.1, tout: 0.4, t0: at, dur: 140 });
-          end = Math.max(end, at + 140);
-        }
-      }
-    });
-  });
-  return end;
+  trees.forEach((tree, i) => drawTree(B, R, tree, t0 + i * TREE_GAP));
 }
