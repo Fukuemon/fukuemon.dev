@@ -193,13 +193,13 @@ export function startGarden(
       const svgW = a >= 16 / 9 ? w : a > 1 ? (h * 16) / 9 : w * 1.25;
       return (Math.atan((tanDesign * h) / ((svgW * 9) / 16)) * 360) / Math.PI;
     };
-    const cam0 = () => ({ pos: new Vector3(...CAM0.pos), look: new Vector3(...CAM0.look) });
+    const start = { pos: new Vector3(...CAM0.pos), look: new Vector3(...CAM0.look) };
 
     const state = { current: 0, paused: false, px: 0, py: 0, last: 0 };
     /** wait は墨だけの絵で待つ間、enter は色を差して門をくぐる間、garden は和紙の間を移る間 */
     let phase: "wait" | "enter" | "garden" = opts.intro ? "wait" : "garden";
     let enteredAt = 0;
-    const cur = opts.intro ? cam0() : pose(0);
+    const cur = opts.intro ? { pos: start.pos.clone(), look: start.look.clone() } : pose(0);
     pass.setTint(opts.intro ? 0 : 1);
     let target: FramebufferTexture | null = null;
 
@@ -214,12 +214,12 @@ export function startGarden(
     const drawEnter = (now: number): number => {
       const t = now - enteredAt;
       const m = easeInOut(clamp01((t - INTRO.move0) / INTRO.move));
-      const start = cam0();
       const end = pose(0);
+      const f0 = fov0();
       pass.setTint(clamp01((t - INTRO.tint0) / INTRO.tint));
-      cur.pos.copy(start.pos.lerp(end.pos, m));
-      cur.look.copy(start.look.lerp(end.look, m));
-      return fov0() + (fov() - fov0()) * m;
+      cur.pos.lerpVectors(start.pos, end.pos, m);
+      cur.look.lerpVectors(start.look, end.look, m);
+      return f0 + (fov() - f0) * m;
     };
     /** イントロを終え、和紙の間を移る動きに切り替える。フレームが遅れても、カメラはそこから 1 つ目の和紙へ寄る */
     const toGarden = (): void => {
@@ -237,7 +237,9 @@ export function startGarden(
         camera.lookAt(cur.look);
         camera.updateProjectionMatrix();
         render();
-        if (phase === "enter") kick();
+        // 淡彩とカメラが変わる間だけ、次のフレームを描く。終わりのタイマーが、最後の 1 枚を描かせる
+        const t = now - enteredAt;
+        if (phase === "enter" && t < INTRO.move0 + INTRO.move) kick();
         else state.last = 0;
         return;
       }
