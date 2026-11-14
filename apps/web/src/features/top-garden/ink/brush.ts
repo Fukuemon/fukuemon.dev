@@ -64,7 +64,7 @@ export function sample(pts: readonly Vec2[], step: number): Vec2[] {
 }
 
 /** 松の葉の線の置き方。既定は、近景の層に置き、下に淡い円を敷く */
-export interface NeedleOptions {
+interface NeedleOptions {
   readonly layer?: Layer;
   readonly tint?: boolean;
 }
