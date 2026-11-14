@@ -331,6 +331,19 @@ type BackendProcess = {
 - コンソールの記録の、出力したプロセスの名前は、行を抜き出す処理が付ける。名前は、行を出力したプロセスの、`start` の `name` である。シェルで起動したプロセスの行には、シェルの名前が付く。
 - プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
   - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](../../docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
+- 出力のチャンクは、記録の行の途中で切れて届く。行を抜き出す処理は、プレフィックスから改行までがそろうまで、その部分を端末に渡さない。チャンクの末尾がプレフィックスの先頭の数文字で終わるときは、続きを 50 ms 待ち、続きが来なければ端末に渡す。端末で打った `@` のような文字が、次の入力まで出なくならないようにするためである。プロセスが終わったときは、手元の出力を端末に渡す。
+- HTTP の記録を取る preload（`guest/http-trace.cjs`）は、次のことを行う。
+  - `http.Server` の `emit` を包み、`request` のたびに、メソッド、URL（パスとクエリ）、リクエストとレスポンスのヘッダ、本文、ステータスコード、受けた時刻、所要時間を 1 行に書く。`listening` のときは、待ち受けたポートを 1 行に書く。
+  - リクエストの本文は、`data` の購読を足さずに、`emit` を包んで、訪問者の処理が読んだ分を写す。購読を足すと、訪問者の処理より先に本文が流れ出るためである。
+  - レスポンスのヘッダは、送った頭の文字列から読む。`writeHead` に渡したヘッダは、`getHeaders` に入らないことがあるためである。
+  - 本文は、リクエストとレスポンスのそれぞれで、先頭の 64 KB だけを記録する。NUL を含むものと、UTF-8 として読めないものは、テキストとして記録しない。
+  - 実行環境の中のサーバー（`localhost`、`127.0.0.1`、`::1`、`0.0.0.0`）への `fetch` に、送信元を示すヘッダ `x-playground-from` を足す。値は、リクエストを処理している間はそのリクエストを受けたサーバーのポート、ほかのときは待ち受けた最初のポートで、待ち受けていないプロセスは `pid-<プロセスの ID>` である。訪問者が同じ名前のヘッダを付けたときは、書き換えない。外のサーバーへの `fetch` には足さない。
+  - `http.request` で送った通信には、ヘッダを足さない。送信元は、ブラウザになる。
+- `node-runtime/` の直下は、記録の行を `HttpRecord` にして、`httpExchanges` の store に入れる。
+  - `HttpRecord` は、送った側と受けた側（`id` と名前）、メソッド、URL、受けた時刻、所要時間、リクエスト、レスポンスを持つ。レスポンスを返す前に切れた通信は、レスポンスを持たない。本文は、テキスト（読めないものは `null`）、大きさ、64 KB で切ったかを持つ。
+  - 送った側と受けた側の `id` は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `pid:<ID>` である。送信元を示すヘッダが無い通信は、ブラウザからの通信とする。
+  - サーバーの名前は、待ち受けたポートの行を出したプロセスの、`start` の `name` である。シェルで起動したサーバーと、待ち受けたポートの行がまだ届いていないサーバーは、`<番号> 番のサーバー` と呼ぶ。行が後から届いたときは、記録の名前を直す。
+  - 記録は、受けた時刻の順に並べる。記録の行はプロセスごとの出力から届くので、届いた順は受けた順と違う。認可コードフローでは、クライアントが `/callback` の処理の中で送った `/token` の記録が、`/callback` の記録より先に届く。
 - store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。値は、実装のタスクで測って変えてよい。
 
 ### React のツリーと状態
@@ -346,7 +359,7 @@ flowchart TB
   editor["EditorPane"]
   terminal["TerminalPane"]
   preview["PreviewPane"]
-  http["HttpPane"]
+  http["HttpListPane と HttpDetailPane"]
   cons["ConsolePane"]
   sqlp["SqlPane<br/>DB を使うプロジェクトのときだけ"]
   ui["@fukuemon/ui の Case"]
@@ -368,7 +381,7 @@ flowchart TB
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
-  - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
+  - `HttpListPane` と `HttpDetailPane` は、`httpExchanges` の記録の、送った側と受けた側から、`HttpExchangeList` と `HttpExchangeDetail` の `actors` を組み立てる。並びは、ブラウザを先にし、記録に初めて出た順にする。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
   - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値、入力欄のファイルの名前、DB が止まったときに出す案内の文を、props で受ける。`status` は、`useSyncExternalStore` で読む。
   - DB が止まった後の戻り方は `SqlDatabase` の実装ごとに違うので、案内の文は呼ぶ側が渡す。
@@ -379,7 +392,7 @@ flowchart TB
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `pending` を渡したものにする。待ちの印は、ペインの外の `Suspense` が `PageLoading` で出す。プロジェクトの読み込みと起動の待ちは続けて起きるので、境界が別の 2 つの `Suspense` にも、`PageLoading` に同じ文を渡す。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
-- タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
+- タブで切り替えるペイン（端末、コンソール、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
 - 端末のペインの中のプロセスのタブは、選んだプロセスの端末だけを描く。プロセスのタブを替えたときは、端末を作り直し、プロセスの出力の記録を端末に書き込み直す。xterm.js の端末は、`Activity` で隠すと Effect のクリーンアップで破棄されるためである。
 - Node の実行環境では、実行のボタンの、実行中かどうかの値を、`useTransition` で持つ。
 - SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。
@@ -412,7 +425,7 @@ SQL だけを動かすツールのページは、次のとおり組む。
 
 Node の実行環境のページは、次のとおり組む。
 
-- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末を置く。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- ペインは、左にファイルのツリー、中央の上にエディタ、中央の下に端末、右の上にプレビュー、右の下に HTTP の一覧と詳細を置く。HTTP の一覧は、プレビューで操作した結果を並べるので、プレビューと同時に見える位置に置く。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
 - `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。ペインの外の `Suspense` が、画面の右下に `PageLoading` を出す。プロジェクトを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
