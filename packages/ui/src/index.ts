@@ -35,7 +35,7 @@ export type { TabItem, TabsProps } from "./base/Tabs/Tabs";
 export { TextField } from "./base/TextField/TextField";
 export type { TextFieldProps } from "./base/TextField/TextField";
 export { TreeView } from "./base/TreeView/TreeView";
-export type { TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
+export type { TreeEditor, TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
 export { ConfirmDialog } from "./case/ConfirmDialog/ConfirmDialog";
 export type { ConfirmDialogProps } from "./case/ConfirmDialog/ConfirmDialog";
 export { ConsoleEntryList } from "./case/ConsoleEntryList/ConsoleEntryList";
@@ -52,7 +52,7 @@ export type {
 export { EditorFrame } from "./case/EditorFrame/EditorFrame";
 export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFrame";
 export { FileTree } from "./case/FileTree/FileTree";
-export type { FileTreeProps } from "./case/FileTree/FileTree";
+export type { FileTreeProps, FileTreeResult } from "./case/FileTree/FileTree";
 export { HttpExchangeDetail } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export type { HttpExchangeDetailProps } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export { HttpExchangeList } from "./case/HttpExchangeList/HttpExchangeList";

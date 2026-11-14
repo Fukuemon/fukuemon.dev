@@ -80,8 +80,10 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 確認: レビューで、画面の主の操作が 1 つに決まるかを見る。
 - `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティ（墨の 2px の 1 重の輪）だけを使い、コンポーネントごとに色や太さを変えない。例外の理由は DesignDoc の「フォーカスの表示」に書いた。
   - 例外: 検索の欄（`TextField` の `appearance="underline"`）の緑の罫。
-  - 例外: コードを動かす画面の詰めたペインの中の行の、内側に引く輪（`focus-ring-inset`）と、ペインの全体を占めるスクロールする領域の、外側の要素の `::after` に引く内側の輪（`focus-ring-frame`）。
+  - 例外: コードを動かす画面の詰めたペインの中の行と、`FileTree` の名前の欄の、内側に引く輪（`focus-ring-inset`）。
+  - 例外: ペインの全体を占めるスクロールする領域の、外側の要素の `::after` に引く内側の輪（`focus-ring-frame`）。
     - ADR-0066: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
+    - ADR-0074: [詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない](../../docs/adr/0074-inset-focus-ring-on-tree-name-field.md)
   - DADS は、黄色の輪と黒の枠の 2 重の表示を求める。墨の輪にする理由は、DesignDoc の「フォーカスの表示」にある。
   - 確認: `pnpm run check:utilities`。`focus-ring-inset` と `focus-ring-frame` を詰めたペインの外で使っていないかは、レビューで見る。
 - `TARGET-SIZE`: 押せる領域は 44×44 CSS px 以上にする。WCAG 2.2 の AA（2.5.8）の 24×24 より厳しい、AAA（2.5.5）の値を選んでいる。見た目を小さくするときは、見た目の外に押せる領域を広げる。

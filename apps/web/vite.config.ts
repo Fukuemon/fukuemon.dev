@@ -8,8 +8,8 @@ export default defineConfig({
       "build:site": {
         command: "astro build",
         cache: {
-          // .astro/ と dist/ は astro build が書くので、入力に含めると毎回外れる
-          input: [{ auto: true }, "!.astro/**", "!dist/**"],
+          // .astro/ と dist/ は astro build が、dist-preview/ は build:preview が書くので、入力に含めると毎回外れる
+          input: [{ auto: true }, "!.astro/**", "!dist/**", "!dist-preview/**"],
           // 自動の記録は dist/_astro/ を拾わず、dist/ を消した後のキャッシュヒットで資産が欠ける
           output: ["dist/**"],
         },
