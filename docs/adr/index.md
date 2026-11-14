@@ -47,7 +47,7 @@
 | [ADR-0004](0004-typography-static-weights.md)            | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
 | [ADR-0019](0019-latin-font-stix-two-text.md)             | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
 | [ADR-0023](0023-keep-art-and-key-color.md)               | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
-| [ADR-0075](0075-system-font-for-body-text.md)            | （提案）本文を端末の書体で描き、Web フォントを記事の題と見出しの明朝と等幅だけにする                                                                                 |
+| [ADR-0075](0075-system-font-for-body-text.md)            | （提案）本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする                                                                           |
 | [ADR-0010](0010-tailwind-as-styling-base.md)             | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
 | [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md) | サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う                                                                  |
 | [ADR-0024](0024-tokens-of-fukuemon-dev.md)               | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
