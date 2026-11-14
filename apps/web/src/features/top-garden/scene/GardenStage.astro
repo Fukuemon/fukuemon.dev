@@ -102,10 +102,11 @@ const skip =
     border-color: transparent;
   }
 
-  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない */
+  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない。「飛ばす」も、色が差した後は場面と明るさをそろえるよう、同じ色にする */
   :global(html.stage-on.garden-ready [data-site-header]),
   :global(html.stage-on.garden-ready) .garden-nav,
-  :global(html.stage-on.garden-ready) .garden-mist {
+  :global(html.stage-on.garden-ready) .garden-mist,
+  :global(html.stage-on.enter) .garden-skip {
     --fd-color-surface: var(--fd-color-garden-mist-day);
     --fd-color-text: var(--fd-color-garden-ink-day);
     --fd-color-border-field: var(--fd-color-garden-edge-day);
@@ -114,7 +115,8 @@ const skip =
 
   :global(html.stage-on.garden-ready[data-time="night"] [data-site-header]),
   :global(html.stage-on.garden-ready[data-time="night"]) .garden-nav,
-  :global(html.stage-on.garden-ready[data-time="night"]) .garden-mist {
+  :global(html.stage-on.garden-ready[data-time="night"]) .garden-mist,
+  :global(html.stage-on.enter[data-time="night"]) .garden-skip {
     --fd-color-surface: var(--fd-color-garden-mist-night);
     --fd-color-text: var(--fd-color-garden-ink-night);
     --fd-color-border-field: var(--fd-color-garden-edge-night);
@@ -192,20 +194,6 @@ const skip =
     }
   }
 
-  /* 色が差した後は、場面と明るさをそろえるよう、後に出る庭の中のボタンと同じ時間帯の霞の色にする */
-  :global(html.stage-on.enter) .garden-skip {
-    --fd-color-surface: var(--fd-color-garden-mist-day);
-    --fd-color-text: var(--fd-color-garden-ink-day);
-    --fd-color-border-field: var(--fd-color-garden-edge-day);
-    --fd-color-focus: var(--fd-color-garden-ink-day);
-  }
-
-  :global(html.stage-on.enter[data-time="night"]) .garden-skip {
-    --fd-color-surface: var(--fd-color-garden-mist-night);
-    --fd-color-text: var(--fd-color-garden-ink-night);
-    --fd-color-border-field: var(--fd-color-garden-edge-night);
-    --fd-color-focus: var(--fd-color-garden-ink-night);
-  }
 
   /* イントロの終わりに、ヘッダー、霞、庭の中のボタンを 0.6 秒で出す */
   @keyframes garden-appear {
