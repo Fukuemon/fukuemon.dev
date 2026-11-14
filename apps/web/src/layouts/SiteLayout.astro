@@ -1,5 +1,6 @@
 ---
 import SiteHeader from "../components/SiteHeader.astro";
+import { settingsScript } from "../components/site-settings/settings";
 import "../styles/site.css";
 
 interface Props {
@@ -23,6 +24,7 @@ const url = new URL(Astro.url.pathname, Astro.site);
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="fukuemon.dev" href="/rss.xml" />
+    <script is:inline set:html={settingsScript()} />
     <slot name="head" />
   </head>
   <body class="min-h-dvh bg-surface font-sans text-body text-text">

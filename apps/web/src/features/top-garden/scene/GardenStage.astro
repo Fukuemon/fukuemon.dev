@@ -8,8 +8,6 @@ import { STATIONS } from "../layout";
 const mist = "garden-mist from-surface to-transparent";
 const stop =
   "relative -ms-px -mt-px min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-1 text-label text-text focus-visible:focus-ring aria-[current=true]:z-10 aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
-const tool =
-  "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2";
 const skip =
   "min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-4 text-label text-text transition-colors focus-visible:focus-ring";
 ---
@@ -30,10 +28,6 @@ const skip =
         </button>
       ))
     }
-  </div>
-  <div class="flex gap-4">
-    <button type="button" class={tool} data-garden-pause data-testid="garden-pause" aria-pressed="false">動きを止める</button>
-    <button type="button" class={tool} data-garden-plain data-testid="garden-plain">文だけで読む</button>
   </div>
 </nav>
 <button type="button" class:list={[skip, "garden-skip"]} data-garden-skip data-testid="garden-skip">飛ばす</button>
@@ -133,19 +127,27 @@ const skip =
     z-index: 40;
   }
 
-  /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、間を詰める */
+  /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、左右の余白と間を詰め、ロゴを小さくする */
   @media not (min-width: 48rem) {
+    :global(html.stage-on [data-site-header]) {
+      padding-inline: 0.5rem;
+    }
+
     :global(html.stage-on [data-site-header] ul),
     :global(html.stage-on [data-site-header] > div) {
       column-gap: 0.5rem;
     }
 
-    :global(html.stage-on [data-site-header] svg) {
-      block-size: 2rem;
+    :global(html.stage-on [data-site-header] > div > div) {
+      column-gap: 0;
+    }
+
+    :global(html.stage-on [data-site-header] > div > a svg) {
+      block-size: 1.5rem;
     }
   }
 
-  /* 狭い画面では、4 つの文へ移るボタンと 2 つの操作を 2 段に分け、広い画面では 1 段に並べる */
+  /* 4 つの文へ移るボタンは、画面の下端の中央に並べる */
   :global(html.stage-on.garden-ready) .garden-nav {
     position: fixed;
     inset: auto 0.5rem 0.5rem;

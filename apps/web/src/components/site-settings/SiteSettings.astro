@@ -1,0 +1,88 @@
+---
+// ヘッダーの歯車のボタンと、押すと開く設定の面。React は配らず、IconButton と Switch を静的な HTML に描き、下の script で動かす。
+// 面は popover にする。庭とヘッダーより上の層に出し、Esc と面の外のクリックで閉じ、閉じたら歯車にフォーカスを戻すのを、ブラウザに任せる。
+import { Switch } from "@fukuemon/ui";
+import { buttonClassName } from "@fukuemon/ui/button-class-name";
+import { SettingsButton } from "./SettingsButton";
+---
+
+<SettingsButton target="site-settings" />
+<div
+  id="site-settings"
+  popover
+  class="site-settings m-0 w-80 max-w-[calc(100vw-2rem)] rounded-control border border-border-field bg-surface-raised p-6 text-text shadow-raised"
+  role="dialog"
+  aria-labelledby="site-settings-title"
+  data-site-settings
+  data-testid="site-settings"
+>
+  <h2 class="font-heading text-heading-sm font-semibold" id="site-settings-title">表示の設定</h2>
+  <div class="mt-4 flex flex-col gap-4">
+    <div>
+      <Switch label="アニメーション" data-setting="motion" data-testid="setting-motion" aria-describedby="setting-motion-note" />
+      <p class="text-caption text-text-secondary" id="setting-motion-note">オフにすると、サイト全体で動きを止めます。</p>
+    </div>
+    <div>
+      <Switch label="トップの庭" data-setting="garden" data-testid="setting-garden" aria-describedby="setting-garden-note" />
+      <p class="text-caption text-text-secondary" id="setting-garden-note">オフにすると、トップを通常のページで表示します。</p>
+    </div>
+    <div class="border-t border-border pt-4">
+      <button
+        type="button"
+        class={buttonClassName({ variant: "secondary", size: "S" })}
+        aria-describedby="intro-again-note"
+        data-intro-again
+        data-testid="intro-again"
+      >
+        イントロをもう一度見る
+      </button>
+      <p class="mt-2 text-caption text-text-secondary" id="intro-again-note">
+        トップを開き直し、初めての訪問と同じイントロを流します。アニメーションとトップの庭がオンのときに使えます。
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 面は、ヘッダーの右端の下に出す。popover は top layer に出るので、庭とヘッダーの重なりの順に依らない */
+  .site-settings:popover-open {
+    position: fixed;
+    inset: 4.5rem 1rem auto auto;
+  }
+</style>
+
+<script>
+  import { changeSetting, type SettingName } from "./settings";
+
+  const root = document.documentElement;
+  const panel = document.querySelector<HTMLElement>("[data-site-settings]");
+  const switches = [...(panel?.querySelectorAll<HTMLButtonElement>("[data-setting]") ?? [])];
+  const again = panel?.querySelector<HTMLButtonElement>("[data-intro-again]");
+
+  // 静的に描いた Switch は、保存した値を知らずに off で出るので、面を開くたびと切り替えるたびに、html の属性へ合わせる。
+  const sync = () => {
+    for (const b of switches) {
+      b.setAttribute("aria-checked", String(root.dataset[b.dataset.setting as SettingName] !== "off"));
+    }
+    const ready = root.dataset.motion !== "off" && root.dataset.garden !== "off";
+    if (ready) again?.removeAttribute("aria-disabled");
+    else again?.setAttribute("aria-disabled", "true");
+  };
+
+  panel?.addEventListener("beforetoggle", sync);
+  for (const b of switches) {
+    b.addEventListener("click", () => {
+      const name = b.dataset.setting as SettingName;
+      const on = root.dataset[name] === "off";
+      changeSetting(root, () => localStorage, { name, on });
+      sync();
+      // 庭を出すかは head の inline script が描く前に決めるので、トップで庭をオンにしたときは読み込み直す。オフはトップの場面の側が受ける。
+      if (name === "garden" && on && document.querySelector("[data-garden-stage]")) location.reload();
+    });
+  }
+  again?.addEventListener("click", () => {
+    if (again.getAttribute("aria-disabled") === "true") return;
+    location.assign("/?intro");
+  });
+  sync();
+</script>

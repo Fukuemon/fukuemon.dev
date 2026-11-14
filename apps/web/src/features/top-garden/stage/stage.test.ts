@@ -29,8 +29,16 @@ function fakeRoot() {
   };
 }
 
-function run(o: Partial<Omit<StageEnv, "root" | "storage">> & { seen?: boolean } = {}) {
+function run(
+  o: Partial<Omit<StageEnv, "root" | "storage">> & {
+    seen?: boolean;
+    motion?: "on" | "off";
+    garden?: "on" | "off";
+  } = {},
+) {
   const root = fakeRoot();
+  root.dataset.motion = o.motion ?? "on";
+  root.dataset.garden = o.garden ?? "on";
   const store = memory(o.seen);
   const loads: (() => void)[] = [];
   const timers: { fn: () => void; ms: number }[] = [];
@@ -39,7 +47,7 @@ function run(o: Partial<Omit<StageEnv, "root" | "storage">> & { seen?: boolean }
       root,
       now: NOV_13_20H,
       override: {},
-      reducedMotion: false,
+      again: false,
       storage: () => store,
       load: (onError) => void loads.push(onError),
       later: (fn, ms) => void timers.push({ fn, ms }),
@@ -79,14 +87,34 @@ describe("applyStage", () => {
     });
   });
 
-  it("動きを減らす設定では、季節と時間帯を書いて記録し、場面のバンドルを読み込まない", () => {
-    expect(summary(run({ reducedMotion: true }))).toStrictEqual({
+  it("庭の表示がオフのときは、季節と時間帯を書いて記録し、場面のバンドルを読み込まない", () => {
+    expect(summary(run({ garden: "off" }))).toStrictEqual({
       season: "autumn",
       time: "night",
       classes: [],
       seen: "1",
       loaded: 0,
     });
+  });
+
+  it("アニメーションがオフのときは、初めて開いてもイントロを出さずに庭を出し、記録する", () => {
+    expect(summary(run({ motion: "off" }))).toStrictEqual({
+      season: "autumn",
+      time: "night",
+      classes: ["stage-on"],
+      seen: "1",
+      loaded: 1,
+    });
+  });
+
+  it("「イントロをもう一度見る」から開くと、2 回目でもイントロを出す", () => {
+    expect(summary(run({ seen: true, again: true })).classes).toStrictEqual(["intro", "stage-on"]);
+  });
+
+  it("「イントロをもう一度見る」から開いても、アニメーションがオフならイントロを出さない", () => {
+    expect(summary(run({ seen: true, again: true, motion: "off" })).classes).toStrictEqual([
+      "stage-on",
+    ]);
   });
 
   it("場面のバンドルが無いときは、季節と時間帯を書いて記録し、庭を出さない", () => {
@@ -125,8 +153,8 @@ describe("applyStage", () => {
     expect([...r.root.classes].sort()).toStrictEqual(["scene-ready", "stage-on"]);
   });
 
-  it("動きを減らす設定では、6 秒の打ち切りを仕掛けない", () => {
-    expect(run({ reducedMotion: true }).timers).toStrictEqual([]);
+  it("庭の表示がオフのときは、6 秒の打ち切りを仕掛けない", () => {
+    expect(run({ garden: "off" }).timers).toStrictEqual([]);
   });
 
   it("localStorage に触れると例外を投げる端末では、季節と時間帯を書き、イントロを出さずに庭を出す", () => {
@@ -136,7 +164,7 @@ describe("applyStage", () => {
         root,
         now: NOV_13_20H,
         override: {},
-        reducedMotion: false,
+        again: false,
         storage: () => {
           throw new DOMException("blocked", "SecurityError");
         },
@@ -178,11 +206,16 @@ describe("readOverride", () => {
 // inline script と同じく、外の名前の無い文脈で、ブラウザの値だけを渡して動かす
 function browser(search = "") {
   const root = fakeRoot();
+  const replaced: string[] = [];
   const store = memory();
   const globals = {
     document: { documentElement: root },
     localStorage: store,
-    location: { search },
+    location: { search, pathname: "/", hash: "" },
+    history: {
+      state: null,
+      replaceState: (_: unknown, __: string, url: string) => void replaced.push(url),
+    },
     matchMedia: () => ({ matches: false }),
     setTimeout: () => {},
     URLSearchParams,
@@ -192,12 +225,29 @@ function browser(search = "") {
       }
     },
   };
-  return { root, store, globals };
+  return { root, store, globals, replaced };
 }
 
 describe("stageScript", () => {
-  it("本番の文字列は、URL の引数を読む処理を持たない", () => {
-    expect(/URLSearchParams|location\.search/.test(stageScript({ dev: false }))).toBe(false);
+  it("本番の文字列は、季節と時間帯の URL の引数を読む処理を持たない", () => {
+    expect(/get\("season"\)|get\("time"\)/.test(stageScript({ dev: false }))).toBe(false);
+  });
+
+  it("URL の引数 intro があると、2 回目でもイントロを出し、引数を URL から消す", () => {
+    const b = browser("?intro");
+    b.store.items.set("fd-top-seen", "1");
+    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), {
+      ...b.globals,
+      document: {
+        documentElement: b.root,
+        createElement: () => ({}),
+        head: { appendChild: () => {} },
+      },
+    });
+    expect({ classes: [...b.root.classes].sort(), replaced: b.replaced }).toStrictEqual({
+      classes: ["intro", "stage-on"],
+      replaced: ["/"],
+    });
   });
 
   it("本番の文字列を動かすと、引数を無視して端末の日付と時刻を書き、記録し、庭を出さない", () => {
@@ -294,7 +344,7 @@ describe("inline script に埋め込む形", () => {
         root,
         now: NOV_13_20H,
         override: {},
-        reducedMotion: false,
+        again: false,
         storage: () => memory(),
         load: () => {},
         later: () => {},

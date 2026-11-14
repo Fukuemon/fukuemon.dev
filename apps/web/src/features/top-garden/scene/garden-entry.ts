@@ -4,13 +4,14 @@
 import { startGarden, type Garden } from "./garden";
 import { INK_END } from "../intro-timing";
 import { STATIONS } from "../layout";
+import { SETTINGS_CHANGE, type SettingsChange } from "../../../components/site-settings/settings";
 import type { Season, TimeOfDay } from "../stage/season";
 
 const root = document.documentElement;
 const wiring = new AbortController();
 const on = { signal: wiring.signal };
 
-/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと「文だけで読む」で呼ぶ */
+/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと、設定で庭の表示をオフにしたときに呼ぶ */
 function leave(cards: readonly HTMLElement[]): void {
   wiring.abort();
   for (const el of cards) el.classList.remove("is-current");
@@ -22,8 +23,6 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
   const nav = document.querySelector<HTMLElement>("[data-garden-nav]");
   const live = document.querySelector<HTMLElement>("[data-garden-live]");
   const stops = [...(nav?.querySelectorAll<HTMLButtonElement>("[data-station]") ?? [])];
-  const pause = nav?.querySelector<HTMLButtonElement>("[data-garden-pause]");
-  const plain = nav?.querySelector<HTMLButtonElement>("[data-garden-plain]");
 
   const select = (i: number, announce: boolean) => {
     const s = garden.go(i);
@@ -63,35 +62,12 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
     },
     on,
   );
-  pause?.addEventListener(
-    "click",
-    () => {
-      const pressed = pause.getAttribute("aria-pressed") !== "true";
-      pause.setAttribute("aria-pressed", String(pressed));
-      garden.pause(pressed);
-    },
-    on,
-  );
   const fine = matchMedia("(hover: hover) and (pointer: fine)");
   addEventListener(
     "pointermove",
     (e) => {
       if (fine.matches)
         garden.pointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
-    },
-    on,
-  );
-  plain?.addEventListener(
-    "click",
-    () => {
-      try {
-        garden.stop();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        leave(cards);
-        cards[0]?.querySelector<HTMLElement>("h1")?.focus();
-      }
     },
     on,
   );
@@ -163,6 +139,33 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
   });
 }
 
+/**
+ * ヘッダーの歯車の設定に合わせる。アニメーションがオフの間は、カメラを動かさずに切り替え、ポインタに合わせて揺らさない。
+ * 庭の表示をオフにしたら、ふつうのページに戻す。フォーカスは設定の面に残す。
+ */
+function follow(garden: Garden, cards: readonly HTMLElement[]): void {
+  garden.pause(root.dataset.motion === "off");
+  root.addEventListener(
+    SETTINGS_CHANGE,
+    (e) => {
+      const { name, on: enabled } = (e as CustomEvent<SettingsChange>).detail;
+      if (name === "motion") {
+        garden.pause(!enabled);
+        return;
+      }
+      if (enabled) return;
+      try {
+        garden.stop();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        leave(cards);
+      }
+    },
+    on,
+  );
+}
+
 function boot(): void {
   if (!root.classList.contains("stage-on")) return;
   const stage = document.querySelector<HTMLElement>("[data-garden-stage]");
@@ -190,6 +193,7 @@ function boot(): void {
   }
   root.classList.add("scene-ready");
   performance.mark("garden-scene-ready");
+  follow(garden, cards);
   if (intro) runIntro(garden, cards);
   else reveal(garden, cards);
 }
