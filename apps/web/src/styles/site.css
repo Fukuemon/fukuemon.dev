@@ -62,7 +62,7 @@
 
   /* rehype-playground が書く実行環境の埋め込み。押す前はボタンだけを罫の枠に置き、押した後は枠を iframe で埋める */
   .prose :where(.playground-embed) {
-    @apply flex items-center justify-center border border-border p-6;
+    @apply flex items-center justify-center border border-border p-4 md:p-6;
   }
   .prose :where(.playground-embed:has(> iframe)) {
     @apply block p-0;
@@ -72,7 +72,7 @@
     @apply relative inline-flex h-12 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-control bg-surface px-5 text-label text-primary ring-1 ring-border-field ring-inset ink-press focus-visible:focus-ring active:brightness-90;
   }
   .prose :where(.playground-embed-frame) {
-    @apply block h-160 w-full focus-visible:focus-ring;
+    @apply block h-160 w-full;
   }
 
   /* Pele の SVG の色を、Pele の変数からトークンへ対応させる。1 枚の SVG のままライトとダークを切り替える (ADR-0016) */
