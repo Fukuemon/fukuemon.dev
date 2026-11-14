@@ -110,7 +110,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - `MOTION-REDUCE`: 利用者が OS で動きを減らす設定（`prefers-reduced-motion: reduce`）にしたときは、位置、大きさ、回転を動かすアニメーションと遷移、スクロールに合わせた動きを止める。残すのは、状態の変化を伝える短い透明度の変化と、機能に欠かせない動きだけにする。今の止め方は、透明度の変化を含めて、時間で進むアニメーションと遷移を全て止める。WCAG 2.2 の AA に無い、AAA（2.3.3）の基準を選んでいる。止め方はテーマ変数のファイル（`src/tokens/theme.css`）の末尾の 1 か所に置き、画面のコードに設定ごとの条件を書かない。
   - 例外: スクロールに合わせた動きのうち、`scroll-fade-end` だけは残す。`scroll-fade-end` は右に続きがあることを知らせる印で、途中の濃さを出さず、右端まで送ったときに一度に消える。
   - 確認: レビューで、テーマ変数のファイルの止め方を見る。
-  - 確認: 動きを減らす設定で描画した画面を調べるテストは、`packages/e2e/visual/specs/scroll-box-fade.spec.ts` だけである。この spec は記事のページの検証用の原稿を開くので、原稿を消すときは、開く記事を差し替える。
+  - 確認: 動きを減らす設定で描画した画面を調べるテストは、`packages/e2e/tests/specs/articles/scroll-box-fade.e2e.ts` だけである。この spec は記事のページの検証用の原稿を開くので、原稿を消すときは、開く記事を差し替える。
 - `PLAYGROUND-ONLY`: コードを動かす画面だけの面、角丸、高さの条件を、コードを動かす画面と、そのコンポーネントの外で使わない。対象は、`surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact`、`short:` である。`packages/ui` の Base では、`density="compact"` か `size="XS"` のときだけ使う。例外として、コードを動かす画面だけで使う `PageLoading` は、`density` と `size` によらず、覆いの面に `surface-pane` を使う。同じく、コードを動かす画面だけで使う `Select` は、`density` によらず、欄の面に `surface-pane` を使う。
   - ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)
   - ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)

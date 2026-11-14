@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test";
  *
  * `page.clock` を使うと、ページの requestAnimationFrame は 16ms のタイマーに替わり、画面にフレームが出るのを待たない。
  * Playwright の `polling: "raf"` は本物の requestAnimationFrame を使うので、庭の最初の絵が出るまでを待てる。
- * 待たずに撮ると、`toHaveScreenshot` の「安定するまで待つ」が、最初の絵が出るまでの数秒を 5 秒の上限の中で待つことになる。
+ * 待たずに撮ると、`toHaveScreenshot` の「安定するまで待つ」が、最初の絵が出るまでの数秒を `expect` の待ちの上限の中で待つことになる。
  */
 export const waitForPresentedFrames = async (page: Page, count = 2) => {
   await page.evaluate(() => {
