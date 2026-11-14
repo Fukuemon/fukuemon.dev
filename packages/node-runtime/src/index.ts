@@ -2,6 +2,7 @@ import { bootWithBackend } from "./runtime";
 import type { BootOptions, NodeRuntime } from "./types";
 import { webContainerBackend } from "./webcontainer";
 
+export { BROWSER_PEER_ID } from "./http-records";
 export { BootError } from "./types";
 export type {
   BootFailureReason,

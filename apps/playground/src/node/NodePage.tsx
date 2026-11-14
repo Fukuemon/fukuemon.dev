@@ -14,6 +14,7 @@ import { type ReactNode, Suspense, use, useReducer } from "react";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
+import { BottomTabs } from "./BottomTabs";
 import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
@@ -60,13 +61,11 @@ function Pane({
   );
 }
 
-/** プレビューの下に、HTTP の一覧と、選んだ通信の詳細を、上下に並べる。 */
+/** 下のペインの HTTP のタブ。一覧と、選んだ通信の詳細を、左右に並べる。 */
 function HttpPanes() {
   return (
     <SplitPane
-      defaultSize={45}
-      label="HTTP の一覧の高さ"
-      orientation="vertical"
+      label="HTTP の一覧の幅"
       primary={
         <Pane
           fallback={
@@ -111,13 +110,12 @@ function NodeLayout({ project }: { project: NodeProject }) {
             }
             secondary={
               <SplitPane
-                defaultSize={55}
-                label="エディタとプレビューの幅"
+                defaultSize={70}
+                label="端末の高さ"
+                orientation="vertical"
                 primary={
                   <SplitPane
-                    defaultSize={70}
-                    label="端末の高さ"
-                    orientation="vertical"
+                    label="エディタとプレビューの幅"
                     primary={
                       <Pane
                         editorFocusRing
@@ -132,20 +130,6 @@ function NodeLayout({ project }: { project: NodeProject }) {
                     }
                     secondary={
                       <Pane
-                        fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}
-                      >
-                        <TerminalPane />
-                      </Pane>
-                    }
-                  />
-                }
-                secondary={
-                  <SplitPane
-                    defaultSize={40}
-                    label="プレビューの高さ"
-                    orientation="vertical"
-                    primary={
-                      <Pane
                         fallback={
                           <PreviewFrame state={pendingState} url="">
                             {null}
@@ -155,7 +139,18 @@ function NodeLayout({ project }: { project: NodeProject }) {
                         <PreviewPane />
                       </Pane>
                     }
-                    secondary={<HttpPanes />}
+                  />
+                }
+                secondary={
+                  <BottomTabs
+                    http={<HttpPanes />}
+                    terminal={
+                      <Pane
+                        fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}
+                      >
+                        <TerminalPane />
+                      </Pane>
+                    }
                   />
                 }
               />

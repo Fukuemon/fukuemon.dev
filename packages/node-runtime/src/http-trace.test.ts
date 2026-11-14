@@ -7,9 +7,9 @@ import { promisify } from "node:util";
 
 import { afterAll, describe, expect, it } from "vitest";
 
-import { HTTP_PREFIX } from "../http-records";
+import { HTTP_PREFIX } from "./record-lines";
 
-const PRELOAD = fileURLToPath(new URL("./http-trace.cjs", import.meta.url));
+const PRELOAD = fileURLToPath(new URL("./guest/http-trace.cjs", import.meta.url));
 
 type Line = Record<string, unknown>;
 

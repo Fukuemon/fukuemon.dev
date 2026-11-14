@@ -1,4 +1,4 @@
-import type { HttpBody, HttpRecord } from "@fukuemon/node-runtime";
+import { BROWSER_PEER_ID, type HttpBody, type HttpRecord } from "@fukuemon/node-runtime";
 import type { HttpActor, HttpExchange, HttpMessage } from "@fukuemon/ui";
 
 const bytes = (size: number) =>
@@ -24,7 +24,7 @@ export function toHttpView(records: readonly HttpRecord[]): {
   actors: HttpActor[];
   exchanges: HttpExchange[];
 } {
-  const actors = new Map<string, HttpActor>([["browser", { id: "browser", name: "ブラウザ" }]]);
+  const actors = new Map<string, HttpActor>();
   const exchanges = records.map((record): HttpExchange => {
     for (const peer of [record.from, record.to])
       actors.set(peer.id, { id: peer.id, name: peer.name });
@@ -41,5 +41,8 @@ export function toHttpView(records: readonly HttpRecord[]): {
       }),
     };
   });
-  return { actors: [...actors.values()], exchanges };
+  const ordered = [...actors.values()].sort(
+    (a, b) => Number(b.id === BROWSER_PEER_ID) - Number(a.id === BROWSER_PEER_ID),
+  );
+  return { actors: ordered, exchanges };
 }

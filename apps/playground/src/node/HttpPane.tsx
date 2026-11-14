@@ -41,13 +41,12 @@ export function HttpListPane() {
 
 /** HTTP の一覧で選んだ通信の、ヘッダ、Cookie、本文を出すペイン。 */
 export function HttpDetailPane() {
-  const { state, actors, exchanges } = useHttpView();
+  const { actors, exchanges } = useHttpView();
   const { selection } = useSelection();
   return (
     <HttpExchangeDetail
       actors={actors}
       exchange={exchanges.find((exchange) => exchange.id === selection.exchange)}
-      state={state}
     />
   );
 }

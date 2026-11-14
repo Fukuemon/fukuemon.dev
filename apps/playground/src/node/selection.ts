@@ -11,7 +11,11 @@ export type Selection = {
   preview?: number;
   /** HTTP の一覧で選んだ記録の id。 */
   exchange?: string;
+  /** 下のペインで選んだタブ。選んでいないときは端末を出す。 */
+  bottom?: BottomTab;
 };
+
+export type BottomTab = "terminal" | "http";
 
 export type SelectionAction =
   | { type: "select-item"; path: string; isFile: boolean }
@@ -21,7 +25,8 @@ export type SelectionAction =
   | { type: "removed"; path: string }
   | { type: "select-terminal"; id: string }
   | { type: "select-preview"; port: number }
-  | { type: "select-exchange"; id: string };
+  | { type: "select-exchange"; id: string }
+  | { type: "select-bottom"; tab: BottomTab };
 
 export const initialSelection = (open: string): Selection => ({
   treeItem: open,
@@ -81,6 +86,8 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
       return { ...state, preview: action.port };
     case "select-exchange":
       return { ...state, exchange: action.id };
+    case "select-bottom":
+      return { ...state, bottom: action.tab };
   }
 }
 

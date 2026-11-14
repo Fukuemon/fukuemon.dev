@@ -129,6 +129,13 @@ describe("selectionReducer", () => {
       exchange: "3",
     });
   });
+
+  it("下のペインのタブを選ぶ", () => {
+    expect(selectionReducer(state(), { type: "select-bottom", tab: "http" })).toStrictEqual({
+      ...state(),
+      bottom: "http",
+    });
+  });
 });
 
 const proc = (id: string, status: ProcessInfo["status"]): ProcessInfo => ({

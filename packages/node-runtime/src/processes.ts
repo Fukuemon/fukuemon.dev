@@ -1,5 +1,5 @@
 import type { BackendInstance, BackendProcess } from "./backend";
-import { type RecordSource, withoutRecordLines } from "./http-records";
+import { type RecordSource, withoutRecordLines } from "./record-lines";
 import { createOutputLog } from "./output";
 import { type WritableStore, createStore } from "./store";
 import type { NodeRuntime, ProcessHandle, ProcessInfo } from "./types";
