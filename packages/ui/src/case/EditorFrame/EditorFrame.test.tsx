@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./EditorFrame.stories";
 
-const { Default, Closable, Empty, Error } = composeStories(stories);
+const { Default, Closable, Empty, Error, Pending } = composeStories(stories);
 
 describe("EditorFrame", () => {
   it("選んだファイルのエンジンに、テーマの名前のテーマとファイルを渡す", () => {
@@ -86,5 +86,16 @@ describe("EditorFrame", () => {
       ring: [ring.outlineStyle, ring.outlineOffset],
       own: getComputedStyle(engine).outlineStyle,
     }).toStrictEqual({ before: "none", ring: ["solid", "-2px"], own: "none" });
+  });
+
+  it("起動を待つ pending のときは、ファイルのタブも、エンジンも、待ちの文も出さない", () => {
+    render(<Pending status="UTF-8" />);
+    expect({
+      region: screen.getByRole("region", { name: "エディタ" }) !== null,
+      tabs: screen.queryByRole("tablist"),
+      engine: screen.queryByRole("region", { name: "server.js のコード" }),
+      footer: screen.queryByText("UTF-8"),
+      status: screen.queryByRole("status"),
+    }).toStrictEqual({ region: true, tabs: null, engine: null, footer: null, status: null });
   });
 });

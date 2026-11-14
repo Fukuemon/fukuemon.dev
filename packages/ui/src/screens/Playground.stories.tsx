@@ -88,10 +88,10 @@ function Playground({
               <FileTree
                 defaultExpandedIds={["src"]}
                 items={files}
-                onCreate={() => {}}
-                onCreateDirectory={() => {}}
+                onCreate={(name) => ({ id: name })}
+                onCreateDirectory={(name) => ({ id: name })}
                 onDelete={setDeletingId}
-                onRename={() => {}}
+                onRename={(id) => ({ id })}
                 onSelect={setFileId}
                 selectedId={fileId}
               />

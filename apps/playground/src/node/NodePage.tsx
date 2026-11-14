@@ -2,8 +2,8 @@ import {
   EditorFrame,
   FileTree,
   Link,
-  Loading,
   Notice,
+  PageLoading,
   PreviewFrame,
   SplitPane,
   TerminalFrame,
@@ -12,9 +12,10 @@ import { type ReactNode, Suspense, use, useReducer, useSyncExternalStore } from 
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
-import { RuntimeContext, SelectionContext } from "./context";
+import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
+import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
 import { type NodeSession, createNodeSessionOpener } from "./session";
@@ -23,7 +24,13 @@ import { Toolbar } from "./Toolbar";
 
 const openSession = createNodeSessionOpener(createProjectLoader("node", nodeDefaultProject));
 
-const booting = { kind: "loading", label: "実行環境を起動しています" } as const;
+const pendingState = { kind: "pending" } as const;
+
+/** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */
+function BootWait() {
+  useRuntime();
+  return null;
+}
 
 /**
  * SplitPane の領域を、ペインで埋める。ToolPane は高さを持たないので、縦の flex で広げる。
@@ -62,12 +69,17 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
     <RuntimeContext value={{ project, runtime }}>
       <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
+        <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
+          <BootWait />
+        </Suspense>
         <div className="min-h-0 flex-1">
           <SplitPane
             defaultSize={20}
             label="ファイルのツリーの幅"
             primary={
-              <Pane fallback={<FileTree items={[]} onSelect={() => undefined} state={booting} />}>
+              <Pane
+                fallback={<FileTree items={[]} onSelect={() => undefined} state={pendingState} />}
+              >
                 <FilesPane />
               </Pane>
             }
@@ -83,7 +95,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
                       <Pane
                         editorFocusRing
                         fallback={
-                          <EditorFrame files={[]} onSelect={() => undefined} state={booting}>
+                          <EditorFrame files={[]} onSelect={() => undefined} state={pendingState}>
                             {() => null}
                           </EditorFrame>
                         }
@@ -94,7 +106,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
                     secondary={
                       <Pane
                         fallback={
-                          <PreviewFrame state={booting} url="">
+                          <PreviewFrame state={pendingState} url="">
                             {null}
                           </PreviewFrame>
                         }
@@ -105,7 +117,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
                   />
                 }
                 secondary={
-                  <Pane fallback={<TerminalFrame state={booting}>{() => null}</TerminalFrame>}>
+                  <Pane fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}>
                     <TerminalPane />
                   </Pane>
                 }
@@ -141,7 +153,7 @@ function NodeTool({ search, embedded }: { search: string; embedded: boolean }) {
 export function NodePage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
     <main className="flex h-dvh min-w-0 flex-col gap-2 p-2">
-      <Suspense fallback={<Loading label="プロジェクトを読み込んでいます" />}>
+      <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
         <NodeTool embedded={embedded} search={search} />
       </Suspense>
     </main>

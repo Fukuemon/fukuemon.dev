@@ -1,4 +1,4 @@
-import { ConfirmDialog, FileTree, Notice } from "@fukuemon/ui";
+import { ConfirmDialog, FileTree, type FileTreeResult, Notice } from "@fukuemon/ui";
 import { useState, useSyncExternalStore } from "react";
 
 import { useRuntime, useSelection } from "./context";
@@ -25,11 +25,15 @@ export function FilesPane() {
     });
   };
 
-  /** 名前を確かめてから、新しいパスへの操作を実行する。使えない名前のときは、理由を出して実行しない。 */
-  const runNamed = (name: string, path: string, operation: () => Promise<void>) => {
+  /**
+   * 名前を確かめてから、新しいパスへの操作を実行し、新しいパスを返す。使えない名前のときは、実行せずに理由を返し、FileTree が欄の下に出す。
+   * 保存は待たずにパスを返す。FileTree は、そのパスの項目が木に出たらフォーカスを移す。
+   */
+  const runNamed = (name: string, path: string, operation: () => Promise<void>): FileTreeResult => {
     const invalid = nameError(name, path, new Set(kinds.keys()));
-    if (invalid !== undefined) setFailure(invalid);
-    else run(operation);
+    if (invalid !== undefined) return { error: invalid };
+    run(operation);
+    return { id: path };
   };
 
   return (
@@ -40,7 +44,7 @@ export function FilesPane() {
           files &&
           ((name, parentId) => {
             const path = childPath(parentId, name);
-            runNamed(name, path, async () => {
+            return runNamed(name, path, async () => {
               await files.write(path, "");
               dispatch({ type: "select-item", path, isFile: true });
             });
@@ -50,7 +54,7 @@ export function FilesPane() {
           files &&
           ((name, parentId) => {
             const path = childPath(parentId, name);
-            runNamed(name, path, async () => {
+            return runNamed(name, path, async () => {
               await files.createDirectory(path);
               dispatch({ type: "select-item", path, isFile: false });
             });
@@ -61,8 +65,8 @@ export function FilesPane() {
           files &&
           ((id, name) => {
             const to = renamedPath(id, name);
-            if (to === id) return;
-            runNamed(name, to, async () => {
+            if (to === id) return { id };
+            return runNamed(name, to, async () => {
               await files.rename(id, to);
               dispatch({ type: "renamed", from: id, to });
             });

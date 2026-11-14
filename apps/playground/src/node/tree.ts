@@ -53,6 +53,7 @@ export function projectEntries(files: Readonly<Record<string, string>>): FileEnt
 /**
  * 新しい項目と、名前を変えた項目の名前を確かめ、使えないときは理由の文を返す。
  * 同じパスの項目があるときは、上書きしない。`/` を含む名前と、`.` と `..` は、ほかのディレクトリを指すので断る。
+ * FileTree の欄も同じ名前を断るが、FileTree を通らない呼び出しでもツリーの一覧にある項目を上書きしないよう、実行の前に確認する。中身を読まないディレクトリ（node_modules の下）の項目は見ない。
  */
 export function nameError(
   name: string,

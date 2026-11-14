@@ -1,10 +1,10 @@
-import { Link, Notice } from "@fukuemon/ui";
+import { Link, Notice, PageLoading } from "@fukuemon/ui";
 import { Suspense, use, useSyncExternalStore } from "react";
 
 import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
-import { progressLabel } from "./progress";
+import { bootLabel, progressLabel } from "./progress";
 import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
@@ -33,6 +33,7 @@ function SqlSessionView({ session }: { session: SqlSession }) {
     session.saveFailed.subscribe,
     session.saveFailed.getSnapshot,
   );
+  const bootText = bootLabel(phase);
   return (
     <>
       {session.canSave && saveFailed && (
@@ -46,6 +47,7 @@ function SqlSessionView({ session }: { session: SqlSession }) {
           このブラウザでは IndexedDB を使えないので、ページを閉じると変えた SQL が消えます。
         </Notice>
       )}
+      {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
         onChange={session.setQuery}
         onRun={session.execute}
@@ -67,11 +69,7 @@ export function SqlPage({ search, embedded }: { search: string; embedded: boolea
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">SQL の実行環境</h1>
       )}
-      <Suspense
-        fallback={
-          <p className="text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>
-        }
-      >
+      <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
         <SqlTool search={search} />
       </Suspense>
     </main>
