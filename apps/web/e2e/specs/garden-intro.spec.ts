@@ -147,6 +147,40 @@ test.describe("イントロの途中", () => {
   });
 });
 
+test.describe("イントロの途中でふつうのページに戻る", () => {
+  const INTRO_CLASSES = /\b(stage-on|intro|enter|scene-ready|garden-ready|no-anim)\b/;
+
+  test("文が出てからカメラが止まるまでに「文だけで読む」を押すと、ふつうのページに戻り、イントロの class が後から付かない", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/garden-ready/, { timeout: 60_000 });
+    await page.getByRole("button", { name: "文だけで読む" }).click();
+    await expect(heading(page)).toBeFocused();
+    await expect(page.locator("[data-garden-stage]")).toBeHidden();
+    // イントロを終える時刻（色を差してから 4.5 秒）を過ぎても、class を書き戻さない
+    await page.waitForFunction(() => performance.now() > 12_000);
+    await expect(html(page)).not.toHaveClass(INTRO_CLASSES);
+  });
+
+  test("門をくぐる途中で描く途中の例外が出ると、ふつうのページに戻り、イントロの class が残らない", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      const draw = WebGL2RenderingContext.prototype.drawElements;
+      WebGL2RenderingContext.prototype.drawElements = function (...args) {
+        if (document.documentElement.classList.contains("enter")) throw new Error("描画の失敗");
+        return draw.apply(this, args);
+      };
+    });
+    await page.goto("/");
+    await expect(page.locator("[data-garden-stage]")).toBeHidden({ timeout: 60_000 });
+    await expect(html(page)).not.toHaveClass(INTRO_CLASSES);
+    await expect(heading(page)).toBeVisible();
+    await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
+  });
+});
+
 test.describe("場面のバンドル", () => {
   test("場面のバンドルが届かないまま止まると、6 秒でふつうのページを出す", async ({ page }) => {
     // 応答を返さない。読み込みの失敗が届かないので、head の inline script の打ち切りだけが働く。バンドルを待つ間は load が来ないので、DOMContentLoaded まで待つ
