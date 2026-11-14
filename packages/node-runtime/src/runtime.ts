@@ -1,5 +1,6 @@
 import type { BackendInstance, RuntimeBackend } from "./backend";
 import { createFiles } from "./files";
+import { createHttpRecords } from "./http-records";
 import { createProcesses } from "./processes";
 import { createStore } from "./store";
 import { BootError, type BootOptions, type NodeRuntime, type OpenPort } from "./types";
@@ -22,7 +23,8 @@ function isPreviewUrl(url: string) {
 
 async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime> {
   const files = await createFiles(instance.files);
-  const processes = createProcesses(instance);
+  const http = createHttpRecords();
+  const processes = createProcesses(instance, http.accept);
   const ports = createStore<readonly OpenPort[]>([]);
   const unsubscribePorts = instance.ports.subscribe((open) =>
     ports.set(open.filter((port) => isPreviewUrl(port.url))),
@@ -32,7 +34,7 @@ async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime
     files: files.api,
     processes: processes.api,
     ports,
-    httpExchanges: createStore<readonly never[]>([]),
+    httpExchanges: http.store,
     consoleEntries: createStore<readonly never[]>([]),
     dispose: () => {
       disposed ??= (async () => {
