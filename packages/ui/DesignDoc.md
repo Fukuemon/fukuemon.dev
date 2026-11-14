@@ -44,7 +44,8 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
   - 時間帯ごとに 20 個を超える色を使い、場面のほかでは使わないので、トークンにしない。
   - 値は `apps/web/src/features/top-garden/scene/scene-colors.ts` だけに書く。
   - 表は [トップの水墨の門と立体の庭の Design Doc](../../docs/design/features/top-garden/DesignDoc.md#時間帯ごとの場面の色) にある。
-  - 例外は、場面の上端と下端に敷く霞と、霞の上の字の色である。ヘッダーと庭の中のボタンの字を載せるので、トークン（`surface`、`text`、`garden-mist-night`、`garden-ink-night`）にし、コントラストのチェックで確認する。
+  - 例外は、場面の上端と下端に敷く霞と、霞の上の字の色である。ヘッダーと庭の中のボタンの字を載せるので、`garden-` で始まる 6 つのトークンにし、コントラストのチェックで確認する。
+    トークンの一覧は [トークンの文書](design/tokens.md) にある。
 
 ## Design
 
