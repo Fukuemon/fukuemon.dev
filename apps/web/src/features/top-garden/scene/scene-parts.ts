@@ -111,6 +111,12 @@ export interface TreeLeaf {
   readonly colors: readonly string[];
 }
 
+export interface Tree {
+  readonly group: Group;
+  /** 和紙を掛ける枝を伸ばし始める幹の点。木の原点からの位置（m） */
+  readonly top: Vector3;
+}
+
 /**
  * 木。幹と枝は管で、葉は葉の形の小さな板を枝の先に集めて描く。
  * @param s 大きさの倍率
@@ -123,7 +129,7 @@ export function tree(
   s: number,
   dir: 1 | -1,
   leaf: TreeLeaf | null,
-): Group {
+): Tree {
   const g = new Group();
   const barkMat = new MeshLambertMaterial({ color: bark });
   const trunk = new CatmullRomCurve3([
@@ -198,10 +204,8 @@ export function tree(
     m.frustumCulled = false;
     g.add(m);
   }
-  // 和紙を掛ける枝は、幹のこの点から伸ばす。
-  g.userData.top = trunk.getPoint(0.86).multiplyScalar(s);
   g.scale.setScalar(s);
-  return g;
+  return { group: g, top: trunk.getPoint(0.86).multiplyScalar(s) };
 }
 
 /**

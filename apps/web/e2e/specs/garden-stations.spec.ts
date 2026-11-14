@@ -3,6 +3,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
 const AUTUMN_NOON = new Date(2026, 10, 13, 12);
 
+// SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかるので、テストの時間の上限を 3 倍にする
+test.beforeEach(() => test.slow());
+
 const openGarden = async (page: Page) => {
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
@@ -28,17 +31,16 @@ const settledCenterX = (el: Locator) =>
 /** カメラがその文の正面に来て、その文だけが見えている */
 const expectAt = async (page: Page, id: string) => {
   await expect(page.locator("[data-garden-card]:not(.is-current)")).toHaveCount(3);
-  // SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかる
   await expect
     .poll(
       async () => {
         const x = await settledCenterX(card(page, id));
         return x !== null && x > 0.4 && x < 0.6;
       },
-      { timeout: 20_000 },
+      { timeout: 45_000 },
     )
     .toBe(true);
-  await expect(card(page, id)).toHaveCSS("opacity", "1", { timeout: 15_000 });
+  await expect(card(page, id)).toHaveCSS("opacity", "1", { timeout: 45_000 });
 };
 
 test.describe("幅 1440px", () => {

@@ -58,7 +58,7 @@ export function startGarden(
   renderer.shadowMap.type = PCFSoftShadowMap;
 
   const C = scenePalette(opts.time, opts.season);
-  const { scene, stationTrees } = buildGarden(C, renderer.capabilities.getMaxAnisotropy());
+  const { scene, boughFrom } = buildGarden(C, renderer.capabilities.getMaxAnisotropy());
   /** 紙と墨の色を、今のテーマのトークンから読む */
   const inkColors = () => {
     const cs = getComputedStyle(document.documentElement);
@@ -94,7 +94,7 @@ export function startGarden(
     cssScene.add(o);
     const w = el.offsetWidth / PX;
     const h = el.offsetHeight / PX;
-    hangPaper(scene, C, st, w, h, stationTrees[i]!);
+    hangPaper(scene, C, st, w, h, boughFrom[i]!);
     return {
       w,
       h,

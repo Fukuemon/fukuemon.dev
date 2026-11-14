@@ -52,6 +52,11 @@ import { STATIONS } from "../layout";
     inset: 0;
   }
 
+  /* 見せていない和紙の文は、クリックを受けない。CSS3DRenderer が要素に pointer-events: auto を書くので、!important で止める */
+  .garden-stage :global([data-garden-card]:not(.is-current)) {
+    pointer-events: none !important;
+  }
+
   /* 庭の中のボタン（top-garden の Design Doc の「庭の中のボタンの並び」） */
   :global(html.stage-on.garden-ready) .garden-nav {
     position: fixed;

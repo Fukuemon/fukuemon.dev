@@ -73,11 +73,6 @@ const row = "border-t border-border py-2";
     transition: opacity 700ms ease;
   }
 
-  /* CSS3DRenderer が要素に pointer-events: auto を書くので、見せていない文は !important で止める */
-  :global(html.stage-on) [data-garden-card]:not(:global(.is-current)) {
-    pointer-events: none !important;
-  }
-
   :global(html.stage-on.garden-ready) [data-garden-card]:global(.is-current) {
     opacity: 1;
   }

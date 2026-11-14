@@ -3,15 +3,13 @@ import { describe, expect, it } from "vitest";
 import { SEASON_LEAVES, TIME_PALETTES, mixHex, scenePalette } from "./scene-colors";
 import type { TimeOfDay } from "../stage/season";
 
-/** WCAG 2.2 のコントラスト比。three の Color は 16 進数を sRGB から線形に直して持つ */
-const contrast = (a: string, b: string) => {
-  const lum = (hex: string) => {
-    const { r, g, b } = new Color(hex);
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
-  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number];
-  return (hi + 0.05) / (lo + 0.05);
+/** WCAG 2.2 の相対輝度。three の Color は、16 進数を sRGB から線形に直して持つ */
+const luminance = (hex: string) => {
+  const c = new Color(hex);
+  return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 };
+const contrast = (a: string, b: string) =>
+  (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
 
 describe("mixHex", () => {
   it.each([
