@@ -2,7 +2,7 @@ name: Deploy Preview
 
 # 開発中のサイトを、プレビューの Worker (fukuemon-dev-preview) の workers.dev の URL へ配信する (ADR-0031)。
 # 本番の Worker への deploy は deploy workflow が手動の起動だけで行い、この workflow は触らない。
-# 本番を切り替えるときに、この workflow とプレビューの Worker を消す (#91)。noindex はこの経路でだけ足す。
+# 本番を切り替えるときに、この workflow とプレビューの Worker を消す。noindex を足した配信物を出すのは、この workflow だけである。
 on:
   workflow_run:
     workflows: [Check]

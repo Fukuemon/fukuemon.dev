@@ -5,7 +5,6 @@ const NOINDEX = "/*\n  X-Robots-Tag: noindex\n";
 
 /** `_headers` の末尾に、全てのパスへ noindex を返す規則を足す (ADR-0031) */
 export function withNoindex(headers: string): string {
-  if (headers.includes("X-Robots-Tag: noindex")) return headers;
   const current = headers.trimEnd();
   return current === "" ? NOINDEX : `${current}\n\n${NOINDEX}`;
 }
@@ -20,8 +19,4 @@ export function buildPreviewAssets(distDir: string, outDir: string): void {
   const headersPath = join(outDir, "_headers");
   const current = existsSync(headersPath) ? readFileSync(headersPath, "utf8") : "";
   writeFileSync(headersPath, withNoindex(current));
-}
-
-if (import.meta.main) {
-  buildPreviewAssets("dist", "dist-preview");
 }

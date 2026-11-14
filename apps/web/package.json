@@ -8,7 +8,8 @@
     "build": "vp run build:site",
     "preview": "astro preview",
     "deploy": "wrangler deploy",
-    "deploy:preview": "node src/lib/preview-assets.ts && wrangler deploy --env preview",
+    "build:preview": "node scripts/build-preview-assets.ts",
+    "deploy:preview": "pnpm run build:preview && wrangler deploy --env preview",
     "typecheck": "astro check",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
