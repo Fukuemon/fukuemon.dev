@@ -70,9 +70,12 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 - cross-origin isolation のヘッダは、isolation を求める実行環境を埋め込む記事の URL にだけ返す。`fukuemon.dev` の全体には返さない。
   - 全体に返すと、CORP を返さない第三者のリソースが一律にブロックされる。
-  - ヘッダは、該当する記事が実在してから書く。
+  - `apps/web` のビルドが、出力の HTML から Node の実行環境を埋め込むページを集め、`COOP: same-origin` と `COEP: require-corp` の規則を、出力の `_headers` の末尾に足す。`apps/web/public/_headers` には書かない。
+  - 規則は、末尾のスラッシュがある URL と無い URL の両方に書く。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md#5-cross-origin-isolation)
   - ADR-0034: [cross-origin isolation のヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
+- `/playground-projects/*` には、`Access-Control-Allow-Origin: https://play.fukuemon.dev` を返す。`play.fukuemon.dev` のツールのページが、プロジェクトの JSON を読むためである。
+  - ADR-0049: [プロジェクトを渡す方法](../docs/adr/0049-playground-projects-from-articles.md#3-渡す方法)
 - HTML に `Cache-Control` を書かない。Workers Static Assets のデフォルト値に任せる。
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
 - HSTS に `includeSubDomains` を付ける。HTTP で公開するサブドメインが要るときは外す。

@@ -63,7 +63,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 記事の本文は `apps/web/src/content/articles/` に置く。  
 コンテンツの用語と、frontmatter の項目が守る条件は [domain.md](domain.md) と [domain/content.md](domain/content.md) にある。  
-1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。新しいシリーズを作るときだけ、`index.md` を足す。
+1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。新しいシリーズを作るときだけ、`index.md` を足す。実行環境を埋め込むときだけ、プロジェクトのディレクトリを足す。
 
 - 原稿の本文は、`である` 調で書く。frontmatter の `description` も同じである。
   - 箇条書きと表のセルは、体言止めか終止形で書く。
@@ -73,6 +73,19 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - シリーズに入れる記事は `articles/<series>/` に置き、シリーズに入れない記事は `articles/` の直下に置く。ディレクトリは 1 階層までにする。
 - シリーズの中の記事は frontmatter の `order` を書き、シリーズに入れない記事は `order` を書かない。
 - frontmatter に `format` を書くときは、`page` だけを書く。
+- 実行環境は、言語を `playground` にしたコードフェンスに、埋め込みの名前を 1 行で書いて埋め込む。
+
+  ````md
+  ```playground
+  node-server
+  ```
+  ````
+
+  - プロジェクトは、記事の Markdown があるディレクトリの `playground/<埋め込みの名前>/` に置く。`playground.json` と初期ファイルを置く。形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#プロジェクト) にある。
+  - 埋め込みの名前は、英小文字、数字、ハイフンで書き、1 本の記事の中で重ねない。
+  - Node の実行環境を埋め込む記事には、別の origin の画像と埋め込み（`img`、`iframe`、`video` など）と、SQL と Go のツールを置かない。置くと、ビルドが失敗する。記事に返す `COEP: require-corp` が、それらを止めるためである。
+  - ADR-0034: [記事への埋め込み](../docs/adr/0034-playground-origin-and-embedding.md#3-記事への埋め込み)
+
 - 図は `mermaid` のコードフェンスで書き、色を指定しない。
   - `style` や `classDef` で色を書くと、暗い地で読めなくなる。
   - 図は、ビルドのときに Pele で SVG になる。Pele が対応しない記法を書くと、ビルドが失敗する。
