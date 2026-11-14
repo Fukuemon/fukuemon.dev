@@ -56,7 +56,7 @@ export function SqlPage({ search, embedded }: { search: string; embedded: boolea
       className={
         useLayoutMode() === "wide"
           ? "mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4"
-          : "flex h-dvh min-w-0 flex-col gap-2 p-2 short:gap-0 short:p-0"
+          : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
       }
     >
       {!embedded && (

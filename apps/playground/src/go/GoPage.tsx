@@ -270,7 +270,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const deletingKind = deleting === undefined ? undefined : kindOf(fileSet, deleting);
 
   const filesPanel = (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-2 p-1">
       {problem !== undefined && (
         <Notice isAlert title="操作できませんでした" tone="danger">
           {problem}
@@ -293,7 +293,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
     </div>
   );
   const editorPanel = (
-    <div className="grid h-full min-h-0 grid-rows-1">
+    <div className="grid h-full min-h-0 grid-rows-1 p-1">
       <EditorFrame
         files={openTabs.map((path) => ({ id: path, label: tabLabel(path, openTabs) }))}
         onClose={closeTab}
@@ -329,7 +329,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
     </div>
   );
   const outputPanel = (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-2 p-1">
       <div className="grid min-h-0 flex-1 grid-rows-1">
         <OutputPane session={session} />
       </div>
@@ -343,7 +343,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <title>{`${session.embedId ?? TITLE} | fukuemon.dev プレイグラウンド`}</title>
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-2 border-text bg-surface px-4 py-2">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1.5 py-1">
         <div className="flex min-w-0 items-baseline gap-3">
           {!embedded && <h1 className="font-heading text-heading-sm text-text">{TITLE}</h1>}
           {session.embedId !== undefined && (
@@ -461,7 +461,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 /** Go を動かすツールのページ。埋め込みのときは、ページの題を出さない。 */
 export function GoPage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
-    <main className="flex h-dvh min-w-0 flex-col bg-surface">
+    <main className="flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5">
       <Suspense
         fallback={
           <p className="p-4 text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>
