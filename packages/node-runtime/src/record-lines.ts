@@ -50,6 +50,37 @@ function partialPrefixLength(text: string): number {
 }
 
 /**
+ * text から、改行までそろった記録の行を onLine に渡し、端末に出す文字と手元に置く文字に分ける。
+ * waitingForEnd は、記録の行の頭が届き、改行を待っていることを表す。そのときは、頭の途中で切れたものと違い、待つ時間を決めない。
+ */
+function takeRecordLines(
+  text: string,
+  onLine: (line: string, kind: RecordKind) => void,
+): { out: string; held: string; waitingForEnd: boolean } {
+  let rest = text;
+  let out = "";
+  for (;;) {
+    const found = findPrefix(rest);
+    if (found === undefined) break;
+    const { at, kind, prefix } = found;
+    const end = rest.indexOf("\n", at);
+    if (end === -1) {
+      if (rest.length - at > MAX_LINE_CHARS) break;
+      return { out: out + rest.slice(0, at), held: rest.slice(at), waitingForEnd: true };
+    }
+    out += rest.slice(0, at);
+    onLine(rest.slice(at + prefix.length, end).replace(/\r$/, ""), kind);
+    rest = rest.slice(end + 1);
+  }
+  const keep = partialPrefixLength(rest);
+  return {
+    out: out + rest.slice(0, rest.length - keep),
+    held: rest.slice(rest.length - keep),
+    waitingForEnd: false,
+  };
+}
+
+/**
  * プロセスの出力から、記録の行を抜き出す。onText には記録の行を除いた出力を、onLine には記録の行の頭を除いた中身と、行の種類を渡す。
  * 記録の行は、出力の途中で切れて届くので、頭か改行が届くまで手元に置く。頭の途中で切れたものは、HOLD_MS の後に端末に出す。
  */
@@ -61,6 +92,11 @@ export function createRecordLineFilter(
   let timer: ReturnType<typeof setTimeout> | undefined;
   let discarded = false;
 
+  const stopTimer = () => {
+    clearTimeout(timer);
+    timer = undefined;
+  };
+
   const release = () => {
     timer = undefined;
     if (held === "" || discarded) return;
@@ -70,44 +106,23 @@ export function createRecordLineFilter(
   };
 
   const push = (chunk: string) => {
-    clearTimeout(timer);
-    timer = undefined;
-    let text = held + chunk;
-    held = "";
-    let out = "";
-    for (;;) {
-      const found = findPrefix(text);
-      if (found === undefined) break;
-      const { at, kind, prefix } = found;
-      const end = text.indexOf("\n", at);
-      if (end === -1) {
-        if (text.length - at > MAX_LINE_CHARS) break;
-        out += text.slice(0, at);
-        held = text.slice(at);
-        if (out !== "") onText(out);
-        return;
-      }
-      out += text.slice(0, at);
-      onLine(text.slice(at + prefix.length, end).replace(/\r$/, ""), kind);
-      text = text.slice(end + 1);
-    }
-    const keep = partialPrefixLength(text);
-    out += text.slice(0, text.length - keep);
-    held = text.slice(text.length - keep);
-    if (out !== "") onText(out);
-    if (held !== "") timer = setTimeout(release, HOLD_MS);
+    stopTimer();
+    const taken = takeRecordLines(held + chunk, onLine);
+    held = taken.held;
+    if (taken.out !== "") onText(taken.out);
+    if (!taken.waitingForEnd && held !== "") timer = setTimeout(release, HOLD_MS);
   };
 
   return {
     push,
     /** 手元に置いた出力を、記録の行でなかったものとして端末に出す。プロセスが終わったときに呼ぶ。 */
     flush: () => {
-      clearTimeout(timer);
+      stopTimer();
       release();
     },
     /** 手元に置いた出力を捨て、この後の flush でも渡さない。購読を外したときに呼ぶ。 */
     discard: () => {
-      clearTimeout(timer);
+      stopTimer();
       held = "";
       discarded = true;
     },
