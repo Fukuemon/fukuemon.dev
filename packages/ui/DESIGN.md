@@ -82,7 +82,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 例外: 検索の欄（`TextField` の `appearance="underline"`）の緑の罫。
   - 例外: コードを動かす画面の詰めたペインの中の行と、`FileTree` の名前の欄の、内側に引く輪（`focus-ring-inset`）。
   - 例外: ペインの全体を占めるスクロールする領域の、外側の要素の `::after` に引く内側の輪（`focus-ring-frame`）。
-    - ADR-0079: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](../../docs/adr/0079-inset-focus-ring-in-dense-panes.md)
+    - ADR-0066: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
     - ADR-0074: [詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない](../../docs/adr/0074-inset-focus-ring-on-tree-name-field.md)
   - DADS は、黄色の輪と黒の枠の 2 重の表示を求める。墨の輪にする理由は、DesignDoc の「フォーカスの表示」にある。
   - 確認: `pnpm run check:utilities`。`focus-ring-inset` と `focus-ring-frame` を詰めたペインの外で使っていないかは、レビューで見る。

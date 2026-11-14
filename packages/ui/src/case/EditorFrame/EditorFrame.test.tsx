@@ -74,7 +74,7 @@ describe("EditorFrame", () => {
     expect(screen.queryByRole("tab")).toBeNull();
   });
 
-  it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0079）", () => {
+  it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0066）", () => {
     render(<Default />);
     const engine = screen.getByRole("region", { name: "server.js のコード" });
     const frame = engine.parentElement as HTMLElement;

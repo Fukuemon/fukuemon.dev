@@ -75,7 +75,7 @@ describe("HttpExchangeList", () => {
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 
-  it("行のフォーカスの輪は、行の内側に引く（ADR-0079）", async () => {
+  it("行のフォーカスの輪は、行の内側に引く（ADR-0066）", async () => {
     render(<Default />);
     await userEvent.tab();
     const focused = document.activeElement as Element;

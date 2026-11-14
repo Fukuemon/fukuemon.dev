@@ -169,7 +169,7 @@ describe("TreeView", () => {
     }
   });
 
-  it("compact の項目は、フォーカスの輪を項目の内側に引く（ADR-0079）", async () => {
+  it("compact の項目は、フォーカスの輪を項目の内側に引く（ADR-0066）", async () => {
     render(<CompactBody />);
     await userEvent.tab();
     const focused = document.activeElement as Element;

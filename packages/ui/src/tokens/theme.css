@@ -216,13 +216,13 @@
   outline-offset: 2px;
 }
 
-/* 詰めたペインの中の行と、ペインの全体を占めるスクロールする領域に使う。隣の行や領域の端で輪が欠けないよう、要素の内側に引く（docs/adr/0079-inset-focus-ring-in-dense-panes.md） */
+/* 詰めたペインの中の行と、ペインの全体を占めるスクロールする領域に使う。隣の行や領域の端で輪が欠けないよう、要素の内側に引く（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
 @utility focus-ring-inset {
   outline: 2px solid var(--fd-color-focus);
   outline-offset: -2px;
 }
 
-/* フォーカスできるスクロールする領域 1 つを直下に置く外側の要素に付ける。領域自身の輪は、中の行や帯の背景に隠れて欠けるので、外側の ::after に引く。isolation は、領域の中の z-index が輪を覆わないようにする（docs/adr/0079-inset-focus-ring-in-dense-panes.md） */
+/* フォーカスできるスクロールする領域 1 つを直下に置く外側の要素に付ける。領域自身の輪は、中の行や帯の背景に隠れて欠けるので、外側の ::after に引く。isolation は、領域の中の z-index が輪を覆わないようにする（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
 @utility focus-ring-frame {
   position: relative;
   & > * {
