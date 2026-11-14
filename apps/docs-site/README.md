@@ -3,10 +3,9 @@
 設計の文書（PRD、Design Doc、ADR）を Zensical でビルドし、`docs.fukuemon.dev` の Worker（`fukuemon-dev-docs`）から配信する。
 Cloudflare Access がオンの間は、許可したメールアドレスの人だけを通す。
 Access は、運営者がダッシュボードで設定する。
-決めたことと理由は ADR-0032 と ADR-0081 にある。
+決めたことと理由は ADR-0032 にある。
 
-- ADR-0032: [ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する](../../docs/adr/0032-docs-site-behind-access.md)
-- ADR-0081: [ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する](../../docs/adr/0081-docs-site-access-on-dashboard.md)
+- ADR-0032: [ドキュメントサイトを Zensical でビルドし、Cloudflare Access を運営者がダッシュボードで設定する](../../docs/adr/0032-docs-site-behind-access.md)
 
 ## 構成
 
@@ -46,7 +45,7 @@ Access のアプリケーションが無いまま custom domain を作ると、�
 このため、ダッシュボードで Access を作ってから、Terraform で custom domain を作る。
 apply workflow の起動と `infra` environment の承認は、[infra/README.md](../../infra/README.md#ci-から-apply-する) の「CI から apply する」の手順で行う。
 
-- ADR-0081: [ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する](../../docs/adr/0081-docs-site-access-on-dashboard.md)
+- ADR-0032: [アクセスの認証](../../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 
 ### 1. Zero Trust を有効にする
 
@@ -87,8 +86,6 @@ Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` �
 
 1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
    ほかの差分が出たら、apply しない。
-   とくに、Access のアプリケーションかポリシー（`cloudflare_zero_trust_access_*.docs`）の destroy が出たら、state に Access が残っている。
-   apply すると Access が消えるので、扱いを決めてから進める。
 2. 確認したら、`mode=apply` で起動し直す。
 
 ### 5. 公開の範囲を確認する

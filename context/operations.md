@@ -43,7 +43,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------- |
 | Zone、DNS レコード、TLS                                                    | Terraform                                                                         | 使う     |
 | Workers custom domain（`cloudflare_workers_custom_domain`）                | Terraform                                                                         | 使う     |
-| Access のアプリケーションとポリシー                                        | ダッシュボード（運営者がオンとオフを切り替える。ADR-0081）                        | 使う     |
+| Access のアプリケーションとポリシー                                        | ダッシュボード（運営者がオンとオフを切り替える。ADR-0032）                        | 使う     |
 | Zero Trust の組織                                                          | ダッシュボード（最初の 1 回）                                                     | 使う     |
 | Terraform の state 用の R2 バケット                                        | Terraform（`infra/bootstrap/`）                                                   | 使う     |
 | workers.dev とバージョンごとの URL の公開（`workers_dev`、`preview_urls`） | Wrangler（`wrangler.jsonc`）。ドキュメントサイトは `check:closed-urls` が確認する | 使う     |
@@ -63,7 +63,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 ドキュメントサイトの Access のアプリケーションとポリシーは、判定の 3 の例外で、ダッシュボードで設定する。  
 運営者が Access のオンとオフを頻繁に切り替えるためである。  
-ADR-0081: [Access をダッシュボードで設定する](../docs/adr/0081-docs-site-access-on-dashboard.md)
+ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 
 - `cloudflare_workers_script` で静的アセットを配らない。deploy が Terraform を経由し、apply の権限が日常の CI へ降りる。
 - Terraform が作ったリソースの識別子（R2 のバケット名、D1 の database id など）を Wrangler へ渡す方法は、データを保持するリソースが 2 つ目になる前にこの節に定める。
@@ -208,7 +208,7 @@ token の権限は、スコープ、権限グループ、アクセスレベル�
 - deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy の 5 つの workflow は custom domain を触らない。
 - DNS の権限は要らない。custom domain が作るレコード（サイトの apex、カタログの `design`、プレイグラウンドの `play`、ドキュメントサイトの `docs`）は `Workers Scripts` の配下にある。
 - deploy 用と apply 用の token に Access の権限を与えない。Access は、運営者がダッシュボードで設定する。
-  - ADR-0081: [Access をダッシュボードで設定する](../docs/adr/0081-docs-site-access-on-dashboard.md)
+  - ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 - `Zone / Zone / Edit` の Zone Resources は、対象の zone だけに限る。
 - R2 の S3 互換キーは、R2 の画面から発行したものだけを使う。
   - ほかの画面で作った token で起きるエラーと、発行時に出る値のどれを使うかは、[infra/README.md](../infra/README.md#prerequisites) にある。

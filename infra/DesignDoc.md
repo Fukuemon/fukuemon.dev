@@ -100,7 +100,7 @@ Cloudflare Registrar がドメインを取得したときに作った zone を�
 
 `docs.<zone>` の Access のアプリケーションとポリシーは、Terraform で持たない。  
 運営者がダッシュボードで設定する。  
-ADR-0081: [ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する](../docs/adr/0081-docs-site-access-on-dashboard.md)
+ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 
 - Terraform は、custom domain の `docs` だけを持つ。Terraform では、Access と custom domain を作る順序を制御しない。
 - custom domain を作る apply は、ダッシュボードで Access のアプリケーションを作った後に実行する。Access の無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。

@@ -247,10 +247,8 @@ Success Metrics の「記事を読める」「記事の追加が 1 枚で済む�
   - Lighthouse の Performance が 90 以上で、LCP が 2.5 秒以内である（Moto G Power、Slow 4G 相当）。
   - トップの最初の訪問は、この条件の対象から除く。最初の訪問だけに、水墨の門のイントロ（約 10 秒）を表示するためである。2 回目以降の訪問のトップは、対象に含める。
   - トップの合否を判定する GPU、スロットリング、回数は、[ADR-0078](adr/0078-top-lighthouse-gpu-and-throttling.md) にある。
-- ドキュメントサイトを、許可した人だけが開ける。
-  - 許可していない人がドキュメントサイトの URL を開くと、認証の画面になる。
-- 公開に関わる Cloudflare の設定が、Dashboard の上の属人的な設定として残らない。
-  - ドメイン、DNS、配信先、ドキュメントサイトのアクセスの認証の設定が、リポジトリに書いた定義と一致する。
+- 公開に関わる Cloudflare の設定が、Dashboard の上の属人的な設定として残らない。ドキュメントサイトの Access は除く。
+  - ドメイン、DNS、配信先の設定が、リポジトリに書いた定義と一致する。
   - 確認した結果は [基盤の Design Doc の Verification](../infra/DesignDoc.md#verification) にある。
 
 ## Open Questions / Risks

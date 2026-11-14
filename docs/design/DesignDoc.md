@@ -175,8 +175,7 @@ ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-work
 | workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない            |
 
 ドキュメントサイトのビルドの方法と、アクセスの認証は、次の ADR にある。  
-ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)  
-ADR-0081: [Access をダッシュボードで設定する](../adr/0081-docs-site-access-on-dashboard.md)
+ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)
 
 ### URL の構成
 
