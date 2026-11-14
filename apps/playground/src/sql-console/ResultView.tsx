@@ -10,6 +10,7 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageSize, tablePage } from "./resul
 const ms = (value: number) => `${value.toFixed(1)} ms`;
 
 function PlanTree({ plan }: { plan: JsonPlan }) {
+  const text = use(DenseContext) ? "text-body-compact" : "text-body-dense";
   const ids: string[] = [];
   const collect = (node: JsonPlan["root"]) => {
     ids.push(node.id);
@@ -20,12 +21,10 @@ function PlanTree({ plan }: { plan: JsonPlan }) {
     <div className="flex flex-col gap-2">
       <TreeView defaultExpandedIds={ids} items={[plan.root]} label="実行計画" />
       {plan.planningMs !== undefined && (
-        <p className="text-body-dense text-text-secondary">Planning Time: {ms(plan.planningMs)}</p>
+        <p className={`${text} text-text-secondary`}>Planning Time: {ms(plan.planningMs)}</p>
       )}
       {plan.executionMs !== undefined && (
-        <p className="text-body-dense text-text-secondary">
-          Execution Time: {ms(plan.executionMs)}
-        </p>
+        <p className={`${text} text-text-secondary`}>Execution Time: {ms(plan.executionMs)}</p>
       )}
     </div>
   );
