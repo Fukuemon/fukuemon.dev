@@ -14,7 +14,7 @@ const describe = (value) => (types.isProxy(value) ? "Proxy" : undefined);
 // 記録を書く途中で console.* が呼ばれたとき（stdout の write を包んだ訪問者のコードなど）は、2 重に記録しない
 let writing = false;
 
-// 標準出力がパイプかファイルのとき（親のプログラムが出力を読むときや、リダイレクトしたとき）は記録の行を書かず、読む側に JSON を渡さない。
+// 標準出力がパイプかファイルのとき（親のプログラムが出力を読むときや、リダイレクトしたとき）は記録の行を書かず、読む側に JSON を渡さない (apps/playground/DesignDoc.md の「コンソール」)。
 // ワーカーのスレッドの標準出力は、isTTY を持たずに親のスレッドへ送られるので、スレッドでは、親のスレッドが環境のデータで渡した値を使う
 const TTY_KEY = "@@fd:console-tty";
 const decideRecording = () => {

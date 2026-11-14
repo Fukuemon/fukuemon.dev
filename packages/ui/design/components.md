@@ -229,6 +229,9 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
   - 13px では、選んだ項目を太字にせず、面の色と左の 2px の `primary` の罫で示す。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
   - ADR-0067: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](../../../docs/adr/0067-compact-text-tokens-in-dense-panes.md)
+- 内容の制約: `TreeView` は、見えている項目の `children` だけを読む。閉じた枝の子の `children` は、getter にして、初めて読まれたときに作ってよい。
+  - `editor` を渡したときだけ、欄を置く項目を探すために、木の全体の `children` を読む。
+- 外の要素から木へフォーカスを移す: `isTabStop` を `false` にした木では、呼ぶ側が、`role="tree"` の要素の中の `role="treeitem"` の要素を探して `focus()` を呼ぶ。項目は、見えている順に、平らに DOM に並ぶ。
 - 状態: 枝の開閉、選択、hover、フォーカス、名前の欄を開いている。
   - `editor` を渡すと、項目の名前の代わり（`rename`）か、枝の子の先頭に足した行（`insert`）に、名前の欄を描く。
   - 項目の中に押せる要素を入れない規則の例外にする。名前を打つ欄を、その名前が木に出る位置に置くためである。

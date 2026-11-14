@@ -18,6 +18,10 @@ export type TreeNode = {
    * label と同じ文字を描き、押せる要素を入れない。treeitem の中に、ほかの操作を置けないためである。名前の欄は、TreeViewProps の editor で描く。
    */
   content?: ReactNode;
+  /**
+   * 枝の子。TreeView は、見えている項目の children を読み、閉じた枝の子の children は読まない。そのため、子を初めて読まれたときに作る getter で渡してよい。
+   * editor を渡したときだけ、欄を置く項目を探すために、木の全体の children を読む。
+   */
   children?: readonly TreeNode[];
   /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
   icon?: (isOpen: boolean) => ReactNode;
@@ -74,6 +78,7 @@ export type TreeViewProps = {
   /**
    * false にすると、木の項目を Tab のキーの順に入れない。呼ぶ側が、外の要素からフォーカスを木の項目へ移す。
    * 木を、キーボードで移る別の要素（一覧の行）の中に置くときに使う。止まる箇所を外の要素の 1 つにするためである。
+   * 呼ぶ側は、`role="tree"` の要素の中の `role="treeitem"` の要素を探して `focus()` を呼んでよい。項目は、見えている順に、平らに DOM に並ぶ。
    */
   isTabStop?: boolean;
   /**
