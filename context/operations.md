@@ -115,9 +115,9 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 ## Deployment Conditions
 
-- サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
+- 本番の Worker（`fukuemon-dev`）の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
   - ADR-0031: [切り替えまでのプレビュー](../docs/adr/0031-subdomains-and-workers.md#6-切り替えまでのプレビュー)
-- サイトの Worker の deploy workflow は、build に環境変数 `SITE_ENV=production` を渡す。
+- 本番の Worker の deploy workflow は、build に環境変数 `SITE_ENV=production` を渡す。
   - `verificationOnly: true` の記事（検証用の記事）は、`SITE_ENV=production` の build では、記事の一覧、RSS、記事のページ、シリーズのページに出ない。
   - プレビュー、E2E、手元の build は `SITE_ENV` を渡さないので、検証用の記事も書き出す。
   - `SITE_ENV` に `production` 以外の値を渡すと、build が失敗する。
