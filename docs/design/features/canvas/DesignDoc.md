@@ -17,7 +17,7 @@ status: draft
 方式は、次の ADR が決めている。
 
 - ADR-0039: [キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する](../../../adr/0039-canvas-drawio-and-excalidraw.md)
-- ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](../../../adr/0040-canvas-figures-in-articles.md)
+- ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
 - ADR-0043: [キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する](../../../adr/0043-multiple-named-documents-per-tool.md)
 
 ## Scope
@@ -85,7 +85,7 @@ packages/
 
 図の名前の規則と、ファイルの名前と URL のパスの形は、`packages/figures`（`@fukuemon/figures`）に置く。  
 `apps/web` のビルドと、`apps/playground` の `figures/` が、この package を使う。  
-ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
 
 次の図は、キャンバスのディレクトリと package の間で許す import の向きを示す。矢印の無い組は、import しない。
 
@@ -336,7 +336,7 @@ sequenceDiagram
 ### 記事の図
 
 運営者は、キャンバスから書き出した SVG を `apps/web/src/content/figures/` に置き、記事の Markdown から、画像の記法で指す。  
-ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
 
 ```text
 apps/web/src/content/figures/
@@ -364,7 +364,7 @@ apps/web/src/content/figures/
   - 枠のキーボードの操作は、`@fukuemon/ui` の Table の、幅に収まらない表の枠と同じにする。Tab のキーで枠にフォーカスし、左右の矢印のキーで横にスクロールする。
 - Excalidraw の図で、運営者が選んだ色は、ダークでもライトの色のままである。運営者は、図を置くときに、ライトとダークの両方で読めることを確認する。
 - インラインにする SVG は、色の値を、トークンの CSS 変数に置き換える。
-  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](../../../adr/0040-canvas-figures-in-articles.md)
+  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
   - draw.io の SVG は、ルートの `color-scheme` の指定を外し、背景と線の色の変数の値を、トークンの CSS 変数にする。
   - Excalidraw の SVG は、線と文字のデフォルトの色を、トークンに置き換える。
 - インラインにする SVG からは、元データ（draw.io の `content` の属性、Excalidraw の scene）を外す。元データは、図の URL で配る SVG が持つ。
@@ -416,7 +416,7 @@ sequenceDiagram
 - URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../../../../apps/playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
 - `fetch` は、リダイレクトを辿らない。
 - 開いただけでは、IndexedDB に保存しない。最初に編集したときに、新しい図として保存する。同じリンクを開くたびに、一覧に図が増えないようにするためである。
-  - ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+  - ADR-0043: [キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する](../../../adr/0043-multiple-named-documents-per-tool.md)
 - 新しい図の名前は、記事の図の名前にする。レコードの `source` に、記事の図の名前を持つ。
 - 保存してあった図は変えない。同じ記事の図から作った図が保存してあっても、リンクは、記事の図を開く。
 - エラーのときは、保存してある図を開かない。リンクの先は、`https://fukuemon.dev/playground` である。

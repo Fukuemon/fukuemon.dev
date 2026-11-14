@@ -19,7 +19,7 @@
 - 記事に埋め込むページと、トップレベルで開くページは、同じ URL である。
   - ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける](0046-playground-as-vite-react-app.md)
 - `fukuemon.dev` は、キャンバスの図のパスに、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
-  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](0040-canvas-figures-in-articles.md)
+  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](0040-canvas-figures-in-articles.md)
 - package を切り出すのは、2 つ以上の消費者が実在するか、消費する側と別の理由で変わるときである。`apps/playground` は、`apps/web` と `@fukuemon/content-model` に依存しない。
   - [context/codebase.md](../../context/codebase.md#packages)
 
