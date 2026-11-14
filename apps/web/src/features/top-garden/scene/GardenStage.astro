@@ -129,6 +129,18 @@ const tool =
     }
   }
 
+  /* 幅 320px でも、ヘッダーと 4 つの文へ移るボタンをそれぞれ 1 段に収める */
+  @media not (min-width: 22.5rem) {
+    :global(html.stage-on.garden-ready [data-site-header] ul),
+    :global(html.stage-on.garden-ready [data-site-header] > div) {
+      column-gap: 0.5rem;
+    }
+
+    .garden-nav [data-station] {
+      padding-inline: 0.25rem;
+    }
+  }
+
   /* 狭い画面では、4 つの文へ移るボタンと 2 つの操作を 2 段に分け、広い画面では 1 段に並べる */
   :global(html.stage-on.garden-ready) .garden-nav {
     position: fixed;
