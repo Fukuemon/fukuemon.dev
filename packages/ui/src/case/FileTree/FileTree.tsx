@@ -295,10 +295,11 @@ export function FileTree({
     };
   })();
 
-  // 空の木でも、最初の項目を作る欄を出すために、作っている間は木を描く
+  // 空の木でも、最初の項目を作る欄を出すために、作っている間は木を描く。
+  // 確定の後も、返った項目が木に出るまでは木を描き、出た項目へフォーカスを移せるようにする
   const paneState: ToolPaneState =
     state ??
-    (items.length === 0 && editing === undefined
+    (items.length === 0 && editing === undefined && focusAfterEdit === undefined
       ? { kind: "empty", message: "ファイルがありません。" }
       : { kind: "ready" });
 

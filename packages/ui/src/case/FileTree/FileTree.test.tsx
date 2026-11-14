@@ -40,6 +40,26 @@ function DelayedSelectTree() {
   );
 }
 
+/** ファイルの無い木で、保存を待ってから作った項目を木に足して選ぶ呼び出し側。 */
+function EmptyDelayedTree() {
+  const [items, setItems] = useState<TreeNode[]>([]);
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  return (
+    <FileTree
+      items={items}
+      onCreate={(name) => {
+        window.setTimeout(() => {
+          setItems([{ id: name, label: name }]);
+          setSelectedId(name);
+        }, 50);
+        return { id: name };
+      }}
+      onSelect={setSelectedId}
+      selectedId={selectedId}
+    />
+  );
+}
+
 const labels = () => screen.getAllByRole("treeitem").map((item) => item.textContent);
 
 /** \ を含む名前を断る呼び出し側（Go のツールと同じ規則）。受け入れた名前は木に足さない。 */
@@ -535,5 +555,13 @@ describe("FileTree", () => {
     expect(fieldStyle.outlineWidth).toBe("2px");
     expect(fieldStyle.outlineOffset).toBe("-2px");
     expect(getComputedStyle(field.closest("li")!).outlineStyle).toBe("none");
+  });
+
+  it("ファイルが無い木で、呼ぶ側が保存を待ってから作った項目を足すときも、その項目へフォーカスが移る", async () => {
+    render(<EmptyDelayedTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("index.js{Enter}");
+    const item = await screen.findByRole("treeitem", { name: "index.js" });
+    await expect.poll(() => document.activeElement).toBe(item);
   });
 });

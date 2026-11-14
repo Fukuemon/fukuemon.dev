@@ -65,7 +65,8 @@ export type TreeViewProps = {
   editor?: TreeEditor;
   /**
    * 欄を閉じた後に、フォーカスを移す項目の id。欄で作った項目か、名前を変えた項目を渡す。取り消したときは渡さない。
-   * 欄を閉じて木の項目へ戻した後、この項目が見えるようになったら、その項目へフォーカスを移す。呼ぶ側が保存を待ってから木を書き換えることがあるためである。
+   * editor を外す更新と同じ更新か、それより前に渡す。TreeView は欄を外した後に 1 回だけ読むので、外した後に変えても効かない。
+   * 欄を閉じて木の項目へ戻した後、この項目が見えるようになったら、その項目へフォーカスを移す。呼ぶ側が、後から木に項目を足すことがあるためである。
    * 移る前に木を操作するか、フォーカスがほかの要素へ移ったら、移さない。
    */
   focusAfterEdit?: string;
@@ -180,17 +181,18 @@ export function TreeView({
   };
 
   const isEditing = editor !== undefined;
-  const follow = useRef<{ from: string; id: string } | undefined>(undefined);
+  const follow = useRef<{ from: string | undefined; id: string } | undefined>(undefined);
   const readSelectedId = useEffectEvent(() => selectedId);
   // フォーカスがまだ戻した項目にあり、作った項目か名前を変えた項目が見えるようになったら、その項目へ移る。フォーカスが動いたらやめる
   const followEdited = useEffectEvent(() => {
     const pending = follow.current;
     if (pending === undefined) return;
     const active = document.activeElement;
-    // 名前の変更でパスが変わると、戻した項目が消えてフォーカスが body に落ちる。そのときも追い続ける
+    // 戻した項目が木から消えたか、戻す項目が無かったときは、フォーカスが body にある間は追い続ける
     const isLost =
-      (active === null || active === document.body) && !itemRefs.current.has(pending.from);
-    if (active !== itemRefs.current.get(pending.from) && !isLost) {
+      (active === null || active === document.body) &&
+      (pending.from === undefined || !itemRefs.current.has(pending.from));
+    if (!isLost && (pending.from === undefined || active !== itemRefs.current.get(pending.from))) {
       follow.current = undefined;
       return;
     }
@@ -208,8 +210,8 @@ export function TreeView({
       selectedId !== selectedAtStart && visible.some((v) => v.node.id === selectedId);
     const target = isNewSelection ? selectedId : tabStopId;
     focus(target);
-    // 呼ぶ側が、保存を待ってから作った項目を木に足すことがある。その項目が見えるようになったら移る
-    if (target !== undefined && focusAfterEdit !== undefined && focusAfterEdit !== target) {
+    // 呼ぶ側が、後から木に項目を足すことがある。その項目が見えるようになったら移る
+    if (focusAfterEdit !== undefined && focusAfterEdit !== target) {
       follow.current = { from: target, id: focusAfterEdit };
       followEdited();
     }
