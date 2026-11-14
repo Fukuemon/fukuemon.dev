@@ -1,15 +1,13 @@
 import { clsx } from "clsx";
 import { type KeyboardEvent, type ReactNode, useId, useRef } from "react";
 
+import type { TabItem } from "../../base/Tabs/Tabs";
 import { PaneTitleHiddenContext } from "../ToolPane/ToolPane";
 
-/** 切り替えるペインの 1 つ。 */
-export type PaneTabItem = {
-  id: string;
-  label: string;
+/** 切り替えるペインの 1 つ。ペインは閉じないので、`Tabs` のタブと違い閉じるボタンを持たず、印を必ず持つ。 */
+export type PaneTabItem = Omit<TabItem, "closable" | "icon"> & {
   /** ラベルの上（`placement` が `top` のときは左）に描く 20px の印。`aria-hidden` にする。 */
   icon: ReactNode;
-  content: ReactNode;
 };
 
 /**
