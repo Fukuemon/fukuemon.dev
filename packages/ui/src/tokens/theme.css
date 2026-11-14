@@ -295,7 +295,7 @@
 
 @utility forced-edge-hidden {
   @media (forced-colors: active) {
-    border-color: Canvas;
+    border-color: Canvas !important;
   }
 }
 
@@ -325,7 +325,7 @@
   }
 }
 
-@utility forced-thumb-disabled {
+@utility forced-thumb-off-disabled {
   @media (forced-colors: active) {
     background-color: GrayText !important;
     color: Canvas !important;

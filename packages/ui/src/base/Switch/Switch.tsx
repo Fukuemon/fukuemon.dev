@@ -67,7 +67,7 @@ export function Switch({
       >
         <span
           aria-hidden
-          className="absolute left-0.5 flex size-5 items-center justify-center rounded-control bg-text-secondary text-text-inverse transition-transform group-aria-checked:translate-x-5 group-aria-checked:bg-surface group-aria-checked:text-primary group-aria-disabled:bg-text-disabled group-aria-disabled:group-aria-checked:bg-surface group-aria-disabled:group-aria-checked:text-text-disabled forced-colors:left-px forced-thumb-off group-aria-checked:forced-thumb-on group-aria-disabled:forced-thumb-disabled group-aria-disabled:group-aria-checked:forced-thumb-on-disabled"
+          className="absolute left-0.5 flex size-5 items-center justify-center rounded-control bg-text-secondary text-text-inverse transition-transform group-aria-checked:translate-x-5 group-aria-checked:bg-surface group-aria-checked:text-primary group-aria-disabled:bg-text-disabled group-aria-disabled:group-aria-checked:bg-surface group-aria-disabled:group-aria-checked:text-text-disabled forced-colors:left-px forced-thumb-off group-aria-checked:forced-thumb-on group-aria-disabled:forced-thumb-off-disabled group-aria-disabled:group-aria-checked:forced-thumb-on-disabled"
         >
           <svg
             className="hidden group-aria-checked:block"

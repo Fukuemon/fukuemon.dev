@@ -11,9 +11,14 @@ import * as tabsStories from "../base/Tabs/Tabs.stories";
 import * as treeViewStories from "../base/TreeView/TreeView.stories";
 
 const { Primary, PrimaryDisabled, Loading } = composeStories(buttonStories);
-const { Unchecked, Checked, CheckedDisabled } = composeStories(checkboxStories);
+const {
+  Unchecked,
+  Checked,
+  Disabled: CheckboxDisabled,
+  CheckedDisabled,
+} = composeStories(checkboxStories);
 const { Horizontal } = composeStories(splitPaneStories);
-const { Off, On, OnDisabled } = composeStories(switchStories);
+const { Off, On, Disabled: SwitchDisabled, OnDisabled } = composeStories(switchStories);
 const { Closable } = composeStories(tabsStories);
 const { CompactBody } = composeStories(treeViewStories);
 
@@ -32,12 +37,13 @@ describe("forced-colors: active", () => {
   beforeEach(() => setForcedColors("active"));
   afterEach(() => setForcedColors("none"));
 
-  it("Switch は、オフとオンとオンの無効で、枠の中の塗りが違う", () => {
+  it("Switch は、状態ごとに、枠、溝の塗り、つまみの塗りが違う", () => {
     const track = (ui: React.ReactElement) => {
       const { unmount } = render(ui);
       const control = screen.getByRole("switch");
       const result = {
         borderWidth: style(control).borderTopWidth,
+        borderColor: style(control).borderTopColor,
         trackBackground: style(control).backgroundColor,
         thumbBackground: style(control.firstElementChild as Element).backgroundColor,
       };
@@ -47,7 +53,11 @@ describe("forced-colors: active", () => {
     const off = track(<Off />);
     const on = track(<On />);
     const onDisabled = track(<OnDisabled />);
+    const offDisabled = track(<SwitchDisabled />);
     expect(off.borderWidth).toBe("1px");
+    expect(onDisabled.thumbBackground).not.toBe(onDisabled.trackBackground);
+    expect(offDisabled.thumbBackground).not.toBe(offDisabled.trackBackground);
+    expect(offDisabled.borderColor).not.toBe(off.borderColor);
     expect(on.trackBackground).not.toBe(off.trackBackground);
     expect(on.thumbBackground).not.toBe(on.trackBackground);
     expect(off.thumbBackground).not.toBe(off.trackBackground);
@@ -61,6 +71,7 @@ describe("forced-colors: active", () => {
       const mark = input.nextElementSibling as Element;
       const result = {
         borderWidth: style(input).borderTopWidth,
+        borderColor: style(input).borderTopColor,
         background: style(input).backgroundColor,
         mark: style(mark).color,
       };
@@ -70,11 +81,13 @@ describe("forced-colors: active", () => {
     const unchecked = box(<Unchecked />);
     const checked = box(<Checked />);
     const checkedDisabled = box(<CheckedDisabled />);
+    const disabled = box(<CheckboxDisabled />);
     expect(unchecked.borderWidth).toBe("1px");
     expect(checked.background).not.toBe(unchecked.background);
     expect(checked.mark).not.toBe(checked.background);
     expect(checkedDisabled.background).not.toBe(checked.background);
     expect(checkedDisabled.mark).not.toBe(checkedDisabled.background);
+    expect(disabled.borderColor).not.toBe(unchecked.borderColor);
   });
 
   it("Button は、有効と無効のどちらにも枠があり、枠の色が違う", () => {
@@ -98,7 +111,7 @@ describe("forced-colors: active", () => {
     expect(style(dot).backgroundColor).not.toBe(style(document.body).backgroundColor);
   });
 
-  it("Tabs は、選んだタブの下に帯が出て、帯が背景と違う色で塗られる", () => {
+  it("Tabs は、選んだタブの下の帯が、背景と違う色で塗られる", () => {
     render(<Closable />);
     const selected = screen.getByRole("tab", { selected: true });
     const indicator = selected.previousElementSibling as Element;
@@ -126,9 +139,12 @@ describe("forced-colors: active", () => {
       const { unmount } = render(ui);
       await userEvent.tab();
       const element = screen.getByRole(role, { selected: role === "tab" ? true : undefined });
-      expect(element).toHaveFocus();
       const outline = style(element);
-      const result = { style: outline.outlineStyle, width: outline.outlineWidth };
+      const result = {
+        focused: document.activeElement === element,
+        style: outline.outlineStyle,
+        width: outline.outlineWidth,
+      };
       unmount();
       return result;
     };
@@ -138,7 +154,11 @@ describe("forced-colors: active", () => {
       [<Primary key="button" />, "button"],
       [<Closable key="tabs" />, "tab"],
     ] as const) {
-      expect(await focused(ui, role), role).toEqual({ style: "solid", width: "2px" });
+      expect(await focused(ui, role), role).toStrictEqual({
+        focused: true,
+        style: "solid",
+        width: "2px",
+      });
     }
   });
 });
