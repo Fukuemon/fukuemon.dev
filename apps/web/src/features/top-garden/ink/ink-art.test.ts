@@ -14,13 +14,18 @@ describe("inkArt", () => {
   });
 
   it("試作の 281 本の線に、木の線を足した数の線を作る", () => {
-    expect(inkArt().strokes).toHaveLength(393);
+    expect(inkArt().strokes).toHaveLength(399);
   });
 
-  it("墨の絵の最後の線は、INK_END より前に描き終え、その差は 0.3 秒より短い", () => {
-    const last = Math.max(...inkArt().strokes.map((s) => (s.t0 + s.dur) * TIME_SCALE)) + SIGN_LEAD;
-    expect(INK_END - last).toBeGreaterThanOrEqual(0);
-    expect(INK_END - last).toBeLessThan(300);
+  const last = () =>
+    Math.max(...inkArt().strokes.map((s) => (s.t0 + s.dur) * TIME_SCALE)) + SIGN_LEAD;
+
+  it("墨の絵の最後の線は、INK_END より前に描き終える", () => {
+    expect(INK_END - last()).toBeGreaterThanOrEqual(0);
+  });
+
+  it("墨の絵の最後の線を描き終えてから INK_END までは、0.3 秒より短い", () => {
+    expect(INK_END - last()).toBeLessThan(300);
   });
 
   it("木の線は、塀の上か門の柱の間にだけあり、塀の面に重ならない", () => {

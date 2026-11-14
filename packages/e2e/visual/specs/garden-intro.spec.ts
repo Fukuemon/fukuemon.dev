@@ -14,6 +14,9 @@ test.use({ viewport: { width: 480, height: 270 }, colorScheme: "light" });
  */
 const INK_FLOOR = 5590;
 
+/** 色を差し始めてからイントロを終えるまで（intro-timing.ts の INTRO.done、4500ms）に、タイマーの遅れを見込んだ 500ms を足した値（ms） */
+const AFTER_INTRO = 5_000;
+
 const html = (page: Page) => page.locator("html");
 const profile = (page: Page) => page.locator('[data-garden-card][aria-labelledby="profile"]');
 const heading = (page: Page) => page.getByRole("heading", { level: 1, name: "プロフィール" });
@@ -450,10 +453,10 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
     expect(states[left - 1]!.split(" ")).toContain("intro");
     await expect(page.locator("[data-garden-stage]")).toBeHidden();
     // イントロを終える時刻（色を差してから 4.5 秒）を過ぎても、class を書き戻さない
-    await page.waitForFunction(() => {
+    await page.waitForFunction((after) => {
       const enter = performance.getEntriesByName("garden-enter")[0];
-      return enter !== undefined && performance.now() > enter.startTime + 5_000;
-    });
+      return enter !== undefined && performance.now() > enter.startTime + after;
+    }, AFTER_INTRO);
     await expect(html(page)).not.toHaveClass(INTRO_CLASSES);
   });
 
