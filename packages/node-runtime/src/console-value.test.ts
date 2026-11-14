@@ -140,6 +140,12 @@ describe("toConsoleValues", () => {
     expect(touched).toStrictEqual([]);
   });
 
+  it("DOMException の名前と文は、組み込みの getter で読む", () => {
+    expect(copy(new DOMException("m", "AbortError"))).toMatchObject([
+      { kind: "error", name: "AbortError", message: "m" },
+    ]);
+  });
+
   it("配列の穴は undefined として写す", () => {
     // oxlint-disable-next-line no-sparse-arrays -- 穴のある配列を写す
     expect(copy([, 1])).toStrictEqual([

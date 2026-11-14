@@ -17,15 +17,21 @@ const MAX_STACK = 30;
 const ELLIPSIS = "…";
 
 /**
- * 呼んでよい組み込みの stack の getter。V8 はインスタンスに、Firefox は Error.prototype に定義する。
+ * Error の name、message、stack を読むときに、呼んでよい組み込みの getter。
+ * stack は、V8 はインスタンスに、Firefox は Error.prototype に定義する。DOMException は、3 つとも DOMException.prototype に定義する。
  * Function.prototype.toString の「[native code]」で見分けると、bind した訪問者の関数も通るので、同じ関数かで比べる。
  */
-const stackGetters = new Set(
-  [new Error(), Error.prototype]
-    .map((target) => Object.getOwnPropertyDescriptor(target, "stack"))
-    // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
-    .map((descriptor) => descriptor && descriptor.get)
-    .filter((get) => typeof get === "function"),
+const errorGetters = new Map(
+  ["name", "message", "stack"].map((key) => {
+    const targets = [new Error(), Error.prototype];
+    if (typeof DOMException === "function") targets.push(DOMException.prototype);
+    const getters = targets
+      .map((target) => Object.getOwnPropertyDescriptor(target, key))
+      // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
+      .map((descriptor) => descriptor && descriptor.get)
+      .filter((get) => typeof get === "function");
+    return [key, new Set(getters)];
+  }),
 );
 
 /** 組み込みの getter を、訪問者が上書きしたメソッドを通さずに呼ぶ。 */
@@ -104,14 +110,14 @@ function toConsoleValues(args, describe) {
     return name && typeof name.value === "string" ? name.value : "";
   };
 
-  /** key を、自分か継承した記述子から読む。getter は、組み込みの stack の getter だけを呼ぶ。 */
+  /** Error の name、message、stack を、自分か継承した記述子から読む。getter は、errorGetters にある組み込みのものだけを呼ぶ。 */
   const readProperty = (value, key) => {
     for (let target = value; target; target = Object.getPrototypeOf(target)) {
       const found = Object.getOwnPropertyDescriptor(target, key);
       if (!found) continue;
       if ("value" in found) return found.value;
       // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
-      if (key !== "stack" || !stackGetters.has(found.get)) return undefined;
+      if (!errorGetters.get(key)?.has(found.get)) return undefined;
       try {
         return found.get.call(value);
       } catch {
