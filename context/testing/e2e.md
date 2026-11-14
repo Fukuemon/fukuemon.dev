@@ -65,7 +65,7 @@ pnpm --filter @fukuemon/e2e test
 - ルートの `pnpm run test:e2e` は、サイトの E2E の後に、カタログの Show code の E2E（`pnpm --filter @fukuemon/ui e2e`）を流す。
   - カタログの E2E は、config が Storybook をビルドしてポート 6126 で配信する。そのポートが使用中なら、起動が失敗する。
 - CI は `.github/workflows/e2e.yml` が、pull request だけで `pnpm run test:e2e` を流す。develop への push では流さない。
-- `pnpm run check` は、E2E を流さず、E2E の lint だけを流す。
+- `pnpm run check` は、E2E の lint と、トップの庭の E2E（`test:garden`）を流す。サイトのほかの E2E は流さない。
 
 エビデンスを撮る config は `packages/e2e/playwright.capture.config.ts` である。
 字幕の関数は `packages/e2e/tests/fixtures/caption.ts` にある。

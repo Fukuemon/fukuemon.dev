@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { waitForGardenCanvasWidth } from "../../widgets/waits/canvas-width";
 import { waitForPresentedFrames } from "../../widgets/waits/presented-frames";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
@@ -17,11 +18,7 @@ test.describe("トップの庭", () => {
     }) => {
       await page.clock.setFixedTime(AUTUMN_NOON);
       await page.goto("/");
-      // 庭は、描く直前に canvas の大きさを画面に合わせる
-      await page.waitForFunction(
-        () =>
-          document.querySelector<HTMLCanvasElement>("[data-garden-stage] canvas")?.width === 1440,
-      );
+      await waitForGardenCanvasWidth(page, 1440);
       await waitForPresentedFrames(page);
       await expect(page.getByTestId("garden-stage")).toHaveScreenshot("garden-autumn-day.png", {
         maxDiffPixelRatio: 0.01,

@@ -221,8 +221,12 @@ test.describe("トップの庭", () => {
       page,
     }) => {
       await openGarden(page);
-      await expect(page.getByTestId("garden-title")).toHaveCSS("color", "rgb(26, 23, 20)");
-      await expect(page.getByTestId("garden-articles-link")).toHaveCSS("color", "rgb(61, 75, 43)");
+      const colors = await Promise.all(
+        ["garden-title", "garden-articles-link"].map((id) =>
+          page.getByTestId(id).evaluate((el) => getComputedStyle(el).color),
+        ),
+      );
+      expect(colors).toStrictEqual(["rgb(26, 23, 20)", "rgb(61, 75, 43)"]);
     });
   });
 

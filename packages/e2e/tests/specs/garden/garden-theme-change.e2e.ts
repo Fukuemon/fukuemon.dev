@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
+import { waitForGardenCanvasWidth } from "../../widgets/waits/canvas-width";
 import { meanDiff } from "../../widgets/actions/mean-diff";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
@@ -10,10 +11,7 @@ const openGarden = async (browser: Browser, colorScheme: "light" | "dark") => {
   const page = await browser.newPage({ viewport: VIEWPORT, colorScheme });
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
-  await page.waitForFunction(
-    (w) => document.querySelector<HTMLCanvasElement>("[data-garden-stage] canvas")?.width === w,
-    VIEWPORT.width,
-  );
+  await waitForGardenCanvasWidth(page, VIEWPORT.width);
   return page;
 };
 

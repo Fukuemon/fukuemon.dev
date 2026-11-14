@@ -107,7 +107,8 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 
 記事のページの表、図、コードブロックの枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
 あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  
-`scroll-box-fade.spec.ts` と `packages/e2e` の一覧から記事を開く spec は、検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
+`packages/e2e/tests/specs/articles/scroll-box-fade.e2e.ts` と `packages/e2e` の一覧から記事を開く spec は、検証用の原稿に依存する。
+原稿を消すときは、spec が開く記事を差し替える。
 
 トップの庭は、Playwright のスクリーンショットの比較で確認する。  
 庭は WebGL で描き、目で比べても色の小さな違いに気づけないためである。  
