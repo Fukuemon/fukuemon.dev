@@ -87,7 +87,9 @@ pnpm run test:visual
   - カメラの移動の動きを確認しない庭の spec は、「動きを止める」を押してから移る。止めたカメラは 1 フレームで行き先に着く。
 - 基準のスナップショットは、`packages/e2e/visual/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
-  - macOS の chromium で実行しても、この範囲に収まる。
+  - 合否は CI の Linux で決める。
+    本文はシステムフォントで描くので、macOS の chromium で実行すると、庭の上の字の差で 1% を超えることがある。
+    macOS で落ちた結果は、合否に使わない。
 - 場面を変えて基準のスナップショットを作り直すときは、CI と同じ Linux の Playwright のイメージで作る。
   - CI で実行する環境と同じ絵を基準にするためである。
 

@@ -32,7 +32,7 @@
 - プロジェクトの設定は、DB を使うかどうかと、初期データの SQL のファイルを持つ。
   - ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` のビルドが JSON にし、ツールのページが埋め込みの ID で読む](0049-playground-projects-from-articles.md)
 - 訪問者は、シェルを制限なしで使う。
-  - ADR-0051: [Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす](0051-node-runtime-boot-and-commands.md)
+  - ADR-0076: [Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かし、起動し直すときに作業ディレクトリを読めなければ、前に起動したときのファイルで起動する](0076-node-runtime-boot-commands-and-restart.md)
 - 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く。preload は、`NODE_OPTIONS` で渡す。
   - ADR-0052: [実行環境が追加するファイルを、訪問者の作業ディレクトリの外に置き、preload を `NODE_OPTIONS` で渡す](0052-runtime-files-outside-workdir.md)
 

@@ -1,7 +1,8 @@
 import { Compartment, EditorState, type Extension, Transaction } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { useEffect, useRef } from "react";
+import { use, useEffect, useRef } from "react";
 
+import { EditorStatesContext, keepState, restoreState } from "./editor-states";
 import { codeEditorExtensions } from "./extensions";
 
 /** エディタの中身を読み書きする口。外から中身を置き換えるときに使う。 */
@@ -32,6 +33,8 @@ type CodeEditorProps = {
    * 渡さないときは、initialText を読み取り専用で出す。
    */
   connect?: (document: EditorDocument) => EditorConnection;
+  /** EditorStatesContext の入れ物に状態を保つときの名前。ファイルのパスを渡す。 */
+  stateKey?: string;
 };
 
 /**
@@ -45,36 +48,53 @@ export function CodeEditor({
   initialText,
   extensions,
   connect,
+  stateKey,
 }: CodeEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const initial = useRef({ label, describedBy, initialText, extensions, connect });
+  const saved = use(EditorStatesContext);
+  const initial = useRef({ label, describedBy, initialText, extensions, connect, stateKey, saved });
 
   useEffect(() => {
-    const { label, describedBy, initialText, extensions = [], connect } = initial.current;
+    const {
+      label,
+      describedBy,
+      initialText,
+      extensions = [],
+      connect,
+      stateKey,
+      saved,
+    } = initial.current;
     const editable = new Compartment();
     let connection: EditorConnection | undefined;
+    const editorExtensions = [
+      ...codeEditorExtensions({ label, describedBy }),
+      ...extensions,
+      editable.of(EditorState.readOnly.of(true)),
+      EditorView.updateListener.of((update) => {
+        // 外から読んだ中身で置き換えたときは、input を呼ばない
+        if (!update.docChanged || update.transactions.some((t) => t.isUserEvent("load"))) return;
+        connection?.input(update.state.doc.toString());
+      }),
+      ...(stateKey === undefined ? [] : [keepState(saved, stateKey)]),
+    ];
     const view = new EditorView({
       parent: parentRef.current ?? undefined,
-      doc: initialText,
-      extensions: [
-        ...codeEditorExtensions({ label, describedBy }),
-        ...extensions,
-        editable.of(EditorState.readOnly.of(true)),
-        EditorView.updateListener.of((update) => {
-          // 外から読んだ中身で置き換えたときは、input を呼ばない
-          if (!update.docChanged || update.transactions.some((t) => t.isUserEvent("load"))) return;
-          connection?.input(update.state.doc.toString());
-        }),
-      ],
+      state:
+        stateKey === undefined
+          ? EditorState.create({ doc: initialText, extensions: editorExtensions })
+          : restoreState(saved, stateKey, initialText, editorExtensions),
     });
     connection = connect?.({
       read: () => view.state.doc.toString(),
-      replace: (text, options = {}) =>
+      replace: (text, options = {}) => {
+        // 同じ中身で置き換えると、カーソルが先頭へ動くので、置き換えない
+        if (view.state.doc.toString() === text) return;
         view.dispatch({
           changes: { from: 0, to: view.state.doc.length, insert: text },
           userEvent: "load",
           annotations: options.initial ? Transaction.addToHistory.of(false) : [],
-        }),
+        });
+      },
       setEditable: (value) =>
         view.dispatch({ effects: editable.reconfigure(EditorState.readOnly.of(!value)) }),
     });

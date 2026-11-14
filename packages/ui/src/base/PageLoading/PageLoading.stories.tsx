@@ -6,14 +6,8 @@ const meta = {
   title: "コンポーネント/Base/PageLoading",
   component: PageLoading,
   args: { label: "実行環境を起動しています" },
-  parameters: { layout: "fullscreen" },
-  decorators: [
-    (Story) => (
-      <div className="h-64">
-        <Story />
-      </div>
-    ),
-  ],
+  // 覆いは画面の全体を覆い、外の要素を inert にするので、Docs のページでは story ごとに iframe で描く
+  parameters: { layout: "fullscreen", docs: { story: { inline: false, iframeHeight: 256 } } },
 } satisfies Meta<typeof PageLoading>;
 
 export default meta;

@@ -95,14 +95,14 @@ function readAllFiles(
       release();
     }
   };
-  // ファイルとディレクトリは、一覧を読んだ後に消えたものだけを飛ばす。ほかの失敗で飛ばすと、読めなかった作業ディレクトリを読めた扱いにする (ADR-0069)
+  // ファイルとディレクトリは、一覧を読んだ後に消えたものだけを飛ばす。ほかの失敗で飛ばすと、読めなかった作業ディレクトリを読めた扱いにする (ADR-0076)
   const skipMissing =
     <T>(fallback: T) =>
     (error: unknown): T => {
       if (error instanceof PathNotFoundError) return fallback;
       throw error;
     };
-  // ファイルでもディレクトリでもない項目（シンボリックリンク）は、保存にも起動し直しにも使わないので、どのエラーでもスキップする。互いを指すリンクは ELOOP で失敗し続けるためである (ADR-0069)
+  // ファイルでもディレクトリでもない項目（シンボリックリンク）は、保存にも起動し直しにも使わないので、どのエラーでもスキップする。互いを指すリンクは ELOOP で失敗し続けるためである (ADR-0076)
   const readFile = (path: string, kind: DirectoryItem["kind"]) =>
     limited(() =>
       files.readFile(path).catch(kind === "other" ? () => undefined : skipMissing(undefined)),

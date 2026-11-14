@@ -21,7 +21,7 @@ AI のエージェントからの操作を、SQL だけを動かすツール（`
 - SQL だけを動かすツールの PGlite も、訪問者が実行のボタンを押してから読み込む。
   - 出典: [プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md)
 - Go を動かすツールは、訪問者のファイルを IndexedDB に保存する。
-  - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
+  - ADR-0077: [訪問者のファイルを、埋め込みの ID ごとに IndexedDB に保存し、Node の実行環境ではシークレットのファイル、ビルドの出力、`.git`、リンクを除き、上限を付ける](0077-save-visitor-files.md)
 - プレイグラウンドでは、訪問者が動かしたコードが、同じ origin に保存した図とスライドにアクセスできることを受け入れる。条件は、他人が用意したコードを、訪問者の操作なしに動かさないことである。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
 - Go のコードは、WebContainers の中で動かさず、`play.fukuemon.dev` のページで動かす。ページの Web Worker の中で動くコードは、`localStorage` を読めず、IndexedDB を読める。

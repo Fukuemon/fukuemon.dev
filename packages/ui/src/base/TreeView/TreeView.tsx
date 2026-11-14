@@ -54,7 +54,7 @@ export type TreeViewProps = {
   onRequestRename?: (id: string) => void;
   /** 渡すと、項目で Delete のキーを押したときに呼ぶ。削除の確認を開くための入口で、項目には `aria-keyshortcuts` で示す。 */
   onRequestDelete?: (id: string) => void;
-  /** compact は、項目の高さを 24px 以上にする。コードを動かす画面の木に使い、文字は textSize で選ぶ。 */
+  /** compact は、項目の高さを 24px 以上にし、触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。コードを動かす画面の木に使い、文字は textSize で選ぶ。 */
   density?: "default" | "compact";
   /**
    * density が compact のときの文字。compact は 12px（コンソールの値の木）、body-compact は 13px（ファイルの木）にする。
@@ -289,8 +289,13 @@ export function TreeView({
 
   const rowClassName = clsx(
     // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
-    "flex items-start gap-1 rounded-control pr-2 transition-colors",
-    isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
+    "flex items-start gap-1 pr-2 transition-colors",
+    isBodyCompact
+      ? "min-h-6 py-0.5 pointer-coarse:min-h-11 pointer-coarse:py-3"
+      : isCompact
+        ? "min-h-6 py-1 pointer-coarse:min-h-11 pointer-coarse:py-3"
+        : "min-h-11 py-3",
+    isCompact ? "rounded-control-compact" : "rounded-control",
     isBodyCompact && "border-l-2 border-transparent forced-edge-hidden",
   );
   // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
@@ -334,7 +339,10 @@ export function TreeView({
           isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
           "aria-selected:bg-primary-surface aria-selected:forced-on-row",
           isBodyCompact ? "aria-selected:border-primary" : "aria-selected:font-bold",
-          (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
+          (isBranch || onSelect) &&
+            (isCompact
+              ? "cursor-pointer hover:bg-surface-pane-subtle"
+              : "cursor-pointer hover:bg-surface-subtle"),
         )}
         key={node.id}
         onClick={(event) => {

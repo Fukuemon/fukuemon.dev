@@ -17,7 +17,7 @@ draw.io のツール、Excalidraw のツール、スライドのエディタが�
 - スライドのエディタは、Markdown を保存する。
   - ADR-0041: [スライドのエディタは Marp で作り、テーマの CSS からトークンの CSS 変数を参照する](0041-slides-editor-with-marp.md)
 - 訪問者のファイルは、`play.fukuemon.dev` の IndexedDB に、ツールの名前と埋め込みの ID の組をキーにして保存する。IndexedDB を読めないときは、保存したものが無いときと同じに扱い、保存できないことを画面に出し、ページを開いている間は書き込まない。
-  - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
+  - ADR-0077: [訪問者のファイルを、埋め込みの ID ごとに IndexedDB に保存し、Node の実行環境ではシークレットのファイル、ビルドの出力、`.git`、リンクを除き、上限を付ける](0077-save-visitor-files.md)
 - 訪問者のファイルを保存するモジュール（`workspace/`）は、`apps/playground/src/` の、ほかの関心ごとのディレクトリを import しない。
   - ADR-0048: [Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する](0048-node-runtime-interface-and-stores.md)
 - 記事の図は、キャンバスに、図の名前で渡す。
