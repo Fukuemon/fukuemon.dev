@@ -13,6 +13,7 @@ import {
 } from "@fukuemon/ui";
 import { type ReactNode, Suspense, use, useReducer, useState } from "react";
 
+import { EDITOR_ICON, FOLDER_ICON, PREVIEW_ICON, TERMINAL_ICON } from "../layout/icons";
 import { type LayoutMode, useLayoutMode } from "../layout/useLayoutMode";
 
 import { nodeDefaultProject } from "../project/defaults";
@@ -121,16 +122,6 @@ function WidePanes() {
 
 const NARROW_PANES = ["editor", "terminal", "preview"] as const;
 type NarrowPane = (typeof NARROW_PANES)[number];
-
-const icon = (d: string) => (
-  <svg aria-hidden="true" fill="none" height="20" viewBox="0 0 20 20" width="20">
-    <path d={d} stroke="currentColor" strokeWidth="1.5" />
-  </svg>
-);
-const EDITOR_ICON = icon("M7.5 6L3.5 10l4 4M12.5 6l4 4-4 4");
-const TERMINAL_ICON = icon("M3.5 6l4 4-4 4M9.5 14.5h7");
-const PREVIEW_ICON = icon("M2.75 3.75h14.5v12.5H2.75zM2.75 7.25h14.5");
-const FOLDER_ICON = icon("M2.75 4.75h5l1.5 1.5h8v9h-14.5z");
 
 /**
  * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビューをタブで 1 つずつ出す。

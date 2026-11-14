@@ -1,6 +1,7 @@
 import { Link, Notice, PageLoading } from "@fukuemon/ui";
 import { Suspense, use, useSyncExternalStore } from "react";
 
+import { useLayoutMode } from "../layout/useLayoutMode";
 import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
@@ -9,7 +10,7 @@ import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
 
-function SqlTool({ search }: { search: string }) {
+function SqlTool({ search, embedded }: { search: string; embedded: boolean }) {
   const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
@@ -22,10 +23,10 @@ function SqlTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  return <SqlSessionView session={load.session} />;
+  return <SqlSessionView embedded={embedded} session={load.session} />;
 }
 
-function SqlSessionView({ session }: { session: SqlSession }) {
+function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: boolean }) {
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
@@ -34,6 +35,7 @@ function SqlSessionView({ session }: { session: SqlSession }) {
     <>
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
+        embedded={embedded}
         onChange={session.setQuery}
         onRun={session.execute}
         progress={progressLabel(phase, running)}
@@ -50,12 +52,20 @@ function SqlSessionView({ session }: { session: SqlSession }) {
 /** SQL だけを動かすツールのページ。埋め込みのときは、ページのヘッダを出さない。 */
 export function SqlPage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
-    <main className="mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4">
+    <main
+      className={
+        useLayoutMode() === "wide"
+          ? "mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4"
+          : "flex h-dvh min-w-0 flex-col gap-2 p-2 short:gap-0 short:p-0"
+      }
+    >
       {!embedded && (
-        <h1 className="font-heading text-heading-md font-semibold text-text">SQL の実行環境</h1>
+        <h1 className="font-heading text-heading-md font-semibold text-text short:sr-only">
+          SQL の実行環境
+        </h1>
       )}
       <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
-        <SqlTool search={search} />
+        <SqlTool embedded={embedded} search={search} />
       </Suspense>
     </main>
   );
