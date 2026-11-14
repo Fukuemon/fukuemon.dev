@@ -181,9 +181,30 @@ const skip =
   /* 「飛ばす」は、場面の準備ができてから、文を出すまでの間だけ右下に出す */
   :global(html.stage-on.intro.scene-ready:not(.garden-ready)) .garden-skip {
     position: fixed;
-    inset: auto 1.25rem 1.25rem auto;
+    inset: auto 0.5rem 0.5rem auto;
     z-index: 30;
     display: block;
+  }
+
+  @media (min-width: 48rem) {
+    :global(html.stage-on.intro.scene-ready:not(.garden-ready)) .garden-skip {
+      inset: auto 1.25rem 1.25rem auto;
+    }
+  }
+
+  /* 色が差した後は、場面と明るさをそろえるよう、後に出る庭の中のボタンと同じ時間帯の霞の色にする */
+  :global(html.stage-on.enter) .garden-skip {
+    --fd-color-surface: var(--fd-color-garden-mist-day);
+    --fd-color-text: var(--fd-color-garden-ink-day);
+    --fd-color-border-field: var(--fd-color-garden-edge-day);
+    --fd-color-focus: var(--fd-color-garden-ink-day);
+  }
+
+  :global(html.stage-on.enter[data-time="night"]) .garden-skip {
+    --fd-color-surface: var(--fd-color-garden-mist-night);
+    --fd-color-text: var(--fd-color-garden-ink-night);
+    --fd-color-border-field: var(--fd-color-garden-edge-night);
+    --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
   /* イントロの終わりに、ヘッダー、霞、庭の中のボタンを 0.6 秒で出す */
