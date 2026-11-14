@@ -1,6 +1,24 @@
+import { createServer } from "node:net";
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 4410;
+async function findFreePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      server.close(() => {
+        if (address && typeof address === "object") resolve(address.port);
+        else reject(new Error("空きポートを取得できなかった"));
+      });
+    });
+  });
+}
+
+// 空きポートは最初の 1 回だけ決める。worker は config を読み直すので、決めた値を環境変数に残して同じポートを使わせる
+// PREVIEW_PORT を渡したときは、そのポートを使う
+const PORT = Number(process.env.PREVIEW_PORT ?? (await findFreePort()));
+process.env.PREVIEW_PORT = String(PORT);
 
 // トップの庭の見た目の回帰の config。ビルドした dist/ を astro preview で配信して流す（context/testing.md）
 // 庭は WebGL で描くので、GPU に依らず同じ絵になる SwiftShader で描かせる。基準の画像は Linux で作る（context/testing/e2e.md）
@@ -19,7 +37,7 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command: `pnpm exec astro preview --port ${PORT}`,
+        command: `pnpm exec astro preview --port ${PORT} --strictPort`,
         url: `http://localhost:${PORT}`,
         reuseExistingServer: false,
       },

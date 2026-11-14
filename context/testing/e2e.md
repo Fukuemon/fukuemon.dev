@@ -34,6 +34,9 @@ pnpm run build
 pnpm run test:visual
 ```
 
+- 配信のポートは、実行のたびに空きポートを選ぶ。
+  - 別の worktree の preview が動いていても、並べて実行できる。
+  - ポートを決めたいときは、環境変数 `PREVIEW_PORT` に渡す。そのポートが使用中なら、preview の起動が失敗する。
 - 庭は WebGL で描くので、GPU に依らないよう、chromium に SwiftShader で描かせる。
 - 基準のスナップショットは、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
