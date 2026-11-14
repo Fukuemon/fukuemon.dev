@@ -247,13 +247,13 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - `no-noninteractive-tabindex`: 横か縦にスクロールする領域に `tabIndex={0}` を付ける。キーボードだけでスクロールできるようにするためである（WCAG 2.1.1）。
     - 設定（`roles`）で許す要素: `role="region"` か `role="log"` を書いた要素（Go の画面の出力、`pre`）。
     - 行ごとに抑制する要素: `role` を書かない `section`（`Table`、`ResultView`）と、`SplitPane` の story の `ol`。
-    - `ConsoleEntryList` の行の `li` も抑制する。行を 1 つの止まる箇所にし、止まる行に `tabIndex={0}`、ほかの行に `tabIndex={-1}` を付ける。行を移る一覧に当たる ARIA の役割が無く、`grid` にすると、値の木を入れたセルの操作まで決めることになるためである。
+    - `ConsoleEntryList` の行の `li` も抑制する。行の 1 つだけを Tab のキーの順に入れ、その行に `tabIndex={0}`、ほかの行に `tabIndex={-1}` を付ける。行を移る一覧に当たる ARIA の役割が無く、`grid` にすると、値の木を入れたセルの操作まで決めることになるためである。
   - `prefer-tag-over-role`: 次の 3 種類の `role`。
     - `pre` の `role="region"`。`section` に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる。
     - `SplitPane` の `role="separator"`。`hr` は子を持てず、押せる領域の中に線を描けない。
     - `SearchBox` の `combobox`、`listbox`、`option`。APG の Combobox の形で、候補は遷移するリンクである。
   - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
-    - `no-noninteractive-element-interactions` は、`ConsoleEntryList` の行の `li` のキーの操作（矢印のキーで前後の行と行の中の木へ移る）にも抑制する。
+    - `no-noninteractive-element-interactions` は、`ConsoleEntryList` の行の `li` のキーの操作（矢印のキーで前後の行と行の中の木へ移る）でも抑制する。
 - 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
   - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。
