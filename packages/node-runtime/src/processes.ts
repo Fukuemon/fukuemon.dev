@@ -1,4 +1,5 @@
 import type { BackendInstance, BackendProcess } from "./backend";
+import { type RecordSource, createRecordLineFilter } from "./http-records";
 import { createOutputLog } from "./output";
 import { createStore } from "./store";
 import type { NodeRuntime, ProcessHandle, ProcessInfo } from "./types";
@@ -9,12 +10,19 @@ const SHELL_NAME = "シェル";
  * 実装のプロセスを、出力を記録する ProcessHandle にする。終了したら、出力の購読を外して onExit を呼ぶ。
  * 実装が exit を失敗させたときも、終了したことにする。終了コードは、異常終了を表す 1 にする。
  */
-function toHandle(id: string, process: BackendProcess, onExit: (code: number) => void) {
+function toHandle(
+  id: string,
+  process: BackendProcess,
+  onRecordLine: (line: string) => void,
+  onExit: (code: number) => void,
+) {
   const output = createOutputLog();
-  const stop = process.output.subscribe(output.append);
+  const filter = createRecordLineFilter(output.append, onRecordLine);
+  const stop = process.output.subscribe(filter.push);
   const exit = process.exit.catch(() => 1);
   void exit.then((code) => {
     stop();
+    filter.flush();
     onExit(code);
   });
   const handle: ProcessHandle = {
@@ -29,7 +37,10 @@ function toHandle(id: string, process: BackendProcess, onExit: (code: number) =>
 }
 
 /** 起動したプロセスの一覧と、出力の記録。終了したプロセスも一覧に残し、出力を読める。 */
-export function createProcesses(instance: BackendInstance): {
+export function createProcesses(
+  instance: BackendInstance,
+  onRecordLine: (line: string, source: RecordSource) => void = () => undefined,
+): {
   api: NodeRuntime["processes"];
   dispose: () => void;
 } {
@@ -41,12 +52,16 @@ export function createProcesses(instance: BackendInstance): {
     info: Pick<ProcessInfo, "kind" | "name">,
   ): ProcessHandle => {
     const id = String(tracked.size + 1);
-    const entry = toHandle(id, process, (code) =>
-      list.set(
-        list
-          .getSnapshot()
-          .map((item) => (item.id === id ? { ...item, status: { kind: "exited", code } } : item)),
-      ),
+    const entry = toHandle(
+      id,
+      process,
+      (line) => onRecordLine(line, info),
+      (code) =>
+        list.set(
+          list
+            .getSnapshot()
+            .map((item) => (item.id === id ? { ...item, status: { kind: "exited", code } } : item)),
+        ),
     );
     tracked.set(id, entry);
     list.set([...list.getSnapshot(), { id, ...info, status: { kind: "running" } }]);

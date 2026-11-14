@@ -58,6 +58,30 @@ describe("processes", () => {
     expect(handle.output.read()).toBe("ab");
   });
 
+  it("HTTP の記録の行を、出力から除いて、起動のコマンドの名前で httpExchanges に入れる", async () => {
+    const { runtime, created } = await bootFake();
+    const handle = await runtime.processes.start("node", ["client.js"], { name: "クライアント" });
+    created.processes[0]?.emit('ok\r\n@@fd:http {"type":"listen","port":3000}\r\n');
+    created.processes[0]?.emit(
+      '@@fd:http {"type":"exchange","from":null,"to":3000,"startedAt":1,"durationMs":2,' +
+        '"method":"GET","url":"/","request":{"headers":[]},"response":null}\r\ndone',
+    );
+    expect(handle.output.read()).toBe("ok\r\ndone");
+    expect(runtime.httpExchanges.getSnapshot()).toMatchObject([
+      { url: "/", to: { id: "port:3000", name: "クライアント" } },
+    ]);
+  });
+
+  it("終了したプロセスの、記録の行の途中で切れた出力は、端末に残す", async () => {
+    const { runtime, created } = await bootFake();
+    const handle = await runtime.processes.start("node", ["index.js"]);
+    created.processes[0]?.emit("@@fd:http {");
+    created.processes[0]?.finish(0);
+    await handle.exit;
+    await flush();
+    expect(handle.output.read()).toBe("@@fd:http {");
+  });
+
   it("購読した後の出力だけを、subscribe で渡す", async () => {
     const { runtime, created } = await bootFake();
     const handle = await runtime.processes.start("node", ["index.js"]);
