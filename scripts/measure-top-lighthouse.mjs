@@ -5,10 +5,10 @@
 //   node scripts/measure-top-lighthouse.mjs [--visit second|first|reduced-motion] [--runs 5] [--gpu metal|swiftshader] [--throttling simulate|devtools] [--out lighthouse-results]
 //
 // 条件は、Lighthouse の既定の mobile（Moto G Power の画面と、Slow 4G と CPU 4 倍の遅さ）である。
-// 既定の --throttling simulate は、絞らずに読み込んだ記録から遅い端末の値を推定する。devtools は、絞った通信と CPU の上で読み込む。
+// 既定の --throttling simulate は、スロットリングを掛けずに読み込んだ記録から遅い端末の値を推定する。devtools は、通信と CPU にスロットリングを掛けて読み込む。
 // 実行ごとに新しいプロファイルで Chrome を起動し、前の実行のシェーダとディスクのキャッシュを持ち越さない。
 // 配信は Cache-Control: no-store にする。fd-top-seen を残すために Lighthouse のストレージの消去を止めるので、代わりに HTTP のキャッシュを使わせない。
-// 文字のファイル（HTML、CSS、JavaScript、JSON、XML、SVG）は gzip で送る。本番の配信が圧縮して返すためである。
+// テキストのファイル（HTML、CSS、JavaScript、JSON、XML、SVG）は gzip で送る。本番の配信が圧縮して返すためである。
 // 配信は TLS の無い HTTP/1.1 である。本番の配信の HTTP/2 と Brotli とは、通信の値が違う。
 // 庭の最初の 1 枚が、ページの最初の描画に入った回は、LCP が FCP と同じ値になる。その回は lcpIsFcp を true にする。
 import { execFile } from "node:child_process";

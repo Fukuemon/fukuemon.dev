@@ -94,10 +94,21 @@ pnpm run measure:top
 
 引数は、`pnpm run measure:top --visit first` のように後ろに付ける。
 
-- `--visit first` は最初の訪問を測る。`--visit reduced-motion` は、動きを減らす設定で庭を出さないトップを測る。
-- `--gpu swiftshader` は、GPU を使わずに CPU で WebGL を描く条件で測る。付けないときは macOS の Metal で描く。
-- `--throttling devtools` は、通信と CPU を絞って読み込んで測る。付けないときの `simulate` は、絞らずに読み込んだ記録から値を推定する。
-- 結果は `lighthouse-results/` に書く。実行ごとの報告の JSON と最後の画面と、中央値の JSON である。Git では追跡しない。
-- 値は手元の負荷で変わる。結果の JSON には、実行の前と後のロードアベレージと、Lighthouse の `benchmarkIndex` を書く。
+- `--visit first` は最初の訪問を測る。
+  - `--visit reduced-motion` は、動きを減らす設定で庭を出さないトップを測る。
+- `--gpu swiftshader` は、GPU を使わずに CPU で WebGL を描く条件で測る。
+  - 付けないときは、macOS の Metal で描く。
+- `--throttling devtools` は、通信と CPU にスロットリングを掛けて読み込んで測る。
+  - 付けないときの `simulate` は、スロットリングを掛けずに読み込んだ記録から値を推定する。
+
+結果と、本番との違いは次のとおり。
+
+- 結果は `lighthouse-results/` に書く。
+  - 実行ごとのレポートの JSON と最後のスクリーンショット、中央値の JSON を書く。
+  - Git では追跡しない。
+- 値は手元の負荷で変わる。
+  - 結果の JSON には、実行の前と後のロードアベレージと、Lighthouse の `benchmarkIndex` を書く。
 - 配信は TLS の無い HTTP/1.1 と gzip なので、本番の配信とは通信の値が違う。
-- 2 回目以降の訪問として再現するのは、`fd-top-seen` の値だけである。HTTP のキャッシュとシェーダのキャッシュは空にして測る。本番の `/_astro/` は長く保存されるので、実際の 2 回目の訪問とは通信の条件が違う。
+- 2 回目以降の訪問として再現するのは、`fd-top-seen` の値だけである。
+  - HTTP のキャッシュとシェーダのキャッシュは空にして測る。
+  - 本番の `/_astro/` は長くキャッシュされるので、実際の 2 回目以降の訪問とは通信の条件が違う。
