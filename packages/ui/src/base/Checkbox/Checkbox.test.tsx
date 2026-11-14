@@ -76,7 +76,7 @@ describe("Checkbox", () => {
     render(<Unchecked />);
     const box = screen.getByRole("checkbox");
     const before = getComputedStyle(box).backgroundColor;
-    await userEvent.hover(box);
+    await userEvent.hover(screen.getByText("このページでは今後尋ねない"));
     await expect.poll(() => getComputedStyle(box).backgroundColor).not.toBe(before);
   });
 });

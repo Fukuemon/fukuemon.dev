@@ -117,7 +117,7 @@ describe("Switch", () => {
     render(<Off />);
     const control = screen.getByRole("switch");
     const before = getComputedStyle(control).backgroundColor;
-    await userEvent.hover(control);
+    await userEvent.hover(screen.getByText("AI からの操作を許可する"));
     await expect.poll(() => getComputedStyle(control).backgroundColor).not.toBe(before);
   });
 });

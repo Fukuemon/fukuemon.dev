@@ -15,11 +15,11 @@ export type CheckboxProps = Omit<
  */
 export function Checkbox({ label, ...props }: CheckboxProps) {
   return (
-    <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-disabled:cursor-not-allowed has-disabled:text-text-disabled">
+    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-disabled:cursor-not-allowed has-disabled:text-text-disabled">
       <span className="relative inline-flex size-5 shrink-0">
         <input
           {...props}
-          className="peer size-5 cursor-pointer appearance-none disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset not-disabled:not-checked:hover:bg-surface-subtle not-disabled:not-checked:hover:ring-text checked:bg-primary checked:ring-primary not-disabled:checked:hover:bg-primary-hover focus-visible:focus-ring disabled:bg-surface-disabled disabled:ring-border disabled:checked:bg-text-disabled disabled:checked:ring-text-disabled"
+          className="peer size-5 cursor-pointer appearance-none disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset not-disabled:not-checked:group-hover/row:bg-surface-subtle not-disabled:not-checked:group-hover/row:ring-text checked:bg-primary checked:ring-primary not-disabled:checked:group-hover/row:bg-primary-hover focus-visible:focus-ring disabled:bg-surface-disabled disabled:ring-border disabled:checked:bg-text-disabled disabled:checked:ring-text-disabled"
           type="checkbox"
         />
         <svg

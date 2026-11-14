@@ -16,5 +16,9 @@ export const Off: Story = {};
 export const On: Story = { args: { defaultChecked: true } };
 export const Focus: Story = { parameters: { pseudo: { focusVisible: true } } };
 export const Hover: Story = { parameters: { pseudo: { hover: true } } };
+export const OnHover: Story = {
+  args: { defaultChecked: true },
+  parameters: { pseudo: { hover: true } },
+};
 export const Disabled: Story = { args: { disabled: true } };
 export const OnDisabled: Story = { args: { disabled: true, defaultChecked: true } };
