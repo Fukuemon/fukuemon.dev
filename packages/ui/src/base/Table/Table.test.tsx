@@ -42,10 +42,15 @@ describe("Table", () => {
       await expect.poll(() => fadeOpacity(region)).toBe(0);
     });
 
-    it("幅に収まらない表には、送る前に出し、右端まで送ると消す", async () => {
+    it("幅に収まらない表には、送る前に出す", async () => {
       render(<Wide />);
       const region = screen.getByRole("region", { name: "SQL の結果" });
       await expect.poll(() => fadeOpacity(region)).toBe(1);
+    });
+
+    it("幅に収まらない表は、右端まで送ると消す", async () => {
+      render(<Wide />);
+      const region = screen.getByRole("region", { name: "SQL の結果" });
       region.scrollLeft = region.scrollWidth - region.clientWidth;
       await expect.poll(() => fadeOpacity(region)).toBe(0);
     });

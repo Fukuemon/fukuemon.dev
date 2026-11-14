@@ -60,6 +60,13 @@ for (const [name, box] of [
   });
 }
 
+test("コードブロックのぼかしは、コードブロックの背景と同じ色で終わる", async ({ page }) => {
+  const pre = longCode(page);
+  const background = await pre.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const gradient = await pre.evaluate((el) => getComputedStyle(el, "::after").backgroundImage);
+  expect(gradient).toContain(background);
+});
+
 test("列の多い表は、右端の手前で、ぼかしを薄くし始める", async ({ page }) => {
   await scrollToRatio(wideTable(page), 0.95);
   const opacity = await fadeOpacity(wideTable(page));
