@@ -31,7 +31,7 @@ buddy の構成は次のとおり。
 - Content Model は、Astro に依存しない package である。
   - ADR-0002: [関係を `contentId` の辺として持ち、Content Model を Astro 非依存に保つ](0002-content-model-independence.md)
 - lint と format は Oxlint と Oxfmt を直接実行する。
-  - ADR-0017: [Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の dev と build、`packages/ui` のテストに使う](0017-vp-run-cache-for-web-build.md)
+  - ADR-0017: [Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の実行、`packages/ui` のテストに限って使う](0017-vp-run-cache-for-web-build.md)
 
 ## Decision
 

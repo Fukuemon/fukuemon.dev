@@ -114,7 +114,7 @@ ADR-0017: [Vite+ の適用範囲](../docs/adr/0017-vp-run-cache-for-web-build.md
   - `pnpm-workspace.yaml` の catalog の `vite` は `@voidzero-dev/vite-plus-core` で、`vite` のコマンドを持たない。
   - `vite build` と書くと、ほかの依存が持ち込んだ別のバージョンの vite のコマンドが、ルートの `node_modules/.bin` から動く。
 - `vp lint`、`vp fmt`、`vp check`、`vp install`、`vp env` は使わない。`vp test` は、`packages/ui` だけが使う。
-  - Oxlint、Oxfmt と、`packages/ui` のほかの package の Vitest は、devDependencies に宣言したバージョンを実行する。vite-plus の同梱のバージョンとは別に上がる。
+  - Oxlint、Oxfmt と、`packages/ui` を除く package の Vitest は、devDependencies に宣言したバージョンを実行する。vite-plus の同梱のバージョンとは別に上がる。
   - Node.js のバージョンは mise が固定する。
 - `vp test` を使わずに vitest を使う package は、vitest を自分の devDependencies に宣言する。
   - 宣言しないと、`@vitest/coverage-v8` が vite-plus の依存の vitest 5 に解決され、`test:cov` が失敗する。

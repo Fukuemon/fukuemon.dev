@@ -10,7 +10,7 @@ agent-harness のスキルとフックは apm で配置し、Git で追跡しな
 CI の docs のチェックも、apm が配置したスクリプトを呼ぶ。  
 apm のバージョンが CI と手元で違うと、配置されるスキルとフックが食い違う。
 
-Vite+ の `vp env` も、Node.js のバージョンを固定できる。  
+Vite+ の `vp env` は、Node.js のバージョンを固定できる。  
 出典: vite-plus 1.3.0 の `docs/guide/env.md`（[Environment](https://viteplus.dev/guide/env)）
 
 ## Decision
@@ -43,4 +43,4 @@ mise は Node.js のほかに apm、uv、similarity-ts も固定しており、`
 
 ### Negative
 
-- Vite+ の `vp env` と役割が重なる。
+- mise と Vite+ の `vp env` は、Node.js のバージョンを固定する役割が重なる。

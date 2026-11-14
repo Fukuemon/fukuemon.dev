@@ -1,4 +1,4 @@
-# ADR-0017: Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の dev と build、`packages/ui` のテストに使う
+# ADR-0017: Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の実行、`packages/ui` のテストに限って使う
 
 ## Status
 
@@ -36,7 +36,7 @@ vite-plus 1.3.0 の同梱のツールには、次の事実がある。
 
 - `pnpm-workspace.yaml` の catalog の `vite` は `@voidzero-dev/vite-plus-core` で、`vite` のコマンドを持たない。
   - `vite build` と書くと、ほかの依存が持ち込んだ別のバージョンの vite のコマンドが、ルートの `node_modules/.bin` から動く。
-- `packages/ui` のテストは、Vitest のブラウザのモードで動く。`packages/ui/vite.config.ts` は `vite-plus` の `defineConfig` と `vite-plus/test/browser-playwright` を読む。
+- `packages/ui` のテストは、Vitest のブラウザのモードで動く。`packages/ui/vite.config.ts` は、`vite-plus` の `defineConfig` と `vite-plus/test/browser-playwright` を import する。
   - `packages/ui` は、`@vitest/browser-playwright` 5.0.5 を宣言し、vitest と `@vitest/coverage-v8` を宣言しない。
 
 ## Decision
@@ -72,8 +72,8 @@ lint、typecheck、test、knip は、手元でどれも 7 秒以内に終わり�
 
 ### 4. `apps/playground` の dev、build、preview は、`vp` で実行する
 
-`apps/playground` は素の Vite のアプリなので、`vp dev`、`vp build`、`vp preview` で実行する。  
-catalog の `vite` が `vite` のコマンドを持たないためである。
+`apps/playground` は素の Vite のアプリで、dev、build、preview は `vp dev`、`vp build`、`vp preview` で実行する。  
+`vite` のコマンドを使わないのは、catalog の `vite` が `vite` のコマンドを持たないためである。
 
 ### 5. lint と format は、devDependencies に宣言したバージョンを直接実行する
 
@@ -84,7 +84,7 @@ Oxlint と Oxfmt は devDependencies に宣言したバージョンを、各 pac
 
 ### 6. test は、`packages/ui` だけ `vp test` で実行する
 
-`packages/ui` のテストは、`vp test run` で、vite-plus の依存の vitest で実行する。  
+`packages/ui` のテストは `vp test run` で実行し、vite-plus が依存に持つ vitest を使う。  
 ほかの package は、`vp test` を使わず、devDependencies に宣言した Vitest を、各 package の script から実行する。
 
 `@vitest/coverage-v8` 4.1.11 は、peer に vitest 4.1.11 を求める。vitest 5 へ上げるには、coverage-v8 も上げ、Vitest 5 への移行の手順に従う必要がある。  
@@ -135,7 +135,7 @@ Turborepo は `outputs` / `inputs` を明示宣言する方式のため、入力
 - Decision 2 と Decision 9: `pagefind --site dist` を実行するタスク `build:search` を外す。本文の検索と Pagefind の索引を最初は作らないことは、ADR-0030 が決めている。
 - Decision 9: 3 つの条件を確認する時期を、実装のときから、`vite-plus` か Astro を上げるときと、タスクを変えるときに変える。2 つ目の条件の対象を、`packages/design-system/` から `packages/ui` に変える。
 
-次の 3 つは、決定を変えないが、利用者が読んで判断する。
+次の 4 つは、決定を変えないが、利用者が読んで判断する。
 
 - Context と Verification の事実は、vite-plus 1.3.0 で確認したものである。`pnpm-workspace.yaml` の catalog は 1.4.0 で、1.4.0 では確認し直していない。
 - Decision 4 と Decision 6 は、比べた案の記録が無い。
@@ -177,7 +177,7 @@ Vite+ の採否の選択肢は次のとおり。
 | Turborepo を採用する                     | `outputs` / `inputs` の明示宣言によりキャッシュの入力が自明になり、Astro の build でも誤ヒットの不確かさがない。実績が長い。2.9.x を別のプロジェクトで運用している。動作要件は Node.js のみ。代替は Vite+ / Nx | Node.js runtime と package manager の管理、lint / format / test の同梱が得られず、別途ツールを入れることになる。Vite+ を入れた場合と役割が重複する |
 | Vite+ を採用しない (pnpm scripts のみ)   | beta のツールに依存しない                                                                                                                                                                                      | Node.js の固定に mise 等を別途入れることになる。タスクのキャッシュが得られない                                                                     |
 
-タスクの置き場と、同梱のツールの選択肢は次のとおり。
+タスクのコマンドを書く場所と、同梱のツールを使うかの選択肢は次のとおり。
 
 | 選択肢                                                                                                      | 強み                                                                                              | 弱み                                                                                                            |
 | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |

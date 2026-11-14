@@ -91,7 +91,7 @@ WebMCP の無いブラウザと、デスクトップの MCP のクライアン�
 | Go         | ファイルを実行し、終了コードと出力を返す | 重大な操作、信頼できない内容   |
 | Go         | テストを実行し、終了コードと出力を返す   | 重大な操作、信頼できない内容   |
 
-「読み取りだけ」は `readOnlyHint`、「信頼できない内容」は `untrustedContentHint`、「重大な操作」は `consequentialHint` を指す。
+「読み取りだけ」は `readOnlyHint`、「信頼できない内容」は `untrustedContentHint`、「重大な操作」は `consequentialHint` を指す。  
 「実行環境」は、Node の実行環境を指す。
 
 - SQL だけを動かすツールの 2 つの操作は、入力欄の SQL を書き換えない。利用者が書いて保存した SQL が、エージェントの操作で消えないようにするためである。

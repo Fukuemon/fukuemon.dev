@@ -15,7 +15,7 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 
 - 本 repo には既に `lefthook.yml` がある。
 - Vite+ が Oxlint / Oxfmt / Vitest / tsgo と Node.js runtime を同梱する。
-  - ADR-0017: [Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の dev と build、`packages/ui` のテストに使う](0017-vp-run-cache-for-web-build.md)
+  - ADR-0017: [Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の実行、`packages/ui` のテストに限って使う](0017-vp-run-cache-for-web-build.md)
 - **本サイトで React を使う範囲は小さい。** 静的 HTML で表現できるものに React を使わない方針であり、当初は Island がゼロになる見込みである。
 - Design System は「カードを使わない」「罫線と余白で階層を作る」「見出しをほとんど大きくしない」といった、汎用 UI ルールと衝突しうる規則を持つ。
 

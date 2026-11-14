@@ -6,7 +6,8 @@
 
 ## Context
 
-CSS スタイリングの基盤と、`apps/web` のサイトの共通の CSS で、preflight を読むかと、トークンをどこから読むかを決める必要がある。
+CSS スタイリングの基盤を決める必要がある。  
+`apps/web` のサイトの共通の CSS で、preflight を読むかと、トークンをどこから読むかも決める必要がある。
 
 新しい `apps/web` は、全てのページを `packages/ui` のトークンとコンポーネントで組む。  
 ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く](0029-repository-layout-like-buddy.md)
