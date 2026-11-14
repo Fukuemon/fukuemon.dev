@@ -134,13 +134,26 @@ test.describe("幅 320px", () => {
     page,
   }) => {
     await openGarden(page);
-    const boxes = await page
-      .locator("[data-station]")
-      .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()));
+    // 隣のボタンに覆われずに押せるかを、左右の端から 1px 内側で確かめる。当たり判定は座標を整数に丸めるので、端の 0.5px では隣に当たる
+    const boxes = await page.locator("[data-station]").evaluateAll((els) =>
+      els.map((el) => {
+        const b = el.getBoundingClientRect();
+        const y = b.top + b.height / 2;
+        const own = (x: number) => document.elementFromPoint(x, y) === el;
+        return {
+          top: b.top,
+          width: b.width,
+          height: b.height,
+          left: b.left,
+          right: b.right,
+          edges: own(b.left + 1) && own(b.right - 1),
+        };
+      }),
+    );
     const header = (await page.locator("[data-site-header]").boundingBox())!.height;
     expect({
       rows: new Set(boxes.map((b) => Math.round(b.top))).size,
-      small: boxes.filter((b) => b.width < 44 || b.height < 44).length,
+      small: boxes.filter((b) => b.width < 44 || b.height < 44 || !b.edges).length,
       inside: boxes.every((b) => b.left >= 0 && b.right <= 320),
       headerOneRow: header < 80,
     }).toStrictEqual({ rows: 1, small: 0, inside: true, headerOneRow: true });

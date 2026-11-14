@@ -6,7 +6,7 @@ import { STATIONS } from "../layout";
 // 色は surface、text、border-field、focus で書き、庭の範囲で時間帯の霞の色に差し替える（top-garden の Design Doc の「ヘッダーと霞」）
 const mist = "garden-mist from-surface to-transparent";
 const stop =
-  "-ms-px min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-1 text-label text-text first:ms-0 focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
+  "min-h-11 min-w-11 cursor-pointer border border-s-0 border-border-field bg-surface px-1 text-label text-text first:border-s focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
 const tool =
   "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2";
 ---
@@ -68,7 +68,7 @@ const tool =
     pointer-events: none !important;
   }
 
-  /* 霞は、ヘッダーと庭の中の字のボタンの後ろに敷き、字の後ろを霞の色で埋める。字は霞の色が残る範囲に収める */
+  /* 霞は、ヘッダーと庭の中の字のボタンの後ろに敷き、字の後ろを霞の色で埋める。面を持たない字は、霞の色が残る範囲に収める */
   :global(html.stage-on.garden-ready) .garden-mist {
     position: fixed;
     inset-inline: 0;
@@ -114,12 +114,7 @@ const tool =
     --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
-  /* 狭い画面でも、ヘッダーを霞の色が残る範囲の 1 段に収める */
-  :global(html.stage-on.garden-ready [data-site-header] ul) {
-    gap: 1rem;
-  }
-
-  /* 幅 320px でも 1 段に収まるよう、間を詰める */
+  /* 狭い画面では、幅 320px でもヘッダーを霞の色が残る範囲の 1 段に収めるよう、間を詰める */
   @media not (min-width: 48rem) {
     :global(html.stage-on.garden-ready [data-site-header] ul),
     :global(html.stage-on.garden-ready [data-site-header] > div) {
