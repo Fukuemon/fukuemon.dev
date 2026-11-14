@@ -71,7 +71,7 @@ export function SqlPage({ search, embedded }: { search: string; embedded: boolea
     <main
       className={
         mode === "wide"
-          ? "min-h-dvh min-w-0 bg-surface-ground p-4"
+          ? "min-h-dvh min-w-0 bg-surface-ground p-1.5"
           : // 記事に埋め込んだ狭い配置では、地を出さず、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）
             embedded
             ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
