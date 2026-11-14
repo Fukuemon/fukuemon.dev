@@ -34,7 +34,7 @@ iOS と iPadOS の入力時の拡大は、iOS と iPadOS のときだけ viewpor
   - 木の行、タブの帯、ペインの見出しの帯の高さも 44px にする。24px の行に 44px の押せる領域を重ねると、隣の行の押せる領域と重なるためである。
   - `TARGET-SIZE` のテストは、指で押す端末とマウスで押す端末の両方の大きさを確認する。
 - マウスで押す端末では、ADR-0062 のとおり 24×24 CSS px 以上のままにする。
-- 文字の大きさは、指で押す端末とマウスで押す端末で分けない。エディタは、`text-code`（16px）から `text-code-compact`（13px）にする。ADR-0067 が、コードを動かす画面のコードを 13px にすると決めているためである。
+- 文字の大きさは、指で押す端末とマウスで押す端末で分けない。エディタは、`text-code`（16px）から `text-code-compact`（13px）にする。ADR-0067 が、13px の等幅（`text-code-compact`）をエディタに使うと決めているためである。
 - iOS と iPadOS の WebKit のブラウザのときだけ、ページの読み込みの初めに、viewport の指定へ `maximum-scale=1` を足す。
   - iPadOS の Safari は、デスクトップの Safari と同じ UA を名乗る。UA の文字列だけでは見分けない。
   - Android では足さない。Android の Chrome はピンチズームも止め、拡大して読む利用者が読めなくなるためである。
