@@ -62,6 +62,11 @@ export type TreeViewProps = {
   textSize?: "compact" | "body-compact";
   /** 渡すと、木の行の中に名前の欄を描く。欄の中のキーとクリックは、木の操作に使わない。 */
   editor?: TreeEditor;
+  /**
+   * 最後に editor を外した理由。commit を渡したときだけ、欄を閉じて木の項目へ戻した後に selectedId が変わると、その項目へフォーカスを移す。
+   * 呼ぶ側が保存を待ってから、作った項目や名前を変えた項目を選ぶためである。取り消したときに外から選ぶ項目が変わっても、フォーカスを動かさない。
+   */
+  editorClosedBy?: "commit" | "cancel";
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -125,6 +130,7 @@ export function TreeView({
   density = "default",
   textSize = "compact",
   editor,
+  editorClosedBy,
 }: TreeViewProps) {
   const isCompact = density === "compact";
   const isBodyCompact = isCompact && textSize === "body-compact";
@@ -184,7 +190,9 @@ export function TreeView({
     const target = isNewSelection ? selectedId : tabStopId;
     focus(target);
     // 呼ぶ側が、保存を待ってから作った項目を選ぶことがある。選ぶ項目が後から変わったら、その項目へ移る
-    if (!isNewSelection && target !== undefined) follow.current = { from: target, selectedId };
+    if (!isNewSelection && target !== undefined && editorClosedBy === "commit") {
+      follow.current = { from: target, selectedId: selectedAtStart };
+    }
   });
 
   // フォーカスがまだ戻した項目にあり、選ぶ項目が変わって見えるようになったら、その項目へ移る。フォーカスが動いたらやめる
@@ -230,6 +238,7 @@ export function TreeView({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>, index: number) => {
     if (isFromEditor(event)) return;
+    follow.current = undefined;
     const current = visible[index];
     if (!current) return;
     const { node } = current;
@@ -326,6 +335,7 @@ export function TreeView({
         key={node.id}
         onClick={(event) => {
           if (isFromEditor(event)) return;
+          follow.current = undefined;
           setFocusedId(node.id);
           if (isBranch) setOpen(node.id, !isOpen);
           onSelect?.(node.id);

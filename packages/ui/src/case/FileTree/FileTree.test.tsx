@@ -12,7 +12,10 @@ const { Default, NoSelection, ReadOnly, Empty } = composeStories(stories);
 
 /** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
 function DelayedSelectTree() {
-  const [items, setItems] = useState<TreeNode[]>([{ id: "index.js", label: "index.js" }]);
+  const [items, setItems] = useState<TreeNode[]>([
+    { id: "index.js", label: "index.js" },
+    { id: "package.json", label: "package.json" },
+  ]);
   const [selectedId, setSelectedId] = useState<string | undefined>("index.js");
   return (
     <FileTree
@@ -321,6 +324,30 @@ describe("FileTree", () => {
     await userEvent.keyboard("util.js{Enter}");
     const item = await screen.findByRole("treeitem", { name: "util.js" });
     await expect.poll(() => document.activeElement).toBe(item);
+  });
+
+  it("保存を待つ間に矢印のキーで別の項目へ移ると、作った項目が出てもフォーカスを移さない", async () => {
+    render(<DelayedSelectTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("util.js{Enter}");
+    const index = screen.getByRole("treeitem", { name: "index.js" });
+    await expect.poll(() => document.activeElement).toBe(index);
+    await userEvent.keyboard("{ArrowDown}");
+    const moved = screen.getByRole("treeitem", { name: "package.json" });
+    await screen.findByRole("treeitem", { name: "util.js" });
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    expect(document.activeElement).toBe(moved);
+  });
+
+  it("Esc でやめた後に選ぶ項目が変わっても、フォーカスを移さない", async () => {
+    render(<DelayedSelectTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("util.js{Enter}");
+    screen.getByRole("treeitem", { name: "index.js" }).focus();
+    await userEvent.keyboard("{F2}{Escape}");
+    await screen.findByRole("treeitem", { name: "util.js" });
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    expect(screen.getByRole("treeitem", { name: "index.js" })).toHaveFocus();
   });
 
   it("呼ぶ側が保存を待ってから名前を変えた項目を選ぶときも、元の行が消えた後に新しい行へフォーカスが移る", async () => {

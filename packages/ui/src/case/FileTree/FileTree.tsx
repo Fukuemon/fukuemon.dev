@@ -190,6 +190,7 @@ export function FileTree({
   state,
 }: FileTreeProps) {
   const [editing, setEditing] = useState<Editing | undefined>(undefined);
+  const [closedBy, setClosedBy] = useState<"commit" | "cancel" | undefined>(undefined);
   const editingTargetId = editing?.kind === "rename" ? editing.id : editing?.parentId;
   const editingTarget = editingTargetId === undefined ? undefined : find(items, editingTargetId);
   // 欄を開いている間に、名前を変える項目か作る場所が木から消えたら、欄を閉じる
@@ -221,6 +222,7 @@ export function FileTree({
 
   const commit = (name: string) => {
     setEditing(undefined);
+    setClosedBy("commit");
     if (editing?.kind === "file") onCreate?.(name, editing.parentId);
     else if (editing?.kind === "directory") onCreateDirectory?.(name, editing.parentId);
     else if (editing?.kind === "rename") onRename?.(editing.id, name);
@@ -241,7 +243,10 @@ export function FileTree({
         // 名前を変える項目と、新しく作る種類が変わったら、欄を作り直して値と誤りを消す
         key={isRename ? `rename:${editing.id}` : `${editing.kind}:${editing.parentId ?? ""}`}
         label={FIELD_LABEL[editing.kind]}
-        onCancel={() => setEditing(undefined)}
+        onCancel={() => {
+          setEditing(undefined);
+          setClosedBy("cancel");
+        }}
         onCommit={commit}
         selectionEnd={
           renamed && !renamed.children && extension > 0 ? extension : initialValue.length
@@ -317,6 +322,7 @@ export function FileTree({
           defaultExpandedIds={defaultExpandedIds}
           density="compact"
           editor={editor}
+          editorClosedBy={closedBy}
           items={withIcons(items)}
           label={title}
           onRequestDelete={onDelete}
