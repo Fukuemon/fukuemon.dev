@@ -51,12 +51,16 @@ flowchart TD
     check --> pci["deploy-playground workflow"]
     pci -->|"deploy 用の token"| pwd["wrangler deploy（apps/playground）"]
     pwd --> playground["プレイグラウンドの Worker + assets"]
+    check --> vci["deploy-preview workflow"]
+    vci -->|"deploy 用の token"| vwd["wrangler deploy --env preview（apps/web）"]
+    vwd --> preview["プレビューの Worker + assets"]
     manual["運用者が手動で起動（mode=plan、次に mode=apply）"] --> env["environment protection rules"]
     env -->|"apply 用の token"| tf["terraform plan / apply"]
     tf --> base["Zone / custom domain"]
     ci -. "触らない" .-x base
     cci -. "触らない" .-x base
     pci -. "触らない" .-x base
+    vci -. "触らない" .-x base
 ```
 
 Worker のコードの変更は、通常の pull request に含まれる。  
@@ -65,7 +69,8 @@ Worker のコードの変更は、通常の pull request に含まれる。
 `develop` には branch protection を掛けていないので、pull request を通すのは慣行であり、仕組みでは強制しない。  
 deploy 用の token は Workers Scripts の権限を持つので、custom domain の apex のレコードにも届きうる。deploy の workflow がそれを触らないのは、`wrangler deploy` の振る舞いによる。  
 apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md) にある。  
-カタログとプレイグラウンドの Worker は、develop の check workflow が通るたびに、それぞれ deploy-catalog と deploy-playground の workflow が出す。  
+カタログ、プレイグラウンド、プレビューの Worker は、develop の check workflow が通るたびに出す。  
+出す workflow は、それぞれ deploy-catalog、deploy-playground、deploy-preview である。  
 初回と出し直しは、運用者が `develop` から手で起動する。  
 どの Worker もハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
 
@@ -124,7 +129,7 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `infra/cloudflare/zone.tf`: zone の取り込み
 - `infra/cloudflare/workers_domain.tf`: Workers の custom domain。サイトの apex（`site`）、カタログの `design.<zone>`（`catalog`）、プレイグラウンドの `play.<zone>`（`playground`）
 - `infra/cloudflare/vars.tf`: `account_id`、`zone_id`、`zone_name`、`worker_name`、`catalog_worker_name`、`playground_worker_name` の変数
-- `apps/web/wrangler.jsonc`: サイトの Worker の設定
+- `apps/web/wrangler.jsonc`: サイトの Worker の設定。`env.preview` に、プレビューの Worker（`fukuemon-dev-preview`）の設定を置く。プレビューの Worker は custom domain を持たず、workers.dev の URL で公開する
 - `packages/ui/wrangler.jsonc`: カタログの Worker の設定。`workers_dev` と `preview_urls` を切り、`design.<zone>` だけで公開する
 - `apps/playground/wrangler.jsonc`: プレイグラウンドの Worker の設定。`workers_dev` と `preview_urls` を切り、`play.<zone>` だけで公開する
 
@@ -141,7 +146,8 @@ CI では、apply の workflow が `TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_
   - `apps/web/wrangler.jsonc` の `name` と `worker_name` のデフォルト値を比べる
   - `packages/ui/wrangler.jsonc` の `name` と `catalog_worker_name` のデフォルト値を比べる
   - `apps/playground/wrangler.jsonc` の `name` と `playground_worker_name` のデフォルト値を比べる
-- `pnpm run check:deploy`: サイト、カタログ、プレイグラウンドの `wrangler deploy --dry-run` を実行する。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を読む
+  - プレビューの Worker は custom domain を持たず、Terraform の変数に名前が無いので、比べない
+- `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンドの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を読む
 - check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 2 つを含む `pnpm run check` を実行する
 - workflow は次の 4 つ
   - apply: `.github/workflows/apply.yml`
