@@ -78,7 +78,7 @@ const expectCameraAtEnd = async (page: Page) => {
   return right;
 };
 
-test("初めての端末で開くと、墨の絵の後に色を差して門をくぐり、決めた長さでプロフィールの文の前で止まり、その間も h1 がアクセシビリティツリーにある", async ({
+test("初めての端末で開くと、墨の絵の後に色を差して門をくぐり、決めた長さより前には終えずにプロフィールの文の前で止まり、その間も h1 がアクセシビリティツリーにある", async ({
   page,
 }) => {
   await recordClasses(page);
@@ -201,35 +201,49 @@ test.describe("イントロの途中", () => {
     await page.goto("/");
     await expectJumped(page);
   });
+});
 
-  test("色を差し始めると、「飛ばす」の面と枠と字を、庭の中のボタンと同じ時間帯の色にする", async ({
+test.describe("「飛ばす」の色と位置", () => {
+  // ライトのテーマの紙と墨の色は昼の霞の色と同じトークンなので、時間帯に依らず色が替わるダークのテーマで見る
+  test.use({ colorScheme: "dark" });
+
+  interface SkipLog {
+    __skip?: { ink: string[]; gaps: number[]; enter: string[] };
+  }
+
+  test("墨の絵の間はテーマの色で狭い画面の端から 0.5rem に出し、色を差し始めると庭の中のボタンと同じ時間帯の色にする", async ({
     page,
   }) => {
     await page.addInitScript(() => {
+      const log = { ink: [] as string[], gaps: [] as number[], enter: [] as string[] };
+      (window as unknown as SkipLog).__skip = log;
+      const colors = (s: CSSStyleDeclaration) => [s.backgroundColor, s.borderTopColor, s.color];
       new MutationObserver((_, observer) => {
         const root = document.documentElement;
+        const el = document.querySelector<HTMLElement>("[data-garden-skip]");
+        if (!el) return;
+        if (root.classList.contains("scene-ready") && !log.gaps.length) {
+          const r = el.getBoundingClientRect();
+          log.gaps = [Math.round(innerWidth - r.right), Math.round(innerHeight - r.bottom)];
+          log.ink = colors(getComputedStyle(el));
+        }
         if (!root.classList.contains("enter")) return;
         observer.disconnect();
-        const s = getComputedStyle(document.querySelector("[data-garden-skip]")!);
-        (window as unknown as { __skipColors: string[] }).__skipColors = [
-          s.backgroundColor,
-          s.borderTopColor,
-          s.color,
-        ];
+        log.enter = colors(getComputedStyle(el));
       }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
     });
     await page.goto("/");
     await expect(html(page)).not.toHaveClass(/\bintro\b/, { timeout: 60_000 });
     await expectGardenEnd(page);
-    const skip = await page.evaluate(
-      () => (window as unknown as { __skipColors?: string[] }).__skipColors,
-    );
+    const skip = (await page.evaluate(() => (window as unknown as SkipLog).__skip))!;
     // 今いる場所のボタンは色を反転するので、今いない「経歴」と比べる
     const station = await page.getByRole("button", { name: "経歴" }).evaluate((el) => {
       const s = getComputedStyle(el);
       return [s.backgroundColor, s.borderTopColor, s.color];
     });
-    expect(skip).toStrictEqual(station);
+    expect(skip.gaps).toStrictEqual([8, 8]);
+    expect(skip.enter).toStrictEqual(station);
+    expect(skip.ink[0]).not.toBe(skip.enter[0]);
   });
 });
 
