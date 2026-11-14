@@ -32,6 +32,7 @@
 ## Decision
 
 コードを動かす画面に置くコンポーネントだけ、2 つの原則を緩める。  
+コンソール（`ConsoleEntryList`）と、その値の木（`TreeView` の `density="compact"`）から適用する。  
 色と筆の線の動きは変えない。  
 コードを動かす画面の面、罫、角丸は、[ADR-0073](0073-layered-panes-and-radius-in-playground.md) が決める。
 
@@ -46,7 +47,6 @@
   - `text-code-compact`: 13px の等幅。行高は 154%（約 20px）。
 - 154% は DADS の行高に無いので、プリミティブトークンに足す。
 - 4 つのトークンは、コードを動かす画面のコンポーネントの外で使わない。使う場面は、デザインシステムの Design Doc の文字の表に書く。
-- コンソール（`ConsoleEntryList`）と、その値の木（`TreeView` の `density="compact"`）から適用する。
 
 ### 押せる領域
 
