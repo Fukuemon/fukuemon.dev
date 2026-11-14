@@ -29,6 +29,7 @@ fukuemon.dev のデザインシステムのトークンの持ち方と、値の�
 - プリミティブトークンは、fukuemon.dev の値を持つ。
   - 地と罫と差し色は、旧サイトの `packages/design-system/styles/tokens.css` の値を使う。生成りの地、墨の文字、温かい灰の罫、くすんだ緑、藍、錆である。
   - 書体の太さ、文字の大きさ、行高は、DADS の `@digital-go-jp/design-tokens` 2.1.0 の値を使う。ファイルの冒頭に、出典の URL と MIT License の表示を残す。
+    - コードを動かす画面の詰めたペインの、13px の等幅の行高だけは、DADS に無い値を使う。値は [ADR-0062](0062-dense-text-and-targets-in-playground.md) が決める。
   - 名前は `--fd-primitive-` で始める。
 - セマンティックトークンは、役割の名前を `--fd-color-` で始め、プリミティブトークンを参照する。
 - テーマ変数は、Tailwind CSS の `@theme inline` に置き、Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す。セマンティックトークンを通らない書き方を、画面のコードで書けなくするためである。
