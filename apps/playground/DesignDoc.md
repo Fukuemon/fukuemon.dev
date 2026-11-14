@@ -115,7 +115,7 @@ packages/
 - `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
-  - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
+  - `webcontainer/` が `node-runtime/` の直下から import するのは、型と、`backend.ts` の契約の失敗のクラス（`PathNotFoundError`）だけである。
   - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
 
 次の図は、`apps/playground/src/` のディレクトリと package の、互いの間で許す import の向きを示す。矢印の無い組は、import しない。
