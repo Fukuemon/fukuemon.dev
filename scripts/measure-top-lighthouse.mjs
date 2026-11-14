@@ -30,8 +30,15 @@ import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
 
 const require = createRequire(import.meta.url);
-const LIGHTHOUSE_CLI = require.resolve("lighthouse/cli/index.js");
-const LIGHTHOUSE = `lighthouse@${require("lighthouse/package.json").version}`;
+let LIGHTHOUSE_CLI;
+let LIGHTHOUSE_SPEC;
+try {
+  LIGHTHOUSE_CLI = require.resolve("lighthouse/cli/index.js");
+  LIGHTHOUSE_SPEC = `lighthouse@${require("lighthouse/package.json").version}`;
+} catch (e) {
+  if (e.code !== "MODULE_NOT_FOUND") throw e;
+  fail("Lighthouse が無い。pnpm install で入れる");
+}
 const DIST = resolve("apps/web/dist");
 const SEED_PATH = "/__seed-top-seen";
 const METRICS = [
@@ -123,6 +130,13 @@ const server = createServer((req, res) => {
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 const origin = `http://localhost:${server.address().port}`;
 
+// Lighthouse とその依存には、手元の token などの環境変数を渡さない。
+const childEnv = Object.fromEntries(
+  ["PATH", "HOME", "TMPDIR", "LANG"]
+    .filter((k) => process.env[k] !== undefined)
+    .map((k) => [k, process.env[k]]),
+);
+
 const gpuFlags =
   opt.gpu === "metal"
     ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"]
@@ -191,7 +205,7 @@ const median = (k) => {
 /** 結果を書く。途中の回が失敗したときは、それまでの回と失敗を書き、中央値は書かない */
 const writeSummary = (error) => {
   const summary = {
-    lighthouse: LIGHTHOUSE,
+    lighthouse: LIGHTHOUSE_SPEC,
     visit: opt.visit,
     gpu: opt.gpu,
     throttling: opt.throttling,
@@ -230,10 +244,11 @@ try {
           `--throttling-method=${opt.throttling}`,
           "--output=json",
           `--output-path=${report}`,
+          "--no-enable-error-reporting",
           "--quiet",
         ],
         // 1 回は 1 分前後で終わる。止まったときに、配信とプロファイルを残したまま待ち続けない。
-        { env: { ...process.env, CHROME_PATH: chromium.executablePath() }, timeout: 600_000 },
+        { env: { ...childEnv, CHROME_PATH: chromium.executablePath() }, timeout: 600_000 },
       );
       const r = JSON.parse(readFileSync(report, "utf8"));
       const row = {
