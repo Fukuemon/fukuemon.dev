@@ -3,16 +3,32 @@ import { join } from "node:path";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { type Connect, type Plugin, defineConfig } from "vite";
 
 // ツールは、index.html を持つディレクトリから読む。oxlint.config.ts も同じ方法で読む
 const tools = readdirSync(import.meta.dirname, { withFileTypes: true })
   .filter((d) => d.isDirectory() && existsSync(join(import.meta.dirname, d.name, "index.html")))
   .map((d) => d.name);
 
+// public/_headers は Cloudflare でだけ働く。手元の vp dev と vp preview でも、/node/ に同じ isolation のヘッダを返す
+const isolate = (server: { middlewares: Connect.Server }) => {
+  server.middlewares.use((request, response, next) => {
+    if (request.url?.startsWith("/node/")) {
+      response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+      response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+    }
+    next();
+  });
+};
+const isolationHeaders: Plugin = {
+  name: "node-isolation-headers",
+  configureServer: isolate,
+  configurePreviewServer: isolate,
+};
+
 export default defineConfig({
   // React Compiler は apps/playground にだけ入れる。外すときは babel の plugin を消す (ADR-0047)
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss(), isolationHeaders],
   // PGlite は .wasm と .data を import.meta.url から相対で読むので、事前のバンドルから外す
   optimizeDeps: { exclude: ["@electric-sql/pglite"] },
   worker: { format: "es" },

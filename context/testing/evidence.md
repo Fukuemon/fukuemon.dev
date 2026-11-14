@@ -47,7 +47,7 @@ status: draft
 
 <!-- 撮るときに起動するもの。起動と停止のコマンド、ポート、URL と環境変数、テストと分けるための設定、改修前と改修後を並べて起動する方法。pull request の head を配信した URL を E2E の config の baseURL に渡す方法と、base を配信した URL を渡す環境変数 BASE_URL。検証環境があれば、その URL と呼び名 -->
 
-- E2E の config は、Storybook を静的にビルドし、`vite preview` でポート 6126 に配信してから流す。
+- E2E の config は、Storybook を静的にビルドし、`vp preview` でポート 6126 に配信してから流す。
 - 環境変数 `BASE_URL` を渡すと、配信を立てずに、その URL のカタログを撮る。改修前のカタログは、別の worktree でビルドして別のポートで配信し、その URL を渡す。
 
 ## Login and Test Data

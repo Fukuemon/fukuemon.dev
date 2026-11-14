@@ -206,6 +206,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
+- `packages/e2e` の tsconfig は、`noUncheckedIndexedAccess` を外す。スキルの写しの `caption.ts` が、添字で読んだ値をそのまま使うため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
   - 承認した ADR-0026 の題と、PRD の性能の要求の行にあり、言い換えると承認した文が変わる。
