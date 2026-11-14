@@ -77,9 +77,13 @@ Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全�
       詰めたペインの行
     </span>
     <p className="font-mono text-code-dense text-text-secondary">
-      focus-visible:focus-ring-inset:
-      コードを動かす画面の詰めたペインの中の行と、ペインの全体を占めるスクロールする領域（FOCUS-ONE
-      の例外、ADR-0066（提案））
+      focus-visible:focus-ring-inset: コードを動かす画面の詰めたペインの中の行（FOCUS-ONE
+      の例外、ADR-0066）
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      focus-ring-frame:
+      ペインの全体を占める、フォーカスできるスクロールする領域を直下に置く要素。内側の輪を外側の
+      ::after に引く（FOCUS-ONE の例外、ADR-0066）
     </p>
   </div>
 </Unstyled>

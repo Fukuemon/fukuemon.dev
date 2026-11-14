@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -35,10 +35,6 @@
 
 ADR-0062 の Decision のうち、テーマ変数に置く compact のトークンを 2 つとした決定と、13px にしてよい文字をコードと操作のラベルとした範囲を、この Decision が置き換える。  
 ADR-0024 の Decision のうち、行高を DADS 2.1.0 の値に限った決定を、154% についてだけ、この Decision が置き換える。
-
-## 承認の条件
-
-- 承認のときに、ADR-0062 と ADR-0024 の Status に、置き換えた範囲を書く。
 
 ## Verification
 
