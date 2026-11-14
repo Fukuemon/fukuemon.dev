@@ -2,7 +2,7 @@
 
 この文書は、fukuemon.dev の画面とコンポーネントのコードを書く人が、書く前に読む規則である。  
 値は fukuemon.dev が決め、アクセシビリティ、タイポグラフィ、配色、レイアウトの指標と参考に、デジタル庁デザインシステム（DADS）を使う。  
-構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028、ADR-0062にある。
+構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0024、ADR-0028、ADR-0062、ADR-0075 にある。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
 - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
@@ -51,7 +51,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 
 ### 個性として残すもの
 
-運営者は、旧サイトの和の感じを残すと決めた（ADR-0023、ADR-0024、ADR-0026、ADR-0028）。  
+運営者は、旧サイトの和の感じを残すと決めた（ADR-0024、ADR-0026、ADR-0028、ADR-0075）。  
 規則の本文は、右の列の文書にある。  
 残すものと使う場所は次のとおり。
 
@@ -95,6 +95,10 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 確認: `pnpm run check:utilities`
   - 入力欄と、その見出し、補足の文、誤りの文の間は、`gap-2`（8px）以上にする。フォーカスの表示（`focus-ring`）は、欄の外へ 4px 広がる。狭いと、フォーカスの表示が近くの文字に重なる。
     - 確認: レビューで、欄と近くの文字の間が、その段以上かを見る。
+- `BODY-WIDTH`: 文字の列（記事の本文、シリーズの説明、トップの Profile）の幅は、テーマ変数の `--container-body`（40rem）のユーティリティの `max-w-body` で抑える。`max-w-prose` を書かない。
+  - `max-w-prose` は Tailwind の `65ch` で、幅が本文の書体の「0」の幅で決まる。本文は端末に入っている書体で描くので、1 行の字数が端末ごとにずれる。
+  - `max-w-prose` はテーマ変数を読まず、`65ch` に固定されている。
+  - 確認: `pnpm run check:utilities`
 - `LAYOUT-OVERFLOW`: レイアウトのブレークポイントの幅ごとに、ページの横方向のオーバーフローを出さない。長い文字とデータの多い状態でも出さない。
   - 確認: ページの全体の幅は、`pnpm run test:ui` の `src/screens/Playground.test.tsx` の、名前に `LAYOUT-OVERFLOW` を含むテストで見る。320px、767px、768px、1280px の幅を見る。内側の領域で切れた文字とボタンは、撮った画像をレビューで見る。
 - `MOTION-TOKEN`: アニメーションと緩急は、トークンの文書の「レイアウト、区切り、重なり、動き」の表の動きのユーティリティだけで書く。任意値（`animate-[ping_1s_infinite]` のような書き方）を書かない。アニメーションの任意値はテーマ変数を通らないので、`MOTION-REDUCE` の止め方では止まらない。
@@ -106,18 +110,19 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 
 ### 原則と確認の方法の対応
 
-| ID                     | 確認の方法                                                                    | チェックが見ないもの                                                                                                                        |
-| ---------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `COLOR-TOKEN`          | `pnpm run check:raw-values`                                                   | 文字、動きの時間と緩急の値                                                                                                                  |
-| `STATE-NOT-COLOR-ONLY` | レビュー                                                                      |                                                                                                                                             |
-| `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                                    | compact の 4 つの文字のトークンを、コードを動かす画面の外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                       |
-| `PRIMARY-ACTION-ONE`   | レビュー                                                                      |                                                                                                                                             |
-| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | フォーカスの変種に ring、outline、border、shadow を直に書いた書き方。クラスの名前を文字列の連結で組み立てた書き方                           |
-| `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
-| `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
-| `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
-| `MOTION-TOKEN`         | `pnpm run check:utilities`                                                    | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方 |
-| `MOTION-REDUCE`        | レビュー                                                                      |                                                                                                                                             |
+| ID                     | 確認の方法                                                                    | チェックが見ないもの                                                                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COLOR-TOKEN`          | `pnpm run check:raw-values`                                                   | 文字、動きの時間と緩急の値                                                                                                                                                 |
+| `STATE-NOT-COLOR-ONLY` | レビュー                                                                      |                                                                                                                                                                            |
+| `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                                    | compact の 4 つの文字のトークンを、コードを動かす画面の外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                                                      |
+| `PRIMARY-ACTION-ONE`   | レビュー                                                                      |                                                                                                                                                                            |
+| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | フォーカスの変種に ring、outline、border、shadow を直に書いた書き方。クラスの名前を文字列の連結で組み立てた書き方                                                          |
+| `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                                                  |
+| `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                                                         |
+| `BODY-WIDTH`           | `pnpm run check:utilities`                                                    | `max-w-body` でない段（`max-w-xl` など）と `ch` の任意値（`max-w-[65ch]`）で抑えた文字の列。スタイルに直に書いた `max-width`。クラスの名前を文字列の連結で組み立てた書き方 |
+| `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                                                 |
+| `MOTION-TOKEN`         | `pnpm run check:utilities`                                                    | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方                                |
+| `MOTION-REDUCE`        | レビュー                                                                      |                                                                                                                                                                            |
 
 ## 画面を作るときの手順
 
@@ -135,14 +140,14 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 
 ### 流すコマンド
 
-| コマンド                    | 見るもの                                                                                                                       | 原則の ID                                                     |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `pnpm run check:tokens`     | 2 つの生成物が、トークンと合っているか                                                                                         |                                                               |
-| `pnpm run check:contrast`   | セマンティックトークンの組のコントラスト比                                                                                     |                                                               |
-| `pnpm run check:raw-values` | 画面のコードの色の値とプリミティブトークンの名前                                                                               | `COLOR-TOKEN`                                                 |
-| `pnpm run check:utilities`  | 画面のコードの、原則に反するユーティリティ。規則の ID がこの文書にあるか                                                       | `TEXT-MIN-SIZE`、`FOCUS-ONE`、`SPACING-SCALE`、`MOTION-TOKEN` |
-| `pnpm run lint`             | テーマ変数にないクラスと、任意の値のクラス                                                                                     | `COLOR-TOKEN`                                                 |
-| `pnpm run test:ui`          | コンポーネントの状態、押せる領域の大きさ、コードを動かす画面の幅ごとのページの横方向のオーバーフロー、story のアクセシビリティ | `TARGET-SIZE`、`LAYOUT-OVERFLOW`                              |
+| コマンド                    | 見るもの                                                                                                                       | 原則の ID                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `pnpm run check:tokens`     | 2 つの生成物が、トークンと合っているか                                                                                         |                                                                             |
+| `pnpm run check:contrast`   | セマンティックトークンの組のコントラスト比                                                                                     |                                                                             |
+| `pnpm run check:raw-values` | 画面のコードの色の値とプリミティブトークンの名前                                                                               | `COLOR-TOKEN`                                                               |
+| `pnpm run check:utilities`  | 画面のコードの、原則に反するユーティリティ。規則の ID がこの文書にあるか                                                       | `TEXT-MIN-SIZE`、`FOCUS-ONE`、`SPACING-SCALE`、`MOTION-TOKEN`、`BODY-WIDTH` |
+| `pnpm run lint`             | テーマ変数にないクラスと、任意の値のクラス                                                                                     | `COLOR-TOKEN`                                                               |
+| `pnpm run test:ui`          | コンポーネントの状態、押せる領域の大きさ、コードを動かす画面の幅ごとのページの横方向のオーバーフロー、story のアクセシビリティ | `TARGET-SIZE`、`LAYOUT-OVERFLOW`                                            |
 
 ### 受け入れ条件
 
