@@ -26,6 +26,7 @@ export default defineConfig({
         "src/lib/playground/embeds.ts",
         "src/lib/playground/isolation-headers.ts",
         "src/lib/playground/project.ts",
+        "src/lib/playground/project-pages.ts",
         "src/lib/playground/rehype-playground.ts",
         "src/lib/rehype-fence.ts",
         "src/lib/rehype-ja-linebreak.ts",

@@ -1,22 +1,25 @@
 import type { Element, ElementContent, Root, RootContent } from "hast";
 import type { PlaygroundProject, PlaygroundTool } from "@fukuemon/playground-project";
 import {
+  PLAYGROUND_LANG,
+  PLAYGROUND_ORIGIN,
   embedId,
   embedUrl,
   isEmbedName,
-  playgroundOrigin,
   projectDir,
   readProject,
 } from "./project";
 import { replaceFences } from "../rehype-fence";
 
-export const PLAYGROUND_LANG = "playground";
-
-const OPEN_LABEL: Record<PlaygroundTool, string> = {
-  node: "Node の実行環境を開く",
-  sql: "SQL のツールを開く",
-  go: "Go のツールを開く",
+const TOOL_NAME: Record<PlaygroundTool, string> = {
+  node: "Node の実行環境",
+  sql: "SQL のツール",
+  go: "Go のツール",
 };
+
+/** rehypePlayground が書いた、Node の実行環境を埋め込む要素か */
+export const isNodeEmbed = (el: Element) =>
+  el.properties.dataPlaygroundEmbed !== undefined && el.properties.dataPlaygroundTool === "node";
 
 /** COEP: require-corp の記事で、CORP を返さない別の origin から読むと止められる要素 */
 const SUBRESOURCE_TAGS = new Set(["img", "iframe", "video", "audio", "source", "embed", "object"]);
@@ -37,7 +40,7 @@ type Options = {
 export const rehypePlayground =
   (options: Options = {}) =>
   (tree: Root, file: FileLike) =>
-    transform(tree, file, options.origin ?? playgroundOrigin(), options.readProject ?? readProject);
+    transform(tree, file, options.origin ?? PLAYGROUND_ORIGIN, options.readProject ?? readProject);
 
 function transform(
   tree: Root,
@@ -74,7 +77,7 @@ function resolveEmbed(
 }
 
 function embedElement(tool: PlaygroundTool, src: string): Element {
-  const label = OPEN_LABEL[tool];
+  const title = TOOL_NAME[tool];
   return {
     type: "element",
     tagName: "div",
@@ -83,14 +86,14 @@ function embedElement(tool: PlaygroundTool, src: string): Element {
       dataPlaygroundEmbed: "",
       dataPlaygroundTool: tool,
       dataPlaygroundSrc: src,
-      dataPlaygroundLabel: label,
+      dataPlaygroundTitle: title,
     },
     children: [
       {
         type: "element",
         tagName: "button",
         properties: { type: "button", className: ["playground-embed-open"] },
-        children: [{ type: "text", value: label }],
+        children: [{ type: "text", value: `${title}を開く` }],
       },
     ],
   };

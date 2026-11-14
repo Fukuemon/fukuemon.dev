@@ -17,12 +17,14 @@ const NODE = '<div data-playground-embed="" data-playground-tool="node"></div>';
 const SQL = '<div data-playground-embed="" data-playground-tool="sql"></div>';
 
 describe("Node の実行環境を埋め込むページを集める", () => {
-  it("Node の実行環境を埋め込むページだけを集め、SQL だけと埋め込まないページを除く", () => {
+  it("Node の実行環境を埋め込むページだけを集め、SQL だけと埋め込まないページと、属性を本文に書いただけのページを除く", () => {
     const dir = dist({
       "articles/node/index.html": NODE,
       "articles/s/node2/index.html": `${SQL}${NODE}`,
       "articles/sql/index.html": SQL,
       "articles/plain/index.html": "<p>本文</p>",
+      "articles/quoted/index.html":
+        '<p><code>data-playground-embed data-playground-tool="node"</code></p>',
       "playground-projects/a/b.json": NODE,
     });
     expect(findNodeEmbedPages(dir)).toStrictEqual(["/articles/node/", "/articles/s/node2/"]);

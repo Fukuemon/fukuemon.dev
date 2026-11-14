@@ -1,7 +1,7 @@
 import type { Code, Root, RootContent } from "mdast";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
-import { PLAYGROUND_LANG } from "./rehype-playground";
+import { PLAYGROUND_LANG } from "./project";
 
 function codeBlocks(node: Root | RootContent): Code[] {
   if (node.type === "code") return [node];

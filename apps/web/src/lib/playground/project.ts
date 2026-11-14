@@ -21,8 +21,10 @@ export const embedId = (contentId: string, name: string) => `${contentId}/${name
 export const projectDir = (articlePath: string, name: string) =>
   join(dirname(articlePath), "playground", name);
 
-export const playgroundOrigin = (env: Record<string, string | undefined> = process.env) =>
-  env.PUBLIC_PLAYGROUND_ORIGIN ?? "https://play.fukuemon.dev";
+export const PLAYGROUND_ORIGIN = "https://play.fukuemon.dev";
+
+/** 実行環境を埋め込むコードフェンスの言語 */
+export const PLAYGROUND_LANG = "playground";
 
 /** 記事の iframe の URL。クエリには埋め込みの ID だけを書く (ADR-0049) */
 export const embedUrl = (origin: string, tool: PlaygroundTool, id: string) =>

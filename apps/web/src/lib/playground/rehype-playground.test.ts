@@ -45,6 +45,7 @@ describe("実行環境の埋め込みの置き換え", () => {
     const button = embed.children[0] as Element;
     expect(button.tagName).toBe("button");
     expect(button.children).toStrictEqual([{ type: "text", value: "Node の実行環境を開く" }]);
+    expect(embed.properties.dataPlaygroundTitle).toBe("Node の実行環境");
   });
 
   it("プロジェクトを、記事の Markdown があるディレクトリの playground/<名前>/ から読む", () => {

@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { embedUrl, isEmbedName, playgroundOrigin, projectDir, readProject } from "./project";
+import { embedUrl, isEmbedName, projectDir, readProject } from "./project";
 
 function projectFiles(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), "playground-project-"));
@@ -89,13 +89,6 @@ describe("埋め込みの名前と URL", () => {
   it("iframe の URL のクエリには、埋め込みの ID だけを書く", () => {
     expect(embedUrl("https://play.example", "node", "a/b")).toBe(
       "https://play.example/node/?project=a/b",
-    );
-  });
-
-  it("origin は、環境変数が無いときに play.fukuemon.dev にする", () => {
-    expect(playgroundOrigin({})).toBe("https://play.fukuemon.dev");
-    expect(playgroundOrigin({ PUBLIC_PLAYGROUND_ORIGIN: "http://localhost:5173" })).toBe(
-      "http://localhost:5173",
     );
   });
 });

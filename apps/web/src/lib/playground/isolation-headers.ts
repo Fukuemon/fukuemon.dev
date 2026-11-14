@@ -2,9 +2,14 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
+import type { Element, Root, RootContent } from "hast";
+import { fromHtml } from "hast-util-from-html";
+import { isNodeEmbed } from "./rehype-playground";
 
-/** rehypePlayground が、Node の実行環境を埋め込む要素に付ける属性 */
-const NODE_EMBED = /data-playground-tool="node"/;
+function hasNodeEmbed(node: Root | RootContent): boolean {
+  if (node.type === "element" && isNodeEmbed(node as Element)) return true;
+  return "children" in node && node.children.some(hasNodeEmbed);
+}
 
 /** 出力の HTML のパスから、配信する URL のパスを返す。`a/index.html` は `/a/` になる */
 export function pagePath(htmlPath: string): string {
@@ -31,7 +36,7 @@ export function isolationHeaders(paths: readonly string[]): string {
 export function findNodeEmbedPages(distDir: string): string[] {
   return readdirSync(distDir, { recursive: true, encoding: "utf8" })
     .filter((file) => file.endsWith(".html"))
-    .filter((file) => NODE_EMBED.test(readFileSync(join(distDir, file), "utf8")))
+    .filter((file) => hasNodeEmbed(fromHtml(readFileSync(join(distDir, file), "utf8"))))
     .map(pagePath)
     .sort();
 }

@@ -8,11 +8,11 @@
     const button = (event.target as Element | null)?.closest(".playground-embed-open");
     const embed = button?.closest<HTMLElement>("[data-playground-embed]");
     if (!embed) return;
-    const { playgroundSrc, playgroundTool, playgroundLabel } = embed.dataset;
+    const { playgroundSrc, playgroundTool, playgroundTitle } = embed.dataset;
     if (!playgroundSrc) return;
     const frame = document.createElement("iframe");
     frame.src = playgroundSrc;
-    frame.title = playgroundLabel?.replace(/を開く$/, "") ?? "実行環境";
+    frame.title = playgroundTitle ?? "実行環境";
     frame.className = "playground-embed-frame";
     // WebContainers は、親のページと iframe の両方が cross-origin isolated のときだけ起動する
     if (playgroundTool === "node") frame.allow = "cross-origin-isolated";
