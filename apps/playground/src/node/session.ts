@@ -112,7 +112,7 @@ export function createNodeSession({
   const restartReadFailed = createStore(false);
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
-  const saving = createRecordSaver({
+  const recordSaver = createRecordSaver({
     storage,
     record,
     needsRewrite,
@@ -120,7 +120,7 @@ export function createNodeSession({
     projectVersion: project.version,
     now,
   });
-  const { persist, rewriteIfUnsaved } = saving;
+  const { persist, rewriteIfUnsaved } = recordSaver;
 
   /** 保存のために作業ディレクトリを読む。読めなかったときは undefined を返す。 */
   const readForSave = async (runtime: NodeRuntime): Promise<SaveRead | undefined> => {
@@ -372,7 +372,7 @@ export function createNodeSession({
 
   const clearSaved = async (old: Instance) => {
     try {
-      await saving.clear();
+      await recordSaver.clear();
     } catch (error) {
       // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
       // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
@@ -392,10 +392,10 @@ export function createNodeSession({
     project,
     runtime: runtimeStore,
     canSave,
-    saveFailed: saving.saveFailed,
-    overLimit: saving.overLimit,
+    saveFailed: recordSaver.saveFailed,
+    overLimit: recordSaver.overLimit,
     restartReadFailed,
-    hasSaved: saving.hasSaved,
+    hasSaved: recordSaver.hasSaved,
     versionChanged,
     busy,
     commandFailed,

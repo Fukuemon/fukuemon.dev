@@ -1242,6 +1242,35 @@ describe("reset", () => {
     expect(session.busy.getSnapshot()).toBe(false);
   });
 
+  it("戻した後の保存には、プロジェクトのバージョンを付ける", async () => {
+    const { session, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, version: "v0" },
+    });
+    await settle(session);
+    await session.reset();
+    await session.run();
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.at(-1)?.version).toBe("v1");
+  });
+
+  it("戻した後は、消す前に保存した中身と同じでも保存する", async () => {
+    const { session, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { ...project.files } },
+    });
+    await settle(session);
+    await session.reset();
+    await session.run();
+    latest().change("index.js");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect({
+      saves: saves.map((record) => record.files),
+      hasSaved: session.hasSaved.getSnapshot(),
+    }).toStrictEqual({ saves: [project.files], hasSaved: true });
+  });
+
   it("訪問者の変更の保存が失敗した後に戻すと、saveFailed を false にする", async () => {
     const { session, workspace, latest } = setup({ kind: "saved", record: savedRecord });
     await settle(session);
