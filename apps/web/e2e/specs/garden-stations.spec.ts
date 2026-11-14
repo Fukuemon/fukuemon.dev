@@ -137,7 +137,7 @@ test.describe("幅 320px", () => {
     const boxes = await page
       .locator("[data-station]")
       .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()));
-    const header = await page.locator("[data-site-header]").evaluate((el) => el.offsetHeight);
+    const header = (await page.locator("[data-site-header]").boundingBox())!.height;
     expect({
       rows: new Set(boxes.map((b) => Math.round(b.top))).size,
       small: boxes.filter((b) => b.width < 44 || b.height < 44).length,
