@@ -10,7 +10,7 @@ import {
 
 import type { Store } from "@fukuemon/node-runtime";
 
-import { BYTES_PER_MB, SAVE_LIMIT } from "./save-rules";
+import { overLimitMessage } from "./messages";
 import type { NodeSession } from "./session";
 
 const useStore = <T,>(store: Store<T>) => useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -110,7 +110,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             title="ファイルが多いため、保存していません"
             tone="warning"
           >
-            {`作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${hasSaved ? "前に保存したファイルを残しています。" : ""}ファイルを減らすと、また保存します。`}
+            {overLimitMessage(hasSaved)}
           </Notice>
         )}
         {!session.canSave && (

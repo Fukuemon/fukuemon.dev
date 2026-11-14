@@ -64,7 +64,7 @@ function readAllFiles(
   { exclude, maxBytes, limit }: ReadAllOptions,
 ): Promise<FileContents[]> {
   const count = { files: 0, bytes: 0 };
-  // 数は増えるだけなので、超えた後に一覧か読み込みを終えた枝は、ここで止まり、次の一覧と読み込みを始めない
+  // 読めたファイルだけを数える。数は増えるだけなので、超えた後に一覧か読み込みを終えた枝は、ここで止まり、次の一覧と読み込みを始めない
   const check = () => {
     if (limit && (count.files > limit.files || count.bytes > limit.bytes)) {
       throw new ReadLimitError();
@@ -74,7 +74,6 @@ function readAllFiles(
     const items = [...(await files.list(directory))]
       .filter((item) => !isExcludedPath(join(directory, item.name), exclude))
       .sort((a, b) => a.name.localeCompare(b.name));
-    count.files += items.filter((item) => item.kind !== "directory").length;
     check();
     // 1 回ずつの往復を待つと、ファイルの数だけ待ち時間が積み重なるので、1 つのディレクトリの中は並べて読む
     const entries = await Promise.all(
@@ -84,6 +83,7 @@ function readAllFiles(
         // 一覧を読んだ後に消えたファイルと、指す先を読めないリンクは、読まずに飛ばす
         const bytes = await files.readFile(path).catch(() => undefined);
         if (!bytes) return [];
+        count.files += 1;
         count.bytes += bytes.byteLength;
         check();
         return [

@@ -36,6 +36,9 @@ export type RuntimeResult =
 /** IndexedDB に保存する 1 件。作業ディレクトリのファイルの一式を、丸ごと置き換える。 */
 export type NodeRecord = { files: Record<string, string>; version: string; savedAt: number };
 
+/** 保存のために読んだ作業ディレクトリ。読んでいる途中で上限を超えたときは over-limit である。 */
+type SaveRead = { kind: "read"; entries: readonly FileContents[] } | { kind: "over-limit" };
+
 /** 変更の通知を受けてから、作業ディレクトリを読むまでの時間（ms）。待つ間に来た通知は、1 回の保存にまとめる。 */
 export const SAVE_DELAY_MS = 500;
 
@@ -186,8 +189,8 @@ export function createNodeSession({
   });
 
   // 上限を超えたときは、前に保存したレコードを残す (ADR-0070)
-  const persist = (entries: readonly FileContents[]) => {
-    const saving = filesToSave(entries);
+  const persist = (read: SaveRead) => {
+    const saving = read.kind === "over-limit" ? read : filesToSave(read.entries);
     overLimit.set(saving.kind === "over-limit");
     if (saving.kind === "over-limit") return;
     const { files } = saving;
@@ -196,20 +199,22 @@ export function createNodeSession({
     saver.save({ files, version, savedAt: now() });
   };
 
-  const readForSave = async (runtime: NodeRuntime) => {
-    // 読み込みが終わらないと、次の保存が始まらないので、上限で諦める
-    const entries = await withTimeout(runtime.files.readAll(SAVE_READ), READ_TIMEOUT_MS).catch(
-      (error: unknown) => (error instanceof ReadLimitError ? "over-limit" : error),
-    );
+  /** 保存のために作業ディレクトリを読む。読めなかったときと、読んでいる間に実行環境を破棄したときは undefined を返す。 */
+  const readForSave = async (runtime: NodeRuntime): Promise<SaveRead | undefined> => {
+    let read: SaveRead | undefined;
+    try {
+      // 読み込みが終わらないと、次の保存が始まらないので、上限で諦める
+      const entries = await withTimeout(runtime.files.readAll(SAVE_READ), READ_TIMEOUT_MS);
+      read = { kind: "read", entries };
+    } catch (error) {
+      if (error instanceof ReadLimitError) read = { kind: "over-limit" };
+      else console.error("保存のために作業ディレクトリを読めない", error);
+    }
     // 破棄した実行環境の読み込みが後から終わっても、今の実行環境の状態を書き換えない
     if (current.runtime !== runtime) return undefined;
-    if (entries === "over-limit") overLimit.set(true);
-    else if (!Array.isArray(entries))
-      console.error("保存のために作業ディレクトリを読めない", entries);
-    if (!Array.isArray(entries)) return undefined;
     // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
-    lastRead = filesForRestart(entries);
-    return entries as readonly FileContents[];
+    if (read?.kind === "read") lastRead = filesForRestart(read.entries);
+    return read;
   };
 
   const watchForSave = (instance: Instance, runtime: NodeRuntime) => {
@@ -229,8 +234,8 @@ export function createNodeSession({
       reading = true;
       do {
         again = false;
-        const entries = await readForSave(runtime);
-        if (entries && !stopped) persist(entries);
+        const read = await readForSave(runtime);
+        if (read && !stopped) persist(read);
       } while (again && !stopped);
       reading = false;
     };
@@ -410,7 +415,7 @@ export function createNodeSession({
       const entries = await withTimeout(old.runtime.files.readAll(RESTART_READ), READ_TIMEOUT_MS);
       const files = filesForRestart(entries);
       lastRead = files;
-      if (old.touched) persist(entries);
+      if (old.touched) persist({ kind: "read", entries });
       return { files, touched: old.touched };
     } catch (error) {
       console.error("起動し直す前に作業ディレクトリを読めない", error);
@@ -428,7 +433,7 @@ export function createNodeSession({
         old.stopSaving = watchForSave(old, old.runtime);
         // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
         if (old.touched) {
-          void readForSave(old.runtime).then((entries) => entries && persist(entries));
+          void readForSave(old.runtime).then((read) => read && persist(read));
         }
       }
       throw error;

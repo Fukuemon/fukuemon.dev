@@ -1,5 +1,7 @@
 import type { BootFailureReason, ProcessInfo } from "@fukuemon/node-runtime";
 
+import { BYTES_PER_MB, SAVE_LIMIT } from "./save-rules";
+
 export const SUPPORTED_BROWSERS = "デスクトップの Chrome か Edge の最新版で開いてください。";
 
 const REASONS: Record<BootFailureReason, string> = {
@@ -11,6 +13,10 @@ const REASONS: Record<BootFailureReason, string> = {
 /** 実行環境を起動できなかった理由と、対応するブラウザの文。端末とプレビューのペインに出す。 */
 export const bootFailureMessage = (reason: BootFailureReason) =>
   `${REASONS[reason]}${SUPPORTED_BROWSERS}`;
+
+/** 保存の上限を超えたときの案内の本文。保存したファイルがあるときは、それを残していることも書く。 */
+export const overLimitMessage = (hasSaved: boolean) =>
+  `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${hasSaved ? "前に保存したファイルを残しています。" : ""}ファイルを減らすと、また保存します。`;
 
 export const PREVIEW_TIMEOUT_MS = 30_000;
 

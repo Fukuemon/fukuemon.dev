@@ -10,7 +10,7 @@ export type BootOptions = {
 
 /**
  * files.readAll で読まないパスと、中身を読まないファイルの大きさ。exclude は、パスの区切りの 1 つと一致する名前である。
- * limit を渡すと、読むファイルの数か、読んだ大きさの合計が超えた時点で、読むのをやめて ReadLimitError で失敗する。
+ * limit を渡すと、読めたファイルの数か、読んだ大きさの合計が超えた時点で、読むのをやめて ReadLimitError で失敗する。
  */
 export type ReadAllOptions = {
   exclude: readonly string[];

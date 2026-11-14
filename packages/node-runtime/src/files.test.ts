@@ -249,14 +249,27 @@ describe("files.readAll", () => {
 
   it("limit を超えたら、残りのディレクトリの一覧を読まない", async () => {
     const { runtime, created } = await bootFake();
-    for (const name of ["a", "b", "c"]) created.files.putFromCommand(`${name}/x/y.txt`, "");
+    for (const name of ["a", "b", "c"]) created.files.putFromCommand(`${name}/x/y/z.txt`, "");
     await flush();
-    const calls = created.files.api.listCalls;
-    await expect(
+    const countLists = async (read: () => Promise<unknown>) => {
+      const before = created.files.api.listCalls;
+      await read().catch(() => undefined);
+      // 失敗した後も動いている枝が、一覧を読み始めるかを見る
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return created.files.api.listCalls - before;
+    };
+    // 子のディレクトリの一覧を、ルートのファイルを読み終えた後に返す
+    const list = created.files.api.list;
+    created.files.api.list = async (directory) => {
+      if (directory !== "") await new Promise((resolve) => setTimeout(resolve, 0));
+      return list(directory);
+    };
+    const all = await countLists(() => runtime.files.readAll(options));
+    const limited = await countLists(() =>
       runtime.files.readAll({ ...options, limit: { files: 1, bytes: 100 } }),
-    ).rejects.toBeInstanceOf(ReadLimitError);
-    // ルートの一覧で数を超えるので、子のディレクトリを読まない
-    expect(created.files.api.listCalls - calls).toBe(1);
+    );
+    // ルートのファイルを読んだ時点で超えるので、子のディレクトリの下の一覧を読まない
+    expect(limited).toBeLessThan(all);
   });
 
   it("limit の数と大きさちょうどなら、読み終える", async () => {
