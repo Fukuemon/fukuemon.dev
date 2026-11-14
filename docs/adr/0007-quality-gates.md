@@ -1,8 +1,8 @@
-# ADR-0007: 品質チェックに react-doctor / knip / similarity-ts を採り、mise / Bun / Biome を採らない
+# ADR-0007: 品質チェックに react-doctor / knip / similarity-ts を採り、Bun / Biome を採らない
 
 ## Status
 
-承認（mise を採らない判断を ADR-0011 に置換）
+承認
 
 ## Context
 
@@ -15,7 +15,7 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 
 - 本 repo には既に `lefthook.yml` がある。
 - Vite+ が Oxlint / Oxfmt / Vitest / tsgo と Node.js runtime を同梱する。
-  - ADR-0003: [pnpm workspace の monorepo とし、Vite+ を `vp run` / `vp env` / 同梱ツールに限定して採用する](0003-monorepo-and-vite-plus.md)
+  - ADR-0003: [pnpm workspace の monorepo とし、package の境界を最初から物理的に分ける](0003-monorepo-and-vite-plus.md)
 - **本サイトで React を使う範囲は小さい。** 静的 HTML で表現できるものに React を使わない方針であり、当初は Island がゼロになる見込みである。
 - Design System は「カードを使わない」「罫線と余白で階層を作る」「見出しをほとんど大きくしない」といった、汎用 UI ルールと衝突しうる規則を持つ。
 
@@ -44,7 +44,6 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 
 | ツール                    | 理由                                                                                      |
 | ------------------------- | ----------------------------------------------------------------------------------------- |
-| **mise**                  | Node の固定は `vp env` が担う。バージョン定義が 2 箇所になる                              |
 | **Bun**                   | pnpm workspace を基盤とする決定 (ADR-0003) と衝突する                                     |
 | **Biome**                 | Oxlint / Oxfmt と役割が重複する                                                           |
 | **`.claude/rules/` 方式** | 本 repo の AI 設定は sdd-template からの symlink 配布であり、消費 repo では commit しない |
@@ -88,7 +87,6 @@ CI では存在を確認し、欠けていれば警告として報告する。
 | Oxlint / Oxfmt だけで済ませる                                                                                 | ツールが最も少ない。Vite+ 同梱で追加インストールがゼロ。バージョンは Vite+ が管理し、同梱版に追従する                                                                      | 未使用の export / 依存が monorepo で溜まる。package を 5 つ以上持つ構成では knip の価値が大きい。React 固有の誤りは汎用 lint では拾えない                    |
 | Biome に集約する                                                                                              | formatter と linter が 1 つに揃い、設定が単純になる                                                                                                                        | Vite+ が Oxlint / Oxfmt を同梱するため役割が重複する。同梱ツールを使わずに別のものを入れる理由がない                                                         |
 | react-doctor をスコア gate として最初から強制する                                                             | 規約の自動強制という方針に最も忠実                                                                                                                                         | 対象コードが存在しない段階では常に満点になり、gate が機能しない。Island が入った時点で大量の指摘が出て、そこで緩めることになる。段階的に上げるほうが機能する |
-| mise で Node と cargo バイナリを一括管理する                                                                  | similarity-ts を含めてバージョンを 1 箇所で固定できる。similarity-ts が `vp env` の外にある問題が消える                                                                    | Node のバージョン定義が `vp env` と 2 箇所になる。**この二重管理を避けることを優先する。** similarity-ts の未インストールは CI の存在の確認で検出する        |
 
 ## Consequences
 
@@ -97,7 +95,6 @@ CI では存在を確認し、欠けていれば警告として報告する。
 - 依存規約 2 本が既存ツールだけで機械でチェックできる。
   - カスタムプラグインの保守が不要になる。
 - monorepo で未使用の export / 依存が溜まらない。
-- Node のバージョン定義が `vp env` の 1 箇所に収まる。
 
 ### Negative
 

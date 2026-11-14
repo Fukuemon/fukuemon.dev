@@ -26,36 +26,20 @@ buddy の構成は次のとおり。
 - `packages/design-system` は、古いトークン、レイアウトのユーティリティ、サイト全体の動きの規則の文書、挿絵の文書を持つ。トークンとコンポーネントは `packages/ui` に、挿絵の生成の出力は `packages/ui/src/art/` に移っている。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](0021-ui-components-and-catalog.md)
   - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](0024-tokens-of-fukuemon-dev.md)
-- monorepo の構成の一覧は、`packages/design-system/` を含む。
-  - ADR-0003: [pnpm workspace の monorepo とし、Vite+ を `vp run` / `vp env` / 同梱ツールに限定して採用する](0003-monorepo-and-vite-plus.md)
-- 古い Design System を、全てのページに適用すると決めている。
-  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む](0001-starlight-as-docs-renderer.md)
+- package を切り出す条件は、決まっている。
+  - ADR-0003: [pnpm workspace の monorepo とし、package の境界を最初から物理的に分ける](0003-monorepo-and-vite-plus.md)
 - Content Model は、Astro に依存しない package である。
   - ADR-0002: [関係を `contentId` の辺として持ち、Content Model を Astro 非依存に保つ](0002-content-model-independence.md)
-- lint と format は Oxlint と Oxfmt を直接実行し、Vite+ は `apps/web` の build のキャッシュだけに使う。
-  - ADR-0017: [Vite+ は `apps/web` の build を `vp run` でキャッシュすることだけに使う](0017-vp-run-cache-for-web-build.md)
+- lint と format は Oxlint と Oxfmt を直接実行する。
+  - ADR-0017: [Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の dev と build、`packages/ui` のテストに使う](0017-vp-run-cache-for-web-build.md)
 
 ## Decision
 
 ### 1. workspace の構成
 
-monorepo の構成を次のとおりにする。
-
-```text
-apps/web/                  Astro の静的サイト。記事、シリーズ、トップ
-apps/docs-site/            ドキュメントサイトの Worker
-packages/ui/               トークン、コンポーネント、挿絵、カタログ
-packages/content-model/    schema、ContentRef、関係グラフ（Astro に依存しない）
-packages/config/           tsconfig の共有の設定
-packages/e2e/              E2E のテスト
-infra/                     Terraform。workspace の package ではない
-docs/                      PRD、Design Doc、ADR
-context/                   規約と事実
-```
-
 - 古い `apps/web` と `packages/design-system` を消し、`apps/web` を新しく作る。古いコードを直しながら移すより、引き継がないコードが残らないためである。
 - `packages/content-model` と `packages/config` は残す。Astro なしでテストできる境界を保つためである。
-- `packages/` にモジュールを増やす条件は、2 つ以上の消費者が実在することのままにする。`packages/e2e` は、テストだけを持つ package として、この条件の例外にする。
+- `packages/e2e` は、テストだけを持つ package として、package を切り出す条件の例外にする。
 - TypeScript は 6.0.2 にする。buddy と同じバージョンである。
 
 ### 2. 文書の配置先
@@ -63,7 +47,7 @@ context/                   規約と事実
 - `PRD.md`、`design/`、`adr/` を、`docs/PRD.md`、`docs/design/`、`docs/adr/` に移す。古い `apps/web` を消す変更と同じ変更で移す。
 - 機能ごとの Design Doc は、コードの隣に置いたままにする。`docs/design/apps/` と `docs/design/packages/` から、シンボリックリンクで指す。ドキュメントサイトが `docs/` だけを読めば済むためである。
 - `context/` は、ルートに置いたままにする。
-- 古い Design System を全てのページに適用する決定をやめ、全てのページを `packages/ui` のトークンとコンポーネントで構築する。
+- 全てのページを `packages/ui` のトークンとコンポーネントで構築する。
 - サイト全体の動きの規則は、全体の Design Doc の Cross-Cutting Concerns に移す。挿絵の Design Doc は、`packages/ui/src/art/` に移す。
 
 ### 3. E2E の配置先

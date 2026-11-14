@@ -50,7 +50,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - CodeMirror 6 は、プレイグラウンドのツールの入力欄のエディタに使う。色は、`packages/ui` のテーマ変数を読む。
 - CodeMirror 6 は、プレイグラウンドのツールのエディタに使う。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
-- Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。`vp build` は、`apps/playground` の build に使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
+- Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。`vp build` は、`apps/playground` の build に使う。`vp test` は、`packages/ui` のテストに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
   - Oxlint の設定は、ルートの `oxlint.config.ts` に書く。
   - 組み込みのプラグインは、デフォルトの `eslint`、`typescript`、`unicorn`、`oxc` に、`react`、`jsx-a11y`、`import` を加えて有効にする。`plugins` を書くとデフォルトのプラグインが外れるので、デフォルトのプラグインも並べる。
@@ -93,7 +93,12 @@ ADR-0007: [品質のチェックの採否](../docs/adr/0007-quality-gates.md)
 
 ### Vite+ の取り決め
 
-Vite+（`vite-plus`）は、`apps/web` の build を `vp run` でキャッシュすることと、`apps/playground` の dev、build、preview を `vp` で実行することだけに使う。  
+Vite+（`vite-plus`）は、次の 3 つだけに使う。
+
+- `apps/web` の build を `vp run` でキャッシュする。
+- `apps/playground` の dev、build、preview を `vp` で実行する。
+- `packages/ui` のテストを `vp test` で実行する。
+
 ADR-0017: [Vite+ の適用範囲](../docs/adr/0017-vp-run-cache-for-web-build.md)
 
 - `apps/web` の build のコマンドは、`apps/web/vite.config.ts` の `run.tasks` に置く。
@@ -104,21 +109,20 @@ ADR-0017: [Vite+ の適用範囲](../docs/adr/0017-vp-run-cache-for-web-build.md
 - タスクの `cache.output` は、成果物のディレクトリを明示する。
   - `astro build` では、自動の記録が `dist/_astro/` を拾わない。
 - Astro の dev と build は、Astro の CLI が担う。`vp dev` と `vp build` で Astro を置き換えない。
-  - ADR-0003: [monorepo と Vite+ の採否](../docs/adr/0003-monorepo-and-vite-plus.md)
 - `apps/playground` の dev、build、preview は、`vp dev`、`vp build`、`vp preview` で実行する。
   - `pnpm-workspace.yaml` の catalog の `vite` は `@voidzero-dev/vite-plus-core` で、`vite` のコマンドを持たない。
   - `vite build` と書くと、ほかの依存が持ち込んだ別のバージョンの vite のコマンドが、ルートの `node_modules/.bin` から動く。
-- `vp lint`、`vp fmt`、`vp test`、`vp check`、`vp install`、`vp env` は使わない。
-  - Oxlint、Oxfmt、Vitest は devDependencies に宣言したバージョンを実行する。vite-plus の同梱のバージョンとは別に上がる。
+- `vp lint`、`vp fmt`、`vp check`、`vp install`、`vp env` は使わない。`vp test` は、`packages/ui` だけが使う。
+  - Oxlint、Oxfmt と、`packages/ui` のほかの package の Vitest は、devDependencies に宣言したバージョンを実行する。vite-plus の同梱のバージョンとは別に上がる。
   - Node.js のバージョンは mise が固定する。
-- vitest を使う package は、vitest を自分の devDependencies に宣言する。
+- `vp test` を使わずに vitest を使う package は、vitest を自分の devDependencies に宣言する。
   - 宣言しないと、`@vitest/coverage-v8` が vite-plus の依存の vitest 5 に解決され、`test:cov` が失敗する。
-- `vp` は、`apps/web` と `apps/playground` の devDependency の `vite-plus` のものを使う。global の CLI と `voidzero-dev/setup-vp` は要らない。
+- `vp` は、`apps/web`、`apps/playground`、`packages/ui` の devDependency の `vite-plus` のものを使う。global の CLI と `voidzero-dev/setup-vp` は要らない。
 - タスクのキャッシュは `node_modules/.vite/task-cache` にある。消すときは `pnpm --filter @fukuemon/web exec vp cache clean` を実行する。
 - CI は、タスクのキャッシュを run をまたいで持ち越さない。
 - キャッシュの指紋には、環境変数も入る。ルートの `pnpm run build` と `pnpm --filter @fukuemon/web run build` は、互いのキャッシュを使わない。
 
-Vite+ を外す手順は、ADR-0017 の Decision 7 にある。
+`apps/web` から Vite+ を外す手順は、ADR-0017 の Decision 9 にある。
 
 ## Upgrade Checks
 
