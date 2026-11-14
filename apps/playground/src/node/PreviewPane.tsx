@@ -110,6 +110,7 @@ export function PreviewPane() {
     >
       {active && (
         <Tabs
+          density="compact"
           items={ports.map((port) => ({
             id: String(port.port),
             label: String(port.port),
