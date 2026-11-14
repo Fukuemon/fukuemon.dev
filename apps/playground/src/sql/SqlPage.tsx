@@ -29,17 +29,34 @@ function SqlSessionView({ session }: { session: SqlSession }) {
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
+  const saveFailed = useSyncExternalStore(
+    session.saveFailed.subscribe,
+    session.saveFailed.getSnapshot,
+  );
   return (
-    <SqlConsole
-      onChange={session.setQuery}
-      onRun={session.execute}
-      progress={progressLabel(phase, running)}
-      running={running}
-      fileName={session.fileName}
-      status={session.status}
-      stoppedHint="次に実行すると、DB を初期の状態から作り直します。"
-      value={query}
-    />
+    <>
+      {session.canSave && saveFailed && (
+        <Notice isAlert title="SQL を保存できませんでした" tone="warning">
+          ブラウザの保存の容量が足りないか、保存できない状態です。次に SQL
+          を変えたときに、もう一度保存します。
+        </Notice>
+      )}
+      {!session.canSave && (
+        <Notice title="SQL を保存できません" tone="warning">
+          このブラウザでは IndexedDB を使えないので、ページを閉じると変えた SQL が消えます。
+        </Notice>
+      )}
+      <SqlConsole
+        onChange={session.setQuery}
+        onRun={session.execute}
+        progress={progressLabel(phase, running)}
+        running={running}
+        fileName={session.fileName}
+        status={session.status}
+        stoppedHint="次に実行すると、DB を初期の状態から作り直します。"
+        value={query}
+      />
+    </>
   );
 }
 
