@@ -1,5 +1,5 @@
 import type { SqlDatabase, SqlResponse } from "@fukuemon/sql-runtime";
-import { Notice } from "@fukuemon/ui";
+import { EditorFrame } from "@fukuemon/ui";
 import { useState, useTransition } from "react";
 
 import { SqlConsole } from "../sql-console/SqlConsole";
@@ -14,9 +14,20 @@ export function SqlPane() {
   const { runtime, reason } = useRuntime();
   if (reason !== undefined) {
     return (
-      <Notice title="SQL を実行できません" tone="danger">
-        {bootFailureMessage(reason)}
-      </Notice>
+      <div className="size-full p-1">
+        <EditorFrame
+          files={[]}
+          onSelect={() => undefined}
+          state={{
+            kind: "error",
+            title: "SQL を実行できません",
+            message: bootFailureMessage(reason),
+          }}
+          title="SQL"
+        >
+          {() => null}
+        </EditorFrame>
+      </div>
     );
   }
   const database = runtime.database;
@@ -36,7 +47,7 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
     });
 
   return (
-    <div className="size-full overflow-auto p-1">
+    <div className="size-full p-1">
       <SqlConsole
         dense
         fileName="query.sql"

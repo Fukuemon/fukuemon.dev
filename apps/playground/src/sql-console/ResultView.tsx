@@ -1,6 +1,8 @@
 import { Button, Notice, Table, TreeView } from "@fukuemon/ui";
 import type { SqlResponse, SqlResult } from "@fukuemon/sql-runtime";
-import { useId, useState } from "react";
+import { use, useId, useState } from "react";
+
+import { DenseContext } from "./density";
 
 import { type JsonPlan, toPlanView } from "./plan";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageSize, tablePage } from "./result";
@@ -30,20 +32,26 @@ function PlanTree({ plan }: { plan: JsonPlan }) {
 }
 
 function RowsTable({ result }: { result: SqlResult }) {
+  const dense = use(DenseContext);
+  const buttonSize = dense ? "XS" : "S";
+  const text = dense ? "text-body-compact" : "text-body-dense";
   const sizeId = useId();
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(0);
   const range = tablePage(result, pageSize, page);
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}>
       {result.truncated && (
-        <Notice title="結果の行を切りました" tone="warning">
+        <Notice density={dense ? "compact" : "default"} title="結果の行を切りました" tone="warning">
           全体の {result.totalRows.toLocaleString()} 行のうち、先頭の{" "}
           {result.rows.length.toLocaleString()} 行を表示しています。
         </Notice>
       )}
-      <Table caption={`結果（${result.totalRows.toLocaleString()} 行）`}>
+      <Table
+        density={dense ? "compact" : "default"}
+        caption={`結果（${result.totalRows.toLocaleString()} 行）`}
+      >
         <Table.Header>
           <Table.Row>
             {range.columns.map((column) => (
@@ -63,13 +71,13 @@ function RowsTable({ result }: { result: SqlResult }) {
           ))}
         </Table.Body>
       </Table>
-      <div className="flex flex-wrap items-center gap-4">
+      <div className={`flex flex-wrap items-center ${dense ? "gap-2" : "gap-4"}`}>
         <div className="flex items-center gap-2">
-          <label className="text-body-dense text-text" htmlFor={sizeId}>
+          <label className={`${text} text-text`} htmlFor={sizeId}>
             1 ページの行
           </label>
           <select
-            className="h-12 rounded-control bg-surface px-2 text-body-dense text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring"
+            className={`rounded-control bg-surface px-2 text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring ${dense ? "h-7 text-body-compact" : "h-12 text-body-dense"}`}
             id={sizeId}
             onChange={(event) => {
               setPageSize(Number(event.target.value) as PageSize);
@@ -89,18 +97,18 @@ function RowsTable({ result }: { result: SqlResult }) {
             <Button
               disabled={range.page === 0}
               onClick={() => setPage(range.page - 1)}
-              size="S"
+              size={buttonSize}
               variant="secondary"
             >
               前のページ
             </Button>
-            <span className="text-body-dense text-text">
+            <span className={`${text} text-text`}>
               {range.page + 1} / {range.pages}
             </span>
             <Button
               disabled={range.page === range.pages - 1}
               onClick={() => setPage(range.page + 1)}
-              size="S"
+              size={buttonSize}
               variant="secondary"
             >
               次のページ
@@ -141,18 +149,19 @@ export type ResultViewProps = { response: SqlResponse };
 
 /** 1 回の実行の結果。複数の文を実行したときは、最後の文の結果を出す。 */
 export function ResultView({ response }: ResultViewProps) {
+  const density = use(DenseContext) ? "compact" : "default";
   if ("error" in response) {
     const { message, code, position } = response.error;
     // SQLSTATE を持つのは Postgres が返したエラーだけである。読み込みの失敗と異常終了では、取り消した文は無い
     if (code === undefined) {
       return (
-        <Notice isAlert title="実行できませんでした" tone="danger">
+        <Notice density={density} isAlert title="実行できませんでした" tone="danger">
           <span className="font-mono break-all whitespace-pre-wrap">{message}</span>
         </Notice>
       );
     }
     return (
-      <Notice isAlert title="SQL が失敗しました" tone="danger">
+      <Notice density={density} isAlert title="SQL が失敗しました" tone="danger">
         <span className="font-mono break-all whitespace-pre-wrap">{message}</span>
         <span className="block">
           SQLSTATE {code}
@@ -164,7 +173,7 @@ export function ResultView({ response }: ResultViewProps) {
   }
   const last = response.results.at(-1);
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className={`flex min-w-0 flex-col ${density === "compact" ? "gap-2" : "gap-4"}`}>
       <p className="text-caption text-text-secondary">
         {response.results.length} 個の文を {ms(response.ms)} で実行しました。
       </p>

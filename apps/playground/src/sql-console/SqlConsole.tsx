@@ -2,6 +2,7 @@ import type { DatabaseStatus, SqlResponse, Store } from "@fukuemon/sql-runtime";
 import { Button, EditorFrame, Loading, Notice } from "@fukuemon/ui";
 import { useId, useState, useSyncExternalStore } from "react";
 
+import { DenseContext } from "./density";
 import { ResultView } from "./ResultView";
 import { SqlEditor } from "./SqlEditor";
 
@@ -46,41 +47,48 @@ export function SqlConsole({
     setShown((previous) => ({ id: (previous?.id ?? 0) + 1, response }));
   };
 
+  const density = dense ? "compact" : "default";
+  const gap = dense ? "gap-2" : "gap-4";
   return (
-    <div className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}>
-      <div className={`grid min-h-0 has-[.cm-focused]:focus-ring ${dense ? "h-72" : "h-96"}`}>
-        <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
-          {() => (
-            <SqlEditor
-              describedBy={hintId}
-              onChange={onChange}
-              onRun={() => void run()}
-              value={value}
-            />
+    <DenseContext value={dense}>
+      {/* 詰めた密度では、入力欄と操作を上に置いたまま、結果の領域だけを送る */}
+      <div className={`flex min-w-0 flex-col ${gap} ${dense ? "h-full min-h-0" : ""}`}>
+        <div
+          className={`grid min-h-0 shrink-0 has-[.cm-focused]:focus-ring ${dense ? "h-72" : "h-96"}`}
+        >
+          <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
+            {() => (
+              <SqlEditor
+                describedBy={hintId}
+                onChange={onChange}
+                onRun={() => void run()}
+                value={value}
+              />
+            )}
+          </EditorFrame>
+        </div>
+        <div className={`flex shrink-0 flex-wrap items-center ${gap}`}>
+          <Button isLoading={running} onClick={() => void run()} size={dense ? "XS" : "S"}>
+            実行する
+          </Button>
+          <span className="text-caption text-text-secondary" id={hintId}>
+            Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
+            でエディタの外へ移ります
+          </span>
+        </div>
+        <section
+          aria-label="実行の結果"
+          className={`flex min-w-0 flex-col ${gap} ${dense ? "min-h-0 flex-1 overflow-y-auto" : ""}`}
+        >
+          {progress !== undefined && <Loading density={density} label={progress} />}
+          {database.kind === "stopped" && (
+            <Notice density={density} isAlert title="DB が止まりました" tone="danger">
+              {database.reason}。{stoppedHint}
+            </Notice>
           )}
-        </EditorFrame>
+          {shown && <ResultView key={shown.id} response={shown.response} />}
+        </section>
       </div>
-      <div className="flex flex-wrap items-center gap-4">
-        <Button isLoading={running} onClick={() => void run()} size="S">
-          実行する
-        </Button>
-        <span className="text-caption text-text-secondary" id={hintId}>
-          Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
-          でエディタの外へ移ります
-        </span>
-      </div>
-      <section
-        aria-label="実行の結果"
-        className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}
-      >
-        {progress !== undefined && <Loading label={progress} />}
-        {database.kind === "stopped" && (
-          <Notice isAlert title="DB が止まりました" tone="danger">
-            {database.reason}。{stoppedHint}
-          </Notice>
-        )}
-        {shown && <ResultView key={shown.id} response={shown.response} />}
-      </section>
-    </div>
+    </DenseContext>
   );
 }

@@ -85,14 +85,22 @@ function PreviewColumn({ database }: { database: boolean }) {
     <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
       <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
       <Activity mode={tab === "sql" ? "visible" : "hidden"}>
-        <Pane fallback={null}>
+        <Suspense
+          fallback={
+            <div className="size-full p-1">
+              <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
+                {() => null}
+              </EditorFrame>
+            </div>
+          }
+        >
           <SqlPane />
-        </Pane>
+        </Suspense>
       </Activity>
     </div>
   );
   return (
-    <div className="flex size-full min-h-0 flex-col [&>div>[role=tablist]]:mx-1">
+    <div className="flex size-full min-h-0 flex-col">
       <Tabs
         density="compact"
         items={[
