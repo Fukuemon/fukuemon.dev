@@ -39,6 +39,8 @@ const TEXT_PAIRS = [
     ["current-page", bg],
   ]),
   ["primary", "primary-surface"],
+  // トップの庭の夜の霞の上の字。朝、昼、夕の霞は surface と text の組で確かめている
+  ["garden-ink-night", "garden-mist-night"],
   // 主の操作のボタンは、主の色の面に反転の文字を載せる
   ["text-inverse", "primary"],
   ["text-inverse", "primary-hover"],

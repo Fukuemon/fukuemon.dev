@@ -1,32 +1,43 @@
 ---
-// 庭を描く canvas と、庭の中のボタンを置く。html に class stage-on が付いたときだけ、画面の全体に出す。
+// 庭を描く canvas と、庭の中のボタンと、画面の上端と下端の霞を置く。html に class stage-on が付いたときだけ、画面の全体に出す。
 // 和紙に置いたセクションは、場面のバンドルがこの中へ移すので、外側の要素は読み上げから隠さない。
 import { STATIONS } from "../layout";
+
+// 夜の場面は、テーマに依らず暗いので、霞と字を夜の色にする（top-garden の Design Doc の「庭の中のボタンの並び」）
+const mist = "garden-mist from-surface to-transparent in-data-[time=night]:from-garden-mist-night";
+const stop =
+  "-ms-px min-h-11 cursor-pointer border border-border-field bg-surface px-3 text-label text-text first:ms-0 focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
+const tool =
+  "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2 in-data-[time=night]:text-garden-ink-night";
 ---
 
 <div class="garden-stage bg-surface" data-garden-stage>
   <canvas aria-hidden="true"></canvas>
 </div>
+<div class:list={[mist, "garden-mist-top bg-linear-to-b from-65%"]} aria-hidden="true"></div>
+<div class:list={[mist, "garden-mist-bottom bg-linear-to-t from-50% md:from-65%"]} aria-hidden="true">
+</div>
 <nav class="garden-nav" data-garden-nav aria-label="庭の中の移動">
-  <div class="stops">
+  <div class="flex">
     {
       STATIONS.map(({ label }, i) => (
-        <button type="button" class="focus-visible:focus-ring" data-station={i} aria-current={i === 0 ? "true" : "false"}>
+        <button type="button" class={stop} data-station={i} aria-current={i === 0 ? "true" : "false"}>
           {label}
         </button>
       ))
     }
   </div>
-  <div class="tools">
-    <button type="button" class="focus-visible:focus-ring" data-garden-pause aria-pressed="false">動きを止める</button>
-    <button type="button" class="focus-visible:focus-ring" data-garden-plain>文だけで読む</button>
+  <div class="flex gap-4">
+    <button type="button" class={tool} data-garden-pause aria-pressed="false">動きを止める</button>
+    <button type="button" class={tool} data-garden-plain>文だけで読む</button>
   </div>
 </nav>
 <p class="sr-only" data-garden-live aria-live="polite"></p>
 
 <style>
   .garden-stage,
-  .garden-nav {
+  .garden-nav,
+  .garden-mist {
     display: none;
   }
 
@@ -57,14 +68,46 @@ import { STATIONS } from "../layout";
     pointer-events: none !important;
   }
 
-  /* 庭の中のボタン（top-garden の Design Doc の「庭の中のボタンの並び」） */
+  /* 霞は、ヘッダーと庭の中の字のボタンの後ろに敷き、字の後ろを霞の色で埋める。字は霞の色が残る範囲に収める */
+  :global(html.stage-on.garden-ready) .garden-mist {
+    position: fixed;
+    inset-inline: 0;
+    z-index: 25;
+    display: block;
+    pointer-events: none;
+  }
+
+  .garden-mist-top {
+    inset-block-start: 0;
+    block-size: 6.5rem;
+  }
+
+  .garden-mist-bottom {
+    inset-block-end: 0;
+    block-size: 7.5rem;
+  }
+
+  /* ヘッダーは、庭の上に重ね、地を透かして霞の上に置く */
+  :global(html.stage-on.garden-ready [data-site-header]) {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 30;
+    border-color: transparent;
+  }
+
+  :global(html.stage-on.garden-ready[data-time="night"] [data-site-header] a) {
+    color: var(--fd-color-garden-ink-night);
+  }
+
+  /* 狭い画面では、4 つの文へ移るボタンと 2 つの操作を 2 段に分け、広い画面では 1 段に並べる */
   :global(html.stage-on.garden-ready) .garden-nav {
     position: fixed;
-    inset: auto 1.25rem 1.25rem;
+    inset: auto 0.75rem 0.75rem;
     z-index: 30;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    gap: 0.5rem;
     pointer-events: none;
   }
 
@@ -72,65 +115,16 @@ import { STATIONS } from "../layout";
     pointer-events: auto;
   }
 
-  .stops {
-    display: flex;
-  }
-
-  .tools {
-    position: absolute;
-    inset-inline-end: 0;
-    inset-block-end: 0;
-    display: flex;
-    gap: 1rem;
-  }
-
-  button {
-    min-block-size: 2.75rem;
-    padding: 0.5rem 1.125rem;
-    border: 1px solid var(--fd-color-border-field);
-    background: var(--fd-color-surface);
-    color: var(--fd-color-text);
-    font-size: 0.875rem;
-    cursor: pointer;
-  }
-
-  .stops button + button {
-    margin-inline-start: -1px;
-  }
-
-  .stops button[aria-current="true"] {
-    border-color: var(--fd-color-text);
-    background: var(--fd-color-text);
-    color: var(--fd-color-surface);
-  }
-
-  .tools button {
-    padding-inline: 0.25rem;
-    border: 0;
-    background: none;
-    color: var(--fd-color-text);
-    text-decoration: underline;
-    text-underline-offset: 0.25em;
-  }
-
-  .tools button[aria-pressed="true"] {
-    font-weight: 700;
-    text-decoration-thickness: 2px;
-  }
-
-  @media (max-width: 900px) {
+  @media (min-width: 48rem) {
     :global(html.stage-on.garden-ready) .garden-nav {
-      inset-block-end: 0.75rem;
-      flex-direction: column;
-      gap: 0.25rem;
+      inset: auto 1.25rem 1.25rem;
+      flex-direction: row;
+      justify-content: center;
+      gap: 1.5rem;
     }
 
-    .tools {
-      position: static;
-    }
-
-    button {
-      padding-inline: 0.875rem;
+    .garden-mist-bottom {
+      block-size: 6.5rem;
     }
   }
 </style>

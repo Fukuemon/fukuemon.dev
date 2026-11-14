@@ -61,14 +61,14 @@ const row = "border-t border-border py-2";
   /* 庭を出すときは、セクションを和紙に置く。色は時間帯の場面の色で、テーマに依らない（top-garden の Design Doc の「和紙の文」） */
   :global(html.stage-on) [data-garden-card] {
     box-sizing: content-box;
-    inline-size: 25rem;
+    inline-size: 17.5rem;
     max-inline-size: none;
     padding: var(--scene-pad-y) var(--scene-pad-x);
     border: 0;
     background: var(--scene-paper);
     color: var(--scene-text);
     font-size: 1rem;
-    line-height: 1.9;
+    line-height: 1.8;
     opacity: 0;
     transition: opacity 700ms ease;
   }
@@ -115,10 +115,10 @@ const row = "border-t border-border py-2";
     outline-color: currentColor;
   }
 
-  @media (max-width: 640px) {
+  @media (min-width: 48rem) {
     :global(html.stage-on) [data-garden-card] {
-      inline-size: 17.5rem;
-      line-height: 1.8;
+      inline-size: 25rem;
+      line-height: 1.9;
     }
   }
 
