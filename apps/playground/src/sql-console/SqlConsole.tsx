@@ -22,6 +22,8 @@ export type SqlConsoleProps = {
   restarting?: boolean;
   /** 実行のボタンの文。ほかの「実行する」のボタンと同じページに置くときに替える。 */
   runLabel?: string;
+  /** 実行のボタンの見た目。同じ画面にほかの主のボタンがあるときは secondary にする（PRIMARY-ACTION-ONE）。 */
+  runVariant?: "primary" | "secondary";
   /** 入力欄のタブに出すファイルの名前。 */
   fileName: string;
   /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
@@ -45,6 +47,7 @@ export function SqlConsole({
   onRestart,
   restarting = false,
   runLabel = "実行する",
+  runVariant = "primary",
   fileName,
   progress,
   dense = false,
@@ -94,6 +97,7 @@ export function SqlConsole({
             onClick={() => void run()}
             ref={runButtonRef}
             size={dense ? "XS" : "S"}
+            variant={runVariant}
           >
             {runLabel}
           </Button>

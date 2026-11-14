@@ -53,6 +53,7 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
       onRestart={() => void restart()}
       restarting={restarting}
       runLabel={SQL_PANE_RUN_LABEL}
+      runVariant="secondary"
       onRun={run}
       running={running}
       status={database.status}
