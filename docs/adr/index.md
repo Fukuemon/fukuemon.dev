@@ -125,12 +125,7 @@ ADR-0037 の Decision の「Yaegi の WASM は、訪問者が実行のボタン�
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
-ADR-0035（[HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する](0035-record-http-and-console-in-runtime.md)）は、ADR-0054 に置換した。  
-ADR-0050（[訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)）は、ADR-0077 に置換した。  
-ADR-0051（[Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす](0051-node-runtime-boot-and-commands.md)）は、ADR-0076 に置換した。  
-ADR-0069（[Node の実行環境を起動し直すときに、作業ディレクトリを読めなければ、前に起動したときのファイルで起動する](0069-node-runtime-commands-without-visitor-action.md)）は、ADR-0076 に置換した。  
-ADR-0070（[Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける](0070-node-save-targets.md)）は、ADR-0076 と ADR-0077 に置換した。  
-起動し直すときに、リンクと規則に合わないパスを渡さない決定は ADR-0076 に、保存の決定は ADR-0077 にある。
+ADR-0035（[HTTP の流れとコンソールを、実行環境の中の Node の preload とプレビューのスクリプトで記録する](0035-record-http-and-console-in-runtime.md)）は、ADR-0054 に置換した。
 
 ## ADR の間の依存
 
@@ -286,6 +281,8 @@ flowchart TB
   A0049 --> A0046
   A0052 --> A0033
   A0052 --> A0054
+  A0052 --> A0077
+  A0052 --> A0076
   A0053 --> A0030
   A0053 --> A0031
   A0053 --> A0033
@@ -294,6 +291,7 @@ flowchart TB
   A0053 --> A0048
   A0053 --> A0049
   A0053 --> A0052
+  A0053 --> A0076
   A0054 --> A0021
   A0054 --> A0033
   A0055 --> A0010
@@ -311,6 +309,7 @@ flowchart TB
   A0057 --> A0043
   A0057 --> A0048
   A0057 --> A0056
+  A0057 --> A0077
   A0058 --> A0021
   A0058 --> A0041
   A0058 --> A0042
@@ -332,6 +331,7 @@ flowchart TB
   A0063 --> A0044
   A0063 --> A0045
   A0063 --> A0053
+  A0063 --> A0077
   A0064 --> A0008
   A0064 --> A0034
   A0064 --> A0063
@@ -351,8 +351,7 @@ flowchart TB
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  
-置換した ADR への依存は、図に描かない。ADR-0004 と ADR-0026 の Context は、置換した ADR-0006 と ADR-0009 を前提にしている。  
-ADR-0052、ADR-0053、ADR-0057、ADR-0063 の Context は、置換した ADR-0050 か ADR-0051 を前提にしている。
+置換した ADR への依存は、図に描かない。ADR-0004 と ADR-0026 の Context は、置換した ADR-0006 と ADR-0009 を前提にしている。
 
 ## 番号の対応
 
