@@ -1,10 +1,11 @@
 # noindex は、本番の切り替えまで検索エンジンに載せないため。ほかの 3 つはカタログと同じ値にする
-# frame-ancestors は、記事に埋め込む親の origin を決める #101 で足す
+# frame-ancestors は、fukuemon.dev の記事と、play.fukuemon.dev の中のページだけに埋め込みを許す
 /*
   X-Robots-Tag: noindex
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: frame-ancestors 'self' https://fukuemon.dev
 
 # cross-origin isolation は Node の実行環境のパスにだけ返す。全体に返すと、別の origin のページを iframe で埋め込むツールが動かない (ADR-0034)
 /node/*

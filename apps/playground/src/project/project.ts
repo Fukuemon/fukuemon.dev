@@ -1,6 +1,7 @@
 import {
   type PlaygroundProject,
   type PlaygroundTool,
+  isEmbedId,
   isSafeFilePath,
   playgroundProjectSchema,
 } from "@fukuemon/playground-project";
@@ -8,7 +9,12 @@ import {
 export type { PlaygroundTool };
 export { isSafeFilePath };
 
-export const SITE_ORIGIN = "https://fukuemon.dev";
+/**
+ * プロジェクトの JSON と一覧を置く fukuemon.dev の origin。
+ * 開発サーバーでだけ、環境変数 `VITE_SITE_ORIGIN` で替えられる。本番のビルドで読むと、手元の値が配信に入りうる
+ */
+export const SITE_ORIGIN: string =
+  (import.meta.env.DEV ? import.meta.env.VITE_SITE_ORIGIN : undefined) || "https://fukuemon.dev";
 
 /** 開いたプロジェクトと、保存のキーに使う埋め込みの ID。デフォルトのプロジェクトは、埋め込みの ID を持たない。 */
 type OpenedProject<T extends PlaygroundTool> = {
@@ -21,11 +27,8 @@ export type ProjectLoad<T extends PlaygroundTool> =
   | ({ kind: "opened" } & OpenedProject<T>)
   | { kind: "failed"; embedId: string };
 
-// <contentId>/<埋め込みの名前>。`..` や `?` で、JSON の置き場の外を指せないようにする
-const EMBED_ID = /^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/;
-
 /** 形に合う埋め込みの ID か。合わない ID は、取得せず、画面にも出さない。 */
-export const isEmbedId = (value: string) => EMBED_ID.test(value);
+export { isEmbedId };
 
 export const projectUrl = (embedId: string) => `${SITE_ORIGIN}/playground-projects/${embedId}.json`;
 

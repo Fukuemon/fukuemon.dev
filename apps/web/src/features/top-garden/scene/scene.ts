@@ -5,6 +5,7 @@ import {
   Color,
   DirectionalLight,
   Fog,
+  type Vector3,
   HemisphereLight,
   Mesh,
   MeshBasicMaterial,
@@ -293,8 +294,12 @@ function addPond(scene: Scene, C: ScenePalette, R: () => number): void {
 /**
  * 庭の場面を組み立てる。乱数を使う順は試作と同じにしてあり、同じ色からは同じ場面ができる。
  * @param anisotropy 地面のテクスチャの異方性フィルタの値。renderer の上限を渡す
+ * @returns 場面と、和紙を掛ける 4 本の木の、枝を伸ばし始める点。STATIONS の順に並ぶ
  */
-export function buildGarden(C: ScenePalette, anisotropy: number): Scene {
+export function buildGarden(
+  C: ScenePalette,
+  anisotropy: number,
+): { scene: Scene; boughFrom: Vector3[] } {
   const scene = new Scene();
   scene.background = new Color(C.sky); // design-system-allow: three の Color のコンストラクタで、色の値ではない
   scene.fog = new Fog(C.mist, 9, 46);
@@ -337,14 +342,15 @@ export function buildGarden(C: ScenePalette, anisotropy: number): Scene {
     colors: [C.pine, C.pineLight, mixHex(C.pine, C.pineLight, 0.5)],
   };
   const plant = (x: number, z: number, s: number, dir: 1 | -1, leaf: TreeLeaf | null) => {
-    const t = tree(R, C.bark, s, dir, leaf);
-    t.position.set(x, 0, z);
-    scene.add(t);
+    const { group, boughFrom } = tree(R, C.bark, s, dir, leaf);
+    group.position.set(x, 0, z);
+    scene.add(group);
+    return group.position.clone().add(boughFrom);
   };
   plant(-9.0, -11.2, 1.35, 1, pineLeaf);
   plant(6.4, -1.4, 1.0, -1, pineLeaf);
-  for (const { tree: t } of STATIONS) {
-    plant(t.at[0], t.at[1], t.s, t.dir, t.leaf === "pine" ? pineLeaf : C.leaf);
-  }
-  return scene;
+  const stationBoughs = STATIONS.map(({ tree: t }) =>
+    plant(t.at[0], t.at[1], t.s, t.dir, t.leaf === "pine" ? pineLeaf : C.leaf),
+  );
+  return { scene, boughFrom: stationBoughs };
 }

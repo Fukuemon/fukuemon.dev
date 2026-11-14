@@ -7,5 +7,9 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
+# 記事に埋め込む実行環境のプロジェクトは、play.fukuemon.dev のツールのページが読む (ADR-0049)
+/playground-projects/*
+  Access-Control-Allow-Origin: https://play.fukuemon.dev
+
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable

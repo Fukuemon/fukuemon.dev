@@ -1,7 +1,8 @@
 import { getCollection, getEntry, render } from "astro:content";
 import { assertContentGraph } from "./article-graph";
 import { listArticles, planSeriesPages, type SeriesSource } from "./article-list";
-import { type ArticleSeries, planArticlePages } from "./article-pages";
+import { type ArticleSeries, isPublic, planArticlePages } from "./article-pages";
+import { planProjectPages } from "../playground/project-pages";
 
 /** 記事のページが描く値。Astro のエントリの形をページに出さない (docs/adr/0002-content-model-independence.md) */
 export type ArticlePageProps = {
@@ -68,4 +69,14 @@ export async function getSeriesPaths() {
     params: { series: page.name },
     props: page,
   }));
+}
+
+/** プロジェクトの JSON のページの `getStaticPaths` が返す、ページを書き出す記事が埋め込むプロジェクト (ADR-0049) */
+export async function getPlaygroundProjectPaths() {
+  const { articles } = await loadArticlesAndSeries();
+  return planProjectPages(
+    articles
+      .filter((a) => isPublic(a.data.status, import.meta.env.DEV))
+      .map((a) => ({ id: a.id, filePath: a.filePath, contentId: a.data.contentId, body: a.body })),
+  );
 }
