@@ -34,6 +34,7 @@ export default defineConfig({
   },
   integrations: [
     subsetFonts("Zen Old Mincho"),
+    // 等幅の和文は分割を作り直さず、使う字の無い分割の規則だけを外す（packages/ui/DesignDoc.md の書体）
     subsetFonts("BIZ UDGothic", { rebuild: false }),
     playgroundIsolationHeaders(),
     react(),
