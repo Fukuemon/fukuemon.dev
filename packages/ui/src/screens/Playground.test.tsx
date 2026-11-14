@@ -49,15 +49,16 @@ describe("コードを動かす画面", () => {
     );
   });
 
-  it("幅 1280px では、隣り合う領域の罫を 1px 重ね、右の列の左の罫を端末より下の領域でも引く", async () => {
+  it("幅 1280px では、隣り合う領域を 1px 重ね、領域に四方の罫を引かず、角の丸い紙の面にする", async () => {
     await page.viewport(1280, 900);
     render(<LongData />);
-    // 領域は四方に 1px の罫を引き、左と上へ 1px ずらすので、隣の領域の罫と同じ位置に重なる
+    // 領域は左と上へ 1px ずらす。罫は引かず、面の角を丸める（docs/adr/0073-layered-panes-and-radius-in-playground.md）
     expect(rectOf("エディタ").bottom - rectOf("端末").top).toBe(1);
     expect(rectOf("エディタ").right - rectOf("プレビュー").left).toBe(1);
     const consolePane = screen.getByRole("region", { name: "コンソール" });
     expect(consolePane.getBoundingClientRect().top).toBeGreaterThan(rectOf("端末").bottom);
-    expect(getComputedStyle(consolePane).borderLeftWidth).toBe("1px");
+    expect(getComputedStyle(consolePane).borderLeftWidth).toBe("0px");
+    expect(getComputedStyle(consolePane).borderTopLeftRadius).toBe("10px");
     expect(consolePane.getBoundingClientRect().left).toBe(rectOf("プレビュー").left);
   });
 

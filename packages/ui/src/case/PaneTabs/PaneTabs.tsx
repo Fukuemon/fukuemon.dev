@@ -70,9 +70,10 @@ export function PaneTabs({
   const bar = (
     <div
       className={clsx(
-        "flex shrink-0 bg-surface",
-        placement === "bottom" && "border-t border-border",
-        placement === "start" && "flex-col border-r border-border",
+        "flex shrink-0 bg-surface-pane",
+        // 下と左の帯は、地の上に浮かせた角の丸い紙にする。枠の上の帯は、ペインの面と続け、下の罫だけで分ける（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+        placement === "bottom" && "mt-1.5 rounded-sheet",
+        placement === "start" && "mr-1.5 flex-col rounded-sheet",
         placement === "top" && "items-center border-b border-border",
       )}
     >
@@ -80,9 +81,7 @@ export function PaneTabs({
         <div
           className={clsx(
             "flex shrink-0 items-center justify-center",
-            placement === "bottom" && "border-r border-border px-1",
-            placement === "start" && "border-b border-border py-1",
-            placement === "top" && "px-1",
+            placement === "start" ? "py-1" : "px-1",
           )}
         >
           {leading}

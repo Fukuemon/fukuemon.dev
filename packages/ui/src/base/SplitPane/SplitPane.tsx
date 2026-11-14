@@ -89,8 +89,11 @@ export function SplitPane({
         aria-valuemin={MIN}
         aria-valuenow={size}
         className={clsx(
-          "flex shrink-0 touch-none justify-center focus-visible:focus-ring",
-          isHorizontal ? "w-11 cursor-col-resize" : "h-11 cursor-row-resize flex-col",
+          // 押せる幅 8px を、両側のペインの余白 4px ずつに重ねて置き、ペインの間を 8px に保つ。触る端末では 44px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+          "group relative z-10 flex shrink-0 touch-none justify-center focus-visible:focus-ring-inset",
+          isHorizontal
+            ? "-mx-1 w-2 cursor-col-resize pointer-coarse:w-11"
+            : "-my-1 h-2 cursor-row-resize flex-col pointer-coarse:h-11",
         )}
         onKeyDown={handleKeyDown}
         onPointerDown={(event) => {
@@ -110,7 +113,10 @@ export function SplitPane({
       >
         <span
           aria-hidden="true"
-          className={clsx("bg-border forced-fill", isHorizontal ? "w-px" : "h-px")}
+          className={clsx(
+            "bg-border-field opacity-0 transition-opacity group-hover:opacity-100 forced-fill forced-colors:opacity-100",
+            isHorizontal ? "w-0.5" : "h-0.5",
+          )}
         />
       </div>
       <div className="min-h-0 min-w-0 flex-1 overflow-auto">{secondary}</div>

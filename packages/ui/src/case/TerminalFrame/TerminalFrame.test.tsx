@@ -21,7 +21,7 @@ describe("TerminalFrame", () => {
     const status = screen.getByRole("status");
     expect(status).toHaveTextContent("端末を起動しています");
     expect(screen.queryByRole("region", { name: "端末の出力" })).toBeNull();
-    expect(status.closest(".bg-surface")).not.toBeNull();
+    expect(status.closest(".bg-surface-pane")).not.toBeNull();
     expect(status.closest(".bg-code-surface")).toBeNull();
   });
 

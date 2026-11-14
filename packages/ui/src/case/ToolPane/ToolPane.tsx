@@ -42,9 +42,9 @@ export function ToolPaneGroup({ children }: { children: ReactNode }) {
 }
 
 /**
- * コードを動かす画面の 1 つの領域。題の帯、操作、中身を、罫で区切って縦に積む。
+ * コードを動かす画面の 1 つの領域。題の帯、操作、中身を、地の上に重ねた角の丸い紙の面に縦に積む（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  * 中身の空、読み込み中、エラーの状態を、どの領域でも同じ形で出す。
- * 文字と帯は、コードを動かす画面の密度にする（題の帯 32px、題 13px、下の帯 24px と 12px。docs/adr/0062-dense-text-and-targets-in-playground.md）。
+ * 文字と帯は、コードを動かす画面の密度にする（題の帯 28px、題 12px、下の帯 24px と 12px。docs/adr/0062-dense-text-and-targets-in-playground.md）。
  * ToolPane は高さを指定しない。中身だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。
  * スクロールさせる要素は、中身として渡す側が `min-h-0 flex-1 overflow-y-auto` を付けて用意する。
  * フォーカスできるスクロールさせる要素は、`focus-ring-frame` を付けた要素の直下に 1 つだけ置く（docs/adr/0066-inset-focus-ring-in-dense-panes.md）。
@@ -64,13 +64,14 @@ export function ToolPane({
     <section
       aria-labelledby={titleId}
       className={clsx(
-        "flex min-h-0 min-w-0 flex-col border-border bg-surface text-text",
-        "border",
+        "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-pane bg-surface-pane text-text",
+        // 面の塗りが消えるハイコントラストのときだけ、枠でペインを区切る（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+        "forced-colors:border",
         isJoined && "-mt-px -ml-px",
       )}
     >
-      <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-2 border-b border-border pr-1 pl-3">
-        <h2 className="text-label-compact whitespace-nowrap text-text" id={titleId}>
+      <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 pr-1 pl-3">
+        <h2 className="text-compact whitespace-nowrap text-text-secondary" id={titleId}>
           {title}
         </h2>
         {actions !== undefined && state.kind !== "pending" && (
@@ -83,7 +84,7 @@ export function ToolPane({
           "flex min-h-0 min-w-0 flex-1 flex-col",
           surface === "code" && state.kind === "ready"
             ? "bg-code-surface font-mono text-code-compact text-code-text"
-            : "bg-surface",
+            : "bg-surface-pane",
         )}
       >
         {state.kind === "ready" && children}
@@ -104,7 +105,7 @@ export function ToolPane({
         )}
       </div>
       {state.kind === "ready" && footer !== undefined && (
-        <div className="flex min-h-6 items-center justify-between gap-4 border-t border-border px-3 text-compact text-text-secondary">
+        <div className="flex min-h-6 items-center justify-between gap-4 px-3 text-compact text-text-secondary">
           {footer}
         </div>
       )}

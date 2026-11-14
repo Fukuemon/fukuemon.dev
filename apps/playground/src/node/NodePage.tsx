@@ -45,17 +45,27 @@ function BootWait() {
 function Pane({
   fallback,
   editorFocusRing = false,
+  flush = false,
   children,
 }: {
   fallback: ReactNode;
   /** 中の CodeMirror にフォーカスがあるときに、ペインを輪で囲む。 */
   editorFocusRing?: boolean;
+  /** 記事の枠の中で 1 つずつ出すときに、余白と角の丸めを外し、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）。 */
+  flush?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="size-full p-1">
+    <div className={flush ? "size-full" : "size-full p-1"}>
       <div
-        className={`flex size-full flex-col [&>section]:flex-1 ${editorFocusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
+        className={[
+          "flex size-full flex-col [&>section]:flex-1",
+          flush ? "[&>section]:rounded-none" : "rounded-pane",
+          editorFocusRing &&
+            (flush ? "has-[.cm-focused]:focus-ring-inset" : "has-[.cm-focused]:focus-ring"),
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         <Suspense fallback={fallback}>{children}</Suspense>
       </div>
@@ -147,7 +157,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             label: "エディタ",
             icon: EDITOR_ICON,
             content: (
-              <Pane editorFocusRing fallback={editorFallback}>
+              <Pane editorFocusRing fallback={editorFallback} flush={embedded}>
                 <EditorPane />
               </Pane>
             ),
@@ -157,7 +167,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             label: "端末",
             icon: TERMINAL_ICON,
             content: (
-              <Pane fallback={terminalFallback}>
+              <Pane fallback={terminalFallback} flush={embedded}>
                 <TerminalPane />
               </Pane>
             ),
@@ -167,7 +177,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             label: "プレビュー",
             icon: PREVIEW_ICON,
             content: (
-              <Pane fallback={previewFallback}>
+              <Pane fallback={previewFallback} flush={embedded}>
                 <PreviewPane />
               </Pane>
             ),
@@ -231,10 +241,17 @@ function NodeTool({ search, embedded }: { search: string; embedded: boolean }) {
 
 /** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。高さの低い画面では、題を出さない。 */
 export function NodePage({ search, embedded }: { search: string; embedded: boolean }) {
+  const mode = useLayoutMode();
   return (
-    <main className="flex h-dvh min-w-0 flex-col gap-2 p-2 short:gap-0 short:p-0">
+    <main
+      className={
+        embedded && mode !== "wide"
+          ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
+          : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
+      }
+    >
       {!embedded && (
-        <h1 className="font-heading text-heading-md font-semibold text-text short:sr-only">
+        <h1 className="px-1.5 font-heading text-heading-sm font-semibold text-text short:sr-only">
           Node の実行環境
         </h1>
       )}

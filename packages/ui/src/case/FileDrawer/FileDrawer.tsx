@@ -17,7 +17,7 @@ export type FileDrawerProps = {
 
 /**
  * 狭い配置で、ファイルの木を画面の左から重ねて出すモーダルの面。`<dialog>` の `showModal` で開き、外を操作できなくする。
- * 面は横から滑らせず、濃度を上げて出す（docs/adr/0028-radius-shadow-and-brush-motion.md）。
+ * 面は横から滑らせず、濃度を上げて出す（docs/adr/0028-radius-shadow-and-brush-motion.md）。影を付けず、外を覆う薄い墨の面と右の縁の枠でペインと見分ける（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  * 閉じると、ブラウザが開く前にフォーカスのあった要素へフォーカスを戻す。
  */
 export function FileDrawer({
@@ -46,7 +46,7 @@ export function FileDrawer({
     <dialog
       aria-labelledby={titleId}
       className={clsx(
-        "m-0 h-dvh max-h-none w-5/6 max-w-80 border-r border-border-field bg-surface-raised p-0 text-text shadow-raised",
+        "m-0 h-dvh max-h-none w-5/6 max-w-80 rounded-r-sheet border-r border-border-field bg-surface-raised p-0 text-text",
         "open:flex open:animate-fade-in open:flex-col backdrop:animate-fade-in backdrop:bg-overlay",
       )}
       // Esc のキーでは、ブラウザが自分で閉じるのを止め、閉じるかを呼び出す側の isOpen に任せる
