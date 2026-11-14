@@ -15,7 +15,7 @@ export type CheckboxProps = Omit<
  */
 export function Checkbox({ label, ...props }: CheckboxProps) {
   return (
-    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-disabled:cursor-not-allowed has-disabled:text-text-disabled">
+    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-disabled:cursor-not-allowed has-disabled:text-text-disabled has-disabled:forced-off-disabled">
       <span className="relative inline-flex size-5 shrink-0">
         <input
           {...props}

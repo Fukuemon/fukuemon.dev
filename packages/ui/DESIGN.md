@@ -193,7 +193,7 @@ Windows のハイコントラスト（`forced-colors: active`）では、ブラ�
 
 - フォーカスの輪は `outline` なので、ハイコントラストでも残る。`focus-ring` のユーティリティだけで書く。
 - 状態を背景の色か `ring` だけで表すコンポーネントを足すときは、`forced-*` を足す。
-- 状態の違いは、各コンポーネントの `*.forced-colors.test.tsx` が、Chromium を `forced-colors: active` にして確認する。見た目は、カタログの story を `forcedColors: "active"` で開いて見る。
+- 状態の違いは、各コンポーネントの `*.forced-colors.test.tsx` が、Chromium を `forced-colors: active` にして確認する。見た目は、Chromium の DevTools の Rendering で `forced-colors: active` を再現して、カタログの story を開いて見る。
 
 ## 決まっていない選択
 

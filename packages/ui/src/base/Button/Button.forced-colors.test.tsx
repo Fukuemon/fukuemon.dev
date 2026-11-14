@@ -11,7 +11,7 @@ import {
 } from "../../test/forced-colors";
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading } = composeStories(stories);
+const { Primary, PrimaryDisabled, Loading, Small } = composeStories(stories);
 
 const frame = (ui: React.ReactElement) => {
   const { unmount } = render(ui);
@@ -38,6 +38,21 @@ describe("Button の forced-colors: active", () => {
     render(<Loading />);
     const dot = screen.getByRole("button").querySelector("[aria-hidden] > span") as Element;
     expect(style(dot).backgroundColor).not.toBe(canvas());
+  });
+
+  it("S は、枠が増えても、見た目の上下の 2px 外まで押せる", () => {
+    render(
+      <div className="p-4">
+        <Small />
+      </div>,
+    );
+    const button = screen.getByRole("button", { name: "保存" });
+    const rect = button.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    expect([
+      document.elementFromPoint(centerX, rect.top - 1.5),
+      document.elementFromPoint(centerX, rect.bottom + 1.5),
+    ]).toStrictEqual([button, button]);
   });
 
   it("Tab のキーでフォーカスを受けると、フォーカスの輪が出る", async () => {

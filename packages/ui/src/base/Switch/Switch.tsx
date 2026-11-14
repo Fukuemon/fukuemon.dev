@@ -46,7 +46,7 @@ export function Switch({
   const isChecked = checked ?? innerChecked;
 
   return (
-    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-aria-disabled:cursor-not-allowed has-aria-disabled:text-text-disabled">
+    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-aria-disabled:cursor-not-allowed has-aria-disabled:text-text-disabled has-aria-disabled:forced-off-disabled">
       <button
         {...props}
         aria-checked={isChecked}

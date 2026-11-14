@@ -146,17 +146,18 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
 `forced-colors: active` で消える枠と塗りを、システムの色で引くユーティリティである。通常の表示には何も変わらない。
 足す規則は DESIGN.md の「ハイコントラスト」にある。
 
-| ユーティリティ                                                                                 | 描くもの                                                                                                   |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `forced-frame`                                                                                 | `CanvasText` の 1px の枠。`ring` で枠を表す要素（`Button`、`Switch`、`Checkbox`）に付ける                  |
-| `forced-on`                                                                                    | 選択とオンの塗りと、その上の文字と印                                                                       |
-| `forced-off-disabled`、`forced-on-disabled`                                                    | 無効の要素の枠、文字、塗り（`GrayText`）                                                                   |
-| `forced-fill`、`forced-fill-on`                                                                | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯）の塗り                      |
-| `forced-mark`、`forced-mark-disabled`                                                          | `Checkbox` のチェックの印の色                                                                              |
-| `forced-edge-hidden`                                                                           | 透明の枠（選んでいない項目の左の枠）を、背景の色にして隠す。ハイコントラストでは、透明の枠が見える色になる |
-| `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-off-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                                  |
+| ユーティリティ                                                                                 | 描くもの                                                                                                                            |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `forced-frame`                                                                                 | `CanvasText` の 1px の枠。背景の色か `ring` で境界を表す要素（`Button`、`Switch`、`Checkbox`）に付ける                              |
+| `forced-on`                                                                                    | 選択とオンの塗りと、その上の文字と印                                                                                                |
+| `forced-on-row`                                                                                | 文字を持つ行（`TreeView`）の選択。文字は `CanvasText` のまま、塗りと枠を選択の色にする。Chromium が文字の下に Canvas の板を敷くため |
+| `forced-off-disabled`、`forced-on-disabled`                                                    | 無効の要素の枠、文字、塗り（`GrayText`）                                                                                            |
+| `forced-fill`、`forced-fill-on`                                                                | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯）の塗り                                               |
+| `forced-mark`、`forced-mark-disabled`                                                          | `Checkbox` のチェックの印の色                                                                                                       |
+| `forced-edge-hidden`                                                                           | 透明の枠（選んでいない項目の左の枠）を、背景の色にして隠す。ハイコントラストでは、透明の枠が見える色になる                          |
+| `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-off-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                                                           |
 
-- 選択とオンの色は、変数 `--fd-forced-on` と `--fd-forced-on-text` が持つ。値は `SelectedItem` と `SelectedItemText` で、使えないブラウザでは `Highlight` と `HighlightText` になる。
+- 選択とオンの色は、変数 `--fd-forced-on` と `--fd-forced-on-text` が持つ。この 2 つはセマンティックトークンではなく、`:root` に置く `forced-colors: active` 専用の変数である。値は `SelectedItem` と `SelectedItemText` で、使えないブラウザでは `Highlight` と `HighlightText` になる。
 - ブラウザは、システムの色以外の値を置き換える。通常の色の指定（`bg-primary` など）に勝つよう、`forced-*` の宣言は `!important` にしている。
 - `loading-dots` は、ユーティリティの中で点を `CanvasText` で塗る。`forced-*` を足す必要はない。
 - `forced-frame` は 1px の枠を足す。`absolute` の子を持つ要素では、子の位置を 1px 戻す。`Switch` のつまみは `forced-colors:left-px` で戻している。

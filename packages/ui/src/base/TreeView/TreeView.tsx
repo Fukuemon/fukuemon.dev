@@ -189,7 +189,7 @@ export function TreeView({
               "flex items-start gap-1 rounded-control pr-2 transition-colors",
               isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
               isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
-              "aria-selected:bg-primary-surface aria-selected:forced-on",
+              "aria-selected:bg-primary-surface aria-selected:forced-on-row",
               isBodyCompact
                 ? "border-l-2 border-transparent forced-edge-hidden aria-selected:border-primary"
                 : "aria-selected:font-bold",

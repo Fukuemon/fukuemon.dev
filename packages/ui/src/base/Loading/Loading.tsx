@@ -22,7 +22,7 @@ export function Loading({ label, density = "default" }: LoadingProps) {
     >
       <span
         aria-hidden="true"
-        className="relative h-0.5 w-6 shrink-0 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-primary"
+        className="relative h-0.5 w-6 shrink-0 overflow-hidden bg-border forced-fill after:absolute after:inset-0 after:animate-loading after:bg-primary after:forced-fill-on"
       />
       {label}
     </div>
