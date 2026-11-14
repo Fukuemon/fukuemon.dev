@@ -9,6 +9,24 @@ const RENDER_SEED = 11;
 
 const round1 = (v: number) => String(Math.round(v * 10) / 10);
 
+/**
+ * 点の列を、0.1 の単位に丸めた折れ線の `d` にする。
+ * 2 点目からは前の点からの差（`l`）で書く。HTML の転送量を減らし、トップの LCP を早めるためである。
+ * 差は丸めた座標どうしで取るので、絶対の座標で書いたときと同じ点を通る。
+ */
+export function pathData(pts: readonly (readonly [number, number])[]): string {
+  const tenths = pts.map(([x, y]) => [Math.round(x * 10), Math.round(y * 10)] as const);
+  let d = "";
+  tenths.forEach(([x, y], i) => {
+    const [px, py] = i === 0 ? [0, 0] : tenths[i - 1]!;
+    const dx = (x - px) / 10;
+    const dy = (y - py) / 10;
+    if (i === 0) d += `M${dx} ${dy}`;
+    else d += `${i === 1 ? "l" : dx < 0 ? "" : " "}${dx}${dy < 0 ? "" : " "}${dy}`;
+  });
+  return d;
+}
+
 export interface RenderedLayers {
   /** 層ごとの、線 1 本を包む `<g>` の文字列の列 */
   readonly layers: Readonly<Record<Layer, readonly string[]>>;
@@ -35,7 +53,7 @@ export function renderStrokes(strokes: readonly Stroke[], scale = TIME_SCALE): R
       const edge = nb === 1 ? 0 : Math.abs(b / (nb - 1) - 0.5) * 2;
       const i0 = Math.round(n * edge * st.tin * (0.3 + 0.5 * Q())),
         i1 = n - Math.round(n * edge * st.tout * (0.3 + 0.6 * Q()));
-      let d = "";
+      const pts: [number, number][] = [];
       for (let i = i0; i <= i1; i += step) {
         const u = i / n,
           pt = p[i]!,
@@ -45,14 +63,11 @@ export function renderStrokes(strokes: readonly Stroke[], scale = TIME_SCALE): R
           dy = c[1] - a[1],
           len = Math.hypot(dx, dy) || 1;
         const wf = Math.pow(Math.min(1, u / st.tin) * Math.min(1, (1 - u) / st.tout), 0.6);
-        d +=
-          (d ? "L" : "M") +
-          round1(pt[0] - (dy / len) * off * wf) +
-          " " +
-          round1(pt[1] + (dx / len) * off * wf);
+        pts.push([pt[0] - (dy / len) * off * wf, pt[1] + (dx / len) * off * wf]);
         // 最後の点を必ず通る。
         if (i < i1 && i + step > i1) i = i1 - step;
       }
+      const d = pathData(pts);
       const width = nb === 1 ? st.w * 0.55 + st.lw * 0.5 : (st.w / nb) * 1.15 + st.lw * 0.4;
       const alpha = Math.min(1, st.a * (0.62 + 0.38 * Q()) * (nb === 1 ? 0.9 : 0.8));
       parts.push(
