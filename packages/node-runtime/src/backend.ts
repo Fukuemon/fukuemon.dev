@@ -40,7 +40,7 @@ export type BackendInstance = {
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   /** 待ち受けているポートの全体を、変わるたびに知らせる。 */
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
-  /** DB のプロセスのスクリプトと、依存の package.json を置いたディレクトリの、絶対パス。 */
+  /** DB を使うときに、DB のプロセスのスクリプト、依存の package.json、preload を置くディレクトリの、絶対パス。 */
   guestDirectory: string;
   teardown: () => Promise<void>;
 };

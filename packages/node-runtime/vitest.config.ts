@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      include: ["src/**/*.ts"],
+      include: ["src/**/*.ts", "vite.ts"],
       // WebContainers はブラウザでしか動かないので、WebContainers を動かす webcontainer/index.ts と、それを import する index.ts は対象に入れない
       // DB のプロセスのスクリプトは、実行環境の中の Node でだけ動く
       exclude: [

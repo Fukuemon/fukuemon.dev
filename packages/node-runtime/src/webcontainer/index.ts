@@ -21,9 +21,9 @@ import { toTree } from "./tree";
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
-const KEEP_ALIVE_FILE = `${RUNTIME_DIRECTORY}/keep-alive.cjs`;
 // DB のプロセスのスクリプトと、npm install で入れる依存を置く
 const DB_DIRECTORY = `${RUNTIME_DIRECTORY}/db`;
+const KEEP_ALIVE_FILE = `${DB_DIRECTORY}/keep-alive.cjs`;
 
 // プレビューは WebContainers が割り当てる別の origin で開くので、同じ origin の権限を渡しても、このページには届かない
 const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-modals allow-popups";

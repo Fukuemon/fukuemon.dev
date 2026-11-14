@@ -90,7 +90,7 @@ packages/
   sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
   node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
     webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
-    guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
+    guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く db-package.json、標準入出力の形式）
   go-runtime/src/         GoRunner の型、import のパスと、テストを持つ package を求める関数
     worker/               Yaegi を Web Worker で動かす GoRunner の実装、Web Worker の fetch を差し替える処理
   go-runtime/go/          WASM にする Go のコード。Yaegi で訪問者のファイルを実行する処理
@@ -117,6 +117,8 @@ packages/
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
   - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
+  - `node-runtime/` の直下と `webcontainer/` が `guest/` から値を import するのは、標準入出力の形式を書く `db-protocol.ts` だけである。このファイルはブラウザと Node の両方で読むので、どちらの API も使わない。
+  - Vite の plugin は、package の直下の `vite.ts` に置く。`guest/` と `vite.ts` は、Node の型を読む `tsconfig.node.json` で型を確認する。
 
 次の図は、`apps/playground/src/` のディレクトリと package の、互いの間で許す import の向きを示す。矢印の無い組は、import しない。
 
@@ -166,15 +168,17 @@ flowchart TB
 ```
 
 - `src/node/`、`sql-console/`、`node-runtime/` が `@fukuemon/sql-runtime` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
+  - `sql-console/` のテストだけは、`toJsonResponse` を値で import する。DB のプロセスが JSON で送ったセルと、Web Worker の実装のセルが、同じ文字列で表に出ることを確認するためである。
   - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数を import する。`guest/` は、PGlite を Web Worker で動かす `SqlDatabase` の実装のエントリーポイントを import しない。
 - `node-runtime/` は、`project/` を import しない。`BootOptions` は、プロジェクトの型を使わない。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
-- Oxlint の `no-restricted-imports` が止める import は、次の 3 つ。
+- Oxlint の `no-restricted-imports` が止める import は、次の 4 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
   - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` の間の import
   - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
+  - `packages/node-runtime/src/guest/` からの、`node-runtime/` の直下、`webcontainer/`、`@fukuemon/sql-runtime/worker` の import
 
 ### NodeRuntime
 
@@ -188,7 +192,7 @@ type Store<T> = {
 
 type BootOptions = {
   files: Readonly<Record<string, string>>;
-  database: boolean;
+  database?: boolean;
   initialSql?: string;
 };
 
@@ -557,7 +561,7 @@ sequenceDiagram
   - `PLAYGROUND_PORTS_FILE`: 待ち受けたポートの URL を書くファイルのパス。
   - DB を使うプロジェクトのときは、`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`。
 - 待ち受けたポートの URL を書くファイルは、`/tmp/fukuemon-playground/ports.json` である。中身は、ポートの番号をキー、URL を値にした 1 行の JSON（`{"3000":"https://..."}`）で、ポートが開くか閉じるたびに書き直す。ポートが 1 つも無いときは `{}` である。
-  - `webcontainer/` は、このファイルを、実行環境の中の Node で書く。書く中身を環境変数で渡すので、中身を 1 行にする。WebContainers は、改行を含む環境変数の値を、最初の行で切る。
+  - `webcontainer/` は、このファイルを、実行環境の中の Node で書く。書く中身を環境変数で渡す。WebContainers は、改行を含む環境変数の値を最初の行で切るので、中身を base64 の 1 行にして渡す。
 - `public/_headers` は、Cloudflare でだけ働く。`apps/playground` の `vite.config` は、`vp dev` と `vp preview` でも、`/node/` に同じ isolation のヘッダを返す。
 
 ### SQL

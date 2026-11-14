@@ -1,10 +1,12 @@
 import { build } from "rolldown";
 import type { Plugin } from "vite";
 
+import dbPackage from "./src/guest/db-package.json" with { type: "json" };
+
 const QUERY = "?bundle";
 
-// 実行環境の中で npm install するので、束ねない。バージョンは src/guest/db-package.json にある
-const EXTERNAL = ["@electric-sql/pglite", "@electric-sql/pglite-socket"];
+// DB のプロセスの依存は、実行環境の中で npm install するので、束ねない
+const EXTERNAL = Object.keys(dbPackage.dependencies);
 
 /**
  * `<path>?bundle` の import を、path を 1 つの ES module に束ねた文字列にする。

@@ -5,7 +5,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { guestBundle } from "../../vite";
 import { parseSqlRequest } from "./db-protocol";
 
 const readJson = (path: string) =>
@@ -106,37 +105,5 @@ describe("keep-alive.cjs", () => {
     } finally {
       server.close();
     }
-  });
-});
-
-describe("guestBundle", () => {
-  it("DB のプロセスのスクリプトを、PGlite と pglite-socket を除いて 1 つの文字列に束ねる", async () => {
-    const plugin = guestBundle();
-    const watched: string[] = [];
-    const load = plugin.load as (this: unknown, id: string) => Promise<string | null>;
-    const id = `${new URL("./db-server.ts", import.meta.url).pathname}?bundle`;
-    const module = await load.call({ addWatchFile: (file: string) => watched.push(file) }, id);
-    const source = String(
-      JSON.parse(module?.replace(/^export default /, "").replace(/;$/, "") ?? '""'),
-    );
-    expect({
-      pglite: source.includes('from "@electric-sql/pglite"'),
-      socket: source.includes('from "@electric-sql/pglite-socket"'),
-      workspace: source.includes("@fukuemon/sql-runtime"),
-      prefix: source.includes("@@fd:sql "),
-      watchesSqlRuntime: watched.some((file) => file.endsWith("sql-runtime/src/index.ts")),
-    }).toStrictEqual({
-      pglite: true,
-      socket: true,
-      workspace: false,
-      prefix: true,
-      watchesSqlRuntime: true,
-    });
-  });
-
-  it("?bundle の付かない import は、扱わない", async () => {
-    const plugin = guestBundle();
-    const load = plugin.load as (this: unknown, id: string) => Promise<string | null>;
-    expect(await load.call({}, "/x.ts")).toBeNull();
   });
 });

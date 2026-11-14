@@ -264,9 +264,14 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - テストは、色を混ぜる式を、色の値で確認する。
 - 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
   - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
-- Oxlint の `import/default` は、`?worker&url` の import の 1 行だけで抑制する。
-  - 対象は `apps/web/src/features/top-garden/stage/TopStageScript.astro` である。
-  - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+- Oxlint の `import/default` は、次の 2 か所の import の 1 行だけで抑制する。
+  - `apps/web/src/features/top-garden/stage/TopStageScript.astro` の `?worker&url` の import。Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+  - `packages/node-runtime/src/webcontainer/index.ts` の `?bundle` の import。
+    `packages/node-runtime/vite.ts` の plugin が、束ねたスクリプトを文字列の default で返す。Oxlint は、この接尾辞を解決できない。
+- Oxlint の `typescript/triple-slash-reference` は、`packages/node-runtime/src/webcontainer/index.ts` の 1 行だけで抑制する。`?bundle` の型の宣言を、このファイルを import する `apps/playground` の tsc にも読ませるためである。
+- Oxlint の `typescript/unbound-method` は、preload で Node の関数を包む行だけで抑制する。
+  - 対象は、実行環境の中の Node が読む `packages/node-runtime/src/guest/` の `.cjs` である。
+  - 包んだ関数から、元の関数を `this` を付けて呼ぶためである。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 
