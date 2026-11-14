@@ -53,6 +53,7 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `src/features/top-garden/stage/` の、季節と時間帯を返す `season.ts`、最初の訪問かを返す `visit.ts`、季節と時間帯を `html` に書き庭を出すかを決める `stage.ts`
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
 - `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
+- `src/lib/subset-fonts.ts`（ビルドの後に、見出しの書体のファイルを、使う字だけに作り直す）
 
 `src/lib/` では、次のモジュールも対象。
 
