@@ -286,7 +286,8 @@ ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐっ
 
 ### 配信
 
-deploy と apply の条件は [context/operations.md](../../context/operations.md#deployment-conditions) にある。
+deploy と apply の条件は [context/operations.md](../../context/operations.md#deployment-conditions) にある。  
+ドキュメントサイトの deploy の条件は、[ADR-0032](../adr/0032-docs-site-behind-access.md) にある。
 
 ### 検証
 
@@ -314,6 +315,6 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 
 ## Repository Layout
 
-package とディレクトリの境界と、新しいコードの置き場は [context/codebase.md](../../context/codebase.md#module-boundaries) にある。  
-文書の置き場は、次の ADR にある。  
+package とディレクトリの境界は [context/codebase.md の Module Boundaries](../../context/codebase.md#module-boundaries) に、新しいコードの置き場は [Placement Rules](../../context/codebase.md#placement-rules) にある。  
+機能ごとの Design Doc を指すシンボリックリンクの置き場は、次の ADR にある。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../adr/0029-repository-layout-like-buddy.md)

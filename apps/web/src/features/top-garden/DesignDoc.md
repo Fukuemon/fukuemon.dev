@@ -28,6 +28,7 @@ verified_commit: unverified
 持つもの。
 
 - コードの構成と、ディレクトリの間の import の向き
+- 同じシードから同じ絵を作るための、乱数を使う順と、墨の絵の SVG のサイズの上限
 - イントロの各段の時間
 - 季節と時間帯の決め方
 - 時間帯ごとの場面の色と、季節ごとの葉とパーティクル
@@ -45,8 +46,8 @@ verified_commit: unverified
 
 ### コードの構成
 
-このディレクトリは、墨の絵の SVG を作るコード、立体の庭を three で描くコード、その両方が読む庭の配置、トップのプロフィールの本文を持つ。
-墨の絵の SVG を作るモジュールは、`layout.ts` と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`、`ink-trees.ts` の 5 つ。
+`apps/web/src/features/top-garden/` は、墨の絵の SVG を作るコード、立体の庭を three で描くコード、その両方が読む庭の配置、トップのプロフィールの本文を持つ。
+墨の絵の SVG を作るモジュールは、`layout.ts` と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`、`ink-trees.ts` の 5 つである。
 どれも React と DOM に依らない TypeScript で書く。
 ビルドのときに Node で動く。
 `ink/InkGate.astro` は、ヘッダーのロゴと同じ `sign.svg` を [`components/sign/`](../../components/sign/README.md) から読む。
