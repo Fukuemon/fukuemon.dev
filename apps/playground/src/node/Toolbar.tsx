@@ -73,7 +73,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             <Button
               disabled={busy || running}
               onClick={() => setConfirming(true)}
-              size="XS"
+              size="S"
               variant="secondary"
             >
               初期の状態に戻す
@@ -84,12 +84,12 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             isLoading={busy}
             onClick={() => void session.restart()}
             ref={restartRef}
-            size="XS"
+            size="S"
             variant="secondary"
           >
             起動し直す
           </Button>
-          <Button disabled={busy} isLoading={running} onClick={run} size="XS">
+          <Button disabled={busy} isLoading={running} onClick={run} size="S">
             実行する
           </Button>
         </div>
