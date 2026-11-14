@@ -259,6 +259,8 @@ export function TreeView({
     paddingInlineStart: `${(level - 1) * 1.5 + (isCompact ? 0 : 0.5)}rem`,
   });
   const markClassName = clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5");
+  // 欄にフォーカスがある間は、欄のある行に、ほかの行と同じフォーカスの輪を引く
+  const editorRowFocus = isCompact ? "focus-within:focus-ring-inset" : "focus-within:focus-ring";
   const chevron = (isBranch: boolean, isOpen: boolean) => (
     <span className={markClassName}>
       <svg
@@ -296,6 +298,7 @@ export function TreeView({
           "aria-selected:bg-primary-surface",
           isBodyCompact ? "aria-selected:border-primary" : "aria-selected:font-bold",
           (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
+          isRenaming && editorRowFocus,
         )}
         key={node.id}
         onClick={(event) => {
@@ -334,7 +337,7 @@ export function TreeView({
         // 欄の行は、木の項目と同じ字下げと印で描く。項目ではないので、選択とキーの操作を持たない
         <li
           aria-level={parent ? parent.level + 1 : 1}
-          className={rowClassName}
+          className={clsx(rowClassName, editorRowFocus)}
           // 項目の id と重ならない key にする
           key={"\0editor"}
           role="treeitem"

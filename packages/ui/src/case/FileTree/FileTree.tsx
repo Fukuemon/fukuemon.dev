@@ -133,7 +133,8 @@ function NameField({
   };
 
   return (
-    <span className="flex flex-col">
+    // 欄の枠と余白の分だけ左へ寄せ、欄の中の名前を、ふだんの行の名前と同じ位置に描く
+    <span className="-ml-1 flex flex-col">
       <input
         aria-describedby={error === undefined ? undefined : errorId}
         aria-invalid={error === undefined ? undefined : true}
@@ -141,7 +142,7 @@ function NameField({
         autoComplete="off"
         className={clsx(
           "h-5 w-full min-w-0 rounded-control border bg-surface px-1 text-body-compact text-text outline-none",
-          error === undefined ? "border-primary" : "border-danger",
+          error === undefined ? "border-border-field" : "border-danger",
         )}
         onBlur={() => {
           // ほかのウィンドウへ移ったときは、戻ると欄にフォーカスが戻るので、確定もやめるもしない
@@ -157,7 +158,11 @@ function NameField({
         value={value}
       />
       {error !== undefined && (
-        <span className="pt-0.5 text-compact text-danger" id={errorId}>
+        <span className="flex items-center gap-1 pt-2 text-compact text-danger" id={errorId}>
+          <svg aria-hidden="true" className="shrink-0" height="16" viewBox="0 0 16 16" width="16">
+            <circle cx="8" cy="8" fill="none" r="7" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M8 4v5M8 11v1" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
           {error}
         </span>
       )}
