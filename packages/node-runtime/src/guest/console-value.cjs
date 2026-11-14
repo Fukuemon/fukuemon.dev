@@ -25,6 +25,7 @@ const isNative = (fn) => {
 };
 
 /** 組み込みの getter を、訪問者が上書きしたメソッドを通さずに呼ぶ。 */
+// oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
 const builtinGetter = (proto, key) => Object.getOwnPropertyDescriptor(proto, key).get;
 const mapSize = builtinGetter(Map.prototype, "size");
 const setSize = builtinGetter(Set.prototype, "size");
@@ -84,6 +85,7 @@ function toConsoleValues(args, describe) {
       const found = Object.getOwnPropertyDescriptor(target, key);
       if (!found) continue;
       if ("value" in found) return found.value;
+      // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
       if (typeof found.get !== "function" || !isNative(found.get)) return undefined;
       try {
         return found.get.call(value);
