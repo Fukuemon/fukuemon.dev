@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -39,13 +39,17 @@
   - `FileTree` の名前の欄。輪は欄の 1px の枠に重ねて、欄の内側に引く。
     - 名前に誤りがあるときも、輪は墨のままにする。誤りは、欄の下の印と理由の文と、`aria-invalid` で示す。
   - `Tabs` の `density="compact"` のタブと、マウスで押す閉じるボタン
+  - `PaneTabs` のタブ
+  - `FileDrawer` の閉じるボタン
   - `HttpExchangeList` の行
   - `ConsoleEntryList` の行
   - 分割の幅を変える `SplitPane` の仕切り
+  - Node の実行環境の画面（`NodePage.tsx`）で、ペインの端まで広げたエディタを囲む要素。エディタがフォーカスを持つ間（`has-[.cm-focused]`）、内側に輪を引く。
+  - Go の実行環境の画面（`GoPage.tsx`）の、出力をスクロールさせる `role="log"` の要素
   - ペインの全体を占める、フォーカスできるスクロールする領域。当たるのは、カタログの見本のエンジン（`DummyEngine`）である。
     - この領域には `focus-ring-inset` を付けない。領域自身に輪を引かない。中の行や帯の背景が、領域自身の輪を上から塗って欠けさせるためである。領域を 1 つだけ直下に置く外側の要素に `focus-ring-frame` を付け、直下の領域にフォーカスが来たときに、外側の要素の `::after` へ同じ輪を内側に重ねて引く。
 - `ConsoleEntryList` の行の領域はフォーカスさせず、`focus-ring-frame` を付けない。輪は、フォーカスを受ける行に `focus-ring-inset` で引く。行の領域と行の両方が Tab のキーの順に入ると、キーボードで操作する人が、同じ一覧で 2 回止まるためである。
-- プレイグラウンドの実物のエディタと端末のエンジンは、コードを動かす画面の ToolPane に入れるときに、同じ内側の輪にする。付ける作りは、エンジンごとに、その画面を作る issue（#95、#99、#100）で決める。
+- プレイグラウンドの実物のエディタと端末のエンジンは、コードを動かす画面の ToolPane に入れるときに、同じ内側の輪にする。付ける作りは、エンジンごとに、その画面を作る issue（#95、#99、#100）で決める。Node のエディタと Go の端末は、上の一覧のとおりにした。
 - ほかの要素は、`focus-ring` のままにする。
 - 理由は次のとおり。
   - 輪が要素の中に収まるので、隣の行に掛からず、領域の端で切れない。行の密度も変えずに済む。
@@ -69,11 +73,12 @@
   - コントラスト: `pnpm run check:contrast` が、輪の色と面の組を 3:1 以上で確認する。組には、選んだ行（`primary-surface`）、コードの面、`warning-surface`、`danger-surface` を含み、ライトとダークの 108 組が届いた。
   - 隠れ: 外側の要素の `::after` が最前面に出るので、カーソルのある行の帯と行番号の列に隠れない。画面で確認した。
   - 画素単位の、フォーカスの前後の同じ画素のコントラストは、測っていない（未確認）。面の色との組で代える。
-- 実物のエディタと端末のエンジンの現状は、次のとおり。どちらも、この ADR の対象のコンポーネントには入っていない。
-  - SQL のエディタ（`apps/playground/src/sql-console/SqlConsole.tsx`）は、囲む要素に `has-[.cm-focused]:focus-ring` を付け、輪を外へ引く。`.cm-focused` は、フォーカスを受ける `.cm-content` の外側の要素に付く。
+- 実物のエディタと端末のエンジンの現状は、次のとおり。
+  - SQL のエディタ（`apps/playground/src/sql-console/SqlConsole.tsx`）は、囲む要素に `has-[.cm-focused]:focus-ring` を付け、輪を外へ引く。この ADR の対象には入っていない。`.cm-focused` は、フォーカスを受ける `.cm-content` の外側の要素に付く。
     - そのため、`focus-ring-frame` の「直下の `:focus-visible`」の条件に当たらない。
-  - Go の端末（`apps/playground/src/go/GoPage.tsx`）は、スクロールする `pre` に `focus-visible:focus-ring` を付け、輪を外へ引く。この `pre` は、`focus-ring-frame` の直下に置けば、同じ内側の輪になる。
-  - 実物のエンジンを ToolPane に入れたときの輪の見た目は、撮っていない（未確認）。
+  - Node の実行環境の画面のエディタ（`apps/playground/src/node/NodePage.tsx`）は、ペインの端まで広げたときだけ、輪を内側に引く。囲む要素に `has-[.cm-focused]:focus-ring-inset` を付ける。広げないときは `has-[.cm-focused]:focus-ring` のままにする。
+  - Go の端末（`apps/playground/src/go/GoPage.tsx`）は、出力をスクロールさせる `role="log"` の `div` に `focus-visible:focus-ring-inset` を付け、輪を内側に引く。
+  - Node と Go の画面の輪の見た目は、撮っていない（未確認）。
 - 選んだ木の行（`primary-surface`）の上でも、墨の輪は見えた。輪と面の組は、ADR-0061 でコントラストのチェックに入れてある。
 - コンソールの行が 0 件のとき（フィルタで全ての行を隠したとき）に、行の領域が Tab のキーの順に入らないかは確認していない（未確認）。
 - Safari と Firefox での確認はしていない。
