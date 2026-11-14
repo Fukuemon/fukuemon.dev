@@ -1,0 +1,11 @@
+# ドキュメントサイトを組む Zensical を uv で入れる。Python のパッケージは作らない (ADR-0032)
+[project]
+name = "fukuemon-dev-docs"
+version = "0.0.0"
+requires-python = ">=3.13"
+
+[dependency-groups]
+dev = ["mdx-truly-sane-lists>=1.3", "zensical>=0.1.1"]
+
+[tool.uv]
+package = false

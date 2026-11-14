@@ -48,6 +48,25 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
+      # GitHub は secret の値の全体だけをマスクする。リストの 1 件だけがログに出たときもマスクするよう、1 件ずつ登録する
+      # 値が、文字列だけを要素に持つ 1 件以上の JSON の配列でないときに、マスクしないまま plan へ進まないよう止める
+      # jq のエラーメッセージは値の先頭を含み、まだマスクしていないので捨てる
+      - name: メールアドレスをマスクする
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! emails=$(jq -er 'if type == "array" and length > 0 and all(.[]; type == "string") then .[] else error("invalid") end' <<< "$DOCS_ALLOWED_EMAILS" 2>/dev/null); then
+            echo "::error::DOCS_ALLOWED_EMAILS が、1 件以上の文字列を持つ JSON のリストではありません。"
+            exit 1
+          fi
+          # API が小文字にして返した値もマスクする
+          while IFS= read -r email; do
+            echo "::add-mask::$email"
+            echo "::add-mask::$(tr '[:upper:]' '[:lower:]' <<< "$email")"
+          done <<< "$emails"
+        env:
+          DOCS_ALLOWED_EMAILS: ${{ secrets.DOCS_ALLOWED_EMAILS }}
+
       - name: plan
         run: pnpm run infra:plan -input=false -out=tfplan
         env:
@@ -58,6 +77,8 @@ jobs:
           TF_VAR_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_zone_name: ${{ vars.ZONE_NAME }}
+          # メールアドレスの一覧。値は ["a@example.com"] の形の、JSON として読める 1 行のリストで登録する
+          TF_VAR_docs_allowed_emails: ${{ secrets.DOCS_ALLOWED_EMAILS }}
 
       # 変数は plan file が持つため TF_VAR を渡さない
       - name: apply

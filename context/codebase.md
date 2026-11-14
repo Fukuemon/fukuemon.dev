@@ -21,7 +21,9 @@ verified_commit: ab2da87
 - 共有の設定は、tsconfig を `@fukuemon/config` に、Oxlint の設定をルートの `oxlint.config.ts` に、vitest の設定を各 package に置く。
 - `infra/` は、どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
 - `apps/` には、1 つの Worker に deploy するアプリを 1 つずつ置く。
-  サイトは `apps/web`、プレイグラウンドは `apps/playground` である。
+  サイトは `apps/web`、プレイグラウンドは `apps/playground`、ドキュメントサイトは `apps/docs-site` である。
+- ドキュメントサイトの Zensical の設定（`zensical.toml`）は、リポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs/` を読まないためである。
+  Python の依存（`pyproject.toml`、`uv.lock`）も、同じディレクトリで uv が解決するように、ルートに置く。
 - サイトのほかのアプリを、`apps/web` に置くか、別の app と Worker にするかは、ADR-0031 の規則で決める。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
 
@@ -104,6 +106,7 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
 - `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` に依存する。実行環境の 3 つの package にも依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
   - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
+- `apps/docs-site` は、workspace のどの package にも依存しない。ビルドは、`docs/` と、`docs/design/` のシンボリックリンクが指す文書だけを読む。
 - `infra/` は、どこにも依存しない。
 
 island の framework は React の 1 つに絞る。  

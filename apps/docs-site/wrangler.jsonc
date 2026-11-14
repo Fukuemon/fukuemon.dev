@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fukuemon-dev-docs",
+  "compatibility_date": "2026-08-30",
+  // ハンドラを持たないため main を置かない (ADR-0005)
+  "assets": {
+    "directory": "./dist",
+  },
+  // Access は custom domain の docs.<zone> にだけ掛かる。workers.dev とバージョンごとの URL を開けたままにすると、
+  // 認証を通らずに文書のサイトが開ける (ADR-0032)
+  "workers_dev": false,
+  "preview_urls": false,
+}

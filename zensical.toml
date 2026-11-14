@@ -1,0 +1,70 @@
+# ドキュメントサイトの設定 (ADR-0032)。文書の置き場は context/project.yml の docs とそろえる
+[project]
+site_name = "fukuemon.dev の設計の文書"
+docs_dir = "docs"
+site_dir = "apps/docs-site/dist"
+# docs/design/ のシンボリックリンクの先を、プレビューでたどって再読み込みする
+watch = [
+  "infra/DesignDoc.md",
+  "apps/playground/DesignDoc.md",
+  "apps/web/src/features/top-garden/DesignDoc.md",
+  "packages/content-model/DesignDoc.md",
+  "packages/ui/DesignDoc.md",
+  "packages/ui/src/art/DesignDoc.md",
+  "packages/ui/DESIGN.md",
+  "packages/ui/design",
+]
+# ADR のテンプレートとトップの試作は文書ではないので、サイトに載せない。
+# adr/README.md は ADR を書く人への規則で、adr/index.md と同じ URL になるので載せない
+exclude_docs = """
+adr/template.md
+adr/README.md
+design/prototypes/
+"""
+# ADR は adr/index.md から辿る。nav に ADR のファイルを並べると、ADR を足すか消すたびに nav を直すことになる
+nav = [
+  { "トップ" = "index.md" },
+  { "PRD" = "PRD.md" },
+  { "Design Doc" = [
+    { "全体" = "design/DesignDoc.md" },
+    { "基盤" = "design/infra.md" },
+    { "プレイグラウンド" = "design/apps/playground.md" },
+    { "Content Model" = "design/packages/content-model.md" },
+    { "キャンバス" = "design/features/canvas/DesignDoc.md" },
+    { "スライド" = "design/features/slides/DesignDoc.md" },
+    { "AI からの操作" = "design/features/ai-operations/DesignDoc.md" },
+    { "トップの水墨の門と立体の庭" = "design/apps/top-garden.md" },
+  ] },
+  { "デザインシステム" = [
+    { "packages/ui" = "design/packages/ui.md" },
+    { "使う側の規則" = "design/packages/ui-design/DESIGN.md" },
+    { "トークン" = "design/packages/ui-design/design/tokens.md" },
+    { "コンポーネントとパターン" = "design/packages/ui-design/design/components.md" },
+    { "カタログの書き方" = "design/packages/ui-design/design/catalog.md" },
+    { "挿絵" = "design/packages/ui-art.md" },
+    { "カタログ" = "https://design.fukuemon.dev/" },
+  ] },
+  { "ADR" = "adr/index.md" },
+]
+
+[project.theme]
+language = "ja"
+# 本文はシステムフォントで組む。テーマの既定は Google Fonts の欧文の書体を読み、日本語の字形を持たない
+font = false
+
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+
+# 見出しのアンカーを、GitHub の Markdown の表示と同じく日本語のまま残す。どちらで読んでもリンクが切れない
+[project.markdown_extensions.toc]
+permalink = true
+slugify.object = "pymdownx.slugs.slugify"
+slugify.kwds.case = "lower"
+
+[project.markdown_extensions.tables]
+
+# 2 文字の字下げの入れ子の箇条書きを、入れ子として読む。Python-Markdown は入れ子に 4 文字を求めるが、文書は 2 文字で書く
+[project.markdown_extensions.mdx_truly_sane_lists]
+nested_indent = 2
