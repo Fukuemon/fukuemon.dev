@@ -74,7 +74,7 @@ const expectCameraAtEnd = async (page: Page) => {
   const right = await profileAt(page);
   await expectGardenEnd(page);
   const settled = await profileAt(page);
-  expect(Math.abs(right.x - settled.x) + Math.abs(right.y - settled.y)).toBeLessThanOrEqual(2);
+  expect(Math.abs(right.x - settled.x) + Math.abs(right.y - settled.y)).toBeLessThanOrEqual(6);
   return right;
 };
 
@@ -158,7 +158,7 @@ test.describe("イントロの途中", () => {
       { at, how },
     );
 
-  /** 飛ばした直後に、文が遷移を経ずに見え、カメラが止まった後の位置と同じ所にあった */
+  /** 飛ばした直後に、文が遷移を経ずに見え、カメラが止まった後の位置と同じ所にあった。カメラが寄るなら数十 px ずれるので、描き直しの丸めの分の 6px までは許す */
   const expectJumped = async (page: Page) => {
     await expect
       .poll(() => page.evaluate(() => (window as Jumped).__jumped), { timeout: 60_000 })
@@ -167,7 +167,7 @@ test.describe("イントロの途中", () => {
     expect(right.opacity).toBe("1");
     await expectGardenEnd(page);
     const settled = await profileAt(page);
-    expect(Math.abs(right.x - settled.x) + Math.abs(right.y - settled.y)).toBeLessThanOrEqual(2);
+    expect(Math.abs(right.x - settled.x) + Math.abs(right.y - settled.y)).toBeLessThanOrEqual(6);
     await expect(html(page)).not.toHaveClass(/no-anim/);
     expect(await marks(page)).toHaveProperty("garden-intro-done");
   };
