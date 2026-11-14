@@ -138,7 +138,7 @@ flowchart TD
 
 - [Content Model](../../packages/content-model/DesignDoc.md): schema、`contentId`、関係グラフ、`ContentRef` への正規化
 - [UI](../../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
-- [トップの庭](features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
+- [トップの庭](../../apps/web/src/features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
 - [プレイグラウンド](../../apps/playground/DesignDoc.md): アプリの構成、パス、実行環境のインターフェース、プロジェクトと保存の形
 - [キャンバス](features/canvas/DesignDoc.md): ツールのパス、保存する図の形、図の一覧、記事の図の置き場と書き方
 - [スライド](features/slides/DesignDoc.md): エディタのパスと画面、テーマとテンプレート、`@fukuemon/slides` の関数、公開するスライドのビルドとページ送り
@@ -282,7 +282,7 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
 パーティクルは、「動きを止める」のボタンで止められるためである。
 
 ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../adr/0026-sumi-gate-and-garden-on-top.md)  
-イントロの各段の時間は [トップの水墨の門と立体の庭の Design Doc](features/top-garden/DesignDoc.md) にある。
+イントロの各段の時間は [トップの水墨の門と立体の庭の Design Doc](../../apps/web/src/features/top-garden/DesignDoc.md) にある。
 
 ### 配信
 

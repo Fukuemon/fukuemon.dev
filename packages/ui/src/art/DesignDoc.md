@@ -31,7 +31,7 @@ ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐっ
 
 持たないものは次のとおり。
 
-- 水墨の門の絵と立体の庭の時間、色、配置。[トップの水墨の門と立体の庭の Design Doc](../../../../docs/design/features/top-garden/DesignDoc.md) が持つ。
+- 水墨の門の絵と立体の庭の時間、色、配置。[トップの水墨の門と立体の庭の Design Doc](../../../../apps/web/src/features/top-garden/DesignDoc.md) が持つ。
 - 挿絵の濃さのトークンの値。`packages/ui/src/tokens/semantic.css` と `semantic-dark.css` が持つ。
 - 動きの規則と、トップの庭の例外。[全体の Design Doc の「動き」](../../../../docs/design/DesignDoc.md#動き) が持つ。
 
@@ -46,7 +46,7 @@ ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐっ
 | 記事の一覧の冒頭         | 版画風の図柄                 |
 
 挿絵は、記事の本文、コードを動かす画面、フッターには置かない。  
-水墨の絵と庭の絵は、[トップの水墨の門と立体の庭の Design Doc](../../../../docs/design/features/top-garden/DesignDoc.md) にある。
+水墨の絵と庭の絵は、[トップの水墨の門と立体の庭の Design Doc](../../../../apps/web/src/features/top-garden/DesignDoc.md) にある。
 
 ### 色と濃さ
 
