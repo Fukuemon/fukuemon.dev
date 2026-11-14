@@ -10,7 +10,8 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageSize, tablePage } from "./resul
 const ms = (value: number) => `${value.toFixed(1)} ms`;
 
 function PlanTree({ plan }: { plan: JsonPlan }) {
-  const text = use(DenseContext) ? "text-body-compact" : "text-body-dense";
+  const dense = use(DenseContext);
+  const text = dense ? "text-body-compact" : "text-body-dense";
   const ids: string[] = [];
   const collect = (node: JsonPlan["root"]) => {
     ids.push(node.id);
@@ -19,7 +20,12 @@ function PlanTree({ plan }: { plan: JsonPlan }) {
   collect(plan.root);
   return (
     <div className="flex flex-col gap-2">
-      <TreeView defaultExpandedIds={ids} items={[plan.root]} label="実行計画" />
+      <TreeView
+        defaultExpandedIds={ids}
+        items={[plan.root]}
+        label="実行計画"
+        {...(dense && { density: "compact", textSize: "body-compact" })}
+      />
       {plan.planningMs !== undefined && (
         <p className={`${text} text-text-secondary`}>Planning Time: {ms(plan.planningMs)}</p>
       )}
@@ -120,6 +126,7 @@ function RowsTable({ result }: { result: SqlResult }) {
 }
 
 function ResultBody({ result }: { result: SqlResult }) {
+  const dense = use(DenseContext);
   const plan = toPlanView(result);
   if (plan?.kind === "json") return <PlanTree plan={plan.plan} />;
   if (plan?.kind === "text") {
@@ -130,13 +137,17 @@ function ResultBody({ result }: { result: SqlResult }) {
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 横に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
         tabIndex={0}
       >
-        <pre className="p-4 font-mono text-code text-code-text">{plan.text}</pre>
+        <pre
+          className={`font-mono text-code-text ${dense ? "p-2 text-code-compact" : "p-4 text-code"}`}
+        >
+          {plan.text}
+        </pre>
       </section>
     );
   }
   if (result.fields.length === 0) {
     return (
-      <p className="text-body-dense text-text">
+      <p className={`${dense ? "text-body-compact" : "text-body-dense"} text-text`}>
         実行しました。{result.affectedRows.toLocaleString()} 行に影響しました。
       </p>
     );
@@ -173,7 +184,9 @@ export function ResultView({ response }: ResultViewProps) {
   const last = response.results.at(-1);
   return (
     <div className={`flex min-w-0 flex-col ${density === "compact" ? "gap-2" : "gap-4"}`}>
-      <p className="text-caption text-text-secondary">
+      <p
+        className={`${density === "compact" ? "text-compact" : "text-caption"} text-text-secondary`}
+      >
         {response.results.length} 個の文を {ms(response.ms)} で実行しました。
       </p>
       {last && <ResultBody result={last} />}

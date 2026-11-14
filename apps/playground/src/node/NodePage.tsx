@@ -30,6 +30,7 @@ import { FilesPane } from "./FilesPane";
 import { HttpDetailPane, HttpListPane } from "./HttpPane";
 import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
+import { PaneBox } from "./PaneBox";
 import { initialSelection, selectionReducer } from "./selection";
 import { type NodeSession, createNodeSessionOpener } from "./session";
 import { SqlPane } from "./SqlPane";
@@ -46,28 +47,20 @@ function BootWait() {
   return null;
 }
 
-/**
- * SplitPane の領域を、ペインで埋める。ToolPane は高さを持たないので、縦の flex で広げる。
- * SplitPane の領域は外にはみ出す描画を切るので、フォーカスの輪が入る 4px の余白を、全てのペインに取る。
- */
+/** PaneBox の中で、起動を待つ間は fallback を出す。 */
 function Pane({
   fallback,
   editorFocusRing = false,
   children,
 }: {
   fallback: ReactNode;
-  /** 中の CodeMirror にフォーカスがあるときに、ペインを輪で囲む。 */
   editorFocusRing?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="size-full p-1">
-      <div
-        className={`flex size-full flex-col [&>section]:flex-1 ${editorFocusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
-      >
-        <Suspense fallback={fallback}>{children}</Suspense>
-      </div>
-    </div>
+    <PaneBox editorFocusRing={editorFocusRing}>
+      <Suspense fallback={fallback}>{children}</Suspense>
+    </PaneBox>
   );
 }
 
@@ -99,11 +92,11 @@ function PreviewColumn({ database }: { database: boolean }) {
       <Activity mode={tab === "sql" ? "visible" : "hidden"}>
         <Suspense
           fallback={
-            <div className="size-full p-1">
+            <PaneBox>
               <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
                 {() => null}
               </EditorFrame>
-            </div>
+            </PaneBox>
           }
         >
           <SqlPane />
@@ -165,7 +158,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   return (
-    <RuntimeContext value={{ project, runtime }}>
+    <RuntimeContext value={{ project, runtime, restart: session.restart }}>
       <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>

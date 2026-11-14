@@ -22,7 +22,13 @@ function SelectionProbe() {
 
 const renderRuntime = (result: RuntimeResult) =>
   renderToStaticMarkup(
-    <RuntimeContext value={{ project: nodeDefaultProject, runtime: settled(result) }}>
+    <RuntimeContext
+      value={{
+        project: nodeDefaultProject,
+        runtime: settled(result),
+        restart: async () => undefined,
+      }}
+    >
       <RuntimeProbe />
     </RuntimeContext>,
   );

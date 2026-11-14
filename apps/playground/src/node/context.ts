@@ -4,8 +4,12 @@ import { type ActionDispatch, createContext, use } from "react";
 import type { Selection, SelectionAction } from "./selection";
 import type { NodeProject, RuntimeResult } from "./session";
 
-/** 開いたプロジェクトと、実行環境の起動の Promise。値が変わるのは、実行環境を起動し直すときだけである。 */
-export type RuntimeValue = { project: NodeProject; runtime: Promise<RuntimeResult> };
+/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作。値が変わるのは、実行環境を起動し直すときだけである。 */
+export type RuntimeValue = {
+  project: NodeProject;
+  runtime: Promise<RuntimeResult>;
+  restart: () => Promise<void>;
+};
 
 export const RuntimeContext = createContext<RuntimeValue | null>(null);
 
@@ -26,6 +30,13 @@ export function useRuntime():
   return result.kind === "running"
     ? { project: value.project, runtime: result.runtime }
     : { project: value.project, reason: result.reason };
+}
+
+/** 実行環境を起動し直す操作。ヘッダの「起動し直す」と同じ操作である。 */
+export function useRestart(): () => Promise<void> {
+  const value = use(RuntimeContext);
+  if (!value) throw new Error("RuntimeContext の provider が無い");
+  return value.restart;
 }
 
 export function useSelection(): SelectionValue {

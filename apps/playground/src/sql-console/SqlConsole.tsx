@@ -16,6 +16,8 @@ export type SqlConsoleProps = {
   status: Store<DatabaseStatus>;
   /** DB が止まったときに、止まった理由の後に出す、復帰の案内。 */
   stoppedHint?: string;
+  /** 渡すと、DB が止まったときに、エラーの隣に「起動し直す」のボタンを出し、押すと呼ぶ。 */
+  onRestart?: () => void;
   /** 入力欄のタブに出すファイルの名前。 */
   fileName: string;
   /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
@@ -32,6 +34,7 @@ export function SqlConsole({
   running,
   status,
   stoppedHint,
+  onRestart,
   fileName,
   progress,
   dense = false,
@@ -54,7 +57,7 @@ export function SqlConsole({
       {/* 詰めた密度では、入力欄と操作を上に置いたまま、結果の領域だけを送る */}
       <div className={`flex min-w-0 flex-col ${gap} ${dense ? "h-full min-h-0" : ""}`}>
         <div
-          className={`grid min-h-0 shrink-0 has-[.cm-focused]:focus-ring ${dense ? "h-72" : "h-96"}`}
+          className={`grid min-h-0 shrink-0 has-[.cm-focused]:focus-ring ${dense ? "h-40" : "h-96"}`}
         >
           <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
             {() => (
@@ -71,7 +74,10 @@ export function SqlConsole({
           <Button isLoading={running} onClick={() => void run()} size={dense ? "XS" : "S"}>
             実行する
           </Button>
-          <span className="text-caption text-text-secondary" id={hintId}>
+          <span
+            className={`${dense ? "text-compact" : "text-caption"} text-text-secondary`}
+            id={hintId}
+          >
             Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
             でエディタの外へ移ります
           </span>
@@ -84,6 +90,13 @@ export function SqlConsole({
           {database.kind === "stopped" && (
             <Notice density={density} isAlert title="DB が止まりました" tone="danger">
               {database.reason}。{stoppedHint}
+              {onRestart && (
+                <span className="mt-2 block">
+                  <Button onClick={onRestart} size={dense ? "XS" : "S"} variant="secondary">
+                    起動し直す
+                  </Button>
+                </span>
+              )}
             </Notice>
           )}
           {shown && <ResultView key={shown.id} response={shown.response} />}
