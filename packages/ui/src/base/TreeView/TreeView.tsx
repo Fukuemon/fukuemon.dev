@@ -26,8 +26,10 @@ export type TreeNode = {
 /**
  * 木の行の中に描く名前の欄。content に欄を渡す。
  * rename は、id の項目の名前の代わりに content を描く。
- * insert は、parentId の枝の子の先頭（parentId が undefined のときは木の先頭）に行を 1 つ足し、content を描く。行の印は icon で渡す。
+ * insert は、parentId の枝の子の先頭（parentId が undefined のときは木の先頭）に行を 1 つ足し、content を描く。parentId は children を持つ項目の id にする。
+ * insert の行の印は icon で渡す。行は開かないので、印は閉じた形を渡す。
  * 欄のある行までの枝は開く。欄を外した後、フォーカスがどこにも無ければ、木の項目へ戻す。
+ * 欄を外すまでに selectedId が変わり、その項目が見えていればその項目へ、変わらなければ前にいた項目へ戻す。
  */
 export type TreeEditor =
   | { kind: "rename"; id: string; content: ReactNode }
@@ -166,7 +168,7 @@ export function TreeView({
 
   const isEditing = editor !== undefined;
   const readSelectedId = useEffectEvent(() => selectedId);
-  // 確定で選ぶ項目が変わったら（作った項目、名前を変えてパスの変わった項目）その項目へ、変わらなければ前にいた項目へ戻す。
+  // 欄を外すまでに選んだ項目が変わったらその項目へ、変わらなければ前にいた項目へ戻す。
   // フォーカスがほかの要素にあるときは、欄の外を押して確定したときなので、動かさない
   const restoreFocus = useEffectEvent((selectedAtStart: string | undefined) => {
     const active = document.activeElement;
@@ -316,8 +318,8 @@ export function TreeView({
   if (editor?.kind === "insert") {
     const parentIndex = visible.findIndex((v) => v.node.id === editor.parentId);
     const parent = visible[parentIndex];
-    // 親が木に無いときは、足す場所が無いので行を出さない
-    if (editor.parentId === undefined || parent !== undefined) {
+    // 親が木に無いか枝でないときは、足す場所が無いので行を出さない
+    if (editor.parentId === undefined || parent?.node.children !== undefined) {
       rows.splice(
         parentIndex + 1,
         0,

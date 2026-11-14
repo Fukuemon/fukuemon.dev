@@ -29,7 +29,7 @@ export type { TabItem, TabsProps } from "./base/Tabs/Tabs";
 export { TextField } from "./base/TextField/TextField";
 export type { TextFieldProps } from "./base/TextField/TextField";
 export { TreeView } from "./base/TreeView/TreeView";
-export type { TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
+export type { TreeEditor, TreeNode, TreeViewProps } from "./base/TreeView/TreeView";
 export { ConfirmDialog } from "./case/ConfirmDialog/ConfirmDialog";
 export type { ConfirmDialogProps } from "./case/ConfirmDialog/ConfirmDialog";
 export { ConsoleEntryList } from "./case/ConsoleEntryList/ConsoleEntryList";

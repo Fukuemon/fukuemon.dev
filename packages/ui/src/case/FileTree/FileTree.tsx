@@ -29,7 +29,7 @@ export type FileTreeProps = {
 type Editing =
   | { kind: "file"; parentId: string | undefined }
   | { kind: "directory"; parentId: string | undefined }
-  | { kind: "rename"; node: TreeNode; parentId: string | undefined };
+  | { kind: "rename"; id: string };
 
 const FIELD_LABEL: Record<Editing["kind"], string> = {
   file: "新しいファイルの名前",
@@ -184,18 +184,14 @@ export function FileTree({
   onDelete,
   state,
 }: FileTreeProps) {
-  const [editingState, setEditing] = useState<Editing | undefined>(undefined);
-  // 欄を開いている間に、名前を変える項目か作る場所が木から消えたら、欄を閉じたものとして扱う
-  const editingTarget =
-    editingState?.kind === "rename" ? editingState.node.id : editingState?.parentId;
-  const editing =
-    editingTarget === undefined || find(items, editingTarget) ? editingState : undefined;
+  const [editing, setEditing] = useState<Editing | undefined>(undefined);
+  const editingTargetId = editing?.kind === "rename" ? editing.id : editing?.parentId;
+  const editingTarget = editingTargetId === undefined ? undefined : find(items, editingTargetId);
+  // 欄を開いている間に、名前を変える項目か作る場所が木から消えたら、欄を閉じる
+  if (editingTargetId !== undefined && editingTarget === undefined) setEditing(undefined);
   const selected = selectedId === undefined ? undefined : find(items, selectedId);
 
-  const startRename = (id: string) => {
-    const found = find(items, id);
-    if (found) setEditing({ kind: "rename", node: found.node, parentId: found.parent?.id });
-  };
+  const startRename = (id: string) => setEditing({ kind: "rename", id });
   const startCreate = (kind: "file" | "directory") => {
     const parent = selected?.node.children ? selected.node : selected?.parent;
     setEditing({ kind, parentId: parent?.id });
@@ -222,33 +218,33 @@ export function FileTree({
     setEditing(undefined);
     if (editing?.kind === "file") onCreate?.(name, editing.parentId);
     else if (editing?.kind === "directory") onCreateDirectory?.(name, editing.parentId);
-    else if (editing?.kind === "rename") onRename?.(editing.node.id, name);
+    else if (editing?.kind === "rename") onRename?.(editing.id, name);
   };
 
   const editor = ((): TreeEditor | undefined => {
     if (editing === undefined) return undefined;
-    const siblingNodes =
-      editing.parentId === undefined ? items : (find(items, editing.parentId)?.node.children ?? []);
     const isRename = editing.kind === "rename";
-    const initialValue = isRename ? editing.node.label : "";
+    if (editingTargetId !== undefined && editingTarget === undefined) return undefined;
+    const renamed = isRename ? editingTarget?.node : undefined;
+    const siblingParent = isRename ? editingTarget?.parent : editingTarget?.node;
+    const siblingNodes = siblingParent === undefined ? items : (siblingParent.children ?? []);
+    const initialValue = renamed?.label ?? "";
     const extension = initialValue.lastIndexOf(".");
     const content = (
       <NameField
         initialValue={initialValue}
         // 名前を変える項目と、新しく作る種類が変わったら、欄を作り直して値と誤りを消す
-        key={isRename ? `rename:${editing.node.id}` : `${editing.kind}:${editing.parentId ?? ""}`}
+        key={isRename ? `rename:${editing.id}` : `${editing.kind}:${editing.parentId ?? ""}`}
         label={FIELD_LABEL[editing.kind]}
         onCancel={() => setEditing(undefined)}
         onCommit={commit}
         selectionEnd={
-          isRename && !editing.node.children && extension > 0 ? extension : initialValue.length
+          renamed && !renamed.children && extension > 0 ? extension : initialValue.length
         }
-        siblings={siblingNodes
-          .filter((node) => !isRename || node.id !== editing.node.id)
-          .map((node) => node.label)}
+        siblings={siblingNodes.filter((node) => node !== renamed).map((node) => node.label)}
       />
     );
-    if (isRename) return { kind: "rename", id: editing.node.id, content };
+    if (isRename) return { kind: "rename", id: editing.id, content };
     const isBranch = editing.kind === "directory";
     return {
       kind: "insert",

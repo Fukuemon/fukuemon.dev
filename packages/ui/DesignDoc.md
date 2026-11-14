@@ -340,7 +340,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `Tabs`                 | 記事の中の例の切り替え、エディタのファイルのタブ | DADS のタブ。エディタのために閉じるボタンを足す |
 | `Dialog`               | 検索、`ConfirmDialog` が組む確認                 | DADS のモーダルダイアログ                       |
 | `ActionMenu`           | ファイルとディレクトリの操作のメニュー           | DADS のメニューリスト                           |
-| `TextField`            | 検索の語、ファイルの名前の入力                   | DADS のインプットテキスト                       |
+| `TextField`            | 検索の語の入力                                   | DADS のインプットテキスト                       |
 | `Table`                | 記事の表、SQL の結果、HTTP のヘッダ              | DADS のテーブル                                 |
 | `StatusBadge`          | HTTP の状態コード、記事の種別                    | DADS のラベル                                   |
 | `Notice`               | 記事の注意書き、実行のエラー                     | DADS のノティフィケーションバナー               |
