@@ -168,13 +168,14 @@ export function SqlConsole({
       <DenseContext value>
         {/*
           入力欄と操作を上に置いたまま、結果の領域だけを送る。面はペインの紙の面にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
-          入力欄は面の縁まで広げ、紙の面の中に入力欄の面を重ねない。余白は実行の行と結果にだけ取る。高さの低い画面では、結果の領域を残すため入力欄を低くする。
+          入力欄は面の縁まで広げ、紙の面の中に入力欄の面を重ねない。入力欄の下の角は丸めず、余白は実行の行と結果にだけ取る。高さの低い画面では、結果の領域を残すため入力欄を低くする。
+          入力欄のフォーカスの輪は、呼ぶ側のペインが面の外に引く。内側に引くと、エディタの背景が輪を塗る（docs/adr/0066-inset-focus-ring-in-dense-panes.md）。
         */}
         <div className="flex h-full min-h-0 min-w-0 flex-col rounded-pane bg-surface-pane">
-          <div className="grid h-40 min-h-0 shrink-0 short:h-32 has-[.cm-focused]:focus-ring-inset">
+          <div className="grid h-40 min-h-0 shrink-0 short:h-32 [&>section]:rounded-b-none">
             {editor}
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-2">
             {runRow}
             {results}
           </div>

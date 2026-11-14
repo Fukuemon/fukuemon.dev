@@ -176,7 +176,7 @@ function PreviewColumn({ database }: { database: boolean }) {
     <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
       <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
       <Activity mode={tab === "sql" ? "visible" : "hidden"}>
-        <Pane fallback={sqlFallback}>
+        <Pane editorFocusRing fallback={sqlFallback}>
           <SqlPane />
         </Pane>
       </Activity>
@@ -314,7 +314,7 @@ function NarrowPanes({
                   label: "SQL",
                   icon: DATABASE_ICON,
                   content: (
-                    <Pane fallback={sqlFallback} flush={embedded} inTab>
+                    <Pane editorFocusRing fallback={sqlFallback} flush={embedded} inTab>
                       <SqlPane />
                     </Pane>
                   ),
