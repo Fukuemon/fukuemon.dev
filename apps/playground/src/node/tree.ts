@@ -66,3 +66,23 @@ export function nameError(
   if (existing.has(path)) return `${path} は既にあります。別の名前にしてください。`;
   return undefined;
 }
+
+/**
+ * nameError で断らない名前を、実行環境のファイルシステムでも確かめ、同じパスがあるときは理由の文を返す。
+ * ツリーに出さない node_modules のパッケージの中身は、ツリーの一覧では見えないので、ここで確かめる。確かめられないときは、確定せずに理由を返す。
+ */
+export async function nameErrorInRuntime(
+  name: string,
+  path: string,
+  existing: ReadonlySet<string>,
+  exists: (path: string) => Promise<boolean>,
+): Promise<string | undefined> {
+  const invalid = nameError(name, path, existing);
+  if (invalid !== undefined) return invalid;
+  try {
+    if (await exists(path)) return `${path} は既にあります。別の名前にしてください。`;
+  } catch {
+    return `${path} が既にあるかを確かめられませんでした。もう一度試してください。`;
+  }
+  return undefined;
+}

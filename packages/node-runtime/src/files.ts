@@ -120,6 +120,11 @@ export async function createFiles(
           return () => listeners.delete(onChange);
         },
       },
+      exists: async (path) => {
+        const at = path.lastIndexOf("/");
+        const items = await files.list(at === -1 ? "" : path.slice(0, at));
+        return items.some((item) => item.name === path.slice(at + 1));
+      },
       read: async (path) => decoder.decode(await files.readFile(path)),
       // 既にあるファイルの中身を書いても、ツリーは変わらない
       write: async (path, contents) => {

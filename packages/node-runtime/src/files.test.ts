@@ -19,6 +19,16 @@ describe("files", () => {
     expect(await runtime.files.read("src/new.js")).toBe("1");
   });
 
+  it("exists は、ツリーに出さない node_modules のパッケージの中身も確かめる", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand("node_modules/cookie/index.js", "");
+    await flush();
+    expect(treePaths(runtime)).not.toContain("node_modules/cookie/index.js");
+    expect(await runtime.files.exists("node_modules/cookie/index.js")).toBe(true);
+    expect(await runtime.files.exists("node_modules/cookie")).toBe(true);
+    expect(await runtime.files.exists("node_modules/cookie/other.js")).toBe(false);
+  });
+
   it("ディレクトリを作ると、ツリーにディレクトリとして出る", async () => {
     const { runtime } = await bootFake();
     await runtime.files.createDirectory("lib");

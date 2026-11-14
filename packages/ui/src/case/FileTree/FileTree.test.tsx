@@ -1,5 +1,5 @@
 import { composeStories } from "@storybook/react-vite";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import { useState } from "react";
@@ -511,6 +511,35 @@ describe("FileTree", () => {
     await userEvent.keyboard("a\\b.go");
     await userEvent.click(document.body);
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("呼ぶ側が Promise で名前を断っても、欄を開いたまま理由を出し、直して Enter を押すと確定する", async () => {
+    const onCreate = vi.fn(async (name: string) =>
+      name === "taken.js" ? { error: "taken.js は既にあります。" } : { id: name },
+    );
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("taken.js{Enter}");
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    await waitFor(() => expect(field).toHaveAccessibleDescription("taken.js は既にあります。"));
+    expect(field).toHaveFocus();
+    await userEvent.clear(field);
+    await userEvent.keyboard("new.js{Enter}");
+    expect(onCreate).toHaveBeenCalledTimes(2);
+    await expect.poll(() => screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("呼ぶ側が決めるまで、Enter を重ねても 1 回だけ呼ぶ", async () => {
+    const onCreate = vi.fn(
+      () =>
+        new Promise<{ id: string }>((resolve) =>
+          window.setTimeout(() => resolve({ id: "a.js" }), 50),
+        ),
+    );
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}{Enter}");
+    expect(onCreate).toHaveBeenCalledTimes(1);
   });
 
   it("選んでいない項目の名前を変え、呼ぶ側が選ぶ項目を変えなくても、新しい行が出たらその行へフォーカスが移る", async () => {
