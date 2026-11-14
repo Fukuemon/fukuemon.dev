@@ -37,6 +37,7 @@ verified_commit: ab2da87
 - `styles/` は、サイト全体に掛かるスタイリングが何かに答える。
 
 サイトのコードから import せず、deploy と deploy の dry-run のときだけ実行する処理は、`src/` の外の `apps/web/scripts/` に置く（`preview-assets.ts`）。
+ルートの `scripts/` のスクリプトが使い、テストで踏む処理も、ここに置く（`lighthouse-judge.ts`）。ルートの `scripts/` には Vitest が無いためである。
 
 `features/` の中も、同じ軸で分ける。
 
