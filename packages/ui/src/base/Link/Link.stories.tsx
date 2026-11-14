@@ -56,6 +56,21 @@ export const StandaloneWrapped: Story = {
     </ul>
   ),
 };
+export const LargeTarget: Story = {
+  args: { isStandalone: true, isLargeTarget: true, children: "Node の実行環境を開く" },
+  render: (args) => (
+    <ul className="w-96 text-body text-text">
+      <li className="flex flex-col items-start gap-2 border-b border-border py-4">
+        <span>ブラウザの中で Node と npm を動かします。</span>
+        <Link {...args} />
+      </li>
+    </ul>
+  ),
+};
+export const LargeTargetHover: Story = {
+  ...LargeTarget,
+  parameters: { pseudo: { hover: true } },
+};
 export const External: Story = {
   args: { href: "https://design.digital.go.jp/dads/", isExternal: true, children: "DADS" },
 };
