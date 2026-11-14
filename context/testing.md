@@ -25,7 +25,7 @@ verified_commit: ab2da87
 | unit         | `packages/go-runtime` の `GoRunner` と、Web Worker の `fetch` の差し替え           | Vitest                   | Web Worker のモックで、実行、止める、package ごとのテスト、読み込みと Web Worker の失敗と、ほかの origin へのリクエストを止める処理を踏む                                    |
 | unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                              |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                                                           |
-| E2E          | 記事のページの表と図の枠（`apps/web/e2e/specs/`）                                  | Playwright               | 本文の列からあふれた表と図にだけ、続きがある間、右端にぼかしを出す                                                                                                           |
+| E2E          | 記事のページの表と図の枠（`apps/web/e2e/specs/`）                                  | Playwright               | 本文の列からあふれた表と図の枠にだけ、右に続きがある間、右端を背景の色で薄くする。動きを減らす設定では、右端まで送ったときに一度に消す                                       |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                                                 |
 | 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                 |
 
@@ -84,9 +84,9 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 サイトの E2E の package（`packages/e2e`）は、まだ無い。  
 `apps/web` の E2E の spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。
 
-記事のページの表と図の枠は、ぼかしを CSS の scroll-driven animation だけで出し分ける。  
-あふれたときだけ出ることは、ブラウザで描かないと確認できないので、E2E で確認する。  
-この spec が検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
+記事のページの表と図の枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
+あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  
+`scroll-box-fade.spec.ts` は検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
 
 トップの庭は、Playwright のスクリーンショットの比較で確認する。  
 庭は WebGL で描き、目で比べても色の小さな違いに気づけないためである。  

@@ -100,7 +100,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 記事の本文の要素のスタイリングは、`site.css` の `.prose` に置く。Markdown から出る要素には class が付かないので、要素のセレクタで指定する。
 - 本文の表と図は、`apps/web/src/lib/rehype-scroll-box.ts` が、横に送れるフォーカスできる枠で包む。縮めて本文の幅に収めると、表の列が潰れ、図の文字が 14px より小さくなるためである。
   - Markdown の表には `caption` を書けないので、記事の表は、`packages/ui` の `Table` と違い、題を持たない。
-  - 枠には `packages/ui` のユーティリティ `scroll-fade-end` を当て、右に続きがある間だけ右端を背景の色で薄くする。動きは `site.css` に書かず、`packages/ui` の `theme.css` に置く（`MOTION-TOKEN`）。
+  - 枠には、右に続きがある間だけ右端を背景の色で薄くする、`packages/ui` のユーティリティ `scroll-fade-end` を付ける。動きは `site.css` に書かず、`packages/ui` の `theme.css` に置く（`MOTION-TOKEN`）。
 - `site.css` は、Pele の CSS 変数（`--pele-fg` など）にトークンを割り当てて、Pele が描いた図の色を決める。
   - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
