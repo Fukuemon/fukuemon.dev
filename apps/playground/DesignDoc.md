@@ -81,7 +81,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
     go/                   Go を動かすツールのページ。ファイル、実行中かどうか、出力、実行とテストの関数を持つ React の外のモジュール
     sql-console/          SQL の入力欄、結果の表、実行計画のツリー
-    code-editor/          EditorFrame に渡すエディタのエンジン（CodeMirror 6）と、拡張の組み立て
+    code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
     ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
@@ -158,9 +158,8 @@ flowchart TB
   go --> ui
   go --> ai
   console --> database
-  console --> editor
+  console --> codeeditor
   console --> ui
-  codeeditor --> ui
   runtime --> database
   workspace --> project
   project --> pp
@@ -252,8 +251,10 @@ type OutputLog = {
 - 端末のシェルは、`processes.startShell` で起動する。起動するシェルのプログラムは、`webcontainer/` が決める。画面は、シェルのプログラムの名前を持たない。
 - `start` を呼ばないコンポーネントは、`processes.get` で、プロセスの出力を読む。
 - `files.changes` は、ファイルの中身が変わったことの通知である。保存と、エディタで開いているファイルの更新に使う。
+- ツリーを変えるファイルの操作（新しいファイルへの `files.write`、`files.createDirectory`、`files.rename`、`files.remove`）は、操作の後にツリーを読み直してから終わる。読み直しが失敗したときは、ログに出し、操作は成功として終える。操作の成否は、操作そのものの成否で決める。
 - `files.readAll` は、作業ディレクトリのファイルを、パス、サイズ、テキストの中身で返す。`exclude` に当たるパスは読まない。`maxBytes` を超えるファイルと、テキストとして読めないファイルは、`text` が `null` になる。`exclude` に当たるかの判定、`maxBytes` を超えるかの判定、テキストかどうかの判定は、`node-runtime/` の直下が持つ。
 - `FileEntry` は、パスを持つ。画面は、パスを、`FileTree` の項目の `id` に使う。
+- `ProcessInfo` は、ID、種別、名前、状態を持つ。種別は、`processes.startShell` で起動したプロセスが `shell`、`processes.start` で起動したプロセスが `command` である。画面は、種別でシェルの数を数え、2 つ目からのシェルの名前に番号を付ける。
 - `OpenPort` は、ポート、URL、プレビューの iframe に付ける属性（`sandbox`、`allow`）を持つ。属性の値は、`webcontainer/` が決める。
 - プレビューに入れるスクリプトから `postMessage` で送られるコンソールの記録を受けて、`consoleEntries` に入れる処理は、`node-runtime/` が持つ。スクリプトの中身と、メッセージの形は、`node-runtime/` の直下が持つ。`node-runtime/` の直下は、スクリプトの中身を、`BackendBootOptions` の `previewScript` で `webcontainer/` に渡す。メッセージの origin の確認は、`webcontainer/` が行う。
 - `database` は、DB を使うプロジェクトのときだけある。DB のプロセスの状態は、`database` の `status` で公開し、`NodeRuntime` には持たせない。
@@ -314,7 +315,11 @@ type BackendProcess = {
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
-- `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
+- `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
+- `node-runtime/` の直下は、`webcontainer/` が知らせたポートのうち、URL が `https:` で、ツールのページと別の origin のものだけを、`ports` の store に入れる。
+  合わないポートは、プレビューのタブに出さない。
+  ツールのページと同じ origin のページを、`allow-same-origin` を付けた iframe で開くと、プレビューのスクリプトがツールのページを操作できるためである。
+  `webcontainer/` は、ポートの URL を書くファイルに、確認で除く前の、知らせたすべてのポートの URL を書く。
 - `guest/` のファイルと、標準入出力での `SqlDatabase` の実装は、実行環境が Node のプロセスを動かすことを前提にしている。Node のプロセスを持たない実行環境に差し替えるときは、`webcontainer/` に加えて、この 2 つも直す。
 
 ### 記録を読む形
@@ -335,7 +340,7 @@ type BackendProcess = {
 ```mermaid
 flowchart TB
   page["NodePage<br/>プロジェクトと保存したファイルを読み、起動する"]
-  ctx["2 つの Context<br/>実行環境のインスタンス、画面の選択の状態"]
+  ctx["2 つの Context<br/>実行環境のインスタンス（起動の Promise）、画面の選択の状態"]
   layout["レイアウト"]
   files["FilesPane"]
   editor["EditorPane"]
@@ -358,8 +363,8 @@ flowchart TB
 ```
 
 - Context は 2 つで、`src/node/` に定義する。
-  - 実行環境のインスタンスを渡す Context。値が変わるのは、実行環境を起動し直すときだけである。
-  - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` が `useReducer` で持つ。
+  - 実行環境のインスタンスを、起動の Promise で渡す Context。開いたプロジェクトも一緒に渡す。ペインは、Promise を `use` で読み、ペインごとの `Suspense` で起動を待つ。値が変わるのは、実行環境を起動し直すときだけである。
+  - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ端末のタブ、選んだプレビューのポート、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` がプロジェクトを読んだ後に描く `NodeLayout` が、`useReducer` で持つ。
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
@@ -375,6 +380,7 @@ flowchart TB
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
+- 端末のペインの中のプロセスのタブは、選んだプロセスの端末だけを描く。プロセスのタブを替えたときは、端末を作り直し、プロセスの出力の記録を端末に書き込み直す。xterm.js の端末は、`Activity` で隠すと Effect のクリーンアップで破棄されるためである。
 - Node の実行環境では、実行のボタンの、実行中かどうかの値を、`useTransition` で持つ。
 - SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。
 - SQL だけを動かすツールの PGlite と、Go を動かすツールの Yaegi は、訪問者が実行のボタンを押したときと、AI からの操作の `sql_run_query`、`go_run`、`go_test` が呼ばれたときに読み込む。ページを開いたときには、読み込まない。
@@ -391,10 +397,10 @@ SQL だけを動かすツールのページは、次のとおり組む。
 - 同じモジュールが、ページの URL のクエリからプロジェクトを読み、埋め込みの ID の `SqlSession` を返す関数を持つ。ページは、この関数の Promise を `use` で読む。
 - ページは、このモジュールの値を `useSyncExternalStore` で読み、`sql-console/` のコンポーネントに渡す。
 - 入力欄のエディタは、CodeMirror 6 にする。Ctrl か ⌘ と Enter で実行する。
-- CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境、Go を動かすツール、スライドのエディタも、同じ組み立てを使い、言語の拡張だけを足す。
+- CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境、Go を動かすツール、スライドのエディタも、同じ組み立てを使い、言語の拡張と、ページに固有の keymap を足す。Node の実行環境は、Ctrl か ⌘ と S のキーで何もしない keymap を足す。入力のたびに書き込むので、ブラウザがページを保存するのを止めるためである。
   - 行番号、アクティブ行のハイライト、インデントガイド、対応する括弧のハイライトを出す。折りたたみのガターは出さない。
   - Tab キーでインデントする。補完の一覧が開いているときは、Tab キーで補完を確定する。
-  - Esc の後 2 秒の間の Tab キーで、エディタの外へ移る。このことを、実行のボタンの横に書く。
+  - Esc の後 2 秒の間の Tab キーで、エディタの外へ移る。このことを、実行のボタンの横に書く。Node の実行環境のページでは、エディタのペインの下端に書く。
   - 選択があるときは、アクティブ行のハイライトを消す。ハイライトは選択の範囲より上に描かれ、選択を隠すためである。
   - Ctrl か ⌘ と F で、検索と置換のパネルをエディタの上端に出す。パネルの文言は日本語にする。
   - 置換の行は、最初は畳んで出し、パネルのボタンで開く。狭い幅でも、エディタの行が見えるようにするためである。
@@ -403,6 +409,21 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - 色は、`packages/ui` のテーマ変数を読む。CodeMirror のデフォルトの色は、ダークのテーマで読めないので残さない。
   - フォーカスの表示は、エディタを囲む要素に付ける。CodeMirror が作る要素には `focus-ring` のユーティリティを付けられないので、検索パネルの入力欄とボタンには、同じ値を書く。
 - 実行のボタンを押してから結果が出るまで、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つの段階を `Loading` で出す。
+
+Node の実行環境のページは、次のとおり組む。
+
+- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末を置く。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case の読み込み中を出す。
+- `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
+- ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
+- ファイルとディレクトリを消す前に、`ConfirmDialog` で確認する。
+- エディタは、開いたファイルをタブで並べる。入力のたびに、実行環境のファイルに書き込む。コマンドがファイルを書き換えたときは、`files.changes` の通知を受けて、エディタの中身を置き換える。自分が書き込んでいる間の通知では、置き換えない。
+- エディタの言語は、拡張子で決める。`.js`、`.mjs`、`.cjs`、`.jsx`、`.ts`、`.mts`、`.cts`、`.tsx` は JavaScript と TypeScript、`.json` は JSON にする。ほかの拡張子には、色を付けない。
+- 端末のエンジンは、xterm.js（`@xterm/xterm` と `@xterm/addon-fit`）にする。色は、`packages/ui` の `toVsCodeTheme` の値を写して渡す。xterm.js は CSS の変数を読まないためである。ライトとダークは、OS の設定で決める。
+- 端末は、`processes.list` のプロセスをタブで並べる。終了したプロセスは、タブの文に終了コードを添える。端末の題の右の「新しい端末」のボタンで、シェルを足す。2 つ目からのシェルの名前には、番号を付ける。
+- プレビューは、待ち受けたポートをタブで並べる。選んでいないポートの iframe も `Activity` で隠して残し、タブを切り替えても、ページの状態を消さない。再読み込みのボタンは、選んだポートの iframe を作り直す。
+- 実行環境を起動できなかったときは、ファイルのツリーとエディタに初期ファイルを読み取り専用で出す。端末とプレビューのペインには、理由と、対応するブラウザ（デスクトップの Chrome か Edge の最新版）を出す。
+- `project` を付けずに開いたときのプロジェクトは、`package.json` と、3000 番で待ち受ける `index.js` の 2 つのファイルを持つ。起動のコマンドは、`node index.js` の 1 つである。
 
 ### プロジェクト
 
@@ -417,6 +438,8 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
 - JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
+- schema は、`files` のキーのうち、`/` で区切った部分に空、`.`、`..`、`__proto__` があるものと、`\` か NUL を含むものを拒否する。
+  作業ディレクトリの外と、オブジェクトの prototype を指すキーを、実行環境とエディタに渡さないためである。
 - 埋め込みの ID が `<英小文字、数字、ハイフン>/<英小文字、数字、ハイフン>` の形式に合わないときと、JSON の `tool` が開いたページのツールと違うときも、JSON を読めないときと同じ表示にする。
   - 形式に合わない ID では、JSON を取得せず、エラーの文に ID を出さない。URL を作った人の任意の文を、ページに出さないためである。
 
@@ -516,6 +539,7 @@ sequenceDiagram
 - 起動のコマンドが複数あるときは、`start` の順に起動する。前のコマンドの終了を待たない。
 - 保存したバージョンと、プロジェクトの JSON のバージョンが違うときも、保存したファイルで起動し、保存したファイルがあるときと同じに扱う。
 - プレビューの iframe が 30 秒で読み込まれないときは、`PreviewPane` が、プレビューのペインにだけ、動かせない理由を出す。
+  - WebContainers のプレビューの iframe は、サーバーが応答しないときも `load` を起こす。この上限が働くのは、プレビューのページそのものが読み込まれないときだけである。応答しないサーバーの判定は、プレビューに入れるスクリプトを足すときに、スクリプトが送るメッセージで行う形に替える。
 - 訪問者は、端末で、WebContainers のシェルを制限なしで使う。
 - 「実行環境を起動し直す」の操作は、いつでも使える。起動し直した後は、保存したファイルがあるときと同じに扱う。`npm install` だけを自動で実行し、起動のコマンドは、訪問者が実行のボタンを押してから実行する。
 - DB のプロセスが終了したとき以外で、起動の後に実行環境が動かなくなったときは、訪問者が、「実行環境を起動し直す」の操作で起動し直す。画面は、実行環境の全体の状態を表示しない。
@@ -528,6 +552,9 @@ sequenceDiagram
   - `NODE_OPTIONS`: preload ごとの `--require <絶対パス>`。HTTP の流れとコンソールを記録する preload は、どのプロジェクトでも追加する。Unix ドメインソケットに接続している間はプロセスを終了させない preload は、DB を使うプロジェクトのときだけ追加する。
   - `PLAYGROUND_PORTS_FILE`: 待ち受けたポートの URL を書くファイルのパス。
   - DB を使うプロジェクトのときは、`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`。
+- 待ち受けたポートの URL を書くファイルは、`/tmp/fukuemon-playground/ports.json` である。中身は、ポートの番号をキー、URL を値にした 1 行の JSON（`{"3000":"https://..."}`）で、ポートが開くか閉じるたびに書き直す。ポートが 1 つも無いときは `{}` である。
+  - `webcontainer/` は、このファイルを、実行環境の中の Node で書く。書く中身を環境変数で渡すので、中身を 1 行にする。WebContainers は、改行を含む環境変数の値を、最初の行で切る。
+- `public/_headers` は、Cloudflare でだけ働く。`apps/playground` の `vite.config` は、`vp dev` と `vp preview` でも、`/node/` に同じ isolation のヘッダを返す。
 
 ### SQL
 

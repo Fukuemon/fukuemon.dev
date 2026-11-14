@@ -7,7 +7,7 @@
  * fukuemon.dev のプリミティブトークン。セマンティックトークン（semantic.css）とテーマ変数（theme.css）が参照する値だけを持つ。
  * 値は fukuemon.dev が決める。地と罫と差し色は旧サイトの値で、生成りの紙に墨で刷る向きの温かい灰と、くすんだ緑、藍、錆を持つ（docs/adr/0024-tokens-of-fukuemon-dev.md）。
  * 名前は --fd-primitive-color-<色>-<段> にする。段は、数が大きいほど暗い。
- * 書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。
+ * 書体の太さ、文字の大きさ、行高は、デジタル庁デザインシステムの @digital-go-jp/design-tokens 2.1.0 の値を使う。例外は、12px と 13px の文字の大きさ（docs/adr/0062-dense-text-and-targets-in-playground.md）と、154% の行高（docs/adr/0067-compact-text-tokens-in-dense-panes.md）である。
  * 出典: https://github.com/digital-go-jp/design-tokens
  *
  * MIT License
@@ -131,6 +131,8 @@
   --fd-primitive-line-height-100: 1;
   --fd-primitive-line-height-130: 1.3;
   --fd-primitive-line-height-150: 1.5;
+  /* DADS に無い値。13px の等幅の文字を約 20px の行に置く。DADS の 150% では 19.5px になる */
+  --fd-primitive-line-height-154: 1.54;
   --fd-primitive-line-height-160: 1.6;
   --fd-primitive-line-height-170: 1.7;
 }
@@ -209,7 +211,7 @@
      端末の bright の色は、ライトの面で読めるよう、通常の色より暗い階調にする */
   --fd-color-code-surface: var(--fd-primitive-color-sumi-75);
   --fd-color-code-text: var(--fd-primitive-color-sumi-900);
-  --fd-color-code-comment: var(--fd-primitive-color-sumi-600);
+  --fd-color-code-comment: var(--fd-primitive-color-sumi-650);
   --fd-color-code-keyword: var(--fd-primitive-color-wine-800);
   --fd-color-code-string: var(--fd-primitive-color-green-800);
   --fd-color-code-number: var(--fd-primitive-color-brown-700);
@@ -294,7 +296,7 @@
     /* コード: ダークのコードの面は地より暗くし、ページの面と分ける */
     --fd-color-code-surface: var(--fd-primitive-color-sumi-1000);
     --fd-color-code-text: var(--fd-primitive-color-sumi-25);
-    --fd-color-code-comment: var(--fd-primitive-color-sumi-400);
+    --fd-color-code-comment: var(--fd-primitive-color-sumi-350);
     --fd-color-code-keyword: var(--fd-primitive-color-wine-300);
     --fd-color-code-string: var(--fd-primitive-color-green-200);
     --fd-color-code-number: var(--fd-primitive-color-brown-200);
@@ -372,7 +374,7 @@
   /* コード: ダークのコードの面は地より暗くし、ページの面と分ける */
   --fd-color-code-surface: var(--fd-primitive-color-sumi-1000);
   --fd-color-code-text: var(--fd-primitive-color-sumi-25);
-  --fd-color-code-comment: var(--fd-primitive-color-sumi-400);
+  --fd-color-code-comment: var(--fd-primitive-color-sumi-350);
   --fd-color-code-keyword: var(--fd-primitive-color-wine-300);
   --fd-color-code-string: var(--fd-primitive-color-green-200);
   --fd-color-code-number: var(--fd-primitive-color-brown-200);

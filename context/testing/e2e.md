@@ -9,23 +9,62 @@ status: draft
 
 ## Test Tool
 
-<!-- E2E のテストのツール。ツールの API のうち、スキル write-e2e-test が一般の語で書いたものの名前。確認（自動で待つ assertion）、testid で要素を拾う方法、通信の差し替え、新しいタブの受け取り、ページを読み込むたびに実行するスクリプト、時計の差し替えと時刻の固定、準備の project とログインの状態のファイル -->
+E2E は Playwright（`@playwright/test`）で書く。
+要素は testid（`getByTestId`）で拾い、確認は `expect(locator)` の自動の待ちに任せる。
+画面の文字を比べるときは、`packages/e2e/tests/fixtures/articles.ts` の定数を、確認の両側に渡す。値を読んでから比べない。
 
 ## Test IDs
 
-<!-- testid の名前の付け方。画面 ID の形と、画面の接頭辞の付け方。共通のコンポーネントに渡した testid が付く先の調べ方 -->
+記事の一覧のリンクは `article-link`、記事のページの見出しは `article-title` である。
+testid は、アプリのコンポーネント（`apps/web/src/features/articles/ArticleRow.astro`、`apps/web/src/pages/articles/[...slug].astro`）に付ける。
+`@fukuemon/ui` の `Link` は、渡された `data-testid` を `<a>` に付ける。
 
 ## Lint Rule Options
 
-<!-- テストの書き方の lint の規則（スキル setup-e2e-lint で写したもの）の置き場、渡す値、lint を流すディレクトリ。テストのディレクトリ（既定の tests と違うとき）、固定の待ちを許すファイル、待つ時間の名前を定めるファイル、widgets/ に書いてはいけない画面 ID の形、widgets/ が開いてよい URL。本物の backend につなぐ spec の形、モックを張る関数の名前、モックの置き場 -->
+規則は `packages/e2e/eslint/e2e-authoring-rule.mjs` にある。スキル setup-e2e-lint の規則を写したものである。
+ESLint の設定は `packages/e2e/eslint.config.mjs` で、`packages/e2e/tests/**/*.ts` だけに当てる。
+渡す値は、`testsDir: "tests"` と `fixedWaitAllowedFiles: ["tests/fixtures/caption.ts"]` の 2 つである。
+規則は spec を `*.e2e.ts` の名前で見分けるので、spec はこの名前にする。
+
+```sh
+pnpm --filter @fukuemon/e2e lint
+```
+
+`pnpm run check` は、ルートの `lint:e2e` で同じ lint を流す。
 
 ## Running Tests
 
-<!-- 流すコマンド、テストのプロジェクトの分け方（準備と E2E）と CI で流す範囲、向ける環境と URL、worker の数とその理由、lint と型のチェックのコマンド。backend を差し替えて流す spec と本物の backend につなぐ spec の見分け方（ファイル名かプロジェクト）。エビデンスを撮る撮影の設定があれば、その置き場 -->
+### packages/e2e のサイトの E2E
 
-### トップの庭の見た目の回帰
+`packages/e2e` の E2E は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行し、dev server を対象にしない。
+先に `apps/web` をビルドする。
+
+```sh
+pnpm --filter @fukuemon/web run build
+pnpm --filter @fukuemon/e2e test
+```
+
+- 配信のポートは、実行のたびに空きポートを選ぶ。`PREVIEW_PORT` で決められる。`BASE_URL` を渡したときは、配信を立てない。
+- project は `chromium` だけである。
+- 型のチェックは `pnpm --filter @fukuemon/e2e typecheck` で流す。
+- ルートの `pnpm run test:e2e` は、サイトの E2E の後に、カタログの Show code の E2E（`pnpm --filter @fukuemon/ui e2e`）を流す。
+  - カタログの E2E は、config が Storybook をビルドしてポート 6126 で配信する。そのポートが使用中なら、起動が失敗する。
+- CI は `.github/workflows/e2e.yml` が、pull request だけで `pnpm run test:e2e` を流す。develop への push では流さない。
+- `pnpm run check` は、E2E を流さず、E2E の lint だけを流す。
+
+エビデンスを撮る config は `packages/e2e/playwright.capture.config.ts` である。
+字幕の関数は `packages/e2e/tests/fixtures/caption.ts` にある。
+出力は `packages/e2e/tests/evidence/` にでき、Git で追跡しない。
+
+```sh
+pnpm --filter @fukuemon/e2e capture
+node .claude/skills/playwright-capture/scripts/collect.mjs packages/e2e/tests/evidence/.playwright/改修後.json packages/e2e/tests/evidence
+```
+
+### apps/web の E2E と見た目の回帰
 
 `apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
+記事のページの表と図の枠の E2E も、同じ config（`apps/web/e2e/playwright.config.ts`）とコマンドで実行する。
 CI では、`pnpm run check` がビルドの後に実行する。
 ローカル環境では、ビルドしてから次を実行する。
 
@@ -34,6 +73,11 @@ pnpm run build
 pnpm run test:visual
 ```
 
+- 配信のポートは、実行のたびに空きポートを選ぶ。
+  - 別の worktree の preview が動いていても、並べて実行できる。
+  - ポートを決めたいときは、環境変数 `PREVIEW_PORT` に渡す。そのポートが使用中なら、preview の起動が失敗する。
+  - 1〜65535 の整数でない値は、config がエラーで止める。
+  - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
 - 庭は WebGL で描くので、GPU に依らないよう、chromium に SwiftShader で描かせる。
 - 基準のスナップショットは、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。

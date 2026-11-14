@@ -26,7 +26,7 @@ const isCookie = (header: HttpHeader) => COOKIE_HEADERS.has(header.name.toLowerC
 
 function HeaderTable({ caption, headers }: { caption: string; headers: readonly HttpHeader[] }) {
   return (
-    <Table caption={caption}>
+    <Table caption={caption} density="compact">
       <Table.Header>
         <Table.Row>
           <Table.HeaderCell>名前</Table.HeaderCell>
@@ -38,10 +38,10 @@ function HeaderTable({ caption, headers }: { caption: string; headers: readonly 
           // oxlint-disable-next-line react/no-array-index-key -- 同じ名前のヘッダが並ぶことがあり、並びも変わらない (context/conventions.md)
           <Table.Row key={`${header.name}-${index}`}>
             <Table.HeaderCell scope="row">
-              <span className="font-mono text-code-dense break-words">{header.name}</span>
+              <span className="font-mono text-code-compact break-words">{header.name}</span>
             </Table.HeaderCell>
             <Table.Cell>
-              <span className="font-mono text-code-dense break-all">{header.value}</span>
+              <span className="font-mono text-code-compact break-all">{header.value}</span>
             </Table.Cell>
           </Table.Row>
         ))}
@@ -53,13 +53,13 @@ function HeaderTable({ caption, headers }: { caption: string; headers: readonly 
 function MessageBody({ label, body }: { label: string; body: string }) {
   const labelId = useId();
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-body-dense font-bold" id={labelId}>
+    <div className="flex flex-col gap-1">
+      <p className="text-label-compact" id={labelId}>
         {label}
       </p>
       <pre
         aria-labelledby={labelId}
-        className="overflow-x-auto bg-code-surface p-4 font-mono text-code-dense text-code-text focus-visible:focus-ring"
+        className="overflow-x-auto bg-code-surface p-2 font-mono text-code-compact text-code-text focus-visible:focus-ring"
         role="region"
         tabIndex={0}
       >
@@ -78,12 +78,12 @@ function MessageSection({
 }) {
   const headers = message?.headers.filter((header) => !isCookie(header)) ?? [];
   return (
-    <Disclosure defaultOpen summary={side}>
-      <div className="flex flex-col gap-4">
+    <Disclosure defaultOpen density="compact" summary={side}>
+      <div className="flex flex-col gap-2">
         {headers.length > 0 ? (
           <HeaderTable caption={`${side}のヘッダ`} headers={headers} />
         ) : (
-          <p className="text-body-dense text-text-secondary">ヘッダはありません。</p>
+          <p className="text-body-compact text-text-secondary">ヘッダはありません。</p>
         )}
         {message?.body !== undefined && <MessageBody body={message.body} label={`${side}の本文`} />}
       </div>
@@ -114,8 +114,8 @@ export function HttpExchangeDetail({
   return (
     <ToolPane state={paneState} title={title}>
       {exchange !== undefined && (
-        <div className="flex flex-col gap-4 p-4">
-          <p className="flex flex-col gap-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-2">
+          <p className="flex flex-col">
             <HttpExchangeSummary actors={actors} exchange={exchange} />
           </p>
           <MessageSection message={exchange.request} side="リクエスト" />
@@ -123,7 +123,7 @@ export function HttpExchangeDetail({
             <MessageSection message={exchange.response} side="レスポンス" />
           )}
           {cookies.length > 0 && (
-            <Disclosure defaultOpen summary="Cookie">
+            <Disclosure defaultOpen density="compact" summary="Cookie">
               <HeaderTable caption="Cookie のヘッダ" headers={cookies} />
             </Disclosure>
           )}

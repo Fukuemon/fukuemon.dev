@@ -94,7 +94,7 @@
   /* 等幅の和文の字は BIZ UDGothic で受ける */
   --font-mono: "Noto Sans Mono", "BIZ UDGothic", monospace;
 
-  /* 文字: 用途の名前で置く。14px より小さい文字は、下の compact の 2 つだけにする */
+  /* 文字: 用途の名前で置く。14px より小さい文字は、下の compact の 4 つだけにする */
   --text-caption: var(--fd-primitive-font-size-14);
   --text-caption--line-height: var(--fd-primitive-line-height-130);
   --text-body-dense: var(--fd-primitive-font-size-16);
@@ -115,12 +115,16 @@
   --text-code--line-height: var(--fd-primitive-line-height-170);
   --text-code-dense: var(--fd-primitive-font-size-14);
   --text-code-dense--line-height: var(--fd-primitive-line-height-130);
-  /* compact: コードを動かす画面のコンポーネントだけに使う 12px と 13px（docs/adr/0062-dense-text-and-targets-in-playground.md） */
+  /* compact: コードを動かす画面のコンポーネントだけに使う 12px と 13px。code-compact は等幅の 13px で、約 20px の行にする（docs/adr/0062-dense-text-and-targets-in-playground.md、docs/adr/0067-compact-text-tokens-in-dense-panes.md） */
   --text-compact: var(--fd-primitive-font-size-12);
   --text-compact--line-height: var(--fd-primitive-line-height-130);
   --text-label-compact: var(--fd-primitive-font-size-13);
   --text-label-compact--line-height: var(--fd-primitive-line-height-100);
   --text-label-compact--font-weight: var(--fd-primitive-font-weight-700);
+  --text-body-compact: var(--fd-primitive-font-size-13);
+  --text-body-compact--line-height: var(--fd-primitive-line-height-130);
+  --text-code-compact: var(--fd-primitive-font-size-13);
+  --text-code-compact--line-height: var(--fd-primitive-line-height-154);
 
   --font-weight-normal: var(--fd-primitive-font-weight-400);
   --font-weight-bold: var(--fd-primitive-font-weight-700);
@@ -185,10 +189,46 @@
   }
 }
 
+/* 動きを減らす設定では、--fd-scroll-fade-ease が step-end になる。薄い色は、右端の手前まで濃さを保ち、右端まで送ったときに一度に消える */
+@keyframes fd-scroll-fade-end {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* フォーカスの表示は、このユーティリティだけで書く。要素から 2px 離して、墨の 2px の輪を 1 重に引く */
 @utility focus-ring {
   outline: 2px solid var(--fd-color-focus);
   outline-offset: 2px;
+}
+
+/* 詰めたペインの中の行と、ペインの全体を占めるスクロールする領域に使う。隣の行や領域の端で輪が欠けないよう、要素の内側に引く（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
+@utility focus-ring-inset {
+  outline: 2px solid var(--fd-color-focus);
+  outline-offset: -2px;
+}
+
+/* フォーカスできるスクロールする領域 1 つを直下に置く外側の要素に付ける。領域自身の輪は、中の行や帯の背景に隠れて欠けるので、外側の ::after に引く。isolation は、領域の中の z-index が輪を覆わないようにする（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
+@utility focus-ring-frame {
+  position: relative;
+  & > * {
+    isolation: isolate;
+  }
+  & > :focus-visible {
+    outline: none;
+  }
+  &:has(> :focus-visible)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    outline: 2px solid var(--fd-color-focus);
+    outline-offset: -2px;
+  }
 }
 
 /* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う */
@@ -309,8 +349,54 @@
   }
 }
 
-/* OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない */
+/*
+ * 横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする。薄い色は、右端まで送る手前から消え始め、送りきったときに消えきる。
+ * 中身と ::after を grid の同じセルに重ねる。枠に mask を当てると、外へ広がるフォーカスの輪も切れるためである。
+ * あふれない枠ではスクロールの timeline が働かず、opacity: 0 のままになる。
+ * 要素の子を 1 つだけ持つ枠に付ける。枠の display は grid になる。
+ * 薄い色は surface の色で、枠が別の面の上にあるときは、--fd-scroll-fade-bg にその面の色を渡す。
+ */
+@utility scroll-fade-end {
+  display: grid;
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    &::after {
+      content: "";
+      grid-area: 1 / 1;
+      justify-self: end;
+      position: sticky;
+      inset-inline-end: 0;
+      width: calc(var(--spacing) * 12);
+      background-image: linear-gradient(
+        to right,
+        transparent,
+        var(--fd-scroll-fade-bg, var(--fd-color-surface))
+      );
+      opacity: 0;
+      pointer-events: none;
+      /* shorthand で書くと、ビルドが animation-timeline まで shorthand にまとめ、ブラウザが宣言ごと捨てる */
+      animation-name: fd-scroll-fade-end;
+      animation-timing-function: var(--fd-scroll-fade-ease, linear);
+      animation-fill-mode: both;
+      animation-timeline: scroll(nearest inline);
+    }
+  }
+}
+
+/*
+ * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
+ * scroll-fade-end の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。
+ * step-end がほかのスクロールに合わせた動きに及ばないよう、緩急は変数で scroll-fade-end にだけ渡す。
+ */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --fd-scroll-fade-ease: step-end;
+  }
+
   *,
   *::before,
   *::after,

@@ -75,6 +75,13 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - frontmatter に `format` を書くときは、`page` だけを書く。
 - 図は `mermaid` のコードフェンスで書き、色を指定しない。
   - `style` や `classDef` で色を書くと、暗い地で読めなくなる。
+  - 図は、ビルドのときに Pele で SVG になる。Pele が対応しない記法を書くと、ビルドが失敗する。
+  - 図の中の画像（`img`）は描かない。外部の画像を描くと、読者のブラウザが第三者のホストへ取りに行くためである。図の中のリンク（`click`）は描く。
+  - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)
+- コードは、言語の名前を付けたコードフェンスで書く。ファイルの名前を出すときは、フェンスに `title="<ファイルの名前>"` を書く。
+- 段落は、1 文を 1 行に書く。
+  - 行の終わりが和文の約物（`。` や `、` など）のときと、改行の前後がどちらも和文の字のときは、ビルドのときに `apps/web/src/lib/rehype-ja-linebreak.ts` が改行を消す。
+  - 約物で終わらない行の、和文と欧文の間の改行は、空白として残る。
 
 書いた記事は、`pnpm --filter @fukuemon/web dev` で確認する。
 
@@ -88,8 +95,16 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 ### サイトの共通の CSS
 
 - サイトの共通の CSS は `apps/web/src/styles/site.css` に置き、`layouts/SiteLayout.astro` が読み込む。
-- `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css`、`theme.css`、`sources.css` を読む。`sources.css` のほかは、カタログの `preview.css` と同じ形にする。
+- `site.css` は、`@import "tailwindcss"` で preflight を読み、`@fukuemon/ui` の `fonts.css`、`theme.css`、`sources.css` を読む。読み込みの並びは、`sources.css` のほかは、カタログの `preview.css` と同じ形にする。
   - ADR-0055: [サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う](../docs/adr/0055-tailwind-preflight-and-theme-from-ui.md)
+- 記事の本文の要素のスタイリングは、`site.css` の `.prose` に置く。Markdown から出る要素には class が付かないので、要素のセレクタで指定する。
+- 本文の表と図は、`apps/web/src/lib/rehype-scroll-box.ts` が、横に送れるフォーカスできる枠で包む。縮めて本文の幅に収めると、表の列が潰れ、図の文字が 14px より小さくなるためである。
+  - Markdown の表には `caption` を書けないので、記事の表は、`packages/ui` の `Table` と違い、題を持たない。
+  - 枠には、右に続きがある間だけ右端を背景の色で薄くする、`packages/ui` のユーティリティ `scroll-fade-end` を付ける。動きは `site.css` に書かず、`packages/ui` の `theme.css` に置く（`MOTION-TOKEN`）。
+- コードブロックは、Expressive Code が描く `pre` を横に送る。`site.css` の `.prose .expressive-code pre` に `scroll-fade-end` を付ける。
+  - `pre` の背景は `surface` ではなく `code-surface` なので、薄い色の変数 `--fd-scroll-fade-bg` に `code-surface` の色を渡す。
+- `site.css` は、Pele の CSS 変数（`--pele-fg` など）にトークンを割り当てて、Pele が描いた図の色を決める。
+  - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
 - `packages/ui` のコンポーネントのクラスは、`@fukuemon/ui/sources.css` の `@source` が、Tailwind CSS の走査の対象に足す。Tailwind CSS は `node_modules` の下を走査しないためである。story、文書、テストは対象から外す。
 - 本文へのスキップリンクは、`SiteLayout.astro` の `<body>` の最初に置き、`<main id="main">` を指す。
@@ -191,6 +206,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
+- `packages/e2e` の tsconfig は、`noUncheckedIndexedAccess` を外す。スキルの写しの `caption.ts` が、添字で読んだ値をそのまま使うため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
   - 承認した ADR-0026 の題と、PRD の性能の要求の行にあり、言い換えると承認した文が変わる。

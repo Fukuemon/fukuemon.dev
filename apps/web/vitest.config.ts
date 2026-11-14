@@ -8,6 +8,7 @@ export default defineConfig({
       // ファイル単位で明示列挙する。列挙し忘れると何もゲートしない
       include: [
         "src/components/site-nav.ts",
+        "src/lib/subset-fonts.ts",
         "src/features/top-garden/ink/brush.ts",
         "src/features/top-garden/ink/ink-art.ts",
         "src/features/top-garden/ink/ink-svg.ts",
@@ -18,6 +19,13 @@ export default defineConfig({
         "src/components/sign/sign.ts",
         "src/features/top-garden/stage/stage.ts",
         "src/features/top-garden/stage/visit.ts",
+        "src/lib/content/article-graph.ts",
+        "src/lib/content/article-list.ts",
+        "src/lib/content/article-pages.ts",
+        "src/lib/content/rss.ts",
+        "src/lib/rehype-ja-linebreak.ts",
+        "src/lib/rehype-mermaid.ts",
+        "src/lib/rehype-scroll-box.ts",
       ],
       thresholds: { branches: 90, functions: 90, lines: 90, statements: 90 },
       reporter: ["text-summary"],

@@ -55,10 +55,20 @@ const TEXT_PAIRS = [
     ["text", `${state}-surface`],
   ]),
   // コードの字句と端末の色は、コードの面の上で本文と同じ基準にする（コメントも含む）
-  ...["text", "comment", "keyword", "string", "number", "function", "type"].map((t) => [
-    `code-${t}`,
+  // エディタの今いる行（surface-subtle）、選択と補完の選んだ行（primary-surface）、検索の一致（info-surface）、パネル（surface、surface-raised）の上にも、コードの字句が載る
+  ...[
     "code-surface",
-  ]),
+    "surface",
+    "info-surface",
+    "primary-surface",
+    "surface-subtle",
+    "surface-raised",
+  ].flatMap((bg) =>
+    ["text", "comment", "keyword", "string", "number", "function", "type"].map((t) => [
+      `code-${t}`,
+      bg,
+    ]),
+  ),
   ...["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"].flatMap((color) => [
     [`code-ansi-${color}`, "code-surface"],
     [`code-ansi-bright-${color}`, "code-surface"],
@@ -76,8 +86,10 @@ const NON_TEXT_PAIRS = [
     ["primary", bg],
     ["danger", bg],
   ]),
-  // フォーカスの表示は、要素から離して引く墨の輪が、輪の乗る面（選んだ行とコードの面を含む）に対して 3:1 以上を保つ
-  ...[...SURFACES, "primary-surface", "code-surface"].map((bg) => ["focus", bg]),
+  // フォーカスの表示は、墨の輪が、輪の乗る面（選んだ行、コードの面、コンソールの warn と error の行を含む）に対して 3:1 以上を保つ
+  ...[...SURFACES, "primary-surface", "code-surface", "warning-surface", "danger-surface"].map(
+    (bg) => ["focus", bg],
+  ),
 ];
 
 const MAX_DEPTH = 10;

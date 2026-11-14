@@ -1,0 +1,39 @@
+---
+import type { ContentRef } from "@fukuemon/content-model";
+import { Link } from "@fukuemon/ui";
+import type { SeriesLink } from "../../lib/content/article-list";
+
+interface Props {
+  article: ContentRef;
+  /** 一覧で、記事が入るシリーズ。シリーズのページでは渡さない */
+  series?: SeriesLink | undefined;
+  /** シリーズのページで、読む順の番号。1 から数える */
+  position?: number;
+}
+const { article, series, position } = Astro.props;
+const date = article.date.toISOString().slice(0, 10);
+---
+
+<li class="flex items-baseline justify-between gap-4 border-b border-border py-3">
+  <div class="flex min-w-0 flex-col items-start gap-2">
+    <div class="flex items-baseline gap-3">
+      {
+        position !== undefined && (
+          <span class="shrink-0 text-caption text-text-secondary">{position} 本目</span>
+        )
+      }
+      <Link href={article.href} isStandalone data-testid="article-link">{article.title}</Link>
+    </div>
+    <p class="flex flex-wrap gap-x-4 text-caption text-text-secondary">
+      {
+        series && (
+          <span>
+            シリーズ<Link href={series.href}>{series.title}</Link>
+          </span>
+        )
+      }
+      <span>{article.tags.join("、")}</span>
+    </p>
+  </div>
+  <time class="shrink-0 text-caption text-text-secondary" datetime={date}>{date}</time>
+</li>

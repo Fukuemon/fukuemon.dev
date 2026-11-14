@@ -1,0 +1,30 @@
+---
+import { Breadcrumb } from "@fukuemon/ui";
+import ArticleRow from "../../features/articles/ArticleRow.astro";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import type { SeriesPage } from "../../lib/content/article-list";
+import { getSeriesPaths } from "../../lib/content/articles";
+
+export const getStaticPaths = getSeriesPaths;
+
+type Props = SeriesPage;
+const { href, title, description, articles } = Astro.props;
+---
+
+<SiteLayout title={`${title} | fukuemon.dev`} description={description}>
+  <div class="px-4 py-8 md:px-6">
+    <div class="mx-auto flex max-w-page flex-col gap-4">
+      <Breadcrumb
+        items={[
+          { label: "記事", href: "/articles" },
+          { label: title, href },
+        ]}
+      />
+      <h1 class="font-heading text-heading-lg font-semibold">{title}</h1>
+      <p class="max-w-prose text-body">{description}</p>
+      <ol class="flex flex-col">
+        {articles.map((article, i) => <ArticleRow article={article} position={i + 1} />)}
+      </ol>
+    </div>
+  </div>
+</SiteLayout>
