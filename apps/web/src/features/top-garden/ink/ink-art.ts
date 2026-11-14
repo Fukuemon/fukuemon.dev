@@ -1,4 +1,5 @@
 import { brush, type Stroke, type Tint } from "./brush";
+import { addTrees } from "./ink-trees";
 import {
   CAM0,
   DESIGN,
@@ -22,7 +23,7 @@ const INK_SEED = 7;
 const STEP_FOCAL = 1060;
 
 /**
- * 墨の絵の線を、山並み、塀、門、飛び石、石、松の順に作る。
+ * 墨の絵の線を、山並み、塀、門、飛び石、石、近景の松、塀の向こうと門の奥の木の順に作る。
  * 門と塀と飛び石は、立体の配置を最初のカメラで投影した位置に置く。
  */
 export function inkArt(seed = INK_SEED): InkArt {
@@ -285,5 +286,7 @@ export function inkArt(seed = INK_SEED): InkArt {
     3,
     44,
   );
+  // 塀の向こうと門の奥の木は、近景の松を描いた後に描く。描き終えてから色を差す
+  addTrees(B, 3500);
   return { strokes: B.strokes, tints: B.tints };
 }

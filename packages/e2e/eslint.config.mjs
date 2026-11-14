@@ -12,7 +12,7 @@ export default [
         "error",
         {
           testsDir: "tests",
-          fixedWaitAllowedFiles: ["tests/fixtures/caption.ts"],
+          fixedWaitAllowedFiles: ["tests/fixtures/caption.ts", "tests/fixtures/delay-response.ts"],
         },
       ],
     },
