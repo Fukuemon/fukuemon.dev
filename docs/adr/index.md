@@ -25,11 +25,12 @@ ADR の規則は、[README.md](README.md) にある。
 
 ## 配信の基盤
 
-| ADR                                                     | 題                                                                                         |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [ADR-0005](0005-workers-terraform-wrangler-boundary.md) | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する |
-| [ADR-0031](0031-subdomains-and-workers.md)              | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる        |
-| [ADR-0032](0032-docs-site-behind-access.md)             | ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する        |
+| ADR                                                     | 題                                                                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| [ADR-0005](0005-workers-terraform-wrangler-boundary.md) | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する              |
+| [ADR-0031](0031-subdomains-and-workers.md)              | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる                     |
+| [ADR-0032](0032-docs-site-behind-access.md)             | ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する                     |
+| [ADR-0081](0081-docs-site-access-on-dashboard.md)       | （提案）ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する |
 
 ## 書体、トークン、コンポーネント
 
@@ -109,6 +110,7 @@ flowchart TB
     A0005["ADR-0005"]
     A0031["ADR-0031"]
     A0032["ADR-0032"]
+    A0081["ADR-0081"]
   end
   subgraph design["書体、トークン、コンポーネント"]
     A0075["ADR-0075"]
@@ -176,6 +178,8 @@ flowchart TB
   A0032 --> A0021
   A0032 --> A0005
   A0032 --> A0001
+  A0081 --> A0032
+  A0081 --> A0005
   A0075 --> A0034
   A0055 --> A0029
   A0055 --> A0024
