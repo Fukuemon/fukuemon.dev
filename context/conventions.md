@@ -225,7 +225,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 除外を足すときは、理由をこの節に書く。  
 設定ファイルのコメントだけに残さない。
 
-- knip は、`terraform`、`similarity-ts`、`go` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
+- knip は、`terraform`、`similarity-ts`、`go`、`uv` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - `packages/e2e` の tsconfig は、`noUncheckedIndexedAccess` を外す。スキルの写しの `caption.ts` が、添字で読んだ値をそのまま使うため。
