@@ -174,22 +174,70 @@ const isLoopback = (input) => {
   }
 };
 
-/** 送信元を示すヘッダを足した init。ヘッダを組めないときは undefined を返し、元の fetch に任せる。 */
-function withSender(input, init) {
-  try {
-    const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : {}));
-    if (!headers.has(FROM_HEADER)) headers.set(FROM_HEADER, senderId());
-    return { ...init, headers };
-  } catch {
-    return undefined;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 20;
+// メソッドを GET に替えて送り直すときに消す、本文のヘッダ。Node の fetch と同じ
+const BODY_HEADERS = [
+  "content-encoding",
+  "content-language",
+  "content-location",
+  "content-type",
+  "content-length",
+];
+// origin が変わるリダイレクトで消すヘッダ。Node の fetch と同じ
+const CROSS_ORIGIN_HEADERS = ["authorization", "proxy-authorization", "cookie", "host"];
+
+/**
+ * 送信元を示すヘッダを足した request を、リダイレクトを 1 つずつ追って送る。
+ * Node の fetch は、origin が変わるリダイレクトでも足したヘッダを送り直すので、origin が変わる時点で足したヘッダを外し、その先は元の fetch に任せる。
+ */
+async function follow(request, count) {
+  const spare = request.clone();
+  const response = await originalFetch(request, { redirect: "manual" });
+  const location = response.headers.get("location");
+  if (!REDIRECT_STATUSES.has(response.status) || location === null) return response;
+  if (count >= MAX_REDIRECTS) {
+    throw new TypeError("fetch failed", { cause: new Error("redirect count exceeded") });
   }
+  await response.body?.cancel();
+  const next = new URL(location, request.url);
+  const headers = new Headers(spare.headers);
+  let { method, body } = spare;
+  if (
+    ((response.status === 301 || response.status === 302) && method === "POST") ||
+    (response.status === 303 && method !== "GET" && method !== "HEAD")
+  ) {
+    method = "GET";
+    body = null;
+    for (const name of BODY_HEADERS) headers.delete(name);
+  }
+  const crossOrigin = next.origin !== new URL(request.url).origin;
+  if (crossOrigin) for (const name of [FROM_HEADER, ...CROSS_ORIGIN_HEADERS]) headers.delete(name);
+  const init = { method, headers, body, signal: spare.signal, ...(body && { duplex: "half" }) };
+  if (crossOrigin) return markRedirected(await originalFetch(next, init));
+  return markRedirected(await follow(new Request(next, init), count + 1));
 }
+
+const markRedirected = (response) => {
+  quietly(() => Object.defineProperty(response, "redirected", { value: true }));
+  return response;
+};
 
 // 実行環境の中のサーバーへの fetch にだけ、送信元を示すヘッダを足す。外のサーバーには送らない
 const originalFetch = globalThis.fetch;
 if (typeof originalFetch === "function") {
   globalThis.fetch = function (input, init) {
-    const added = isLoopback(input) ? withSender(input, init) : undefined;
-    return originalFetch.call(this, input, added ?? init);
+    if (!isLoopback(input)) return originalFetch.call(this, input, init);
+    let request;
+    try {
+      request = new Request(input, init);
+      if (request.headers.has(FROM_HEADER)) return originalFetch.call(this, request);
+      request.headers.set(FROM_HEADER, senderId());
+    } catch {
+      // ヘッダや本文を組めないときは、元の fetch に任せ、同じ失敗を返させる
+      return originalFetch.call(this, input, init);
+    }
+    if (request.redirect !== "follow") return originalFetch.call(this, request);
+    return follow(request, 0);
   };
 }

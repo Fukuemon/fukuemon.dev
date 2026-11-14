@@ -91,6 +91,42 @@ const listen = (server, port) => new Promise((r) => server.listen(port, "127.0.0
 })();
 `;
 
+/**
+ * 3000 番と 3001 番を待ち受け、client（`a` は 3000 番の URL）の fetch の応答を出す script。
+ * 3000 番は、/cross を 3001 番へ、/same を同じ origin へ 302 で、/keep を 307 で移し、/loop は自分へ移し続ける。
+ * 移った先は echo の値を返す。既定の echo は、メソッド、URL、送信元のヘッダ、本文である。
+ */
+const REDIRECTS = (
+  client: string,
+  echo = `req.method + " " + req.url + " from=" + (req.headers["x-playground-from"] ?? "none") + (body ? " " + body : "")`,
+  statusOnly = false,
+) => String.raw`
+const http = require("node:http");
+const listen = (server, port) => new Promise((r) => server.listen(port, "127.0.0.1", r));
+const reply = (req, res) => {
+  let body = "";
+  req.on("data", (c) => (body += c));
+  req.on("end", () => res.end(${echo}));
+};
+const moves = { "/cross": [302, "http://127.0.0.1:3001/land"], "/same": [302, "/here"], "/keep": [307, "/here"], "/loop": [302, "/loop"] };
+(async () => {
+  const a = http.createServer((req, res) => {
+    const move = moves[req.url];
+    if (!move) return reply(req, res);
+    req.resume();
+    res.writeHead(move[0], { location: move[1] });
+    res.end();
+  });
+  await listen(a, 3000);
+  const b = http.createServer(reply);
+  await listen(b, 3001);
+  const r = await (async (a) => ${client})("http://127.0.0.1:3000");
+  console.log(${statusOnly ? "String(r.status)" : `(await r.text()) + " " + r.redirected`});
+  a.close();
+  b.close();
+})();
+`;
+
 const LOGIN = oneServer(
   String.raw`(req, res) => {
     let body = "";
@@ -281,5 +317,65 @@ server.listen(3000, "127.0.0.1", () => fetch("http://127.0.0.1:3000/").then((r) 
       ),
     );
     expect(exchanges(records)).toHaveLength(1);
+  });
+
+  describe("リダイレクト", () => {
+    it("origin が変わるリダイレクトの先には、送信元を示すヘッダを送らない", async () => {
+      const { text } = await run(REDIRECTS(`await fetch(a + "/cross")`));
+      expect(text).toStrictEqual(["GET /land from=none true"]);
+    });
+
+    it("origin が変わるリダイレクトの先には、Cookie と Authorization も送らない", async () => {
+      const { text } = await run(
+        REDIRECTS(
+          `await fetch(a + "/cross", { headers: { cookie: "s=1", authorization: "Bearer x" } })`,
+          `req.headers.cookie + " " + req.headers.authorization`,
+        ),
+      );
+      expect(text).toStrictEqual(["undefined undefined true"]);
+    });
+
+    it("origin が変わるリダイレクトの先は、ブラウザからの通信として記録する", async () => {
+      const { records } = await run(REDIRECTS(`await fetch(a + "/cross")`));
+      expect(exchanges(records).map((r) => [r.url, r.from])).toStrictEqual([
+        ["/cross", "3000"],
+        ["/land", null],
+      ]);
+    });
+
+    it("同じ origin のリダイレクトの先には、送信元を示すヘッダを送る", async () => {
+      const { text } = await run(REDIRECTS(`await fetch(a + "/same")`));
+      expect(text).toStrictEqual(["GET /here from=3000 true"]);
+    });
+
+    it("307 のリダイレクトは、メソッドと本文を変えずに送り直す", async () => {
+      const { text } = await run(
+        REDIRECTS(`await fetch(a + "/keep", { method: "POST", body: "a=1" })`),
+      );
+      expect(text).toStrictEqual(["POST /here from=3000 a=1 true"]);
+    });
+
+    it("302 のリダイレクトは、POST を本文の無い GET にして送り直す", async () => {
+      const { text } = await run(
+        REDIRECTS(`await fetch(a + "/same", { method: "POST", body: "a=1" })`),
+      );
+      expect(text).toStrictEqual(["GET /here from=3000 true"]);
+    });
+
+    it("redirect が manual の fetch は、リダイレクトを追わずに返す", async () => {
+      const { text } = await run(
+        REDIRECTS(`await fetch(a + "/cross", { redirect: "manual" })`, `"unused"`, true),
+      );
+      expect(text).toStrictEqual(["302"]);
+    });
+
+    it("リダイレクトが 20 回を超えたら、Promise の失敗で返す", async () => {
+      const { text } = await run(
+        REDIRECTS(
+          `await fetch(a + "/loop").catch((e) => ({ text: async () => e.cause.message, redirected: "" }))`,
+        ),
+      );
+      expect(text).toStrictEqual(["redirect count exceeded "]);
+    });
   });
 });
