@@ -95,7 +95,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 確認: `pnpm run check:utilities`
   - 入力欄と、その見出し、補足の文、誤りの文の間は、`gap-2`（8px）以上にする。フォーカスの表示（`focus-ring`）は、欄の外へ 4px 広がる。狭いと、フォーカスの表示が近くの文字に重なる。
     - 確認: レビューで、欄と近くの文字の間が、その段以上かを見る。
-- `BODY-WIDTH`: 文字の列の幅は、テーマ変数の `--container-body`（40rem）のユーティリティの `max-w-body` で抑える。`max-w-prose` を書かない。
+- `BODY-WIDTH`: 文字の列（記事の本文、シリーズの説明、トップの Profile）の幅は、テーマ変数の `--container-body`（40rem）のユーティリティの `max-w-body` で抑える。`max-w-prose` を書かない。
   - `max-w-prose` は Tailwind の `65ch` で、幅が本文の書体の「0」の幅で決まる。本文は端末に入っている書体で描くので、1 行の字数が端末ごとにずれる。
   - `max-w-prose` はテーマ変数を読まず、`65ch` に固定されている。
   - 確認: `pnpm run check:utilities`
