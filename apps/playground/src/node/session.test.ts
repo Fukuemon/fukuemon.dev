@@ -290,7 +290,7 @@ describe("起動", () => {
     expect(session.versionChanged.getSnapshot()).toBe(false);
   });
 
-  it("保存したレコードに保存しないパスがあるときは、落としたファイルで起動し、落としたレコードを書き直す", async () => {
+  it("保存したレコードに保存しないパスがあるときは、除いたファイルで起動し、除いた後のレコードを書き直す", async () => {
     const record = {
       ...savedRecord,
       files: { "index.js": "b", ".env": "TOKEN=x", "dist/a.js": "d" },
@@ -301,6 +301,38 @@ describe("起動", () => {
       booted: [{ "index.js": "b" }],
       saved: [{ "index.js": "b" }],
     });
+  });
+
+  it("書き直しが失敗したときは、次の変更で、除いた後のレコードを書く", async () => {
+    const { workspace, saves } = fakeWorkspace();
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    const runtimes: Fake[] = [];
+    const session = createNodeSession({
+      project,
+      saved: { kind: "saved", record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } } },
+      storage: workspace,
+      embedId: "oauth/demo",
+      boot: async ({ files }) => {
+        const fake = fakeRuntime(files, 0);
+        runtimes.push(fake);
+        return fake.runtime;
+      },
+    });
+    await settle(session);
+    runtimes[0]?.change("index.js");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((saved) => saved.files)).toStrictEqual([{ "index.js": "b" }]);
+  });
+
+  it("保存しないファイルだけを持つレコードは、空の作業ディレクトリで起動し、空のレコードを書き直す", async () => {
+    const record = { ...savedRecord, files: { ".env": "x" } };
+    const { session, booted, saves, latest } = setup({ kind: "saved", record });
+    await settle(session);
+    expect({
+      booted,
+      saved: saves.map((saved) => saved.files),
+      calls: latest().calls,
+    }).toStrictEqual({ booted: [{}], saved: [{}], calls: ["shell", "npm install (npm install)"] });
   });
 
   it("保存したレコードに保存しないパスが無いときは、起動のときに書き直さない", async () => {
@@ -677,7 +709,25 @@ describe("restart", () => {
     const restarted = session.restart();
     await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
     await restarted;
-    expect(booted.at(-1)).toStrictEqual({ "index.js": "c" });
+    expect({
+      booted: booted.at(-1),
+      readFailed: session.restartReadFailed.getSnapshot(),
+    }).toStrictEqual({ booted: { "index.js": "c" }, readFailed: true });
+  });
+
+  it("起動に失敗した実行環境を起動し直すときは、作業ディレクトリを読まず、案内を変えない", async () => {
+    const { session, boot, booted, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    boot.mockRejectedValueOnce(new Error("起動できない"));
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await restarted;
+    await session.restart();
+    expect({
+      booted: booted.at(-1),
+      readFailed: session.restartReadFailed.getSnapshot(),
+    }).toStrictEqual({ booted: savedRecord.files, readFailed: true });
   });
 
   it("起動し直している間に重ねて呼んでも、1 回だけ起動し直す", async () => {

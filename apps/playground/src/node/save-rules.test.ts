@@ -6,7 +6,7 @@ import {
   isExcludedFromSave,
   filesForRestart,
   filesToSave,
-  withoutUnsaved,
+  withoutExcludedFromSave,
 } from "./save-rules";
 
 const file = (path: string, text: string | null = "x", size = 1): FileContents => ({
@@ -64,10 +64,10 @@ describe("filesForRestart", () => {
   });
 });
 
-describe("withoutUnsaved", () => {
+describe("withoutExcludedFromSave", () => {
   it("保存しないパスを落とす", () => {
     expect(
-      withoutUnsaved({ "a.js": "a", ".env": "x", "b/.yarnrc.yml": "y", "dist/a.js": "d" }),
+      withoutExcludedFromSave({ "a.js": "a", ".env": "x", "b/.yarnrc.yml": "y", "dist/a.js": "d" }),
     ).toStrictEqual({ "a.js": "a" });
   });
 });

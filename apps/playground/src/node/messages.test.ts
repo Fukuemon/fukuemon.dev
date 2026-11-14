@@ -1,7 +1,28 @@
 import type { ProcessInfo } from "@fukuemon/node-runtime";
 import { describe, expect, it } from "vitest";
 
-import { SUPPORTED_BROWSERS, bootFailureMessage, processLabel, shellName } from "./messages";
+import {
+  SUPPORTED_BROWSERS,
+  bootFailureMessage,
+  overLimitMessage,
+  processLabel,
+  shellName,
+} from "./messages";
+
+describe("overLimitMessage", () => {
+  it.each([
+    [
+      true,
+      "作業ディレクトリのファイルが 1000 個か 10 MB を超えました。ページを閉じると、前に保存したときのファイルに戻ります。ファイルを減らすと、また保存します。",
+    ],
+    [
+      false,
+      "作業ディレクトリのファイルが 1000 個か 10 MB を超えました。ページを閉じると、変えたファイルが消えます。ファイルを減らすと、また保存します。",
+    ],
+  ])("保存したファイルがあるかが %s のときの本文", (hasSaved, message) => {
+    expect(overLimitMessage(hasSaved)).toBe(message);
+  });
+});
 
 const info = (
   name: string,

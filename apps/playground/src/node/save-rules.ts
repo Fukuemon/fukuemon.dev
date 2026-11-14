@@ -60,7 +60,9 @@ export function filesForRestart(entries: readonly FileContents[]): Record<string
 }
 
 /** 保存したレコードのファイルから、保存しないパスを落とす。規則を足す前に保存したレコードに、シークレットのファイルが残るためである。 */
-export const withoutUnsaved = (files: Readonly<Record<string, string>>): Record<string, string> =>
+export const withoutExcludedFromSave = (
+  files: Readonly<Record<string, string>>,
+): Record<string, string> =>
   Object.fromEntries(Object.entries(files).filter(([path]) => !isExcludedFromSave(path)));
 
 type SaveFiles = { kind: "within"; files: Record<string, string> } | { kind: "over-limit" };

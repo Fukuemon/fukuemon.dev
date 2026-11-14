@@ -284,6 +284,35 @@ describe("files.readAll", () => {
     expect(readFile.mock.calls.length).toBeLessThan(40);
   });
 
+  it("同時に読むファイルの数より多いファイルも、limit が無ければ全てをパスの順に返す", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++)
+      created.files.putFromCommand(`many/${String(i).padStart(3, "0")}`, "");
+    const paths = (await runtime.files.readAll(options))
+      .map(({ path }) => path)
+      .filter((path) => path.startsWith("many/"));
+    expect(paths).toStrictEqual(
+      Array.from({ length: 100 }, (_, i) => `many/${String(i).padStart(3, "0")}`),
+    );
+  });
+
+  it("同時に読むファイルは、32 個までである", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++) created.files.putFromCommand(`many/${i}.txt`, "");
+    const readFile = created.files.api.readFile;
+    let active = 0;
+    let max = 0;
+    created.files.api.readFile = async (path) => {
+      active += 1;
+      max = Math.max(max, active);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      active -= 1;
+      return readFile(path);
+    };
+    await runtime.files.readAll(options);
+    expect(max).toBe(32);
+  });
+
   it("limit の数と大きさちょうどなら、読み終える", async () => {
     const { runtime } = await bootFake();
     const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });

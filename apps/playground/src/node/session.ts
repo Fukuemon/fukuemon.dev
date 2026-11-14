@@ -24,7 +24,7 @@ import {
   isExcludedFromSave,
   filesForRestart,
   filesToSave,
-  withoutUnsaved,
+  withoutExcludedFromSave,
 } from "./save-rules";
 
 export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["project"];
@@ -170,7 +170,7 @@ export function createNodeSession({
   now = Date.now,
 }: NodeSessionOptions): NodeSession {
   const loaded = saved.kind === "saved" && isNodeRecord(saved.record) ? saved.record : undefined;
-  const record = loaded && { ...loaded, files: withoutUnsaved(loaded.files) };
+  const record = loaded && { ...loaded, files: withoutExcludedFromSave(loaded.files) };
   const canSave = saved.kind !== "unavailable";
   const hasSaved = createStore(record !== undefined);
   // 記事から開いていないページ（デフォルトのプロジェクト）では、記事の初期ファイルが変わったとは出さない
@@ -241,7 +241,7 @@ export function createNodeSession({
     let firstChange: number | undefined;
     let reading = false;
     let again = false;
-    // 読み込みは 1 本ずつにする。古い読み込みが後に終わって、古い中身で保存し直さないためである
+    // 結果を使う読み込みは 1 本ずつにする。古い読み込みが後に終わって、古い中身で保存し直さないためである。上限で諦めた読み込みは止まらずに動くが、結果は捨てる
     const save = async () => {
       timer = undefined;
       firstChange = undefined;
@@ -250,16 +250,19 @@ export function createNodeSession({
         return;
       }
       reading = true;
-      do {
-        again = false;
-        const read = await readForSave(runtime);
-        if (read && !stopped) {
-          // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
-          if (read.kind === "read") lastRead = filesForRestart(read.entries);
-          persist(read);
-        }
-      } while (again && !stopped);
-      reading = false;
+      try {
+        do {
+          again = false;
+          const read = await readForSave(runtime);
+          if (read && !stopped) {
+            // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
+            if (read.kind === "read") lastRead = filesForRestart(read.entries);
+            persist(read);
+          }
+        } while (again && !stopped);
+      } finally {
+        reading = false;
+      }
     };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
       if (!instance.touched || paths.every(isExcludedFromSave)) return;
