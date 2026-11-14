@@ -8,7 +8,7 @@ import {
   SplitPane,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { type ReactNode, Suspense, use, useReducer } from "react";
+import { type ReactNode, Suspense, use, useReducer, useSyncExternalStore } from "react";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
@@ -17,11 +17,11 @@ import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
-import { type NodeProject, createRuntimeStarter } from "./session";
+import { type NodeSession, createNodeSessionOpener } from "./session";
 import { TerminalPane } from "./TerminalPane";
+import { Toolbar } from "./Toolbar";
 
-const loadProject = createProjectLoader("node", nodeDefaultProject);
-const startRuntime = createRuntimeStarter();
+const openSession = createNodeSessionOpener(createProjectLoader("node", nodeDefaultProject));
 
 const booting = { kind: "loading", label: "実行環境を起動しています" } as const;
 
@@ -50,10 +50,13 @@ function Pane({
   );
 }
 
-function NodeLayout({ project }: { project: NodeProject }) {
+function NodeLayout({ session }: { session: NodeSession }) {
+  const { project } = session;
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
+  const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   return (
-    <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
+    <RuntimeContext value={{ project, runtime }}>
+      <Toolbar session={session} />
       <SelectionContext value={{ selection, dispatch }}>
         <div className="min-h-0 flex-1">
           <SplitPane
@@ -112,7 +115,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
 }
 
 function NodeTool({ search }: { search: string }) {
-  const load = use(loadProject(search));
+  const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
       <Notice title="プロジェクトを開けませんでした" tone="danger">
@@ -124,7 +127,7 @@ function NodeTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  return <NodeLayout project={load.project} />;
+  return <NodeLayout session={load.session} />;
 }
 
 /** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。 */
