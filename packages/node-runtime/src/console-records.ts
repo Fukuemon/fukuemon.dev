@@ -202,7 +202,7 @@ export function createConsoleRecords({
   schedule = nextFrame,
 }: { max?: number; maxChars?: number; schedule?: Schedule } = {}) {
   const store = createStore<readonly ConsoleRecord[]>([]);
-  // 残す記録は kept の first 番目から後である。捨てるたびに配列を詰めると、届くたびに上限の数を複製するので、first を進めて、捨てた分が上限の数を超えたら詰める
+  // 残す記録は kept の first 番目から後である。捨てるたびに配列を詰めると、届くたびに上限の数を複製するので、first を進めて、捨てた分が残す分を超えたら詰める
   let kept: { record: ConsoleRecord; chars: number }[] = [];
   let first = 0;
   let chars = 0;
@@ -224,7 +224,7 @@ export function createConsoleRecords({
       chars -= kept[first]?.chars ?? 0;
       first += 1;
     }
-    if (first > max) {
+    if (first > kept.length - first) {
       kept = kept.slice(first);
       first = 0;
     }
