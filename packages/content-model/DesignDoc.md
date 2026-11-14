@@ -197,6 +197,7 @@ flowchart TD
         loader["lib/content/articles-loader.ts<br/>読み込み後のシリーズのチェック"]
         articles["lib/content/articles.ts<br/>ページが使う astro:content の読み出し"]
         pages["lib/content/article-pages.ts<br/>isPublic() / planArticlePages()"]
+        graphcheck["lib/content/article-graph.ts<br/>assertContentGraph()"]
         list["lib/content/article-list.ts<br/>listArticles() / planSeriesPages()"]
         rss["lib/content/rss.ts<br/>buildRss()"]
     end
@@ -208,6 +209,9 @@ flowchart TD
     articles --> ac
     articles --> pages
     articles --> list
+    articles --> graphcheck
+    graphcheck --> list
+    graphcheck --> graph
     list --> pages
     list --> types
     list --> schema
@@ -260,6 +264,7 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 - `apps/web/src/content.config.ts`: collection の結線
 - `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
 - `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `planArticlePages()`
+- `apps/web/src/lib/content/article-graph.ts`: `buildContentGraph()` を呼び、誤りに原稿のパスを付けて throw する `assertContentGraph()`
 - `apps/web/src/lib/content/article-list.ts`: 一覧とシリーズのページの関数
   - `listArticles()`: 一覧と RSS に載せる記事を返す
   - `planSeriesPages()`: シリーズのページを組む
@@ -281,6 +286,8 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 読み込みのときに `planSeries()` が先に止めるので、この throw に届くのは、loader と collection の対応を誤ったときだけである。  
 `buildRss()` は、題、説明、URL に XML 1.0 で使えない文字があると throw し、ビルドを失敗させる。  
 `planSeries()` は、読み込みのときのチェックにだけ使い、戻り値はページに渡さない。  
+`articles.ts` の `loadArticlesAndSeries()` が、`assertContentGraph()` を通して `buildContentGraph()` を呼ぶ。  
+記事のページ、一覧、RSS、シリーズのページのどれを書き出すビルドも、この関数を通るので、誤りがあれば必ず失敗する。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
 
