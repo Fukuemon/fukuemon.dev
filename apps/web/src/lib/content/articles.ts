@@ -18,7 +18,7 @@ async function loadArticlesAndSeries() {
     getCollection("articles"),
     getCollection("series"),
   ]);
-  assertContentGraph(articles.map((a) => ({ id: a.id, data: a.data, filePath: a.filePath })));
+  assertContentGraph(articles);
   // series の glob は `<series>/index.md` を読み、id はディレクトリ名から始まる
   const seriesSources: SeriesSource[] = series.map((s) => ({
     name: s.id.split("/")[0] as string,

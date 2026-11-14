@@ -1,20 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { type ArticleGraphSource, assertContentGraph } from "./article-graph";
 
-const article = (id: string, contentId: string, related: string[] = []): ArticleGraphSource => ({
-  id,
-  filePath: `src/content/articles/${id}.md`,
-  data: {
-    contentId,
-    title: `題 ${id}`,
-    description: `説明 ${id}`,
-    tags: ["検証"],
-    status: "draft",
-    publishedAt: new Date("2026-11-01"),
-    format: "page",
-    related,
-  },
-});
+const article = (
+  id: string,
+  contentId: string,
+  related: string[] = [],
+  over: Partial<ArticleGraphSource> & { status?: "draft" | "published" } = {},
+): ArticleGraphSource => {
+  const { status = "published", ...rest } = over;
+  return {
+    id,
+    filePath: `src/content/articles/${id}.md`,
+    data: {
+      contentId,
+      title: `題 ${id}`,
+      description: `説明 ${id}`,
+      tags: ["検証"],
+      status,
+      publishedAt: new Date("2026-11-01"),
+      format: "page",
+      related,
+    },
+    ...rest,
+  };
+};
 
 describe("assertContentGraph", () => {
   it("重複も誤りも無ければ throw しない", () => {
@@ -35,13 +44,21 @@ describe("assertContentGraph", () => {
     );
   });
 
-  it("下書きを指す related は解決できる", () => {
-    expect(() => assertContentGraph([article("a", "a", ["b"]), article("b", "b")])).not.toThrow();
+  it("公開した記事から下書きを指す related は解決できる", () => {
+    expect(() =>
+      assertContentGraph([article("a", "a", ["b"]), article("b", "b", [], { status: "draft" })]),
+    ).not.toThrow();
   });
 
   it("related を両方向に書いたら、両方の原稿のパスを付けて throw する", () => {
     expect(() => assertContentGraph([article("a", "a", ["b"]), article("b", "b", ["a"])])).toThrow(
-      /両方向に書いています/,
+      /両方向に書いています。片方だけに書いてください: a <-> b \(.*articles\/a\.md, .*articles\/b\.md\)/,
     );
+  });
+
+  it("filePath が無い原稿は、id を付けて throw する", () => {
+    expect(() =>
+      assertContentGraph([article("a", "a", ["missing"], { filePath: undefined })]),
+    ).toThrow(/a -> missing \(a\)/);
   });
 });
