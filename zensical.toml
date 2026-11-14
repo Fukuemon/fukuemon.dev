@@ -40,6 +40,8 @@ nav = [
 
 [project.theme]
 language = "ja"
+# 本文はシステムフォントで組む (ADR-0075)。テーマの既定は Google Fonts の欧文の書体を読み、日本語の字形を持たない
+font = false
 
 [project.markdown_extensions.pymdownx.superfences]
 custom_fences = [
