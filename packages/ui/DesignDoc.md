@@ -104,7 +104,9 @@ Web フォントは Fontsource で self-host し、外部の CDN から読まな
 
 - Zen Old Mincho は、ビルドで見出しに使う字だけのファイルにする。
 - 等幅の和文の字は、BIZ UDGothic の 400 と 700 で受ける。M PLUS 1 Code と比べて、見出しの字に絞ったときのファイルが小さく（400 字で約 70 KB と約 150 KB）、Fontsource に静的なウェイトがあるためである。
-- Zen Old Mincho と BIZ UDGothic は、サイトのどのページも使わない字の分割の `@font-face` を、ビルドで CSS から外す。BIZ UDGothic のファイルは作り直さない。ADR-0075 の表で、等幅の和文は Fontsource の分割をそのまま配ると決めているためである。規則を外すのは、apps/web のビルドだけで、ADR-0075 の配信の方法の中で転送量を減らす処理である。
+- Zen Old Mincho と BIZ UDGothic は、サイトで使う字を 1 つも含まない分割の `@font-face` を、apps/web のビルドで CSS から削除する。
+  - BIZ UDGothic のファイルは作り直さない。等幅の和文は、Fontsource の分割をそのまま配信すると決めているためである。
+  - `@font-face` の削除は、ADR-0075 が決めた配信の方法を変えずに、転送量を減らす。
 - 本文の `font-family` は、プリミティブトークンの `--fd-primitive-font-family-sans` に置く。記事の題と見出しの代替の書体も、この値にする。
 - 見出しの明朝のウェイトは、テーマ変数の `font-semibold`（600）で書く。
 - どの Web フォントも `font-display: swap` にし、和文の分割は preload しない。

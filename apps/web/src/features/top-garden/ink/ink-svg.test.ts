@@ -116,7 +116,7 @@ describe("inkSvg", () => {
     );
   });
 
-  it("gzip で 28 KB 以内に収まる", () => {
+  it("gzip で 28 KiB 以内に収まる", () => {
     expect(gzipSync(out.svg).length).toBeLessThanOrEqual(28 * 1024);
   });
 
