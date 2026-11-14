@@ -13,7 +13,7 @@ governs:
   - packages/ui/package.json
   - packages/ui/vite.config.ts
   - .github/workflows/
-verified_commit: f1fe9fe
+verified_commit: 57f1419
 ---
 
 # 技術スタック
@@ -67,7 +67,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Vitest は unit test に使う。
 - Playwright は、次のことに使う。
   - `packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）
-  - トップの庭の見た目の回帰と、記事のページの表と図の枠の E2E（`packages/e2e/tests/specs/`）
+  - トップの庭の見た目の回帰と、サイトの E2E（`packages/e2e/tests/specs/`）
   - トップの試作の録画
   - トップの Lighthouse の計測（Chromium のパスの取得と、測る前のプロファイルの作成。`scripts/measure-top-lighthouse.mjs`）
 - three は、トップの立体の庭を描く場面のバンドルにだけ使う。
