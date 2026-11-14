@@ -1,5 +1,12 @@
 import { Button, ConfirmDialog, Notice } from "@fukuemon/ui";
-import { type ReactNode, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import {
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react";
 
 import type { Store } from "@fukuemon/node-runtime";
 
@@ -18,7 +25,15 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetFailed, setResetFailed] = useState(false);
+  const [focusRestart, setFocusRestart] = useState(false);
   const restartRef = useRef<HTMLButtonElement>(null);
+
+  // 閉じた <dialog> は、消えた「初期の状態に戻す」へフォーカスを戻そうとして body に落とす。起動し終えるまで「起動し直す」は disabled で、フォーカスを受けない。そのため、ダイアログが閉じ、起動し終えた後の描画でフォーカスを移す
+  useEffect(() => {
+    if (!focusRestart || confirming || busy) return;
+    restartRef.current?.focus();
+    setFocusRestart(false);
+  }, [focusRestart, confirming, busy]);
 
   const run = () => {
     // 失敗は、session の commandFailed で出す
@@ -38,7 +53,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
       .finally(() => {
         setResetting(false);
         setConfirming(false);
-        restartRef.current?.focus();
+        setFocusRestart(true);
       });
   };
 
