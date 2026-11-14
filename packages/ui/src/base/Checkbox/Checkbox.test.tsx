@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Checkbox.stories";
 
-const { Unchecked, Checked, Disabled } = composeStories(stories);
+const { Unchecked, Checked, Disabled, CheckedDisabled } = composeStories(stories);
 
 describe("Checkbox", () => {
   it("ラベルが名前になる", () => {
@@ -31,6 +31,8 @@ describe("Checkbox", () => {
     render(<Disabled />);
     const box = screen.getByRole("checkbox");
     expect(box).toBeDisabled();
+    await userEvent.tab();
+    expect(box).not.toHaveFocus();
     await userEvent.click(screen.getByText("このページでは今後尋ねない"), { force: true });
     expect(box).not.toBeChecked();
   });
@@ -56,5 +58,25 @@ describe("Checkbox", () => {
     render(<Checked />);
     const svg = screen.getByRole("checkbox").nextElementSibling as SVGElement;
     expect(getComputedStyle(svg).display).not.toBe("none");
+  });
+
+  it("チェックありの無効は、クリックしてもチェックが外れない", async () => {
+    render(<CheckedDisabled />);
+    await userEvent.click(screen.getByText("このページでは今後尋ねない"), { force: true });
+    expect(screen.getByRole("checkbox")).toBeChecked();
+  });
+
+  it("チェックなしのとき、印を出さない", () => {
+    render(<Unchecked />);
+    const svg = screen.getByRole("checkbox").nextElementSibling as SVGElement;
+    expect(getComputedStyle(svg).display).toBe("none");
+  });
+
+  it("チェックなしのとき、hover で面の色を変える", async () => {
+    render(<Unchecked />);
+    const box = screen.getByRole("checkbox");
+    const before = getComputedStyle(box).backgroundColor;
+    await userEvent.hover(box);
+    await expect.poll(() => getComputedStyle(box).backgroundColor).not.toBe(before);
   });
 });

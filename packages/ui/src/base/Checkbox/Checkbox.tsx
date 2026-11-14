@@ -10,6 +10,7 @@ export type CheckboxProps = Omit<
 
 /**
  * 選ぶか選ばないかの 2 択のチェックボックス。ブラウザの `<input type="checkbox">` を使う。
+ * 無効のときはブラウザの `disabled` で表し、フォーカスを受けない。
  * 見出しを含む行全体が押せる領域で、高さは 44px である。
  */
 export function Checkbox({ label, ...props }: CheckboxProps) {
@@ -18,7 +19,7 @@ export function Checkbox({ label, ...props }: CheckboxProps) {
       <span className="relative inline-flex size-5 shrink-0">
         <input
           {...props}
-          className="peer size-5 cursor-pointer appearance-none disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset checked:bg-primary checked:ring-primary focus-visible:focus-ring disabled:bg-surface-disabled disabled:ring-border disabled:checked:bg-text-disabled disabled:checked:ring-text-disabled"
+          className="peer size-5 cursor-pointer appearance-none disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset not-disabled:not-checked:hover:bg-surface-subtle not-disabled:not-checked:hover:ring-text checked:bg-primary checked:ring-primary not-disabled:checked:hover:bg-primary-hover focus-visible:focus-ring disabled:bg-surface-disabled disabled:ring-border disabled:checked:bg-text-disabled disabled:checked:ring-text-disabled"
           type="checkbox"
         />
         <svg

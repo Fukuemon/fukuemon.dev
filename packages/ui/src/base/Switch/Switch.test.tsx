@@ -69,6 +69,16 @@ describe("Switch", () => {
     expect(onCheckedChange).not.toHaveBeenCalled();
   });
 
+  it("無効のときは、Enter とラベルの文字のクリックでも切り替わらず、onClick を呼ばない", async () => {
+    const onClick = fn();
+    render(<Disabled onClick={onClick} />);
+    await userEvent.tab();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.click(screen.getByText("AI からの操作を許可する"), { force: true });
+    expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it("オンの無効も切り替わらない", async () => {
     render(<OnDisabled />);
     await userEvent.click(screen.getByRole("switch"), { force: true });
@@ -101,5 +111,13 @@ describe("Switch", () => {
     render(<Off />);
     const off = screen.getAllByRole("switch")[1]!.querySelector("svg")!;
     expect(getComputedStyle(off).display).toBe("none");
+  });
+
+  it("オフのとき、hover で面の色を変える", async () => {
+    render(<Off />);
+    const control = screen.getByRole("switch");
+    const before = getComputedStyle(control).backgroundColor;
+    await userEvent.hover(control);
+    await expect.poll(() => getComputedStyle(control).backgroundColor).not.toBe(before);
   });
 });

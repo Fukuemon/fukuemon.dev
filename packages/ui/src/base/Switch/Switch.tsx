@@ -2,7 +2,19 @@ import { type ComponentPropsWithRef, useId, useState } from "react";
 
 export type SwitchProps = Omit<
   ComponentPropsWithRef<"button">,
-  "className" | "style" | "children" | "role" | "type" | "onChange" | "aria-checked"
+  | "className"
+  | "style"
+  | "children"
+  | "role"
+  | "type"
+  | "onChange"
+  | "aria-checked"
+  | "aria-label"
+  | "aria-labelledby"
+  | "name"
+  | "value"
+  | "form"
+  | "formAction"
 > & {
   /** スイッチの見出し。文字を押しても切り替わる。 */
   label: string;
@@ -17,7 +29,8 @@ export type SwitchProps = Omit<
 /**
  * オンとオフを切り替えるスイッチ。APG の Switch に従い、`role="switch"` を持つ。
  * 状態は色のほかに、つまみの位置（右がオン）と、つまみの中の印で示す。
- * 無効のときは `aria-disabled` で表し、フォーカスを受けたまま切り替えを止める。
+ * 無効のときは `aria-disabled` で表し、フォーカスを受けたまま、切り替えと `onClick` を止める。
+ * フォームの値としては送らない。`checked` を渡すかどうかは、途中で切り替えない。
  */
 export function Switch({
   label,
@@ -33,19 +46,19 @@ export function Switch({
   const isChecked = checked ?? innerChecked;
 
   return (
-    <label
-      className="inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-aria-disabled:cursor-not-allowed has-aria-disabled:text-text-disabled"
-      id={labelId}
-    >
+    <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-aria-disabled:cursor-not-allowed has-aria-disabled:text-text-disabled">
       <button
         {...props}
         aria-checked={isChecked}
         aria-disabled={disabled || undefined}
         aria-labelledby={labelId}
-        className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center aria-disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset focus-visible:focus-ring aria-checked:bg-primary aria-checked:ring-primary aria-disabled:bg-surface-disabled aria-disabled:ring-border aria-disabled:aria-checked:bg-text-disabled aria-disabled:aria-checked:ring-text-disabled"
+        className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center aria-disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset focus-visible:focus-ring not-aria-disabled:not-aria-checked:hover:bg-surface-subtle not-aria-disabled:not-aria-checked:hover:ring-text aria-checked:bg-primary aria-checked:ring-primary not-aria-disabled:aria-checked:hover:bg-primary-hover aria-disabled:bg-surface-disabled aria-disabled:ring-border aria-disabled:aria-checked:bg-text-disabled aria-disabled:aria-checked:ring-text-disabled"
         onClick={(event) => {
+          if (disabled) {
+            event.preventDefault();
+            return;
+          }
           onClick?.(event);
-          if (disabled || event.defaultPrevented) return;
           if (checked === undefined) setInnerChecked(!isChecked);
           onCheckedChange?.(!isChecked);
         }}
@@ -66,7 +79,7 @@ export function Switch({
           </svg>
         </span>
       </button>
-      {label}
+      <span id={labelId}>{label}</span>
     </label>
   );
 }
