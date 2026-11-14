@@ -15,7 +15,7 @@ import {
   type NodeRecord,
   type NodeSession,
   type NodeSessionOptions,
-  RESTART_READ_TIMEOUT_MS,
+  READ_TIMEOUT_MS,
   SAVE_DELAY_MS,
   SAVE_MAX_DELAY_MS,
   createNodeSession,
@@ -252,6 +252,17 @@ describe("起動", () => {
 });
 
 describe("保存", () => {
+  it("保存のための読み込みが上限までに終わらないときは、次の変更で保存する", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS + READ_TIMEOUT_MS);
+    latest().change("index.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "d" }]);
+  });
+
   it("訪問者が操作する前の変更は、保存しない", async () => {
     const { session, saves, latest } = setup();
     await settle(session);
@@ -401,7 +412,7 @@ describe("restart", () => {
     expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
   });
 
-  it("作業ディレクトリのファイルを読み、古い実行環境を破棄してから、そのファイルで起動し直し、起動のコマンドは実行しない", async () => {
+  it("作業ディレクトリのファイルを読み、古い実行環境を破棄し、そのファイルで起動し直し、起動のコマンドは実行しない", async () => {
     const { session, booted, runtimes, latest } = setup();
     await settle(session);
     latest().contents.set("new.js", "n");
@@ -423,9 +434,45 @@ describe("restart", () => {
     await settle(session);
     latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
     const restarted = session.restart();
-    await vi.advanceTimersByTimeAsync(RESTART_READ_TIMEOUT_MS);
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
     await restarted;
     expect(booted.at(-1)).toStrictEqual(project.files);
+  });
+
+  it("訪問者が操作する前なら、起動し直しても保存しない", async () => {
+    const { session, saves, latest } = setup();
+    await settle(session);
+    latest().contents.set("index.js", "c");
+    await session.restart();
+    expect(saves).toStrictEqual([]);
+  });
+
+  it("作業ディレクトリを上限までに読めないときは、保存のために最後に読んだファイルで起動し直す", async () => {
+    const { session, booted, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await restarted;
+    expect(booted.at(-1)).toStrictEqual({ "index.js": "c" });
+  });
+
+  it("起動し直している間に重ねて呼んでも、1 回だけ起動し直す", async () => {
+    const { session, boot } = setup();
+    await settle(session);
+    await Promise.all([session.restart(), session.restart()]);
+    expect(boot.mock.calls.length).toBe(2);
+  });
+
+  it("起動し直すと、commandFailed を false に戻す", async () => {
+    const { session, latest } = setup();
+    await settle(session);
+    vi.mocked(latest().runtime.processes.start).mockRejectedValueOnce(new Error("起動できない"));
+    await session.run().catch(() => undefined);
+    await session.restart();
+    expect(session.commandFailed.getSnapshot()).toBe(false);
   });
 
   it("起動し直している間は busy を true にし、終わると false に戻す", async () => {
@@ -499,6 +546,34 @@ describe("reset", () => {
       boots: 1,
       saves: [{ "index.js": "b" }, { "index.js": "c" }],
     });
+  });
+
+  it("保存したファイルを消せないときは、commandFailed を戻さない", async () => {
+    const { session, workspace, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    vi.mocked(latest().runtime.processes.start).mockRejectedValueOnce(new Error("起動できない"));
+    await session.run().catch(() => undefined);
+    workspace.clear.mockRejectedValueOnce(new Error("消せない"));
+    await session.reset().catch(() => undefined);
+    expect(session.commandFailed.getSnapshot()).toBe(true);
+  });
+
+  it("訪問者が操作する前に消せなかったときは、作業ディレクトリを読み直さない", async () => {
+    const { session, workspace, latest } = setup();
+    await settle(session);
+    workspace.clear.mockRejectedValueOnce(new Error("消せない"));
+    await session.reset().catch(() => undefined);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(latest().readAll.mock.calls.length).toBe(0);
+  });
+
+  it("消せなかったときの読み込みが終わらなくても、失敗を返して busy を false に戻す", async () => {
+    const { session, workspace, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    workspace.clear.mockRejectedValueOnce(new Error("消せない"));
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    await session.reset().catch(() => undefined);
+    expect(session.busy.getSnapshot()).toBe(false);
   });
 
   it("戻すと、versionChanged を false にする", async () => {
@@ -600,7 +675,7 @@ describe("createNodeSessionOpener", () => {
     const load = opened("c/e");
     const { workspace } = fakeWorkspace();
     const openWorkspace = vi.fn(() => workspace);
-    const create = vi.fn((_: NodeSessionOptions) => ({}) as NodeSession);
+    const create = vi.fn<(options: NodeSessionOptions) => NodeSession>(() => ({}) as NodeSession);
     const open = createNodeSessionOpener(() => load, openWorkspace, create);
     const first = open("?project=c/e");
     expect({
@@ -624,7 +699,7 @@ describe("createNodeSessionOpener", () => {
   it("保存したレコードを読んでから、NodeSession を作る", async () => {
     const { workspace } = fakeWorkspace();
     const saved = { kind: "saved", record: savedRecord } as const;
-    const create = vi.fn((_: NodeSessionOptions) => ({}) as NodeSession);
+    const create = vi.fn<(options: NodeSessionOptions) => NodeSession>(() => ({}) as NodeSession);
     const open = createNodeSessionOpener(
       () => opened(undefined),
       () => ({ ...workspace, load: async () => saved }),

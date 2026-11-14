@@ -39,8 +39,8 @@ export const SAVE_DELAY_MS = 500;
 /** 変更の通知が続くときに、最初の通知から保存までを待つ上限（ms）。 */
 export const SAVE_MAX_DELAY_MS = 2_000;
 
-/** 起動し直すときに、作業ディレクトリを読み終えるのを待つ上限（ms）。 */
-export const RESTART_READ_TIMEOUT_MS = 5_000;
+/** 保存のためと起動し直すときに、作業ディレクトリを読み終えるのを待つ上限（ms）。 */
+export const READ_TIMEOUT_MS = 5_000;
 
 /** 実行のボタンで、前の起動のコマンドの終了を待つ上限（ms）。ポートが空くのを待つためである。 */
 const STOP_TIMEOUT_MS = 2_000;
@@ -198,10 +198,13 @@ export function createNodeSession({
   };
 
   const readForSave = async (runtime: NodeRuntime) => {
-    const entries = await runtime.files.readAll(SAVE_RULES).catch((error: unknown) => {
-      console.error("保存のために作業ディレクトリを読めない", error);
-      return undefined;
-    });
+    // 読み込みが終わらないと、次の保存が始まらないので、上限で諦める
+    const entries = await withTimeout(runtime.files.readAll(SAVE_RULES), READ_TIMEOUT_MS).catch(
+      (error: unknown) => {
+        console.error("保存のために作業ディレクトリを読めない", error);
+        return undefined;
+      },
+    );
     return entries && savedFiles(entries);
   };
 
@@ -376,13 +379,13 @@ export function createNodeSession({
   ) => {
     if (busy.getSnapshot()) return;
     busy.set(true);
-    commandFailed.set(false);
     try {
       // 起動の途中で破棄すると、後から起動した実行環境が残るので、起動を待ってから破棄する
       await runtimeStore.getSnapshot();
       const old = current;
       old.stopSaving();
       await before(old);
+      commandFailed.set(false);
       const { files, touched } = await prepare(old);
       bootFiles = files;
       await old.runtime?.dispose().catch((error: unknown) => {
@@ -401,7 +404,7 @@ export function createNodeSession({
     if (!old.runtime) return { files: lastRead ?? project.files, touched: old.touched };
     try {
       const files = savedFiles(
-        await withTimeout(old.runtime.files.readAll(SAVE_RULES), RESTART_READ_TIMEOUT_MS),
+        await withTimeout(old.runtime.files.readAll(SAVE_RULES), READ_TIMEOUT_MS),
       );
       if (old.touched) persist(files);
       return { files, touched: old.touched };
@@ -419,8 +422,8 @@ export function createNodeSession({
       lastSaved = undefined;
       if (old.runtime) {
         old.stopSaving = watchForSave(old, old.runtime);
-        const files = old.touched ? await readForSave(old.runtime) : undefined;
-        if (files) persist(files);
+        // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
+        if (old.touched) void readForSave(old.runtime).then((files) => files && persist(files));
       }
       throw error;
     }

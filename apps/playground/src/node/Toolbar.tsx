@@ -20,7 +20,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
   const hasSaved = useStore(session.hasSaved);
   const versionChanged = useStore(session.versionChanged);
   const saveFailed = useStore(session.saveFailed);
-  const runFailed = useStore(session.commandFailed);
+  const commandFailed = useStore(session.commandFailed);
   const [running, startRunning] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -28,24 +28,25 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
   const [focusRestart, setFocusRestart] = useState(false);
   const restartRef = useRef<HTMLButtonElement>(null);
 
-  // 閉じた <dialog> は、消えた「初期の状態に戻す」へフォーカスを戻そうとして body に落とす。起動し終えるまで「起動し直す」は disabled で、フォーカスを受けない。そのため、ダイアログが閉じ、起動し終えた後の描画でフォーカスを移す
+  // 戻すと「初期の状態に戻す」が消え、閉じた <dialog> はフォーカスを body に落とす。「起動し直す」は disabled の間フォーカスを受けないので、ダイアログが閉じ、ボタンが押せるようになった後の描画で移す
   useEffect(() => {
-    if (!focusRestart || confirming || busy) return;
+    if (!focusRestart || confirming || busy || running) return;
     restartRef.current?.focus();
     setFocusRestart(false);
-  }, [focusRestart, confirming, busy]);
+  }, [focusRestart, confirming, busy, running]);
 
   const run = () => {
     // 失敗は、session の commandFailed で出す
     startRunning(() => session.run().catch(() => undefined));
   };
 
-  // 戻し終えるまで確認のダイアログを閉じず、閉じた後は「起動し直す」にフォーカスを移す。戻すと「初期の状態に戻す」のボタンが消えるためである
+  // 戻し終えるまで確認のダイアログを閉じない。戻せなかったときは、<dialog> がフォーカスを「初期の状態に戻す」へ戻す
   const reset = () => {
     setResetting(true);
     setResetFailed(false);
     session
       .reset()
+      .then(() => setFocusRestart(true))
       .catch((error: unknown) => {
         console.error("初期の状態に戻せない", error);
         setResetFailed(true);
@@ -53,7 +54,6 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
       .finally(() => {
         setResetting(false);
         setConfirming(false);
-        setFocusRestart(true);
       });
   };
 
@@ -103,7 +103,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             このブラウザでは IndexedDB を使えないので、ページを閉じると変えたファイルが消えます。
           </Notice>
         )}
-        {runFailed && (
+        {commandFailed && (
           <Notice
             density="compact"
             isAlert
