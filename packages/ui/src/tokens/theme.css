@@ -185,7 +185,7 @@
   }
 }
 
-/* 動きを減らす設定では、step-end で右端の手前まで濃さを保ち、右端に着いたときに一度に消える */
+/* 動きを減らす設定では、--fd-scroll-fade-ease を step-end にし、右端の手前まで濃さを保ち、右端に着いたときに一度に消える */
 @keyframes fd-scroll-fade-end {
   0%,
   90% {
@@ -346,7 +346,7 @@
       pointer-events: none;
       /* shorthand で書くと、ビルドが animation-timeline まで shorthand にまとめ、ブラウザが宣言ごと捨てる */
       animation-name: fd-scroll-fade-end;
-      animation-timing-function: linear;
+      animation-timing-function: var(--fd-scroll-fade-ease, linear);
       animation-fill-mode: both;
       animation-timeline: scroll(nearest inline);
     }
@@ -355,16 +355,20 @@
 
 /*
  * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
- * スクロールに合わせた動き（scroll-fade-end）は、途中の移り変わりを出さず、終わりの位置で一度に切り替える。
+ * scroll-fade-end の右端の薄い色は、途中の移り変わりを出さず、右端で一度に切り替える。
+ * ほかのスクロールに合わせた動きに及ばないよう、緩急は変数で scroll-fade-end にだけ渡す。
  */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --fd-scroll-fade-ease: step-end;
+  }
+
   *,
   *::before,
   *::after,
   *::backdrop {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    animation-timing-function: step-end !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
