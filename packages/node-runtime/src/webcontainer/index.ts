@@ -10,11 +10,12 @@ import type {
   RuntimeBackend,
 } from "../backend";
 import dbPackageSource from "../guest/db-package.json?raw";
-import { DB_SERVER_FILE, DB_SOCKET_PATH } from "../guest/db-protocol";
+import { DB_SERVER_FILE } from "../guest/db-protocol";
 // oxlint-disable-next-line import/default -- vite.ts の guestBundle が、束ねた文字列を default で返す
 import dbServerSource from "../guest/db-server.ts?bundle";
 import keepAliveSource from "../guest/keep-alive.cjs?raw";
 import type { OpenPort, TerminalSize } from "../types";
+import { visitorEnv } from "./env";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
@@ -29,21 +30,6 @@ const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-modal
 const PREVIEW_ALLOW = "cross-origin-isolated";
 
 const DEFAULT_TERMINAL: TerminalSize = { cols: 80, rows: 24 };
-
-const socketDirectory = DB_SOCKET_PATH.slice(0, DB_SOCKET_PATH.lastIndexOf("/"));
-
-/** 訪問者のプロセスとシェルに渡す環境変数。実行環境が自分で起動するプロセスには渡さない (ADR-0052)。 */
-function visitorEnv(database: boolean): Record<string, string> {
-  if (!database) return { PLAYGROUND_PORTS_FILE: PORTS_FILE };
-  return {
-    PLAYGROUND_PORTS_FILE: PORTS_FILE,
-    NODE_OPTIONS: `--require ${KEEP_ALIVE_FILE}`,
-    PGHOST: socketDirectory,
-    PGUSER: "postgres",
-    PGDATABASE: "postgres",
-    DATABASE_URL: `postgres://postgres@${encodeURIComponent(socketDirectory)}/postgres`,
-  };
-}
 
 function toBackendProcess(process: WebContainerProcess): BackendProcess {
   const listeners = new Set<(chunk: string) => void>();
@@ -175,7 +161,7 @@ export const webContainerBackend: RuntimeBackend = {
         await writeOutside(container, `${DB_DIRECTORY}/package.json`, dbPackageSource);
         await writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource);
       }
-      const env = visitorEnv(database);
+      const env = visitorEnv({ database, portsFile: PORTS_FILE, keepAliveFile: KEEP_ALIVE_FILE });
       const ports = createPorts(container);
       await ports.ready();
       return {

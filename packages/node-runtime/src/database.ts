@@ -59,16 +59,12 @@ export function createStdioDatabase(process: BackendProcess): {
   // 待つ前にプロセスが終了しても、未処理の失敗にしない。待つ側には、失敗が届く
   ready.catch(() => undefined);
 
-  const stopped = (): SqlResponse | undefined => {
-    const current = status.getSnapshot();
-    return current.kind === "stopped" ? { error: { message: current.reason }, ms: 0 } : undefined;
-  };
+  const stoppedResponse = (reason: string): SqlResponse => ({ error: { message: reason }, ms: 0 });
 
   const stopOutput = process.output.subscribe(
     splitLines((line) => {
-      const at = line.indexOf(SQL_PREFIX);
-      if (at === -1) return;
-      const reply = parseReply(line.slice(at + SQL_PREFIX.length));
+      if (!line.startsWith(SQL_PREFIX)) return;
+      const reply = parseReply(line.slice(SQL_PREFIX.length));
       if (!reply) return;
       if ("ready" in reply) {
         markReady();
@@ -88,8 +84,7 @@ export function createStdioDatabase(process: BackendProcess): {
     if (status.getSnapshot().kind === "stopped") return;
     status.set({ kind: "stopped", reason });
     failReady(new Error(reason));
-    const response = stopped();
-    for (const resolve of pending.values()) if (response) resolve(response);
+    for (const resolve of pending.values()) resolve(stoppedResponse(reason));
     pending.clear();
   }
 
@@ -97,8 +92,8 @@ export function createStdioDatabase(process: BackendProcess): {
     database: {
       status,
       run: (sql) => {
-        const response = stopped();
-        if (response) return Promise.resolve(response);
+        const current = status.getSnapshot();
+        if (current.kind === "stopped") return Promise.resolve(stoppedResponse(current.reason));
         sequence += 1;
         const id = String(sequence);
         return new Promise<SqlResponse>((resolve) => {

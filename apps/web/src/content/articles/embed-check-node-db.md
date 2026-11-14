@@ -4,7 +4,7 @@ title: Node のコードから DB に接続する記事
 description: 記事の中で開いた Node の実行環境から、pg で DB に接続し、SQL のペインと同じ DB を読み書きできることを確認する検証用の記事である。
 tags: [検証]
 status: published
-publishedAt: 2026-11-14
+publishedAt: 2026-11-13
 ---
 
 この記事は、Node のコードから DB に接続する実行環境を埋め込む検証用の原稿である。

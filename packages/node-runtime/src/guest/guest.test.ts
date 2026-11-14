@@ -22,13 +22,18 @@ describe("DB のプロセスの依存", () => {
     expect(guest["@electric-sql/pglite"]).toBe(sql["@electric-sql/pglite"]);
   });
 
-  it("バージョンを、範囲ではなく 1 つの値で書き、型を読む devDependencies と同じにする", () => {
-    const dev = readJson("../../package.json").devDependencies ?? {};
-    for (const [name, version] of Object.entries(guest)) {
-      expect(version).toMatch(/^\d+\.\d+\.\d+$/);
-      expect(dev[name]).toBe(version);
-    }
+  const dev = readJson("../../package.json").devDependencies ?? {};
+
+  it.each(Object.entries(guest))("%s のバージョンを、範囲ではなく 1 つの値で書く", (_, version) => {
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
   });
+
+  it.each(Object.entries(guest))(
+    "%s のバージョンを、型を読む devDependencies と同じにする",
+    (name, version) => {
+      expect(dev[name]).toBe(version);
+    },
+  );
 });
 
 describe("parseSqlRequest", () => {
@@ -111,13 +116,22 @@ describe("guestBundle", () => {
     const load = plugin.load as (this: unknown, id: string) => Promise<string | null>;
     const id = `${new URL("./db-server.ts", import.meta.url).pathname}?bundle`;
     const module = await load.call({ addWatchFile: (file: string) => watched.push(file) }, id);
-    const source = JSON.parse(module?.replace(/^export default /, "").replace(/;$/, "") ?? "");
-    expect(typeof source).toBe("string");
-    expect(source).toMatch(/from "@electric-sql\/pglite"/);
-    expect(source).toMatch(/from "@electric-sql\/pglite-socket"/);
-    expect(source).not.toMatch(/@fukuemon\/sql-runtime/);
-    expect(source).toContain("@@fd:sql ");
-    expect(watched.some((file) => file.endsWith("sql-runtime/src/index.ts"))).toBe(true);
+    const source = String(
+      JSON.parse(module?.replace(/^export default /, "").replace(/;$/, "") ?? '""'),
+    );
+    expect({
+      pglite: source.includes('from "@electric-sql/pglite"'),
+      socket: source.includes('from "@electric-sql/pglite-socket"'),
+      workspace: source.includes("@fukuemon/sql-runtime"),
+      prefix: source.includes("@@fd:sql "),
+      watchesSqlRuntime: watched.some((file) => file.endsWith("sql-runtime/src/index.ts")),
+    }).toStrictEqual({
+      pglite: true,
+      socket: true,
+      workspace: false,
+      prefix: true,
+      watchesSqlRuntime: true,
+    });
   });
 
   it("?bundle の付かない import は、扱わない", async () => {

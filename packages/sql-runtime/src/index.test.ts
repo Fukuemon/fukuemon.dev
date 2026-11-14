@@ -170,11 +170,11 @@ describe("toJsonResponse", () => {
     const response = toJsonResponse(
       await runSql(
         pg,
-        "select 9007199254740993::int8, '2020-01-02T03:04:05Z'::timestamptz, '\\x0aff'::bytea, array[9007199254740993::int8], '{\"a\":1}'::jsonb, null, 1",
+        "select 9007199254740993::int8, '2020-01-02T03:04:05Z'::timestamptz, '\\x0aff'::bytea, array[9007199254740993::int8], '{\"a\":1}'::jsonb, null, 1, 'NaN'::float8, 'Infinity'::float8",
       ),
     );
     const rows = "results" in response ? response.results[0]?.rows : undefined;
-    expect(rows).toStrictEqual([
+    expect(JSON.parse(JSON.stringify(rows))).toStrictEqual([
       [
         "9007199254740993",
         "2020-01-02T03:04:05.000Z",
@@ -183,9 +183,10 @@ describe("toJsonResponse", () => {
         { a: 1 },
         null,
         1,
+        "NaN",
+        "Infinity",
       ],
     ]);
-    expect(JSON.parse(JSON.stringify(response))).toStrictEqual(response);
   });
 
   it("失敗の応答は、そのまま返す", () => {

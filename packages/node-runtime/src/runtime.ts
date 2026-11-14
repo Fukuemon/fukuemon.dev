@@ -64,11 +64,13 @@ export async function bootWithBackend(
   timeoutMs = BOOT_TIMEOUT_MS,
 ): Promise<NodeRuntime> {
   if (!backend.isSupported()) throw new BootError("not-isolated");
+  let started: BackendInstance | undefined;
   const booting = (async () => {
     const instance = await backend.boot({
       files: options.files,
       database: options.database === true,
     });
+    started = instance;
     try {
       return await createNodeRuntime(instance, options);
     } catch (cause) {
@@ -84,6 +86,8 @@ export async function bootWithBackend(
     return await Promise.race([booting, timeout]);
   } catch (cause) {
     if (cause instanceof BootError) {
+      // DB の依存の npm install のように、終わらない段階で止まっていても、起動した実行環境を破棄する
+      void started?.teardown().catch(ignore);
       void booting.then((runtime) => runtime.dispose(), ignore).catch(ignore);
       throw cause;
     }

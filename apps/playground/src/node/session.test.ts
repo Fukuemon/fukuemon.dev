@@ -88,6 +88,12 @@ describe("createRuntimeStarter", () => {
     ]);
   });
 
+  it("DB を使い、初期データの SQL が無いプロジェクトでは、DB のプロセスだけを起動に渡す", async () => {
+    const boot = vi.fn(async () => runtime);
+    await createRuntimeStarter(boot, async () => undefined)({ ...project, database: true });
+    expect(boot.mock.calls).toStrictEqual([[{ files: project.files, database: true }]]);
+  });
+
   it("起動した実行環境で、プロジェクトのプロセスを起動する", async () => {
     const start = vi.fn(async () => undefined);
     await createRuntimeStarter(async () => runtime, start)(project);

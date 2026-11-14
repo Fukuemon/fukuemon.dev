@@ -4,12 +4,13 @@ import { createInterface } from "node:readline";
 
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { runSql, toJsonResponse } from "@fukuemon/sql-runtime";
+import { runSql, toJsonResponse, toSqlError } from "@fukuemon/sql-runtime";
 
 import { DB_SOCKET_PATH, SQL_PREFIX, parseSqlRequest } from "./db-protocol";
 
-// 訪問者のコードが 2 つのプロセスから同時に接続できる数。pglite-socket のデフォルトの 1 では、2 つ目の接続が切られる (ADR-0053)
-const MAX_CONNECTIONS = 8;
+// 同時に接続できる数。pglite-socket のデフォルトの 1 では、2 つ目の接続が切られる (ADR-0053)。
+// pg の Pool は 1 つで 10 本まで開くので、2 つのプロセスの Pool が上限まで開いても切られない数にする
+const MAX_CONNECTIONS = 20;
 
 const send = (message: unknown) =>
   process.stdout.write(`${SQL_PREFIX}${JSON.stringify(message)}\n`);
@@ -27,7 +28,12 @@ createInterface({ input: process.stdin }).on("line", (line) => {
   const request = parseSqlRequest(line);
   if (!request) return;
   queue = queue.then(async () => {
-    send({ id: request.id, response: toJsonResponse(await runSql(db, request.sql)) });
+    // 1 件の応答を作れなくても、後のリクエストを止めない
+    try {
+      send({ id: request.id, response: toJsonResponse(await runSql(db, request.sql)) });
+    } catch (error) {
+      send({ id: request.id, response: { error: toSqlError(error), ms: 0 } });
+    }
   });
 });
 

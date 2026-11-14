@@ -79,7 +79,9 @@ export function keepLastRows(response: SqlResponse): SqlResponse {
 
 /** セルを、JSON で送っても表に出す文字列が変わらない値にする。表は、日時を ISO 8601 で、bytea を `\x` で始まる 16 進数で出す。 */
 function toJsonCell(value: unknown): unknown {
-  if (typeof value === "bigint") return value.toString();
+  // NaN と Infinity は JSON で null になり、表が NULL と出すので、文字列にする
+  if (typeof value === "bigint" || (typeof value === "number" && !Number.isFinite(value)))
+    return String(value);
   if (value instanceof Date)
     return Number.isNaN(value.getTime()) ? "Invalid Date" : value.toISOString();
   if (value instanceof Uint8Array) {
