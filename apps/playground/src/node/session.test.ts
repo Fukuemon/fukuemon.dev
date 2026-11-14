@@ -429,14 +429,26 @@ describe("restart", () => {
     });
   });
 
-  it("作業ディレクトリを上限までに読めず、保存のために読んだ結果も無いときは、初期ファイルで起動し直す", async () => {
+  it("作業ディレクトリを上限までに読めず、保存のために読んだ結果も無いときは、前に起動したときのファイルで起動し直す", async () => {
     const { session, booted, latest } = setup({ kind: "saved", record: savedRecord });
     await settle(session);
     latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
     const restarted = session.restart();
     await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
     await restarted;
-    expect(booted.at(-1)).toStrictEqual(project.files);
+    expect(booted.at(-1)).toStrictEqual(savedRecord.files);
+  });
+
+  it("作業ディレクトリを読めずに起動し直した後の保存は、保存したファイルを初期ファイルで上書きしない", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await restarted;
+    latest().change("package-lock.json", "{}");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.at(-1)?.files).toStrictEqual({ "index.js": "b", "package-lock.json": "{}" });
   });
 
   it("訪問者が操作する前なら、起動し直しても保存しない", async () => {

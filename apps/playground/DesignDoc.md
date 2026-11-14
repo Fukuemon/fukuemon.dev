@@ -260,7 +260,7 @@ type OutputLog = {
 - `database` は、DB を使うプロジェクトのときだけある。DB のプロセスの状態は、`database` の `status` で公開し、`NodeRuntime` には持たせない。
 - 実行環境を起動し直すときは、`src/node/` のモジュールが、古いインスタンスの `files.readAll` の結果を受け取ってから、`dispose` を呼ぶ。その結果を `BootOptions` の `files` に渡して、`bootNodeRuntime` で新しいインスタンスを作る。
   - `files.readAll` には、保存のときと同じ `exclude` と `maxBytes` を渡す。`text` が `null` のファイルは、新しいインスタンスに渡さない。
-  - `src/node/` のモジュールは、起動し直すときの `files.readAll` に、時間の上限を付ける。失敗したときと、上限までに終わらないときは、保存のために最後に読んだ `files.readAll` の結果で起動する。その結果も無いときは、初期ファイルで起動する。上限は 5 秒である。
+  - `src/node/` のモジュールは、起動し直すときの `files.readAll` に、時間の上限を付ける。失敗したときと、上限までに終わらないときは、保存のために最後に読んだ `files.readAll` の結果で起動する。その結果も無いときは、前に起動したときのファイル（保存したファイルか、初期ファイル）で起動する。上限は 5 秒である。
   - ページを開いたときに IndexedDB から読んだファイルは使わない。作業ディレクトリのファイルで起動するので、IndexedDB を読めないときも、訪問者が変えたファイルが残る。
 
 SQL だけを動かすツールと、Go を動かすツールは、`NodeRuntime` を実装しない。それぞれ、`SqlDatabase`（`@fukuemon/sql-runtime`）と `GoRunner`（`@fukuemon/go-runtime`）を持つ。
