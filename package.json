@@ -46,6 +46,7 @@
     "eslint-plugin-better-tailwindcss": "4.11.0",
     "knip": "^6.32.2",
     "lefthook": "^2.2.1",
+    "lighthouse": "13.6.0",
     "oxfmt": "^0.48.0",
     "oxlint": "^1.80.0",
     "oxlint-tsgolint": "^7.0.2001",

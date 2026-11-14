@@ -79,7 +79,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Terraform の CLI は、CI では `.github/workflows/check.yml` と `.github/workflows/apply.yml` の `terraform_version` に固定する。
   - provider のバージョンは `infra/*/.terraform.lock.hcl` にある。
 - react-doctor は依存に入れず、`npx` で実行する。`check` から呼ぶときは、ルートの `package.json` の `check:doctor` にバージョンを書く。
-- Lighthouse は依存に入れず、`scripts/measure-top-lighthouse.mjs` が `npx` で実行する。バージョンは、このスクリプトの定数に書く。
+- Lighthouse は、ルートの `package.json` の `devDependencies` にバージョンを固定して入れる。`scripts/measure-top-lighthouse.mjs` が、入れた依存を実行する。
 - similarity-ts は、GitHub のリリースにある prebuilt のバイナリを、mise の `github` backend で入れる。npm にも mise の registry にもないため。
 
 Bun と Biome は使わない。  

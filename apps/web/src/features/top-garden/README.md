@@ -89,7 +89,6 @@ pnpm run measure:top
 前提は次のとおり。
 
 - Playwright の Chromium が入っている（`pnpm exec playwright install chromium`）。
-- 最初の実行では、`npx` が Lighthouse を取得するので、ネットワークにつながっている。
 - 引数を付けないときの GPU の条件（Metal）は、macOS でだけ動く。
 
 引数は、`pnpm run measure:top --visit first` のように後ろに付ける。

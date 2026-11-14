@@ -22,13 +22,16 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { loadavg, tmpdir } from "node:os";
 import { extname, join, resolve, sep } from "node:path";
 import { parseArgs, promisify } from "node:util";
 import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
 
-const LIGHTHOUSE = "lighthouse@13.6.0";
+const require = createRequire(import.meta.url);
+const LIGHTHOUSE_CLI = require.resolve("lighthouse/cli/index.js");
+const LIGHTHOUSE = `lighthouse@${require("lighthouse/package.json").version}`;
 const DIST = resolve("apps/web/dist");
 const SEED_PATH = "/__seed-top-seen";
 const METRICS = [
@@ -119,13 +122,6 @@ const server = createServer((req, res) => {
 });
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 const origin = `http://localhost:${server.address().port}`;
-
-// npx が取得する Lighthouse には、手元の token などの環境変数を渡さない。
-const childEnv = Object.fromEntries(
-  ["PATH", "HOME", "TMPDIR", "LANG", "npm_config_cache"]
-    .filter((k) => process.env[k] !== undefined)
-    .map((k) => [k, process.env[k]]),
-);
 
 const gpuFlags =
   opt.gpu === "metal"
@@ -224,10 +220,9 @@ try {
       const report = join(opt.out, `${stamp}-${label}-${i}.json`);
       const load = loadavg()[0];
       await promisify(execFile)(
-        "npx",
+        process.execPath,
         [
-          "--yes",
-          LIGHTHOUSE,
+          LIGHTHOUSE_CLI,
           `${origin}/`,
           `--chrome-flags=${chromeFlags(profile)}`,
           "--disable-storage-reset",
@@ -238,7 +233,7 @@ try {
           "--quiet",
         ],
         // 1 回は 1 分前後で終わる。止まったときに、配信とプロファイルを残したまま待ち続けない。
-        { env: { ...childEnv, CHROME_PATH: chromium.executablePath() }, timeout: 600_000 },
+        { env: { ...process.env, CHROME_PATH: chromium.executablePath() }, timeout: 600_000 },
       );
       const r = JSON.parse(readFileSync(report, "utf8"));
       const row = {
