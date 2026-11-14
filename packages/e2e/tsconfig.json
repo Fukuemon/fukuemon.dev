@@ -5,5 +5,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["*.ts", "tests/**/*.ts", "visual/**/*.ts"]
+  "include": ["*.ts", "tests/**/*.ts"]
 }
