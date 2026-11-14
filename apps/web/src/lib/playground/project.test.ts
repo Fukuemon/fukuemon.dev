@@ -80,7 +80,15 @@ describe("プロジェクトのディレクトリを読む", () => {
         "playground.json": config({ tool: "sql", open: "q.sql", initialSql: "x.sql" }),
         "q.sql": "",
       },
-      "x.sql を UTF-8 の文字列として読めない",
+      "initialSql は、プロジェクトのファイルを指す: x.sql",
+    ],
+    [
+      "initialSql がプロジェクトの外を指す",
+      {
+        "playground.json": config({ tool: "sql", open: "q.sql", initialSql: "../q.sql" }),
+        "q.sql": "",
+      },
+      "initialSql は、プロジェクトのファイルを指す: ../q.sql",
     ],
     [
       "UTF-8 として読めないファイルがある",

@@ -3,7 +3,6 @@ import type { PlaygroundProject, PlaygroundTool } from "@fukuemon/playground-pro
 import { fromHtml } from "hast-util-from-html";
 import {
   PLAYGROUND_LANG,
-  PLAYGROUND_ORIGIN,
   embedId,
   embedUrl,
   isEmbedName,
@@ -11,6 +10,7 @@ import {
   readProject,
 } from "./project";
 import { replaceFences } from "../rehype-fence";
+import { PLAYGROUND_ORIGIN } from "./origin";
 
 const TOOL_NAME: Record<PlaygroundTool, string> = {
   node: "Node の実行環境",

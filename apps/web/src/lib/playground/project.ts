@@ -22,8 +22,6 @@ export const embedId = (contentId: string, name: string) => `${contentId}/${name
 export const projectDir = (articlePath: string, name: string) =>
   join(dirname(articlePath), "playground", name);
 
-export const PLAYGROUND_ORIGIN = "https://play.fukuemon.dev";
-
 /** 実行環境を埋め込むコードフェンスの言語 */
 export const PLAYGROUND_LANG = "playground";
 
@@ -72,10 +70,12 @@ export function readProject(dir: string): PlaygroundProject {
       .filter((path) => path !== CONFIG_FILE)
       .map((path) => [path, readText(join(dir, path))]),
   );
-  const initialSql =
-    "initialSql" in config && config.initialSql !== undefined
-      ? readText(join(dir, config.initialSql))
-      : undefined;
+  const sqlPath = "initialSql" in config ? config.initialSql : undefined;
+  // files に無いパスを許すと、打ち間違いでプロジェクトの外のファイルを公開の JSON に入れてしまう
+  if (sqlPath !== undefined && !Object.hasOwn(files, sqlPath)) {
+    throw new Error(`${configPath} の initialSql は、プロジェクトのファイルを指す: ${sqlPath}`);
+  }
+  const initialSql = sqlPath === undefined ? undefined : files[sqlPath];
   const body = { ...config, files, ...(initialSql === undefined ? {} : { initialSql }) };
   const version = createHash("sha256").update(JSON.stringify(body)).digest("hex");
   const parsed = playgroundProjectSchema.safeParse({ ...body, version });

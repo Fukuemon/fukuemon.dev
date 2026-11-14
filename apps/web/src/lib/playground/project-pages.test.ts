@@ -48,6 +48,11 @@ describe("プロジェクトの JSON のページ", () => {
     ]);
   });
 
+  it("名前の形が違うときは、プロジェクトを読む前に失敗する", () => {
+    const article = { id: "a", filePath: "articles/a.md", contentId: "a", body: fence("../x") };
+    expect(() => planProjectPages([article], read)).toThrow("埋め込みの名前の形が違う");
+  });
+
   it("記事のパスが分からないときは失敗する", () => {
     expect(() => planProjectPages([{ id: "a", contentId: "a", body: fence("x") }], read)).toThrow(
       "記事のパスが分からない",

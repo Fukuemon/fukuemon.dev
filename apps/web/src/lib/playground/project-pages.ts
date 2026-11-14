@@ -1,6 +1,6 @@
 import type { PlaygroundProject } from "@fukuemon/playground-project";
 import { findEmbedNames } from "./embeds";
-import { projectDir, readProject } from "./project";
+import { isEmbedName, projectDir, readProject } from "./project";
 
 type EmbeddingArticle = { id: string; filePath?: string; contentId: string; body?: string };
 
@@ -17,6 +17,7 @@ export function planProjectPages(
     const { filePath } = article;
     if (filePath === undefined) throw new Error(`記事のパスが分からない: ${article.id}`);
     return findEmbedNames(article.body ?? "").map((name) => {
+      if (!isEmbedName(name)) throw new Error(`${filePath}: 埋め込みの名前の形が違う: ${name}`);
       const dir = projectDir(filePath, name);
       const owner = owners.get(dir);
       if (owner !== undefined && owner !== article.id) {

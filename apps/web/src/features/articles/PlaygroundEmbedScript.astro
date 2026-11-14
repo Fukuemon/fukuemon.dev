@@ -4,12 +4,15 @@
 ---
 
 <script>
+  import { PLAYGROUND_ORIGIN } from "../../lib/playground/origin";
+
   document.addEventListener("click", (event) => {
     const button = (event.target as Element | null)?.closest(".playground-embed-open");
     const embed = button?.closest<HTMLElement>("[data-playground-embed]");
     if (!embed) return;
     const { playgroundSrc, playgroundTool, playgroundTitle } = embed.dataset;
-    if (!playgroundSrc) return;
+    // 原稿に直に書いた HTML の属性で、ほかの origin や javascript: を iframe に読ませない
+    if (!playgroundSrc || new URL(playgroundSrc, location.href).origin !== PLAYGROUND_ORIGIN) return;
     const frame = document.createElement("iframe");
     frame.src = playgroundSrc;
     frame.title = playgroundTitle ?? "実行環境";
