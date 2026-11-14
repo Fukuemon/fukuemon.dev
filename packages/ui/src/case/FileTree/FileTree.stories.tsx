@@ -180,6 +180,7 @@ export const ReadOnly: Story = {
   },
 };
 export const Empty: Story = { name: "空", args: { items: [], selectedId: undefined } };
+export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",
   args: { state: { kind: "loading", label: "ファイルを読み込んでいます" } },

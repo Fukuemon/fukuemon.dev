@@ -25,6 +25,14 @@ import * as Stories from "./PreviewFrame.stories";
 
 <Canvas of={Stories.Empty} />
 
+### 起動を待つ空
+
+`state` に `pending` を渡すと、題だけを出し、URL の欄、再読み込みのボタン、プレビューの画面を出さない。  
+画面の全ての領域が同じ処理を待つ間に使う。  
+待ちの印は `PageLoading` が画面の右下に出す。
+
+<Canvas of={Stories.Pending} />
+
 ### 読み込み中
 
 <Canvas of={Stories.Loading} />

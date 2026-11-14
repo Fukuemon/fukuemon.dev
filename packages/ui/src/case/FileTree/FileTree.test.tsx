@@ -8,7 +8,7 @@ import type { TreeNode } from "../../base/TreeView/TreeView";
 import { FileTree } from "./FileTree";
 import * as stories from "./FileTree.stories";
 
-const { Default, NoSelection, ReadOnly, Empty } = composeStories(stories);
+const { Default, NoSelection, ReadOnly, Empty, Pending } = composeStories(stories);
 
 /** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
 function DelayedSelectTree() {
@@ -618,5 +618,15 @@ describe("FileTree", () => {
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("{Escape}");
     expect(await screen.findByText("ファイルがありません。")).toBeInTheDocument();
+  });
+  it("起動を待つ pending のときは、木も、空の文も、待ちの文も、操作のボタンも出さない", () => {
+    render(<Pending />);
+    expect({
+      region: screen.getByRole("region", { name: "ファイル" }) !== null,
+      tree: screen.queryByRole("tree"),
+      status: screen.queryByRole("status"),
+      empty: screen.queryByText("ファイルがありません。"),
+      button: screen.queryByRole("button"),
+    }).toStrictEqual({ region: true, tree: null, status: null, empty: null, button: null });
   });
 });

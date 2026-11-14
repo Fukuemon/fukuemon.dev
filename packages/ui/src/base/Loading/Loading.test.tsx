@@ -10,7 +10,7 @@ describe("Loading", () => {
   it("待っていることを status の文で示し、罫の印は読み上げない", () => {
     render(<Default />);
     const status = screen.getByRole("status");
-    expect(status).toHaveTextContent("実行環境を起動しています");
+    expect(status).toHaveTextContent("サーバーが待ち受けるのを待っています");
     expect(status.querySelector("[aria-hidden]")).not.toBeNull();
   });
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import * as stories from "./TerminalFrame.stories";
 
-const { Default, Loading, WithActions } = composeStories(stories);
+const { Default, Loading, Pending, WithActions } = composeStories(stories);
 
 describe("TerminalFrame", () => {
   it("題を領域の名前にし、エンジンにテーマの名前のテーマを渡す", () => {
@@ -45,5 +45,15 @@ describe("TerminalFrame", () => {
       ring: [ring.outlineStyle, ring.outlineOffset],
       own: getComputedStyle(engine).outlineStyle,
     }).toStrictEqual({ ring: ["solid", "-2px"], own: "none" });
+  });
+
+  it("起動を待つ pending のときは、エンジンも待ちの文も出さず、操作も出さない", () => {
+    render(<Pending actions={<button type="button">端末を消す</button>} />);
+    expect({
+      region: screen.getByRole("region", { name: "端末" }) !== null,
+      engine: screen.queryByRole("region", { name: "端末の出力" }),
+      status: screen.queryByRole("status"),
+      action: screen.queryByRole("button"),
+    }).toStrictEqual({ region: true, engine: null, status: null, action: null });
   });
 });

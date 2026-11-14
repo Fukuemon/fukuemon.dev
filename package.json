@@ -36,7 +36,7 @@
     "infra:check": "bash scripts/check-infra.sh",
     "infra:bootstrap:init": "terraform -chdir=infra/bootstrap init",
     "infra:bootstrap:apply": "terraform -chdir=infra/bootstrap apply",
-    "test:visual": "pnpm --filter @fukuemon/web run test:visual",
+    "test:visual": "pnpm --filter @fukuemon/e2e run test:visual",
     "check:garden-bundle": "node scripts/check-garden-bundle.mjs"
   },
   "devDependencies": {

@@ -29,8 +29,8 @@ export type FileTreeProps = {
   onRename?: (id: string, name: string) => FileTreeResult;
   /** 渡すと、選んだ項目の操作のメニューに、削除を足し、木の項目の Delete のキーでも呼ぶ。確認は呼ぶ側が行う。 */
   onDelete?: (id: string) => void;
-  /** 渡すと、木の代わりに読み込み中かエラーを出す。 */
-  state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
+  /** 渡すと、木の代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
+  state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
 };
 
 type Editing =
