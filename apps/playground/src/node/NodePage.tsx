@@ -46,6 +46,7 @@ function Pane({
   fallback,
   editorFocusRing = false,
   flush = false,
+  inTab = false,
   children,
 }: {
   fallback: ReactNode;
@@ -53,10 +54,12 @@ function Pane({
   editorFocusRing?: boolean;
   /** 記事の枠の中で 1 つずつ出すときに、余白と角の丸めを外し、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）。 */
   flush?: boolean;
+  /** 狭い配置のタブで 1 つずつ出すときに、仕切りのための 4px の余白を外し、ペインの縁をタブの帯の縁にそろえる。 */
+  inTab?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className={flush ? "size-full" : "size-full p-1"}>
+    <div className={flush || inTab ? "size-full" : "size-full p-1"}>
       <div
         className={[
           "flex size-full flex-col [&>section]:flex-1",
@@ -89,7 +92,8 @@ const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</Termi
 /** PC の配置。ファイルの木、エディタ、プレビュー、端末を並べ、仕切りで幅と高さを変える。 */
 function WidePanes() {
   return (
-    <div className="min-h-0 flex-1">
+    // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+    <div className="-m-1 min-h-0 flex-1">
       <SplitPane
         defaultSize={20}
         label="ファイルのツリーの幅"
@@ -157,7 +161,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             label: "エディタ",
             icon: EDITOR_ICON,
             content: (
-              <Pane editorFocusRing fallback={editorFallback} flush={embedded}>
+              <Pane editorFocusRing fallback={editorFallback} flush={embedded} inTab>
                 <EditorPane />
               </Pane>
             ),
@@ -167,7 +171,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             label: "端末",
             icon: TERMINAL_ICON,
             content: (
-              <Pane fallback={terminalFallback} flush={embedded}>
+              <Pane fallback={terminalFallback} flush={embedded} inTab>
                 <TerminalPane />
               </Pane>
             ),
@@ -177,7 +181,7 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             label: "プレビュー",
             icon: PREVIEW_ICON,
             content: (
-              <Pane fallback={previewFallback} flush={embedded}>
+              <Pane fallback={previewFallback} flush={embedded} inTab>
                 <PreviewPane />
               </Pane>
             ),

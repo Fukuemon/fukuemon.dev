@@ -155,7 +155,6 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const [problem, setProblem] = useState<string>();
   const [created, setCreated] = useState<string>();
   const mode = useLayoutMode();
-  const isFlush = embedded && mode !== "wide";
   const [pane, setPane] = useState<"editor" | "output">("editor");
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const saveFailed = useSyncExternalStore(
@@ -296,7 +295,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const editorPanel = (
     <div
       className={
-        isFlush ? "grid h-full min-h-0 grid-rows-1" : "grid h-full min-h-0 grid-rows-1 p-1"
+        mode === "wide" ? "grid h-full min-h-0 grid-rows-1 p-1" : "grid h-full min-h-0 grid-rows-1"
       }
     >
       <EditorFrame
@@ -336,7 +335,9 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const outputPanel = (
     <div
       className={
-        isFlush ? "flex h-full min-h-0 flex-col gap-2" : "flex h-full min-h-0 flex-col gap-2 p-1"
+        mode === "wide"
+          ? "flex h-full min-h-0 flex-col gap-2 p-1"
+          : "flex h-full min-h-0 flex-col gap-2"
       }
     >
       <div className="grid min-h-0 flex-1 grid-rows-1">
@@ -355,7 +356,9 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1.5 py-1">
         <div className="flex min-w-0 items-baseline gap-3">
           {!embedded && (
-            <h1 className="font-heading text-heading-sm text-text short:sr-only">{TITLE}</h1>
+            <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
+              {TITLE}
+            </h1>
           )}
           {session.embedId !== undefined && (
             <span className="truncate font-mono text-caption text-text-secondary">
@@ -412,7 +415,8 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
         </div>
       )}
       {mode === "wide" ? (
-        <div className="flex min-h-0 flex-1">
+        // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+        <div className="-m-1 flex min-h-0 flex-1">
           <SplitPane
             defaultSize={22}
             label="ファイルの一覧とエディタの仕切り"

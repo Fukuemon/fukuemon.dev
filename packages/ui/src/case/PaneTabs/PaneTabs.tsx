@@ -130,7 +130,7 @@ export function PaneTabs({
                     "pointer-events-none absolute animate-stroke bg-primary stroke-brush forced-fill forced-solid",
                     placement === "bottom" && "inset-x-3 top-0 h-0.75",
                     placement === "top" && "inset-x-0 bottom-0 h-0.75",
-                    placement === "start" && "inset-y-2 left-0 w-0.75",
+                    placement === "start" && "inset-y-2 right-0 w-0.75",
                   )}
                 />
               )}

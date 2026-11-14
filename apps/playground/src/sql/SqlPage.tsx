@@ -64,7 +64,7 @@ export function SqlPage({ search, embedded }: { search: string; embedded: boolea
       }
     >
       {!embedded && (
-        <h1 className="font-heading text-heading-md font-semibold text-text short:sr-only">
+        <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
           SQL の実行環境
         </h1>
       )}
