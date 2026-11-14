@@ -12,10 +12,10 @@
   - ADR-0033: [Node と npm の実行に WebContainers を採り、実行環境と画面の間をインターフェースで分ける](0033-webcontainers-for-node.md)
 - HTTP の流れとコンソールを記録する preload は、実行環境が追加する。運営者が設定に書く起動のコマンドにも、訪問者が端末で打つコマンドにも、現れない。
   - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](0054-record-http-and-console-with-prefixed-lines.md)
-- 訪問者の作業ディレクトリの全体（`node_modules` を除く）を、IndexedDB に保存する。
-  - ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedDB に保存する](0050-save-visitor-files-in-indexeddb.md)
+- 訪問者の作業ディレクトリのファイルを、IndexedDB に保存する。`node_modules`、`.git`、ビルドの出力、シークレットのファイル、シンボリックリンクなどは保存しない。
+  - ADR-0077: [訪問者のファイルを、埋め込みの ID ごとに IndexedDB に保存し、Node の実行環境ではシークレットのファイル、ビルドの出力、`.git`、リンクを除き、上限を付ける](0077-save-visitor-files.md)
 - 訪問者は、シェルを制限なしで使う。
-  - ADR-0051: [Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かす](0051-node-runtime-boot-and-commands.md)
+  - ADR-0076: [Node の実行環境は、ページを開いたときに起動し、シェルを制限なしで使わせ、訪問者が変えたコードは操作の後に動かし、起動し直すときに作業ディレクトリを読めなければ、前に起動したときのファイルで起動する](0076-node-runtime-boot-commands-and-restart.md)
 - Node は、環境変数 `NODE_OPTIONS` の `--require` で、プロセスの起動のときにモジュールを読み込む。
   - 出典: [Node.js: Command-line API](https://nodejs.org/api/cli.html#node_optionsoptions)
 - WebContainers の API の `mount` は、渡したファイルを、作業ディレクトリの中に書く。

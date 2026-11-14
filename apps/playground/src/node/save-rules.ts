@@ -9,7 +9,7 @@ const MAX_FILE_BYTES = BYTES_PER_MB;
 
 /**
  * 保存しないディレクトリの名前。どの階層でも当てはまり、同じ名前のファイルも保存しない。
- * `node_modules` と、よく出るビルドの出力とキャッシュと、`.git` である。`build` と `out` は、ソースのディレクトリにも使う名前なので入れない (ADR-0070)。
+ * `node_modules` と、よく出るビルドの出力とキャッシュと、`.git` である。`build` と `out` は、ソースのディレクトリにも使う名前なので入れない (ADR-0077)。
  */
 const EXCLUDED_DIRECTORIES = ["node_modules", ".git", "dist", ".next", ".nuxt", ".cache", ".turbo"];
 
@@ -49,7 +49,7 @@ export const isExcludedFromSave = (path: string) =>
 
 /**
  * files.readAll の結果のうち、起動し直すときに渡すファイル。テキストとして読めないもの、規則に合わないパス、
- * ファイルでもディレクトリでもないもの（リンク）を除く。リンクを渡すと、指す先の中身を持つ通常のファイルになり、保存されるためである (ADR-0070)。
+ * ファイルでもディレクトリでもないもの（リンク）を除く。リンクを渡すと、指す先の中身を持つ通常のファイルになり、保存されるためである (ADR-0076)。
  */
 export function filesForRestart(entries: readonly FileContents[]): Record<string, string> {
   const files: Record<string, string> = {};

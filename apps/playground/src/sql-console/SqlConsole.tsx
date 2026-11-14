@@ -1,6 +1,6 @@
 import type { DatabaseStatus, SqlResponse, Store } from "@fukuemon/sql-runtime";
 import { Button, EditorFrame, Loading, Notice, PaneTabs } from "@fukuemon/ui";
-import { useId, useState, useSyncExternalStore } from "react";
+import { type ReactNode, type Ref, useId, useState, useSyncExternalStore } from "react";
 
 import { EDITOR_ICON, RESULT_ICON } from "../layout/icons";
 import { useLayoutMode } from "../layout/useLayoutMode";
@@ -25,6 +25,10 @@ export type SqlConsoleProps = {
   progress?: string;
   /** 記事に埋め込んだときは、狭い配置のタブを枠の上に置く。 */
   embedded?: boolean;
+  /** 実行のボタンへの ref。呼ぶ側が、操作の後にフォーカスをボタンへ移すために使う。 */
+  runButtonRef?: Ref<HTMLButtonElement>;
+  /** 実行のボタンの行の右端に置くもの。出入りしても、入力欄の位置が動かないようにするため、行は常にある。 */
+  actions?: ReactNode;
 };
 
 /** SQL の入力欄、実行のボタン、結果の表と実行計画。 */
@@ -38,6 +42,8 @@ export function SqlConsole({
   fileName,
   progress,
   embedded = false,
+  runButtonRef,
+  actions,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
   const database = useSyncExternalStore(status.subscribe, status.getSnapshot);
@@ -72,13 +78,14 @@ export function SqlConsole({
   );
   const runRow = (
     <div className="flex flex-wrap items-center gap-4">
-      <Button isLoading={running} onClick={() => void run()} size="S">
+      <Button isLoading={running} onClick={() => void run()} ref={runButtonRef} size="S">
         実行する
       </Button>
       <span className="text-caption text-text-secondary" id={hintId}>
         Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
         でエディタの外へ移ります
       </span>
+      {actions}
     </div>
   );
   const results = (

@@ -81,6 +81,10 @@ pnpm run test:visual
   - 1〜65535 の整数でない値は、config がエラーで止める。
   - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
 - 庭は WebGL で描くので、GPU に依らないよう、project `visual` が chromium に SwiftShader で描かせる。
+  - SwiftShader は 1 フレームを描くのが遅く、ほかの spec と並べると、最初の絵が画面に出るまでに数秒かかる。
+  - `garden.spec.ts` と `garden-stations.spec.ts` は、`test.slow()` で時間の上限を 3 倍にする。
+  - `page.clock` を使うと、ページの `requestAnimationFrame` は 16ms のタイマーに替わり、画面にフレームが出るのを待たない。本物の `requestAnimationFrame` を待つときは、`visual/support/presented-frames.ts` の `waitForPresentedFrames` を使う。
+  - カメラの移動の動きを確認しない庭の spec は、「動きを止める」を押してから移る。止めたカメラは 1 フレームで行き先に着く。
 - 基準のスナップショットは、`packages/e2e/visual/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
   - macOS の chromium で実行しても、この範囲に収まる。

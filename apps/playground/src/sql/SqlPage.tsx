@@ -1,11 +1,12 @@
 import { Link, Notice, PageLoading } from "@fukuemon/ui";
-import { Suspense, use, useSyncExternalStore } from "react";
+import { Suspense, use, useRef, useSyncExternalStore } from "react";
 
 import { useLayoutMode } from "../layout/useLayoutMode";
 import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { bootLabel, progressLabel } from "./progress";
+import { SqlResetControl } from "./SqlResetControl";
 import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
@@ -27,6 +28,7 @@ function SqlTool({ search, embedded }: { search: string; embedded: boolean }) {
 }
 
 function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: boolean }) {
+  const runRef = useRef<HTMLButtonElement>(null);
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
@@ -51,10 +53,18 @@ function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: 
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
         embedded={embedded}
+        actions={
+          <SqlResetControl
+            disabled={running}
+            onReset={() => runRef.current?.focus()}
+            session={session}
+          />
+        }
         onChange={session.setQuery}
         onRun={session.execute}
         progress={progressLabel(phase, running)}
         running={running}
+        runButtonRef={runRef}
         fileName={session.fileName}
         status={session.status}
         stoppedHint="次に実行すると、DB を初期の状態から作り直します。"
