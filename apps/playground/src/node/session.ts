@@ -191,6 +191,8 @@ export function createNodeSession({
     loaded && record && Object.keys(record.files).length !== Object.keys(loaded.files).length
       ? record
       : undefined;
+  // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける
+  let lastQueued: NodeRecord | undefined;
   // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
   const saver = createSaver<NodeRecord>({
     ...storage,
@@ -203,14 +205,18 @@ export function createNodeSession({
         },
         (error: unknown) => {
           // 後から待ちに入った新しい保存があれば、その中身を保存済みの扱いのまま残す
-          if (sameFiles(next.files, lastSaved)) lastSaved = undefined;
+          if (next === lastQueued) lastSaved = undefined;
           throw error;
         },
       ),
   });
+  const queue = (next: NodeRecord) => {
+    lastQueued = next;
+    saver.save(next);
+  };
   // シークレットのファイルを IndexedDB に残さないため、開いたときに書き直す
   const rewrite = () => {
-    if (pendingRewrite) saver.save({ ...pendingRewrite, savedAt: now() });
+    if (pendingRewrite) queue({ ...pendingRewrite, savedAt: now() });
   };
   rewrite();
 
@@ -226,7 +232,7 @@ export function createNodeSession({
     const { files } = saving;
     if (sameFiles(files, lastSaved)) return;
     lastSaved = files;
-    saver.save({ files, version, savedAt: now() });
+    queue({ files, version, savedAt: now() });
   };
 
   /** 保存のために作業ディレクトリを読む。読めなかったときは undefined を返す。 */
