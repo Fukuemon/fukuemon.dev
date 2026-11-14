@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Link.stories";
 
-const { Default, Wrapped, Standalone, External } = composeStories(stories);
+const { Default, Wrapped, Standalone, LargeTarget, External } = composeStories(stories);
 
 const colorOf = (className: string) => {
   render(<span className={className} data-testid={className} />);
@@ -56,6 +56,25 @@ describe("Link", () => {
     expect(link.getBoundingClientRect().right + extent).toBeLessThanOrEqual(
       date.getBoundingClientRect().left,
     );
+  });
+
+  it("押せる領域を広げたリンクは、44×44 px 以上を押せる", () => {
+    render(<LargeTarget />);
+    const box = screen.getByRole("link", { name: "Go" }).getBoundingClientRect();
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  });
+
+  it("押せる領域を広げたリンクを hover すると、箱の下端ではなく下線の下に 2px の罫を引く", async () => {
+    render(<LargeTarget />);
+    const link = screen.getByRole("link", { name: "Go" });
+    const text = screen.getByText("Go");
+    expect(text).not.toBe(link);
+    expect(getComputedStyle(link).backgroundImage).toBe("none");
+    expect(getComputedStyle(text).textDecorationLine).toBe("underline");
+    expect(text.getBoundingClientRect().bottom).toBeLessThan(link.getBoundingClientRect().bottom);
+    await userEvent.hover(link);
+    await expect.poll(() => getComputedStyle(text).backgroundSize).toBe("100% 2px");
   });
 
   it("hover すると、折り返したリンクのどの行にも 2px の罫を引く", async () => {

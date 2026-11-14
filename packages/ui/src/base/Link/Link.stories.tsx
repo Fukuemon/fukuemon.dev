@@ -56,6 +56,24 @@ export const StandaloneWrapped: Story = {
     </ul>
   ),
 };
+export const LargeTarget: Story = {
+  args: { isStandalone: true, isLargeTarget: true, children: "Go" },
+  render: (args) => (
+    <ul className="w-96 border-t border-border text-body text-text">
+      <li className="border-b border-border py-2">
+        <Link {...args} />
+      </li>
+    </ul>
+  ),
+};
+export const LargeTargetHover: Story = {
+  ...LargeTarget,
+  parameters: { pseudo: { hover: true } },
+};
+export const LargeTargetFocus: Story = {
+  ...LargeTarget,
+  parameters: { pseudo: { focusVisible: true } },
+};
 export const External: Story = {
   args: { href: "https://design.digital.go.jp/dads/", isExternal: true, children: "DADS" },
 };
