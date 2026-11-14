@@ -15,6 +15,7 @@ import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project"
 import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
+import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
 import { type NodeProject, createRuntimeStarter } from "./session";
@@ -24,9 +25,6 @@ const loadProject = createProjectLoader("node", nodeDefaultProject);
 const startRuntime = createRuntimeStarter();
 
 const pendingState = { kind: "pending" } as const;
-
-// プロジェクトの読み込みから起動へ続けて起きるので、2 つの待ちで文を替えない（packages/ui/design/components.md の PageLoading）
-const bootLabel = "実行環境を起動しています";
 
 /** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */
 function BootWait() {
@@ -64,7 +62,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
   return (
     <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
       <SelectionContext value={{ selection, dispatch }}>
-        <Suspense fallback={<PageLoading label={bootLabel} />}>
+        <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
           <BootWait />
         </Suspense>
         <div className="min-h-0 flex-1">
@@ -148,7 +146,7 @@ export function NodePage({ search, embedded }: { search: string; embedded: boole
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
       )}
-      <Suspense fallback={<PageLoading label={bootLabel} />}>
+      <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
         <NodeTool search={search} />
       </Suspense>
     </main>
