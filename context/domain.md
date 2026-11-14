@@ -17,7 +17,6 @@ status: stable
   - schema は `seriesSchema` である。
 - `order`: シリーズの中の記事の読む順。frontmatter に書く整数で、小さいほど前になる。
 - プレイグラウンド: 訪問者がコードを自由に書いて動かせる場所。`play.fukuemon.dev` に置き、`apps/web` のコンテンツには含めない。
-- セクション: サイトを分ける about、blog、playground の 3 つ。
 - 分類: 主題を示す自由な語。frontmatter の `tags` に書き、索引のページを持たない。
 - `contentId`: 記事の安定した識別子。ファイルのパス、URL、ストレージから独立する。
   - Astro の `id` とは別に持つ。

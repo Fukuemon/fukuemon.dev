@@ -19,7 +19,7 @@
 - buddy は、Zensical（Python のツール。uv で実行する）で `docs/` をビルドし、`apps/docs-site/` の Worker から配信している。Cloudflare Access は設定していない。
   - 出典: [buddy](https://github.com/Fukuemon/buddy)
 - サイトの本体は、Starlight を採っていない。
-  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む](0001-starlight-as-docs-renderer.md)
+  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code で組む](0001-starlight-as-docs-renderer.md)
 - Worker は、何も書かないと、workers.dev の URL とバージョンごとの URL でも開ける。Access は `docs.fukuemon.dev` のホスト名に設定するので、この 2 つの URL を閉じる。
 
 ## Decision

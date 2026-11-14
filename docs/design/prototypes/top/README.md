@@ -2,7 +2,7 @@
 
 トップの最初の訪問の水墨の門のイントロと、立体の庭のプロフィールを、1 枚の HTML で動かす試作。  
 実装は、絵の配置と色をこの試作と見比べて合わせる。  
-見た目の数値は [トップの水墨の門と立体の庭の Design Doc](../../features/top-garden/DesignDoc.md) にある。
+見た目の数値は [トップの水墨の門と立体の庭の Design Doc](../../../../apps/web/src/features/top-garden/DesignDoc.md) にある。
 
 - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../../../adr/0026-sumi-gate-and-garden-on-top.md)
 - ADR-0027: [トップの庭の絵を、訪問者の端末の日付と時刻で、季節と時間帯ごとに変える](../../../adr/0027-garden-by-season-and-time.md)

@@ -55,7 +55,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
   - 主の色の緑と成功の緑が並ぶ画面では、成功を文と印でも伝える（`STATE-NOT-COLOR-ONLY`）。
 - 訪問済みのリンクは、色で分けない。DADS は訪問済みのリンクの色を分けるが、旧サイトと同じく内部のリンクの色を 1 つに保つ（ADR-0024）。
 - `garden-` で始まる 6 つのトークンは、テーマに依らず同じ値を指す。場面の色は時間帯で決まり、テーマに依らないためである。
-  霞の置き方と、テーマの色の名前への差し替えは [トップの水墨の門と立体の庭の Design Doc の「ヘッダーと霞」](../../../docs/design/features/top-garden/DesignDoc.md#ヘッダーと霞) にある。
+  霞の置き方と、テーマの色の名前への差し替えは [トップの水墨の門と立体の庭の Design Doc の「ヘッダーと霞」](../../../apps/web/src/features/top-garden/DesignDoc.md#ヘッダーと霞) にある。
 - HTTP の状態コードに当てる状態の色は、[Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)の表にある。新しい色のトークンを作らない。
 - コンソールのログレベルに当てる状態の色は、[Design Doc の「コンソールのログレベルの色」](../DesignDoc.md#コンソールのログレベルの色)の表にある。新しい色のトークンを作らない。
 
@@ -152,7 +152,7 @@ ADR-0075: [本文をシステムフォントで描き、Web フォントを記�
   - 出典: [DADS の余白](https://design.digital.go.jp/dads/foundations/spacing/)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
 - 影のユーティリティは、`shadow-raised` の 1 つだけを書ける。角丸のユーティリティは、`rounded-control` と、コードを動かす画面だけで使う `rounded-pane`、`rounded-sheet`、`rounded-control-compact` を書ける。DADS のコンポーネントは、コンポーネントごとに角丸と影の値を持つが、罫線で区切る版面と合わないためである（ADR-0028、ADR-0073）。
-  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロック、[トップの庭の中の文へ移るボタン](../../../docs/design/features/top-garden/DesignDoc.md#庭の中のボタンの並び)には付けない。
+  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロック、[トップの庭の中の文へ移るボタン](../../../apps/web/src/features/top-garden/DesignDoc.md#庭の中のボタンの並び)には付けない。
   - `shadow-raised` は、重なる面だけに付ける。ボタンと入力欄には付けない。
 - 動きの時間と緩急は、表のユーティリティだけで書く。テーマ変数で止められない時間の値（`duration-[…]` の任意値）を書かない（`MOTION-TOKEN`）。
 - 動きを付ける操作、長さ、付けない所は、[Design Doc の「動き」](../DesignDoc.md#動き) にある。フォーカスの表示、入力した文字、誤りの文には、動きを付けない。

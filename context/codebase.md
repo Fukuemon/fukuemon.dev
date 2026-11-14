@@ -96,14 +96,12 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
 - `@fukuemon/playground-project` は、workspace のどの package にも依存しない。
-- `@fukuemon/figures` は、workspace のどの package にも依存せず、React にも依存しない。
-- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project`、`@fukuemon/figures`、`@fukuemon/slides` に依存してよい。
+- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project` に依存してよい。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
 - `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
-- `@fukuemon/slides` は、workspace のどの package にも依存せず、React にも依存しない。`@marp-team/marp-core` に依存するのは、この package だけである。
-- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project`、`@fukuemon/figures`、`@fukuemon/slides` に依存する。実行環境の 3 つの package にも依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
+- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` に依存する。実行環境の 3 つの package にも依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
   - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
@@ -119,12 +117,10 @@ hydrate するページはその framework のランタイムを配るので、2
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
 - プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#保存) にある。
-- プレイグラウンドは、訪問者が作った図とスライドを、訪問者のファイルと別の IndexedDB のデータベースに置く。レコードの形は、[キャンバスの Design Doc](../docs/design/features/canvas/DesignDoc.md#保存するデータ) にある。
-- プレイグラウンドは、AI からの操作の許可のスイッチの状態と、「このページでは今後尋ねない」の状態を、ツールごとに `localStorage` に置く。キーと値の形は、[AI からの操作の Design Doc](../docs/design/features/ai-operations/DesignDoc.md#スイッチと確認の状態の保存) にある。
 - トップ（`/`）は、端末でトップを開いたことを、`localStorage` の `fd-top-seen` に記録する。
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
   - 例外は、Lighthouse の計測のスクリプト（`scripts/measure-top-lighthouse.mjs`）である。2 回目以降の訪問の状態を作るために、測る前のプロファイルに書く。
-  - `fd-top-seen` の意味と、`head` の inline script が `html` に書く属性と class は、[トップの水墨の門と立体の庭の Design Doc](../docs/design/features/top-garden/DesignDoc.md#ページが持つ状態) にある。
+  - `fd-top-seen` の意味と、`head` の inline script が `html` に書く属性と class は、[トップの水墨の門と立体の庭の Design Doc](../apps/web/src/features/top-garden/DesignDoc.md#ページが持つ状態) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [docs/design/DesignDoc.md](../docs/design/DesignDoc.md#設計不変量)
@@ -163,7 +159,7 @@ package を切り出すのは、次のどちらかが成り立つときである
 - デザインシステムの文書は、`packages/ui/DESIGN.md` と、`packages/ui/design/` の `tokens.md`、`components.md`、`catalog.md` の 4 つに置く。
 - トークンの 3 つの層は、`packages/ui/src/tokens/` の `primitive.css`、`semantic.css` と `semantic-dark.css`、`theme.css` に置く。
 - 使う側の Tailwind CSS に、コンポーネントのクラスを走査させる `@source` は、`packages/ui/src/sources.css` に置く。
-- コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に、パターンを `packages/ui/src/patterns/` に置く。
+- コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に置く。
   - story とテストは、コンポーネントと同じディレクトリに置く。
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/` の関心ごとのディレクトリに置く。
   - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。
@@ -172,7 +168,8 @@ package を切り出すのは、次のどちらかが成り立つときである
 
 ### apps/playground
 
-- ツールのページ（`apps/playground/src/` の `node/`、`sql/`、`go/`）どうしは import しない。
+- ツールのページのディレクトリどうしは import しない。
+  ツールのページのディレクトリは、`apps/playground/` の下で `index.html` を持つディレクトリと同じ名前の、`apps/playground/src/` のディレクトリである。今は `node/`、`sql/`、`go/` がある。
   2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
   - チェックは Oxlint が行う。
     `oxlint.config.ts` と `apps/playground/vite.config.ts` は、`apps/playground/` の下の `index.html` を持つディレクトリを、ツールとして読む。
@@ -203,5 +200,3 @@ ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
 - `/playground-projects/*` は、記事に埋め込む実行環境のプロジェクトの JSON に使う。
-- `/figures/*` は、記事の図の、元データ入りの SVG に使う。
-  - ADR-0056: [記事の図の置き場と URL](../docs/adr/0056-article-figures-directory-and-name.md)
