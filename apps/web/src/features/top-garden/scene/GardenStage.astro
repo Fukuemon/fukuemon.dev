@@ -7,7 +7,7 @@ import { STATIONS } from "../layout";
 // 色は surface、text、border-field、focus で書き、庭の範囲で時間帯の霞の色に差し替える（top-garden の Design Doc の「ヘッダーと霞」）
 const mist = "garden-mist from-surface to-transparent";
 const stop =
-  "min-h-11 min-w-11 cursor-pointer border border-s-0 border-border-field bg-surface px-0.5 text-label-compact text-text first:border-s focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4 md:text-label";
+  "min-h-11 min-w-11 cursor-pointer border border-s-0 border-border-field bg-surface px-1 text-label text-text first:border-s focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
 const tool =
   "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2";
 const skip =
@@ -148,7 +148,7 @@ const skip =
   /* 狭い画面では、4 つの文へ移るボタンと 2 つの操作を 2 段に分け、広い画面では 1 段に並べる */
   :global(html.stage-on.garden-ready) .garden-nav {
     position: fixed;
-    inset: auto 0 0.5rem;
+    inset: auto 0.5rem 0.5rem;
     z-index: 30;
     display: flex;
     flex-direction: column;

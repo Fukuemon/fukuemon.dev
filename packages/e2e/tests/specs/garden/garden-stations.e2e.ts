@@ -74,6 +74,16 @@ test.describe("トップの庭", () => {
       await expectAt(page, "portfolio");
     });
 
+    test("プロフィールの見出しにフォーカスがある状態で右の矢印キーを押した場合、フォーカスが 2 つ目の文へ移るボタンに移ること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await page.getByTestId("garden-title").focus();
+      await page.keyboard.press("ArrowRight");
+      await expectAt(page, "career");
+      await expect(page.getByTestId("garden-station-1")).toBeFocused();
+    });
+
     test("「文だけで読む」を押した場合、ふつうのページが出て、フォーカスが h1 に移り、セクションにインラインのスタイルが残らないこと", async ({
       page,
     }) => {
@@ -168,7 +178,7 @@ test.describe("トップの庭", () => {
   test.describe("幅 320px", () => {
     test.use({ viewport: { width: 320, height: 640 }, colorScheme: "light" });
 
-    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 1 段に並び、ヘッダーが 1 段に収まること", async ({
+    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 2 段以内に並び、ヘッダーが 1 段に収まること", async ({
       page,
     }) => {
       await openGarden(page);
@@ -190,11 +200,11 @@ test.describe("トップの庭", () => {
       );
       const header = (await page.getByTestId("site-header").boundingBox())!.height;
       expect({
-        rows: new Set(boxes.map((b) => Math.round(b.top))).size,
+        rows: new Set(boxes.map((b) => Math.round(b.top))).size <= 2,
         small: boxes.filter((b) => b.width < 44 || b.height < 44 || !b.edges).length,
         inside: boxes.every((b) => b.left >= 0 && b.right <= 320),
         headerOneRow: header < 80,
-      }).toStrictEqual({ rows: 1, small: 0, inside: true, headerOneRow: true });
+      }).toStrictEqual({ rows: true, small: 0, inside: true, headerOneRow: true });
     });
   });
 
