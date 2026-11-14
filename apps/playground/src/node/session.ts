@@ -134,9 +134,13 @@ export type NodeSessionOptions = {
 /** 起動した 1 つの実行環境と、その上で起動したもの。 */
 type Instance = {
   runtime?: NodeRuntime;
-  /** npm install の終了コード。npm install を起動できなかったときは undefined である。 */
-  install?: Promise<number | undefined>;
+  /** シェルと npm install を起動し、npm install が終わると、その終了コードで解決する。起動できなかったときは undefined である。 */
+  install: Promise<number | undefined>;
   commands: ProcessHandle[];
+  /** 起動のコマンドの実行の列。自動の実行と、実行のボタンを、1 つずつ順に進める。 */
+  commandQueue: Promise<void>;
+  /** 訪問者が、この実行環境を操作したか。操作する前の変更は保存しない。 */
+  touched: boolean;
   stopSaving: () => void;
 };
 
@@ -149,7 +153,6 @@ export function createNodeSession({
 }: NodeSessionOptions): NodeSession {
   const record = saved.kind === "saved" && isNodeRecord(saved.record) ? saved.record : undefined;
   const canSave = saved.kind !== "unavailable";
-  const saver = createSaver(storage);
   const hasSaved = createStore(record !== undefined);
   const versionChanged = createStore(record !== undefined && record.version !== project.version);
   const busy = createStore(false);
@@ -158,32 +161,43 @@ export function createNodeSession({
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
   let lastSaved = record?.files;
-  // 訪問者が操作する前の変更は保存しない。自動の npm install が書く package-lock.json だけで、保存したファイルがある扱いにしないためである
-  let touched = record !== undefined;
-  const touch = () => {
-    touched = true;
-  };
+  // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
+  const saver = createSaver<NodeRecord>({
+    ...storage,
+    save: (next) =>
+      storage.save(next).then(
+        () => hasSaved.set(canSave),
+        (error: unknown) => {
+          lastSaved = undefined;
+          throw error;
+        },
+      ),
+  });
 
   const persist = (files: Record<string, string>) => {
     lastRead = files;
     if (sameFiles(files, lastSaved)) return;
     lastSaved = files;
     saver.save({ files, version, savedAt: now() });
-    if (canSave) hasSaved.set(true);
   };
 
-  const watchForSave = (runtime: NodeRuntime) => {
+  const readForSave = async (runtime: NodeRuntime) => {
+    const entries = await runtime.files.readAll(SAVE_RULES).catch((error: unknown) => {
+      console.error("保存のために作業ディレクトリを読めない", error);
+      return undefined;
+    });
+    return entries && savedFiles(entries);
+  };
+
+  const watchForSave = (instance: Instance, runtime: NodeRuntime) => {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const save = async () => {
-      const entries = await runtime.files.readAll(SAVE_RULES).catch((error: unknown) => {
-        console.error("保存のために作業ディレクトリを読めない", error);
-        return undefined;
-      });
-      if (entries && !stopped) persist(savedFiles(entries));
+      const files = await readForSave(runtime);
+      if (files && !stopped) persist(files);
     };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
-      if (!touched || paths.every(isExcluded)) return;
+      if (!instance.touched || paths.every(isExcluded)) return;
       clearTimeout(timer);
       timer = setTimeout(() => void save(), SAVE_DELAY_MS);
     });
@@ -194,78 +208,109 @@ export function createNodeSession({
     };
   };
 
-  // 画面に渡す実行環境。訪問者の操作を通る関数を包み、操作の後の変更から保存する
-  const touchHandles = new WeakMap<ProcessHandle, ProcessHandle>();
-  const touching = (handle: ProcessHandle) => {
-    const wrapped = touchHandles.get(handle) ?? {
-      ...handle,
-      write: (data: string) => {
+  // 画面に渡す実行環境。訪問者の操作を通る関数を包み、操作の後の変更から保存する。印は、包んだ実行環境の instance にだけ付ける
+  const forVisitor = (instance: Instance, runtime: NodeRuntime): NodeRuntime => {
+    const touch = () => {
+      instance.touched = true;
+    };
+    const handles = new WeakMap<ProcessHandle, ProcessHandle>();
+    const touching = (handle: ProcessHandle) => {
+      const wrapped = handles.get(handle) ?? {
+        ...handle,
+        write: (data: string) => {
+          touch();
+          handle.write(data);
+        },
+      };
+      handles.set(handle, wrapped);
+      return wrapped;
+    };
+    const afterTouch =
+      <A extends unknown[], R>(operation: (...args: A) => R) =>
+      (...args: A) => {
         touch();
-        handle.write(data);
+        return operation(...args);
+      };
+    return {
+      ...runtime,
+      files: {
+        ...runtime.files,
+        write: afterTouch(runtime.files.write),
+        createDirectory: afterTouch(runtime.files.createDirectory),
+        rename: afterTouch(runtime.files.rename),
+        remove: afterTouch(runtime.files.remove),
+      },
+      processes: {
+        ...runtime.processes,
+        get: (id) => {
+          const handle = runtime.processes.get(id);
+          return handle && touching(handle);
+        },
+        start: async (...args) => touching(await runtime.processes.start(...args)),
+        startShell: async (...args) => touching(await runtime.processes.startShell(...args)),
       },
     };
-    touchHandles.set(handle, wrapped);
-    return wrapped;
   };
-  const afterTouch =
-    <A extends unknown[], R>(operation: (...args: A) => R) =>
-    (...args: A) => {
-      touch();
-      return operation(...args);
-    };
-  const forVisitor = (runtime: NodeRuntime): NodeRuntime => ({
-    ...runtime,
-    files: {
-      ...runtime.files,
-      write: afterTouch(runtime.files.write),
-      createDirectory: afterTouch(runtime.files.createDirectory),
-      rename: afterTouch(runtime.files.rename),
-      remove: afterTouch(runtime.files.remove),
-    },
-    processes: {
-      ...runtime.processes,
-      get: (id) => {
-        const handle = runtime.processes.get(id);
-        return handle && touching(handle);
-      },
-      start: async (...args) => touching(await runtime.processes.start(...args)),
-      startShell: async (...args) => touching(await runtime.processes.startShell(...args)),
-    },
-  });
 
+  /** 前に起動した起動のコマンドを止め、ポートが空くのを待ってから、起動のコマンドを起動する。 */
   const startCommands = async (instance: Instance, runtime: NodeRuntime) => {
+    const previous = instance.commands.splice(0);
+    for (const handle of previous) handle.kill();
+    await withTimeout(Promise.all(previous.map((handle) => handle.exit)), STOP_TIMEOUT_MS).catch(
+      () => undefined,
+    );
+    if (current !== instance) return;
     for (const { command, args, name } of project.start) {
       instance.commands.push(await runtime.processes.start(command, args, { name }));
     }
   };
 
-  /** シェル、npm install の順に起動する。autoStart のときは、npm install が 0 で終わった後に、起動のコマンドを実行する。 */
-  const startup = async (instance: Instance, runtime: NodeRuntime, autoStart: boolean) => {
-    await runtime.processes.startShell({ name: shellName([]) });
-    const install = runtime.processes.start("npm", ["install"], { name: "npm install" });
-    instance.install = install.then(
-      (handle) => handle.exit,
-      () => undefined,
-    );
-    if ((await (await install).exit) !== 0 || !autoStart) return;
-    await startCommands(instance, runtime);
+  /** 起動のコマンドの実行を列に足す。前の実行の失敗は、次の実行を止めない。 */
+  const queueCommands = (instance: Instance, runtime: NodeRuntime) => {
+    const run = instance.commandQueue.then(() => startCommands(instance, runtime));
+    instance.commandQueue = run.catch(() => undefined);
+    return run;
   };
 
-  let current: Instance = { commands: [], stopSaving: () => undefined };
+  /** シェル、npm install の順に起動する。 */
+  const startup = async (runtime: NodeRuntime) => {
+    await runtime.processes.startShell({ name: shellName([]) });
+    const install = await runtime.processes.start("npm", ["install"], { name: "npm install" });
+    return install.exit;
+  };
 
-  const launch = (files: Readonly<Record<string, string>>, autoStart: boolean) => {
-    const instance: Instance = { commands: [], stopSaving: () => undefined };
+  let current: Instance;
+
+  const launch = (
+    files: Readonly<Record<string, string>>,
+    { autoStart, touched }: { autoStart: boolean; touched: boolean },
+  ) => {
+    let installed: (code: number | undefined) => void = () => undefined;
+    const instance: Instance = {
+      install: new Promise((resolve) => (installed = resolve)),
+      commands: [],
+      commandQueue: Promise.resolve(),
+      touched,
+      stopSaving: () => undefined,
+    };
     current = instance;
     return (async (): Promise<RuntimeResult> => {
       try {
         const runtime = await boot({ files });
         instance.runtime = runtime;
-        instance.stopSaving = watchForSave(runtime);
-        void startup(instance, runtime, autoStart).catch((error: unknown) => {
-          console.error("プロセスを起動できない", error);
-        });
-        return { kind: "running", runtime: forVisitor(runtime) };
+        instance.stopSaving = watchForSave(instance, runtime);
+        void startup(runtime)
+          .then(async (code) => {
+            installed(code);
+            if (code === 0 && autoStart) await queueCommands(instance, runtime);
+          })
+          .catch((error: unknown) => {
+            installed(undefined);
+            console.error("プロセスを起動できない", error);
+          });
+        return { kind: "running", runtime: forVisitor(instance, runtime) };
       } catch (error) {
+        installed(undefined);
         console.error("実行環境を起動できない", error);
         return {
           kind: "unavailable",
@@ -276,13 +321,17 @@ export function createNodeSession({
   };
 
   // 保存したファイルがあるとき（再訪）は、起動のコマンドを、訪問者が実行のボタンを押してから実行する (ADR-0051)
-  const runtimeStore = createStore(launch(bootFiles, record === undefined));
+  const runtimeStore = createStore(
+    launch(bootFiles, { autoStart: record === undefined, touched: record !== undefined }),
+  );
 
-  /** 今の実行環境を破棄し、files が返すファイルで起動し直す。起動し直している間は busy にする。 */
+  /** 今の実行環境を破棄し、prepare が返すファイルで起動し直す。起動し直している間は busy にする。 */
   const relaunch = async (
-    files: (old: Instance) => Promise<Readonly<Record<string, string>>>,
+    prepare: (
+      old: Instance,
+    ) => Promise<{ files: Readonly<Record<string, string>>; touched: boolean }>,
     autoStart: boolean,
-    before: () => Promise<void> = async () => undefined,
+    before: (old: Instance) => Promise<void> = async () => undefined,
   ) => {
     if (busy.getSnapshot()) return;
     busy.set(true);
@@ -291,17 +340,13 @@ export function createNodeSession({
       await runtimeStore.getSnapshot();
       const old = current;
       old.stopSaving();
-      try {
-        await before();
-      } catch (error) {
-        if (old.runtime) old.stopSaving = watchForSave(old.runtime);
-        throw error;
-      }
-      bootFiles = await files(old);
+      await before(old);
+      const { files, touched } = await prepare(old);
+      bootFiles = files;
       await old.runtime?.dispose().catch((error: unknown) => {
         console.error("実行環境を破棄できない", error);
       });
-      const next = launch(bootFiles, autoStart);
+      const next = launch(bootFiles, { autoStart, touched });
       runtimeStore.set(next);
       await next;
     } finally {
@@ -309,26 +354,43 @@ export function createNodeSession({
     }
   };
 
+  // 起動し直す直前の変更も残すため、読んだファイルを保存してから起動し直す
   const readWorkdir = async (old: Instance) => {
-    if (!old.runtime) return bootFiles;
+    if (!old.runtime) return { files: bootFiles, touched: old.touched };
     try {
-      return savedFiles(
+      const files = savedFiles(
         await withTimeout(old.runtime.files.readAll(SAVE_RULES), RESTART_READ_TIMEOUT_MS),
       );
+      if (old.touched) persist(files);
+      return { files, touched: old.touched };
     } catch (error) {
       console.error("起動し直す前に作業ディレクトリを読めない", error);
-      return lastRead ?? bootFiles;
+      return { files: lastRead ?? bootFiles, touched: old.touched };
     }
   };
 
-  const initialFiles = async () => {
-    touched = false;
+  const clearSaved = async (old: Instance) => {
+    try {
+      await saver.clear();
+    } catch (error) {
+      // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
+      lastSaved = undefined;
+      if (old.runtime) {
+        old.stopSaving = watchForSave(old, old.runtime);
+        const files = old.touched ? await readForSave(old.runtime) : undefined;
+        if (files) persist(files);
+      }
+      throw error;
+    }
+  };
+
+  const toInitialState = async () => {
     version = project.version;
     lastRead = undefined;
     lastSaved = undefined;
     hasSaved.set(false);
     versionChanged.set(false);
-    return project.files;
+    return { files: project.files, touched: false };
   };
 
   return {
@@ -340,20 +402,17 @@ export function createNodeSession({
     versionChanged,
     busy,
     run: async () => {
+      // 起動の途中に押したときは、起動を待ってから実行する
+      await runtimeStore.getSnapshot();
       const instance = current;
       const runtime = instance.runtime;
       if (!runtime || busy.getSnapshot()) return;
-      touch();
+      instance.touched = true;
       await instance.install;
-      const previous = instance.commands.splice(0);
-      for (const handle of previous) handle.kill();
-      await withTimeout(Promise.all(previous.map((handle) => handle.exit)), STOP_TIMEOUT_MS).catch(
-        () => undefined,
-      );
-      if (current === instance) await startCommands(instance, runtime);
+      await queueCommands(instance, runtime);
     },
     restart: () => relaunch(readWorkdir, false),
-    reset: () => relaunch(initialFiles, true, saver.clear),
+    reset: () => relaunch(toInitialState, true, clearSaved),
   };
 }
 

@@ -35,7 +35,10 @@ const project: NodeProject = {
 const savedRecord: NodeRecord = { files: { "index.js": "b" }, version: "v1", savedAt: 1 };
 
 /** 起動した実行環境の代わり。ファイルは text のマップで持ち、変更の通知はテストから出す。 */
-function fakeRuntime(files: Readonly<Record<string, string>>, installExit: number) {
+function fakeRuntime(
+  files: Readonly<Record<string, string>>,
+  installExit: number | Promise<number>,
+) {
   const contents = new Map(Object.entries(files));
   const calls: string[] = [];
   const listeners = new Set<(paths: readonly string[]) => void>();
@@ -86,7 +89,7 @@ function fakeRuntime(files: Readonly<Record<string, string>>, installExit: numbe
           calls.push(`${command} ${args.join(" ")} (${options?.name})`);
           // 起動のコマンドは終了しない。終了を待つと、次のコマンドが起動しない
           return handle(
-            command === "npm" ? Promise.resolve(installExit) : new Promise(() => undefined),
+            command === "npm" ? Promise.resolve(installExit) : new Promise<number>(() => undefined),
           );
         },
       ),
@@ -123,7 +126,10 @@ function fakeWorkspace() {
   return { workspace, saves };
 }
 
-function setup(saved: WorkspaceLoad<NodeRecord> = { kind: "empty" }, { installExit = 0 } = {}) {
+function setup(
+  saved: WorkspaceLoad<NodeRecord> = { kind: "empty" },
+  { installExit = 0 as number | Promise<number> } = {},
+) {
   const runtimes: Fake[] = [];
   const booted: BootOptions["files"][] = [];
   const boot = vi.fn(async ({ files }: BootOptions) => {
@@ -308,6 +314,26 @@ describe("保存", () => {
     expect(saves.map((record) => record.version)).toStrictEqual(["v0"]);
   });
 
+  it("保存が失敗した後は、同じ中身でも次の変更で書き直す", async () => {
+    const { session, workspace, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    workspace.save.mockRejectedValueOnce(new Error("QuotaExceededError"));
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    latest().change("index.js");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
+  });
+
+  it("IndexedDB を読めないときは、保存しても hasSaved を true にしない", async () => {
+    const { session, visitor, latest } = setup({ kind: "unavailable" });
+    await settle(session);
+    await (await visitor()).files.write("index.js", "c");
+    latest().change("index.js");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(session.hasSaved.getSnapshot()).toBe(false);
+  });
+
   it("保存すると、hasSaved を true にする", async () => {
     const { session, visitor, latest } = setup();
     await settle(session);
@@ -331,6 +357,14 @@ describe("savedFiles", () => {
 });
 
 describe("restart", () => {
+  it("訪問者が操作した後なら、起動し直す前に読んだファイルを保存する", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().contents.set("index.js", "c");
+    await session.restart();
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
+  });
+
   it("作業ディレクトリのファイルを読み、古い実行環境を破棄してから、そのファイルで起動し直し、起動のコマンドは実行しない", async () => {
     const { session, booted, runtimes, latest } = setup();
     await settle(session);
@@ -417,17 +451,73 @@ describe("reset", () => {
     });
     await settle(session);
     workspace.clear.mockRejectedValueOnce(new Error("消せない"));
-    await expect(session.reset()).rejects.toThrow("消せない");
+    const error = await session.reset().catch((reason: Error) => reason.message);
     latest().change("index.js", "c");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
-    expect({ boots: boot.mock.calls.length, saves: saves.length }).toStrictEqual({
+    expect({
+      error,
+      boots: boot.mock.calls.length,
+      saves: saves.map((record) => record.files),
+    }).toStrictEqual({
+      error: "消せない",
       boots: 1,
-      saves: 1,
+      saves: [{ "index.js": "b" }, { "index.js": "c" }],
     });
+  });
+
+  it("戻すと、versionChanged を false にする", async () => {
+    const { session } = setup({ kind: "saved", record: { ...savedRecord, version: "v0" } });
+    await settle(session);
+    await session.reset();
+    expect(session.versionChanged.getSnapshot()).toBe(false);
+  });
+
+  it("戻している間に、前の実行環境へ入力しても、戻した後の変更を保存しない", async () => {
+    const { session, saves, visitor, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const old = await visitor();
+    const resetting = session.reset();
+    void old.files.write("index.js", "x");
+    await resetting;
+    latest().change("package-lock.json", "{}");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves).toStrictEqual([]);
   });
 });
 
 describe("run", () => {
+  it("初めて開いた後の npm install の途中に押しても、動いている起動のコマンドは 1 組だけである", async () => {
+    let installed: (code: number) => void = () => undefined;
+    const { session, latest } = setup(
+      { kind: "empty" },
+      { installExit: new Promise<number>((resolve) => (installed = resolve)) },
+    );
+    await settle(session);
+    const running = session.run();
+    installed(0);
+    await running;
+    const commands = latest().handles.slice(2);
+    expect(commands.map((handle) => handle.killed)).toStrictEqual([true, true, false, false]);
+  });
+
+  it("起動の途中に押したときは、起動を待ってから実行する", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await session.run();
+    expect(latest().calls.slice(2)).toStrictEqual([
+      "node auth.js (認可サーバー)",
+      "node client.js (クライアント)",
+    ]);
+  });
+
+  it("押した後の変更は、保存する", async () => {
+    const { session, saves, latest } = setup();
+    await settle(session);
+    await session.run();
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.length).toBe(1);
+  });
+
   it("前の起動のコマンドを止めてから、起動のコマンドを実行する", async () => {
     const { session, latest } = setup();
     await settle(session);
