@@ -56,11 +56,10 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 - HTTP の状態コードに当てる状態の色は、[Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)の表にある。新しい色のトークンを作らない。
 - コンソールのログレベルに当てる状態の色は、[Design Doc の「コンソールのログレベルの色」](../DesignDoc.md#コンソールのログレベルの色)の表にある。新しい色のトークンを作らない。
 
-セマンティックトークンとテーマ変数がプリミティブトークンを参照しない例外は、次の 3 つ。
+セマンティックトークンがプリミティブトークンを参照しない例外は、次の 2 つ。
 
 - 挿絵の層の濃さ（`--fd-art-*`）は、色ではなく不透明度の値を直に持つ。挿絵は `text` と `surface` の色だけで塗り、濃さをこの値で決めるためである。コントラストのチェックは読まない。
 - 見出しの明朝のウェイト（テーマ変数の `--font-weight-semibold`）は、600 を直に持つ。明朝は 600 の 1 つだけを読み込むためである（ADR-0075）。
-- 見出しと等幅の書体（テーマ変数の `--font-heading` と `--font-mono`）は、Web フォントの名前を直に持つ。プリミティブトークンが持つ書体は、本文の `font-family` だけである（ADR-0075）。
 
 ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
@@ -99,7 +98,8 @@ fukuemon.dev はダークを持つ。
 | `text-code-compact`  | 等幅の 13px のスタイル | コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダと本文                                                             |
 
 - 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0075）。
-- 本文はシステムフォント（`font-sans`）、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
+- 本文はシステムフォント（`font-sans`）、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。DADS の本文は Noto Sans JP だが、本文の Web フォントの取得をなくすためである（ADR-0075）。
+- プリミティブトークンが持つ書体は、本文の `font-family` だけである。見出しと等幅の書体（テーマ変数の `font-heading` と `font-mono`）は、Web フォントの名前を直に持つ（ADR-0075）。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字である（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
 - 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べ、隣の 13px の題とタブに文字の大きさをそろえるためである（ADR-0062、ADR-0067）。
