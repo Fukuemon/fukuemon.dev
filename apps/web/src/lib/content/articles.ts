@@ -1,7 +1,9 @@
 import { getCollection, getEntry, render } from "astro:content";
 import { assertContentGraph } from "./article-graph";
 import { listArticles, planSeriesPages, type SeriesSource } from "./article-list";
-import { type ArticleSeries, planArticlePages } from "./article-pages";
+import { type ArticleSeries, isPublic, planArticlePages } from "./article-pages";
+import { findEmbedNames } from "../playground/embeds";
+import { projectDir, readProject } from "../playground/project";
 
 /** 記事のページが描く値。Astro のエントリの形をページに出さない (docs/adr/0002-content-model-independence.md) */
 export type ArticlePageProps = {
@@ -68,4 +70,19 @@ export async function getSeriesPaths() {
     params: { series: page.name },
     props: page,
   }));
+}
+
+/** プロジェクトの JSON のページの `getStaticPaths` が返す、ページを書き出す記事が埋め込むプロジェクト (ADR-0049) */
+export async function getPlaygroundProjectPaths() {
+  const { articles } = await loadArticlesAndSeries();
+  return articles
+    .filter((a) => isPublic(a.data.status, import.meta.env.DEV))
+    .flatMap((article) => {
+      if (article.filePath === undefined) throw new Error(`記事のパスが分からない: ${article.id}`);
+      const path = article.filePath;
+      return findEmbedNames(article.body ?? "").map((name) => ({
+        params: { contentId: article.data.contentId, name },
+        props: { project: readProject(projectDir(path, name)) },
+      }));
+    });
 }

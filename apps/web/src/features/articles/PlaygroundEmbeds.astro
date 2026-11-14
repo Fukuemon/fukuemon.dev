@@ -1,0 +1,22 @@
+---
+// 記事の本文の実行環境の埋め込み（rehypePlayground が書く要素）のボタンを、押したときに iframe に替える。
+// 開いた直後に iframe を作ると、実行環境の読み込みが記事の初回の表示を遅らせる (ADR-0034)
+---
+
+<script>
+  document.addEventListener("click", (event) => {
+    const button = (event.target as Element | null)?.closest(".playground-embed-open");
+    const embed = button?.closest<HTMLElement>("[data-playground-embed]");
+    if (!embed) return;
+    const { playgroundSrc, playgroundTool, playgroundLabel } = embed.dataset;
+    if (!playgroundSrc) return;
+    const frame = document.createElement("iframe");
+    frame.src = playgroundSrc;
+    frame.title = playgroundLabel?.replace(/を開く$/, "") ?? "実行環境";
+    frame.className = "playground-embed-frame";
+    // WebContainers は、親のページと iframe の両方が cross-origin isolated のときだけ起動する
+    if (playgroundTool === "node") frame.allow = "cross-origin-isolated";
+    embed.replaceChildren(frame);
+    frame.focus();
+  });
+</script>

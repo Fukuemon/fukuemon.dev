@@ -6,6 +6,8 @@ import expressiveCode, { ExpressiveCodeTheme, pluginFramesTexts } from "astro-ex
 import { toVsCodeTheme } from "@fukuemon/ui/code-theme";
 import { rehypeJaLinebreak } from "./src/lib/rehype-ja-linebreak";
 import { rehypeMermaid } from "./src/lib/rehype-mermaid";
+import { playgroundIsolationHeaders } from "./src/lib/playground/isolation-headers";
+import { rehypePlayground } from "./src/lib/playground/rehype-playground";
 import { rehypeScrollBox } from "./src/lib/rehype-scroll-box";
 
 // サイトの UI の文言は、ですます調の日本語にする (context/conventions.md)
@@ -26,10 +28,13 @@ export default defineConfig({
   markdown: {
     // デフォルトの Sätteri は rehype のプラグインを動かさないので、unified の処理に替える。
     // rehypeMermaid は Expressive Code より前に動き、素の <pre><code> のまま図を拾う
-    processor: unified({ rehypePlugins: [rehypeMermaid, rehypeScrollBox, rehypeJaLinebreak] }),
+    processor: unified({
+      rehypePlugins: [rehypePlayground, rehypeMermaid, rehypeScrollBox, rehypeJaLinebreak],
+    }),
   },
   integrations: [
     subsetFonts("Zen Old Mincho"),
+    playgroundIsolationHeaders(),
     react(),
     expressiveCode({
       themes: [
