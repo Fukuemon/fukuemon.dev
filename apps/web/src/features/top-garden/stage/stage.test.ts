@@ -24,6 +24,7 @@ function fakeRoot() {
     classList: {
       add: (...c: string[]) => c.forEach((v) => classes.add(v)),
       remove: (...c: string[]) => c.forEach((v) => classes.delete(v)),
+      contains: (c: string) => classes.has(c),
     },
   };
 }
@@ -32,6 +33,7 @@ function run(o: Partial<Omit<StageEnv, "root" | "storage">> & { seen?: boolean }
   const root = fakeRoot();
   const store = memory(o.seen);
   const loads: (() => void)[] = [];
+  const timers: { fn: () => void; ms: number }[] = [];
   applyStage(
     {
       root,
@@ -40,11 +42,12 @@ function run(o: Partial<Omit<StageEnv, "root" | "storage">> & { seen?: boolean }
       reducedMotion: false,
       storage: () => store,
       load: (onError) => void loads.push(onError),
+      later: (fn, ms) => void timers.push({ fn, ms }),
       ...o,
     },
     fns,
   );
-  return { root, store, loads };
+  return { root, store, loads, timers };
 }
 
 const summary = ({ root, store, loads }: ReturnType<typeof run>) => ({
@@ -105,6 +108,27 @@ describe("applyStage", () => {
     });
   });
 
+  it("6 秒の後に場面の準備ができていないと、2 つの class を外し、記録は残す", () => {
+    const r = run();
+    expect(r.timers.map((t) => t.ms)).toStrictEqual([6000]);
+    r.timers[0]!.fn();
+    expect({ classes: [...r.root.classes], seen: r.store.items.get("fd-top-seen") }).toStrictEqual({
+      classes: [],
+      seen: "1",
+    });
+  });
+
+  it("6 秒の後に場面の準備ができていれば、庭を出したままにする", () => {
+    const r = run({ seen: true });
+    r.root.classList.add("scene-ready");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual(["scene-ready", "stage-on"]);
+  });
+
+  it("動きを減らす設定では、6 秒の打ち切りを仕掛けない", () => {
+    expect(run({ reducedMotion: true }).timers).toStrictEqual([]);
+  });
+
   it("localStorage に触れると例外を投げる端末では、季節と時間帯を書き、イントロを出さずに庭を出す", () => {
     const root = fakeRoot();
     applyStage(
@@ -117,6 +141,7 @@ describe("applyStage", () => {
           throw new DOMException("blocked", "SecurityError");
         },
         load: () => {},
+        later: () => {},
       },
       fns,
     );
@@ -159,6 +184,7 @@ function browser(search = "") {
     localStorage: store,
     location: { search },
     matchMedia: () => ({ matches: false }),
+    setTimeout: () => {},
     URLSearchParams,
     Date: class extends Date {
       constructor() {
@@ -231,6 +257,24 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
     appended[0]?.onerror?.();
     expect([...b.root.classes]).toStrictEqual([]);
   });
+
+  it("バンドルが 6 秒の間に場面の準備を終えないと、庭を出す class を外す", () => {
+    const b = browser();
+    const timers: { fn: () => void; ms: number }[] = [];
+    const globals = {
+      ...b.globals,
+      document: {
+        documentElement: b.root,
+        createElement: () => ({}),
+        head: { appendChild: () => {} },
+      },
+      setTimeout: (fn: () => void, ms: number) => void timers.push({ fn, ms }),
+    };
+    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    expect(timers.map((t) => t.ms)).toStrictEqual([6000]);
+    timers[0]!.fn();
+    expect([...b.root.classes]).toStrictEqual([]);
+  });
 });
 
 describe("stageScript の場面のバンドルの URL", () => {
@@ -251,6 +295,7 @@ describe("inline script に埋め込む形", () => {
         reducedMotion: false,
         storage: () => memory(),
         load: () => {},
+        later: () => {},
       },
       fns,
     );
