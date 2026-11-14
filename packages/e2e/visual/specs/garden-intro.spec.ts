@@ -8,6 +8,12 @@ test.beforeEach(() => test.slow());
 // SwiftShader で描く量を減らすため、16:9 の小さい画面で開く。イントロの段の順と時刻は、画面の大きさに依らない
 test.use({ viewport: { width: 480, height: 270 }, colorScheme: "light" });
 
+/**
+ * 開いてから色を差すまでの下限（ms）。apps/web の intro-timing.ts の INK_END（5600）から、
+ * mark の時刻を ms に丸める分の 10ms を引いた値である
+ */
+const INK_FLOOR = 5590;
+
 const html = (page: Page) => page.locator("html");
 const profile = (page: Page) => page.locator('[data-garden-card][aria-labelledby="profile"]');
 const heading = (page: Page) => page.getByRole("heading", { level: 1, name: "プロフィール" });
@@ -97,9 +103,9 @@ test("初めての端末で開くと、墨の絵の後に色を差して門を�
   expect(states[at("garden-ready")]!.split(" ")).toContain("intro");
   expect(states.at(-1)!.split(" ")).not.toContain("intro");
   const m = await marks(page);
-  // 墨の絵を描き終える 3.8 秒より前には色を差さず、色を差し始めてから 4.5 秒より前には終えない。
+  // 墨の絵を描き終える 5.6 秒より前には色を差さず、色を差し始めてから 4.5 秒より前には終えない。
   // CI の SwiftShader はメインスレッドを止めて時刻が後ろへずれるので、時刻の上限は見ない。上限は GPU のあるローカル環境で測る
-  expect(m["garden-enter"]).toBeGreaterThanOrEqual(3790);
+  expect(m["garden-enter"]).toBeGreaterThanOrEqual(INK_FLOOR);
   expect(m["garden-intro-done"]! - m["garden-enter"]!).toBeGreaterThanOrEqual(4500);
   await expectGardenEnd(page);
 });
@@ -218,6 +224,7 @@ test.describe("「飛ばす」の色と位置", () => {
       paper?: string;
       gaps?: number[];
       duration?: string;
+      colorTransition?: boolean;
       enter?: Colors;
     };
   }
@@ -259,6 +266,8 @@ test.describe("「飛ばす」の色と位置", () => {
           if (!root.classList.contains("enter")) return;
           // 色は遷移で替わる。遷移の途中の値を読まないよう、「飛ばす」が消えて遷移が止まる garden-ready の時点で色を読む
           log.duration ??= getComputedStyle(el).transitionDuration;
+          log.colorTransition ??=
+            getComputedStyle(el).transitionProperty.includes("background-color");
           if (!root.classList.contains("garden-ready")) return;
           observer.disconnect();
           log.enter = colors(el);
@@ -278,11 +287,13 @@ test.describe("「飛ばす」の色と位置", () => {
         gaps: skip?.gaps,
         beforeTintIsPaper: skip?.beforeTint?.bg === skip?.paper,
         duration: skip?.duration,
+        colorTransition: skip?.colorTransition,
         enter: skip?.enter,
       }).toStrictEqual({
         gaps: [8, 8],
         beforeTintIsPaper: true,
         duration: "0.15s",
+        colorTransition: true,
         enter: station,
       });
     });
@@ -307,20 +318,21 @@ test.describe("「本文へスキップ」のリンク", () => {
     expect(await focusedOnTop(page)).toStrictEqual({ link: "#main", onTop: true });
   });
 
-  test("イントロを Esc で飛ばした後に Tab を押すと、リンクがヘッダーに隠れずに出る", async ({
+  test("初めての訪問で場面の準備の前に Tab を押すと、リンクが墨の絵とヘッダーに隠れずに出る", async ({
     page,
   }) => {
-    await page.addInitScript(() => {
-      new MutationObserver((_, observer) => {
-        if (!document.documentElement.classList.contains("scene-ready")) return;
-        observer.disconnect();
-        document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-      }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    // 準備の前は Tab でイントロが止まらず、庭の面が画面を覆ったままになる
+    await page.route("**/_astro/garden-entry-*.js", async (route) => {
+      await new Promise((r) => setTimeout(r, 4000));
+      await route.continue();
     });
-    await page.goto("/");
-    await expectGardenEnd(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(html(page)).toHaveClass(/\bintro\b/);
     await page.keyboard.press("Tab");
-    expect(await focusedOnTop(page)).toStrictEqual({ link: "#main", onTop: true });
+    expect({
+      ...(await focusedOnTop(page)),
+      ready: await page.evaluate(() => document.documentElement.classList.contains("scene-ready")),
+    }).toStrictEqual({ link: "#main", onTop: true, ready: false });
   });
 });
 
@@ -341,6 +353,32 @@ test.describe("場面の準備が遅いとき", () => {
     await expect(html(page)).toHaveClass(/\bintro\b/);
     await expect(html(page)).not.toHaveClass(/scene-ready|garden-ready/);
     await expect(page.getByRole("button", { name: "飛ばす" })).toBeVisible({ timeout: 60_000 });
+  });
+
+  test("色を差す前に、松の円の遷移を待たない", async ({ page }) => {
+    // 松の円の遷移を線より十分に長くし、色を差した時点でまだ動いていることを見る。待つと、色を差すのが 20 秒より後になる
+    await page.route("/", async (route) => {
+      const res = await route.fetch();
+      const body = (await res.text()).replace(
+        "</head>",
+        "<style>html.intro .ink-gate .ink-svg .pine{transition:opacity 700ms ease 20s!important}</style></head>",
+      );
+      await route.fulfill({ response: res, body });
+    });
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        if (!document.documentElement.classList.contains("enter")) return;
+        observer.disconnect();
+        const pine = document
+          .querySelector(".ink-gate .pine")!
+          .getAnimations()
+          .filter((a) => a.playState === "running").length;
+        (window as unknown as { __pine: number }).__pine = pine;
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 60_000 });
+    expect(await page.evaluate(() => (window as unknown as { __pine: number }).__pine)).toBe(1);
   });
 
   test("HTML が遅く届いても、墨の線を描き終えてから色を差し始める", async ({ page }) => {
@@ -379,11 +417,11 @@ test.describe("場面の準備が遅いとき", () => {
     await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 60_000 });
     const m = await marks(page);
     // 準備の直後に差すかは時刻の上限なので、GPU のあるローカル環境で測る。ここでは、遅れが掛かったことと、順序と下限だけを見る。
-    // 準備が 3.8 秒より前に終わった実行では、最初のテストと同じ確認になる
+    // 準備が 5.6 秒より前に終わった実行では、最初のテストと同じ確認になる
     expect({
       delayed: m["garden-scene-ready"]! >= 2000,
       afterReady: m["garden-enter"]! >= m["garden-scene-ready"]!,
-      afterInk: m["garden-enter"]! >= 3790,
+      afterInk: m["garden-enter"]! >= INK_FLOOR,
     }).toStrictEqual({ delayed: true, afterReady: true, afterInk: true });
   });
 });
