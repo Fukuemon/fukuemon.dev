@@ -36,7 +36,11 @@ export function isolationHeaders(paths: readonly string[]): string {
 export function findNodeEmbedPages(distDir: string): string[] {
   return readdirSync(distDir, { recursive: true, encoding: "utf8" })
     .filter((file) => file.endsWith(".html"))
-    .filter((file) => hasNodeEmbed(fromHtml(readFileSync(join(distDir, file), "utf8"))))
+    .filter((file) => {
+      const html = readFileSync(join(distDir, file), "utf8");
+      // 全てのページを hast にすると、ビルドの時間が出力の大きさに比例して延びる
+      return /data-playground-tool/i.test(html) && hasNodeEmbed(fromHtml(html));
+    })
     .map(pagePath)
     .sort();
 }

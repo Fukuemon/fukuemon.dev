@@ -10,6 +10,7 @@ function codeBlocks(node: Root | RootContent): Code[] {
 
 /** 記事の Markdown の、`playground` のコードフェンスに書いた埋め込みの名前 */
 export function findEmbedNames(markdown: string): string[] {
+  if (!markdown.includes(PLAYGROUND_LANG)) return [];
   return codeBlocks(unified().use(remarkParse).parse(markdown))
     .filter((code) => code.lang === PLAYGROUND_LANG)
     .map((code) => code.value.trim());
