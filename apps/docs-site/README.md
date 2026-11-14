@@ -41,7 +41,7 @@ pnpm --filter @fukuemon/docs-site run build
 
 ## 初めて公開する
 
-運営者が、次の順で行う。
+運用者が、次の順で行う。
 Access のアプリケーションが無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。
 このため、ダッシュボードで Access を作ってから、Terraform で custom domain を作る。
 apply workflow の起動と `infra` environment の承認は、[infra/README.md](../../infra/README.md#ci-から-apply-する) の「CI から apply する」の手順で行う。
@@ -54,7 +54,7 @@ Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
 
 1. Cloudflare のダッシュボードで「Zero Trust」を開き、team の名前を決める。
 2. プランは Free を選ぶ。Free でも、支払いの情報の入力を求められる。
-3. ログインの方法に One-time PIN を足す。設定の画面の場所は未確認である。
+3. Login methods に One-time PIN を足す。設定の画面の場所は未確認である。
 
 - 出典: [Get started](https://developers.cloudflare.com/cloudflare-one/setup/)
 
@@ -65,9 +65,9 @@ Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
 3. 「Access policies」で、ポリシーを新しく作る。Action は「Allow」、Include の Selector は「Emails」にし、許可するメールアドレスを入れる。
 4. 保存する。
 
-- custom domain がまだ無いホスト名で、アプリケーションを作れるかは未確認である。作れないときは、ここで止まり、手順 3 の前に Access を作る方法を決め直す。
+- custom domain がまだ無いホスト名で、アプリケーションを作れるかは未確認である。作れないときは、ここで作業を止め、手順 4 で custom domain を作る前に Access を作る方法を決め直す。
 - メールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、issue、pull request、GitHub の secret に書かない。
-- 次の選び方をしない。誰でも通すか、広く通すポリシーになる。
+- 次の値を選ばない。誰でも通すか、広く通すポリシーになる。
   - Action の「Bypass」と「Service Auth」
   - Include の Selector の「Everyone」「Login Methods」「Emails ending in」
 - Include は「Emails」の 1 行だけにする。
@@ -87,7 +87,8 @@ Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` �
 
 1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
    ほかの差分が出たら、apply しない。
-   とくに、Access のアプリケーションかポリシー（`cloudflare_zero_trust_access_*.docs`）の destroy が出たら、state に Access が残っている。apply すると Access が消えるので、扱いを決めてから進める。
+   とくに、Access のアプリケーションかポリシー（`cloudflare_zero_trust_access_*.docs`）の destroy が出たら、state に Access が残っている。
+   apply すると Access が消えるので、扱いを決めてから進める。
 2. 確認したら、`mode=apply` で起動し直す。
 
 ### 5. 公開の範囲を確認する
@@ -100,19 +101,19 @@ Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` �
 
 - ADR-0032: [承認の条件](../../docs/adr/0032-docs-site-behind-access.md#承認の条件)
 
-## Access をオンとオフに切り替える
+## Access のオンとオフを切り替える
 
 Access は、ダッシュボードで切り替える。
 apply は要らない。
 
-- オフにするときは、手順 2 で作ったアプリケーションを消す。
-- オンにするときは、手順 2 をもう一度行い、手順 5 の 1 と 4 を確認する。
+- オフにするときは、「初めて公開する」の手順 2 で作ったアプリケーションを消す。
+- オンにするときは、「初めて公開する」の手順 2 をもう一度行い、手順 5 の 1 と 4 を確認する。
 - **オフの間は、`https://docs.fukuemon.dev` を誰でも開ける。** noindex は返すが、検索の結果に載らないことは保証しない。
 
 アプリケーションを消さずに無効にする設定があるかは、未確認である。
 
 ## 許可するメールアドレスを変える
 
-ダッシュボードで、手順 2 で作ったポリシーの Include のメールアドレスを書き換える。
+ダッシュボードで、「初めて公開する」の手順 2 で作ったポリシーの Include のメールアドレスを書き換える。
 外したメールアドレスで認証できないことを確認する。
 apply は要らない。

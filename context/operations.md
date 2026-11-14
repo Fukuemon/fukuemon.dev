@@ -61,7 +61,9 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 3. 変更が本番の可用性かドメインへの到達に影響するなら、Terraform にする。
 4. どれにも当たらなければ、Terraform にする。変更の履歴とレビューを残せる。
 
-ドキュメントサイトの Access のアプリケーションとポリシーは、3 の例外で、ダッシュボードで設定する。運営者がオンとオフを頻繁に切り替えるためである（ADR-0081）。
+ドキュメントサイトの Access のアプリケーションとポリシーは、判定の 3 の例外で、ダッシュボードで設定する。  
+運営者が Access のオンとオフを頻繁に切り替えるためである。  
+ADR-0081: [Access をダッシュボードで設定する](../docs/adr/0081-docs-site-access-on-dashboard.md)
 
 - `cloudflare_workers_script` で静的アセットを配らない。deploy が Terraform を経由し、apply の権限が日常の CI へ降りる。
 - Terraform が作ったリソースの識別子（R2 のバケット名、D1 の database id など）を Wrangler へ渡す方法は、データを保持するリソースが 2 つ目になる前にこの節に定める。
@@ -148,7 +150,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - ドキュメントサイトの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-docs workflow が行う。
   初回の deploy と出し直しは、運用者が deploy-docs workflow を `workflow_dispatch` で `develop` から手で起動する。
   - deploy-docs workflow は、build の後、配信の前に `check:closed-urls` を実行する。`workflow_dispatch` で起動した deploy-docs workflow は、check workflow の結果を条件にしないためである。
-  - custom domain の `docs.<zone>` は、初回の deploy で Worker ができ、ダッシュボードで Access のアプリケーションを作ってから apply する。Access の無いまま作ると、誰でも開ける。
+  - custom domain の `docs.<zone>` は、初回の deploy で Worker ができ、ダッシュボードで Access のアプリケーションを作ってから apply する。Access の無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。
   - 初めて公開する手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 - プレビューの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-preview workflow が行う。
   出し直しは、運用者が deploy-preview workflow を `workflow_dispatch` で `develop` から手で起動する。
@@ -205,7 +207,8 @@ token の権限は、スコープ、権限グループ、アクセスレベル�
 - bootstrap 用の token を CI へ渡さない。
 - deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy の 5 つの workflow は custom domain を触らない。
 - DNS の権限は要らない。custom domain が作るレコード（サイトの apex、カタログの `design`、プレイグラウンドの `play`、ドキュメントサイトの `docs`）は `Workers Scripts` の配下にある。
-- deploy 用と apply 用の token に Access の権限を与えない。Access は、運営者がダッシュボードで設定する（ADR-0081）。
+- deploy 用と apply 用の token に Access の権限を与えない。Access は、運営者がダッシュボードで設定する。
+  - ADR-0081: [Access をダッシュボードで設定する](../docs/adr/0081-docs-site-access-on-dashboard.md)
 - `Zone / Zone / Edit` の Zone Resources は、対象の zone だけに限る。
 - R2 の S3 互換キーは、R2 の画面から発行したものだけを使う。
   - ほかの画面で作った token で起きるエラーと、発行時に出る値のどれを使うかは、[infra/README.md](../infra/README.md#prerequisites) にある。

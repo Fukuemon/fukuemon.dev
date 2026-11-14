@@ -18,19 +18,20 @@
   - 「accessのonoffを切り替えることがよくある。buddyとかもいまはoffだけどonにもするし。こういう切り替えが多い」
 - Terraform で持つと、切り替えのたびに、コードの変更、pull request、apply の workflow の起動と `infra` environment の承認が要る。
 - Terraform で持つと、許可するメールアドレスを secret から変数で渡し、ログでマスクする仕組みが要る。メールアドレスを変えるたびにも apply が要る。
-- Access のアプリケーションが無いホスト名は、インターネットの誰でも開ける。
+- Access のアプリケーションが無いホスト名は、インターネット上の誰でも開ける。
   - 出典: [Publish a self-hosted application to the Internet](https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/self-hosted-public-app/)
 
 ## Decision
 
 ドキュメントサイトの Access のアプリケーションとポリシーは、Terraform で持たず、運営者が Cloudflare のダッシュボードで設定する。  
 切り替えの多い設定を、apply を通さずに変えられるようにするためである。  
-ADR-0005 の管轄の判定の例外にする。例外は、ドキュメントサイトの Access のアプリケーションとポリシーに限る。
+この決定は、ADR-0005 の管轄の判定の例外にする。  
+例外は、ドキュメントサイトの Access のアプリケーションとポリシーに限る。
 
 - `docs.<zone>` の custom domain（`cloudflare_workers_custom_domain.docs`）は、Terraform に残す。ホスト名の作成は、ほかのサブドメインと同じ管轄にそろえる。
-- Terraform は、Access と custom domain の順を持たない。順は、`apps/docs-site/README.md` の手順で守る。
+- Terraform では、Access と custom domain を作る順序を制御しない。順序は、`apps/docs-site/README.md` の手順で守る。
 - 初めて公開するときは、ダッシュボードで Access のアプリケーションとポリシーを作った後に、Terraform で custom domain を作る。
-- Access をオフにしている間は、ドキュメントサイトを誰でも開ける。文書の原本は公開のリポジトリにあるので、オフにして漏れる中身は無い。
+- Access をオフにしている間は、ドキュメントサイトを誰でも開ける。文書の原本は公開のリポジトリにあるので、Access をオフにしても、新しく公開される内容は無い。
 - 許可するメールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、Terraform の state、GitHub の secret に置かない。
 - apply 用の token に Access の権限を足さない。
 - Worker の `workers_dev` と `preview_urls` を `false` にすることは、ADR-0032 の決定のまま変えない。Access は `docs.<zone>` のホスト名にだけ掛かるためである。
@@ -62,7 +63,8 @@ ADR-0005 の管轄の判定の例外にする。例外は、ドキュメント�
 ### Negative
 
 - Access の設定がリポジトリに残らない。今の設定は、ダッシュボードでしか確認できない。
-- custom domain を作る apply を、Access の前に流すと、ドキュメントサイトが誰でも開ける状態になる。マージの後の最初の apply は、別の目的で流しても、`docs` の custom domain を作る。
+- custom domain を作る apply を Access の前に実行すると、ドキュメントサイトを誰でも開ける。`cloudflare_workers_custom_domain.docs` が state に無い間は、別の目的で実行した apply も、`docs` の custom domain を作る。
 - Access をオフにしている間は、ドキュメントサイトを誰でも開ける。noindex は返すが、検索の結果に載らないことは保証しない。
   - noindex を返す理由: [context/operations.md](../../context/operations.md#レスポンスヘッダ)
-- PRD の 2 つの成功条件は、この決定のままでは成り立たない。
+- PRD の成功条件のうち、ドキュメントサイトを許可した人だけが開けることは、Access をオフにしている間は成り立たない。
+- PRD の成功条件のうち、アクセスの認証の設定がリポジトリに書いた定義と一致することは、成り立たない。
