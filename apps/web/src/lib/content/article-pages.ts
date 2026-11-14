@@ -22,12 +22,12 @@ export function isPublic(status: ArticleData["status"], isDev: boolean): boolean
   return isDev || status === "published";
 }
 
-function articleHref(id: string): string {
+export function articleHref(id: string): string {
   return `/articles/${id}`;
 }
 
 /** シリーズに入る記事は `articles/<series>/` に置かれ、id の先頭がシリーズのディレクトリ名になる */
-function seriesDir(id: string): string | undefined {
+export function seriesDir(id: string): string | undefined {
   const i = id.indexOf("/");
   return i === -1 ? undefined : id.slice(0, i);
 }
@@ -36,7 +36,7 @@ function seriesDir(id: string): string | undefined {
  * planSeries() が読み込みのときに order の欠けを止めるので、ここに来るのは対応の誤りだけである。
  * 0 として並べると、誤りが前後のリンクの順の誤りとして、エラーを出さずに出る。
  */
-function orderOf(a: ArticleSource): number {
+export function orderOf(a: ArticleSource): number {
   if (a.data.order === undefined) throw new Error(`シリーズの記事に order が無い: ${a.id}`);
   return a.data.order;
 }
