@@ -32,7 +32,7 @@ export function PreviewFrame({
       state={state ?? { kind: "ready" }}
       title={title}
       toolbar={
-        <div className="flex items-center gap-2 border-b border-border p-1">
+        <div className="flex items-center gap-2 p-1">
           <div className="min-w-0 flex-1">
             <TextField
               density="compact"
