@@ -3,7 +3,7 @@
 "use strict";
 
 const { types } = require("node:util");
-const { isMainThread } = require("node:worker_threads");
+const { getEnvironmentData, isMainThread, setEnvironmentData } = require("node:worker_threads");
 
 const { toConsoleValues } = require("./console-value.cjs");
 
@@ -16,8 +16,12 @@ const describe = (value) => (types.isProxy(value) ? "Proxy" : undefined);
 let writing = false;
 
 // 標準出力がパイプかファイルのとき（親のプログラムが出力を読むときや、リダイレクトしたとき）は記録の行を書かず、読む側に JSON を渡さない。
-// ワーカーのスレッドの標準出力は、isTTY を持たずに親のスレッドへ送られるので、スレッドでは確認せずに書く
-const recording = process.stdout.isTTY === true || !isMainThread;
+// ワーカーのスレッドの標準出力は、isTTY を持たずに親のスレッドへ送られるので、スレッドでは、親のスレッドが環境のデータで渡した値を使う
+const TTY_KEY = "@@fd:console-tty";
+const recording = isMainThread
+  ? process.stdout.isTTY === true
+  : getEnvironmentData(TTY_KEY) === true;
+if (isMainThread) setEnvironmentData(TTY_KEY, recording);
 
 for (const level of recording ? LEVELS : []) {
   const original = console[level];

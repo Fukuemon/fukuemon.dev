@@ -83,14 +83,15 @@ describe("console-trace.cjs", () => {
     });
   });
 
-  it("ワーカーのスレッドの console は、親の標準出力が端末でなくても記録する", async () => {
-    const { records, stdout } = await run(
-      `new (require("node:worker_threads").Worker)('console.log("w")', { eval: true });`,
-      { tty: false },
-    );
-    expect({ args: records.map((record) => record?.args), stdout }).toStrictEqual({
-      args: [[{ kind: "string", value: "w" }]],
-      stdout: ["w"],
+  it("ワーカーのスレッドの console は、親のスレッドの標準出力が端末のときだけ記録する", async () => {
+    const script = `new (require("node:worker_threads").Worker)('console.log("w")', { eval: true });`;
+    const [tty, pipe] = await Promise.all([run(script), run(script, { tty: false })]);
+    expect({
+      tty: { args: tty.records.map((record) => record?.args), stdout: tty.stdout },
+      pipe: { records: pipe.records, stdout: pipe.stdout },
+    }).toStrictEqual({
+      tty: { args: [[{ kind: "string", value: "w" }]], stdout: ["w"] },
+      pipe: { records: [], stdout: ["w"] },
     });
   });
 
