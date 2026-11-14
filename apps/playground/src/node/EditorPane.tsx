@@ -22,7 +22,9 @@ export function EditorPane() {
       onClose={(path) => dispatch({ type: "close-tab", path })}
       onSelect={(path) => dispatch({ type: "select-tab", path })}
       selectedId={activeFile}
-      status={runtime ? undefined : "読み取り専用"}
+      status={
+        runtime ? "Tab でインデントし、Esc の後の Tab でエディタの外へ移ります" : "読み取り専用"
+      }
     >
       {(_, file) => (
         <FileEditor
