@@ -287,6 +287,14 @@ describe("FileTree", () => {
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
   });
 
+  it("何も選んでいないときは、欄の行を木の先頭に、1 段目の字下げで出す", async () => {
+    render(<NoSelection />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    const row = screen.getByRole("textbox").closest("li")!;
+    expect(screen.getByRole("tree").firstElementChild).toBe(row);
+    expect(row).toHaveAttribute("aria-level", "1");
+  });
+
   it("名前の欄の行は、ほかの項目と同じ 24 px の高さになる", async () => {
     render(<NoSelection />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
