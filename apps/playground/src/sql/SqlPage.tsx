@@ -5,7 +5,7 @@ import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { bootLabel, progressLabel } from "./progress";
-import { ResetControl } from "./ResetControl";
+import { SqlResetControl } from "./SqlResetControl";
 import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
@@ -48,7 +48,7 @@ function SqlSessionView({ session, onReset }: { session: SqlSession; onReset: ()
           このブラウザでは IndexedDB を使えないので、ページを閉じると変えた SQL が消えます。
         </Notice>
       )}
-      <ResetControl disabled={running} onReset={onReset} session={session} />
+      <SqlResetControl disabled={running} onReset={onReset} session={session} />
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
         onChange={session.setQuery}

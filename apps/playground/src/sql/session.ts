@@ -53,7 +53,7 @@ export type SqlSession = {
   saveFailed: Store<boolean>;
   /** IndexedDB に保存した SQL があるか。保存が通ると true に、消すと false になる。 */
   hasSaved: Store<boolean>;
-  /** 待っている保存を捨て、保存した SQL を消し、入力欄を初期の SQL に戻す。消せないときは失敗し、入力欄を変えない。 */
+  /** 待っている保存を捨て、保存した SQL を消し、入力欄を初期の SQL に戻す。消せないときは失敗し、入力欄を変えない。消している間は、setQuery を呼ばない。 */
   reset: () => Promise<void>;
 };
 
@@ -110,6 +110,8 @@ export function createSqlSession(
     query,
     running,
     setQuery: (sql) => {
+      // エディタは、外から入力欄の値を置き換えたときも変更として通知する。同じ値を保存し直すと、戻した直後に保存が作り直される
+      if (sql === query.getSnapshot()) return;
       query.set(sql);
       saver.save({ sql, version, savedAt: now() });
     },

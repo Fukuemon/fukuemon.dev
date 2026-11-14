@@ -219,20 +219,45 @@ describe("入力欄の SQL の保存", () => {
     session.setQuery("select 2;");
     await session.reset();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(saves.map(({ sql }) => sql)).not.toContain("select 2;");
+    expect(saves).toStrictEqual([]);
   });
 
-  it("消せなかったときは、reset が失敗し、入力欄と hasSaved を変えない", async () => {
+  it("reset の後に、エディタが初期の SQL を変更として通知しても、保存しない", async () => {
+    const { workspace, saves } = storage();
     const session = createSqlSession(project, () => fakeDatabase(), {
       saved: savedRecord,
-      storage: {
-        ...storage().workspace,
-        clear: async () => {
-          throw new Error("消せない");
-        },
-      },
+      storage: workspace,
+    });
+    await session.reset();
+    session.setQuery("select 1;");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect({ saves, hasSaved: session.hasSaved.getSnapshot() }).toStrictEqual({
+      saves: [],
+      hasSaved: false,
+    });
+  });
+
+  const failingClear = () => ({
+    ...storage().workspace,
+    clear: async () => {
+      throw new Error("消せない");
+    },
+  });
+
+  it("消せなかったときは、reset が失敗する", async () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: failingClear(),
     });
     await expect(session.reset()).rejects.toThrow("消せない");
+  });
+
+  it("消せなかったときは、入力欄と hasSaved を変えない", async () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: failingClear(),
+    });
+    await session.reset().catch(() => undefined);
     expect({
       query: session.query.getSnapshot(),
       hasSaved: session.hasSaved.getSnapshot(),

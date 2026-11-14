@@ -1,5 +1,5 @@
 import { Button, ConfirmDialog, Notice } from "@fukuemon/ui";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import type { SqlSession } from "./session";
 
@@ -7,7 +7,7 @@ import type { SqlSession } from "./session";
  * 保存した SQL があるときだけ、「初期の状態に戻す」のボタンを出す。確認の後に保存した SQL を消し、入力欄を初期の SQL に戻す。
  * 戻した後はボタンが消えるので、フォーカスは onReset を呼んだ側が移す。
  */
-export function ResetControl({
+export function SqlResetControl({
   session,
   disabled,
   onReset,
@@ -20,6 +20,14 @@ export function ResetControl({
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [failed, setFailed] = useState(false);
+  const moveFocus = useRef(false);
+
+  // <dialog> が閉じた後の描画で移す。開いている間は、ページの外が inert でフォーカスを受けない
+  useEffect(() => {
+    if (!moveFocus.current || confirming) return;
+    moveFocus.current = false;
+    onReset();
+  }, [confirming, onReset]);
 
   // 戻し終えるまで確認のダイアログを閉じない。戻せなかったときは、<dialog> がフォーカスをボタンへ戻す
   const reset = () => {
@@ -27,7 +35,9 @@ export function ResetControl({
     setFailed(false);
     session
       .reset()
-      .then(onReset)
+      .then(() => {
+        moveFocus.current = true;
+      })
       .catch((error: unknown) => {
         console.error("初期の状態に戻せない", error);
         setFailed(true);
