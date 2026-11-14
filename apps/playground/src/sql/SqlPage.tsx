@@ -29,10 +29,10 @@ function SqlSessionView({ session }: { session: SqlSession }) {
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
-  const booting = bootLabel(phase);
+  const bootText = bootLabel(phase);
   return (
     <>
-      {booting !== undefined && <PageLoading label={booting} />}
+      {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
         onChange={session.setQuery}
         onRun={session.execute}

@@ -23,9 +23,9 @@ import { TerminalPane } from "./TerminalPane";
 const loadProject = createProjectLoader("node", nodeDefaultProject);
 const startRuntime = createRuntimeStarter();
 
-// 起動を待つ間、ペインは空にし、待ちの印は画面の右下の PageLoading の 1 つだけにする
-const booting = { kind: "pending" } as const;
+const pendingState = { kind: "pending" } as const;
 
+/** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */
 function BootWait() {
   useRuntime();
   return null;
@@ -69,7 +69,9 @@ function NodeLayout({ project }: { project: NodeProject }) {
             defaultSize={20}
             label="ファイルのツリーの幅"
             primary={
-              <Pane fallback={<FileTree items={[]} onSelect={() => undefined} state={booting} />}>
+              <Pane
+                fallback={<FileTree items={[]} onSelect={() => undefined} state={pendingState} />}
+              >
                 <FilesPane />
               </Pane>
             }
@@ -85,7 +87,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
                       <Pane
                         editorFocusRing
                         fallback={
-                          <EditorFrame files={[]} onSelect={() => undefined} state={booting}>
+                          <EditorFrame files={[]} onSelect={() => undefined} state={pendingState}>
                             {() => null}
                           </EditorFrame>
                         }
@@ -96,7 +98,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
                     secondary={
                       <Pane
                         fallback={
-                          <PreviewFrame state={booting} url="">
+                          <PreviewFrame state={pendingState} url="">
                             {null}
                           </PreviewFrame>
                         }
@@ -107,7 +109,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
                   />
                 }
                 secondary={
-                  <Pane fallback={<TerminalFrame state={booting}>{() => null}</TerminalFrame>}>
+                  <Pane fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}>
                     <TerminalPane />
                   </Pane>
                 }

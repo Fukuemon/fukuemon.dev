@@ -16,11 +16,13 @@ describe("PageLoading", () => {
 
   it("画面の右下に固定し、文を 13px にする", () => {
     render(<Default />);
-    const style = getComputedStyle(screen.getByRole("status"));
-    expect(style.position).toBe("fixed");
-    expect(style.right).toBe("24px");
-    expect(style.bottom).toBe("20px");
-    expect(style.fontSize).toBe("13px");
+    const { position, right, bottom, fontSize } = getComputedStyle(screen.getByRole("status"));
+    expect({ position, right, bottom, fontSize }).toStrictEqual({
+      position: "fixed",
+      right: "24px",
+      bottom: "20px",
+      fontSize: "13px",
+    });
   });
 
   it("印は、主の色の筆の線を animate-loading で動かす", () => {

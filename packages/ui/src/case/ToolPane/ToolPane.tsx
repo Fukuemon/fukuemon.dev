@@ -6,7 +6,8 @@ import { Notice } from "../../base/Notice/Notice";
 
 /**
  * 領域の中身の状態。loading と error の間は、中身の代わりに待ちの印か誤りの知らせを出す。
- * pending の間は中身を空にし、待ちの印は画面全体の `PageLoading` に任せる。画面の全ての領域が同じ処理を待つときに使う。
+ * pending の間は、操作、帯、中身を出さずに題だけを出し、待ちの印は画面全体の `PageLoading` に任せる。画面の全ての領域が同じ処理を待つときに使う。
+ * 操作と帯を出さないのは、待ちが終わって領域が描き直されたときに、そこにあったフォーカスが失われるためである。
  */
 export type ToolPaneState =
   | { kind: "ready" }
@@ -72,9 +73,11 @@ export function ToolPane({
         <h2 className="text-label-compact text-text" id={titleId}>
           {title}
         </h2>
-        {actions !== undefined && <div className="flex items-center">{actions}</div>}
+        {actions !== undefined && state.kind !== "pending" && (
+          <div className="flex items-center">{actions}</div>
+        )}
       </div>
-      {toolbar}
+      {state.kind !== "pending" && toolbar}
       <div
         className={clsx(
           "flex min-h-0 min-w-0 flex-1 flex-col",
