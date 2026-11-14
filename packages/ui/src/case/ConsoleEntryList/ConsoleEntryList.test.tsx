@@ -19,6 +19,12 @@ const rows = () => within(screen.getByRole("list")).getAllByRole("listitem");
 const row = (index: number) => rows()[index] as HTMLElement;
 const levelButton = (name: RegExp) => screen.getByRole("button", { name });
 const treeItem = (name: string | RegExp) => screen.getByRole("treeitem", { name });
+/** キーを押した後のフォーカスの先を、2 つの木の根の名前か、行の番号で返す関数を作る。 */
+const focusAfter = (map: HTMLElement, set: HTMLElement) => async (keys: string) => {
+  await userEvent.keyboard(keys);
+  const active = document.activeElement;
+  return active === map ? "map" : active === set ? "set" : rows().indexOf(active as HTMLElement);
+};
 
 /**
  * 描画のフレームを count 回待つ。scroll イベントは描画の前に届くので、
@@ -242,15 +248,7 @@ describe("ConsoleEntryList", () => {
     row(5).focus();
     const map = treeItem(/^Map\(2\)/);
     const set = treeItem(/^Set\(2\)/);
-    const at = async (keys: string) => {
-      await userEvent.keyboard(keys);
-      const active = document.activeElement;
-      return active === map
-        ? "map"
-        : active === set
-          ? "set"
-          : rows().indexOf(active as HTMLElement);
-    };
+    const at = focusAfter(map, set);
     expect([
       await at("{ArrowRight}"),
       await at("{ArrowDown}"),
@@ -260,7 +258,7 @@ describe("ConsoleEntryList", () => {
     ]).toStrictEqual(["map", "set", "map", 5, 6]);
   });
 
-  it("開けない引数を挟んで木が並ぶ行でも、木の端の上下の矢印のキーで、隣の木と行へ移る", async () => {
+  it("開けない引数を挟んで木が並ぶ行でも、木の端の上下と左の矢印のキーで、隣の木と行へ移る", async () => {
     const text = (value: string): ConsoleValue => ({ kind: "string", value });
     render(
       <ConsoleEntryList
@@ -282,21 +280,15 @@ describe("ConsoleEntryList", () => {
     row(0).focus();
     const map = treeItem(/^Map\(1\)/);
     const set = treeItem(/^Set\(1\)/);
-    const at = async (keys: string) => {
-      await userEvent.keyboard(keys);
-      const active = document.activeElement;
-      return active === map
-        ? "map"
-        : active === set
-          ? "set"
-          : rows().indexOf(active as HTMLElement);
-    };
+    const at = focusAfter(map, set);
     expect([
       await at("{ArrowRight}"),
       await at("{ArrowDown}"),
+      await at("{ArrowLeft}"),
+      await at("{ArrowRight}{ArrowDown}"),
       await at("{ArrowUp}"),
       await at("{ArrowUp}"),
-    ]).toStrictEqual(["map", "set", "map", 0]);
+    ]).toStrictEqual(["map", "set", 0, "set", "map", 0]);
   });
 
   it("後の木の最初の項目で上の矢印のキーを押すと、開いた前の木の最後の項目へ移る", async () => {

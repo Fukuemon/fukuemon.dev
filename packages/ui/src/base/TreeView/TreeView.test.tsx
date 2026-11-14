@@ -124,14 +124,16 @@ describe("TreeView", () => {
     expect(screen.getAllByRole("treeitem").map((el) => el.tabIndex)).toStrictEqual([-1, -1]);
   });
 
-  it("木の端の上下の矢印と、閉じた根の左の矢印で onEdge を呼び、端でない項目では呼ばない", async () => {
+  it("木の端の上下の矢印と、閉じた根の左の矢印で、フォーカスが項目にあるうちに onEdge を呼び、端でない項目では呼ばない", async () => {
     const keys: string[] = [];
-    render(<TreeView items={EDGE_ITEMS} label="値" onEdge={(key) => keys.push(key)} />);
+    const onEdge = (key: string) =>
+      keys.push(`${key}:${document.activeElement?.getAttribute("role")}`);
+    render(<TreeView items={EDGE_ITEMS} label="値" onEdge={onEdge} />);
     await userEvent.tab();
     await userEvent.keyboard(
       "{ArrowUp}{ArrowLeft}{ArrowRight}{ArrowRight}{ArrowLeft}{ArrowDown}{ArrowDown}",
     );
-    expect(keys).toStrictEqual(["ArrowUp", "ArrowLeft", "ArrowDown"]);
+    expect(keys).toStrictEqual(["ArrowUp:treeitem", "ArrowLeft:treeitem", "ArrowDown:treeitem"]);
   });
 
   it("項目は 44 px の高さで押せ、枝を押すと開閉する", async () => {

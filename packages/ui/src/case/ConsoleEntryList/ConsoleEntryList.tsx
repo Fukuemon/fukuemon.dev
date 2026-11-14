@@ -130,7 +130,7 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
     const items = treeItems(tree);
     (at === "first" ? items[0] : items.at(-1))?.focus();
   };
-  // 前後と端の行は DOM の並びで探す。一覧から行ごとの関数を渡すと、1 つの行が変わるたびに全ての行を描き直すためである
+  // 前後と端の行は DOM の並びで探す。一覧から行ごとの関数を渡すと、React Compiler を通すビルドで、一覧が描き直されるたびに、その関数に依存する行の中身を作り直すためである（ADR-0047）
   const moveFocus = (to: RowMove) => {
     const row = element.current;
     const list = row?.parentElement;
@@ -158,17 +158,16 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
     event.preventDefault();
     action();
   };
-  // 端に着いた木は、フォーカスのある項目から DOM で探す。描画の中で木の番号を `++` で数えるか、木ごとに関数を作ると、React Compiler 1.0.0 が行の値の木をメモ化しない (ADR-0047)
+  // 端に着いた木は、フォーカスのある項目から DOM で探す。React Compiler 1.0.0 は、描画の中で木の番号を `++` で数えると行をコンパイルせず、木ごとに関数を作ると値の木をメモ化しない（ADR-0047）
   const handleEdge = (key: "ArrowUp" | "ArrowDown" | "ArrowLeft") => {
-    const all = treesInRow();
-    const treeIndex = all.findIndex((tree) => tree.contains(document.activeElement));
-    if (treeIndex === -1) {
-      element.current?.focus();
-    } else if (key === "ArrowDown") {
-      if (all[treeIndex + 1]) enterTree(all[treeIndex + 1], "first");
+    const trees = treesInRow();
+    // TreeView は、キーを押した項目にフォーカスがあるうちに onEdge を呼ぶ
+    const treeIndex = trees.findIndex((tree) => tree.contains(document.activeElement));
+    if (key === "ArrowDown") {
+      if (trees[treeIndex + 1]) enterTree(trees[treeIndex + 1], "first");
       else moveFocus("next");
-    } else if (key === "ArrowUp" && all[treeIndex - 1]) {
-      enterTree(all[treeIndex - 1], "last");
+    } else if (key === "ArrowUp" && trees[treeIndex - 1]) {
+      enterTree(trees[treeIndex - 1], "last");
     } else {
       element.current?.focus();
     }
