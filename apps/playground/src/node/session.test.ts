@@ -584,6 +584,28 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "b" }], overLimit: true });
   });
 
+  it("書き直しが失敗した後の保存が終わる前に上限を超えても、古いレコードで置き換えない", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    let finish: () => void = () => undefined;
+    workspace.save.mockImplementationOnce(async (record) => {
+      await new Promise<void>((resolve) => (finish = resolve));
+      saves.push(record);
+    });
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    fillOverLimit(latest());
+    latest().change("index.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
+  });
+
   it("書き直しが通った後は、上限を超えても書き直さない", async () => {
     const { session, saves, latest } = setup({
       kind: "saved",
@@ -605,6 +627,8 @@ describe("保存しないファイル", () => {
     await settle(session);
     await session.reset();
     await settle(session);
+    // 戻した後は操作するまで保存しないので、実行のボタンで操作した扱いにする
+    await session.run();
     fillOverLimit(latest());
     latest().change("index.js", "c");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);

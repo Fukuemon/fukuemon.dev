@@ -120,7 +120,7 @@ export type NodeSession = {
   saveFailed: Store<boolean>;
   /** 最後に読んだ作業ディレクトリが、保存の上限を超えたときは true である。上限を下回って読めたときと、初期の状態に戻したときに false に戻る。 */
   overLimit: Store<boolean>;
-  /** 最後に起動し直したときに作業ディレクトリを読めず、前に読んだときのファイルで起動したときは true である。読めて起動し直したときと、初期の状態に戻したときに false に戻る。 */
+  /** 最後に起動し直したときに作業ディレクトリを読めず、前に読んだときのファイルで起動したときは true である。起動し直しを始めるときと、初期の状態に戻したときに false に戻る。 */
   restartReadFailed: Store<boolean>;
   /** IndexedDB に保存したファイルがあるか。 */
   hasSaved: Store<boolean>;
@@ -218,7 +218,8 @@ export function createNodeSession({
     const saving = read.kind === "over-limit" ? read : filesToSave(read.entries);
     overLimit.set(saving.kind === "over-limit");
     if (saving.kind === "over-limit") {
-      rewrite();
+      // 新しい保存が待っているか通ったときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る
+      if (lastSaved === undefined) rewrite();
       return;
     }
     const { files } = saving;
