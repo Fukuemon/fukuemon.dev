@@ -201,14 +201,40 @@ const fetchFailed = (message) => new TypeError("fetch failed", { cause: new Erro
 
 const discard = (request) => request.body?.cancel().catch(() => undefined);
 
+/** 本文を読み切る。signal が中断されたら、読むのをやめて中断の理由で失敗する。 */
+function readAll(request) {
+  const { signal } = request;
+  if (signal.aborted) return Promise.reject(signal.reason);
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      discard(request);
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    request
+      .arrayBuffer()
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener("abort", onAbort));
+  });
+}
+
 /**
  * 送信元を示すヘッダを足した request を、リダイレクトを 1 つずつ追って送る。
  * Node の fetch は、origin が変わるリダイレクトでも足したヘッダを送り直すので、origin が変わる時点で足したヘッダを外し、その先は元の fetch に任せる。
- * 307 と 308 で送り直す本文は、元の本文を読み切ったバイト列にする。Node の fetch と違い、ストリームの本文も送り直す。
+ * メソッドを変えずに送り直す本文は、元の本文を読み切ったバイト列にする。訪問者が init に ReadableStream か非同期の反復を渡したときは、Node の fetch と同じく送り直さずに失敗する。
  * dispatcher は、訪問者が init に渡した undici の dispatcher で、Request に入らないので別に渡す。
  */
-async function follow(request, count, dispatcher) {
+async function follow(request, count, options) {
   const spare = request.clone();
+  try {
+    return await followOnce(request, spare, count, options);
+  } catch (error) {
+    discard(spare);
+    throw error;
+  }
+}
+
+async function followOnce(request, spare, count, { dispatcher, streamed }) {
   const response = await originalFetch(request, { redirect: "manual", dispatcher });
   const location = response.headers.get("location");
   if (!REDIRECT_STATUSES.has(response.status) || location === null) {
@@ -216,12 +242,15 @@ async function follow(request, count, dispatcher) {
     return response;
   }
   await response.body?.cancel();
-  const next = new URL(location, request.url);
-  if (count >= MAX_REDIRECTS || (next.protocol !== "http:" && next.protocol !== "https:")) {
-    discard(spare);
-    throw fetchFailed(
-      count >= MAX_REDIRECTS ? "redirect count exceeded" : "URL scheme must be a HTTP(S) scheme",
-    );
+  let next;
+  try {
+    next = new URL(location, request.url);
+  } catch {
+    throw fetchFailed("invalid location");
+  }
+  if (count >= MAX_REDIRECTS) throw fetchFailed("redirect count exceeded");
+  if (next.protocol !== "http:" && next.protocol !== "https:") {
+    throw fetchFailed("URL scheme must be a HTTP(S) scheme");
   }
   const headers = new Headers(spare.headers);
   let method = spare.method;
@@ -234,7 +263,8 @@ async function follow(request, count, dispatcher) {
     for (const name of BODY_HEADERS) headers.delete(name);
     discard(spare);
   } else if (spare.body) {
-    body = await spare.arrayBuffer();
+    if (streamed) throw fetchFailed("cannot replay a stream body");
+    body = await readAll(spare);
   }
   const crossOrigin = next.origin !== new URL(request.url).origin;
   if (crossOrigin) for (const name of [FROM_HEADER, ...CROSS_ORIGIN_HEADERS]) headers.delete(name);
@@ -247,7 +277,7 @@ async function follow(request, count, dispatcher) {
     dispatcher,
   };
   if (crossOrigin) return markRedirected(await originalFetch(next, init));
-  return markRedirected(await follow(new Request(next, init), count + 1, dispatcher));
+  return markRedirected(await follow(new Request(next, init), count + 1, { dispatcher, streamed }));
 }
 
 // Response の redirected は、送った Response にだけ立つ。clone した Response には付かない
@@ -255,6 +285,10 @@ const markRedirected = (response) => {
   quietly(() => Object.defineProperty(response, "redirected", { value: true }));
   return response;
 };
+
+const isStream = (body) =>
+  body instanceof ReadableStream ||
+  (typeof body === "object" && body !== null && typeof body[Symbol.asyncIterator] === "function");
 
 // 実行環境の中のサーバーへの fetch にだけ、送信元を示すヘッダを足す。外のサーバーには送らない
 const originalFetch = globalThis.fetch;
@@ -274,6 +308,6 @@ if (typeof originalFetch === "function") {
       return originalFetch.call(this, input, init);
     }
     if (request.redirect !== "follow") return originalFetch.call(this, request, { dispatcher });
-    return follow(request, 0, dispatcher);
+    return follow(request, 0, { dispatcher, streamed: isStream(init?.body) });
   };
 }

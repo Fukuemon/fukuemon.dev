@@ -108,7 +108,7 @@ const reply = (req, res) => {
   req.on("data", (c) => (body += c));
   req.on("end", () => res.end(${echo}));
 };
-const moves = { "/cross": [302, "http://127.0.0.1:3001/land"], "/cross307": [307, "http://127.0.0.1:3001/land"], "/chain": [302, "/cross"], "/same": [302, "/here"], "/keep": [307, "/here"], "/see": [303, "/here"], "/loop": [302, "/loop"] };
+const moves = { "/cross": [302, "http://127.0.0.1:3001/land"], "/cross307": [307, "http://127.0.0.1:3001/land"], "/chain": [302, "/cross"], "/same": [302, "/here"], "/keep": [307, "/here"], "/see": [303, "/here"], "/loop": [302, "/loop"], "/data": [302, "data:text/plain,x"], "/bad": [302, "http://[bad"] };
 const countdown = (url) => { const k = Number(url.split("/")[2]); return k > 0 ? [302, "/n/" + (k - 1)] : undefined; };
 (async () => {
   const a = http.createServer((req, res) => {
@@ -377,6 +377,27 @@ server.listen(3000, "127.0.0.1", () => fetch("http://127.0.0.1:3000/").then((r) 
         ),
       );
       expect(text).toStrictEqual(["redirect count exceeded "]);
+    });
+
+    it.each([
+      [
+        "http と https のほかへのリダイレクト",
+        `a + "/data"`,
+        "URL scheme must be a HTTP(S) scheme",
+      ],
+      ["解釈できない Location", `a + "/bad"`, "invalid location"],
+      [
+        "ストリームの本文の 307 のリダイレクト",
+        `a + "/keep", { method: "POST", body: new Blob(["a=1"]).stream(), duplex: "half" }`,
+        "cannot replay a stream body",
+      ],
+    ])("%sは、Promise の失敗で返す", async (_, args, cause) => {
+      const { text } = await run(
+        REDIRECTS(
+          `await fetch(${args}).catch((e) => ({ text: async () => e.message + ": " + e.cause.message, redirected: "" }))`,
+        ),
+      );
+      expect(text).toStrictEqual([`fetch failed: ${cause} `]);
     });
 
     it("ちょうど 20 回のリダイレクトは、最後の応答を返す", async () => {
