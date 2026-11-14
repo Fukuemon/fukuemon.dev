@@ -128,6 +128,11 @@ ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-
 - すべてのパスに、`X-Robots-Tag: noindex` と、カタログと同じ `X-Content-Type-Options`、`Referrer-Policy`、`Strict-Transport-Security` を返す。
   - noindex は、Access の外へ文書のサイトが漏れたときに、検索の結果に載せないためである。
 - すべてのパスに、`Content-Security-Policy: frame-ancestors 'none'` を返す。文書のサイトを埋め込むページは無いので、自分の origin にも埋め込ませない。
+- Mermaid の図は、Zensical のテーマが `https://unpkg.com/mermaid@12/dist/mermaid.min.js` を実行時に読んで描く。SRI は付かず、CSP でスクリプトの読み込み元を絞らない。
+  - 受け入れる。サイトに載る文書は public のリポジトリにある文書で、スクリプトが読めても困る中身が無いためである。
+  - 受け入れる範囲には、unpkg のファイルが改ざんされたときに、同じ origin で表示を書き換えられることと、許可した閲覧者のブラウザで動くことも入る。Access が返す閲覧者の情報をスクリプトから読めるかは未確認である。
+  - テーマのバンドルは、pyodide、ace-builds、glightbox、resize-observer-polyfill の unpkg の URL も持つ。この設定で読まれるかは未確認である。
+  - Zensical に、読み込み元を自前の配信に替える設定があるかは未確認である。
 
 ## Deployment Conditions
 
