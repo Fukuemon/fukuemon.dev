@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     coverage: {
       provider: "v8",
       // ファイル単位で明示列挙する。列挙し忘れると何もゲートしない
@@ -28,7 +28,7 @@ export default defineConfig({
         "src/lib/playground/project.ts",
         "src/lib/playground/project-pages.ts",
         "src/lib/playground/rehype-playground.ts",
-        "src/lib/preview-assets.ts",
+        "scripts/preview-assets.ts",
         "src/lib/rehype-fence.ts",
         "src/lib/rehype-ja-linebreak.ts",
         "src/lib/rehype-mermaid.ts",
