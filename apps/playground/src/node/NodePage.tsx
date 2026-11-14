@@ -25,11 +25,27 @@ const startRuntime = createRuntimeStarter();
 
 const booting = { kind: "loading", label: "実行環境を起動しています" } as const;
 
-/** SplitPane の領域を、ペインで埋める。ToolPane は高さを持たないので、縦の flex で広げる。 */
-function Pane({ fallback, children }: { fallback: ReactNode; children: ReactNode }) {
+/**
+ * SplitPane の領域を、ペインで埋める。ToolPane は高さを持たないので、縦の flex で広げる。
+ * SplitPane の領域は外にはみ出す描画を切るので、フォーカスの輪が入る 4px の余白を、全てのペインに取る。
+ */
+function Pane({
+  fallback,
+  focusRing = false,
+  children,
+}: {
+  fallback: ReactNode;
+  /** 中の CodeMirror にフォーカスがあるときに、ペインを輪で囲む。 */
+  focusRing?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <div className="flex size-full min-h-0 flex-col [&>section]:flex-1">
-      <Suspense fallback={fallback}>{children}</Suspense>
+    <div className="size-full p-1">
+      <div
+        className={`flex size-full min-h-0 flex-col [&>section]:flex-1 ${focusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
+      >
+        <Suspense fallback={fallback}>{children}</Suspense>
+      </div>
     </div>
   );
 }
@@ -58,6 +74,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
                     label="エディタとプレビューの幅"
                     primary={
                       <Pane
+                        focusRing
                         fallback={
                           <EditorFrame files={[]} onSelect={() => undefined} state={booting}>
                             {() => null}

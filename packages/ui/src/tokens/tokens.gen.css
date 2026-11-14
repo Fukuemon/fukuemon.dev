@@ -285,7 +285,7 @@
     /* コード: ダークのコードの面は地より暗くし、ページの面と分ける */
     --fd-color-code-surface: var(--fd-primitive-color-sumi-1000);
     --fd-color-code-text: var(--fd-primitive-color-sumi-25);
-    --fd-color-code-comment: var(--fd-primitive-color-sumi-400);
+    --fd-color-code-comment: var(--fd-primitive-color-sumi-350);
     --fd-color-code-keyword: var(--fd-primitive-color-wine-300);
     --fd-color-code-string: var(--fd-primitive-color-green-200);
     --fd-color-code-number: var(--fd-primitive-color-brown-200);
@@ -363,7 +363,7 @@
   /* コード: ダークのコードの面は地より暗くし、ページの面と分ける */
   --fd-color-code-surface: var(--fd-primitive-color-sumi-1000);
   --fd-color-code-text: var(--fd-primitive-color-sumi-25);
-  --fd-color-code-comment: var(--fd-primitive-color-sumi-400);
+  --fd-color-code-comment: var(--fd-primitive-color-sumi-350);
   --fd-color-code-keyword: var(--fd-primitive-color-wine-300);
   --fd-color-code-string: var(--fd-primitive-color-green-200);
   --fd-color-code-number: var(--fd-primitive-color-brown-200);

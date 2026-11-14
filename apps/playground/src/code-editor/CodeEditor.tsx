@@ -35,6 +35,7 @@ type CodeEditorProps = {
 /**
  * EditorFrame の中に置く、CodeMirror 6 のエディタ。拡張は codeEditorExtensions に、extensions を足す。
  * エディタは 1 度だけ作る。開くファイルを替えるときは、呼ぶ側が key を替えて作り直す。
+ * フォーカスの表示は持たない。呼ぶ側が、切られない祖先に `has-[.cm-focused]:focus-ring` を付ける。
  */
 export function CodeEditor({ label, initialText, extensions, connect }: CodeEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -75,8 +76,5 @@ export function CodeEditor({ label, initialText, extensions, connect }: CodeEdit
     };
   }, []);
 
-  // codeEditorExtensions はフォーカスの表示を持たないので、囲む要素に付ける
-  return (
-    <div className="min-h-0 flex-1 overflow-hidden has-[.cm-focused]:focus-ring" ref={parentRef} />
-  );
+  return <div className="min-h-0 flex-1 overflow-hidden" ref={parentRef} />;
 }

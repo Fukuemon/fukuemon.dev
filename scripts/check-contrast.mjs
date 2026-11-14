@@ -50,12 +50,12 @@ const TEXT_PAIRS = [
     ["text", `${state}-surface`],
   ]),
   // コードの字句と端末の色は、コードの面の上で本文と同じ基準にする（コメントも含む）
-  // エディタの選択、検索の一致、補完とパネルの面の上にも、コードの字句が載る
+  // エディタの今いる行（surface-subtle）、選択と補完の選んだ行（primary-surface）、検索の一致（info-surface）、パネル（surface、surface-raised）の上にも、コードの字句が載る
   ...[
     "code-surface",
     "surface",
     "info-surface",
-    "warning-surface",
+    "primary-surface",
     "surface-subtle",
     "surface-raised",
   ].flatMap((bg) =>
