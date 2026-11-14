@@ -17,7 +17,6 @@ AI からの操作は、利用者がつないだ AI のエージェントに、�
 
 - ADR-0044: [AI のエージェントからの操作は、WebMCP の API で登録し、MCP-B の polyfill と relay でも呼べるようにする](../../../adr/0044-ai-operations-with-webmcp.md)
 - ADR-0045: [AI のエージェントからの操作は、ツールごとに 7 日のあいだ保存するスイッチで許可し、消す操作と全体を置き換える操作はページが確認を出す](../../../adr/0045-ai-operations-permission-and-confirmation.md)
-- ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../../adr/0063-ai-operations-for-sql-and-go.md)
 
 ## Scope
 
@@ -162,7 +161,7 @@ relay を通すと、開いている全てのタブの操作が、MCP のクラ�
   - polyfill（`@mcp-b/global` 6.2.0）は、`[A-Za-z0-9_.-]` の 1〜128 文字でない名前の登録を拒否する。
   - relay（`@mcp-b/webmcp-local-relay` 6.2.0）は、名前を `[a-zA-Z0-9_]` に直して、MCP のクライアントに見せる。
 - 注釈の語は、ADR-0044 の Decision 4 と同じである。
-- `sql` と `go` の操作の注釈は、ADR-0063 の Decision 1 にある。
+- `sql` と `go` の操作の注釈は、ADR-0044 の Decision 4 にある。
 
 ### 結果の形
 
@@ -373,7 +372,6 @@ type NewElement = {
 - `go_delete_file` は、確認を出す。
 - `go_run` は、`src/go/` のモジュールが持つ今のファイルを実行する。`go_test` は、同じファイルのテストを実行する。画面の実行のボタンとテストのボタンと、同じ関数を呼ぶ。
   - `go_run` は、ルートのディレクトリの直下にある `main` の package を実行する。`go_test` は、全ての package のテストを実行する。
-  - 複数の package の import を、Yaegi の WASM で解決できないときは、`main` の 1 つの package だけを実行する。別の package を import したコードには、エラーを `output` に入れる（ADR-0063 の承認の条件）。
   - 入力でコードを受け取らない。エージェントは、先に `go_write_file` で書く。
   - Yaegi の WASM を読み込んでいないときは、読み込んでから実行する。読み込みの時間は、`timeoutMs` に含めない。読み込めないときは、`failed` を返す。読み込みの間に来た呼び出しにも、実行中に来た呼び出しと同じく、`not_ready` を返す。
   - 実行を始めたときのファイルの写しを実行する。実行中に `go_write_file` と `go_delete_file` が呼ばれても、実行しているコードは変わらない。
@@ -382,11 +380,10 @@ type NewElement = {
   - コンパイルのエラーと、テストの失敗は、`ok` を `true` にし、`exitCode` を 1 にして、`output` にエラーを入れる。コードが `os.Exit` を呼んだときは、渡した値を `exitCode` にする。panic で終わったときは、`exitCode` を 2 にする。`go_test` は、出力（`=== RUN`、`--- PASS`、`--- FAIL`）をそのまま返し、テストごとの結果に分けない。
   - `output` は、末尾の 100,000 文字である。切り詰めたときは、`truncated` を `true` にする。切り詰める処理は、`src/go/` の操作の定義が持つ。
   - 実行中に、もう 1 つの `go_run` か `go_test` が呼ばれたときは、後の呼び出しに `not_ready` を返す。利用者がボタンで実行している間も、同じである。エージェントの操作で実行している間は、画面の実行のボタンとテストのボタンを、実行中の表示にする。
-- `go_run` と `go_test` は、確認を出さない（ADR-0063 の Decision 2）。確認を出さない前提は、`GoRunner` が Yaegi に渡す symbol を絞り、Yaegi で動かすコードが、ページの `localStorage` と IndexedDB を読み書きできないことである。
-  - Yaegi に渡す symbol を `stdlib.Symbols` だけにすると、Yaegi で動かすコードは、`syscall/js`、`syscall`、`unsafe` を import できない。Yaegi 0.16.3 の WASM を Node の上で動かして確認した。ブラウザの中では、実装のタスクのテストで確認する。
+- `go_run` と `go_test` は、確認を出さない（ADR-0045 の Decision 4）。確認を出さない前提は、`GoRunner` が Yaegi に渡す symbol を絞り、Yaegi で動かすコードが、ページの `localStorage` と IndexedDB を読み書きできないことである。
+  - Yaegi に渡す symbol を `stdlib.Symbols` だけにすると、Yaegi で動かすコードは、`syscall/js`、`syscall`、`unsafe` を import できない。確認の結果は、ADR-0037 の Verification にある。
   - `GoRunner` は、Yaegi を Web Worker の中で動かす。
-  - ADR-0063 の承認の条件を、ブラウザの中で満たせないときは、ページは、`go_run` と `go_test` に確認を出す。
-  - Yaegi で動かすコードは、`net/http` を import できる。ブラウザの中で、外部へリクエストを送れるかは、実装のタスクで確認する。
+  - Yaegi で動かすコードは、`net/http` を import できる。リクエストの扱いは、ADR-0064 が決めている。
 
 ### 許可のスイッチ
 

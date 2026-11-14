@@ -29,7 +29,7 @@ type Input struct {
 }
 
 // newInterpreter は、訪問者のファイルだけを src/<Module>/ に置いたファイルシステムで、Yaegi を作る。
-// symbol は stdlib.Symbols だけを渡す。syscall、unsafe、unrestricted を渡すと、ページの JS に届くコードを動かせるためである (ADR-0063)。
+// symbol は stdlib.Symbols だけを渡す。syscall、unsafe、unrestricted を渡すと、ページの JS に届くコードを動かせるためである (ADR-0037)。
 // stderr は、呼ぶ側が relativeWriter で包んで渡す。
 func newInterpreter(in Input, stdout, stderr io.Writer) (*interp.Interpreter, error) {
 	files := fstest.MapFS{}
