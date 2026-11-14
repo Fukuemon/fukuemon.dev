@@ -59,7 +59,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 セマンティックトークンがプリミティブトークンを参照しない例外は、次の 2 つ。
 
 - 挿絵の層の濃さ（`--fd-art-*`）は、色ではなく不透明度の値を直に持つ。挿絵は `text` と `surface` の色だけで塗り、濃さをこの値で決めるためである。コントラストのチェックは読まない。
-- 見出しの明朝のウェイト（テーマ変数の `--font-weight-semibold`）は、600 を直に持つ。明朝は 600 の 1 つだけを読み込むためである（ADR-0023）。
+- 見出しの明朝のウェイト（テーマ変数の `--font-weight-semibold`）は、600 を直に持つ。明朝は 600 の 1 つだけを読み込むためである（ADR-0075）。
 
 ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
@@ -97,15 +97,15 @@ fukuemon.dev はダークを持つ。
 | `text-body-compact`  | 13px のスタイル        | コードを動かす画面のファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文、注意の枠の本文、読み込み中の文 |
 | `text-code-compact`  | 等幅の 13px のスタイル | コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダと本文                                                             |
 
-- 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0023）。
-- 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
+- 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0075）。
+- 本文はシステムフォント（`--fd-primitive-font-family-sans`）、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字である（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
 - 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べ、隣の 13px の題とタブに文字の大きさをそろえるためである（ADR-0062、ADR-0067）。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
   - ADR-0067: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](../../../docs/adr/0067-compact-text-tokens-in-dense-panes.md)
 
-ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
+ADR-0075: [本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする](../../../docs/adr/0075-system-font-for-body-text.md)
 
 ## レイアウト、区切り、重なり、動き
 

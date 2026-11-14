@@ -98,14 +98,15 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 
 ### 文字
 
-書体は、本文に Noto Sans JP の 400 と 700、記事の題と見出しに Zen Old Mincho の 600、等幅に Noto Sans Mono を使う。  
-書体は Fontsource で self-host し、外部の CDN から読まない。
+書体は、本文にシステムフォントの 400 と 700、記事の題と見出しに Zen Old Mincho の 600、等幅に Noto Sans Mono を使う。  
+本文は Web フォントを読み込まない。Web フォントは Fontsource で self-host し、外部の CDN から読まない。
 
 - Zen Old Mincho は、ビルドで見出しに使う字だけのファイルにする。
 - 等幅の和文の字は、BIZ UDGothic の 400 と 700 で受ける。M PLUS 1 Code と比べて、見出しの字に絞ったときのファイルが小さく（400 字で約 70 KB と約 150 KB）、Fontsource に静的なウェイトがあるためである。
+- 本文の `font-family` は、プリミティブトークンの `--fd-primitive-font-family-sans` に置く。記事の題と見出しの代替も、この値にする。
 - 見出しの明朝のウェイトは、テーマ変数の `font-semibold`（600）で書く。
-- どの書体も `font-display: swap` にし、和文の分割は preload しない。
-- ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../docs/adr/0023-keep-art-and-key-color.md)
+- どの Web フォントも `font-display: swap` にし、和文の分割は preload しない。
+- ADR-0075: [本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする](../../docs/adr/0075-system-font-for-body-text.md)
 
 テーマ変数には、DADS のテキストスタイルのうち使うものだけを、用途の名前で置く。
 
@@ -435,6 +436,7 @@ DADS から外れる点と理由は次のとおり。
   - `danger` は、ファイルの削除のように、データを失う操作を確定するボタンに使う。DADS のボタンには、この種類がない。
 - コードの色を持つ。DADS は、シンタックスハイライトの色を決めていない。
 - 記事の題と見出しの書体を、Zen Old Mincho の 600 にする。`heading-*` のスタイルは、DADS の大きさと行高を使い、書体とウェイトだけを替える。運営者が、今のサイトの和の感じを残すと決めたためである。
+- 本文の書体を、DADS の Noto Sans JP からシステムフォントにする。本文の Web フォントの取得をなくし、トップの Performance を 90 に届かせるためである（ADR-0075）。
 
 ## Interface
 

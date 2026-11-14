@@ -2,7 +2,7 @@
 
 この文書は、fukuemon.dev の画面とコンポーネントのコードを書く人が、書く前に読む規則である。  
 値は fukuemon.dev が決め、アクセシビリティ、タイポグラフィ、配色、レイアウトの指標と参考に、デジタル庁デザインシステム（DADS）を使う。  
-構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0023、ADR-0024、ADR-0028、ADR-0062にある。
+構成の判断は [Design Doc](DesignDoc.md) と、ADR-0021、ADR-0022、ADR-0024、ADR-0028、ADR-0062、ADR-0075にある。
 
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
 - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
@@ -51,7 +51,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 
 ### 個性として残すもの
 
-運営者は、旧サイトの和の感じを残すと決めた（ADR-0023、ADR-0024、ADR-0026、ADR-0028）。  
+運営者は、旧サイトの和の感じを残すと決めた（ADR-0024、ADR-0026、ADR-0028、ADR-0075）。  
 規則の本文は、右の列の文書にある。  
 残すものと使う場所は次のとおり。
 
