@@ -6,7 +6,7 @@ import { browserUrl, readCookies } from "./shared.js";
 const PORT = 3000;
 const AUTH_PORT = 4000;
 const sessions = new Map();
-const random = () => randomBytes(8).toString("hex");
+const random = () => randomBytes(16).toString("hex");
 
 async function handle(request, response) {
   const url = new URL(request.url, "http://localhost");
@@ -17,7 +17,7 @@ async function handle(request, response) {
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     response.end(
       token
-        ? `<h1>ログインしました</h1><p>アクセストークンを受け取りました。有効期限は ${token.expires_in} 秒です。</p>`
+        ? `<h1>ログインしました</h1><p>アクセストークンを受け取りました。有効期限は ${Number(token.expires_in)} 秒です。</p>`
         : `<h1>クライアント</h1><p><a href="/login">認可サーバーでログインする</a></p>`,
     );
     return;
@@ -32,7 +32,7 @@ async function handle(request, response) {
     authorize.searchParams.set("state", state);
     response.writeHead(302, {
       Location: authorize.href,
-      "Set-Cookie": `state=${state}; HttpOnly; Path=/`,
+      "Set-Cookie": `state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/`,
     });
     response.end();
     return;
@@ -63,7 +63,10 @@ async function handle(request, response) {
     sessions.set(session, await tokenResponse.json());
     response.writeHead(302, {
       Location: "/",
-      "Set-Cookie": `session=${session}; HttpOnly; Path=/`,
+      "Set-Cookie": [
+        `session=${session}; HttpOnly; Secure; SameSite=Lax; Path=/`,
+        "state=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/",
+      ],
     });
     response.end();
     return;

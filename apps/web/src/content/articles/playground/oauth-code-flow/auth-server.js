@@ -1,11 +1,23 @@
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:http";
 
-import { escapeHtml, readForm } from "./shared.js";
+import { browserUrl, escapeHtml, readForm } from "./shared.js";
 
 const PORT = 4000;
+const CLIENT_ID = "demo-client";
 const codes = new Map();
-const random = () => randomBytes(8).toString("hex");
+const random = () => randomBytes(16).toString("hex");
+
+// 登録したクライアントの、コードを返してよい URL。本物の認可サーバーと同じく、完全一致で比べる
+const registeredRedirectUri = () => new URL("/callback", browserUrl(3000)).href;
+
+const isRegistered = (params) =>
+  params.get("client_id") === CLIENT_ID && params.get("redirect_uri") === registeredRedirectUri();
+
+function rejectClient(response) {
+  response.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+  response.end("<h1>登録されていないクライアントか redirect_uri です</h1>");
+}
 
 async function handle(request, response) {
   const url = new URL(request.url, "http://localhost");
@@ -19,6 +31,10 @@ async function handle(request, response) {
   }
 
   if (url.pathname === "/authorize" && request.method === "GET") {
+    if (!isRegistered(url.searchParams)) {
+      rejectClient(response);
+      return;
+    }
     const fields = ["client_id", "redirect_uri", "state"]
       .map(
         (name) =>
@@ -35,9 +51,8 @@ async function handle(request, response) {
 
   if (url.pathname === "/authorize" && request.method === "POST") {
     const form = await readForm(request);
-    if (!URL.canParse(form.get("redirect_uri"))) {
-      response.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
-      response.end("<h1>redirect_uri がありません</h1>");
+    if (!isRegistered(form)) {
+      rejectClient(response);
       return;
     }
     const code = random();
@@ -50,9 +65,12 @@ async function handle(request, response) {
     return;
   }
 
+  // 例を短くするため、クライアントの認証、PKCE、コードの期限は省いている
   if (url.pathname === "/token" && request.method === "POST") {
     const form = await readForm(request);
-    if (!codes.delete(form.get("code"))) {
+    const issuedTo = codes.get(form.get("code"));
+    codes.delete(form.get("code"));
+    if (issuedTo === undefined || issuedTo !== form.get("client_id")) {
       response.writeHead(400, { "Content-Type": "application/json" });
       response.end(JSON.stringify({ error: "invalid_grant" }));
       return;
