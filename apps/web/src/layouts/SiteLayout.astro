@@ -28,7 +28,8 @@ const url = new URL(Astro.url.pathname, Astro.site);
   <body class="min-h-dvh bg-surface font-sans text-body text-text">
     <a
       class="sr-only border border-border-field bg-surface-raised text-label text-link underline underline-offset-4 focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:px-4 focus:py-4 focus-visible:focus-ring"
-      href="#main">本文へスキップ</a
+      href="#main"
+      data-skip-link>本文へスキップ</a
     >
     <SiteHeader />
     <main id="main"><slot /></main>

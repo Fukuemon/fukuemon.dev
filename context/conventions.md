@@ -222,9 +222,6 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - `packages/e2e` の tsconfig は、`noUncheckedIndexedAccess` を外す。スキルの写しの `caption.ts` が、添字で読んだ値をそのまま使うため。
-- E2E の lint の規則（`e2e-authoring-rule`）は、`packages/e2e/visual/` に掛けない。
-  - 規則は `tests/` の下だけを見る。
-  - 庭と表の枠の spec は、`getByRole`、CSS のセレクタ、`getAttribute` を使う。規則に合わせるには、spec の書き直しと `apps/web` への `data-testid` の追加が要り、動作を変えない移動を超えるため。
 - knip は、記事に埋め込む実行環境の初期ファイル（`apps/web/src/content/articles/**/playground/**`）を見ない（`ignore`）。訪問者の実行環境で動くファイルで、サイトのコードから import されないため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
@@ -251,7 +248,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
     - `pre` の `role="region"`。`section` に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる。
     - `SplitPane` の `role="separator"`。`hr` は子を持てず、押せる領域の中に線を描けない。
     - `SearchBox` の `combobox`、`listbox`、`option`。APG の Combobox の形で、候補は遷移するリンクである。
-  - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
+  - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリックと、`FileDrawer` の外の面のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
 - 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
   - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。

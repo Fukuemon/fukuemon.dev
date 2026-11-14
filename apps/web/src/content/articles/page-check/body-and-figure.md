@@ -4,6 +4,7 @@ title: 本文と図とコードブロック
 description: 本文、コードブロック、Mermaid の図の描画を確認する検証用の記事である。
 tags: [検証]
 status: published
+verificationOnly: true
 publishedAt: 2026-11-14
 order: 1
 ---
@@ -54,10 +55,26 @@ export function articleHref(id: string): string {
 pnpm --filter @fukuemon/web build
 ```
 
+ファイル名のないコードブロックは、帯を持たない。
+
+```ts
+export function untitledArticleHref(id: string, base: string): string {
+  return base + id;
+}
+```
+
 横に長い行は、コードブロックの中で横に送る。
 
 ```sh title="long-line.sh"
 pnpm --filter @fukuemon/web exec astro build --site https://fukuemon.dev --outDir ./dist-check --root ./apps/web --verbose --devOutput
+```
+
+## 見出しの直後のコードブロック
+
+```ts
+export function headingFollowedHref(id: string, base: string): string {
+  return base + id;
+}
 ```
 
 ## 図

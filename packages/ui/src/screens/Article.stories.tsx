@@ -132,7 +132,7 @@ export const Article: Story = {
       <SiteHeader />
       <div className="px-6 py-8">
         <div className="mx-auto flex max-w-page justify-between gap-8">
-          <article className="flex max-w-prose min-w-0 flex-1 flex-col gap-8">
+          <article className="flex max-w-body min-w-0 flex-1 flex-col gap-8">
             <Breadcrumb
               items={[
                 { label: "記事", href: "#articles" },

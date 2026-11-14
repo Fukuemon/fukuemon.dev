@@ -69,7 +69,7 @@ function RowsTable({ result }: { result: SqlResult }) {
             1 ページの行
           </label>
           <select
-            className="h-12 rounded-control bg-surface px-2 text-body-dense text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring"
+            className="h-12 rounded-control bg-surface-pane px-2 text-body-dense text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring"
             id={sizeId}
             onChange={(event) => {
               setPageSize(Number(event.target.value) as PageSize);

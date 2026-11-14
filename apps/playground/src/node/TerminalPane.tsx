@@ -40,6 +40,7 @@ export function TerminalPane() {
       actions={
         runtime && (
           <IconButton
+            density="compact"
             icon={
               <svg aria-hidden="true" height="20" viewBox="0 0 20 20" width="20">
                 <path d="M10 4v12M4 10h12" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -63,12 +64,12 @@ export function TerminalPane() {
       {(theme) =>
         selected && (
           <Tabs
+            density="compact"
             items={processes.map((info) => ({
               id: info.id,
               label: processLabel(info),
               content: handle && <ProcessTerminal handle={handle} key={handle.id} theme={theme} />,
             }))}
-            density="compact"
             label="プロセス"
             onSelect={(id) => dispatch({ type: "select-terminal", id })}
             panel="flush"

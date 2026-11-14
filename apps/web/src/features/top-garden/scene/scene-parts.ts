@@ -20,6 +20,7 @@ import {
   TubeGeometry,
   Vector3,
 } from "three";
+import { TREE_PADS, TRUNK } from "../layout";
 import { SHAPE_FILL, type LeafShape } from "./scene-colors";
 
 /**
@@ -132,27 +133,14 @@ export function tree(
 ): Tree {
   const g = new Group();
   const barkMat = new MeshLambertMaterial({ color: bark });
-  const trunk = new CatmullRomCurve3([
-    new Vector3(0, -0.1, 0),
-    new Vector3(0.12 * dir, 0.7, 0),
-    new Vector3(-0.15 * dir, 1.5, 0.1),
-    new Vector3(0.35 * dir, 2.3, 0),
-    new Vector3(0.9 * dir, 2.9, -0.1),
-  ]);
+  const trunk = new CatmullRomCurve3(TRUNK.map(([x, y, z]) => new Vector3(x * dir, y, z)));
   const t = new Mesh(new TubeGeometry(trunk, 32, 0.11, 7), barkMat);
   t.castShadow = true;
   g.add(t);
-  // [幹の上の位置, 枝の先の x, z のずれ, 葉の広がり]
-  const pads = [
-    [0.55, 1.2 * dir, 0.25, 0.9],
-    [0.68, -0.9 * dir, 0.1, 0.75],
-    [0.8, 1.6 * dir, -0.2, 1.0],
-    [0.92, 0.2 * dir, 0.35, 0.7],
-    [1, 1.25 * dir, 0.05, 0.8],
-  ] as const;
   const spots: [number, number, number, number][] = [];
   const pine = leaf?.shape === "fan";
-  for (const [u, ox, oz, size] of pads) {
+  for (const [u, dx, oz, size] of TREE_PADS) {
+    const ox = dx * dir;
     const a = trunk.getPoint(u);
     const end = new Vector3(a.x + ox, a.y + 0.15, a.z + oz);
     const mid = new Vector3((a.x + end.x) / 2, a.y + 0.25, (a.z + end.z) / 2);

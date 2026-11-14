@@ -8,6 +8,7 @@
     "./fonts.css": "./src/tokens/fonts.css",
     "./sources.css": "./src/sources.css",
     "./button-class-name": "./src/base/Button/buttonClassName.ts",
+    "./ios-viewport": "./src/platform/iosViewport.ts",
     "./code-theme": "./src/tokens/code-theme.ts",
     "./code-theme.json": "./src/tokens/code-theme.gen.json"
   },
@@ -22,7 +23,6 @@
   },
   "dependencies": {
     "@fontsource/biz-udgothic": "5.3.0",
-    "@fontsource/noto-sans-jp": "5.3.1",
     "@fontsource/noto-sans-mono": "5.3.0",
     "@fontsource/zen-old-mincho": "5.3.1",
     "clsx": "^2.1.1"

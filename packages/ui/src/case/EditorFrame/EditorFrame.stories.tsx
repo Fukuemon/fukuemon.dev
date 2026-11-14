@@ -49,7 +49,7 @@ const meta = {
   args: { files: FILES },
   decorators: [
     (Story) => (
-      <div className="max-w-prose p-4">
+      <div className="max-w-body p-4">
         <Story />
       </div>
     ),

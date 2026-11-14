@@ -19,7 +19,7 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
   /** `underline` の欄の左に置く印。装飾なので読み上げから外す。 */
   leading?: ReactNode;
   /**
-   * compact は、欄を 28px の高さ、値と見出しを 13px にする。`appearance="boxed"` だけに効く。
+   * compact は、欄を 28px の高さ、値と見出しを 13px にする。欄の高さは、触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。`appearance="boxed"` だけに効く。
    * コードを動かす画面の帯に置く欄（プレビューの URL、ファイルの名前）に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
    */
   density?: "default" | "compact";
@@ -27,7 +27,7 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
 
 /**
  * 1 行の文字の入力欄。見出し、補足、誤りの文を欄に結ぶ。
- * `boxed` の欄は、見た目の高さが 40px で、押せる領域は上下に 2px ずつ広げた 44px である。density が compact のときは、見た目も押せる領域も 28px にする。
+ * `boxed` の欄は、見た目の高さが 40px で、押せる領域は上下に 2px ずつ広げた 44px である。density が compact のときは、見た目も押せる領域も 28px にし、触る端末では 44px にする。
  */
 export function TextField({
   label,
@@ -81,7 +81,9 @@ export function TextField({
             aria-invalid={error === undefined ? undefined : true}
             className={clsx(
               "peer relative z-10 w-full bg-transparent text-text outline-none disabled:text-text-disabled",
-              isCompact ? "h-7 px-2 text-body-compact" : "h-11 px-3 text-body-dense",
+              isCompact
+                ? "h-7 px-2 text-body-compact pointer-coarse:h-11"
+                : "h-11 px-3 text-body-dense",
             )}
             id={id}
             required={required}
@@ -89,8 +91,10 @@ export function TextField({
           <span
             aria-hidden
             className={clsx(
-              "absolute inset-x-0 rounded-control border-b border-border-field bg-surface-subtle",
-              isCompact ? "inset-y-0" : "inset-y-0.5",
+              "absolute inset-x-0 border-b border-border-field",
+              isCompact
+                ? "inset-y-0 rounded-control-compact bg-surface-pane-subtle"
+                : "inset-y-0.5 rounded-control bg-surface-subtle",
               "peer-focus-visible:focus-ring peer-aria-invalid:border-b-2 peer-aria-invalid:border-danger",
               "peer-disabled:border-border peer-disabled:bg-surface-disabled",
               "peer-disabled:peer-aria-invalid:border-b peer-disabled:peer-aria-invalid:border-border",

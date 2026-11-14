@@ -14,8 +14,17 @@ const { Default, NoSelection, ReadOnly, Empty, Pending } = composeStories(storie
 const delayed = <T,>(value: T, ms = 50) =>
   new Promise<T>((resolve) => window.setTimeout(() => resolve(value), ms));
 
-/** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
-function DelayedSelectTree() {
+/** open を呼ぶまで解決しない Promise。操作の後に保存が終わる順を、実行の速さに依らず作る。 */
+function createGate() {
+  let open = () => {};
+  const opened = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  return { opened, open };
+}
+
+/** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。until を渡すと、作成の保存は until が解決するまで待つ。 */
+function DelayedSelectTree({ until }: { until?: Promise<void> }) {
   const [items, setItems] = useState<TreeNode[]>([
     { id: "index.js", label: "index.js" },
     { id: "package.json", label: "package.json" },
@@ -25,10 +34,12 @@ function DelayedSelectTree() {
     <FileTree
       items={items}
       onCreate={(name) => {
-        window.setTimeout(() => {
+        const save = () => {
           setItems((current) => [...current, { id: name, label: name }]);
           setSelectedId(name);
-        }, 50);
+        };
+        if (until) void until.then(save);
+        else window.setTimeout(save, 50);
         return { id: name };
       }}
       onRename={(id, name) => {
@@ -44,18 +55,20 @@ function DelayedSelectTree() {
   );
 }
 
-/** ファイルの無い木で、保存を待ってから作った項目を木に足して選ぶ呼び出し側。 */
-function EmptyDelayedTree() {
+/** ファイルの無い木で、保存を待ってから作った項目を木に足して選ぶ呼び出し側。until を渡すと、until が解決するまで待つ。 */
+function EmptyDelayedTree({ until }: { until?: Promise<void> }) {
   const [items, setItems] = useState<TreeNode[]>([]);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   return (
     <FileTree
       items={items}
       onCreate={(name) => {
-        window.setTimeout(() => {
+        const save = () => {
           setItems([{ id: name, label: name }]);
           setSelectedId(name);
-        }, 50);
+        };
+        if (until) void until.then(save);
+        else window.setTimeout(save, 50);
         return { id: name };
       }}
       onSelect={setSelectedId}
@@ -392,24 +405,31 @@ describe("FileTree", () => {
   });
 
   it("保存を待つ間に矢印のキーで別の項目へ移ると、作った項目が出てもフォーカスを移さない", async () => {
-    render(<DelayedSelectTree />);
+    const gate = createGate();
+    render(<DelayedSelectTree until={gate.opened} />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("util.js{Enter}");
     const index = screen.getByRole("treeitem", { name: "index.js" });
     await expect.poll(() => document.activeElement).toBe(index);
     await userEvent.keyboard("{ArrowDown}");
     const moved = screen.getByRole("treeitem", { name: "package.json" });
+    gate.open();
     await screen.findByRole("treeitem", { name: "util.js" });
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     expect(document.activeElement).toBe(moved);
   });
 
   it("Esc でやめた後に選ぶ項目が変わっても、フォーカスを移さない", async () => {
-    render(<DelayedSelectTree />);
+    const gate = createGate();
+    render(<DelayedSelectTree until={gate.opened} />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("util.js{Enter}");
-    screen.getByRole("treeitem", { name: "index.js" }).focus();
+    const index = screen.getByRole("treeitem", { name: "index.js" });
+    await expect.poll(() => document.activeElement).toBe(index);
     await userEvent.keyboard("{F2}{Escape}");
+    await expect.poll(() => screen.queryByRole("textbox")).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(index);
+    gate.open();
     await screen.findByRole("treeitem", { name: "util.js" });
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     expect(screen.getByRole("treeitem", { name: "index.js" })).toHaveFocus();
@@ -562,7 +582,8 @@ describe("FileTree", () => {
   });
 
   it("呼ぶ側が決めるまで、Esc を押しても欄を閉じない", async () => {
-    const onCreate = vi.fn(() => delayed({ id: "a.js" }));
+    const gate = createGate();
+    const onCreate = vi.fn(() => gate.opened.then(() => ({ id: "a.js" })));
     render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("a.js{Enter}{Escape}");
@@ -570,7 +591,8 @@ describe("FileTree", () => {
   });
 
   it("呼ぶ側が決めるまで、別の欄を開くボタンを押しても欄を増やさない", async () => {
-    const onCreate = vi.fn(() => delayed({ id: "a.js" }, 1000));
+    const gate = createGate();
+    const onCreate = vi.fn(() => gate.opened.then(() => ({ id: "a.js" })));
     render(
       <FileTree
         items={[]}
@@ -662,22 +684,26 @@ describe("FileTree", () => {
   });
 
   it("保存を待つ間に項目をクリックすると、作った項目が出てもフォーカスを移さない", async () => {
-    render(<DelayedSelectTree />);
+    const gate = createGate();
+    render(<DelayedSelectTree until={gate.opened} />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("util.js{Enter}");
     const clicked = screen.getByRole("treeitem", { name: "package.json" });
     await userEvent.click(clicked);
+    gate.open();
     await screen.findByRole("treeitem", { name: "util.js" });
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     expect(clicked).toHaveFocus();
   });
 
   it("ファイルが無い木で確定した後、項目が出る前にボタンへ移ると、項目が出てもフォーカスを移さない", async () => {
-    render(<EmptyDelayedTree />);
+    const gate = createGate();
+    render(<EmptyDelayedTree until={gate.opened} />);
     const button = screen.getByRole("button", { name: "新しいファイル" });
     await userEvent.click(button);
     await userEvent.keyboard("index.js{Enter}");
     button.focus();
+    gate.open();
     await screen.findByRole("treeitem", { name: "index.js" });
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     expect(button).toHaveFocus();

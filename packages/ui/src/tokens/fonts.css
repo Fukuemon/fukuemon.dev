@@ -1,11 +1,9 @@
 /*
- * fukuemon.dev の書体。Fontsource の unicode-range の分割を self-host で配り、外部の CDN から読まない（docs/adr/0023-keep-art-and-key-color.md）。
- * 和文の可変の書体は分割が重いので、静的なウェイトだけを読み込む（docs/adr/0004-typography-static-weights.md）。
+ * fukuemon.dev の Web フォント。本文はシステムフォントで描き、ここでは読み込まない（docs/adr/0075-system-font-for-body-text.md）。
+ * Fontsource の unicode-range の分割を self-host で配り、外部の CDN から読まない。和文の可変の書体は分割が重いので、静的なウェイトだけを読み込む。
  * Fontsource の CSS は font-display: swap を持つ。
  */
 
-@import "@fontsource/noto-sans-jp/400.css";
-@import "@fontsource/noto-sans-jp/700.css";
 @import "@fontsource/zen-old-mincho/600.css";
 @import "@fontsource/noto-sans-mono/400.css";
 @import "@fontsource/noto-sans-mono/700.css";

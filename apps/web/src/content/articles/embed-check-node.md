@@ -4,6 +4,7 @@ title: Node の実行環境を埋め込む記事
 description: 記事の中で、初期ファイルを持つ Node の実行環境を開けることを確認する検証用の記事である。
 tags: [検証]
 status: published
+verificationOnly: true
 publishedAt: 2026-11-13
 ---
 
