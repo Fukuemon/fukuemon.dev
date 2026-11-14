@@ -37,7 +37,7 @@ export interface Tint {
 }
 
 /** 一様な Catmull-Rom の曲線の、b と c の間の位置 t（0〜1）の値。a と d は前後の制御点 */
-export function catmullRom(a: number, b: number, c: number, d: number, t: number): number {
+function catmullRom(a: number, b: number, c: number, d: number, t: number): number {
   const t2 = t * t,
     t3 = t2 * t;
   return (
@@ -62,10 +62,12 @@ export function sample(pts: readonly Vec2[], step: number): Vec2[] {
   return out;
 }
 
-/** 松の葉の線の置き方。既定は、近景の層に置き、下に淡い円を敷く */
+/** 松の葉の線の置き方。既定は、近景の層に置き、下に淡い円を敷き、葉の線を切らない */
 interface NeedleOptions {
   readonly layer?: Layer;
   readonly tint?: boolean;
+  /** 葉の線 1 本を、描く区間の列に分ける */
+  readonly clip?: (pts: readonly Vec2[]) => readonly (readonly Vec2[])[];
 }
 
 export interface Brush {
@@ -236,20 +238,26 @@ export function brush(seed: number): Brush {
     cy: number,
     r: number,
     t0: number,
-    { layer = "near", tint = true }: NeedleOptions = {},
+    { layer = "near", tint = true, clip = (pts) => [pts] }: NeedleOptions = {},
   ): void {
     for (let k = 0; k < 17; k++) {
       const an = -Math.PI * (0.06 + 0.88 * (k / 16)) + (R() - 0.5) * 0.12,
         len = r * (0.75 + R() * 0.35);
-      add(
-        layer,
-        [
-          [cx, cy],
-          [cx + Math.cos(an) * len * 0.5, cy + Math.sin(an) * len * 0.52],
-          [cx + Math.cos(an) * len, cy + Math.sin(an) * len],
-        ],
-        { w: 2.3, a: 0.8, dry: 0.3, t0: t0 + k * 11, dur: 110, tin: 0.05, tout: 0.5 },
-      );
+      const needle: Vec2[] = [
+        [cx, cy],
+        [cx + Math.cos(an) * len * 0.5, cy + Math.sin(an) * len * 0.52],
+        [cx + Math.cos(an) * len, cy + Math.sin(an) * len],
+      ];
+      for (const run of clip(needle))
+        add(layer, run, {
+          w: 2.3,
+          a: 0.8,
+          dry: 0.3,
+          t0: t0 + k * 11,
+          dur: 110,
+          tin: 0.05,
+          tout: 0.5,
+        });
     }
     if (tint) tints.push({ layer, x: cx, y: cy - r * 0.4, r: r * 1.15 });
   }

@@ -1,4 +1,4 @@
-import { catmullRom, sample, type Brush } from "./brush";
+import { sample, type Brush } from "./brush";
 import {
   GATE,
   GATE_Z,
@@ -25,15 +25,35 @@ interface InkTree {
   readonly pine: boolean;
 }
 
-/** 点の列の上の位置 u（0〜1）の点。点の間は Catmull-Rom の曲線でつなぐ */
-function along(pts: readonly Vec3[], u: number): Vec3 {
+/**
+ * 点の列の上の位置 u（0〜1）の点。
+ * 立体の木の幹（three の `CatmullRomCurve3` の既定の centripetal）の `getPoint(u)` と同じ式で、端の外の制御点は外挿する。
+ */
+export function along(pts: readonly Vec3[], u: number): Vec3 {
   const n = pts.length - 1;
-  const pos = Math.min(n - 1e-9, Math.max(0, u * n));
-  const i = Math.floor(pos),
+  const pos = n * u;
+  let i = Math.floor(pos),
     t = pos - i;
-  const at = (k: number) => pts[Math.min(n, Math.max(0, k))]!;
-  const [a, b, c, d] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
-  const axis = (j: 0 | 1 | 2) => catmullRom(a[j], b[j], c[j], d[j], t);
+  if (i >= n) {
+    i = n - 1;
+    t = 1;
+  }
+  const b = pts[i]!,
+    c = pts[i + 1]!;
+  const outside = (p: Vec3, q: Vec3): Vec3 => [2 * p[0] - q[0], 2 * p[1] - q[1], 2 * p[2] - q[2]];
+  const a = i > 0 ? pts[i - 1]! : outside(b, c);
+  const d = i + 2 <= n ? pts[i + 2]! : outside(c, b);
+  const gap = (p: Vec3, q: Vec3) => Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]) ** 0.5;
+  const dt1 = gap(b, c) < 1e-4 ? 1 : gap(b, c);
+  const dt0 = gap(a, b) < 1e-4 ? dt1 : gap(a, b);
+  const dt2 = gap(c, d) < 1e-4 ? dt1 : gap(c, d);
+  const axis = (j: 0 | 1 | 2): number => {
+    const t1 = ((b[j] - a[j]) / dt0 - (c[j] - a[j]) / (dt0 + dt1) + (c[j] - b[j]) / dt1) * dt1;
+    const t2 = ((c[j] - b[j]) / dt1 - (d[j] - b[j]) / (dt1 + dt2) + (d[j] - c[j]) / dt2) * dt1;
+    const c2 = -3 * b[j] + 3 * c[j] - 2 * t1 - t2,
+      c3 = 2 * b[j] - 2 * c[j] + t1 + t2;
+    return b[j] + t1 * t + c2 * t * t + c3 * t * t * t;
+  };
   return [axis(0), axis(1), axis(2)];
 }
 
@@ -57,11 +77,18 @@ export function visible([x, y]: Vec2): boolean {
   return y < wallTop;
 }
 
-/** 画面の点の列を、隠れない区間ごとに分ける。短すぎる区間は捨てる */
+/** 隠れる部分で切った後の区間を描く、長さの下限（px）。これより短い区間は、塀の上や柱の際に点のように残るので描かない */
+const MIN_RUN = 24;
+
+/**
+ * 画面の点の列を、隠れない区間ごとに分ける。
+ * 隠れる部分で切った区間のうち、MIN_RUN より短いものは捨てる。全体が見える線は、短くても残す
+ */
 function visibleRuns(pts: readonly Vec2[]): Vec2[][] {
   const runs: Vec2[][] = [];
   let cur: Vec2[] = [];
-  for (const p of sample(pts, 3)) {
+  const sampled = sample(pts, 3);
+  for (const p of sampled) {
     if (visible(p)) cur.push(p);
     else if (cur.length) {
       runs.push(cur);
@@ -69,7 +96,10 @@ function visibleRuns(pts: readonly Vec2[]): Vec2[][] {
     }
   }
   if (cur.length) runs.push(cur);
-  return runs.filter((r) => r.length >= 4);
+  const length = (r: readonly Vec2[]) =>
+    r.slice(1).reduce((sum, p, k) => sum + Math.hypot(p[0] - r[k]![0], p[1] - r[k]![1]), 0);
+  if (runs.length === 1 && runs[0]!.length === sampled.length) return runs;
+  return runs.filter((r) => length(r) >= MIN_RUN);
 }
 
 const TREE_STROKE = { dry: 0.55, tin: 0.04, tout: 0.25 } as const;
@@ -77,8 +107,7 @@ const TREE_STROKE = { dry: 0.55, tin: 0.04, tout: 0.25 } as const;
 /** 枝の先の葉を描く。松は扇の形、紅葉は丸い弧を重ねた形にする */
 function leaves(B: Brush, R: () => number, c: Vec3, r: number, pine: boolean, t0: number): void {
   if (pine) {
-    if (visible([c[0], c[1]]))
-      B.needles(c[0], c[1] - r * 0.1, r * 0.8, t0, { layer: "mid", tint: false });
+    B.needles(c[0], c[1] - r * 0.1, r * 0.8, t0, { layer: "mid", tint: false, clip: visibleRuns });
     return;
   }
   for (let q = 0; q < 4; q++) {

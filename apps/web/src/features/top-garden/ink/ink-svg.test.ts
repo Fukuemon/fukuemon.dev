@@ -47,13 +47,13 @@ describe("inkSvg", () => {
       strokes: out.strokes,
       paths: out.paths,
       tags: out.svg.match(/<path /g)?.length,
-    }).toStrictEqual({ strokes: 393, paths: 543, tags: 543 });
+    }).toStrictEqual({ strokes: 399, paths: 543, tags: 543 });
   });
 
   it("決めた墨の絵と同じ文字列を書く", () => {
     // 試作の線に木の線を足した SVG の文字列の SHA-256。乱数の順がずれると変わる。
     expect(createHash("sha256").update(out.svg).digest("hex")).toBe(
-      "3a6bc9830ed4ce5aa082bb587f902c58b7123d161ed352316db9814b27e67004",
+      "4cc3c737f68c028ea1ac3f9f4a0a4a09a33683f7bcf887f2b2a199b9a81b28e0",
     );
   });
 
