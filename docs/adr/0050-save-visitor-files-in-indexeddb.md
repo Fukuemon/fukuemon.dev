@@ -54,7 +54,10 @@ Playwright 1.65.0 の Chromium、WebKit、Firefox（headless）で、`localhost`
 - 記事の iframe と、トップレベルで開いたページが、同じ保存先を読むかは、判定できなかった。
   - Chromium と Firefox は、別のサイトのページの iframe でも、トップレベルと同じ値を読んだ。Playwright のブラウザでは、保存先の分離が働いていないとみられる。
   - WebKit は、同じサイトの役のホスト名（`fukuemon.localhost` と `play.fukuemon.localhost`）でも、IndexedDB が別だった。WebKit が、この 2 つを同じサイトとして扱っているかは、確認していない。
-- 作業ディレクトリのファイルの変更の監視で、コマンドが作ったファイルの通知を受け取れるかは、未確認である。
+- 作業ディレクトリのファイルの変更の監視は、シェルのコマンドが作ったファイルの通知を受け取った。
+  - Playwright 1.64.1 の Chromium（headless）で、`vp dev` の `/node/` を開いて測った。
+  - `node -e` で作ったファイル、深いディレクトリの下のファイル、追記、削除、名前の変更の、どれも通知が来た。パスは作業ディレクトリからの相対で、名前の変更は古いパスと新しいパスの 2 つが来た。
+  - WebKit と Firefox では測っていない。
 
 ## Considered Options
 
