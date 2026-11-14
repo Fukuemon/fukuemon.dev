@@ -13,3 +13,4 @@ export const RESULT_ICON = icon(
   "M2.75 3.75h14.5v12.5H2.75zM2.75 8.25h14.5M2.75 12.25h14.5M8.25 8.25v8",
 );
 export const OUTPUT_ICON = icon("M3.75 4.75h12.5M3.75 8.75h12.5M3.75 12.75h8");
+export const NETWORK_ICON = icon("M6.5 3.5v13M3.5 6.5l3-3 3 3M13.5 16.5v-13M10.5 13.5l3 3 3-3");

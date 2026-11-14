@@ -35,6 +35,7 @@ export function FileEditor({ path, files, initialText, describedBy }: FileEditor
       initialText={files ? "" : initialText}
       describedBy={describedBy}
       label={path}
+      stateKey={path}
       extensions={[...languageExtension(path), noSave]}
     />
   );

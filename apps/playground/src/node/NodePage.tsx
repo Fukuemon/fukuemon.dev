@@ -15,9 +15,17 @@ import {
 } from "@fukuemon/ui";
 import { type ReactNode, Suspense, use, useReducer, useState } from "react";
 
-import { EDITOR_ICON, FOLDER_ICON, PREVIEW_ICON, TERMINAL_ICON } from "../layout/icons";
+import {
+  EDITOR_ICON,
+  FOLDER_ICON,
+  NETWORK_ICON,
+  PREVIEW_ICON,
+  TERMINAL_ICON,
+} from "../layout/icons";
+import { usePaneFocus } from "../layout/usePaneFocus";
 import { type LayoutMode, useLayoutMode } from "../layout/useLayoutMode";
 
+import { type EditorStates, EditorStatesContext } from "../code-editor/editor-states";
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { BottomTabs } from "./BottomTabs";
@@ -93,11 +101,15 @@ const previewFallback = (
 );
 const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</TerminalFrame>;
 
-/** 下のペインの HTTP のタブ。一覧と、選んだ通信の詳細を、左右に並べる。 */
-function HttpPanes() {
+/**
+ * HTTP の流れのペイン。一覧と、選んだ通信の詳細を、仕切りで分けて並べる。
+ * PC の配置の下のタブと横の狭い配置では左右に、縦の狭い配置では上下に並べる。
+ */
+function HttpPanes({ orientation = "horizontal" }: { orientation?: "horizontal" | "vertical" }) {
   return (
     <SplitPane
-      label="HTTP の一覧の幅"
+      label={orientation === "horizontal" ? "HTTP の一覧の幅" : "HTTP の一覧の高さ"}
+      orientation={orientation}
       primary={
         <Pane
           fallback={
@@ -171,26 +183,28 @@ function WidePanes() {
   );
 }
 
-const NARROW_PANES = ["editor", "terminal", "preview"] as const;
+const NARROW_PANES = ["editor", "terminal", "preview", "http"] as const;
 type NarrowPane = (typeof NARROW_PANES)[number];
 
 /**
- * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビューをタブで 1 つずつ出す。
+ * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビュー、通信をタブで 1 つずつ出す。
  * ドロワーでファイルを選ぶと、ドロワーを閉じてエディタのタブに替える。フォルダの行は開閉だけをし、ドロワーを閉じない。
  */
 function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; embedded: boolean }) {
   const { selection, dispatch } = useSelection();
   const [pane, setPane] = useState<NarrowPane>("editor");
   const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const { rootRef, focusEditor } = usePaneFocus();
   const dispatchInDrawer = (action: SelectionAction) => {
     dispatch(action);
     if (action.type === "select-item" && action.isFile) {
       setDrawerOpen(false);
       setPane("editor");
+      focusEditor();
     }
   };
   return (
-    <div className="min-h-0 flex-1">
+    <div className="min-h-0 flex-1" ref={rootRef}>
       <PaneTabs
         items={[
           {
@@ -223,6 +237,17 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
               </Pane>
             ),
           },
+          {
+            id: "http",
+            label: "通信",
+            icon: NETWORK_ICON,
+            content: (
+              // 一覧と詳細の包みの 4px の余白を外へ出し、ペインの縁をほかのタブのペインにそろえる
+              <div className="-m-1 flex min-h-0 flex-1 flex-col">
+                <HttpPanes orientation={mode === "narrow" ? "vertical" : "horizontal"} />
+              </div>
+            ),
+          },
         ]}
         label="ペイン"
         leading={
@@ -252,6 +277,8 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
 
 function NodeLayout({ project, embedded }: { project: NodeProject; embedded: boolean }) {
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
+  // 配置が替わってエディタを作り直しても、ファイルごとの元に戻す履歴とカーソルを残す
+  const [editorStates] = useState<EditorStates>(() => new Map());
   const mode = useLayoutMode();
   return (
     <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
@@ -259,7 +286,9 @@ function NodeLayout({ project, embedded }: { project: NodeProject; embedded: boo
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
           <BootWait />
         </Suspense>
-        {mode === "wide" ? <WidePanes /> : <NarrowPanes embedded={embedded} mode={mode} />}
+        <EditorStatesContext value={editorStates}>
+          {mode === "wide" ? <WidePanes /> : <NarrowPanes embedded={embedded} mode={mode} />}
+        </EditorStatesContext>
       </SelectionContext>
     </RuntimeContext>
   );

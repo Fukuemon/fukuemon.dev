@@ -27,6 +27,7 @@ import {
 
 import { EDITOR_ICON, FOLDER_ICON, OUTPUT_ICON } from "../layout/icons";
 import { useLayoutMode } from "../layout/useLayoutMode";
+import { usePaneFocus } from "../layout/usePaneFocus";
 import { goDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { GoEditor } from "./GoEditor";
@@ -157,6 +158,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const mode = useLayoutMode();
   const [pane, setPane] = useState<"editor" | "output">("editor");
   const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const { rootRef, focusEditor, focusSelectedTab } = usePaneFocus();
   const saveFailed = useSyncExternalStore(
     session.saveFailed.subscribe,
     session.saveFailed.getSnapshot,
@@ -182,6 +184,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
       openFile(path);
       setDrawerOpen(false);
       setPane("editor");
+      focusEditor();
     }
   };
 
@@ -242,10 +245,12 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 
   const run = () => {
     setPane("output");
+    focusSelectedTab();
     void session.run();
   };
   const test = () => {
     setPane("output");
+    focusSelectedTab();
     void session.test();
   };
   const onShortcut = useEffectEvent((event: KeyboardEvent) => {
@@ -433,7 +438,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
           />
         </div>
       ) : (
-        <div className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1" ref={rootRef}>
           <PaneTabs
             items={[
               { id: "editor", label: "エディタ", icon: EDITOR_ICON, content: editorPanel },

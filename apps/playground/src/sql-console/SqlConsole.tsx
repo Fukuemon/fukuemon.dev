@@ -4,6 +4,8 @@ import { useId, useState, useSyncExternalStore } from "react";
 
 import { EDITOR_ICON, RESULT_ICON } from "../layout/icons";
 import { useLayoutMode } from "../layout/useLayoutMode";
+import type { EditorStates } from "../code-editor/editor-states";
+import { usePaneFocus } from "../layout/usePaneFocus";
 import { ResultView } from "./ResultView";
 import { SqlEditor } from "./SqlEditor";
 
@@ -43,12 +45,16 @@ export function SqlConsole({
   const [shown, setShown] = useState<{ id: number; response: SqlResponse }>();
   const mode = useLayoutMode();
   const [pane, setPane] = useState<"input" | "result">("input");
+  const { rootRef, focusSelectedTab } = usePaneFocus();
+  // 配置が替わって入力欄を作り直しても、元に戻す履歴とカーソルを残す
+  const [editorStates] = useState<EditorStates>(() => new Map());
 
   const run = async () => {
     if (running) return;
     const response = await onRun(value);
     setShown((previous) => ({ id: (previous?.id ?? 0) + 1, response }));
     setPane("result");
+    focusSelectedTab();
   };
 
   const editor = (
@@ -58,6 +64,7 @@ export function SqlConsole({
           describedBy={hintId}
           onChange={onChange}
           onRun={() => void run()}
+          states={editorStates}
           value={value}
         />
       )}
@@ -96,7 +103,7 @@ export function SqlConsole({
     );
   }
   return (
-    <div className="min-h-0 min-w-0 flex-1">
+    <div className="min-h-0 min-w-0 flex-1" ref={rootRef}>
       <PaneTabs
         items={[
           {
