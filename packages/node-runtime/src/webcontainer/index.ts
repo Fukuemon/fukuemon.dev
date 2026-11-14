@@ -169,9 +169,12 @@ export const webContainerBackend: RuntimeBackend = {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
-      await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
-      await writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource);
-      await writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource);
+      // ファイルごとに node を起動するので、順に待たずに並べる。ディレクトリは recursive で作るので、同時に作っても失敗しない
+      await Promise.all([
+        writeOutside(container, HTTP_TRACE_FILE, httpTraceSource),
+        writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource),
+        writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource),
+      ]);
       // 登録できなくても、プレビューの記録が欠けるだけなので、起動は続ける (docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
       await container.setPreviewScript(previewScript).catch(() => undefined);
       const ports = createPorts(container);

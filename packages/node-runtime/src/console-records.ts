@@ -201,7 +201,7 @@ export function createConsoleRecords({
 
   const flush = () => {
     cancel = undefined;
-    const next = [...store.getSnapshot(), ...pending];
+    const next = [...store.getSnapshot(), ...pending.slice(-max)];
     pending = [];
     store.set(next.length > max ? next.slice(next.length - max) : next);
   };
@@ -213,7 +213,8 @@ export function createConsoleRecords({
     if (parsed === undefined || disposed) return;
     count += 1;
     pending.push({ id: String(count), source, ...parsed });
-    if (pending.length > max) pending = pending.slice(pending.length - max);
+    // 上限を超えた分は、上限の 2 倍まで溜めてから捨てる。1 件ごとに捨てると、届くたびに上限の数を複製する
+    if (pending.length > max * 2) pending = pending.slice(pending.length - max);
     cancel ??= schedule(flush);
   };
 

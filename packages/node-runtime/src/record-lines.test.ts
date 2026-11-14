@@ -49,6 +49,14 @@ describe("createRecordLineFilter", () => {
     });
   });
 
+  it("共通の先頭だけで、種類の無い文字列は、端末に渡し、後ろの記録の行を抜き出す", () => {
+    const { text, lines } = filtered(`@@fd:other x\n${CONSOLE_PREFIX}{"c":1}\n`);
+    expect({ text: text.join(""), lines }).toStrictEqual({
+      text: "@@fd:other x\n",
+      lines: ['{"c":1}'],
+    });
+  });
+
   it("コンソールの記録の頭の途中で切れた出力は、続きが届いたら記録の行にする", () => {
     const { lines, kinds } = filtered("$ @@fd:con", 'sole {"c":1}\n');
     expect({ lines, kinds }).toStrictEqual({ lines: ['{"c":1}'], kinds: ["console"] });

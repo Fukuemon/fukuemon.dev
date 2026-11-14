@@ -1,7 +1,7 @@
 import { Tabs } from "@fukuemon/ui";
 import { Activity, type ReactNode, Suspense } from "react";
 
-import { useConsoleRecords } from "./ConsolePane";
+import { useConsoleCount } from "./ConsolePane";
 import { consoleTabLabel } from "./console-view";
 import { useSelection } from "./context";
 import { useHttpRecords } from "./HttpPane";
@@ -27,10 +27,8 @@ export function BottomTabs(panes: Panes) {
 
 function CountedBottomTabs(panes: Panes) {
   const http = useHttpRecords();
-  const logs = useConsoleRecords();
-  return (
-    <BottomTabsView {...panes} consoleCount={logs.records.length} httpCount={http.records.length} />
-  );
+  const consoleCount = useConsoleCount();
+  return <BottomTabsView {...panes} consoleCount={consoleCount} httpCount={http.records.length} />;
 }
 
 function BottomTabsView({ terminal, consolePane, http, consoleCount, httpCount }: Panes & Counts) {

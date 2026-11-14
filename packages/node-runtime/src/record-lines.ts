@@ -16,14 +16,17 @@ const PREFIXES: readonly (readonly [RecordKind, string])[] = [
   ["console", CONSOLE_PREFIX],
 ];
 
+/** どの記録の行の頭にも共通する先頭。頭を探すときは、この文字列を 1 回だけ探し、見つけた位置で種類を見分ける。 */
+const COMMON_HEAD = "@@fd:";
+
 /** text に最初に現れる記録の行の頭と、その位置。 */
 function findPrefix(text: string): { at: number; kind: RecordKind; prefix: string } | undefined {
-  let found: { at: number; kind: RecordKind; prefix: string } | undefined;
-  for (const [kind, prefix] of PREFIXES) {
-    const at = text.indexOf(prefix);
-    if (at !== -1 && (found === undefined || at < found.at)) found = { at, kind, prefix };
+  for (let at = text.indexOf(COMMON_HEAD); at !== -1; at = text.indexOf(COMMON_HEAD, at + 1)) {
+    for (const [kind, prefix] of PREFIXES) {
+      if (text.startsWith(prefix, at)) return { at, kind, prefix };
+    }
   }
-  return found;
+  return undefined;
 }
 
 /** 出力の末尾が記録の行の頭の途中で切れたときに、続きを待つ時間。続きが来なければ、端末に出す。 */
