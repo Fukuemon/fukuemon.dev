@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PathNotFoundError } from "./backend";
 import { bootFake, flush, treePaths } from "./test/fake-backend";
 import { ReadLimitError } from "./types";
 
@@ -346,9 +347,39 @@ describe("files.readAll", () => {
     const { runtime, created } = await bootFake();
     const readFile = created.files.api.readFile;
     vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
-      path === "index.js" ? Promise.reject(new Error("ENOENT")) : readFile(path),
+      path === "index.js" ? Promise.reject(new PathNotFoundError("ENOENT")) : readFile(path),
     );
     const paths = (await runtime.files.readAll(options)).map((file) => file.path);
     expect(paths).toStrictEqual(["package.json", "src/app.js"]);
+  });
+
+  it("消えた以外の理由でファイルを読めないときは、失敗する", async () => {
+    const { runtime, created } = await bootFake();
+    const readFile = created.files.api.readFile;
+    const error = new Error("EIO");
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "index.js" ? Promise.reject(error) : readFile(path),
+    );
+    await expect(runtime.files.readAll(options)).rejects.toBe(error);
+  });
+
+  it("一覧の前に消えたディレクトリは、飛ばして返す", async () => {
+    const { runtime, created } = await bootFake();
+    const list = created.files.api.list;
+    vi.spyOn(created.files.api, "list").mockImplementation((directory) =>
+      directory === "src" ? Promise.reject(new PathNotFoundError("ENOENT")) : list(directory),
+    );
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["index.js", "package.json"]);
+  });
+
+  it("消えた以外の理由でディレクトリの一覧を読めないときは、失敗する", async () => {
+    const { runtime, created } = await bootFake();
+    const list = created.files.api.list;
+    const error = new Error("EIO");
+    vi.spyOn(created.files.api, "list").mockImplementation((directory) =>
+      directory === "src" ? Promise.reject(error) : list(directory),
+    );
+    await expect(runtime.files.readAll(options)).rejects.toBe(error);
   });
 });

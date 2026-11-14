@@ -1,4 +1,4 @@
-import type { BackendFiles } from "./backend";
+import { type BackendFiles, PathNotFoundError } from "./backend";
 import { createStore } from "./store";
 import {
   type FileContents,
@@ -95,9 +95,17 @@ function readAllFiles(
       release();
     }
   };
-  const readFile = (path: string) => limited(() => files.readFile(path).catch(() => undefined));
+  // 一覧を読んだ後に消えたものだけを飛ばす。ほかの失敗で飛ばすと、読めなかった作業ディレクトリを読めた扱いにする (ADR-0069)
+  const skipMissing =
+    <T>(fallback: T) =>
+    (error: unknown): T => {
+      if (error instanceof PathNotFoundError) return fallback;
+      throw error;
+    };
+  const readFile = (path: string) =>
+    limited(() => files.readFile(path).catch(skipMissing(undefined)));
   const read = async (directory: string): Promise<FileContents[]> => {
-    const items = [...(await limited(() => files.list(directory)))]
+    const items = [...(await limited(() => files.list(directory).catch(skipMissing([]))))]
       .filter((item) => !isExcludedPath(join(directory, item.name), exclude))
       .sort((a, b) => a.name.localeCompare(b.name));
     check();
@@ -106,7 +114,7 @@ function readAllFiles(
       items.map(async (item): Promise<FileContents[]> => {
         const path = join(directory, item.name);
         if (item.kind === "directory") return read(path);
-        // 一覧を読んだ後に消えたファイルと、指す先を読めないリンクは、読まずに飛ばす
+        // 一覧を読んだ後に消えたファイルと、指す先の無いリンクは、読まずに飛ばす
         const bytes = await readFile(path);
         if (!bytes) return [];
         count.files += 1;

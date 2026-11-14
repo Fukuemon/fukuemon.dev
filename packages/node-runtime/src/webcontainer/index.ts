@@ -1,11 +1,12 @@
 import { WebContainer, type WebContainerProcess } from "@webcontainer/api";
 
-import type {
-  BackendFiles,
-  BackendInstance,
-  BackendProcess,
-  DirectoryItem,
-  RuntimeBackend,
+import {
+  type BackendFiles,
+  type BackendInstance,
+  type BackendProcess,
+  type DirectoryItem,
+  PathNotFoundError,
+  type RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
 import { toTree } from "./tree";
@@ -53,11 +54,20 @@ function toBackendProcess(process: WebContainerProcess): BackendProcess {
   };
 }
 
+// WebContainers の fs の失敗には code が無く、パスが無いことは message の先頭の ENOENT でしか分けられない
+const toNotFound = (error: unknown) => {
+  throw error instanceof Error && error.message.startsWith("ENOENT")
+    ? new PathNotFoundError(error.message, { cause: error })
+    : error;
+};
+
 function createBackendFiles(container: WebContainer): BackendFiles {
   const fs = container.fs;
   return {
     list: async (directory) => {
-      const items = await fs.readdir(directory === "" ? "." : directory, { withFileTypes: true });
+      const items = await fs
+        .readdir(directory === "" ? "." : directory, { withFileTypes: true })
+        .catch(toNotFound);
       return items.map(
         (item): DirectoryItem => ({
           name: item.name,
@@ -66,7 +76,7 @@ function createBackendFiles(container: WebContainer): BackendFiles {
         }),
       );
     },
-    readFile: (path) => fs.readFile(path),
+    readFile: (path) => fs.readFile(path).catch(toNotFound),
     writeFile: (path, contents) => fs.writeFile(path, contents),
     mkdir: async (path) => {
       await fs.mkdir(path, { recursive: true });

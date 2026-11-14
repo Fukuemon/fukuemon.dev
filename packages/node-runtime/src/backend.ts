@@ -5,7 +5,15 @@ type BackendBootOptions = Pick<BootOptions, "files">;
 /** other は、ファイルでもディレクトリでもないもの（シンボリックリンクなど）である。 */
 export type DirectoryItem = { name: string; kind: "file" | "directory" | "other" };
 
-/** 作業ディレクトリのファイルの操作。パスは作業ディレクトリからの相対パスで、`""` は作業ディレクトリそのものである。 */
+/** list と readFile が、パスが無いときに投げる失敗。 */
+export class PathNotFoundError extends Error {
+  override name = "PathNotFoundError";
+}
+
+/**
+ * 作業ディレクトリのファイルの操作。パスは作業ディレクトリからの相対パスで、`""` は作業ディレクトリそのものである。
+ * list と readFile は、パスが無いときに PathNotFoundError で失敗する。
+ */
 export type BackendFiles = {
   list: (directory: string) => Promise<readonly DirectoryItem[]>;
   readFile: (path: string) => Promise<Uint8Array>;

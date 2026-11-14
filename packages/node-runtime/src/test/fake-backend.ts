@@ -1,9 +1,10 @@
-import type {
-  BackendFiles,
-  BackendInstance,
-  BackendProcess,
-  DirectoryItem,
-  RuntimeBackend,
+import {
+  type BackendFiles,
+  type BackendInstance,
+  type BackendProcess,
+  type DirectoryItem,
+  PathNotFoundError,
+  type RuntimeBackend,
 } from "../backend";
 import { bootWithBackend } from "../runtime";
 import type { NodeRuntime, OpenPort, TerminalSize } from "../types";
@@ -108,7 +109,7 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
     },
     readFile: async (path) => {
       const contents = files.get(path);
-      if (!contents) throw new Error(`ENOENT: ${path}`);
+      if (!contents) throw new PathNotFoundError(`ENOENT: ${path}`);
       return contents;
     },
     writeFile: async (path, contents) => {
