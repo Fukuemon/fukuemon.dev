@@ -4,7 +4,7 @@ import { inkArt, type InkArt } from "./ink-art";
 import { DESIGN } from "../layout";
 
 /** 試作の時刻（ms）に掛ける倍率。試作と同じ値である。 */
-const TIME_SCALE = 3150 / 3900;
+export const TIME_SCALE = 3150 / 3900;
 const RENDER_SEED = 11;
 
 const round1 = (v: number) => String(Math.round(v * 10) / 10);
@@ -88,8 +88,8 @@ export interface InkSvg {
 
 /**
  * 墨の絵を、HTML に置く `<svg class="ink-svg">` の文字列にする。
- * 線の色と、かすれの filter の掛け方は、`InkGate.astro` の CSS が、class（`far`、`mid`、`near`、`lines`、`pine`）と id（`f-dry`、`f-wash`、`g-pine`）で引く。
- * 松の円の色は CSS 変数 `--art-pine` で決める。筆の順に描く動きは、この文字列の外の CSS が付ける。
+ * 線の色、かすれの filter の掛け方、イントロで筆の順に描く動きは、`InkGate.astro` の CSS が、class（`far`、`mid`、`near`、`lines`、`pine`）と id（`f-dry`、`f-wash`、`g-pine`）で引く。
+ * 松の円の色は CSS 変数 `--art-pine` で決める。線ごとの `--t` と `--d` も、同じ CSS が読む。
  */
 export function inkSvg(art: InkArt = inkArt()): InkSvg {
   const r = renderStrokes(art.strokes);

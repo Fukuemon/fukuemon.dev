@@ -11,7 +11,8 @@ import {
 } from "three";
 import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { createInkPass } from "./ink-pass";
-import { PAPER_PAD, PX, STATIONS } from "../layout";
+import { INTRO } from "../intro-timing";
+import { CAM0, DESIGN, PAPER_PAD, PX, STATIONS } from "../layout";
 import { hangPaper } from "./paper";
 import { scenePalette } from "./scene-colors";
 import { buildGarden } from "./scene";
@@ -27,9 +28,20 @@ export interface Garden {
   pause(on: boolean): void;
   /** ポインタの位置（-1〜1）に合わせて、カメラを少し揺らす */
   pointer(x: number, y: number): void;
+  /**
+   * 最初の訪問のイントロで、墨だけの絵から色を差し、カメラが門をくぐって 1 つ目の和紙の前で止まる。
+   * @param handlers.cards 文とヘッダーと庭の中のボタンを出す時刻に、1 回呼ぶ
+   * @param handlers.done カメラが止まった時刻に、1 回呼ぶ
+   */
+  enter(handlers: { cards(): void; done(): void }): void;
+  /** イントロを、動かさずに最後の状態にする。呼んだ後は、`enter` に渡した関数を呼ばない。最後の状態を描く途中で描けなくなったときは、`onBroken` を呼んでから戻る */
+  skip(): void;
   /** 描くのをやめ、セクションを元の場所に戻し、和紙に置いたときに書いた属性と変数を消す */
   stop(): void;
 }
+
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
 const webglAvailable = () => document.createElement("canvas").getContext("webgl2") !== null;
 
@@ -42,7 +54,10 @@ const webglAvailable = () => document.createElement("canvas").getContext("webgl2
  */
 export function startGarden(
   stage: HTMLElement,
-  opts: SeasonTime,
+  opts: SeasonTime & {
+    /** true のときは、墨だけの絵を最初のカメラで描いて待つ。`enter` で色を差して門をくぐる */
+    readonly intro: boolean;
+  },
   cards: readonly HTMLElement[],
   onBroken: () => void,
 ): Garden | null {
@@ -63,6 +78,8 @@ export function startGarden(
   const cssRenderer = new CSS3DRenderer();
   let raf = 0;
   let stopped = false;
+  /** イントロの文を出す時刻と終える時刻のタイマー */
+  const timers: ReturnType<typeof setTimeout>[] = [];
   const listeners = new AbortController();
 
   /** 和紙に置く前の状態に戻す。何度呼んでもよい */
@@ -70,6 +87,7 @@ export function startGarden(
     stopped = true;
     cancelAnimationFrame(raf);
     listeners.abort();
+    for (const id of timers) clearTimeout(id);
     // 後ろのセクションから戻す。次の兄弟が、まだ戻していないセクションを指さないようにするためである。
     for (let i = cards.length - 1; i >= 0; i--) {
       const el = cards[i]!;
@@ -166,13 +184,65 @@ export function startGarden(
       };
     };
 
+    const tanDesign = Math.tan((DESIGN.fov * Math.PI) / 360);
+    /** 墨の絵の SVG と同じ切り取り方になる、最初のカメラの縦の画角（top-garden の Design Doc の「墨の絵と署名の置き方」） */
+    const fov0 = (): number => {
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      const a = w / h;
+      const svgW = a >= 16 / 9 ? w : a > 1 ? (h * 16) / 9 : w * 1.25;
+      return (Math.atan((tanDesign * h) / ((svgW * 9) / 16)) * 360) / Math.PI;
+    };
+    const start = { pos: new Vector3(...CAM0.pos), look: new Vector3(...CAM0.look) };
+
     const state = { current: 0, paused: false, px: 0, py: 0, last: 0 };
-    const cur = pose(0);
+    /** wait は墨だけの絵で待つ間、enter は色を差して門をくぐる間、garden は和紙の間を移る間 */
+    let phase: "wait" | "enter" | "garden" = opts.intro ? "wait" : "garden";
+    let enteredAt = 0;
+    const cur = opts.intro ? { pos: start.pos.clone(), look: start.look.clone() } : pose(0);
+    pass.setTint(opts.intro ? 0 : 1);
     let target: FramebufferTexture | null = null;
+
+    const render = (): void => {
+      renderer.render(scene, camera);
+      renderer.copyFramebufferToTexture(target!);
+      renderer.render(pass.scene, pass.camera);
+      cssRenderer.render(cssScene, camera);
+    };
+
+    /** 門をくぐる間のカメラと淡彩を、色を差し始めてからの時刻で決める。@returns カメラの縦の画角 */
+    const drawEnter = (now: number): number => {
+      const t = now - enteredAt;
+      const m = easeInOut(clamp01((t - INTRO.move0) / INTRO.move));
+      const end = pose(0);
+      const f0 = fov0();
+      pass.setTint(clamp01((t - INTRO.tint0) / INTRO.tint));
+      cur.pos.lerpVectors(start.pos, end.pos, m);
+      cur.look.lerpVectors(start.look, end.look, m);
+      return f0 + (fov() - f0) * m;
+    };
+    /** イントロを終え、和紙の間を移る動きに切り替える。フレームが遅れても、カメラはそこから 1 つ目の和紙へ寄る */
+    const toGarden = (): void => {
+      for (const id of timers) clearTimeout(id);
+      phase = "garden";
+      pass.setTint(1);
+    };
 
     const draw = (now: number): void => {
       const dt = state.last ? Math.min(100, now - state.last) : 16;
       state.last = now;
+      if (phase !== "garden") {
+        camera.fov = phase === "enter" ? drawEnter(now) : fov0();
+        camera.position.copy(cur.pos);
+        camera.lookAt(cur.look);
+        camera.updateProjectionMatrix();
+        render();
+        // 淡彩とカメラが変わる間だけ、次のフレームを描く。終わりのタイマーが、最後の 1 枚を描かせる
+        const t = now - enteredAt;
+        if (phase === "enter" && t < INTRO.move0 + INTRO.move) kick();
+        else state.last = 0;
+        return;
+      }
       const tgt = pose(state.current);
       // 縦長の画面は和紙が幅いっぱいなので、揺らすと和紙が画面からはみ出る。
       if (!state.paused && !portrait()) {
@@ -186,10 +256,7 @@ export function startGarden(
       camera.position.copy(cur.pos);
       camera.lookAt(cur.look);
       camera.updateProjectionMatrix();
-      renderer.render(scene, camera);
-      renderer.copyFramebufferToTexture(target!);
-      renderer.render(pass.scene, pass.camera);
-      cssRenderer.render(cssScene, camera);
+      render();
       const moving = cur.pos.distanceTo(tgt.pos) + cur.look.distanceTo(tgt.look) > 0.003;
       if (moving) kick();
       else state.last = 0;
@@ -272,6 +339,32 @@ export function startGarden(
         state.px = x;
         state.py = y;
         if (!state.paused && !portrait()) kick();
+      },
+      enter(handlers) {
+        if (phase !== "wait") return;
+        phase = "enter";
+        enteredAt = performance.now();
+        // 文を出す時刻と終える時刻は、フレームでなく時刻で決める。描くのが遅い端末でも、決めた長さで終える。
+        timers.push(
+          setTimeout(() => handlers.cards(), INTRO.cards),
+          setTimeout(() => {
+            toGarden();
+            kick();
+            handlers.done();
+          }, INTRO.done),
+        );
+        kick();
+      },
+      skip() {
+        if (phase === "garden") return;
+        toGarden();
+        const p = pose(state.current);
+        cur.pos.copy(p.pos);
+        cur.look.copy(p.look);
+        // 次のフレームを待たずに、最後の状態を描く。
+        cancelAnimationFrame(raf);
+        raf = 0;
+        frame(performance.now());
       },
       stop: cleanup,
     };

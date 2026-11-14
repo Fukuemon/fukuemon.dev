@@ -1,4 +1,5 @@
 import { brush, type Stroke, type Tint } from "./brush";
+import { addTrees } from "./ink-trees";
 import {
   CAM0,
   DESIGN,
@@ -285,5 +286,7 @@ export function inkArt(seed = INK_SEED): InkArt {
     3,
     44,
   );
+  // 塀の向こうと門の奥の木は、近景の松を描いた後に描く。描き終えてから色を差す
+  addTrees(B, 3500);
   return { strokes: B.strokes, tints: B.tints };
 }

@@ -2,6 +2,7 @@
 // 庭を描けないときは、バンドルの読み込みに失敗したときと同じく、ふつうのページに戻す。
 // 描く途中で例外が出たときも、ページが canvas に覆われたままにならないよう、ふつうのページに戻す。
 import { startGarden, type Garden } from "./garden";
+import { INK_END } from "../intro-timing";
 import { STATIONS } from "../layout";
 import type { Season, TimeOfDay } from "../stage/season";
 
@@ -13,7 +14,7 @@ const on = { signal: wiring.signal };
 function leave(cards: readonly HTMLElement[]): void {
   wiring.abort();
   for (const el of cards) el.classList.remove("is-current");
-  root.classList.remove("stage-on", "intro", "garden-ready");
+  root.classList.remove("stage-on", "intro", "enter", "scene-ready", "garden-ready", "no-anim");
 }
 
 /** 庭の中のボタン、矢印キー、セクションへのフォーカスで、和紙の間を移る */
@@ -97,6 +98,71 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
   select(0, false);
 }
 
+/** 和紙の文、ヘッダー、庭の中のボタンを出し、和紙の間を移れるようにする */
+function reveal(garden: Garden, cards: readonly HTMLElement[]): void {
+  wire(garden, cards);
+  root.classList.add("garden-ready");
+}
+
+/**
+ * 墨の絵を描き終えるのを待ち、色を差して門をくぐる。
+ * 「飛ばす」のボタン、Esc、Tab では、動かさずに最後の状態にする。
+ * Tab は既定の動きを止めず、最後の状態でそのまま次の要素へフォーカスを移す。
+ */
+function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
+  const introWiring = new AbortController();
+  const introOn = { signal: introWiring.signal };
+  wiring.signal.addEventListener("abort", () => introWiring.abort(), introOn);
+  let shown = false;
+  const show = () => {
+    if (shown) return;
+    shown = true;
+    reveal(garden, cards);
+  };
+  const finish = () => {
+    introWiring.abort();
+    root.classList.remove("intro", "enter");
+    performance.mark("garden-intro-done");
+  };
+  const jump = (focusHeading: boolean) => {
+    // 文とヘッダーの不透明度の遷移も止め、最後の状態を 1 度に出す。値が落ち着いた後に外す。
+    root.classList.add("no-anim");
+    garden.skip();
+    // 最後の状態を描く途中で描けなくなると、leave がふつうのページに戻している。class を付け直さない。
+    if (wiring.signal.aborted) return;
+    show();
+    finish();
+    if (focusHeading) cards[0]?.querySelector<HTMLElement>("h1")?.focus();
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("no-anim")));
+  };
+  document
+    .querySelector("[data-garden-skip]")
+    ?.addEventListener("click", () => jump(true), introOn);
+  addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Escape" || e.key === "Tab") jump(false);
+    },
+    introOn,
+  );
+  // 墨の線と署名の遷移は、最初にスタイルが付いた時点から動くので、HTML が遅く届くとその分だけ後ろにずれる。遷移が終わるのを待つ。遷移を取れない場合に備え、開いてからの時刻（INK_END）も下限として待つ。
+  // 松の円の不透明度の遷移は線より後に終わるので待たない。色が差した後も、松の円は現れ続けてよい（Design Doc の「イントロの各段の時間」）。
+  const drawing = (
+    document.querySelector("[data-garden-stage] .ink-gate")?.getAnimations({ subtree: true }) ?? []
+  ).filter(
+    (a) =>
+      a instanceof CSSTransition &&
+      (a.transitionProperty === "stroke-dashoffset" || a.transitionProperty === "--sign-w"),
+  );
+  const floor = new Promise((r) => setTimeout(r, Math.max(0, INK_END - performance.now())));
+  void Promise.allSettled([floor, ...drawing.map((a) => a.finished)]).then(() => {
+    if (introWiring.signal.aborted) return;
+    root.classList.add("enter");
+    performance.mark("garden-enter");
+    garden.enter({ cards: show, done: finish });
+  });
+}
+
 function boot(): void {
   if (!root.classList.contains("stage-on")) return;
   const stage = document.querySelector<HTMLElement>("[data-garden-stage]");
@@ -105,7 +171,12 @@ function boot(): void {
     document.querySelector<HTMLElement>(`[data-garden-card][aria-labelledby="${id}"]`),
   ).filter((el) => el !== null);
   // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。
-  const opts = { season: root.dataset.season as Season, time: root.dataset.time as TimeOfDay };
+  const intro = root.classList.contains("intro");
+  const opts = {
+    season: root.dataset.season as Season,
+    time: root.dataset.time as TimeOfDay,
+    intro,
+  };
   let garden: Garden | null = null;
   try {
     if (cards.length !== STATIONS.length) console.warn("和紙に置くセクションが足りない");
@@ -117,8 +188,10 @@ function boot(): void {
     leave(cards);
     return;
   }
-  wire(garden, cards);
-  root.classList.add("garden-ready");
+  root.classList.add("scene-ready");
+  performance.mark("garden-scene-ready");
+  if (intro) runIntro(garden, cards);
+  else reveal(garden, cards);
 }
 
 // 紙と墨の色は、スタイルシートのトークンから読む。バンドルはスタイルシートより先に動くことがあるので、load を待つ。

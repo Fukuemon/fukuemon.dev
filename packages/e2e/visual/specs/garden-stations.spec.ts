@@ -1,5 +1,7 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { meanDiff } from "../support/mean-diff";
+import { settledCenterX } from "../support/camera";
+import { seenBefore } from "../support/visit";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
 const AUTUMN_NOON = new Date(2026, 10, 13, 12);
@@ -13,6 +15,7 @@ test.beforeEach(() => test.slow());
  * 移動の動き自体を確かめるテスト以外は、止めてから移る。
  */
 const openGarden = async (page: Page, { paused = false } = {}) => {
+  await seenBefore(page);
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await expect(page.locator("html")).toHaveClass(/garden-ready/);
@@ -21,19 +24,6 @@ const openGarden = async (page: Page, { paused = false } = {}) => {
 
 const card = (page: Page, id: string) =>
   page.locator(`[data-garden-card][aria-labelledby="${id}"]`);
-
-/**
- * 要素の中心の x が画面の幅のどこにあるか（0〜1）を返す。
- * カメラが動いている間は、10 フレームの間に位置が変わるので null を返す。
- */
-const settledCenterX = (el: Locator) =>
-  el.evaluate(async (node) => {
-    const before = node.getBoundingClientRect();
-    for (let i = 0; i < 10; i++) await new Promise(requestAnimationFrame);
-    const after = node.getBoundingClientRect();
-    if (Math.abs(after.x - before.x) + Math.abs(after.y - before.y) > 0.5) return null;
-    return (after.x + after.width / 2) / innerWidth;
-  });
 
 /** カメラがその文の正面に来て、その文だけが見えている */
 const expectAt = async (page: Page, id: string) => {
