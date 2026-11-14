@@ -3,8 +3,8 @@
 このディレクトリは、トップの最初の訪問に出す墨の絵の SVG を作るコードと、門の内側の立体の庭を three で描くコードを持つ。
 墨の絵と立体の庭の場面の両方が読む、庭の配置も持つ。
 トップのプロフィールの本文も持つ。
-墨の絵の SVG を作るモジュールは、`layout.ts` と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`、`ink-trees.ts` である。
-どれも React と DOM に依らない TypeScript である。
+墨の絵の SVG を作るモジュールは、`layout.ts` と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`、`ink-trees.ts` の 5 つ。
+どれも React と DOM に依らない TypeScript で書く。
 ビルドのときに Node で動く。
 `ink/InkGate.astro` は、ヘッダーのロゴと同じ `sign.svg` を [`components/sign/`](../../components/sign/README.md) から読む。
 `stage/stage.ts` の `stageScript` は、`stage/season.ts` と `stage/visit.ts` の関数と `applyStage` を、文字列にしてトップの `head` の inline script に埋め込む。
@@ -43,7 +43,7 @@ Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/REA
 | `Profile.astro`              | プロフィールの 4 つのセクションの本文と、庭を出すときにセクションを和紙の上の文として見せる CSS                                                                                                                                                                                              |
 | `ink/brush.ts`               | 筆の線と松の円を配列に足していく `brush`                                                                                                                                                                                                                                                     |
 | `ink/ink-art.ts`             | 墨の絵の線を、山並み、塀、門、飛び石、石、近景の松、塀の向こうと門の奥の木の順に作る                                                                                                                                                                                                         |
-| `ink/ink-trees.ts`           | 塀の向こうと門の奥の木の線を、立体の木と同じ位置と形から、奥の木から幹、枝、葉の順に作る。塀、門の梁、屋根に隠れる部分は描かない                                                                                                                                                             |
+| `ink/ink-trees.ts`           | 塀の向こうと門の奥の木の線を、立体の木と同じ位置と形から作る。奥の木から手前の木へ、1 本ごとに幹、枝、葉の順で描く。塀、門の梁、屋根に隠れる部分は描かない。松の葉の扇は、中心の 1 点が隠れなければ全体を描く                                                                                |
 | `ink/ink-svg.ts`             | 線を、線ごとの `path` を持つ 1 枚の SVG の文字列にする                                                                                                                                                                                                                                       |
 | `ink/InkGate.astro`          | 墨の絵と署名を、描き終えた状態で出す Astro のコンポーネント。トップでは、`scene/GardenStage.astro` の slot に置く。`html` に class `intro` と `enter` が付いている間の、筆の順に描く動きと、線を消す動きの CSS も持つ                                                                        |
 | `stage/season.ts`            | 端末の日付と時刻から、季節と時間帯を返す                                                                                                                                                                                                                                                     |
