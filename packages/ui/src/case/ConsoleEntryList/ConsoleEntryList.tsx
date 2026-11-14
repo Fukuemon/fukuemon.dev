@@ -112,10 +112,8 @@ type EntryRowProps = {
   entry: ConsoleEntry;
   /** Tab のキーで止まる行か。一覧の中で 1 つの行だけを止まる箇所にする。 */
   isTabStop: boolean;
-  onFocus: () => void;
-  /** フォーカスを、この行から見た前後か端の行へ移す。 */
-  onMove: (to: RowMove) => void;
-  rowRef: (element: HTMLLIElement | null) => void;
+  /** 行の中にフォーカスが入ったときに、行の id で呼ぶ。 */
+  onFocusRow: (id: string) => void;
 };
 
 /**
@@ -123,23 +121,38 @@ type EntryRowProps = {
  * 行で右の矢印か Enter を押すと、最初の木の最初の項目へ移る。木の根で左の矢印を押すと、行へ戻る。
  * 木の最初の項目で上の矢印を押すと、前の木の最後の項目か、前の木が無ければ行へ移る。最後の項目で下の矢印を押すと、次の木の最初の項目か、次の木が無ければ次の行へ移る。
  */
-function EntryRow({ entry, isTabStop, onFocus, onMove, rowRef }: EntryRowProps) {
+function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
   const element = useRef<HTMLLIElement>(null);
   // ツリーの項目は文字の上に余白を持つので、値がツリーで始まる行は、印と時刻をその 1 行目にそろえる
   const startsWithTree = entry.args[0] !== undefined && isExpandable(entry.args[0]);
+  // 引数ごとの、行の中の木の番号。開けない引数は -1 にする
+  let treeCount = 0;
+  const treeIndexes = entry.args.map((arg) => (isExpandable(arg) ? treeCount++ : -1));
   const trees = () => [...(element.current?.querySelectorAll('[role="tree"]') ?? [])];
   const enterTree = (tree: Element | undefined, at: "first" | "last") => {
     const items = treeItems(tree);
     (at === "first" ? items[0] : items.at(-1))?.focus();
   };
+  // 前後と端の行は DOM の並びで探す。一覧から行ごとの関数を渡すと、行が描き直されるたびに全ての行の値の木を作り直すためである
+  const moveFocus = (to: RowMove) => {
+    const row = element.current;
+    const list = row?.parentElement;
+    const target = {
+      previous: row?.previousElementSibling,
+      next: row?.nextElementSibling,
+      first: list?.firstElementChild,
+      last: list?.lastElementChild,
+    }[to];
+    if (target instanceof HTMLElement) target.focus();
+  };
   const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>) => {
     // 木の項目から上がってきたキーは、木が扱う
     if (event.target !== event.currentTarget) return;
     const keys: Record<string, () => void> = {
-      ArrowUp: () => onMove("previous"),
-      ArrowDown: () => onMove("next"),
-      Home: () => onMove("first"),
-      End: () => onMove("last"),
+      ArrowUp: () => moveFocus("previous"),
+      ArrowDown: () => moveFocus("next"),
+      Home: () => moveFocus("first"),
+      End: () => moveFocus("last"),
       ArrowRight: () => enterTree(trees()[0], "first"),
       Enter: () => enterTree(trees()[0], "first"),
     };
@@ -152,7 +165,7 @@ function EntryRow({ entry, isTabStop, onFocus, onMove, rowRef }: EntryRowProps) 
     const all = trees();
     if (key === "ArrowDown") {
       if (all[treeIndex + 1]) enterTree(all[treeIndex + 1], "first");
-      else onMove("next");
+      else moveFocus("next");
     } else if (key === "ArrowUp" && all[treeIndex - 1]) {
       enterTree(all[treeIndex - 1], "last");
     } else {
@@ -166,12 +179,9 @@ function EntryRow({ entry, isTabStop, onFocus, onMove, rowRef }: EntryRowProps) 
         "flex gap-2 border-b border-l-2 border-b-border py-0.5 pr-4 pl-3.5 last:border-b-0 focus-visible:focus-ring-inset",
         ROW_CLASS_NAME[entry.level],
       )}
-      onFocus={onFocus}
+      onFocus={() => onFocusRow(entry.id)}
       onKeyDown={handleKeyDown}
-      ref={(node) => {
-        element.current = node;
-        rowRef(node);
-      }}
+      ref={element}
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 行を移る一覧は、1 つの行だけを Tab のキーの順に入れる (context/conventions.md)
       tabIndex={isTabStop ? 0 : -1}
     >
@@ -202,7 +212,7 @@ function EntryRow({ entry, isTabStop, onFocus, onMove, rowRef }: EntryRowProps) 
                   items={[toTreeNode(arg, `${entry.id}/${index}`)]}
                   isTabStop={false}
                   label="ログの値"
-                  onEdge={handleEdge(entry.args.slice(0, index).filter(isExpandable).length)}
+                  onEdge={handleEdge(treeIndexes[index] ?? 0)}
                 />
               </div>
             ) : (
@@ -258,18 +268,6 @@ export function ConsoleEntryList({
   // 行は 1 つだけを Tab のキーで止まる箇所にする。止まっていた行が上限かフィルタで消えたときは、一番新しい行にする
   const [focusedId, setFocusedId] = useState<string | undefined>(undefined);
   const tabStopId = visible.some((entry) => entry.id === focusedId) ? focusedId : lastId;
-  const rowRefs = useRef(new Map<string, HTMLLIElement>());
-  const moveFocus = (index: number, to: RowMove) => {
-    const target = {
-      previous: visible[index - 1],
-      next: visible[index + 1],
-      first: visible[0],
-      last: visible.at(-1),
-    }[to];
-    if (!target) return;
-    setFocusedId(target.id);
-    rowRefs.current.get(target.id)?.focus();
-  };
   const paneState: ToolPaneState =
     state ??
     (entries.length === 0
@@ -338,17 +336,12 @@ export function ConsoleEntryList({
             </p>
           ) : (
             <ol className="flex flex-col">
-              {visible.map((entry, index) => (
+              {visible.map((entry) => (
                 <EntryRow
                   entry={entry}
                   isTabStop={entry.id === tabStopId}
                   key={entry.id}
-                  onFocus={() => setFocusedId(entry.id)}
-                  onMove={(to) => moveFocus(index, to)}
-                  rowRef={(element) => {
-                    if (element) rowRefs.current.set(entry.id, element);
-                    else rowRefs.current.delete(entry.id);
-                  }}
+                  onFocusRow={setFocusedId}
                 />
               ))}
             </ol>
