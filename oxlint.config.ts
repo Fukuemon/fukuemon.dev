@@ -13,6 +13,8 @@ type Restriction = {
   message: string;
 };
 
+type SubdirRestriction = { name: string; patterns: Restriction[] };
+
 const RULE_1 = "コンテンツの参照は lib/content/ の公開関数を通す (context/codebase.md 規約 1)";
 const RULE_3 =
   "island は Astro を import しない。素の props だけを受ける (context/codebase.md 規約 3)";
@@ -79,13 +81,14 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const TOP_GARDEN_README = "apps/web/src/features/top-garden/README.md";
+const TOP_GARDEN_README = `${FEATURES_DIR}/top-garden/README.md`;
 // alias、../ の連続、./../ の形で書いた top-garden 内の兄弟ディレクトリを当てる
-const GARDEN_PREFIX = "^(~/features/top-garden/|(\\.\\./)+(top-garden/)?|\\./(\\.\\./)+)";
+const GARDEN_PREFIX =
+  "^(~/features/top-garden/|(\\.\\./)+(features/)?(top-garden/)?|\\./(\\.\\./)+)";
 
 // stage/ の関数は文字列にして head の inline script に埋め込むので、scene/ のコードを import できない。
 // 例外は、TopStageScript.astro が読む場面のバンドルの URL (?worker&url) だけ
-const topGardenSubdirs: { name: string; patterns: Restriction[] }[] = [
+const topGardenSubdirs: SubdirRestriction[] = [
   {
     name: "ink",
     patterns: [
@@ -114,14 +117,14 @@ const topGardenSubdirs: { name: string; patterns: Restriction[] }[] = [
     patterns: [
       {
         // 先読みが無いので、接尾辞の無い import と、?worker&url 以外の接尾辞を止める
-        regex: `${GARDEN_PREFIX}scene(/[^?]*)?$|${GARDEN_PREFIX}scene/.*\\?(?:$|[^w]|w(?:$|[^o])|wo(?:$|[^r])|wor(?:$|[^k])|work(?:$|[^e])|worke(?:$|[^r])|worker(?:$|[^&])|worker&(?:$|[^u])|worker&u(?:$|[^r])|worker&ur(?:$|[^l])|worker&url.)`,
+        regex: `${GARDEN_PREFIX}scene(/[^?]*)?$|${GARDEN_PREFIX}scene(/.*)?\\?(?:$|[^w]|w(?:$|[^o])|wo(?:$|[^r])|wor(?:$|[^k])|work(?:$|[^e])|worke(?:$|[^r])|worker(?:$|[^&])|worker&(?:$|[^u])|worker&u(?:$|[^r])|worker&ur(?:$|[^l])|worker&url.)`,
         message: `stage/ から scene/ へは場面のバンドルの URL (?worker&url) だけを import する (${TOP_GARDEN_README})`,
       },
     ],
   },
 ];
 
-const subdirs: Record<string, { name: string; patterns: Restriction[] }[]> = {
+const featureSubdirs: Record<string, SubdirRestriction[]> = {
   "top-garden": topGardenSubdirs,
 };
 
@@ -133,7 +136,7 @@ function islandFiles(dir: string): string[] {
 // そのため entry ごとに、そのファイル群に要る禁止を全て書く (context/conventions.md)
 function featureOverrides(): OxlintOverride[] {
   // 実行したディレクトリによらず、設定ファイルの隣から読む。
-  // features/ が無い間は、設定の読み込みを失敗させない。
+  // features/ が無い間は、設定の読み込みを失敗させない。ただし subdirs に載せた feature があれば、下の確認で失敗する。
   // features/ の親が無いときは、パスがずれたとみなして失敗させ、禁止が消えたまま通らないようにする
   const root = join(import.meta.dirname, FEATURES_DIR);
   if (!existsSync(dirname(root)))
@@ -144,10 +147,10 @@ function featureOverrides(): OxlintOverride[] {
         .map((d) => d.name)
     : [];
   // 名前がずれたまま禁止が消えて通らないよう、サブディレクトリの実在を確かめる
-  for (const [feature, entries] of Object.entries(subdirs)) {
+  for (const [feature, entries] of Object.entries(featureSubdirs)) {
     for (const { name } of entries) {
       if (!existsSync(join(root, feature, name)))
-        throw new Error(`${FEATURES_DIR}/${feature}/${name} が無い。subdirs を直す`);
+        throw new Error(`${FEATURES_DIR}/${feature}/${name} が無い。featureSubdirs を直す`);
     }
   }
   return features.flatMap((feature) => {
@@ -172,7 +175,7 @@ function featureOverrides(): OxlintOverride[] {
       },
     ];
     // サブディレクトリの override は、同じ規則を置き換えるので、親の禁止も全て書く
-    const subOverrides = (subdirs[feature] ?? []).flatMap(({ name, patterns }) => [
+    const subOverrides = (featureSubdirs[feature] ?? []).flatMap(({ name, patterns }) => [
       {
         files: [`${dir}/${name}/**`],
         rules: restrict(noAstroContent, [...base, ...patterns]),
