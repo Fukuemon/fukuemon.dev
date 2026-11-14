@@ -25,7 +25,7 @@ describe("toHttpView", () => {
       }),
       record({ id: "2" }),
     ]);
-    expect(actors).toEqual([
+    expect(actors).toStrictEqual([
       { id: "browser", name: "ブラウザ" },
       { id: "port:3000", name: "クライアント" },
       { id: "port:4000", name: "認可サーバー" },
@@ -44,7 +44,7 @@ describe("toHttpView", () => {
       }),
       record({ id: "2" }),
     ]);
-    expect(exchanges).toEqual([
+    expect(exchanges).toStrictEqual([
       {
         id: "1",
         fromId: "browser",
@@ -78,7 +78,7 @@ describe("bodyText", () => {
     [
       "上限で切った本文は、全体の大きさを添える",
       { text: "abc", size: 70000, truncated: true },
-      "abc\n…（先頭だけを記録した。全体は 68.4 KB）",
+      "abc\n…（先頭だけを記録しました。全体は 68.4 KB）",
     ],
     [
       "1 KB に満たない大きさは、バイトで書く",

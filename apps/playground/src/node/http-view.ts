@@ -8,7 +8,7 @@ const bytes = (size: number) =>
 export function bodyText(body: HttpBody): string {
   if (body.text === null) return `（テキストでない本文、${bytes(body.size)}）`;
   if (!body.truncated) return body.text;
-  return `${body.text}\n…（先頭だけを記録した。全体は ${bytes(body.size)}）`;
+  return `${body.text}\n…（先頭だけを記録しました。全体は ${bytes(body.size)}）`;
 }
 
 const toMessage = (message: { headers: HttpMessage["headers"]; body?: HttpBody }): HttpMessage => ({
@@ -18,7 +18,7 @@ const toMessage = (message: { headers: HttpMessage["headers"]; body?: HttpBody }
 
 /**
  * HTTP の記録を、一覧と詳細に渡す形にする。通信した側は、ブラウザを先に、記録に初めて出た順に並べる。
- * 並べた順で区別の色が決まるので、記録が増えても、前からいる側の色は変わらない。
+ * 並べた順で区別の色が決まる。後から届いた記録が前に入るときと、上限で古い記録が消えるときは、色が変わることがある。
  */
 export function toHttpView(records: readonly HttpRecord[]): {
   actors: HttpActor[];
