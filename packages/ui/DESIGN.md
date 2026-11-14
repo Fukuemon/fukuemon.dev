@@ -90,7 +90,11 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 例外: `Link` は対象にせず、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。本文の中の文字のリンクを 44×44 CSS px にすると、行の高さが崩れるためである。
   - 例外: コードを動かす画面のコンポーネントは、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。木の行と開閉の要約（`Disclosure`）は 24px、ボタン、入力欄、タブは 28〜32px にする（ADR-0062）。
     - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
-  - 確認: `pnpm run test:ui` の component の project で、コンポーネントごとの、名前に「44 px」を含むテストが見る。コードを動かす画面の例外のコンポーネントでは、名前に「24 px」か「28 px」を含むテストが見る。例は、`src/base/Button/Button.test.tsx` の「S のボタンは、見た目の外まで 44×44 px 以上を押せる」である。カタログのアクセシビリティの自動チェックは、押せる領域の大きさを確認しない。
+    - 触る端末（`pointer-coarse:`）では、コードを動かす画面のコンポーネントも 44×44 CSS px 以上にする。
+    - ADR-0071: [触る端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める](../../docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md)
+  - 例外: マウスで押す端末の `SplitPane` の仕切りは、押せる幅を 8px にする。キーボードの矢印のキーで同じ操作ができる。
+    - ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)
+  - 確認: `pnpm run test:ui` の component の project で、コンポーネントごとの、名前に「44 px」を含むテストが見る。コードを動かす画面の例外のコンポーネントでは、名前に「24 px」か「28 px」、仕切りでは「8 px」を含むテストが見る。例は、`src/base/Button/Button.test.tsx` の「S のボタンは、見た目の外まで 44×44 px 以上を押せる」である。カタログのアクセシビリティの自動チェックは、押せる領域の大きさを確認しない。
 - `SPACING-SCALE`: 余白は、トークンの文書の「レイアウト、区切り、重なり、動き」の表の余白の段のユーティリティだけで書く。任意値（`p-[13px]` のような書き方）を書かない。
   - 確認: `pnpm run check:utilities`
   - 入力欄と、その見出し、補足の文、誤りの文の間は、`gap-2`（8px）以上にする。フォーカスの表示（`focus-ring`）は、欄の外へ 4px 広がる。狭いと、フォーカスの表示が近くの文字に重なる。
@@ -103,6 +107,10 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 例外: スクロールに合わせた動きのうち、`scroll-fade-end` だけは残す。`scroll-fade-end` は右に続きがあることを知らせる印で、途中の濃さを出さず、右端まで送ったときに一度に消える。
   - 確認: レビューで、テーマ変数のファイルの止め方を見る。
   - 確認: 動きを減らす設定で描画した画面を調べるテストは、`packages/e2e/visual/specs/scroll-box-fade.spec.ts` だけである。この spec は記事のページの検証用の原稿を開くので、原稿を消すときは、開く記事を差し替える。
+- `PLAYGROUND-ONLY`: コードを動かす画面だけの面、角丸、高さの条件を、コードを動かす画面と、そのコンポーネントの外で使わない。対象は、`surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact`、`short:` である。`packages/ui` の Base では、`density="compact"` か `size="XS"` のときだけ使う。
+  - ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)
+  - ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)
+  - 確認: `pnpm run check:utilities`。使ってよい置き場は、チェックのスクリプトの `PLAYGROUND_PATHS` に列挙する。Base の中で compact の分岐の外に書いていないかは、レビューで見る。
 
 ### 原則と確認の方法の対応
 
@@ -118,6 +126,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
 | `MOTION-TOKEN`         | `pnpm run check:utilities`                                                    | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方 |
 | `MOTION-REDUCE`        | レビュー                                                                      |                                                                                                                                             |
+| `PLAYGROUND-ONLY`      | `pnpm run check:utilities`                                                    | Base の中の、compact の分岐の外での使用。クラスの名前を文字列の連結で組み立てた書き方                                                       |
 
 ## 画面を作るときの手順
 

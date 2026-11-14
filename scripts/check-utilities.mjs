@@ -70,7 +70,42 @@ const RULES = [
     // transition-[...] は、遷移の対象を選ぶ書き方で、止め方が transition-property を透明度に絞るので見ない。
     test: (variants, utility) => /^(?:animate|ease)-[[(]/.test(utility),
   },
+  {
+    id: "PLAYGROUND-ONLY",
+    label: "コードを動かす画面の外での、コードを動かす画面だけの面、角丸、高さの条件",
+    // ADR-0072 と ADR-0073 で、コードを動かす画面だけに置いた名前。packages/ui の Base は、density が compact のときだけ使う
+    test: (variants, utility, file) =>
+      !PLAYGROUND_PATHS.some((p) => file === p || file.startsWith(p + sep)) &&
+      (variants.includes("short") ||
+        /(?:^|-)surface-(?:ground|pane(?:-subtle)?)(?:\/\d+)?$/.test(utility) ||
+        /^rounded(?:-[a-z]{1,2})?-(?:pane|sheet|control-compact)$/.test(utility)),
+  },
 ];
+
+// PLAYGROUND-ONLY の名前を使ってよい置き場。コードを動かす画面と、そのコンポーネント
+const PLAYGROUND_PATHS = [
+  "./apps/playground/src",
+  "./packages/ui/src/screens",
+  ...[
+    "ToolPane",
+    "PaneTabs",
+    "FileDrawer",
+    "EditorFrame",
+    "TerminalFrame",
+    "PreviewFrame",
+    "FileTree",
+  ].map((c) => `./packages/ui/src/case/${c}`),
+  ...[
+    "Button",
+    "IconButton",
+    "TextField",
+    "TreeView",
+    "Disclosure",
+    "Tabs",
+    "ActionMenu",
+    "SplitPane",
+  ].map((c) => `./packages/ui/src/base/${c}`),
+].map((p) => resolve(p));
 
 const excluded = EXCLUDES.map((p) => resolve(p));
 const isExcluded = (abs) => excluded.some((e) => abs === e || abs.startsWith(e + sep));
@@ -193,7 +228,7 @@ for (const file of files) {
       // 末尾の ! は重要度の印（text-xs!）、先頭の ! は古い書き方（!text-xs）
       const utility = parts.pop().replace(/^!|!$/g, "");
       for (const { id, label, test } of RULES) {
-        if (!test(parts, utility)) continue;
+        if (!test(parts, utility, file)) continue;
         found++;
         console.log(`${relative(".", file)}:${i + 1}: ${id} ${label} ${token}`);
       }
