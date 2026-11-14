@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildPreviewAssets, withNoindex } from "./preview-assets";
+import { buildPreviewAssets, withNoindex } from "./preview-assets.ts";
 
 const HANDWRITTEN =
   "/*\n  X-Content-Type-Options: nosniff\n\n/_astro/*\n  Cache-Control: immutable\n";
@@ -23,6 +23,37 @@ describe("withNoindex", () => {
 
   it("空の _headers には規則だけを書く", () => {
     expect(withNoindex("")).toBe(NOINDEX);
+  });
+
+  it("コメントと空行の後にある全てのパスの規則にも足す", () => {
+    expect(withNoindex(`# note\n\n${HANDWRITTEN}`)).toBe(`# note\n\n${WITH_NOINDEX}`);
+  });
+
+  it("全てのパスの行の末尾に空白があっても、同じ規則に足す", () => {
+    expect(withNoindex(HANDWRITTEN.replace("/*\n", "/* \n"))).toBe(
+      WITH_NOINDEX.replace("/*\n", "/* \n"),
+    );
+  });
+
+  it("改行が CRLF でも、同じ規則に足す", () => {
+    expect(withNoindex(HANDWRITTEN.replaceAll("\n", "\r\n"))).toBe(WITH_NOINDEX);
+  });
+
+  it("コメントの中の /* は規則として扱わない", () => {
+    expect(withNoindex(`# /*\n${HANDWRITTEN}`)).toBe(`# /*\n${WITH_NOINDEX}`);
+  });
+
+  it("全てのパスの規則が 2 つあるときは失敗する", () => {
+    expect(() => withNoindex(`${HANDWRITTEN}\n/*\n  Referrer-Policy: no-referrer\n`)).toThrow(
+      /2 つ/,
+    );
+  });
+
+  it("apps/web/public/_headers の全てのパスの規則に noindex が入る", () => {
+    const actual = withNoindex(
+      readFileSync(new URL("../public/_headers", import.meta.url), "utf8"),
+    );
+    expect(actual.match(/^\/\*\n  X-Robots-Tag: noindex\n/gm)).toHaveLength(1);
   });
 });
 

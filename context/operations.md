@@ -88,6 +88,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 - `apps/web` の `build:preview` が、ビルドの出力の `dist/` を `dist-preview/` に複製し、複製の `_headers` の、すべてのパス（`/*`）の規則に noindex の行を足す。プレビューの Worker は `dist-preview/` を配る。
   - `/*` の規則を別に足すと、Workers Static Assets は後の規則のヘッダだけを返し、noindex が返らない。`wrangler dev` で確認した。
+  - `/*` の規則が無いときは、先頭に作る。2 つ以上あるときは、`build:preview` が失敗する。
 - `dist/` と `apps/web/public/_headers` には noindex を書かない。本番の Worker へ `dist/` を配ったときに、noindex が入らないようにするためである。
 - 本番を切り替えるときに、プレビューの Worker と deploy-preview workflow を消す。
   - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。
