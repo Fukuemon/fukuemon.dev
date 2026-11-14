@@ -129,7 +129,11 @@ const stackNodes = (id: string, stack: readonly string[]): TreeNode[] =>
   stack.map((line, index) => ({
     id: `${id}/stack/${index}`,
     label: line,
-    content: <span className="font-mono wrap-anywhere whitespace-pre-wrap">{line}</span>,
+    content: (
+      <span className="font-mono wrap-anywhere whitespace-pre-wrap text-text-secondary">
+        {line}
+      </span>
+    ),
   }));
 
 /**
