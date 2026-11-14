@@ -15,7 +15,7 @@ export type Selection = {
   bottom?: BottomTab;
 };
 
-export type BottomTab = "terminal" | "http";
+export type BottomTab = "terminal" | "console" | "http";
 
 export type SelectionAction =
   | { type: "select-item"; path: string; isFile: boolean }

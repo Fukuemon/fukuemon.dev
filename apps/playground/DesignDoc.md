@@ -90,7 +90,7 @@ packages/
   sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
   node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
     webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
-    guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
+    guest/                実行環境の中の Node とプレビューのページが動かすファイル（preload、プレビューに入れるスクリプト、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
   go-runtime/src/         GoRunner の型、import のパスと、テストを持つ package を求める関数
     worker/               Yaegi を Web Worker で動かす GoRunner の実装、Web Worker の fetch を差し替える処理
   go-runtime/go/          WASM にする Go のコード。Yaegi で訪問者のファイルを実行する処理
@@ -111,7 +111,10 @@ packages/
   - 型と、PGlite で SQL を実行して結果の形にする関数。このエントリーポイントは、PGlite から型だけを import する。関数はブラウザと Node の両方で動くので、このエントリーポイントは DOM と Worker の API を使わない。`Store` の型も、このエントリーポイントに置く。
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
-- `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
+- `guest/` のファイルは、ツールのページではなく、実行環境の中の Node か、プレビューのページで動く。tsconfig と lint の対象を、ツールのページのコードと分ける。
+  - 実行環境の中の Node で動くファイルは、`webcontainer/` が中身を文字列として読み込み、実行環境に書く。
+  - プレビューに入れるスクリプト（`guest/preview-console.cjs`）は、`node-runtime/` の直下が中身を文字列として読み込み、`previewScript` で `webcontainer/` に渡す。
+  - 値の木に写す処理（`guest/console-value.cjs`）は、preload とプレビューに入れるスクリプトが共有する。`webcontainer/` と `node-runtime/` の直下の両方が、中身を文字列として読み込む。
 - `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
@@ -311,7 +314,9 @@ type BackendInstance = {
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
-  previewMessages: { subscribe: (onMessage: (message: unknown) => void) => () => void };
+  previewMessages: {
+    subscribe: (onMessage: (message: unknown, port: number) => void) => () => void;
+  };
   guestDirectory: string;
   teardown: () => Promise<void>;
 };
@@ -331,11 +336,13 @@ type BackendProcess = {
   - 一覧と読み込みは、パスが存在しないときに `PathNotFoundError` で失敗する。WebContainers の `fs` のエラーには `code` が無いので、`webcontainer/` の実装は、パスが存在しないことを、`message` の先頭の `ENOENT:` で見分ける。
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
-  - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
+  - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。スクリプトを登録できなかったときは、プレビューの記録が欠けるだけなので、起動を続ける。
   - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`spawn` で起動する全てのプロセスに、同じ環境変数を渡す。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
+    - 待ち受けているポートの URL と同じ origin から届いたメッセージだけを、そのポートと一緒に渡す。ほかの iframe とウィンドウからのメッセージは渡さない。
+    - `node-runtime/` の直下は、`ports` の store にあるポートのメッセージだけを、コンソールの記録にする。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
 - `node-runtime/` の直下は、`webcontainer/` が知らせたポートのうち、URL が `https:` で、ツールのページと別の origin のものだけを、`ports` の store に入れる。
   合わないポートは、プレビューのタブに出さない。
@@ -350,6 +357,47 @@ type BackendProcess = {
 - プロセスの出力は、`OutputLog` で公開する。端末のペインは、Effect の中で、`read` の結果を端末のエンジンに書いてから、`subscribe` で追加の出力を書く。
 - preload は、記録の行の行頭に、固定のプレフィックスを付ける。`node-runtime/` の直下（`webcontainer/` の外）の処理が、`BackendProcess` の `output` から受けたそのままの出力から、プレフィックスの付いた行を抜き出して、store に入れる。`OutputLog` には、抜き出した後の出力を渡す。
 - コンソールの記録の、出力したプロセスの名前は、行を抜き出す処理が付ける。名前は、行を出力したプロセスの、`start` の `name` である。シェルで起動したプロセスの行には、シェルの名前が付く。
+- コンソールの記録を取る preload（`guest/console-trace.cjs`）とプレビューに入れるスクリプト（`guest/preview-console.cjs`）は、次のことを行う。
+  - `console.debug` から `console.error` までの 5 つの関数を包み、ログレベル、時刻（`Date.now()`）、引数を 1 件の記録にする。
+    - 元の関数も呼ぶので、端末の出力とプレビューのページの DevTools の出力は変わらない。
+    - `console.table`、`console.dir`、`console.trace`、`console.assert`、`console.group` は記録しない。
+    - 書式指定子（`%s`、`%o`）は解釈せず、引数をそのまま記録する。
+    - プレビューの捕捉されなかった例外と、処理されなかった Promise の拒否は記録しない。
+  - 引数は、呼んだ時点の値を、値の木に写す。写す処理（`guest/console-value.cjs`）は、preload とスクリプトが共有する。
+  - 値の木は、文字列、数、bigint、真偽値、`null`、`undefined`、symbol、関数の名前、循環参照を区別する。
+    - 入れ子の値は、配列、オブジェクト（クラスの名前と、自身の列挙可能なプロパティ）、`Map`、`Set`、`Error`（名前、メッセージ、スタックトレースの行）を区別する。
+    - 数は、NaN、Infinity、-0 を JSON で表せるよう、文字列で表す。
+    - ほかの値（`Date`、正規表現、Proxy、DOM の要素など）は、文字列にする。
+  - getter、`toJSON`、Proxy のトラップは実行しない。getter のプロパティは `(...)` にする。訪問者のコードを、記録のために実行しないためである。
+    - `Map` と `Set` の中身と大きさは、組み込みのメソッドで読み、サブクラスが上書きしたメソッドを呼ばない。
+    - `Error` の `name`、`message`、`stack` は、組み込みの getter（V8 と Firefox の `stack`、`DOMException` の 3 つ）だけを呼ぶ。訪問者が定義した getter は呼ばない。
+    - プレビューのページでは、ブラウザの JavaScript が Proxy を見分けられないので、Proxy のトラップが実行される。
+      配列の要素は記述子で読むので、`get` のトラップで要素を返す Proxy の配列は、中身が `undefined` で出る。
+    - 訪問者のコードが、グローバルの組み込み（`Object`、`Array`、`JSON` のメソッドなど）を書き換えたときと、`Error.prepareStackTrace` を定義したときは、写す処理は、その関数を呼び、防がない。書き換えた関数は、記録しなくても訪問者のコードの中で呼ばれ、影響は訪問者自身のプロセスとページに閉じるためである。
+  - 写す量に上限を置く。1 件の記録が、記録の行を抜き出す処理の上限を超えないようにするためである。
+    - 深さは 6 段、引数と 1 つの入れ子の要素は 100 個、1 つの文字列は 1 万字、スタックトレースの行は 30 行まで写す。
+    - 1 回の呼び出しで写す値は 2000 個、文字は 256 K 字までにする。
+    - 超えた分は、文字列の末尾の「…」か、残りの件数を書いた文字列（「…ほか 3 件」）にする。
+  - preload は、記録を `@@fd:console ` を付けた 1 行の JSON にして、標準出力に書く。記録を書く途中で呼ばれた `console.*` は、記録しない。
+    - 標準出力が端末（`process.stdout.isTTY`）のときだけ書く。パイプやファイルに書くプログラムの出力に、記録の JSON を混ぜないためである。
+    - 端末のタブで動くプロセス（シェル、npm install、起動のコマンド）の標準出力は、端末である。
+    - 標準出力をパイプにして起動された子のプロセスのコンソールは、記録しない。元の出力は、親が中継すれば端末に出る。
+    - ワーカーのスレッドの標準出力は `isTTY` を持たずに親のスレッドへ送られるので、ワーカーは、親のスレッドの値を `worker_threads` の `setEnvironmentData` で受け取って使う。
+    - `stdout: true` で作ったワーカーは、親のスレッドの標準出力が端末なら記録の行を書き、その行は親が読む `worker.stdout` に入る。
+    - HTTP の記録には、この条件を置かない。標準出力をパイプにして起動された子のサーバーの通信も記録するためである。
+  - プレビューに入れるスクリプトは、iframe の中のページでだけ `console.*` を包む。
+    - 記録は、ツールのページの origin を宛先にして、`window.parent` へ `postMessage` で送る。
+    - ツールのページの origin は、`node-runtime/` の直下がスクリプトを組むときに埋め込む。
+    - スクリプトは 1 つの関数に包み、ページのグローバルに名前を足さない。
+- `node-runtime/` の直下は、記録の行とプレビューのメッセージを `ConsoleRecord` にして、`consoleEntries` の store に入れる。
+  - `ConsoleRecord` は、ID、ログレベル、出力元、時刻、値の木を持つ。出力元は、Node のプロセス（`start` の `name`）か、プレビュー（ページを返したサーバーのポート）である。
+  - 訪問者のプログラムとプレビューのページも、同じ形の記録を出せる。形に合わない記録と、読む側の上限を超えた記録は捨てる。
+    - 読む側の上限は、写す側の上限に、残りの件数を書いた項目の分の余裕を足す。写す側が出せる最大の記録は、読む側の上限に収まる。
+    - 引数と 1 つの入れ子の要素は 101 個（100 個と、残りの件数を書いた項目）まで受ける。
+    - プレビューの `postMessage` には大きさの上限が無いので、1 件の文字数の合計も 512 K 字までに限る。
+  - 時刻が 0 以上の安全な整数で、今より 1 日を超えて先でない記録だけを受ける。HTTP の記録と同じ条件である。
+  - 記録は、届いた順に並べる。プロセスとプレビューをまたいで、時刻の順に並べ直さない。
+  - 届いた記録は、1 フレームごとに（`requestAnimationFrame`）まとめて store に入れる。1 件ごとに入れると、表示中の全ての行の再描画とレイアウトが、1 件ごとに起きるためである。
 - プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
   - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](../../docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
 - 出力のチャンクは、記録の行の途中で切れて届くことがある。行を抜き出す処理（`record-lines.ts`）は、プレフィックスから改行までがそろうまで、その部分を端末に渡さない。チャンクの末尾がプレフィックスの先頭の数文字で終わるときは、続きを 50 ms 待ち、続きが来なければ端末に渡す。端末で打った `@` のような文字が、次の入力まで出なくならないようにするためである。プレフィックスから 4 MB を超えても改行が来ないときは、記録の行でないとみなして端末に渡す。プロセスが終わったときは、手元の出力を端末に渡す。プロセスの終わりが、最後の出力より先に届くかは確認していない。
@@ -377,7 +425,14 @@ type BackendProcess = {
     - 切ったヘッダの名前と値は、末尾に「…」を付ける。切った本文は `truncated`、捨てたヘッダの数は `omittedHeaders`、切った URL は `urlTruncated` で示し、画面はそのことを文で添える。
     - 名前を保持するサーバーは 100 個までにし、超えた後に待ち受けたサーバーは、ポートの番号で呼ぶ。
   - 記録は、受けた時刻の順に並べる。記録の行はプロセスごとの出力から届くので、届いた順は、受けた順と違うことがある。認可コードフローでは、クライアントが `/callback` の処理の中で送った `/token` の記録が、`/callback` の記録より先に届く。
-- store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。HTTP の記録は、1 件が本文を最大 64 KB ずつ 2 つ持つので、500 件で最大 64 MB 前後の文字を持つ。この値は見積もりで、測っていない。訪問者のプログラムが出す偽の記録の行は、ヘッダの名前に 256 文字、値に 8,192 文字を、100 個ずつ持てるので、1 件が最大 2 MB 前後の文字になる。偽の行で上限まで埋めたときに重くなるのは、訪問者自身のタブだけである。値は、実装のタスクで測って変えてよい。
+- store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。
+  - コンソールの記録は、文字数の合計も 4 M 字（1 件の上限の 8 倍）までにする。1 件が最大 512 K 字なので、件数だけでは 1000 件で 5 億字を持てるためである。
+  - 件数と文字数は、store に入れる前に 1 フレームの間ためた記録も合わせて数え、最新の 1 件は必ず残す。
+  - 文字数は、値とプロパティの名前が持つ文字を数える。真偽値、`null`、`undefined`、循環参照と、配列、オブジェクト、`Map`、`Set` そのものは数えないので、値の数は、1000 件に 1 件の上限の 2100 個を掛けた数まで持てる。
+  - 捨てた記録は、すぐには配列から消さない。捨てた件数が残す件数を超えたとき、捨てた文字数が 4 M 字を超えたとき、store に入れるときに消すので、その間は最大で 4 M 字の 2 倍前後を持つ。
+  - HTTP の記録は、1 件が本文を最大 64 KB ずつ 2 つ持つので、500 件で最大 64 MB 前後の文字を持つ。この値は見積もりで、測っていない。
+  - 訪問者のプログラムが出す偽の記録の行は、ヘッダの名前に 256 文字、値に 8,192 文字を、100 個ずつ持てるので、1 件が最大 2 MB 前後の文字になる。偽の行で上限まで埋めたときに重くなるのは、訪問者自身のタブだけである。
+  - 値は、実装のタスクで測って変えてよい。
 
 ### React のツリーと状態
 
@@ -469,7 +524,7 @@ SQL だけを動かすツールのページは、次のとおり組む。
 
 Node の実行環境のページは、次のとおり組む。
 
-- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末とコンソールと HTTP の流れを置く。下のペインは、端末、コンソール、HTTP の流れをタブで切り替え、最初は端末を出す。コンソールと HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
 - `NodePage` は、プロジェクトと保存したファイルをまとめた Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。プロジェクトと保存したファイルを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、画面の右下に `PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。

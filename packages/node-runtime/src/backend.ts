@@ -1,6 +1,7 @@
 import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
-type BackendBootOptions = Pick<BootOptions, "files">;
+/** previewScript は、プレビューのページに入れるスクリプトの中身である。 */
+type BackendBootOptions = Pick<BootOptions, "files"> & { previewScript: string };
 
 /** other は、ファイルでもディレクトリでもないもの（シンボリックリンクなど）である。 */
 export type DirectoryItem = { name: string; kind: "file" | "directory" | "other" };
@@ -43,6 +44,10 @@ export type BackendInstance = {
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   /** 待ち受けているポートの全体を、変わるたびに知らせる。 */
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
+  /** プレビューのページが `postMessage` で送ったメッセージを知らせる。待ち受けているポートの origin から届いたものだけを、そのポートと一緒に渡す。 */
+  previewMessages: {
+    subscribe: (onMessage: (message: unknown, port: number) => void) => () => void;
+  };
   teardown: () => Promise<void>;
 };
 

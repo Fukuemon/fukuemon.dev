@@ -1,4 +1,5 @@
 import {
+  ConsoleEntryList,
   EditorFrame,
   FileTree,
   HttpExchangeDetail,
@@ -15,6 +16,7 @@ import { type ReactNode, Suspense, use, useReducer, useSyncExternalStore } from 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { BottomTabs } from "./BottomTabs";
+import { ConsolePane } from "./ConsolePane";
 import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
@@ -150,6 +152,11 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
                 }
                 secondary={
                   <BottomTabs
+                    consolePane={
+                      <Pane fallback={<ConsoleEntryList entries={[]} state={pendingState} />}>
+                        <ConsolePane />
+                      </Pane>
+                    }
                     http={<HttpPanes />}
                     terminal={
                       <Pane

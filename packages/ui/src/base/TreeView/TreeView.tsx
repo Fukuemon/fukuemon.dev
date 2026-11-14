@@ -18,6 +18,10 @@ export type TreeNode = {
    * label と同じ文字を描き、押せる要素を入れない。treeitem の中に、ほかの操作を置けないためである。名前の欄は、TreeViewProps の editor で描く。
    */
   content?: ReactNode;
+  /**
+   * 枝の子。TreeView は、見えている項目の children を読み、閉じた枝の子の children は読まない。そのため、子を初めて読まれたときに作る getter で渡してよい。
+   * editor を渡したときだけ、欄を置く項目を探すために、木の全体の children を読む。
+   */
   children?: readonly TreeNode[];
   /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
   icon?: (isOpen: boolean) => ReactNode;
@@ -71,6 +75,18 @@ export type TreeViewProps = {
    * 移る前に木を操作するか、フォーカスがほかの要素へ移ったら、移さない。項目が出ないまま、フォーカスが戻した項目に残る間は待ち続ける。
    */
   focusAfterEdit?: string;
+  /**
+   * false にすると、木の項目を Tab のキーの順に入れない。呼ぶ側が、外の要素からフォーカスを木の項目へ移す。
+   * 木を、キーボードで移る別の要素（一覧の行）の中に置くときに使う。止まる箇所を外の要素の 1 つにするためである。
+   * 呼ぶ側は、`role="tree"` の要素の中の `role="treeitem"` の要素を探して `focus()` を呼んでよい。項目は、見えている順に、平らに DOM に並ぶ。
+   */
+  isTabStop?: boolean;
+  /**
+   * 渡すと、木の端でキーを押したときに呼ぶ。最初の項目での上の矢印、最後の項目での下の矢印、閉じた根の項目での左の矢印である。
+   * 呼ぶときは、キーを押した木の項目にフォーカスがある。呼ぶ側は、フォーカスのある要素から、端に着いた木を探してよい。
+   * 呼ぶ側は、フォーカスを木の外へ移す。渡さないときは、端のキーで何もしない。
+   */
+  onEdge?: (key: "ArrowUp" | "ArrowDown" | "ArrowLeft") => void;
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -120,6 +136,7 @@ const branchesToOpen = (nodes: readonly TreeNode[], editor: TreeEditor | undefin
  * 項目を階層で並べる木。WAI-ARIA APG の Tree View のキーボードの操作に従う。
  * 上下の矢印のキーで見えている項目の間を移り、Home と End で端へ移る。
  * 右の矢印のキーは、閉じた枝を開き、開いた枝では最初の子へ移る。左の矢印のキーは、開いた枝を閉じ、それ以外では親へ移る。
+ * Enter のキーは、onSelect を渡すと項目を選び、渡さないと枝を開閉する。onSelect を渡さないときは、Space のキーでも枝を開閉する。
  * 文字を打つと、その文字で始まるラベルの項目へ移る（タイプアヘッド）。続けて打つと、打った文字の並びで探す。同じ文字だけを繰り返すと、その文字で始まる項目を順に巡る。
  * 見えている項目を `aria-level` 付きで平らに並べる。`group` で入れ子にすると、フォーカスの枠が子の項目まで囲むためである。
  */
@@ -135,6 +152,8 @@ export function TreeView({
   textSize = "compact",
   editor,
   focusAfterEdit,
+  isTabStop = true,
+  onEdge,
 }: TreeViewProps) {
   const isCompact = density === "compact";
   const isBodyCompact = isCompact && textSize === "body-compact";
@@ -251,9 +270,13 @@ export function TreeView({
     const { node } = current;
     const isBranch = node.children !== undefined;
     const isOpen = expanded.has(node.id);
+    const toggle = () => {
+      if (isBranch) setOpen(node.id, !isOpen);
+    };
     const keys: Record<string, () => void> = {
-      ArrowDown: () => focus(visible[index + 1]?.node.id),
-      ArrowUp: () => focus(visible[index - 1]?.node.id),
+      ArrowDown: () =>
+        index === visible.length - 1 ? onEdge?.("ArrowDown") : focus(visible[index + 1]?.node.id),
+      ArrowUp: () => (index === 0 ? onEdge?.("ArrowUp") : focus(visible[index - 1]?.node.id)),
       Home: () => focus(visible[0]?.node.id),
       End: () => focus(visible.at(-1)?.node.id),
       ArrowRight: () => {
@@ -263,9 +286,11 @@ export function TreeView({
       },
       ArrowLeft: () => {
         if (isBranch && isOpen) setOpen(node.id, false);
+        else if (current.parentId === undefined) onEdge?.("ArrowLeft");
         else focus(current.parentId);
       },
-      Enter: () => onSelect?.(node.id),
+      Enter: () => (onSelect ? onSelect(node.id) : toggle()),
+      ...(!onSelect && { " ": toggle }),
       F2: () => onRequestRename?.(node.id),
       Delete: () => onRequestDelete?.(node.id),
     };
@@ -354,7 +379,7 @@ export function TreeView({
         }}
         role="treeitem"
         style={indent(level)}
-        tabIndex={node.id === tabStopId ? 0 : -1}
+        tabIndex={isTabStop && node.id === tabStopId ? 0 : -1}
       >
         {chevron(isBranch, isOpen)}
         {node.icon && <span className={markClassName}>{node.icon(isOpen)}</span>}

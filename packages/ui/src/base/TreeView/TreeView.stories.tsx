@@ -31,6 +31,7 @@ function TreeViewExample({
   density,
   textSize,
   editor,
+  isSelectable = true,
 }: {
   items: TreeNode[];
   defaultExpandedIds?: string[];
@@ -38,6 +39,8 @@ function TreeViewExample({
   density?: "default" | "compact";
   textSize?: "compact" | "body-compact";
   editor?: TreeEditor;
+  /** false にすると、onSelect を渡さない。選ぶ操作の無い木になり、Enter と Space で枝を開閉する。 */
+  isSelectable?: boolean;
 }) {
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   return (
@@ -47,7 +50,7 @@ function TreeViewExample({
       editor={editor}
       items={items}
       label="ファイル"
-      onSelect={setSelectedId}
+      onSelect={isSelectable ? setSelectedId : undefined}
       selectedId={selectedId}
       textSize={textSize}
     />
@@ -76,6 +79,10 @@ export const Compact: Story = {
     defaultExpandedIds: ["src", "src/routes"],
     initialSelectedId: "src/routes/token.ts",
   },
+};
+export const WithoutSelect: Story = {
+  name: "選ぶ操作の無い木",
+  args: { density: "compact", isSelectable: false },
 };
 export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };
 export const WithContent: Story = {

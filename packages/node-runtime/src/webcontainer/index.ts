@@ -8,14 +8,20 @@ import {
   type RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
+import consoleTraceSource from "../guest/console-trace.cjs?raw";
+import consoleValueSource from "../guest/console-value.cjs?raw";
 import httpTraceSource from "../guest/http-trace.cjs?raw";
 import { toBackendError } from "./errors";
+import { portOfOrigin } from "./preview-origin";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
 const HTTP_TRACE_FILE = `${RUNTIME_DIRECTORY}/http-trace.cjs`;
+const CONSOLE_TRACE_FILE = `${RUNTIME_DIRECTORY}/console-trace.cjs`;
+// console-trace.cjs が、同じディレクトリから require する
+const CONSOLE_VALUE_FILE = `${RUNTIME_DIRECTORY}/console-value.cjs`;
 
 // プレビューは WebContainers が割り当てる別の origin で開くので、同じ origin の権限を渡しても、このページには届かない
 const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-modals allow-popups";
@@ -24,7 +30,10 @@ const PREVIEW_ALLOW = "cross-origin-isolated";
 const DEFAULT_TERMINAL: TerminalSize = { cols: 80, rows: 24 };
 
 // 実行環境が自分で起動するプロセス（writeOutside の node）には渡さない
-const env = { PLAYGROUND_PORTS_FILE: PORTS_FILE, NODE_OPTIONS: `--require ${HTTP_TRACE_FILE}` };
+const env = {
+  PLAYGROUND_PORTS_FILE: PORTS_FILE,
+  NODE_OPTIONS: `--require ${HTTP_TRACE_FILE} --require ${CONSOLE_TRACE_FILE}`,
+};
 
 function toBackendProcess(process: WebContainerProcess): BackendProcess {
   const listeners = new Set<(chunk: string) => void>();
@@ -147,6 +156,16 @@ function createPorts(container: WebContainer) {
         return () => listeners.delete(onChange);
       },
     },
+    previewMessages: {
+      subscribe: (onMessage: (message: unknown, port: number) => void) => {
+        const receive = (event: MessageEvent) => {
+          const port = portOfOrigin(open, event.origin);
+          if (port !== undefined) onMessage(event.data, port);
+        };
+        globalThis.addEventListener("message", receive);
+        return () => globalThis.removeEventListener("message", receive);
+      },
+    },
     dispose: unsubscribe,
   };
 }
@@ -154,11 +173,18 @@ function createPorts(container: WebContainer) {
 /** WebContainers で動く実行環境。WebContainers を import するのは、このファイルだけである (apps/playground/DesignDoc.md)。 */
 export const webContainerBackend: RuntimeBackend = {
   isSupported: () => globalThis.crossOriginIsolated === true,
-  boot: async ({ files }): Promise<BackendInstance> => {
+  boot: async ({ files, previewScript }): Promise<BackendInstance> => {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
-      await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
+      // ファイルごとに node を起動するので、順に待たずに並べる。ディレクトリは recursive で作るので、同時に作っても失敗しない
+      await Promise.all([
+        writeOutside(container, HTTP_TRACE_FILE, httpTraceSource),
+        writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource),
+        writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource),
+      ]);
+      // 登録できなくても、プレビューの記録が欠けるだけなので、起動は続ける (apps/playground/DesignDoc.md)
+      await container.setPreviewScript(previewScript).catch(() => undefined);
       const ports = createPorts(container);
       await ports.ready();
       return {
@@ -178,6 +204,7 @@ export const webContainerBackend: RuntimeBackend = {
             }),
           ),
         ports: ports.ports,
+        previewMessages: ports.previewMessages,
         teardown: async () => {
           ports.dispose();
           container.teardown();
