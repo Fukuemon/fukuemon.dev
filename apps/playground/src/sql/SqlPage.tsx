@@ -30,6 +30,7 @@ function SqlTool({ search, embedded }: { search: string; embedded: boolean }) {
 function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: boolean }) {
   const runRef = useRef<HTMLButtonElement>(null);
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
+  const resets = useSyncExternalStore(session.resets.subscribe, session.resets.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
   const saveFailed = useSyncExternalStore(
@@ -63,6 +64,7 @@ function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: 
         onChange={session.setQuery}
         onRun={session.execute}
         progress={progressLabel(phase, running)}
+        resets={resets}
         running={running}
         runButtonRef={runRef}
         fileName={session.fileName}

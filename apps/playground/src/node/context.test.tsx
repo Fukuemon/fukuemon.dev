@@ -9,7 +9,7 @@ import {
   useRestart,
   useRuntime,
   useSelection,
-  useSqlEditorStates,
+  useSqlEditorHistory,
   useSqlQuery,
 } from "./context";
 import { initialSelection } from "./selection";
@@ -40,6 +40,7 @@ const renderRuntime = (result: RuntimeResult) =>
         sqlQuery: createStore(""),
         setSqlQuery: () => undefined,
         sqlEditorStates: new Map(),
+        sqlResets: createStore(0),
       }}
     >
       <RuntimeProbe />
@@ -83,6 +84,7 @@ describe("useRestart", () => {
           sqlQuery: createStore(""),
           setSqlQuery: () => undefined,
           sqlEditorStates: new Map(),
+          sqlResets: createStore(0),
         }}
       >
         <RestartProbe />
@@ -119,6 +121,7 @@ describe("useSqlQuery", () => {
           sqlQuery: createStore("select 1;"),
           setSqlQuery,
           sqlEditorStates: new Map(),
+          sqlResets: createStore(0),
         }}
       >
         <QueryProbe />
@@ -132,12 +135,12 @@ describe("useSqlQuery", () => {
   });
 });
 
-describe("useSqlEditorStates", () => {
-  it("provider の SQL の入力欄の履歴の入れ物を返す", () => {
+describe("useSqlEditorHistory", () => {
+  it("provider の SQL の入力欄の履歴の入れ物と、戻した回数を返す", () => {
     const states = new Map();
     let got: unknown;
     function StatesProbe() {
-      got = useSqlEditorStates();
+      got = useSqlEditorHistory();
       return null;
     }
     renderToStaticMarkup(
@@ -150,12 +153,22 @@ describe("useSqlEditorStates", () => {
           sqlQuery: createStore(""),
           setSqlQuery: () => undefined,
           sqlEditorStates: states,
+          sqlResets: createStore(2),
         }}
       >
         <StatesProbe />
       </RuntimeContext>,
     );
-    expect(got).toBe(states);
+    expect(got).toStrictEqual({ editorStates: states, resets: 2 });
+    expect((got as { editorStates: unknown }).editorStates).toBe(states);
+  });
+
+  it("provider の外では、誤りにする", () => {
+    function OutsideProbe() {
+      useSqlEditorHistory();
+      return null;
+    }
+    expect(() => renderToStaticMarkup(<OutsideProbe />)).toThrow("RuntimeContext");
   });
 });
 

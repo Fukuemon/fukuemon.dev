@@ -3,7 +3,7 @@ import { EditorFrame } from "@fukuemon/ui";
 import { useTransition } from "react";
 
 import { SqlConsole } from "../sql-console/SqlConsole";
-import { useRestart, useRuntime, useSqlEditorStates, useSqlQuery } from "./context";
+import { useRestart, useRuntime, useSqlEditorHistory, useSqlQuery } from "./context";
 import { SQL_PANE_RUN_LABEL, SQL_STOPPED_HINT, bootFailureMessage } from "./messages";
 
 /**
@@ -37,7 +37,7 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
   const [query, setQuery] = useSqlQuery();
   const [running, startRunning] = useTransition();
   const { restart, restarting } = useRestart();
-  const editorStates = useSqlEditorStates();
+  const { editorStates, resets } = useSqlEditorHistory();
 
   const run = (sql: string) =>
     new Promise<SqlResponse>((resolve) => {
@@ -50,6 +50,7 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
     <SqlConsole
       dense
       editorStates={editorStates}
+      resets={resets}
       fileName="query.sql"
       onChange={setQuery}
       onRestart={() => void restart()}

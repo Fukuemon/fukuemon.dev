@@ -44,6 +44,8 @@ export type SqlSession = {
   query: Store<string>;
   running: Store<boolean>;
   setQuery: (sql: string) => void;
+  /** 初期の状態に戻した回数。入力欄は、増えたときに元に戻す履歴を消す。 */
+  resets: Store<number>;
   /** PGlite の読み込みを始める。 */
   load: () => Promise<void>;
   /** SQL を実行し、結果を返す。実行中に呼んだときは、実行せずに error を返す。 */
@@ -104,6 +106,7 @@ export function createSqlSession(
     save: (next) => storage.save(next).then(() => hasSaved.set(canSave)),
   });
   const running = createStore(false);
+  const resets = createStore(0);
   // 消している間は、setQuery の保存を捨て、reset を重ねて呼んでも消す操作を 1 つにする
   let resetting: Promise<void> | undefined;
   return {
@@ -112,8 +115,9 @@ export function createSqlSession(
     fileName: project.open,
     query,
     running,
+    resets,
     setQuery: (sql) => {
-      // エディタは、外から入力欄の値を置き換えたときも変更として通知する。同じ値を保存し直すと、戻した直後に保存が作り直される
+      // 同じ値の通知を保存し直すと、戻した直後に消したレコードが作り直される
       if (resetting || sql === query.getSnapshot()) return;
       query.set(sql);
       saver.save({ sql, version, savedAt: now() });
@@ -138,6 +142,7 @@ export function createSqlSession(
           version = project.version;
           hasSaved.set(false);
           query.set(initialQuery);
+          resets.set(resets.getSnapshot() + 1);
         })
         .finally(() => {
           resetting = undefined;

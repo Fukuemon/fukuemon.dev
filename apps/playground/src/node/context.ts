@@ -15,6 +15,8 @@ export type RuntimeValue = {
   setSqlQuery: (sql: string) => void;
   /** 配置が替わって SQL のペインを作り直しても、入力欄の元に戻す履歴とカーソルを残すための入れ物。 */
   sqlEditorStates: EditorStates;
+  /** 初期の状態に戻した回数。SQL のペインは、増えたときに入力欄の元に戻す履歴を消す。 */
+  sqlResets: Store<number>;
 };
 
 export const RuntimeContext = createContext<RuntimeValue | null>(null);
@@ -50,11 +52,16 @@ export function useRestart(): { restart: () => Promise<void>; restarting: boolea
   return { restart: value.restart, restarting };
 }
 
-/** SQL のペインの入力欄の元に戻す履歴の入れ物。 */
-export function useSqlEditorStates(): EditorStates {
+/** SQL のペインの入力欄の元に戻す履歴の入れ物と、初期の状態に戻した回数。 */
+export function useSqlEditorHistory(): { editorStates: EditorStates; resets: number } {
   const value = use(RuntimeContext);
   if (!value) throw new Error("RuntimeContext の provider が無い");
-  return value.sqlEditorStates;
+  const resets = useSyncExternalStore(
+    value.sqlResets.subscribe,
+    value.sqlResets.getSnapshot,
+    value.sqlResets.getSnapshot,
+  );
+  return { editorStates: value.sqlEditorStates, resets };
 }
 
 /** SQL のペインの入力欄の SQL と、替える関数。値は src/node/ のモジュールが持ち、保存する。 */

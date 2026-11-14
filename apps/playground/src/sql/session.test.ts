@@ -194,7 +194,8 @@ describe("入力欄の SQL の保存", () => {
       clears: clear.mock.calls.length,
       query: session.query.getSnapshot(),
       hasSaved: session.hasSaved.getSnapshot(),
-    }).toStrictEqual({ clears: 1, query: "select 1;", hasSaved: false });
+      resets: session.resets.getSnapshot(),
+    }).toStrictEqual({ clears: 1, query: "select 1;", hasSaved: false, resets: 1 });
   });
 
   it("reset の後に入力欄を変えると、プロジェクトのバージョンで保存する", async () => {

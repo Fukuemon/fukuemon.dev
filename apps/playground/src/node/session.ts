@@ -76,6 +76,8 @@ export type NodeSession = {
   sqlQuery: Store<string>;
   /** SQL のペインの入力欄の SQL を替える。訪問者の操作とみなして保存を予約する。レコードに SQL を入れるのは、DB を使うプロジェクトだけである。 */
   setSqlQuery: (sql: string) => void;
+  /** 初期の状態に戻した回数。SQL のペインは、増えたときに入力欄の元に戻す履歴を消す。 */
+  sqlResets: Store<number>;
   /** npm install の後に、起動のコマンドを実行する。前に実行した起動のコマンドが動いていれば、止めてから実行する。 */
   run: () => Promise<void>;
   /** 作業ディレクトリのファイルを読んでから、実行環境を起動し直す。起動のコマンドは実行しない。 */
@@ -127,6 +129,7 @@ export function createNodeSession({
   const commandFailed = createStore(false);
   const restartReadFailed = createStore(false);
   const sqlQuery = createStore(record?.sql ?? SQL_PANE_QUERY);
+  const sqlResets = createStore(0);
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
   const recordSaver = createRecordSaver({
@@ -425,6 +428,7 @@ export function createNodeSession({
     versionChanged.set(false);
     restartReadFailed.set(false);
     sqlQuery.set(SQL_PANE_QUERY);
+    sqlResets.set(sqlResets.getSnapshot() + 1);
     // 戻す前に替えた SQL は、最初の SQL で上書きしたので保存しない
     sqlChangedWhileRelaunching = false;
     return { files: project.files, touched: false };
@@ -442,6 +446,7 @@ export function createNodeSession({
     busy,
     commandFailed,
     sqlQuery,
+    sqlResets,
     setSqlQuery: (sql) => {
       if (sql === sqlQuery.getSnapshot()) return;
       sqlQuery.set(sql);

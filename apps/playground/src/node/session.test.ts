@@ -521,11 +521,14 @@ describe("SQL のペインの入力欄の保存", () => {
     session.setSqlQuery("select 4;");
     await session.restart();
     const afterRestart = session.sqlQuery.getSnapshot();
+    const resetsAfterRestart = session.sqlResets.getSnapshot();
     await session.reset();
-    expect([afterRestart, session.sqlQuery.getSnapshot()]).toStrictEqual([
-      "select 4;",
-      SQL_PANE_QUERY,
-    ]);
+    expect([
+      afterRestart,
+      session.sqlQuery.getSnapshot(),
+      resetsAfterRestart,
+      session.sqlResets.getSnapshot(),
+    ]).toStrictEqual(["select 4;", SQL_PANE_QUERY, 0, 1]);
   });
 
   it("初期の状態に戻せなかったときは、入力欄の SQL を残す", async () => {

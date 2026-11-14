@@ -46,6 +46,8 @@ export type SqlConsoleProps = {
    * 渡さないときは、このコンポーネントが持ち、作り直すと履歴が消える。結果の表は、どちらでも作り直すと消える。
    */
   editorStates?: EditorStates;
+  /** 初期の状態に戻した回数。増えたときは、入力欄の元に戻す履歴を消す。 */
+  resets?: number;
   /** 実行のボタンの行の右端に置くもの。出入りしても、入力欄の位置が動かないようにするため、行は常にある。 */
   actions?: ReactNode;
 };
@@ -68,6 +70,7 @@ export function SqlConsole({
   embedded = false,
   runButtonRef,
   editorStates: givenStates,
+  resets,
   actions,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
@@ -104,7 +107,8 @@ export function SqlConsole({
           describedBy={hintId}
           onChange={onChange}
           onRun={() => void run()}
-          states={editorStates}
+          editorStates={editorStates}
+          resets={resets}
           value={value}
         />
       )}

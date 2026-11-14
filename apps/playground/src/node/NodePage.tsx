@@ -379,6 +379,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
         sqlQuery: session.sqlQuery,
         setSqlQuery: session.setSqlQuery,
         sqlEditorStates,
+        sqlResets: session.sqlResets,
       }}
     >
       <Toolbar session={session} title={!embedded && title} />
