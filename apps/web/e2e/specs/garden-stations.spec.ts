@@ -159,7 +159,7 @@ test.describe("画面の幅の変更", () => {
     await expectAt(page, "profile");
     const box = (await card(page, "profile").boundingBox())!;
     const clip = {
-      x: box.x - 120,
+      x: Math.max(0, box.x - 120),
       y: Math.max(0, box.y - 90),
       width: box.width + 240,
       height: 140,
@@ -228,6 +228,13 @@ test.describe("ダークのテーマ", () => {
   });
 });
 
+/** ふつうのページに戻ったかを、庭の要素が見えるか、main の中のセクションの数、インラインのスタイルが残るセクションの数で返す */
+const plainPage = async (page: Page) => ({
+  stage: await page.locator("[data-garden-stage]").isVisible(),
+  cards: await page.locator("main [data-garden-card]").count(),
+  styled: await page.locator("[data-garden-card][style]").count(),
+});
+
 test.describe("描く途中の例外", () => {
   test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
 
@@ -241,9 +248,7 @@ test.describe("描く途中の例外", () => {
     });
     await page.clock.setFixedTime(AUTUMN_NOON);
     await page.goto("/");
-    await expect(page.locator("[data-garden-stage]")).toBeHidden();
-    await expect(page.locator("main [data-garden-card]")).toHaveCount(4);
-    await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
+    await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
   });
 
   test("幅 1440px から 390px に変えたときに和紙を掛け直す途中で例外が出ると、ふつうのページに戻り、セクションにインラインのスタイルが残らない", async ({
@@ -259,8 +264,6 @@ test.describe("描く途中の例外", () => {
       });
     });
     await page.setViewportSize({ width: 390, height: 844 });
-    await expect(page.locator("[data-garden-stage]")).toBeHidden();
-    await expect(page.locator("main [data-garden-card]")).toHaveCount(4);
-    await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
+    await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
   });
 });
