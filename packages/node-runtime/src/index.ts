@@ -8,8 +8,6 @@ export type {
   BootOptions,
   FileEntry,
   HttpBody,
-  HttpHeaderLine,
-  HttpPeer,
   HttpRecord,
   NodeRuntime,
   OpenPort,

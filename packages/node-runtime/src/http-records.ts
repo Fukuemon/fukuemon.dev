@@ -1,5 +1,9 @@
-import { createStore } from "./store";
-import type { HttpBody, HttpHeaderLine, HttpPeer, HttpRecord, ProcessInfo } from "./types";
+import type { BackendProcess } from "./backend";
+import { type WritableStore, createStore } from "./store";
+import type { HttpBody, HttpRecord, ProcessInfo } from "./types";
+
+type HttpPeer = HttpRecord["from"];
+type HttpHeaderLine = HttpRecord["request"]["headers"][number];
 
 /** preload が記録の行の頭に付ける文字列。guest/http-trace.cjs と同じ値にする (apps/playground/DesignDoc.md の「記録を読む形」)。 */
 export const HTTP_PREFIX = "@@fd:http ";
@@ -77,6 +81,22 @@ export function createRecordLineFilter(
       release();
     },
   };
+}
+
+/**
+ * process の出力から記録の行を除き、onLine に渡す。購読ごとに、行を抜き出す処理を 1 つ作る。
+ * プロセスが終わったときは、手元に置いた出力を、記録の行でなかったものとして購読した側に渡す。
+ */
+export function withoutRecordLines(
+  process: BackendProcess,
+  onLine: (line: string) => void,
+): BackendProcess {
+  const subscribe = (onChunk: (chunk: string) => void) => {
+    const filter = createRecordLineFilter(onChunk, onLine);
+    void process.exit.then(filter.flush, filter.flush);
+    return process.output.subscribe(filter.push);
+  };
+  return { ...process, output: { subscribe } };
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -205,48 +225,65 @@ export type RecordSource = Pick<ProcessInfo, "kind" | "name">;
  * サーバーの名前は、待ち受けた行を出したプロセスの名前にする。シェルで起動したサーバーは、ポートの番号で呼ぶ。
  */
 export function createHttpRecords(maxRecords = MAX_RECORDS) {
-  const store = createStore<readonly HttpRecord[]>([]);
-  const names = new Map<number, string>();
-  let count = 0;
-
-  const rename = (port: number, name: string) => {
-    const id = `port:${port}`;
-    const renamePeer = (peer: HttpPeer) => (peer.id === id ? { id, name } : peer);
-    const current = store.getSnapshot();
-    if (!current.some((record) => record.from.id === id || record.to.id === id)) return;
-    store.set(
-      current.map((record) => ({
-        ...record,
-        from: renamePeer(record.from),
-        to: renamePeer(record.to),
-      })),
-    );
+  const state: RecordsState = {
+    store: createStore<readonly HttpRecord[]>([]),
+    names: new Map(),
+    count: 0,
+    max: maxRecords,
   };
-
   return {
-    store,
-    accept: (line: string, source: RecordSource) => {
-      const parsed = parseHttpLine(line);
-      if (!parsed) return;
-      if (parsed.type === "listen") {
-        const name = source.kind === "command" ? source.name : portName(parsed.port);
-        if (names.get(parsed.port) === name) return;
-        names.set(parsed.port, name);
-        rename(parsed.port, name);
-        return;
-      }
-      count += 1;
-      const record: HttpRecord = {
-        id: String(count),
-        from: peerOf(parsed.from, names),
-        to: { id: `port:${parsed.to}`, name: names.get(parsed.to) ?? portName(parsed.to) },
-        ...parsed.record,
-      };
-      const current = store.getSnapshot();
-      let at = current.length;
-      while (at > 0 && (current[at - 1]?.startedAt ?? 0) > record.startedAt) at -= 1;
-      const next = [...current.slice(0, at), record, ...current.slice(at)];
-      store.set(next.length > maxRecords ? next.slice(next.length - maxRecords) : next);
-    },
+    store: state.store,
+    accept: (line: string, source: RecordSource) => accept(state, line, source),
   };
+}
+
+type RecordsState = {
+  store: WritableStore<readonly HttpRecord[]>;
+  /** 待ち受けたポートと、サーバーの名前。 */
+  names: Map<number, string>;
+  count: number;
+  max: number;
+};
+
+/** 記録の行を、記録の一覧に当てる。待ち受けた行は names を書き換え、名前の変わったサーバーの記録を直す。 */
+function accept(state: RecordsState, line: string, source: RecordSource) {
+  const parsed = parseHttpLine(line);
+  if (parsed?.type === "listen") {
+    const name = source.kind === "command" ? source.name : portName(parsed.port);
+    state.names.set(parsed.port, name);
+    state.store.set(renamePort(state.store.getSnapshot(), parsed.port, name));
+  }
+  if (parsed?.type === "exchange") addExchange(state, parsed);
+}
+
+function addExchange(state: RecordsState, parsed: Extract<ParsedLine, { type: "exchange" }>) {
+  state.count += 1;
+  const record: HttpRecord = {
+    id: String(state.count),
+    from: peerOf(parsed.from, state.names),
+    to: { id: `port:${parsed.to}`, name: state.names.get(parsed.to) ?? portName(parsed.to) },
+    ...parsed.record,
+  };
+  state.store.set(insertByStart(state.store.getSnapshot(), record, state.max));
+}
+
+/** port のサーバーを指す記録の名前を直す。直す記録が無いときは、同じ配列を返す。 */
+function renamePort(records: readonly HttpRecord[], port: number, name: string) {
+  const id = `port:${port}`;
+  const stale = (peer: HttpPeer) => peer.id === id && peer.name !== name;
+  if (!records.some((record) => stale(record.from) || stale(record.to))) return records;
+  const renamePeer = (peer: HttpPeer) => (peer.id === id ? { id, name } : peer);
+  return records.map((record) => ({
+    ...record,
+    from: renamePeer(record.from),
+    to: renamePeer(record.to),
+  }));
+}
+
+/** record を、受けた時刻の順の位置に入れる。同じ時刻のものは、後に入れる。上限を超えたら、古いものから捨てる。 */
+function insertByStart(records: readonly HttpRecord[], record: HttpRecord, max: number) {
+  let at = records.length;
+  while (at > 0 && (records[at - 1]?.startedAt ?? 0) > record.startedAt) at -= 1;
+  const next = [...records.slice(0, at), record, ...records.slice(at)];
+  return next.length > max ? next.slice(next.length - max) : next;
 }

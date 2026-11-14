@@ -40,25 +40,25 @@ export type StartOptions = { name?: string; terminal?: TerminalSize };
 /** 待ち受けたポート。sandbox と allow は、プレビューの iframe に付ける属性の値である。 */
 export type OpenPort = { port: number; url: string; sandbox: string; allow: string };
 
-/** HTTP の通信の、送った側か受けた側。id は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `pid:<ID>` である。 */
-export type HttpPeer = { id: string; name: string };
-
-export type HttpHeaderLine = { name: string; value: string };
-
 /** 記録した本文。上限を超えた分は記録せず、truncated を立てる。テキストとして読めないものは、text が null である。 */
 export type HttpBody = { text: string | null; size: number; truncated: boolean };
 
 /** 実行環境の中のサーバーが受けた、1 つのリクエストとレスポンス。response が無いものは、レスポンスを返す前に切れた。 */
 export type HttpRecord = {
   id: string;
-  from: HttpPeer;
-  to: HttpPeer;
+  /** 送った側と受けた側。id は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `pid:<ID>` である。 */
+  from: { id: string; name: string };
+  to: { id: string; name: string };
   method: string;
   url: string;
   startedAt: number;
   durationMs: number;
-  request: { headers: readonly HttpHeaderLine[]; body?: HttpBody };
-  response?: { status: number; headers: readonly HttpHeaderLine[]; body?: HttpBody };
+  request: { headers: readonly { name: string; value: string }[]; body?: HttpBody };
+  response?: {
+    status: number;
+    headers: readonly { name: string; value: string }[];
+    body?: HttpBody;
+  };
 };
 
 export type NodeRuntime = {
