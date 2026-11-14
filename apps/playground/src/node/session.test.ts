@@ -606,6 +606,43 @@ describe("保存しないファイル", () => {
     expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
   });
 
+  it("書き直しが終わる前に新しい保存が待ちに入り、書き直しが失敗した後に上限を超えても、古いレコードで置き換えない", async () => {
+    const { workspace, saves } = fakeWorkspace();
+    let fail: (error: Error) => void = () => undefined;
+    let finish: () => void = () => undefined;
+    workspace.save
+      .mockImplementationOnce(() => new Promise<void>((_, reject) => (fail = reject)))
+      .mockImplementationOnce(async (record) => {
+        await new Promise<void>((resolve) => (finish = resolve));
+        saves.push(record);
+      });
+    const runtimes: Fake[] = [];
+    const session = createNodeSession({
+      project,
+      saved: { kind: "saved", record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } } },
+      storage: workspace,
+      embedId: "oauth/demo",
+      boot: async ({ files }) => {
+        const fake = fakeRuntime(files, 0);
+        runtimes.push(fake);
+        return fake.runtime;
+      },
+    });
+    await settle(session);
+    const fake = runtimes[0];
+    if (!fake) throw new Error("起動していない");
+    fake.change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    fail(new Error("容量の超過"));
+    await vi.advanceTimersByTimeAsync(0);
+    fillOverLimit(fake);
+    fake.change("index.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
+  });
+
   it("書き直しが通った後は、上限を超えても書き直さない", async () => {
     const { session, saves, latest } = setup({
       kind: "saved",

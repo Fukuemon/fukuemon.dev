@@ -202,7 +202,8 @@ export function createNodeSession({
           hasSaved.set(canSave);
         },
         (error: unknown) => {
-          lastSaved = undefined;
+          // 後から待ちに入った新しい保存があれば、その中身を保存済みの扱いのまま残す
+          if (sameFiles(next.files, lastSaved)) lastSaved = undefined;
           throw error;
         },
       ),
