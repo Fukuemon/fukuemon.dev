@@ -140,10 +140,15 @@ export function TreeView({
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
   const editorRef = useRef<HTMLSpanElement>(null);
   const typed = useRef({ text: "", timer: 0 });
+  const isMounted = useRef(false);
 
   useEffect(() => {
     const current = typed.current;
-    return () => window.clearTimeout(current.timer);
+    isMounted.current = true;
+    return () => {
+      window.clearTimeout(current.timer);
+      isMounted.current = false;
+    };
   }, []);
 
   const typeAhead = (char: string, index: number) => {
@@ -183,7 +188,10 @@ export function TreeView({
     const selectedAtStart = readSelectedId();
     // blur での確定は、フォーカスが次の要素へ移る前に描き直すので、移り終えた後に見る
     return () => {
-      window.setTimeout(() => restoreFocus(selectedAtStart), 0);
+      window.setTimeout(() => {
+        // 欄を開いたまま木を外したときは、外した後にタイマーが動くので、何もしない
+        if (isMounted.current) restoreFocus(selectedAtStart);
+      }, 0);
     };
   }, [isEditing]);
 
