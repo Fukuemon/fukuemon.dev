@@ -2,15 +2,18 @@
 export interface DeviceInfo {
   userAgent: string;
   maxTouchPoints: number;
+  /** WebKit のブラウザは、どれも `Apple Computer, Inc.` を返す。 */
+  vendor: string;
 }
 
 /**
- * iOS か iPadOS の WebKit のブラウザなら true を返す。
+ * iOS か iPadOS の WebKit のブラウザなら true を返す。UA を偽るほかのエンジンのブラウザを外すため、vendor も見る。
  * iPadOS の Safari は、標準の設定で Mac の Safari と同じ UA を名乗るので、Macintosh を名乗り触る点を 2 つ以上持つものを iPadOS とみなす。
  */
-export const isAppleTouchDevice = ({ userAgent, maxTouchPoints }: DeviceInfo) =>
-  /\b(iPhone|iPad|iPod)\b/.test(userAgent) ||
-  (/\bMacintosh\b/.test(userAgent) && maxTouchPoints > 1);
+export const isAppleTouchDevice = ({ userAgent, maxTouchPoints, vendor }: DeviceInfo) =>
+  vendor === "Apple Computer, Inc." &&
+  (/\b(iPhone|iPad|iPod)\b/.test(userAgent) ||
+    (/\bMacintosh\b/.test(userAgent) && maxTouchPoints > 1));
 
 /**
  * iOS と iPadOS のときだけ、viewport の指定に `maximum-scale=1` を足し、16px 未満の入力欄にフォーカスしたときの自動の拡大を止める。
