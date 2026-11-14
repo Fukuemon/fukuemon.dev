@@ -62,8 +62,8 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 `packages/go-runtime` の `test` の script は、Vitest の後に `go test` を実行するので、`mise.toml` の Go が要る。  
 `packages/node-runtime` の `src/webcontainer/index.ts` と `src/index.ts` は、対象に入れない。  
 WebContainers はブラウザでしか動かないためである。  
-`src/webcontainer/` のうち、WebContainers を動かさない処理（初期ファイルを mount に渡す木にする `tree.ts`）は、別のファイルに分けて対象に入れる。  
-動きは、ブラウザでの動作確認で見る。
+`src/webcontainer/` のうち、WebContainers を動かさない処理（初期ファイルを mount に渡すツリーの形にする `tree.ts`）は、別のファイルに分けて対象に入れる。  
+`src/webcontainer/index.ts` と `src/index.ts` の動きは、ブラウザでの動作確認で確認する。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  
