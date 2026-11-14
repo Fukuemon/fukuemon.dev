@@ -187,6 +187,37 @@ describe("createSaver", () => {
     expect(saver.failed.getSnapshot()).toBe(true);
   });
 
+  it("keepFailure の保存が失敗した後に通常の保存も失敗すると、keepFailure の保存が通っても failed を戻さない", async () => {
+    const { workspace, settle } = manualWorkspace();
+    const saver = createSaver(workspace);
+    saver.save(1, { keepFailure: true });
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(2);
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(3, { keepFailure: true });
+    await tick();
+    await settle();
+    expect(saver.failed.getSnapshot()).toBe(true);
+  });
+
+  it("clear が通ると、通常の保存の失敗で立った原因も戻し、後の keepFailure の保存が通ると failed を戻す", async () => {
+    const { workspace, settle } = manualWorkspace();
+    const saver = createSaver(workspace);
+    saver.save(1);
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    await saver.clear();
+    saver.save(2, { keepFailure: true });
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(3, { keepFailure: true });
+    await tick();
+    await settle();
+    expect(saver.failed.getSnapshot()).toBe(false);
+  });
+
   it("keepFailure の保存が失敗すると、failed を true にする", async () => {
     const { workspace, settle } = manualWorkspace();
     const saver = createSaver(workspace);

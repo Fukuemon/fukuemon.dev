@@ -96,7 +96,7 @@ export type Saver<T> = {
   save: (record: T, options?: { keepFailure?: boolean }) => void;
   /** 待っているレコードを捨て、途中の保存が終わってから、保存してあるレコードを消す。 */
   clear: () => Promise<void>;
-  /** 保存が失敗したときは true である。keepFailure でない保存が通ると false に戻る。keepFailure の保存が通ったときは、keepFailure の保存の失敗だけで立っていれば false に戻る。 */
+  /** 保存が失敗したときは true である。keepFailure でない保存が通ると false に戻る。keepFailure の保存が通ったときは、keepFailure の保存の失敗だけで立っていれば false に戻る。clear が通ると false に戻る。 */
   failed: { subscribe: (onChange: () => void) => () => void; getSnapshot: () => boolean };
 };
 
@@ -105,7 +105,7 @@ export type Saver<T> = {
  */
 export function createSaver<T>(workspace: Workspace<T>): Saver<T> {
   const failed = createStore(false);
-  // keepFailure でない保存の失敗で立った failed は、keepFailure の保存が通っても戻さない
+  // 訪問者の変更の保存の失敗は、書き直しの成功で消さないため、keepFailure でない保存の失敗を別に持つ (ADR-0070)
   let failedByNormal = false;
   let queued: { record: T; keepFailure: boolean } | undefined;
   let tail = Promise.resolve();

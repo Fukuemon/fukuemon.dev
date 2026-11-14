@@ -1218,6 +1218,20 @@ describe("reset", () => {
     expect(session.busy.getSnapshot()).toBe(false);
   });
 
+  it("訪問者の変更の保存が失敗した後に戻すと、saveFailed を false にする", async () => {
+    const { session, workspace, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    const before = session.saveFailed.getSnapshot();
+    await session.reset();
+    expect({ before, after: session.saveFailed.getSnapshot() }).toStrictEqual({
+      before: true,
+      after: false,
+    });
+  });
+
   it("戻すと、versionChanged を false にする", async () => {
     const { session } = setup({ kind: "saved", record: { ...savedRecord, version: "v0" } });
     await settle(session);
