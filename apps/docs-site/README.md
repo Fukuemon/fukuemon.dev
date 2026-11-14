@@ -41,11 +41,36 @@ pnpm --filter @fukuemon/docs-site run build
 ## 初めて公開する
 
 運用者が、次の順で行う。
-Access のアプリケーションが無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。
-このため、ダッシュボードで Access を作ってから、Terraform で custom domain を作る。
+custom domain を先に作り、Access は後から掛けてよい。
+**Access を掛けるまでは、`https://docs.fukuemon.dev` を誰でも開ける。** noindex は返すが、検索の結果に載らないことは保証しない。
 apply workflow の起動と `infra` environment の承認は、[infra/README.md](../../infra/README.md#ci-から-apply-する) の「CI から apply する」の手順で行う。
 
 - ADR-0032: [アクセスの認証](../../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
+
+### 1. Worker を作る
+
+deploy-docs workflow は、develop で check が通るたびに Worker を配信する。
+Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` で `develop` から起動する。
+`workers_dev` と `preview_urls` が `false` なので、この時点では誰も開けない。
+
+### 2. custom domain を作る
+
+1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
+   ほかの差分が出たら、apply しない。
+2. 確認したら、`mode=apply` で起動し直す。
+
+### 3. 公開の範囲を確認する
+
+1. `https://docs.fukuemon.dev` を開き、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
+2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
+3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
+
+- ADR-0032: [承認の条件](../../docs/adr/0032-docs-site-behind-access.md#承認の条件)
+
+## Access を掛ける
+
+運営者が、ダッシュボードで行う。
+apply は要らない。
 
 ### 1. Zero Trust を有効にする
 
@@ -64,7 +89,6 @@ Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
 3. 「Access policies」で、ポリシーを新しく作る。Action は「Allow」、Include の Selector は「Emails」にし、許可するメールアドレスを入れる。
 4. 保存する。
 
-- custom domain がまだ無いホスト名で、アプリケーションを作れるかは未確認である。作れないときは、ここで作業を止め、手順 4 で custom domain を作る前に Access を作る方法を決め直す。
 - メールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、issue、pull request、GitHub の secret に書かない。
 - 次の値を選ばない。誰でも通すか、広く通すポリシーになる。
   - Action の「Bypass」と「Service Auth」
@@ -74,43 +98,25 @@ Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
 - 出典: [Publish a self-hosted application to the Internet](https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/self-hosted-public-app/)
 - 出典: [Access policies](https://developers.cloudflare.com/cloudflare-one/policies/access/)
 
-### 3. Worker を作る
-
-deploy-docs workflow は、develop で check が通るたびに Worker を配信する。
-Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` で `develop` から起動する。
-`workers_dev` と `preview_urls` が `false` なので、この時点では誰も開けない。
-
-### 4. custom domain を作る
-
-手順 2 で Access のアプリケーションを作ってから行う。
-
-1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
-   ほかの差分が出たら、apply しない。
-2. 確認したら、`mode=apply` で起動し直す。
-
-### 5. 公開の範囲を確認する
+### 3. 認証を確認する
 
 1. 認証していないブラウザで `https://docs.fukuemon.dev` を開き、Access の認証の画面が出ることを確認する。
    出なければ、ダッシュボードで、アプリケーションの Domain が `docs.fukuemon.dev` であることと、手順 2 のポリシーを確認する。
-2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
-3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
-4. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
-
-- ADR-0032: [承認の条件](../../docs/adr/0032-docs-site-behind-access.md#承認の条件)
+2. 許可したメールアドレスで認証し、ドキュメントサイトのページが出ることを確認する。
 
 ## Access のオンとオフを切り替える
 
 Access は、ダッシュボードで切り替える。
 apply は要らない。
 
-- オフにするときは、「初めて公開する」の手順 2 で作ったアプリケーションを消す。
-- オンにするときは、「初めて公開する」の手順 2 をもう一度行い、手順 5 の 1 と 4 を確認する。
+- オフにするときは、「Access を掛ける」の手順 2 で作ったアプリケーションを消す。
+- オンにするときは、「Access を掛ける」の手順 2 と 3 を行う。
 - **オフの間は、`https://docs.fukuemon.dev` を誰でも開ける。** noindex は返すが、検索の結果に載らないことは保証しない。
 
-アプリケーションを消さずに無効にする設定があるかは、未確認である。
+アプリケーションを消さずに無効にする設定があるかは、未確認である。運営者が初めて Access を掛けるときに確認する。
 
 ## 許可するメールアドレスを変える
 
-ダッシュボードで、「初めて公開する」の手順 2 で作ったポリシーの Include のメールアドレスを書き換える。
+ダッシュボードで、「Access を掛ける」の手順 2 で作ったポリシーの Include のメールアドレスを書き換える。
 外したメールアドレスで認証できないことを確認する。
 apply は要らない。

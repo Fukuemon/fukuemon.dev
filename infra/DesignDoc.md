@@ -103,7 +103,7 @@ Cloudflare Registrar がドメインを取得したときに作った zone を�
 ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 
 - Terraform は、custom domain の `docs` だけを持つ。Terraform では、Access と custom domain を作る順序を制御しない。
-- custom domain を作る apply は、ダッシュボードで Access のアプリケーションを作った後に実行する。Access の無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
+- custom domain は、Access より先に作ってよい。Access を掛けるまでは、ドキュメントサイトを誰でも開ける。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 - Access は `docs.<zone>` のホスト名にだけ掛かる。Worker の `workers_dev` と `preview_urls` を `false` にして、ほかの URL を閉じる。
 
 ### state backend

@@ -155,7 +155,7 @@ ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-
 - ドキュメントサイトの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-docs workflow が行う。
   初回の deploy と出し直しは、運用者が deploy-docs workflow を `workflow_dispatch` で `develop` から手で起動する。
   - deploy-docs workflow は、build の後、配信の前に `check:closed-urls` を実行する。`workflow_dispatch` で起動した deploy-docs workflow は、check workflow の結果を条件にしないためである。
-  - custom domain の `docs.<zone>` は、初回の deploy で Worker ができ、ダッシュボードで Access のアプリケーションを作ってから apply する。Access の無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。
+  - custom domain の `docs.<zone>` は、初回の deploy で Worker ができてから apply する。Access は運営者が後から掛けてよく、掛けるまではドキュメントサイトを誰でも開ける。
   - 初めて公開する手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 - プレビューの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-preview workflow が行う。
   出し直しは、運用者が deploy-preview workflow を `workflow_dispatch` で `develop` から手で起動する。

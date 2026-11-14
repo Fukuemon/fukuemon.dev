@@ -51,18 +51,17 @@ Access は、組み立てたサイトを開発者向けにし、訪問者や検�
   - この決定は、ADR-0005 の管轄の判定の例外にする。
   - 例外は、ドキュメントサイトの Access のアプリケーションとポリシーに限る。
 - `docs.<zone>` の custom domain（`cloudflare_workers_custom_domain.docs`）は、Terraform で持つ。ホスト名の作成は、ほかのサブドメインと同じ管轄にそろえる。
-- Terraform では、Access と custom domain を作る順序を制御しない。初めて公開するときは、ダッシュボードで Access のアプリケーションとポリシーを作った後に、Terraform で custom domain を作る。手順は `apps/docs-site/README.md` にある。
+- Terraform では、Access と custom domain を作る順序を制御しない。初めて公開するときは、Terraform で custom domain を先に作り、Access は運営者が後から掛けてよい。手順は `apps/docs-site/README.md` にある。
 - Access をオフにしている間は、ドキュメントサイトを誰でも開ける。文書の原本は公開のリポジトリにあるので、Access をオフにしても、新しく公開される内容は無い。
 - 許可するメールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、Terraform の state、GitHub の secret に置かない。
 - apply 用と deploy 用の token に Access の権限を与えない。
 
 ## 承認の条件
 
-次の 3 つは、運営者がダッシュボードで Access を作り、ドキュメントサイトを公開するときに確認する。
+次の 2 つを確認する。
 
-- custom domain の無いホスト名（`docs.fukuemon.dev`）で、Access のアプリケーションを作れること。作れなければ、初めて公開するときの順を決め直す。
-- Access をオフにする操作が、アプリケーションの削除か、消さずに無効にする設定か。
-- `workers_dev` と `preview_urls` を `false` にした Worker が、custom domain のほかの URL で開けないこと。
+- Access をオフにする操作が、アプリケーションの削除か、消さずに無効にする設定か。運営者が初めて Access を掛けるときに確認する。
+- `workers_dev` と `preview_urls` を `false` にした Worker が、custom domain のほかの URL で開けないこと。ドキュメントサイトを公開するときに確認する。
 
 ## Considered Options
 
@@ -78,7 +77,7 @@ Access の管理の選択肢は次のとおり。
 
 | 選択肢                                                   | 強み                                                                                                           | 弱み                                                                                                      |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **採用:** Access をダッシュボードで設定する              | オンとオフを、apply を通さずにすぐ切り替えられる。メールアドレスを secret とログのマスクで扱う仕組みが要らない | 設定がリポジトリに残らない。custom domain を Access より先に作らない順を、手順でしか守れない              |
+| **採用:** Access をダッシュボードで設定する              | オンとオフを、apply を通さずにすぐ切り替えられる。メールアドレスを secret とログのマスクで扱う仕組みが要らない | 設定がリポジトリに残らない。Access を掛けるまでと、オフの間は、誰でも開ける                               |
 | Access を Terraform で持つ                               | 設定がリポジトリに残る。custom domain を Access の後に作る順を `depends_on` で守れる                           | 切り替えのたびに、コードの変更、pull request、apply の承認が要る。apply 用の token に Access の権限が要る |
 | Terraform で持ち、オンとオフを変数で切り替える           | 設定がリポジトリに残る。切り替えはコードを変えずに済む                                                         | 切り替えのたびに apply の workflow の起動と承認が要る。変数の値を GitHub の variable に置く仕組みが増える |
 | custom domain もダッシュボードで作り、Terraform から外す | Access と custom domain を作る順を、同じ画面で守れる                                                           | ほかのサブドメインと、custom domain の管轄が分かれる                                                      |
@@ -96,7 +95,7 @@ Access の管理の選択肢は次のとおり。
 
 - Python と uv が、ドキュメントサイトをビルドするためだけに要る。
 - Access の設定がリポジトリに残らない。今の設定は、ダッシュボードでしか確認できない。
-- custom domain を作る apply を Access の前に実行すると、ドキュメントサイトを誰でも開ける。`cloudflare_workers_custom_domain.docs` が state に無い間は、別の目的で実行した apply も、`docs` の custom domain を作る。
+- Access を掛けるまでは、ドキュメントサイトを誰でも開ける。
 - Access をオフにしている間は、ドキュメントサイトを誰でも開ける。noindex は返すが、検索の結果に載らないことは保証しない。
   - noindex を返す理由: [context/operations.md](../../context/operations.md#レスポンスヘッダ)
 - 文書の原本は公開のリポジトリにあるので、Access は文書の中身を隠さない。
