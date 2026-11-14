@@ -38,6 +38,11 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isLevel = (value: unknown): value is ConsoleLevel =>
   typeof value === "string" && LEVELS.has(value);
 
+const isTime = (value: unknown): value is number =>
+  Number.isSafeInteger(value) &&
+  (value as number) >= 0 &&
+  (value as number) <= Date.now() + MAX_FUTURE_MS;
+
 const isText = (value: unknown): value is string =>
   typeof value === "string" && value.length <= MAX_TEXT;
 
@@ -82,7 +87,7 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
     case "bigint": {
       // 写す側は、長い bigint の末尾を「…」にし、文字数を使い切った後は「…」だけにする
       const value = text(raw.value);
-      return /^(-?\d+…?|…)$/.test(value) ? { kind: "bigint", value } : reject();
+      return /^-?(\d+…?|…)$/.test(value) ? { kind: "bigint", value } : reject();
     }
     case "number": {
       // 写す側が String(数) で書いた文字だけを受ける。Number は、空の文字や 16 進数の文字も数にする
@@ -142,21 +147,12 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
 export function parseConsoleRecord(
   value: unknown,
 ): Pick<ConsoleRecord, "level" | "time" | "args"> | undefined {
-  if (
-    !isObject(value) ||
-    !isLevel(value.level) ||
-    !Number.isSafeInteger(value.time) ||
-    (value.time as number) < 0 ||
-    (value.time as number) > Date.now() + MAX_FUTURE_MS ||
-    !Array.isArray(value.args) ||
-    value.args.length > MAX_ITEMS
-  ) {
-    return undefined;
-  }
+  if (!isObject(value) || !isLevel(value.level) || !isTime(value.time)) return undefined;
+  const { level, time } = value;
   const budget = createBudget();
   try {
     const args = each(value.args, (arg) => toValue(arg, 0, budget));
-    return { level: value.level, time: value.time as number, args };
+    return { level, time, args };
   } catch (error) {
     if (error instanceof Rejected) return undefined;
     throw error;

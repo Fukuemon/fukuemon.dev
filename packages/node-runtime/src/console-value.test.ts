@@ -66,6 +66,62 @@ describe("toConsoleValues", () => {
     expect(touched).toStrictEqual([]);
   });
 
+  it("値に直接定義した stack の getter、上書きした size、クラスの名前、正規表現の source と flags の getter を呼ばない", () => {
+    const touched: string[] = [];
+    const error = new Error("m");
+    Object.defineProperty(error, "stack", {
+      get() {
+        touched.push("stack");
+        return "";
+      },
+    });
+    class SizedMap extends Map<unknown, unknown> {
+      override get size() {
+        touched.push("map size");
+        return 0;
+      }
+    }
+    class SizedSet extends Set<unknown> {
+      override get size() {
+        touched.push("set size");
+        return 0;
+      }
+    }
+    class Named {
+      static get name() {
+        touched.push("name");
+        return "Named";
+      }
+    }
+    class LoudRegExp extends RegExp {
+      override get source() {
+        touched.push("source");
+        return "x";
+      }
+      override get flags() {
+        touched.push("flags");
+        return "";
+      }
+    }
+    const values = copy(
+      error,
+      new SizedMap([[1, 2]]),
+      new SizedSet([1]),
+      new Named(),
+      new LoudRegExp("a+", "gi"),
+    );
+    expect(touched).toStrictEqual([]);
+    expect(values[1]).toHaveProperty(["entries", "length"], 1);
+    expect(values[2]).toHaveProperty(["items", "length"], 1);
+    expect(values[4]).toStrictEqual({ kind: "text", value: "/a+/gi" });
+  });
+
+  it("型付き配列のクラスの名前も、上限で切る", () => {
+    class Long extends Uint8Array {}
+    Object.defineProperty(Long, "name", { value: "x".repeat(10_002) });
+    expect(copy(new Long(1))).toHaveProperty(["0", "value", "length"], 10_001);
+  });
+
   it("写せない値は、記録を止めずに印にする", () => {
     const broken = new Proxy(
       {},
@@ -133,6 +189,10 @@ describe("写した値を、読む側が捨てない", () => {
     [
       "文字数を使い切った後の bigint",
       [...Array.from({ length: 27 }, () => "x".repeat(10_000)), 10n],
+    ],
+    [
+      "文字数の残りが 1 のときの負の bigint",
+      [...Array.from({ length: 26 }, () => "x".repeat(10_000)), "x".repeat(2143), -10n],
     ],
   ])("%s", (_, args) => {
     expect(roundTrip(...args)).toBeDefined();

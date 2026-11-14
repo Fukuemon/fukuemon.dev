@@ -192,6 +192,14 @@ describe("createConsoleRecords", () => {
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["3", "4"]);
   });
 
+  it("描画の前に上限の 2 倍を超えて届いたら、新しいものから上限の数だけを残す", () => {
+    const frames = manualFrames();
+    const records = createConsoleRecords({ max: 2, schedule: frames.schedule });
+    for (const value of ["a", "b", "c", "d", "e"]) records.acceptLine(line(value), { name: "p" });
+    frames.run();
+    expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["4", "5"]);
+  });
+
   it("形に合わない行は、store に入れない", () => {
     const frames = manualFrames();
     const records = createConsoleRecords({ schedule: frames.schedule });

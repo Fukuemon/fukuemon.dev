@@ -31,11 +31,32 @@ const mapSize = builtinGetter(Map.prototype, "size");
 const setSize = builtinGetter(Set.prototype, "size");
 const typedArrayLength = builtinGetter(Object.getPrototypeOf(Uint8Array.prototype), "length");
 const viewByteLength = builtinGetter(DataView.prototype, "byteLength");
+const regexpSource = builtinGetter(RegExp.prototype, "source");
+/** RegExp.prototype.toString は、サブクラスが上書きできる source と flags を読むので、フラグの組み込みの getter から組む。 */
+const regexpFlags = [
+  ["d", "hasIndices"],
+  ["g", "global"],
+  ["i", "ignoreCase"],
+  ["m", "multiline"],
+  ["s", "dotAll"],
+  ["u", "unicode"],
+  ["v", "unicodeSets"],
+  ["y", "sticky"],
+].flatMap(([flag, key]) =>
+  Object.getOwnPropertyDescriptor(RegExp.prototype, key)
+    ? [[flag, builtinGetter(RegExp.prototype, key)]]
+    : [],
+);
+const regexpText = (value) =>
+  `/${regexpSource.call(value)}/${regexpFlags
+    .filter(([, get]) => get.call(value))
+    .map(([flag]) => flag)
+    .join("")}`;
 
 /**
  * args を値の木の配列にする。describe は、実行する場所に固有の値（Proxy、DOM の要素）を文字にする関数で、当てはまらないときは undefined を返す。
  * 数は、NaN、Infinity、-0 を JSON で運べるよう、文字で持つ。
- * 値の数を使い切ったら、残りの兄弟を写さずに、残りの件数の印を 1 つだけ足す。印は、開いている入れ子ごとに 1 つまでなので、値の数は MAX_NODES に深さの分を足した数を超えない。
+ * 値の数を使い切ったら、残りの兄弟を写さずに、残りの件数の印を 1 つだけ足す。値の数は、MAX_NODES に、開いている入れ子ごとに 1 つの残りの件数の印と、MAX_ITEMS で止めた入れ子ごとに 1 つの印を足した数を超えない。
  */
 function toConsoleValues(args, describe) {
   const budget = { nodes: MAX_NODES, chars: MAX_CHARS };
@@ -69,8 +90,8 @@ function toConsoleValues(args, describe) {
     const proto = Object.getPrototypeOf(value);
     if (proto === null) return "Object";
     const ctor = Object.getOwnPropertyDescriptor(proto, "constructor");
-    return ctor && typeof ctor.value === "function" && typeof ctor.value.name === "string"
-      ? ctor.value.name
+    return ctor && typeof ctor.value === "function"
+      ? functionName(ctor.value) || undefined
       : undefined;
   };
 
@@ -133,9 +154,6 @@ function toConsoleValues(args, describe) {
     );
   };
 
-  const fromIterator = (total, iterator, toItem) =>
-    take(total, () => toItem(iterator.next().value), rest);
-
   /** 深さの上限で、中身を写さずに出す文字。 */
   const summary = (value) => {
     if (Array.isArray(value)) return `Array(${value.length})`;
@@ -191,20 +209,19 @@ function toConsoleValues(args, describe) {
         return { kind: "map", entries };
       }
       if (value instanceof Set) {
-        const items = fromIterator(setSize.call(value), Set.prototype.values.call(value), (item) =>
-          walk(item, depth + 1),
-        );
+        const iterator = Set.prototype.values.call(value);
+        const items = take(setSize.call(value), () => walk(iterator.next().value, depth + 1), rest);
         return { kind: "set", items };
       }
       if (value instanceof Date) {
         const time = Date.prototype.getTime.call(value);
         return text(Number.isNaN(time) ? "Invalid Date" : Date.prototype.toISOString.call(value));
       }
-      if (value instanceof RegExp) return text(cut(RegExp.prototype.toString.call(value)));
+      if (value instanceof RegExp) return text(cut(regexpText(value)));
       if (ArrayBuffer.isView(value)) {
-        const size =
-          value instanceof DataView ? viewByteLength.call(value) : typedArrayLength.call(value);
-        return text(`${classNameOf(value) ?? "ArrayBuffer"}(${size})`);
+        const isView = value instanceof DataView;
+        const size = isView ? viewByteLength.call(value) : typedArrayLength.call(value);
+        return text(cut(`${classNameOf(value) ?? (isView ? "DataView" : "TypedArray")}(${size})`));
       }
       for (const builtin of ["Promise", "WeakMap", "WeakSet", "WeakRef"]) {
         const ctor = globalThis[builtin];
