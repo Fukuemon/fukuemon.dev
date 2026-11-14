@@ -43,6 +43,13 @@ export type OpenPort = { port: number; url: string; sandbox: string; allow: stri
 /** 記録した本文。上限を超えた分は記録せず、truncated を立てる。テキストとして読めないものは、text が null である。 */
 export type HttpBody = { text: string | null; size: number; truncated: boolean };
 
+/** 記録したリクエストかレスポンスの、ヘッダと本文。omittedHeaders は、上限を超えて捨てたヘッダの数である。 */
+type HttpMessageRecord = {
+  headers: readonly { name: string; value: string }[];
+  omittedHeaders?: number;
+  body?: HttpBody;
+};
+
 /** 実行環境の中のサーバーが受けた、1 つのリクエストとレスポンス。response が無いものは、レスポンスを返す前に切れた。 */
 export type HttpRecord = {
   id: string;
@@ -51,14 +58,12 @@ export type HttpRecord = {
   to: { id: string; name: string };
   method: string;
   url: string;
+  /** 記録の行の URL が上限を超え、先頭だけを持つ。 */
+  urlTruncated?: boolean;
   startedAt: number;
   durationMs: number;
-  request: { headers: readonly { name: string; value: string }[]; body?: HttpBody };
-  response?: {
-    status: number;
-    headers: readonly { name: string; value: string }[];
-    body?: HttpBody;
-  };
+  request: HttpMessageRecord;
+  response?: HttpMessageRecord & { status: number };
 };
 
 export type NodeRuntime = {

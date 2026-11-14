@@ -157,3 +157,49 @@ describe("createHttpRecords", () => {
     expect(records.store.getSnapshot()).toBe(before);
   });
 });
+
+describe("偽の記録の行の上限", () => {
+  const parsedRecord = (overrides: Record<string, unknown>) => {
+    const parsed = parseHttpLine(exchange(overrides));
+    return parsed?.type === "exchange" ? parsed.record : undefined;
+  };
+
+  it("64 KB の文字を超えた本文は切り、truncated を立てる", () => {
+    const text = "a".repeat(64 * 1024 + 10);
+    const body = parsedRecord({
+      request: { headers: [], body: { text, size: 1, truncated: false } },
+    })?.request.body;
+    expect(body).toStrictEqual({
+      text: text.slice(0, 64 * 1024),
+      size: text.length,
+      truncated: true,
+    });
+  });
+
+  it("100 個を超えたヘッダは捨て、捨てた数を持つ", () => {
+    const headers = Array.from({ length: 103 }, (_, i) => ({ name: `h${i}`, value: "v" }));
+    const request = parsedRecord({ request: { headers } })?.request;
+    expect([request?.headers.length, request?.omittedHeaders]).toStrictEqual([100, 3]);
+  });
+
+  it("8 KB の文字を超えた URL は切り、urlTruncated を立てる", () => {
+    const record = parsedRecord({ url: `/${"a".repeat(9000)}` });
+    expect([record?.url.length, record?.urlTruncated]).toStrictEqual([8 * 1024, true]);
+  });
+
+  it("上限の中の行には、切ったことを示す値を付けない", () => {
+    const record = parsedRecord({});
+    expect([record?.urlTruncated, record?.request.omittedHeaders]).toStrictEqual([
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it("100 個を超えて待ち受けたサーバーの名前は覚えず、ポートの番号で呼ぶ", () => {
+    const records = createHttpRecords();
+    for (let port = 1; port <= 100; port += 1) records.accept(listen(port), auth);
+    records.accept(listen(3000), client);
+    records.accept(exchange(), client);
+    expect(records.store.getSnapshot()[0]?.to.name).toBe("3000 番のサーバー");
+  });
+});

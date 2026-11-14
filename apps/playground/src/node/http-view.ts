@@ -11,8 +11,14 @@ export function bodyText(body: HttpBody): string {
   return `${body.text}\n…（先頭だけを記録しました。全体は ${bytes(body.size)}）`;
 }
 
-const toMessage = (message: { headers: HttpMessage["headers"]; body?: HttpBody }): HttpMessage => ({
-  headers: message.headers,
+/** 記録を詳細の形にする。上限を超えて捨てたヘッダは、その数を末尾の行で示す。 */
+const toMessage = (message: HttpRecord["request"]): HttpMessage => ({
+  headers: message.omittedHeaders
+    ? [
+        ...message.headers,
+        { name: "…", value: `ほかに ${message.omittedHeaders} 個のヘッダを省きました` },
+      ]
+    : message.headers,
   ...(message.body && { body: bodyText(message.body) }),
 });
 
@@ -38,7 +44,7 @@ export function toExchange(record: HttpRecord): HttpExchange {
     fromId: record.from.id,
     toId: record.to.id,
     method: record.method,
-    url: record.url,
+    url: record.urlTruncated ? `${record.url}…（URL の先頭だけを記録しました）` : record.url,
     request: toMessage(record.request),
     ...(record.response && {
       status: record.response.status,

@@ -8,24 +8,39 @@ type HttpHeaderLine = HttpRecord["request"]["headers"][number];
 /** 1 つの実行環境が持つ HTTP の記録の上限。超えたときは、古いものから捨てる。 */
 const MAX_RECORDS = 500;
 
+/**
+ * 1 行の記録の大きさの上限。訪問者のプログラムも記録の行を出せるので、preload が出す大きさを超えた分を切る。
+ * 本文の文字数は、preload が記録する 64 KB を UTF-8 で読んだ文字数を超えない値にする。
+ */
+const MAX_BODY_TEXT = 64 * 1024;
+const MAX_HEADERS = 100;
+const MAX_URL = 8 * 1024;
+/** 名前を覚えるサーバーの数の上限。超えた後に待ち受けたサーバーは、ポートの番号で呼ぶ。 */
+const MAX_NAMES = 100;
+
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
 const isPort = (value: unknown): value is number =>
   Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 65535;
 
-const toHeaders = (value: unknown): HttpHeaderLine[] | undefined => {
+type HeaderList = { headers: HttpHeaderLine[]; omittedHeaders?: number };
+
+/** ヘッダの一覧を読む。上限を超えた分は捨て、捨てた数を omittedHeaders に入れる。 */
+const toHeaders = (value: unknown): HeaderList | undefined => {
   if (!Array.isArray(value)) return undefined;
   const headers: HttpHeaderLine[] = [];
   for (const item of value) {
     if (!isObject(item) || typeof item.name !== "string" || typeof item.value !== "string") {
       return undefined;
     }
-    headers.push({ name: item.name, value: item.value });
+    if (headers.length < MAX_HEADERS) headers.push({ name: item.name, value: item.value });
   }
-  return headers;
+  const omitted = value.length - headers.length;
+  return omitted > 0 ? { headers, omittedHeaders: omitted } : { headers };
 };
 
+/** 本文を読む。文字数の上限を超えた分は切り、truncated を立てる。 */
 const toBody = (value: unknown): HttpBody | undefined | false => {
   if (value === undefined) return undefined;
   if (
@@ -36,8 +51,19 @@ const toBody = (value: unknown): HttpBody | undefined | false => {
   ) {
     return false;
   }
+  if (value.text !== null && value.text.length > MAX_BODY_TEXT) {
+    return {
+      text: value.text.slice(0, MAX_BODY_TEXT),
+      size: Math.max(value.size, value.text.length),
+      truncated: true,
+    };
+  }
   return { text: value.text, size: value.size, truncated: value.truncated };
 };
+
+/** URL を読む。上限を超えた分は切り、urlTruncated を立てる。 */
+const toUrl = (url: string) =>
+  url.length > MAX_URL ? { url: url.slice(0, MAX_URL), urlTruncated: true } : { url };
 
 type ParsedLine =
   | { type: "listen"; port: number }
@@ -90,7 +116,7 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
     }
     parsedResponse = {
       status: response.status as number,
-      headers: responseHeaders,
+      ...responseHeaders,
       ...(responseBody && { body: responseBody }),
     };
   }
@@ -100,10 +126,10 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
     to,
     record: {
       method,
-      url,
+      ...toUrl(url),
       startedAt,
       durationMs,
-      request: { headers: requestHeaders, ...(requestBody && { body: requestBody }) },
+      request: { ...requestHeaders, ...(requestBody && { body: requestBody }) },
       ...(parsedResponse && { response: parsedResponse }),
     },
   };
@@ -161,6 +187,7 @@ type RecordsState = {
 function accept(state: RecordsState, line: string, source: RecordSource) {
   const parsed = parseHttpLine(line);
   if (parsed?.type === "listen") {
+    if (!state.names.has(parsed.port) && state.names.size >= MAX_NAMES) return;
     const name = source.kind === "command" ? source.name : portName(parsed.port);
     state.names.set(parsed.port, name);
     state.store.set(renamePort(state.store.getSnapshot(), parsed.port, name));

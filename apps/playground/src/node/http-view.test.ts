@@ -91,3 +91,21 @@ describe("bodyText", () => {
     expect(bodyText(body)).toBe(expected);
   });
 });
+
+describe("toExchange の上限の注記", () => {
+  it("先頭だけを持つ URL には、そのことを添える", () => {
+    expect(toExchange(record({ url: "/a", urlTruncated: true })).url).toBe(
+      "/a…（URL の先頭だけを記録しました）",
+    );
+  });
+
+  it("捨てたヘッダがあるときは、その数を末尾の行で示す", () => {
+    const exchange = toExchange(
+      record({ request: { headers: [{ name: "a", value: "1" }], omittedHeaders: 3 } }),
+    );
+    expect(exchange.request?.headers).toStrictEqual([
+      { name: "a", value: "1" },
+      { name: "…", value: "ほかに 3 個のヘッダを省きました" },
+    ]);
+  });
+});
