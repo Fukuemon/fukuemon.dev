@@ -37,7 +37,7 @@ export type SqlConsoleProps = {
    * 配置は呼ぶ側のペインが決めるので、狭い配置でも入力と結果のタブに分けない。
    */
   dense?: boolean;
-  /** 記事に埋め込んだときは、狭い配置のタブを枠の上に置く。 */
+  /** 記事に埋め込んだときは、狭い配置のタブを枠の上に置く。`dense` のときは使わない。 */
   embedded?: boolean;
   /** 実行のボタンへの ref。呼ぶ側が、操作の後にフォーカスをボタンへ移すために使う。 */
   runButtonRef?: Ref<HTMLButtonElement>;

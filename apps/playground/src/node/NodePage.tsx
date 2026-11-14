@@ -191,7 +191,7 @@ function PreviewColumn({ database }: { database: boolean }) {
           { id: "sql", label: "SQL", content },
         ]}
         label="プレビューと SQL"
-        onSelect={(id) => setTab(id as RightTab)}
+        onSelect={(id) => setTab(id === "sql" ? "sql" : "preview")}
         panel="flush"
         selectedId={tab}
       />
