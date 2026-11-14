@@ -13,6 +13,11 @@ export const PREVIEW_CONSOLE_MESSAGE = "fukuemon:console";
 
 /** 1 つの実行環境が持つコンソールの記録の上限。超えたときは、古いものから捨てる。 */
 const MAX_RECORDS = 1000;
+/**
+ * 1 つの実行環境が持つコンソールの記録の文字数の合計の上限。超えたときは、古いものから捨てる。
+ * 1 件の上限（MAX_CHARS）より大きいので、最新の 1 件は必ず残る。
+ */
+const MAX_TOTAL_CHARS = 4 * 1024 * 1024;
 
 /**
  * 1 件の記録の大きさの上限。訪問者のプログラムとプレビューのページも記録を出せるので、写す側（guest/console-value.cjs）の上限を超えた分を捨てる。
@@ -143,30 +148,35 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
   }
 }
 
-/** 記録の中身を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
-export function parseConsoleRecord(
-  value: unknown,
-): Pick<ConsoleRecord, "level" | "time" | "args"> | undefined {
+type Parsed = { record: Pick<ConsoleRecord, "level" | "time" | "args">; chars: number };
+
+/** 記録の中身と、値の木が持つ文字数を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
+function parseWithChars(value: unknown): Parsed | undefined {
   if (!isObject(value) || !isLevel(value.level) || !isTime(value.time)) return undefined;
   const { level, time } = value;
   const budget = createBudget();
   try {
     const args = each(value.args, (arg) => toValue(arg, 0, budget));
-    return { level, time, args };
+    return { record: { level, time, args }, chars: MAX_CHARS - budget.chars };
   } catch (error) {
     if (error instanceof Rejected) return undefined;
     throw error;
   }
 }
 
-/** 記録の行の中身（頭を除いた JSON）を読む。 */
-export function parseConsoleLine(line: string) {
+const parseLineWithChars = (line: string) => {
   try {
-    return parseConsoleRecord(JSON.parse(line));
+    return parseWithChars(JSON.parse(line));
   } catch {
     return undefined;
   }
-}
+};
+
+/** 記録の中身を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
+export const parseConsoleRecord = (value: unknown) => parseWithChars(value)?.record;
+
+/** 記録の行の中身（頭を除いた JSON）を読む。 */
+export const parseConsoleLine = (line: string) => parseLineWithChars(line)?.record;
 
 /** 次の描画の前に run を呼ぶ。返す関数で、呼ぶ前に取り消す。 */
 type Schedule = (run: () => void) => () => void;
@@ -184,33 +194,40 @@ const nextFrame: Schedule = (run) => {
  * コンソールの記録の store。届いた記録は、描画の 1 回分ずつまとめて store に入れる。
  * 1 件ごとに入れると、表示中の全ての行の再描画とレイアウトが、1 件ごとに起きるためである。
  * 記録は、届いた順に並べる。プロセスとプレビューをまたいで時刻の順に並べ直さない。
+ * 件数と文字数の合計の上限は、store に入れた記録と、まだ入れていない記録を合わせて数える。最新の 1 件は、上限を超えても残す。
  */
 export function createConsoleRecords({
   max = MAX_RECORDS,
+  maxChars = MAX_TOTAL_CHARS,
   schedule = nextFrame,
-}: { max?: number; schedule?: Schedule } = {}) {
+}: { max?: number; maxChars?: number; schedule?: Schedule } = {}) {
   const store = createStore<readonly ConsoleRecord[]>([]);
-  let pending: ConsoleRecord[] = [];
+  // 残す記録は kept の first 番目から後である。捨てるたびに配列を詰めると、届くたびに上限の数を複製するので、first を進めて、捨てた分が上限の数を超えたら詰める
+  let kept: { record: ConsoleRecord; chars: number }[] = [];
+  let first = 0;
+  let chars = 0;
   let count = 0;
   let cancel: (() => void) | undefined;
   let disposed = false;
 
   const flush = () => {
     cancel = undefined;
-    const next = [...store.getSnapshot(), ...pending.slice(-max)];
-    pending = [];
-    store.set(next.length > max ? next.slice(next.length - max) : next);
+    store.set(kept.slice(first).map((entry) => entry.record));
   };
 
-  const add = (
-    parsed: Pick<ConsoleRecord, "level" | "time" | "args"> | undefined,
-    source: ConsoleSource,
-  ) => {
+  const add = (parsed: Parsed | undefined, source: ConsoleSource) => {
     if (parsed === undefined || disposed) return;
     count += 1;
-    pending.push({ id: String(count), source, ...parsed });
-    // 上限を超えた分は、上限の 2 倍まで溜めてから捨てる。1 件ごとに捨てると、届くたびに上限の数を複製する
-    if (pending.length > max * 2) pending = pending.slice(pending.length - max);
+    kept.push({ record: { id: String(count), source, ...parsed.record }, chars: parsed.chars });
+    chars += parsed.chars;
+    while (kept.length - first > 1 && (kept.length - first > max || chars > maxChars)) {
+      chars -= kept[first]?.chars ?? 0;
+      first += 1;
+    }
+    if (first > max) {
+      kept = kept.slice(first);
+      first = 0;
+    }
     cancel ??= schedule(flush);
   };
 
@@ -218,17 +235,19 @@ export function createConsoleRecords({
     store: store as Store<readonly ConsoleRecord[]>,
     /** Node の preload が出した記録の行を受ける。source は、行を出したプロセスである。 */
     acceptLine: (line: string, source: Pick<ProcessInfo, "name">) =>
-      add(parseConsoleLine(line), { kind: "process", name: source.name }),
+      add(parseLineWithChars(line), { kind: "process", name: source.name }),
     /** プレビューのページから届いたメッセージを受ける。port は、メッセージを送ったページのサーバーのポートである。 */
     acceptPreviewMessage: (message: unknown, port: number) => {
       if (!isObject(message) || message.type !== PREVIEW_CONSOLE_MESSAGE) return;
-      add(parseConsoleRecord(message), { kind: "preview", port });
+      add(parseWithChars(message), { kind: "preview", port });
     },
     dispose: () => {
       disposed = true;
       cancel?.();
       cancel = undefined;
-      pending = [];
+      kept = [];
+      first = 0;
+      chars = 0;
     },
   };
 }

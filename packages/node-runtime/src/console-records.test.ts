@@ -200,6 +200,34 @@ describe("createConsoleRecords", () => {
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["4", "5"]);
   });
 
+  it("捨てた記録が上限の数を超えて溜まっても、新しいものから上限の数だけを残す", () => {
+    const frames = manualFrames();
+    const records = createConsoleRecords({ max: 2, schedule: frames.schedule });
+    for (let index = 0; index < 10; index += 1) records.acceptLine(line("x"), { name: "p" });
+    frames.run();
+    records.acceptLine(line("y"), { name: "p" });
+    frames.run();
+    expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["10", "11"]);
+  });
+
+  it("文字数の合計が上限を超えたら、store に入れた記録と溜めた記録を合わせて、古いものから捨てる", () => {
+    const frames = manualFrames();
+    const records = createConsoleRecords({ maxChars: 5, schedule: frames.schedule });
+    records.acceptLine(line("aa"), { name: "p" });
+    frames.run();
+    for (const value of ["bb", "cc"]) records.acceptLine(line(value), { name: "p" });
+    frames.run();
+    expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2", "3"]);
+  });
+
+  it("1 件で文字数の合計の上限を超えても、最新の 1 件は残す", () => {
+    const frames = manualFrames();
+    const records = createConsoleRecords({ maxChars: 3, schedule: frames.schedule });
+    for (const value of ["a", "long"]) records.acceptLine(line(value), { name: "p" });
+    frames.run();
+    expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2"]);
+  });
+
   it("形に合わない行は、store に入れない", () => {
     const frames = manualFrames();
     const records = createConsoleRecords({ schedule: frames.schedule });
