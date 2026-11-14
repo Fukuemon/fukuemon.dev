@@ -63,8 +63,10 @@ Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/REA
 乱数を使う順は、試作の `docs/design/prototypes/top/src/h-strokes.mjs` と同じにしてある。
 線を足すか、消すか、並べ替えると、それより後の線がすべて変わる。
 
-出力は、線が 281 本、`path` が 415 本で、試作の `i-mon.html` の墨の絵と同じ文字列である。
-SVG のサイズの上限は gzip で 40 KB で、ユニットテストが確認する。
+試作の `i-mon.html` の墨の絵の 281 本の線の後ろに、`ink/ink-trees.ts` が、塀の向こうと門の奥の木の線を足す。
+木の線は、試作の線より後に乱数を使うので、試作の線を変えない。
+出力は、線が 393 本、`path` が 543 本である。
+SVG のサイズの上限は gzip で 45 KB で、ユニットテストが確認する。
 
 ## Testing
 

@@ -42,23 +42,23 @@ describe("inkSvg", () => {
     expect(inkSvg().svg).toBe(out.svg);
   });
 
-  it("試作と同じ数の線と path を書く", () => {
+  it("試作の線に木の線を足した数の線と path を書く", () => {
     expect({
       strokes: out.strokes,
       paths: out.paths,
       tags: out.svg.match(/<path /g)?.length,
-    }).toStrictEqual({ strokes: 281, paths: 415, tags: 415 });
+    }).toStrictEqual({ strokes: 393, paths: 543, tags: 543 });
   });
 
-  it("試作の i-mon.html の墨の絵と同じ文字列を書く", () => {
-    // 試作の SVG のタグの間の空白を除いた文字列の SHA-256。乱数の順がずれると変わる。
+  it("決めた墨の絵と同じ文字列を書く", () => {
+    // 試作の線に木の線を足した SVG の文字列の SHA-256。乱数の順がずれると変わる。
     expect(createHash("sha256").update(out.svg).digest("hex")).toBe(
-      "22bff8b7a4e4d2063a82b3e6a097d6688792fd44f00c8c72f511e87c07dae22c",
+      "3a6bc9830ed4ce5aa082bb587f902c58b7123d161ed352316db9814b27e67004",
     );
   });
 
-  it("gzip で 40 KB 以内に収まる", () => {
-    expect(gzipSync(out.svg).length).toBeLessThanOrEqual(40 * 1024);
+  it("gzip で 45 KB 以内に収まる", () => {
+    expect(gzipSync(out.svg).length).toBeLessThanOrEqual(45 * 1024);
   });
 
   it("3 つの層と松の円を、読み上げから隠した 1 枚の SVG に置く", () => {
