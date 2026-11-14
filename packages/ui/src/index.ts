@@ -52,6 +52,8 @@ export type {
 export { EditorFrame } from "./case/EditorFrame/EditorFrame";
 export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFrame";
 export { FileTree } from "./case/FileTree/FileTree";
+export { FileDrawer } from "./case/FileDrawer/FileDrawer";
+export type { FileDrawerProps } from "./case/FileDrawer/FileDrawer";
 export type { FileTreeProps, FileTreeResult } from "./case/FileTree/FileTree";
 export { HttpExchangeDetail } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export type { HttpExchangeDetailProps } from "./case/HttpExchangeDetail/HttpExchangeDetail";
@@ -63,6 +65,8 @@ export type {
   HttpHeader,
   HttpMessage,
 } from "./case/HttpExchangeList/HttpExchangeList";
+export { PaneTabs } from "./case/PaneTabs/PaneTabs";
+export type { PaneTabItem, PaneTabsPlacement, PaneTabsProps } from "./case/PaneTabs/PaneTabs";
 export { PreviewFrame } from "./case/PreviewFrame/PreviewFrame";
 export type { PreviewFrameProps } from "./case/PreviewFrame/PreviewFrame";
 export { TerminalFrame } from "./case/TerminalFrame/TerminalFrame";

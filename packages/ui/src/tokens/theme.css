@@ -151,6 +151,9 @@
   --animate-fade-in: fd-fade-in 150ms ease-out;
 }
 
+/* 高さが 500px 未満の画面。コードを動かす画面の配置にだけ、md と並べて使う（docs/adr/0072-short-landscape-layout-in-playground.md） */
+@custom-variant short (@media (max-height: 499.98px));
+
 @keyframes fd-fade-in {
   from {
     opacity: 0;
