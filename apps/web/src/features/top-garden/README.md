@@ -86,7 +86,15 @@ pnpm run build
 pnpm run measure:top
 ```
 
-- `--visit first` は最初の訪問を測る。`--visit plain` は、動きを減らす設定で庭を出さないトップを測る。
+前提は次のとおり。
+
+- Playwright の Chromium が入っている（`pnpm exec playwright install chromium`）。
+- 最初の実行では、`npx` が Lighthouse を取得するので、ネットワークにつながっている。
+- 引数を付けないときの GPU の条件（Metal）は、macOS でだけ動く。
+
+引数は、`pnpm run measure:top --visit first` のように後ろに付ける。
+
+- `--visit first` は最初の訪問を測る。`--visit reduced-motion` は、動きを減らす設定で庭を出さないトップを測る。
 - `--gpu swiftshader` は、GPU を使わずに CPU で WebGL を描く条件で測る。付けないときは macOS の Metal で描く。
 - `--throttling devtools` は、通信と CPU を絞って読み込んで測る。付けないときの `simulate` は、絞らずに読み込んだ記録から値を推定する。
 - 結果は `lighthouse-results/` に書く。実行ごとの報告の JSON と最後の画面と、中央値の JSON である。Git では追跡しない。

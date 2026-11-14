@@ -91,7 +91,6 @@
       "go"
     ],
     "ignoreDependencies": [
-      "playwright",
       "textlint-rule-no-mix-dearu-desumasu",
       "textlint-rule-preset-ai-words-ja",
       "textlint-rule-prh",
