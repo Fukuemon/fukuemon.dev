@@ -185,6 +185,17 @@
   }
 }
 
+/* 動きを減らす設定では、step-end で右端の手前まで濃さを保ち、右端に着いたときに一度に消える */
+@keyframes fd-scroll-fade-end {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* フォーカスの表示は、このユーティリティだけで書く。要素から 2px 離して、墨の 2px の輪を 1 重に引く */
 @utility focus-ring {
   outline: 2px solid var(--fd-color-focus);
@@ -338,16 +349,6 @@
       animation-fill-mode: both;
       animation-timeline: scroll(nearest inline);
     }
-  }
-}
-
-@keyframes fd-scroll-fade-end {
-  0%,
-  90% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
   }
 }
 
