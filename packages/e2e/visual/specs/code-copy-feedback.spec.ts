@@ -8,9 +8,10 @@ const COPY_BUTTON = "クリップボードにコピーします";
 
 for (const [name, marker] of [
   ["ファイル名の帯のある", "article-pages.ts"],
-  ["ファイル名の帯のない", "untitledArticleHref"],
+  ["段落の直後の、ファイル名の帯のない", "untitledArticleHref"],
+  ["見出しの直後の、ファイル名の帯のない", "headingFollowedHref"],
 ] as const) {
-  test(`${name}コードブロックのコピーのボタンを押すと、吹き出しが 1 行目の字とボタンに重ならない`, async ({
+  test(`${name}コードブロックのコピーのボタンを押すと、吹き出しが 1 行目の字とボタンと直前のブロックに重ならない`, async ({
     page,
     context,
   }) => {
@@ -24,21 +25,23 @@ for (const [name, marker] of [
     await button.click();
     await frame.locator(".feedback").waitFor();
 
-    // 矩形は吹き出しが消え始めても変わらないので、1 回の評価で、消える前に 3 つをまとめて読む
+    // 矩形は吹き出しが消え始めても変わらないので、1 回の評価で、消える前にまとめて読む
     const overlaps = await frame.evaluate((el) => {
       const feedback = el.querySelector(".feedback")!.getBoundingClientRect();
       const copyButton = el.querySelector(".copy button")!.getBoundingClientRect();
       const range = document.createRange();
       range.selectNodeContents(el.querySelector(".ec-line .code")!);
       const firstLine = range.getBoundingClientRect();
+      const previous = el.previousElementSibling!.getBoundingClientRect();
       const intersects = (a: DOMRect, b: DOMRect) =>
         a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
       return {
         firstLine: intersects(feedback, firstLine),
         button: intersects(feedback, copyButton),
+        previousBlock: intersects(feedback, previous),
       };
     });
 
-    expect(overlaps).toStrictEqual({ firstLine: false, button: false });
+    expect(overlaps).toStrictEqual({ firstLine: false, button: false, previousBlock: false });
   });
 }

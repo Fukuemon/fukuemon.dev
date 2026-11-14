@@ -69,6 +69,14 @@ export function untitledArticleHref(id: string, base: string): string {
 pnpm --filter @fukuemon/web exec astro build --site https://fukuemon.dev --outDir ./dist-check --root ./apps/web --verbose --devOutput
 ```
 
+## 見出しの直後のコードブロック
+
+```ts
+export function headingFollowedHref(id: string, base: string): string {
+  return base + id;
+}
+```
+
 ## 図
 
 次の図は、原稿が記事のページになるまでを示す。
