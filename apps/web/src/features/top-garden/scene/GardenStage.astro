@@ -87,10 +87,14 @@ const tool =
     block-size: 8.5rem;
   }
 
-  /* ヘッダーは、庭の上に重ね、地を透かして霞の上に置く */
-  :global(html.stage-on.garden-ready [data-site-header]) {
+  /* ヘッダーは、庭を描く前から文書の流れの外に置き、庭の面の下に隠す。描いた後に外すと、本文が上へずれて CLS に数えられる */
+  :global(html.stage-on [data-site-header]) {
     position: fixed;
     inset: 0 0 auto;
+  }
+
+  /* 庭を描いた後は、ヘッダーを庭の上に重ね、地を透かして霞の上に置く */
+  :global(html.stage-on.garden-ready [data-site-header]) {
     z-index: 30;
     border-color: transparent;
   }
