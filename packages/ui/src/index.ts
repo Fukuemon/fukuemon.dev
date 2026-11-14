@@ -71,7 +71,7 @@ export { PreviewFrame } from "./case/PreviewFrame/PreviewFrame";
 export type { PreviewFrameProps } from "./case/PreviewFrame/PreviewFrame";
 export { TerminalFrame } from "./case/TerminalFrame/TerminalFrame";
 export type { TerminalFrameProps } from "./case/TerminalFrame/TerminalFrame";
-export { ToolPaneGroup, type ToolPaneState } from "./case/ToolPane/ToolPane";
+export type { ToolPaneState } from "./case/ToolPane/ToolPane";
 export { SearchBox } from "./case/SearchBox/SearchBox";
 export type { SearchBoxProps, SearchSuggestion } from "./case/SearchBox/SearchBox";
 export { SeriesPager } from "./case/SeriesPager/SeriesPager";

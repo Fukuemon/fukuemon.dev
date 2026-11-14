@@ -31,8 +31,6 @@ export type ToolPaneProps = {
   children?: ReactNode;
 };
 
-const JoinedContext = createContext(false);
-
 const TabPanelContext = createContext<{ isFlush: boolean } | undefined>(undefined);
 
 /**
@@ -42,13 +40,6 @@ const TabPanelContext = createContext<{ isFlush: boolean } | undefined>(undefine
  */
 export function ToolPaneTabPanel({ flush, children }: { flush: boolean; children: ReactNode }) {
   return <TabPanelContext value={{ isFlush: flush }}>{children}</TabPanelContext>;
-}
-
-/**
- * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は、左と上へ 1px ずらして隣に重ねる。ツールのページは使わず、ペインの間を 8px 空けて並べる（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
- */
-export function ToolPaneGroup({ children }: { children: ReactNode }) {
-  return <JoinedContext value>{children}</JoinedContext>;
 }
 
 /**
@@ -69,7 +60,6 @@ export function ToolPane({
   children,
 }: ToolPaneProps) {
   const titleId = useId();
-  const isJoined = use(JoinedContext);
   const tabPanel = use(TabPanelContext);
   const isTitleHidden = tabPanel !== undefined;
   // 条件で出す操作は false か null で渡るので、描くものが無いときは帯を操作の無い形にする
@@ -83,7 +73,6 @@ export function ToolPane({
         !tabPanel?.isFlush && "rounded-pane",
         // 面の塗りが消えるハイコントラストのときだけ、枠でペインを区切る（docs/adr/0073-layered-panes-and-radius-in-playground.md）
         "forced-colors:border",
-        isJoined && "-mt-px -ml-px",
       )}
     >
       <div

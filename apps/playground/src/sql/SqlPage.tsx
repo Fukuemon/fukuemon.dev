@@ -56,21 +56,26 @@ export function SqlPage({ search, embedded }: { search: string; embedded: boolea
     <main
       className={
         mode === "wide"
-          ? "mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4"
+          ? "min-h-dvh min-w-0 bg-surface-ground p-4"
           : // 記事に埋め込んだ狭い配置では、地を出さず、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）
             embedded
             ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
             : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
       }
     >
-      {!embedded && (
-        <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
-          SQL の実行環境
-        </h1>
-      )}
-      <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
-        <SqlTool embedded={embedded} search={search} />
-      </Suspense>
+      {/* PC の配置では、地の上に、記事と同じ幅の列を置く */}
+      <div
+        className={mode === "wide" ? "mx-auto flex max-w-page min-w-0 flex-col gap-4" : "contents"}
+      >
+        {!embedded && (
+          <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
+            SQL の実行環境
+          </h1>
+        )}
+        <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
+          <SqlTool embedded={embedded} search={search} />
+        </Suspense>
+      </div>
     </main>
   );
 }

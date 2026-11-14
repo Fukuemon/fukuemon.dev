@@ -9,7 +9,7 @@ const { Default, LongData } = composeStories(stories);
 
 const rectOf = (name: string) => screen.getByRole("region", { name }).getBoundingClientRect();
 
-// 48rem（768px）のブレークポイントの前後と、狭い画面の最小の幅で確かめる。隣り合う領域は罫を 1px 重ねる
+// 48rem（768px）のブレークポイントの前後と、狭い画面の最小の幅で確かめる。隣り合う領域は 8px 空ける
 describe("コードを動かす画面", () => {
   it.each([320, 767])(
     "幅 %ipx（48rem 未満）では、ページが横にはみ出さず、領域が縦に並ぶ（LAYOUT-OVERFLOW）",
@@ -37,24 +37,28 @@ describe("コードを動かす画面", () => {
     },
   );
 
-  it("幅 1280px では、ファイルの枠が端末の下端まで伸び、領域の間に隙間を空けない", async () => {
+  it("幅 1280px では、ファイルの枠が端末の下端まで伸び、領域の間を 8px 空ける", async () => {
     await page.viewport(1280, 900);
     render(<LongData />);
-    expect(Math.abs(rectOf("ファイル").bottom - rectOf("端末").bottom)).toBeLessThanOrEqual(1);
-    expect(Math.abs(rectOf("エディタ").bottom - rectOf("端末").top)).toBeLessThanOrEqual(1);
-    expect(Math.abs(rectOf("ファイル").right - rectOf("エディタ").left)).toBeLessThanOrEqual(1);
-    expect(Math.abs(rectOf("エディタ").right - rectOf("プレビュー").left)).toBeLessThanOrEqual(1);
-    expect(Math.abs(rectOf("プレビュー").bottom - rectOf("HTTP の流れ").top)).toBeLessThanOrEqual(
-      1,
-    );
+    expect({
+      fileToTerminalBottom: Math.round(rectOf("ファイル").bottom - rectOf("端末").bottom),
+      editorToTerminal: Math.round(rectOf("端末").top - rectOf("エディタ").bottom),
+      fileToEditor: Math.round(rectOf("エディタ").left - rectOf("ファイル").right),
+      editorToPreview: Math.round(rectOf("プレビュー").left - rectOf("エディタ").right),
+      previewToHttp: Math.round(rectOf("HTTP の流れ").top - rectOf("プレビュー").bottom),
+    }).toStrictEqual({
+      fileToTerminalBottom: 0,
+      editorToTerminal: 8,
+      fileToEditor: 8,
+      editorToPreview: 8,
+      previewToHttp: 8,
+    });
   });
 
-  it("幅 1280px では、隣り合う領域を 1px 重ね、領域に四方の罫を引かず、角の丸い紙の面にする", async () => {
+  it("幅 1280px では、領域に四方の罫を引かず、角の丸い紙の面にする", async () => {
     await page.viewport(1280, 900);
     render(<LongData />);
-    // 領域は左と上へ 1px ずらす。罫は引かず、面の角を丸める（docs/adr/0073-layered-panes-and-radius-in-playground.md）
-    expect(rectOf("エディタ").bottom - rectOf("端末").top).toBe(1);
-    expect(rectOf("エディタ").right - rectOf("プレビュー").left).toBe(1);
+    // 罫は引かず、面の角を丸める（docs/adr/0073-layered-panes-and-radius-in-playground.md）
     const consolePane = screen.getByRole("region", { name: "コンソール" });
     expect(consolePane.getBoundingClientRect().top).toBeGreaterThan(rectOf("端末").bottom);
     expect(getComputedStyle(consolePane).borderLeftWidth).toBe("0px");

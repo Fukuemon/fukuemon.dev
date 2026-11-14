@@ -98,7 +98,10 @@ export function SqlConsole({
       <div className="flex min-w-0 flex-col gap-4">
         <div className="grid h-96 min-h-0 has-[.cm-focused]:focus-ring">{editor}</div>
         {runRow}
-        {results}
+        {/* 結果は、出すものがあるときだけ、地の上の紙の面に置く（docs/adr/0073-layered-panes-and-radius-in-playground.md） */}
+        {(progress !== undefined || database.kind === "stopped" || shown !== undefined) && (
+          <div className="min-w-0 rounded-pane bg-surface-pane p-3">{results}</div>
+        )}
       </div>
     );
   }
