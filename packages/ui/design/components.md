@@ -108,6 +108,16 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 内容の制約: `label` を必ず渡す。見出しを画面に出さないときも、`isLabelHidden` で読み上げに残す。案内の文（placeholder）を見出しの代わりにしない。
 - キーボード: 入力欄の標準の操作だけを持つ。
 
+### Select
+
+- 使う場面: コードを動かす画面で、決まった少ない値から 1 つを選ぶ欄。SQL の結果の 1 ページの行の数に使う。
+- 使わない場面と、代わりに使うもの: 自由な文字を入れるなら `TextField`。操作を選んで起こすなら `ActionMenu`。
+- 変種: 密度の `default`（48px）と `compact`（28px）。`compact` は、コードを動かす画面のペインだけに使う（ADR-0062）。`compact` も、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
+  - 欄の面は、コードを動かす画面の紙の面と同じ `surface-pane` にする（ADR-0073）。コードを動かす画面の外では使わない（`PLAYGROUND-ONLY`）。
+- 状態: デフォルト、フォーカス、無効。
+- 内容の制約: `label` を必ず渡す。見出しは欄の左に置き、`<label>` で欄に結ぶ。
+- キーボード: ブラウザの `<select>` の操作に従う。
+
 ### Table
 
 - 使う場面: 記事の表、SQL の結果、HTTP のヘッダ。

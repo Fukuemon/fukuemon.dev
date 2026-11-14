@@ -1,6 +1,6 @@
-import { Button, Notice, Table, TreeView } from "@fukuemon/ui";
+import { Button, Notice, Select, Table, TreeView } from "@fukuemon/ui";
 import type { SqlResponse, SqlResult } from "@fukuemon/sql-runtime";
-import { use, useId, useState } from "react";
+import { use, useState } from "react";
 
 import { DenseContext } from "./density";
 
@@ -40,7 +40,6 @@ function RowsTable({ result }: { result: SqlResult }) {
   const dense = use(DenseContext);
   const buttonSize = dense ? "XS" : "S";
   const text = dense ? "text-body-compact" : "text-body-dense";
-  const sizeId = useId();
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(0);
   const range = tablePage(result, pageSize, page);
@@ -77,26 +76,21 @@ function RowsTable({ result }: { result: SqlResult }) {
         </Table.Body>
       </Table>
       <div className={`flex flex-wrap items-center ${dense ? "gap-2" : "gap-4"}`}>
-        <div className="flex items-center gap-2">
-          <label className={`${text} text-text`} htmlFor={sizeId}>
-            1 ページの行
-          </label>
-          <select
-            className={`bg-surface-pane px-2 text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring ${dense ? "h-7 rounded-control-compact text-body-compact pointer-coarse:h-11" : "h-12 rounded-control text-body-dense"}`}
-            id={sizeId}
-            onChange={(event) => {
-              setPageSize(Number(event.target.value) as PageSize);
-              setPage(0);
-            }}
-            value={pageSize}
-          >
-            {PAGE_SIZES.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          density={dense ? "compact" : "default"}
+          label="1 ページの行"
+          onChange={(event) => {
+            setPageSize(Number(event.target.value) as PageSize);
+            setPage(0);
+          }}
+          value={pageSize}
+        >
+          {PAGE_SIZES.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </Select>
         {range.pages > 1 && (
           <div className="flex items-center gap-2">
             <Button
