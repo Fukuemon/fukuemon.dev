@@ -171,38 +171,73 @@ describe("toConsoleValues", () => {
       expect(touched).toStrictEqual([]);
     });
 
-    it("name か message が文字列のデータでも組み込みの getter でもない Error は、stack を読まず、訪問者のコードを動かさない", () => {
-      const touched: string[] = [];
-      const own = new Error("m");
-      Object.defineProperty(own, "message", {
-        get() {
-          touched.push("own");
-          return "x";
-        },
-      });
-      class Inherited extends Error {
-        override get name() {
-          touched.push("inherited");
-          return "I";
-        }
-      }
-      const object = new Error("m");
-      Object.defineProperty(object, "message", {
-        value: {
+    describe.each([
+      ["isNativeError を渡さないとき", copy],
+      ["isNativeError を渡したとき", copyInNode],
+    ])("%s", (_, run) => {
+      it("name か message が文字列のデータでも組み込みの getter でもない Error は、stack を読まず、訪問者のコードを動かさない", () => {
+        const touched: string[] = [];
+        const spy = (label: string) => ({
           toString() {
-            touched.push("toString");
+            touched.push(label);
             return "x";
           },
-        },
+        });
+        const own = new Error("m");
+        Object.defineProperty(own, "message", {
+          get() {
+            touched.push("own");
+            return "x";
+          },
+        });
+        class Inherited extends Error {
+          override get name() {
+            touched.push("inherited");
+            return "I";
+          }
+        }
+        const object = new Error("m");
+        Object.defineProperty(object, "message", { value: spy("message") });
+        const objectName = new Error("m");
+        Object.defineProperty(objectName, "name", { value: spy("name") });
+        class InheritedObject extends Error {}
+        Object.defineProperty(InheritedObject.prototype, "name", { value: spy("inheritedObject") });
+        // stack を持つ Error の getter を、鎖の下の値の文字列の name で隠す
+        const inner = new Error("m");
+        Object.defineProperty(inner, "name", {
+          get() {
+            touched.push("shadowed");
+            return "x";
+          },
+        });
+        const shadowed = Object.create(inner, { name: { value: "E" } }) as object;
+        const values = run(
+          own,
+          new Inherited("m"),
+          object,
+          objectName,
+          new InheritedObject("m"),
+          shadowed,
+        );
+        expect({ touched, values }).toStrictEqual({
+          touched: [],
+          values: [
+            { kind: "error", name: "Error", message: "" },
+            { kind: "error", name: "Error", message: "m" },
+            { kind: "error", name: "Error", message: "" },
+            { kind: "error", name: "Error", message: "m" },
+            { kind: "error", name: "Error", message: "m" },
+            { kind: "error", name: "E", message: "m" },
+          ],
+        });
       });
-      const values = copyInNode(own, new Inherited("m"), object);
-      expect({ touched, values }).toStrictEqual({
-        touched: [],
-        values: [
-          { kind: "error", name: "Error", message: "" },
-          { kind: "error", name: "Error", message: "m" },
-          { kind: "error", name: "Error", message: "" },
-        ],
+
+      it("name と message が文字列のデータの Error のサブクラスは、stack を読む", () => {
+        class Named extends Error {}
+        Object.defineProperty(Named.prototype, "name", { value: "Named" });
+        expect(run(new Named("m"))).toStrictEqual([
+          { kind: "error", name: "Named", message: "m", stack: expect.any(Array) },
+        ]);
       });
     });
 

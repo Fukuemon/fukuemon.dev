@@ -150,13 +150,21 @@ function toConsoleValues(args, describe, isNativeError) {
     return true;
   };
 
+  /** V8 は、値ではなく stack を自身に持つオブジェクトの name と message で文を作るので、両方を確かめる。 */
+  const canReadStack = (value) => {
+    let holder = value;
+    while (holder && !Object.prototype.hasOwnProperty.call(holder, "stack")) {
+      holder = Object.getPrototypeOf(holder);
+    }
+    return [value, holder].every(
+      (target) => !target || (isPlainText(target, "name") && isPlainText(target, "message")),
+    );
+  };
+
   const errorOf = (value) => {
     const name = readProperty(value, "name");
     const message = readProperty(value, "message");
-    const stack =
-      isPlainText(value, "name") && isPlainText(value, "message")
-        ? readProperty(value, "stack")
-        : undefined;
+    const stack = canReadStack(value) ? readProperty(value, "stack") : undefined;
     // V8 は「    at 関数 (場所)」、Firefox と Safari は「関数@場所」の行を並べる。V8 の 1 行目は name と message である
     const lines = typeof stack === "string" ? stack.split("\n") : [];
     const v8 = lines.filter((line) => /^\s+at\s/.test(line));
