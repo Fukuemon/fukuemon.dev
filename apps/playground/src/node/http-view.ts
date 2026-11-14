@@ -17,32 +17,32 @@ const toMessage = (message: { headers: HttpMessage["headers"]; body?: HttpBody }
 });
 
 /**
- * HTTP の記録を、一覧と詳細に渡す形にする。通信した側は、ブラウザを先に、記録に初めて出た順に並べる。
+ * 記録に出た、通信した側。ブラウザを先に、記録に初めて出た順に並べる。
  * 並べた順で区別の色が決まる。後から届いた記録が前に入るときと、上限で古い記録が消えるときは、色が変わることがある。
  */
-export function toHttpView(records: readonly HttpRecord[]): {
-  actors: HttpActor[];
-  exchanges: HttpExchange[];
-} {
+export function actorsOf(records: readonly HttpRecord[]): HttpActor[] {
   const actors = new Map<string, HttpActor>();
-  const exchanges = records.map((record): HttpExchange => {
+  for (const record of records) {
     for (const peer of [record.from, record.to])
       actors.set(peer.id, { id: peer.id, name: peer.name });
-    return {
-      id: record.id,
-      fromId: record.from.id,
-      toId: record.to.id,
-      method: record.method,
-      url: record.url,
-      request: toMessage(record.request),
-      ...(record.response && {
-        status: record.response.status,
-        response: toMessage(record.response),
-      }),
-    };
-  });
-  const ordered = [...actors.values()].sort(
+  }
+  return [...actors.values()].sort(
     (a, b) => Number(b.id === BROWSER_PEER_ID) - Number(a.id === BROWSER_PEER_ID),
   );
-  return { actors: ordered, exchanges };
+}
+
+/** 1 件の記録を、一覧と詳細に渡す形にする。 */
+export function toExchange(record: HttpRecord): HttpExchange {
+  return {
+    id: record.id,
+    fromId: record.from.id,
+    toId: record.to.id,
+    method: record.method,
+    url: record.url,
+    request: toMessage(record.request),
+    ...(record.response && {
+      status: record.response.status,
+      response: toMessage(record.response),
+    }),
+  };
 }

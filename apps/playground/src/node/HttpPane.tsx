@@ -3,13 +3,13 @@ import { HttpExchangeDetail, HttpExchangeList } from "@fukuemon/ui";
 import { useSyncExternalStore } from "react";
 
 import { useRuntime, useSelection } from "./context";
-import { toHttpView } from "./http-view";
+import { actorsOf, toExchange } from "./http-view";
 import { bootFailureMessage } from "./messages";
 
 const NO_RECORDS: readonly HttpRecord[] = [];
 const noRecords = { subscribe: () => () => undefined, getSnapshot: () => NO_RECORDS };
 
-function useHttpView() {
+function useRecords() {
   const { runtime, reason } = useRuntime();
   const store = runtime?.httpExchanges ?? noRecords;
   const records = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -21,17 +21,17 @@ function useHttpView() {
           title: "HTTP の流れを記録できません",
           message: bootFailureMessage(reason),
         } as const);
-  return { state, ...toHttpView(records) };
+  return { state, records };
 }
 
 /** 実行環境の中のサーバーが受けた HTTP のリクエストとレスポンスを、受けた順に並べるペイン。 */
 export function HttpListPane() {
-  const { state, actors, exchanges } = useHttpView();
+  const { state, records } = useRecords();
   const { selection, dispatch } = useSelection();
   return (
     <HttpExchangeList
-      actors={actors}
-      exchanges={exchanges}
+      actors={actorsOf(records)}
+      exchanges={records.map(toExchange)}
       onSelect={(id) => dispatch({ type: "select-exchange", id })}
       selectedId={selection.exchange}
       state={state}
@@ -41,12 +41,8 @@ export function HttpListPane() {
 
 /** HTTP の一覧で選んだ通信の、ヘッダ、Cookie、本文を出すペイン。 */
 export function HttpDetailPane() {
-  const { actors, exchanges } = useHttpView();
+  const { records } = useRecords();
   const { selection } = useSelection();
-  return (
-    <HttpExchangeDetail
-      actors={actors}
-      exchange={exchanges.find((exchange) => exchange.id === selection.exchange)}
-    />
-  );
+  const record = records.find((item) => item.id === selection.exchange);
+  return <HttpExchangeDetail actors={actorsOf(records)} exchange={record && toExchange(record)} />;
 }

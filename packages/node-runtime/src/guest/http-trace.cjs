@@ -46,10 +46,16 @@ function createBody() {
   return {
     add(chunk, encoding) {
       if (chunk === undefined || chunk === null || typeof chunk === "function") return;
+      const textEncoding = typeof encoding === "string" ? encoding : "utf8";
+      // 上限まで写した後は、大きさだけを数え、本文を写さない
+      if (kept >= BODY_LIMIT && typeof chunk === "string") {
+        size += Buffer.byteLength(chunk, textEncoding);
+        return;
+      }
       const buffer = Buffer.isBuffer(chunk)
         ? chunk
         : typeof chunk === "string"
-          ? Buffer.from(chunk, typeof encoding === "string" ? encoding : "utf8")
+          ? Buffer.from(chunk, textEncoding)
           : Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
       size += buffer.length;
       if (kept < BODY_LIMIT) {
@@ -142,7 +148,7 @@ const serverEmit = http.Server.prototype.emit;
 http.Server.prototype.emit = function (event, ...args) {
   let port;
   quietly(() => {
-    port = portOf(this);
+    if (event === "listening" || event === "request") port = portOf(this);
     if (event === "listening" && port !== undefined) {
       listening ??= port;
       write({ type: "listen", port });

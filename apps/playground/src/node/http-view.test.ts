@@ -1,7 +1,7 @@
 import type { HttpRecord } from "@fukuemon/node-runtime";
 import { describe, expect, it } from "vitest";
 
-import { bodyText, toHttpView } from "./http-view";
+import { actorsOf, bodyText, toExchange } from "./http-view";
 
 const record = (overrides: Partial<HttpRecord>): HttpRecord => ({
   id: "1",
@@ -15,9 +15,9 @@ const record = (overrides: Partial<HttpRecord>): HttpRecord => ({
   ...overrides,
 });
 
-describe("toHttpView", () => {
+describe("actorsOf", () => {
   it("通信した側を、ブラウザを先に、記録に初めて出た順に並べる", () => {
-    const { actors } = toHttpView([
+    const actors = actorsOf([
       record({
         id: "1",
         from: { id: "port:3000", name: "クライアント" },
@@ -31,9 +31,11 @@ describe("toHttpView", () => {
       { id: "port:4000", name: "認可サーバー" },
     ]);
   });
+});
 
+describe("toExchange", () => {
   it("レスポンスのある記録は、状態コードとレスポンスを持ち、無い記録は持たない", () => {
-    const { exchanges } = toHttpView([
+    const exchanges = [
       record({
         id: "1",
         response: {
@@ -43,7 +45,7 @@ describe("toHttpView", () => {
         },
       }),
       record({ id: "2" }),
-    ]);
+    ].map(toExchange);
     expect(exchanges).toStrictEqual([
       {
         id: "1",

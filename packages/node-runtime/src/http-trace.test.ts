@@ -218,6 +218,20 @@ describe("http-trace", () => {
     });
   });
 
+  it("上限まで写した後に届いた本文も、大きさに数える", async () => {
+    const { records } = await run(
+      oneServer(
+        `(req, res) => { res.write("a".repeat(70000)); res.end("あ"); }`,
+        `await (await fetch(base)).text();`,
+      ),
+    );
+    expect(responseBody(records)).toStrictEqual({
+      text: "a".repeat(64 * 1024),
+      size: 70003,
+      truncated: true,
+    });
+  });
+
   it("NUL を含む本文は、テキストとして記録しない", async () => {
     const { records } = await run(
       oneServer(

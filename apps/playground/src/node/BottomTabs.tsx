@@ -6,7 +6,8 @@ import type { BottomTab } from "./selection";
 
 /**
  * 下のペインの、端末と HTTP の流れを切り替えるタブ。
- * 選んでいないタブのペインも Activity で隠して残す。端末の入力の途中と、HTTP の一覧の選択とスクロールを、切り替えても消さないためである。
+ * 選んでいないタブのペインは Activity で隠す。隠している間の記録は store が持つ。
+ * 端末のエンジンは、隠すと Effect の後始末で破棄され、見せると作り直して出力の記録を書き直す。スクロールの位置と選択は残らない。
  */
 export function BottomTabs({ terminal, http }: { terminal: ReactNode; http: ReactNode }) {
   const { selection, dispatch } = useSelection();
