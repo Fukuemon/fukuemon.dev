@@ -44,7 +44,7 @@ const startRuntime = createRuntimeStarter();
 
 const pendingState = { kind: "pending" } as const;
 
-/** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */
+/** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面を覆う PageLoading を出させる。 */
 function BootWait() {
   useRuntime();
   return null;

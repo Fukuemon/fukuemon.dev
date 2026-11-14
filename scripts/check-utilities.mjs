@@ -104,6 +104,7 @@ const PLAYGROUND_PATHS = [
     "Tabs",
     "ActionMenu",
     "SplitPane",
+    "PageLoading",
   ].map((c) => `./packages/ui/src/base/${c}`),
 ].map((p) => resolve(p));
 

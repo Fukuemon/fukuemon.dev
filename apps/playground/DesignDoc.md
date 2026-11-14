@@ -448,14 +448,14 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - CodeMirror は、ビルドで `code-editor` のチャンクに分け、エディタを持つページの間で共有する。
   - 色は、`packages/ui` のテーマ変数を読む。CodeMirror のデフォルトの色は、ダークのテーマで読めないので残さない。
   - フォーカスの表示は、エディタを囲む要素に付ける。CodeMirror が作る要素には `focus-ring` のユーティリティを付けられないので、検索パネルの入力欄とボタンには、同じ値を書く。
-- 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、画面の右下に `PageLoading` で出す。SQL の実行の間は、結果の欄に `Loading` で出す。
+- 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、`PageLoading` で画面を覆って出す。SQL の実行の間は、結果の欄に `Loading` で出す。
 - `wide` の配置では、地の上の、サイトのページと同じ幅（`max-w-page`）の列に、入力欄、実行の行、結果の欄を縦に並べる。結果の欄は、出すものがあるときだけ紙の面に置く。`narrow` と `short` の配置では、入力と結果を `PaneTabs` のタブで 1 つずつ出す。実行すると結果のタブに替え、隠れた入力欄にあったフォーカスを選んだタブへ移す。
 
 Node の実行環境のページは、次のとおり組む。
 
 - `wide` の配置では、ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
 - `narrow` と `short` の配置では、エディタ、端末、プレビュー、通信（HTTP の流れ）を `PaneTabs` のタブで 1 つずつ出す。通信のタブは、一覧と詳細を、`narrow` では上下に、`short` では左右に並べる。ファイルのツリーは、タブの帯の先頭の「ファイル」のボタンで `FileDrawer` に開き、ファイルを選ぶと、ドロワーを閉じてエディタのタブに替え、エディタにフォーカスを移す。選んでいないタブのペインも隠して残し、タブを切り替えても、端末の出力とプレビューのページの状態を消さない。
-- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。ペインの外の `Suspense` が、画面の右下に `PageLoading` を出す。プロジェクトを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
+- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。ペインの外の `Suspense` が、`PageLoading` で画面を覆う。プロジェクトを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
 - ファイルとディレクトリを消す前に、`ConfirmDialog` で確認する。

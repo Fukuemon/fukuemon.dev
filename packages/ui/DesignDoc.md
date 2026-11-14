@@ -405,7 +405,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
   - `PaneTabs` のタブの中に置いた領域は、題を読み上げだけに残す。`flush` の `PaneTabs` の中では、面の角を丸めない。
 - 題の帯は 28px（触る端末では 44px）で、題は `text-compact` の薄い墨にする。下の状態の帯は 24px で、`text-compact` にする。ペインの中の罫は、タブの帯の下だけに引く。
 - 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
-  - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
+  - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、`PageLoading` で画面を覆って、中央に待ちの印を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
     - `pending` の領域は、操作と、題の下の帯（ファイルのタブ、URL の欄）も出さない。待ちの間にこれらへフォーカスすると、待ちが終わって領域が描き直されたときに、フォーカスが失われるためである。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
