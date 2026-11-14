@@ -33,6 +33,7 @@ const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions
     "relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-control ink-press",
     "not-aria-disabled:not-aria-busy:active:brightness-90",
     "focus-visible:focus-ring",
+    "forced-frame aria-disabled:forced-off-disabled",
     "aria-disabled:cursor-not-allowed aria-disabled:bg-surface-disabled aria-disabled:text-text-disabled aria-disabled:ring-0",
     variantClassName[variant],
     sizeClassName[size],

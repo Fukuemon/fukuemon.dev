@@ -231,6 +231,96 @@
   }
 }
 
+/*
+ * Windows のハイコントラスト（forced-colors: active）では、ブラウザが背景の色と影を消し、色をシステムの色に置き換える。
+ * 背景の色と ring だけで境界と状態を表す要素は、見分けられなくなる。次のユーティリティが、システムの色で枠と塗りを引く。
+ * 通常の表示には何も足さない。システムの色は、トークンを通さずここに書く（DESIGN.md の「ハイコントラスト」）。
+ * !important は、bg-primary のような通常の色の指定に勝たせるために付ける。ブラウザはシステムの色以外の値を置き換えるので、通常の指定が勝つと塗りが消える。
+ */
+/* 選択とオンの色。Chromium の forced-colors の強制では Highlight が半透明で、文字の下に Canvas の板が敷かれ、HighlightText の文字が見えなくなる。SelectedItem は不透明である */
+@media (forced-colors: active) {
+  :root {
+    --fd-forced-on: Highlight;
+    --fd-forced-on-text: HighlightText;
+  }
+
+  @supports (color: SelectedItem) {
+    :root {
+      --fd-forced-on: SelectedItem;
+      --fd-forced-on-text: SelectedItemText;
+    }
+  }
+}
+
+@utility forced-frame {
+  @media (forced-colors: active) {
+    border: 1px solid CanvasText !important;
+  }
+}
+
+@utility forced-on {
+  @media (forced-colors: active) {
+    background-color: var(--fd-forced-on) !important;
+    border-color: var(--fd-forced-on) !important;
+    color: var(--fd-forced-on-text) !important;
+  }
+}
+
+@utility forced-off-disabled {
+  @media (forced-colors: active) {
+    border-color: GrayText !important;
+    color: GrayText !important;
+  }
+}
+
+@utility forced-on-disabled {
+  @media (forced-colors: active) {
+    background-color: GrayText !important;
+    border-color: GrayText !important;
+    color: Canvas !important;
+  }
+}
+
+@utility forced-fill {
+  @media (forced-colors: active) {
+    background-color: CanvasText !important;
+  }
+}
+
+@utility forced-fill-on {
+  @media (forced-colors: active) {
+    background-color: var(--fd-forced-on) !important;
+  }
+}
+
+@utility forced-thumb-off {
+  @media (forced-colors: active) {
+    background-color: CanvasText !important;
+    color: Canvas !important;
+  }
+}
+
+@utility forced-thumb-on {
+  @media (forced-colors: active) {
+    background-color: var(--fd-forced-on-text) !important;
+    color: var(--fd-forced-on) !important;
+  }
+}
+
+@utility forced-thumb-disabled {
+  @media (forced-colors: active) {
+    background-color: GrayText !important;
+    color: Canvas !important;
+  }
+}
+
+@utility forced-thumb-on-disabled {
+  @media (forced-colors: active) {
+    background-color: Canvas !important;
+    color: GrayText !important;
+  }
+}
+
 /* 筆の線の形。stroke-brush と brush-hover が使う。入りを太くし、終わりを払う */
 :root {
   --fd-mask-brush: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 6%27 preserveAspectRatio=%27none%27%3E%3Cpath d=%27M0,1.2 C8,0.2 30,0.6 60,1.4 C80,1.9 92,2.6 100,3.4 C90,4.4 70,5.2 40,5.6 C20,5.8 6,5.6 0,5 Z%27/%3E%3C/svg%3E");

@@ -19,12 +19,12 @@ export function Checkbox({ label, ...props }: CheckboxProps) {
       <span className="relative inline-flex size-5 shrink-0">
         <input
           {...props}
-          className="peer size-5 cursor-pointer appearance-none disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset not-disabled:not-checked:group-hover/row:bg-surface-subtle not-disabled:not-checked:group-hover/row:ring-text checked:bg-primary checked:ring-primary not-disabled:checked:group-hover/row:bg-primary-hover focus-visible:focus-ring disabled:bg-surface-disabled disabled:ring-border disabled:checked:bg-text-disabled disabled:checked:ring-text-disabled"
+          className="peer size-5 cursor-pointer appearance-none disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset not-disabled:not-checked:group-hover/row:bg-surface-subtle not-disabled:not-checked:group-hover/row:ring-text checked:bg-primary checked:ring-primary not-disabled:checked:group-hover/row:bg-primary-hover focus-visible:focus-ring disabled:bg-surface-disabled disabled:ring-border disabled:checked:bg-text-disabled disabled:checked:ring-text-disabled forced-frame checked:forced-on disabled:forced-off-disabled disabled:checked:forced-on-disabled"
           type="checkbox"
         />
         <svg
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 hidden text-text-inverse peer-checked:block"
+          className="pointer-events-none absolute inset-0 hidden text-text-inverse peer-checked:block forced-colors:text-(--fd-forced-on-text) forced-colors:peer-disabled:text-[Canvas]"
           height="20"
           viewBox="0 0 20 20"
           width="20"

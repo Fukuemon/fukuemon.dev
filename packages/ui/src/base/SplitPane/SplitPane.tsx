@@ -107,7 +107,10 @@ export function SplitPane({
         role="separator"
         tabIndex={0}
       >
-        <span aria-hidden="true" className={clsx("bg-border", isHorizontal ? "w-px" : "h-px")} />
+        <span
+          aria-hidden="true"
+          className={clsx("bg-border forced-fill", isHorizontal ? "w-px" : "h-px")}
+        />
       </div>
       <div className="min-h-0 min-w-0 flex-1 overflow-auto">{secondary}</div>
     </div>
