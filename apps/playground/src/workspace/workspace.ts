@@ -17,7 +17,7 @@ export type Workspace<T> = {
   load: () => Promise<WorkspaceLoad<T>>;
   /** 保存してあるレコードを、丸ごと置き換える。IndexedDB を読めなかった後は、書き込まない。 */
   save: (record: T) => Promise<void>;
-  /** 保存してあるレコードを消す。IndexedDB を読めなかった後は、何もしない。 */
+  /** 保存してあるレコードを消す。IndexedDB を読めなかった後は、何もしない。待っている保存の後に消すため、createSaver の clear を通して呼ぶ。 */
   clear: () => Promise<void>;
 };
 

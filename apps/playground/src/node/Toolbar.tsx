@@ -13,23 +13,16 @@ export function Toolbar({ session }: { session: NodeSession }) {
   const hasSaved = useStore(session.hasSaved);
   const versionChanged = useStore(session.versionChanged);
   const saveFailed = useStore(session.saveFailed);
+  const runFailed = useStore(session.commandFailed);
   const [running, startRunning] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetFailed, setResetFailed] = useState(false);
-  const [runFailed, setRunFailed] = useState(false);
   const restartRef = useRef<HTMLButtonElement>(null);
 
   const run = () => {
-    setRunFailed(false);
-    startRunning(async () => {
-      try {
-        await session.run();
-      } catch (error) {
-        console.error("起動のコマンドを実行できない", error);
-        setRunFailed(true);
-      }
-    });
+    // 失敗は、session の commandFailed で出す
+    startRunning(() => session.run().catch(() => undefined));
   };
 
   // 戻し終えるまで確認の窓を開いておき、閉じた後は「起動し直す」にフォーカスを移す。戻すと「初期の状態に戻す」のボタンが消えるためである

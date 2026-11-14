@@ -48,18 +48,20 @@ function decodeText(bytes: Uint8Array): string | null {
   }
 }
 
+/** パスの区切りの 1 つが、exclude の名前と一致するか。files.readAll は、当たるパスを読まない。 */
+export const isExcludedPath = (path: string, exclude: readonly string[]) =>
+  path.split("/").some((segment) => exclude.includes(segment));
+
 async function readAllFiles(
   files: BackendFiles,
   { exclude, maxBytes }: ReadAllOptions,
   directory = "",
 ): Promise<FileContents[]> {
-  const excluded = new Set(exclude);
-  const items = [...(await files.list(directory))]
-    .filter((item) => !excluded.has(item.name))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const items = [...(await files.list(directory))].sort((a, b) => a.name.localeCompare(b.name));
   const result: FileContents[] = [];
   for (const item of items) {
     const path = join(directory, item.name);
+    if (isExcludedPath(path, exclude)) continue;
     if (item.kind === "directory") {
       result.push(...(await readAllFiles(files, { exclude, maxBytes }, path)));
       continue;

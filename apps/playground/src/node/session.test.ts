@@ -501,6 +501,19 @@ describe("run", () => {
     expect(commands.map((handle) => handle.killed)).toStrictEqual([true, true, false, false]);
   });
 
+  it("自動の実行で起動のコマンドを起動できないときは、commandFailed を true にする", async () => {
+    let installed: (code: number) => void = () => undefined;
+    const { session, latest } = setup(
+      { kind: "empty" },
+      { installExit: new Promise<number>((resolve) => (installed = resolve)) },
+    );
+    await settle(session);
+    vi.mocked(latest().runtime.processes.start).mockRejectedValue(new Error("起動できない"));
+    installed(0);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(session.commandFailed.getSnapshot()).toBe(true);
+  });
+
   it("起動の途中に押したときは、起動を待ってから実行する", async () => {
     const { session, latest } = setup({ kind: "saved", record: savedRecord });
     await session.run();

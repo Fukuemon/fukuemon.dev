@@ -8,6 +8,7 @@ import {
   type ReadAllOptions,
   type Store,
   bootNodeRuntime,
+  isExcludedPath,
 } from "@fukuemon/node-runtime";
 
 import { type ProjectLoad, isEmbedId, isSafeFilePath } from "../project/project";
@@ -60,8 +61,7 @@ function createStore<T>(initial: T): WritableStore<T> {
   };
 }
 
-const isExcluded = (path: string) =>
-  path.split("/").some((segment) => SAVE_RULES.exclude.includes(segment));
+const isExcluded = (path: string) => isExcludedPath(path, SAVE_RULES.exclude);
 
 /**
  * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
@@ -123,6 +123,8 @@ export type NodeSession = {
   hasSaved: Store<boolean>;
   /** 保存したファイルの初期ファイルのバージョンが、プロジェクトのものと違うか。 */
   versionChanged: Store<boolean>;
+  /** 起動のコマンドを起動できなかったときは true である。次に実行を始めたときと、起動し直したときに false に戻る。自動の実行と、実行のボタンの両方で立つ。 */
+  commandFailed: Store<boolean>;
   /** 起動し直すか、初期の状態に戻している間は true である。 */
   busy: Store<boolean>;
   /** npm install の後に、起動のコマンドを実行する。前に実行した起動のコマンドが動いていれば、止めてから実行する。 */
@@ -166,6 +168,7 @@ export function createNodeSession({
   const hasSaved = createStore(record !== undefined);
   const versionChanged = createStore(record !== undefined && record.version !== project.version);
   const busy = createStore(false);
+  const commandFailed = createStore(false);
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   let version = record?.version ?? project.version;
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
@@ -277,8 +280,14 @@ export function createNodeSession({
 
   /** 起動のコマンドの実行を列に足す。前の実行の失敗は、次の実行を止めない。 */
   const queueCommands = (instance: Instance, runtime: NodeRuntime) => {
-    const run = instance.commandQueue.then(() => startCommands(instance, runtime));
-    instance.commandQueue = run.catch(() => undefined);
+    const run = instance.commandQueue.then(() => {
+      commandFailed.set(false);
+      return startCommands(instance, runtime);
+    });
+    instance.commandQueue = run.catch((error: unknown) => {
+      console.error("起動のコマンドを実行できない", error);
+      if (current === instance) commandFailed.set(true);
+    });
     return run;
   };
 
@@ -345,6 +354,7 @@ export function createNodeSession({
   ) => {
     if (busy.getSnapshot()) return;
     busy.set(true);
+    commandFailed.set(false);
     try {
       // 起動の途中で破棄すると、後から起動した実行環境が残るので、起動を待ってから破棄する
       await runtimeStore.getSnapshot();
@@ -411,6 +421,7 @@ export function createNodeSession({
     hasSaved,
     versionChanged,
     busy,
+    commandFailed,
     run: async () => {
       // 起動の途中に押したときは、起動を待ってから実行する
       await runtimeStore.getSnapshot();
