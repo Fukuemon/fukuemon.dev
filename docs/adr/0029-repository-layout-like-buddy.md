@@ -25,7 +25,7 @@ buddy の構成は次のとおり。
 - `apps/web` は、記事、ハンズオン、playground を持つ Astro のサイトである。このサイトのコードと原稿は引き継がない。
 - `packages/design-system` は、古いトークン、レイアウトのユーティリティ、サイト全体の動きの規則の文書、挿絵の文書を持つ。トークンとコンポーネントは `packages/ui` に、挿絵の生成の出力は `packages/ui/src/art/` に移っている。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](0021-ui-components-and-catalog.md)
-  - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](0024-tokens-of-fukuemon-dev.md)
+  - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする](0024-tokens-of-fukuemon-dev.md)
 - package を切り出す条件は、決まっている。
   - ADR-0003: [pnpm workspace の monorepo とし、package の境界を最初から物理的に分ける](0003-monorepo-and-vite-plus.md)
 - Content Model は、Astro に依存しない package である。

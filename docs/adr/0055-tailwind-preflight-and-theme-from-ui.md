@@ -24,7 +24,7 @@ Expressive Code が挿す CSS はこのリポジトリのビルドを通らな�
 
 - トークンの値は、`packages/ui/src/tokens/primitive.css` と `semantic.css` の `:root` に、素のカスタムプロパティとして書いてある。
 - テーマ変数は、`packages/ui/src/tokens/theme.css` の `@theme inline` に置き、セマンティックトークンを参照する。
-  - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](0024-tokens-of-fukuemon-dev.md)
+  - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする](0024-tokens-of-fukuemon-dev.md)
 - 挿絵の SVG は、`fill="var(--fd-color-surface)"` のように、セマンティックトークンの素のカスタムプロパティを参照する。
 - カタログ（`packages/ui/.storybook/preview.css`）は、`@import "tailwindcss"` で preflight を読み、コンポーネントを preflight の上で描いている。
 
