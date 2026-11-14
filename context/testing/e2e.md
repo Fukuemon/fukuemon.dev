@@ -11,7 +11,7 @@ status: draft
 
 E2E は Playwright（`@playwright/test`）で書く。
 要素は testid（`getByTestId`）で拾い、確認は `expect(locator)` の自動の待ちに任せる。
-画面の文字を比べるときは、`packages/e2e/tests/fixtures/` の定数（記事の題は `articles.ts`、プレイグラウンドのツールは `playground.ts`）を、確認の両側に渡す。  
+画面の文字を比べるときは、`packages/e2e/tests/fixtures/` の定数（記事の題は `articles.ts`、プレイグラウンドのツールは `playground.ts`）を、確認の両側に渡す。
 値を読んでから比べない。
 
 ## Test IDs
@@ -21,7 +21,7 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 `@fukuemon/ui` の `Link` は、渡された `data-testid` を `<a>` に付ける。
 
 プレイグラウンドの一覧のツールのリンクは `playground-tool-link` で、`apps/web/src/pages/playground/index.astro` に付ける。
-ヘッダーのリンクは `SITE_NAV` から並べるので testid を付けず、`selectors/site-header.ts` で名前で指す。
+ヘッダーのリンクは `SITE_NAV` から並べるので testid を付けず、`selectors/site-header.ts` に置いた関数が、リンクの名前で指す。
 
 トップの庭の testid は次のとおり。
 
