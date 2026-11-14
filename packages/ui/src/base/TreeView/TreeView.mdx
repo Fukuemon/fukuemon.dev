@@ -51,6 +51,14 @@ import * as Stories from "./TreeView.stories";
 
 <Canvas of={Stories.CompactBody} />
 
+### 名前の欄を開いている
+
+`editor` に渡した欄を、項目の名前の代わり（`rename`）か、枝の子の先頭に足した行（`insert`）に描く。  
+例は、閉じた `routes` の子の先頭に `insert` の行を足している。  
+欄を描く間は、欄のある行までの閉じた枝を開く。
+
+<Canvas of={Stories.Editing} />
+
 ## props
 
 <ArgTypes of={TreeView} />

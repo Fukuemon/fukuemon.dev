@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
-import { type TreeNode, TreeView } from "./TreeView";
+import { type TreeEditor, type TreeNode, TreeView } from "./TreeView";
 
 const FILES: TreeNode[] = [
   {
@@ -30,18 +30,21 @@ function TreeViewExample({
   initialSelectedId,
   density,
   textSize,
+  editor,
 }: {
   items: TreeNode[];
   defaultExpandedIds?: string[];
   initialSelectedId?: string;
   density?: "default" | "compact";
   textSize?: "compact" | "body-compact";
+  editor?: TreeEditor;
 }) {
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   return (
     <TreeView
       defaultExpandedIds={defaultExpandedIds}
       density={density}
+      editor={editor}
       items={items}
       label="ファイル"
       onSelect={setSelectedId}
@@ -110,5 +113,26 @@ export const CompactBody: Story = {
     textSize: "body-compact",
     defaultExpandedIds: ["src"],
     initialSelectedId: "src/index.ts",
+  },
+};
+export const Editing: Story = {
+  name: "名前の欄を開いている",
+  args: {
+    density: "compact",
+    textSize: "body-compact",
+    defaultExpandedIds: ["src"],
+    initialSelectedId: "src/routes/token.ts",
+    editor: {
+      kind: "insert",
+      parentId: "src/routes",
+      isBranch: false,
+      content: (
+        <input
+          aria-label="新しいファイルの名前"
+          className="-ml-1 h-5 w-full min-w-0 rounded-control border border-border-field bg-surface px-1 text-body-compact text-text outline-none"
+          defaultValue="client.ts"
+        />
+      ),
+    },
   },
 };
