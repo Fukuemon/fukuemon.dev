@@ -2,7 +2,7 @@
 
 ## Status
 
-[ADR-0076](0076-node-runtime-boot-commands-and-restart.md) と [ADR-0077](0077-save-visitor-files.md) に置換
+ADR-0076 と ADR-0077 に置換
 
 ## Context
 

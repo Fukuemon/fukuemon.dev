@@ -2,7 +2,7 @@
 
 ## Status
 
-[ADR-0077](0077-save-visitor-files.md) に置換
+ADR-0077 に置換
 
 ## Context
 
