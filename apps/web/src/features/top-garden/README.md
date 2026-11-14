@@ -100,3 +100,4 @@ pnpm run measure:top
 - 結果は `lighthouse-results/` に書く。実行ごとの報告の JSON と最後の画面と、中央値の JSON である。Git では追跡しない。
 - 値は手元の負荷で変わる。結果の JSON には、実行の前と後のロードアベレージと、Lighthouse の `benchmarkIndex` を書く。
 - 配信は TLS の無い HTTP/1.1 と gzip なので、本番の配信とは通信の値が違う。
+- 2 回目以降の訪問として再現するのは、`fd-top-seen` の値だけである。HTTP のキャッシュとシェーダのキャッシュは空にして測る。本番の `/_astro/` は長く保存されるので、実際の 2 回目の訪問とは通信の条件が違う。

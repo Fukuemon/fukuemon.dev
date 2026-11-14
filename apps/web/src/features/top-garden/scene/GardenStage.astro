@@ -120,12 +120,12 @@ const tool =
 
   /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、間を詰める */
   @media not (min-width: 48rem) {
-    :global(html.stage-on.garden-ready [data-site-header] ul),
-    :global(html.stage-on.garden-ready [data-site-header] > div) {
+    :global(html.stage-on [data-site-header] ul),
+    :global(html.stage-on [data-site-header] > div) {
       column-gap: 0.5rem;
     }
 
-    :global(html.stage-on.garden-ready [data-site-header] svg) {
+    :global(html.stage-on [data-site-header] svg) {
       block-size: 2rem;
     }
   }

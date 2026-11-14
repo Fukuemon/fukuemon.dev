@@ -78,16 +78,11 @@ const TYPES = {
   ".woff": "font/woff",
 };
 const GZIP = new Set([".html", ".js", ".css", ".svg", ".json", ".xml"]);
-const server = createServer((req, res) => {
-  try {
-    const path = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
-    if (path === SEED_PATH) {
-      res.writeHead(200, { "content-type": TYPES[".html"], "cache-control": "no-store" });
-      res.end(`<script>localStorage.setItem("fd-top-seen","1")</script>`);
-      return;
-    }
-    const file = resolve(DIST, `.${path.endsWith("/") ? `${path}index.html` : path}`);
-    if (!file.startsWith(DIST + sep) || !statSync(file).isFile()) throw new Error("not found");
+/** 配るファイルの本体とヘッダ。圧縮の時間を応答の時間に入れないよう、パスごとに 1 回だけ読んで圧縮する */
+const files = new Map();
+function load(file) {
+  let hit = files.get(file);
+  if (!hit) {
     const ext = extname(file);
     const head = {
       "content-type": TYPES[ext] ?? "application/octet-stream",
@@ -98,6 +93,24 @@ const server = createServer((req, res) => {
       body = gzipSync(body);
       head["content-encoding"] = "gzip";
     }
+    hit = { head, body };
+    files.set(file, hit);
+  }
+  return hit;
+}
+const server = createServer((req, res) => {
+  try {
+    const path = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
+    if (path === SEED_PATH) {
+      // --visit first では、値を書かずにプロファイルを 1 回開く。訪問の種類の差を localStorage の値だけにする。
+      const write = new URL(req.url ?? "/", "http://localhost").searchParams.get("write") === "1";
+      res.writeHead(200, { "content-type": TYPES[".html"], "cache-control": "no-store" });
+      res.end(write ? `<script>localStorage.setItem("fd-top-seen","1")</script>` : "<p>seed</p>");
+      return;
+    }
+    const file = resolve(DIST, `.${path.endsWith("/") ? `${path}index.html` : path}`);
+    if (!file.startsWith(DIST + sep) || !statSync(file).isFile()) throw new Error("not found");
+    const { head, body } = load(file);
     res.writeHead(200, head).end(body);
   } catch {
     res.writeHead(404).end();
@@ -125,14 +138,17 @@ const chromeFlags = (profile) =>
     ...(opt.visit === "reduced-motion" ? ["--force-prefers-reduced-motion"] : []),
   ].join(" ");
 
-/** 新しいプロファイルに fd-top-seen を書く。庭を描かないページで書き、シェーダのキャッシュを温めない */
-async function seed(profile) {
+/**
+ * 新しいプロファイルを、庭を描かないページで 1 回開いて閉じる。シェーダのキャッシュは温めない。
+ * @param write true のときは、fd-top-seen を書く
+ */
+async function seed(profile, write) {
   const ctx = await chromium.launchPersistentContext(profile, { args: gpuFlags });
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
-    await page.goto(origin + SEED_PATH);
+    await page.goto(`${origin}${SEED_PATH}?write=${write ? 1 : 0}`);
     const seen = await page.evaluate(() => localStorage.getItem("fd-top-seen"));
-    if (seen !== "1") throw new Error("fd-top-seen を書けなかった");
+    if (seen !== (write ? "1" : null)) throw new Error(`fd-top-seen が想定と違う: ${seen}`);
   } finally {
     await ctx.close();
   }
@@ -203,7 +219,7 @@ try {
     // --chrome-flags は空白で区切られるので、空白を含むパスはフラグが割れる。
     if (/\s/.test(profile)) fail(`一時ディレクトリのパスに空白がある: ${profile}`);
     try {
-      if (opt.visit !== "first") await seed(profile);
+      await seed(profile, opt.visit !== "first");
       const report = join(opt.out, `${stamp}-${label}-${i}.json`);
       const load = loadavg()[0];
       await promisify(execFile)(
@@ -220,7 +236,8 @@ try {
           `--output-path=${report}`,
           "--quiet",
         ],
-        { env: { ...childEnv, CHROME_PATH: chromium.executablePath() } },
+        // 1 回は 1 分前後で終わる。止まったときに、配信とプロファイルを残したまま待ち続けない。
+        { env: { ...childEnv, CHROME_PATH: chromium.executablePath() }, timeout: 600_000 },
       );
       const r = JSON.parse(readFileSync(report, "utf8"));
       const row = {
