@@ -25,7 +25,7 @@ export type TabsProps = {
    */
   panel?: "padded" | "flush";
   /**
-   * compact は、タブを 32px の高さと 13px の文字、閉じるボタンを 28px、選んだタブの筆の線を 3px にする。
+   * compact は、タブを 32px の高さと 13px の文字、閉じるボタンを 28px、選んだタブの筆の線を 3px にする。タブと閉じるボタンは、触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。
    * コードを動かす画面のエディタのタブに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
    */
   density?: "default" | "compact";
@@ -106,7 +106,9 @@ export function Tabs({
                 className={clsx(
                   "flex cursor-pointer items-center transition-colors",
                   isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
-                  isCompact ? "h-8 gap-1.5 px-3 text-label-compact" : "h-11 gap-2 px-4 text-label",
+                  isCompact
+                    ? "h-8 gap-1.5 px-3 text-label-compact pointer-coarse:h-11"
+                    : "h-11 gap-2 px-4 text-label",
                   isSelected ? "text-text" : "text-text-secondary hover:text-text",
                 )}
                 id={`${baseId}-tab-${item.id}`}
@@ -139,7 +141,9 @@ export function Tabs({
                   className={clsx(
                     "inline-grid cursor-pointer place-items-center text-text-secondary transition-colors hover:text-text",
                     isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
-                    isCompact ? "size-7 rounded-control-compact" : "size-11 rounded-control",
+                    isCompact
+                      ? "size-7 rounded-control-compact pointer-coarse:size-11"
+                      : "size-11 rounded-control",
                   )}
                   onClick={() => onClose?.(item.id)}
                   tabIndex={-1}

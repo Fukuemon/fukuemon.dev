@@ -8,6 +8,7 @@
     "./fonts.css": "./src/tokens/fonts.css",
     "./sources.css": "./src/sources.css",
     "./button-class-name": "./src/base/Button/buttonClassName.ts",
+    "./ios-viewport": "./src/platform/iosViewport.ts",
     "./code-theme": "./src/tokens/code-theme.ts",
     "./code-theme.json": "./src/tokens/code-theme.gen.json"
   },

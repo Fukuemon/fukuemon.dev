@@ -154,6 +154,8 @@ function NameField({
         className={clsx(
           // 欄の行には輪を引かないので、欄が自分の輪を持つ。輪は枠に重ねて内側に引き、枠と二重にしない
           "h-5 w-full min-w-0 rounded-control border bg-surface px-1 text-body-compact text-text focus-visible:focus-ring-inset",
+          // 触る端末では、行の上下の余白に欄を広げ、行の高さを 44px のまま欄を 44px で押せるようにする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）
+          "pointer-coarse:-my-3 pointer-coarse:h-11",
           error === undefined ? "border-border-field" : "border-danger",
         )}
         onBlur={() => {

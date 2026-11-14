@@ -4,7 +4,11 @@
 ---
 
 <script>
+  import { limitIosInputZoom } from "@fukuemon/ui/ios-viewport";
   import { PLAYGROUND_ORIGIN } from "../../lib/playground/origin";
+
+  // iframe の中の viewport の指定は記事のページの拡大を変えないので、埋め込みのある記事のページにも足す（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）
+  if (document.querySelector("[data-playground-embed]")) limitIosInputZoom();
 
   document.addEventListener("click", (event) => {
     const button = (event.target as Element | null)?.closest(".playground-embed-open");

@@ -80,7 +80,7 @@ export function ToolPane({
       <div
         className={clsx(
           "flex flex-wrap items-center justify-between gap-x-2 pr-1 pl-3",
-          isTitleHidden && !hasActions ? "sr-only" : "min-h-7",
+          isTitleHidden && !hasActions ? "sr-only" : "min-h-7 pointer-coarse:min-h-11",
         )}
       >
         <h2

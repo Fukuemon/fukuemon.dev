@@ -4,7 +4,7 @@ import { clsx } from "clsx";
 export type ButtonVariant = "primary" | "secondary" | "danger";
 /**
  * ボタンの高さ。S は 40px で、見た目の外まで 44px を押せる。M は 48px である。
- * XS は 28px で、文字を 13px にする。コードを動かす画面の帯だけに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
+ * XS は 28px で、文字を 13px にする。触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。コードを動かす画面の帯だけに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
  * ほかの Base の density="compact" と違い、Button は高さを size で選ぶので、同じ軸に XS を足している。
  */
 export type ButtonSize = "XS" | "S" | "M";
@@ -22,7 +22,7 @@ const variantClassName: Record<ButtonVariant, string> = {
 };
 
 const sizeClassName: Record<ButtonSize, string> = {
-  XS: "h-7 min-w-7 px-3 text-label-compact",
+  XS: "h-7 min-w-7 px-3 text-label-compact pointer-coarse:h-11 pointer-coarse:min-w-11",
   S: "h-10 min-w-11 px-4 text-label after:absolute after:inset-x-0 after:-inset-y-0.5 forced-colors:after:-inset-y-0.75",
   M: "h-12 min-w-11 px-5 text-label",
 };

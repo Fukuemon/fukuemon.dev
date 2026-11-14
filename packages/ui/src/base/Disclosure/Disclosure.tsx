@@ -6,7 +6,7 @@ export type DisclosureProps = {
   summary: string;
   children: ReactNode;
   defaultOpen?: boolean;
-  /** compact は、要約を 24px の高さと太字の 13px にし、中身の余白を詰める。コードを動かす画面に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact は、要約を 24px の高さと太字の 13px にし、中身の余白を詰める。要約の高さは、触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。コードを動かす画面に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
   density?: "default" | "compact";
 };
 
@@ -27,7 +27,7 @@ export function Disclosure({
         className={clsx(
           "flex cursor-pointer list-none items-center text-text focus-visible:focus-ring",
           isCompact
-            ? "rounded-control-compact hover:bg-surface-pane-subtle min-h-6 gap-1 px-1 py-0.5 text-label-compact"
+            ? "rounded-control-compact hover:bg-surface-pane-subtle min-h-6 gap-1 px-1 py-0.5 text-label-compact pointer-coarse:min-h-11"
             : "min-h-11 gap-2 rounded-control px-2 py-2 text-body-dense font-bold hover:bg-surface-subtle",
         )}
       >
