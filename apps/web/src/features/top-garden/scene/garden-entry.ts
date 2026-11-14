@@ -2,15 +2,13 @@
 // 庭を描けないときは、バンドルの読み込みに失敗したときと同じく、ふつうのページに戻す。
 // 描く途中で例外が出たときも、ページが canvas に覆われたままにならないよう、ふつうのページに戻す。
 import { startGarden, type Garden } from "./garden";
+import { INK_END } from "../intro-timing";
 import { STATIONS } from "../layout";
 import type { Season, TimeOfDay } from "../stage/season";
 
 const root = document.documentElement;
 const wiring = new AbortController();
 const on = { signal: wiring.signal };
-
-/** 署名と墨の絵を描き終える、開いてからの時刻（ms）。署名の 0.6 秒の後に、墨の絵を 3.2 秒で描く */
-const INK_END = 3800;
 
 /** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと「文だけで読む」で呼ぶ */
 function leave(cards: readonly HTMLElement[]): void {

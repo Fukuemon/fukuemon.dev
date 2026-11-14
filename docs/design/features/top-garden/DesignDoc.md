@@ -294,6 +294,7 @@ SVG を `set:html` で HTML に置くので、SVG の中の `path` にユーテ�
 | セクションの class `is-current`                                    | 今いる場所の文                                     |
 
 - 最初の訪問では、`garden-ready` を、文を出す時刻（7.5 秒）に書き、カメラが止まる時刻（8.3 秒）に `intro` と `enter` を外す。
+- 場面を組み立てた時刻、色を差し始めた時刻、イントロを終えた時刻を、`performance.mark` の `garden-scene-ready`、`garden-enter`、`garden-intro-done` で記録する。E2E が、イントロの段の時刻を確認するために読む。
 - 「文だけで読む」を押したときと、描く途中の例外か WebGL のコンテキストの喪失で描けなくなったときは、この値をすべて外し、セクションを元の場所に戻し、`stage-on` と `intro` を外す。
 
 ### 場面のバンドル

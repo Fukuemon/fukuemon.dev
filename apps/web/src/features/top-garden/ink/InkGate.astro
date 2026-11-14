@@ -2,18 +2,21 @@
 import { inkSvg } from "./ink-svg";
 import { signSvg } from "../../../components/sign/sign";
 import signSource from "../../../components/sign/sign.svg?raw";
+import { INTRO, SIGN_LEAD } from "../intro-timing";
 
 const ink = inkSvg().svg;
+// 墨の線を描き始める時刻と、カメラが動き始める時刻。イントロの CSS の遅延が読む
+const timing = `--ink0: ${SIGN_LEAD}ms; --move0: ${INTRO.move0}ms`;
 const sign = signSvg(signSource);
 ---
 
-<div class="ink-gate">
+<div class="ink-gate" style={timing}>
   <Fragment set:html={ink} />
   <Fragment set:html={sign} />
 </div>
 
 <style>
-  /* 描き終えた後の、止まった絵を出す。筆の順に描く動きは、トップのイントロが付ける */
+  /* 描き終えた後の、止まった絵を出す。トップの最初の訪問では、後ろのイントロの CSS が筆の順に描く */
   .ink-gate {
     --art-ink: var(--fd-color-text);
     --art-pine: var(--fd-color-primary);
@@ -77,5 +80,63 @@ const sign = signSvg(signSource);
     fill: var(--art-ink);
     rotate: -5deg;
     pointer-events: none;
+  }
+
+  /* 最初の訪問のイントロ（html の class intro と enter）。時刻は top-garden の Design Doc の「イントロの各段の時間」で、--ink0 と --move0 は intro-timing.ts の値 */
+  :global(html.intro) .ink-gate :global(.ink-svg path) {
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 0;
+    transition:
+      stroke-dashoffset var(--d) cubic-bezier(0.45, 0, 0.55, 1) calc(var(--t) + var(--ink0)),
+      opacity 60ms linear calc(var(--t) + var(--ink0));
+  }
+
+  :global(html.intro) .ink-gate :global(.ink-svg .pine) {
+    transition: opacity 700ms ease calc(2700ms + var(--ink0));
+  }
+
+  @property --sign-w {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 135%;
+  }
+
+  :global(html.intro) .ink-gate :global(.sign) {
+    mask-image: linear-gradient(100deg, currentColor calc(var(--sign-w) - 14%), transparent var(--sign-w));
+    transition: --sign-w 1500ms cubic-bezier(0.45, 0, 0.4, 1) 150ms;
+  }
+
+  @starting-style {
+    :global(html.intro) .ink-gate :global(.ink-svg path) {
+      stroke-dashoffset: 1.02;
+      opacity: 0;
+    }
+
+    :global(html.intro) .ink-gate :global(.ink-svg .pine) {
+      opacity: 0;
+    }
+
+    :global(html.intro) .ink-gate :global(.sign) {
+      --sign-w: 0%;
+    }
+  }
+
+  /* 色が差した後に、遠景と中景の線と署名を消し、カメラが動き始める時刻に近景の松の枝を頭上へ抜く */
+  :global(html.enter) .ink-gate :global(:is(.ink-svg .far, .ink-svg .mid, .sign)) {
+    opacity: 0;
+    transition: opacity 500ms linear 1150ms;
+  }
+
+  .ink-gate :global(.ink-svg .near) {
+    transform-origin: 100% 0;
+    transform-box: view-box;
+  }
+
+  :global(html.enter) .ink-gate :global(.ink-svg .near) {
+    opacity: 0;
+    transform: translate(14%, -20%) scale(1.8);
+    transition:
+      transform 1500ms cubic-bezier(0.5, 0, 0.9, 0.6) var(--move0),
+      opacity 900ms linear calc(var(--move0) + 500ms);
   }
 </style>

@@ -11,6 +11,7 @@ import {
 } from "three";
 import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { createInkPass } from "./ink-pass";
+import { INTRO } from "../intro-timing";
 import { CAM0, DESIGN, PAPER_PAD, PX, STATIONS } from "../layout";
 import { hangPaper } from "./paper";
 import { scenePalette } from "./scene-colors";
@@ -33,14 +34,11 @@ export interface Garden {
    * @param handlers.done カメラが止まった時刻に、1 回呼ぶ
    */
   enter(handlers: { cards(): void; done(): void }): void;
-  /** イントロを、動かさずに最後の状態にする。呼んだ後は、`enter` に渡した関数を呼ばない */
+  /** イントロを、動かさずに最後の状態にする。呼んだ後は、`enter` に渡した関数を呼ばない。最後の状態を描く途中で描けなくなったときは、`onBroken` を呼んでから戻る */
   skip(): void;
   /** 描くのをやめ、セクションを元の場所に戻し、和紙に置いたときに書いた属性と変数を消す */
   stop(): void;
 }
-
-/** イントロの、色を差し始めてからの各段の時刻と長さ（ms）。tint0 と move0 は始める時刻、tint と move はその長さ、cards と done は時刻。top-garden の Design Doc の「イントロの各段の時間」 */
-const INTRO = { tint0: 300, tint: 1200, move0: 1300, move: 2800, cards: 3700, done: 4500 } as const;
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
@@ -192,7 +190,7 @@ export function startGarden(
       const w = stage.clientWidth;
       const h = stage.clientHeight;
       const a = w / h;
-      const svgW = a >= 16 / 9 ? w : a >= 1 ? (h * 16) / 9 : w * 1.25;
+      const svgW = a >= 16 / 9 ? w : a > 1 ? (h * 16) / 9 : w * 1.25;
       return (Math.atan((tanDesign * h) / ((svgW * 9) / 16)) * 360) / Math.PI;
     };
     const cam0 = () => ({ pos: new Vector3(...CAM0.pos), look: new Vector3(...CAM0.look) });
