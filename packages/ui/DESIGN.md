@@ -178,6 +178,29 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | キーボードの操作             | コンポーネントの文書のとおりに動く                                                                                                                                                  | `pnpm run test:ui` のコンポーネントのテスト                                                                                      |
 | 入力の誤りの伝え方           | 欄ごとの誤りの文は `aria-describedby` で欄に結び付け、`role="alert"` を付けない。送った後は最初の誤りの欄へフォーカスを移す。送れなかったときの文だけを `role="alert"` で読み上げる | `pnpm run test:ui` の `TextField` のテスト（欄ごとの誤りの文）。送った後のフォーカスの移り方と、送れなかったときの文は、レビュー |
 | 動きを減らす設定             | 設定が `reduce` のとき、位置、大きさ、回転を動かすアニメーションと遷移、スクロールに合わせた動きを止める。このプロダクトの選択（AAA の 2.3.3）                                      | レビュー（`MOTION-REDUCE`）                                                                                                      |
+| ハイコントラスト             | `forced-colors: active` で、状態を枠と塗りの違いで見分けられる。背景の色と `ring` だけで状態を表さない                                                                              | `pnpm run test:ui`（`src/test/forced-colors.test.tsx`）と、レビュー                                                              |
+
+## ハイコントラスト
+
+Windows のハイコントラスト（`forced-colors: active`）では、ブラウザが背景の色と影（`ring` を含む）を消し、色をシステムの色に置き換える。
+背景の色と `ring` だけで境界と状態を表す要素は、見分けられなくなる。
+
+直し方は、`src/tokens/theme.css` の `forced-*` のユーティリティを、その要素に足すことである。
+通常の表示には何も変わらない。
+
+| ユーティリティ                                                                             | 描くもの                                                                                  |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `forced-frame`                                                                             | `CanvasText` の 1px の枠。`ring` で枠を表す要素（`Button`、`Switch`、`Checkbox`）に付ける |
+| `forced-on`                                                                                | 選択とオンの塗りと、その上の文字と印                                                      |
+| `forced-off-disabled`、`forced-on-disabled`                                                | 無効の要素の枠、文字、塗り（`GrayText`）                                                  |
+| `forced-fill`、`forced-fill-on`                                                            | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯）の塗り     |
+| `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                 |
+
+- 選択とオンの色は、変数 `--fd-forced-on` と `--fd-forced-on-text` が持つ。値は `SelectedItem` と `SelectedItemText` で、使えないブラウザでは `Highlight` と `HighlightText` になる。
+- ブラウザは、システムの色以外の値を置き換える。通常の色の指定（`bg-primary` など）に勝つよう、`forced-*` の宣言は `!important` にしている。
+- フォーカスの輪は `outline` なので、ハイコントラストでも残る。`focus-ring` のユーティリティだけで書く。
+- 状態を背景の色か `ring` だけで表すコンポーネントを足すときは、`forced-*` を足す。
+- 見た目は、カタログの story を Chromium の `forcedColors: "active"` で開いて見る。
 
 ## 決まっていない選択
 
