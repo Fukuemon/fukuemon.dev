@@ -138,14 +138,14 @@ function toConsoleValues(args, describe, isNativeError) {
    * V8 の組み込みの stack の getter は、初めて読むときに name と message を読んで文にする。
    * そのときに訪問者のコードが動かないのは、どちらも文字列のデータか組み込みの getter か、無いときだけである。
    */
-  const isPlainText = (value, key) => {
+  const readsWithoutGuestCode = (value, key) => {
     for (let target = value; target; target = Object.getPrototypeOf(target)) {
       const found = Object.getOwnPropertyDescriptor(target, key);
       if (!found) continue;
       // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、同じ関数かを比べるだけで呼ばない
       return "value" in found
         ? typeof found.value === "string"
-        : errorGetters.get(key).has(found.get);
+        : errorGetters.get(key)?.has(found.get) === true;
     }
     return true;
   };
@@ -157,7 +157,7 @@ function toConsoleValues(args, describe, isNativeError) {
       holder = Object.getPrototypeOf(holder);
     }
     return [value, holder].every(
-      (target) => !target || (isPlainText(target, "name") && isPlainText(target, "message")),
+      (target) => readsWithoutGuestCode(target, "name") && readsWithoutGuestCode(target, "message"),
     );
   };
 

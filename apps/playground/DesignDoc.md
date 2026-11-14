@@ -385,8 +385,8 @@ type BackendProcess = {
     - `Error` の `name`、`message`、`stack` は、組み込みの getter（V8 と Firefox の `stack`、`DOMException` の 3 つ）だけを呼ぶ。訪問者が定義した getter は呼ばない。
     - 例外として、Node のプロセスでは、`util.types.isNativeError` が true を返す値について、その値が自身のプロパティとして持つ `stack` の getter も呼ぶ。
       WebContainers の Node は、`Error` のインスタンスごとに別の `stack` の getter を持ち、組み込みの getter と同じ関数かでは見分けられないためである。
-      訪問者が組み込みの `Error` のインスタンスに `stack` の getter を定義すると、その getter も呼ぶ。
-    - `name` か `message` が文字列のデータでも組み込みの getter でもない `Error` は、`stack` を読まず、スタックトレースの行を出さない。
+      訪問者が組み込みの `Error` のインスタンスに `stack` の getter を定義すると、その getter も呼ぶ。影響は訪問者自身のプロセスに閉じるので、防がない。
+    - `name` か `message` が文字列のデータでも組み込みの getter でもない `Error` は、`stack` を読まず、スタックトレースの行を出さない。プロトタイプの鎖で `stack` を自身に持つオブジェクトの `name` と `message` も、同じく確認する。
       V8 の `stack` の getter は、初めて読むときに `name` と `message` を読んでスタックトレースの文字列を作るので、読むと訪問者の getter や `toString` が実行されるためである。
     - Node のプロセスでも、値のプロトタイプが Proxy のときは、プロトタイプの鎖をたどる処理（記述子の読み取りと `instanceof`）が Proxy のトラップを実行する。
       影響は訪問者自身のプロセスに閉じるので、組み込みを書き換えたときと同じく防がない。

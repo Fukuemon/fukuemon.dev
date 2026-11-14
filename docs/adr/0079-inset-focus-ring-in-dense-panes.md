@@ -78,7 +78,7 @@
     - そのため、`focus-ring-frame` の「直下の `:focus-visible`」の条件に当たらない。
   - Node の実行環境の画面のエディタ（`apps/playground/src/node/NodePage.tsx`）は、ペインの端まで広げたときだけ、輪を内側に引く。囲む要素に `has-[.cm-focused]:focus-ring-inset` を付ける。広げないときは `has-[.cm-focused]:focus-ring` のままにする。
   - Go の端末（`apps/playground/src/go/GoPage.tsx`）は、出力をスクロールさせる `role="log"` の `div` に `focus-visible:focus-ring-inset` を付け、輪を内側に引く。
-  - Node と Go の画面の輪の見た目は、撮っていない（未確認）。
+  - Node のエディタと Go の出力の領域の輪の見た目は、撮っていない（未確認）。
 - 選んだ木の行（`primary-surface`）の上でも、墨の輪は見えた。輪と面の組は、ADR-0061 でコントラストのチェックに入れてある。
 - コンソールの行が 0 件のとき（フィルタで全ての行を隠したとき）に、行の領域が Tab のキーの順に入らないかは確認していない（未確認）。
 - Safari と Firefox での確認はしていない。
