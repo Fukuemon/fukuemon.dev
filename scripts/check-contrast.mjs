@@ -21,7 +21,15 @@ const SOURCES = ["./packages/ui/src/tokens/primitive.css", "./packages/ui/src/to
 // セマンティックトークンの接頭辞。組の名前に付けて CSS の変数の名前にする
 const PREFIX = "--fd-color-";
 
-const SURFACES = ["surface", "surface-subtle", "surface-raised"];
+// surface-ground、surface-pane、surface-pane-subtle は、コードを動かす画面だけの面（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+const SURFACES = [
+  "surface",
+  "surface-subtle",
+  "surface-raised",
+  "surface-ground",
+  "surface-pane",
+  "surface-pane-subtle",
+];
 const STATES = ["danger", "warning", "success", "info"];
 
 // 文字と、その下の面の組。4.5:1 以上
