@@ -64,6 +64,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - `packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）
   - トップの庭の見た目の回帰と、記事のページの表と図の枠の E2E（`packages/e2e/visual/`）
   - トップの試作の録画
+  - トップの Lighthouse の計測で、Chromium の場所と、測る前のプロファイルを作る（`scripts/measure-top-lighthouse.mjs`）
 - three は、トップの立体の庭を描く場面のバンドルにだけ使う。
   - 庭を出すときだけ読み込み、ほかのページには配らない。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。

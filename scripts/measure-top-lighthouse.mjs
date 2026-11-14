@@ -102,6 +102,7 @@ const server = createServer((req, res) => {
   try {
     const path = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
     if (path === SEED_PATH) {
+      // キーと値は、apps/web/src/features/top-garden/stage/visit.ts の takeFirstVisit が書くものと同じにする。
       // --visit first では、値を書かずにプロファイルを 1 回開く。訪問の種類の差を localStorage の値だけにする。
       const write = new URL(req.url ?? "/", "http://localhost").searchParams.get("write") === "1";
       res.writeHead(200, { "content-type": TYPES[".html"], "cache-control": "no-store" });
