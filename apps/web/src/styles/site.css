@@ -79,6 +79,15 @@
 }
 
 /*
+ * 横に送るコードブロックの右端を薄くする。pre の背景は code-surface なので、薄い色もその色にする。
+ * Expressive Code の display: flex に勝って grid にするため、層の外に置き、.prose で詳細度を上げる。
+ */
+.prose .expressive-code pre {
+  @apply scroll-fade-end;
+  --fd-scroll-fade-bg: var(--color-code-surface);
+}
+
+/*
  * Expressive Code のコピーのボタン、吹き出し、フォーカスを、packages/ui の角丸、押せる範囲、動きの長さ、フォーカスの輪にそろえる。
  * 吹き出しは下から上へ動かして出すので、位置を動かさず、濃さだけで出す (docs/design/DesignDoc.md の「動き」)。
  * Expressive Code の CSS は層の外にあり、後から読まれるので、層の外に置き、.prose で詳細度を上げる。

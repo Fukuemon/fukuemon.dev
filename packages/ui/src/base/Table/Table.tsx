@@ -23,7 +23,7 @@ export function Table({ caption, children, density = "default" }: TableProps) {
   return (
     <div
       aria-labelledby={captionId}
-      className="overflow-x-auto focus-visible:focus-ring"
+      className="scroll-fade-end overflow-x-auto focus-visible:focus-ring"
       role="region"
       tabIndex={0}
     >
