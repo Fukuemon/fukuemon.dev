@@ -135,7 +135,7 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
   - 出典: [DADS の余白](https://design.digital.go.jp/dads/foundations/spacing/)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
 - 角丸と影のユーティリティは、`rounded-control` と `shadow-raised` の 1 つずつだけを書ける。DADS のコンポーネントは、コンポーネントごとに角丸と影の値を持つが、罫線で区切る版面と合わないためである（ADR-0028）。
-  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックには付けない。
+  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロック、[トップの庭の中の文へ移るボタン](../../../docs/design/features/top-garden/DesignDoc.md#庭の中のボタンの並び)には付けない。
   - `shadow-raised` は、重なる面だけに付ける。ボタンと入力欄には付けない。
 - 動きの時間と緩急は、表のユーティリティだけで書く。テーマ変数で止められない時間の値（`duration-[…]` の任意値）を書かない（`MOTION-TOKEN`）。
 - 動きを付ける操作、長さ、付けない所は、[Design Doc の「動き」](../DesignDoc.md#動き) にある。フォーカスの表示、入力した文字、誤りの文には、動きを付けない。
