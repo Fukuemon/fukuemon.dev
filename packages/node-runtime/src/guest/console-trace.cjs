@@ -10,6 +10,7 @@ const PREFIX = "@@fd:console ";
 const LEVELS = ["debug", "log", "info", "warn", "error"];
 
 const describe = (value) => (types.isProxy(value) ? "Proxy" : undefined);
+const { isNativeError } = types;
 
 // 記録を書く途中で console.* が呼ばれたとき（stdout の write を包んだ訪問者のコードなど）は、2 重に記録しない
 let writing = false;
@@ -38,7 +39,11 @@ for (const level of recording ? LEVELS : []) {
     if (!writing) {
       writing = true;
       try {
-        const record = { level, time: Date.now(), args: toConsoleValues(args, describe) };
+        const record = {
+          level,
+          time: Date.now(),
+          args: toConsoleValues(args, describe, isNativeError),
+        };
         process.stdout.write(PREFIX + JSON.stringify(record) + "\n");
       } catch {
         // 記録できなくても、訪問者のプログラムは動かす

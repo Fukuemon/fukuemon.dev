@@ -67,8 +67,10 @@ const regexpText = (value) =>
  * args を値の木の配列にする。describe は、実行する場所に固有の値（Proxy、DOM の要素）を文字にする関数で、当てはまらないときは undefined を返す。
  * 数は、NaN、Infinity、-0 を JSON で運べるよう、文字で持つ。
  * 値の数を使い切ったら、残りの兄弟を写さずに、残りの件数の印を 1 つだけ足す。値の数は、MAX_NODES に、開いている入れ子ごとに 1 つの残りの件数の印と、MAX_ITEMS で止めた入れ子ごとに 1 つの印を足した数を超えない。
+ * isNativeError は、Node の util.types.isNativeError を渡す。渡すと、それが真の値の自身の stack の getter も呼ぶ。
+ * WebContainers の Node は、Error のインスタンスごとに別の stack の getter を持ち、errorGetters の同じ関数かの判定に通らないためである。
  */
-function toConsoleValues(args, describe) {
+function toConsoleValues(args, describe, isNativeError) {
   const budget = { nodes: MAX_NODES, chars: MAX_CHARS };
   const ancestors = [];
 
@@ -110,14 +112,20 @@ function toConsoleValues(args, describe) {
     return name && typeof name.value === "string" ? name.value : "";
   };
 
-  /** Error の name、message、stack を、自分か継承した記述子から読む。getter は、errorGetters にある組み込みのものだけを呼ぶ。 */
+  /**
+   * Error の name、message、stack を、自分か継承した記述子から読む。getter は、errorGetters にある組み込みのものと、
+   * isNativeError が真の値の自身の stack の getter だけを呼ぶ。
+   */
   const readProperty = (value, key) => {
     for (let target = value; target; target = Object.getPrototypeOf(target)) {
       const found = Object.getOwnPropertyDescriptor(target, key);
       if (!found) continue;
       if ("value" in found) return found.value;
+      const isOwnNativeStack =
+        key === "stack" && target === value && isNativeError !== undefined && isNativeError(value);
       // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
-      if (!errorGetters.get(key)?.has(found.get)) return undefined;
+      if (!isOwnNativeStack && !errorGetters.get(key)?.has(found.get)) return undefined;
+      if (typeof found.get !== "function") return undefined;
       try {
         return found.get.call(value);
       } catch {

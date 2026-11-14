@@ -1,11 +1,16 @@
 import { createRequire } from "node:module";
+import { types } from "node:util";
 
 import { describe, expect, it } from "vitest";
 
 import { parseConsoleRecord } from "./console-records";
 
 const { toConsoleValues } = createRequire(import.meta.url)("./guest/console-value.cjs") as {
-  toConsoleValues: (args: unknown[], describe: (value: unknown) => string | undefined) => unknown[];
+  toConsoleValues: (
+    args: unknown[],
+    describe: (value: unknown) => string | undefined,
+    isNativeError?: (value: unknown) => boolean,
+  ) => unknown[];
 };
 
 const copy = (...args: unknown[]) => toConsoleValues(args, () => undefined);
@@ -129,6 +134,53 @@ describe("toConsoleValues", () => {
         { kind: "object", entries: [] },
         { kind: "text", value: "/a+/gi" },
       ],
+    });
+  });
+
+  describe("isNativeError を渡したとき（Node の preload）", () => {
+    const copyInNode = (...args: unknown[]) =>
+      toConsoleValues(
+        args,
+        () => undefined,
+        (value) => types.isNativeError(value),
+      );
+    const ownStack = (error: object, get: () => string) =>
+      Object.defineProperty(error, "stack", { configurable: true, get });
+
+    it("組み込みの Error が自身に持つ stack の getter を呼び、呼び出し元のフレームの行を写す", () => {
+      const error = ownStack(new Error("m"), () => "Error: m\n    at run (/app.js:1:2)");
+      expect(copyInNode(error)).toStrictEqual([
+        { kind: "error", name: "Error", message: "m", stack: ["at run (/app.js:1:2)"] },
+      ]);
+    });
+
+    it("組み込みの Error でない値の自身の getter、継承した getter、例外を投げる getter からは stack を写さない", () => {
+      const touched: string[] = [];
+      const fake = ownStack(Object.create(Error.prototype) as object, () => {
+        touched.push("fake");
+        return "Error\n    at fake (/app.js:1:2)";
+      });
+      class Loud extends Error {
+        override get stack() {
+          touched.push("inherited");
+          return "Error\n    at loud (/app.js:1:2)";
+        }
+      }
+      const throwing = ownStack(new Error("t"), () => {
+        throw new Error("boom");
+      });
+      // V8 は、作った Error に自身の stack を付けるので、消して継承した getter だけを残す
+      const inherited = new Loud("l");
+      Reflect.deleteProperty(inherited, "stack");
+      const values = copyInNode(fake, inherited, throwing);
+      expect({ touched, values }).toStrictEqual({
+        touched: [],
+        values: [
+          { kind: "error", name: "Error", message: "" },
+          { kind: "error", name: "Error", message: "l" },
+          { kind: "error", name: "Error", message: "t" },
+        ],
+      });
     });
   });
 

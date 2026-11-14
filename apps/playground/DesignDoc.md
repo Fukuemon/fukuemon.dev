@@ -383,6 +383,9 @@ type BackendProcess = {
   - getter、`toJSON`、Proxy のトラップは実行しない。getter のプロパティは `(...)` にする。訪問者のコードを、記録のために実行しないためである。
     - `Map` と `Set` の中身と大きさは、組み込みのメソッドで読み、サブクラスが上書きしたメソッドを呼ばない。
     - `Error` の `name`、`message`、`stack` は、組み込みの getter（V8 と Firefox の `stack`、`DOMException` の 3 つ）だけを呼ぶ。訪問者が定義した getter は呼ばない。
+    - 例外として、Node のプロセスでは、`util.types.isNativeError` が真の値が自身に持つ `stack` の getter も呼ぶ。
+      WebContainers の Node は、`Error` のインスタンスごとに別の `stack` の getter を持ち、組み込みの getter と同じ関数かでは見分けられないためである。
+      訪問者が組み込みの `Error` に自身の `stack` の getter を定義すると、その getter も呼ぶ。影響は訪問者自身のプロセスに閉じるので、組み込みを書き換えたときと同じく防がない。
     - プレビューのページでは、ブラウザの JavaScript が Proxy を見分けられないので、Proxy のトラップが実行される。
       配列の要素は記述子で読むので、`get` のトラップで要素を返す Proxy の配列は、中身が `undefined` で出る。
       配列を写すときは、`get` のトラップが読むたびに別の値を返せるので、Proxy の配列の `length` を 1 回だけ読み、0 以上 2^32−1 以下の整数でなければ 0 にする。
