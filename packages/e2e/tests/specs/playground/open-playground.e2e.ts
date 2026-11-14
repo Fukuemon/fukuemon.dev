@@ -25,7 +25,9 @@ test.describe("プレイグラウンドの一覧", () => {
     }) => {
       await stubPlayground(page);
       await page.goto("/playground");
-      await page.getByTestId("playground-tool-link").nth(index).click();
+      const link = page.getByTestId("playground-tool-link").nth(index);
+      await expect(link).not.toHaveAttribute("target");
+      await link.click();
       await expect(page).toHaveURL(tool.url);
     });
   }

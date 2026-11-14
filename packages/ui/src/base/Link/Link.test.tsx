@@ -67,8 +67,8 @@ describe("Link", () => {
 
   it("押せる領域を広げたリンクを hover すると、箱の下端ではなく下線の下に 2px の罫を引く", async () => {
     render(<LargeTarget />);
-    const link = screen.getByRole("link", { name: "Node の実行環境を開く" });
-    const text = screen.getByText("Node の実行環境を開く");
+    const link = screen.getByRole("link", { name: "Go" });
+    const text = screen.getByText("Go");
     expect(text).not.toBe(link);
     expect(getComputedStyle(link).backgroundImage).toBe("none");
     expect(getComputedStyle(text).textDecorationLine).toBe("underline");

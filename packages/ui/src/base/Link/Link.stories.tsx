@@ -57,11 +57,10 @@ export const StandaloneWrapped: Story = {
   ),
 };
 export const LargeTarget: Story = {
-  args: { isStandalone: true, isLargeTarget: true, children: "Node の実行環境を開く" },
+  args: { isStandalone: true, isLargeTarget: true, children: "Go" },
   render: (args) => (
-    <ul className="w-96 text-body text-text">
-      <li className="flex flex-col items-start gap-2 border-b border-border py-4">
-        <span>ブラウザの中で Node と npm を動かします。</span>
+    <ul className="w-96 border-t border-border text-body text-text">
+      <li className="border-b border-border py-2">
         <Link {...args} />
       </li>
     </ul>
