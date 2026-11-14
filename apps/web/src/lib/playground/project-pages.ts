@@ -4,30 +4,39 @@ import { isEmbedName, projectDir, readProject } from "./project";
 
 type EmbeddingArticle = { id: string; filePath?: string; contentId: string; body?: string };
 
-/**
- * 記事が埋め込むプロジェクトの JSON のページを並べる。
- * 同じディレクトリの 2 本の記事が同じ名前を書くと、片方のための変更がもう片方に及ぶので、失敗にする。
- */
+type Embedding = { articleId: string; contentId: string; name: string; dir: string };
+
+/** 記事の Markdown から、埋め込みの名前とプロジェクトのディレクトリを並べる */
+function embeddingsOf(article: EmbeddingArticle): Embedding[] {
+  const { id, filePath, contentId } = article;
+  if (filePath === undefined) throw new Error(`記事のパスが分からない: ${id}`);
+  return findEmbedNames(article.body ?? "").map((name) => {
+    if (!isEmbedName(name)) throw new Error(`${filePath}: 埋め込みの名前の形が違う: ${name}`);
+    return { articleId: id, contentId, name, dir: projectDir(filePath, name) };
+  });
+}
+
+/** 同じディレクトリの 2 本の記事が同じ名前を書くと、片方のための変更がもう片方に及ぶので、失敗にする */
+function assertOneOwner(embeddings: readonly Embedding[]): void {
+  const owners = new Map<string, string>();
+  for (const { dir, articleId } of embeddings) {
+    const owner = owners.get(dir) ?? articleId;
+    if (owner !== articleId) {
+      throw new Error(`${dir} を、${owner} と ${articleId} の 2 本の記事が埋め込んでいる`);
+    }
+    owners.set(dir, owner);
+  }
+}
+
+/** 記事が埋め込むプロジェクトの JSON のページを並べる。 */
 export function planProjectPages(
   articles: readonly EmbeddingArticle[],
   read: (dir: string) => PlaygroundProject = readProject,
 ) {
-  const owners = new Map<string, string>();
-  return articles.flatMap((article) => {
-    const { filePath } = article;
-    if (filePath === undefined) throw new Error(`記事のパスが分からない: ${article.id}`);
-    return findEmbedNames(article.body ?? "").map((name) => {
-      if (!isEmbedName(name)) throw new Error(`${filePath}: 埋め込みの名前の形が違う: ${name}`);
-      const dir = projectDir(filePath, name);
-      const owner = owners.get(dir);
-      if (owner !== undefined && owner !== article.id) {
-        throw new Error(`${dir} を、${owner} と ${article.id} の 2 本の記事が埋め込んでいる`);
-      }
-      owners.set(dir, article.id);
-      return {
-        params: { contentId: article.contentId, name },
-        props: { project: read(dir) },
-      };
-    });
-  });
+  const embeddings = articles.flatMap(embeddingsOf);
+  assertOneOwner(embeddings);
+  return embeddings.map(({ contentId, name, dir }) => ({
+    params: { contentId, name },
+    props: { project: read(dir) },
+  }));
 }
