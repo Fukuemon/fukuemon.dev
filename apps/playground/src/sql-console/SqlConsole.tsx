@@ -57,7 +57,7 @@ export function SqlConsole({
       {/* 詰めた密度では、入力欄と操作を上に置いたまま、結果の領域だけを送る */}
       <div className={`flex min-w-0 flex-col ${gap} ${dense ? "h-full min-h-0" : ""}`}>
         <div
-          className={`grid min-h-0 shrink-0 has-[.cm-focused]:focus-ring ${dense ? "h-40" : "h-96"}`}
+          className={`grid min-h-0 shrink-0 has-[.cm-focused]:focus-ring ${dense ? "h-64" : "h-96"}`}
         >
           <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
             {() => (
