@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Worker 名は wrangler.jsonc と Terraform の双方が持つ。
 # 食い違うと cloudflare_workers_custom_domain が存在しない Worker を指し、custom domain の紐付けが切れる。
+# プレビューの Worker（apps/web の env.preview）は custom domain を持たないので比べない (ADR-0031)
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
