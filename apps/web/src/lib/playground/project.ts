@@ -11,6 +11,9 @@ import {
 
 const CONFIG_FILE = "playground.json";
 
+/** 記事の contentId と埋め込みの名前から、埋め込みの ID（`<contentId>/<埋め込みの名前>`）を組み立てる */
+export const embedId = (contentId: string, name: string) => `${contentId}/${name}`;
+
 /** 記事の Markdown があるディレクトリの下の、プロジェクトのディレクトリ */
 export const projectDir = (articlePath: string, name: string) =>
   join(dirname(articlePath), "playground", name);

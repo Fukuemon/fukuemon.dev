@@ -12,9 +12,6 @@ export const isEmbedName = (value: string) => embedNameSchema.safeParse(value).s
 
 export const isEmbedId = (value: string) => embedIdSchema.safeParse(value).success;
 
-/** 記事の contentId と埋め込みの名前から、埋め込みの ID を組み立てる */
-export const toEmbedId = (contentId: string, name: string) => `${contentId}/${name}`;
-
 const startCommandSchema = z.object({
   command: z.string().min(1),
   args: z.array(z.string()),

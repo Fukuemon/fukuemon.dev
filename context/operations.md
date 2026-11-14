@@ -93,7 +93,10 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - すべてのパスに、`Content-Security-Policy: frame-ancestors 'self' https://fukuemon.dev` を返す。ほかのサイトが、ツールのページを iframe で埋め込めないようにするためである。
   - `fukuemon.dev` と同じ `frame-ancestors 'self'` だけにすると、記事の iframe の埋め込みが動かない。
   - 手元とプレビューの記事からは、本番の `play.fukuemon.dev` を埋め込めない。
-- ツールのページは、プロジェクトの JSON を `https://fukuemon.dev/playground-projects/` から読む。手元で確認するときは、`apps/playground` のビルドの環境変数 `VITE_SITE_ORIGIN` に、手元の `apps/web` の origin を渡す。本番の deploy では渡さない。
+- ツールのページは、プロジェクトの JSON を `https://fukuemon.dev/playground-projects/` から読む。
+  - 記事から開く流れを手元で確認するときは、2 つのアプリを `wrangler dev` で配信する。
+    Playwright の `context.route` で、`https://fukuemon.dev` と `https://play.fukuemon.dev` を手元に転送する。CORS と `frame-ancestors` が、本番と同じ origin で働く。
+  - JSON を読む origin は、`apps/playground` の開発サーバー（`vp dev`）でだけ、環境変数 `VITE_SITE_ORIGIN` で替えられる。本番のビルドは読まない。
 - `/` は、`apps/playground/public/_redirects` で `https://fukuemon.dev/playground` へリダイレクトする。
 
 ## Deployment Conditions

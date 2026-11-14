@@ -3,11 +3,10 @@ import {
   type PlaygroundProject,
   type PlaygroundTool,
   isEmbedName,
-  toEmbedId,
 } from "@fukuemon/playground-project";
 import { buttonClassName } from "@fukuemon/ui/button-class-name";
 import { fromHtml } from "hast-util-from-html";
-import { PLAYGROUND_LANG, embedUrl, projectDir, readProject } from "./project";
+import { PLAYGROUND_LANG, embedId, embedUrl, projectDir, readProject } from "./project";
 import { replaceFences } from "../rehype-fence";
 import { PLAYGROUND_ORIGIN } from "./origin";
 
@@ -76,7 +75,7 @@ function resolveEmbed(
     throw new Error(`${file.path}: 埋め込みの名前が重なっている: ${name}`);
   }
   const { tool } = read(projectDir(file.path, name));
-  return { name, tool, id: toEmbedId(contentId, name) };
+  return { name, tool, id: embedId(contentId, name) };
 }
 
 function embedElement(tool: PlaygroundTool, src: string): Element {

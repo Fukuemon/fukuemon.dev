@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  isEmbedId,
-  isEmbedName,
-  playgroundConfigSchema,
-  playgroundProjectSchema,
-  toEmbedId,
-} from "./index";
+import { isEmbedId, isEmbedName, playgroundConfigSchema, playgroundProjectSchema } from "./index";
 
 const sqlProject = {
   tool: "sql",
@@ -126,9 +120,5 @@ describe("埋め込みの名前と ID", () => {
     ["a/b?x=1", false],
   ])("%s を埋め込みの ID として %s にする", (id, ok) => {
     expect(isEmbedId(id)).toBe(ok);
-  });
-
-  it("contentId と名前から、/ でつないだ埋め込みの ID を組み立てる", () => {
-    expect(toEmbedId("intro", "server")).toBe("intro/server");
   });
 });
