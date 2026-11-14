@@ -12,12 +12,17 @@ describe("watchPreviewLoad", () => {
     vi.useRealTimers();
   });
 
-  it("上限までに読み込まれないときは、上限の時点で onTimeout を呼ぶ", () => {
+  it("上限の前は、読み込まれていなくても onTimeout を呼ばない", () => {
     const onTimeout = vi.fn();
     watchPreviewLoad(0, () => undefined, onTimeout, TIMEOUT);
     vi.advanceTimersByTime(TIMEOUT - 1);
     expect(onTimeout).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
+  });
+
+  it("上限までに読み込まれないときは、上限の時点で onTimeout を呼ぶ", () => {
+    const onTimeout = vi.fn();
+    watchPreviewLoad(0, () => undefined, onTimeout, TIMEOUT);
+    vi.advanceTimersByTime(TIMEOUT);
     expect(onTimeout).toHaveBeenCalledOnce();
   });
 
@@ -35,13 +40,6 @@ describe("watchPreviewLoad", () => {
     watchPreviewLoad(2, () => 1, onTimeout, TIMEOUT);
     vi.advanceTimersByTime(TIMEOUT);
     expect(onTimeout).toHaveBeenCalledOnce();
-  });
-
-  it("見せ直したときに、読み込み済みの世代では onTimeout を呼ばない", () => {
-    const onTimeout = vi.fn();
-    watchPreviewLoad(0, () => 0, onTimeout, TIMEOUT);
-    vi.advanceTimersByTime(TIMEOUT);
-    expect(onTimeout).not.toHaveBeenCalled();
   });
 
   it("待つのをやめた後は、onTimeout を呼ばない", () => {

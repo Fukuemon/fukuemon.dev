@@ -21,12 +21,12 @@ type PortFrameProps = {
 };
 
 function PortFrame({ port, generation, onTimeout }: PortFrameProps) {
-  // Activity で隠すと Effect が止まり、見せると動き直す
+  // Activity で隠すと Effect が止まり、見せると動き直す。読み込んだ世代を持ち、見せ直したときに上限を数え直さない
   const loaded = useRef<number>(undefined);
   const timeout = useEffectEvent(() => onTimeout(port));
   useEffect(
     () => watchPreviewLoad(generation, () => loaded.current, timeout, PREVIEW_TIMEOUT_MS),
-    [port.port, generation],
+    [generation],
   );
   return (
     <iframe
