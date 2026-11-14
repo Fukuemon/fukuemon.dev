@@ -24,8 +24,8 @@ export type ConsoleEntryListProps = {
   entries: readonly ConsoleEntry[];
   /** 最初に表示するログレベル。渡さないと、全てのログレベルを表示する。 */
   defaultLevels?: readonly ConsoleLevel[];
-  /** 渡すと、一覧の代わりに読み込み中かエラーを出す。 */
-  state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
+  /** 渡すと、一覧の代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
+  state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
 };
 
 const LEVELS: readonly ConsoleLevel[] = ["debug", "log", "info", "warn", "error"];
