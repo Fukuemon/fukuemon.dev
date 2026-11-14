@@ -23,6 +23,44 @@ status: draft
 
 <!-- 流すコマンド、テストのプロジェクトの分け方（準備と E2E）と CI で流す範囲、向ける環境と URL、worker の数とその理由、lint と型のチェックのコマンド。backend を差し替えて流す spec と本物の backend につなぐ spec の見分け方（ファイル名かプロジェクト）。エビデンスを撮る撮影の設定があれば、その置き場 -->
 
+### apps/web の E2E と見た目の回帰
+
+`apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
+記事のページの表と図の枠の E2E も、同じ config（`apps/web/e2e/playwright.config.ts`）とコマンドで実行する。
+CI では、`pnpm run check` がビルドの後に実行する。
+ローカル環境では、ビルドしてから次を実行する。
+
+```sh
+pnpm run build
+pnpm run test:visual
+```
+
+- 配信のポートは、実行のたびに空きポートを選ぶ。
+  - 別の worktree の preview が動いていても、並べて実行できる。
+  - ポートを決めたいときは、環境変数 `PREVIEW_PORT` に渡す。そのポートが使用中なら、preview の起動が失敗する。
+  - 1〜65535 の整数でない値は、config がエラーで止める。
+  - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
+- 庭は WebGL で描くので、GPU に依らないよう、chromium に SwiftShader で描かせる。
+- 基準のスナップショットは、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
+  - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
+  - macOS の chromium で実行しても、この範囲に収まる。
+- 場面を変えて基準のスナップショットを作り直すときは、CI と同じ Linux の Playwright のイメージで作る。
+  - CI で実行する環境と同じ絵を基準にするためである。
+
+基準のスナップショットの作り直し方は、次のとおり。
+`apps/web/dist/` をローカル環境で配信し、コンテナから `host.docker.internal` で開く。
+イメージのバージョンは、`@playwright/test` のバージョンに合わせる。
+
+```sh
+pnpm run build
+python3 -m http.server 4400 --bind 127.0.0.1 --directory apps/web/dist
+docker run --rm --platform linux/amd64 --ipc=host -v "$PWD":/work -w /work/apps/web \
+  -e BASE_URL=http://host.docker.internal:4400 mcr.microsoft.com/playwright:v1.64.1-noble \
+  node node_modules/@playwright/test/cli.js test -c e2e/playwright.config.ts --update-snapshots
+```
+
+`python3 -m http.server` は別のターミナルで実行し、作り直した後に止める。
+
 ## Test Data and Login
 
 <!-- テストデータの作り方と片付け方。使い捨ての環境でデータを消さずに環境ごと作り直すなら、作り直すコマンドと、作り直してから流す spec。ログインの状態の保存先と、並列で共有しない理由。ID 基盤のログインやワンタイムのコードの扱い -->

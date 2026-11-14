@@ -15,13 +15,19 @@ verified_commit: ab2da87
 
 テストの種類ごとに、保証することと置き場は次のとおり。
 
-| 種類         | 対象                                                                               | ツール                   | 保証すること                                                                                                                                 |
-| ------------ | ---------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                 |
-| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする |
-| ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                             |
-| E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                           |
-| 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                 |
+| 種類         | 対象                                                                               | ツール                   | 保証すること                                                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                                                 |
+| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする                                 |
+| ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                                                             |
+| unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む                                  |
+| unit         | `packages/go-runtime` の Yaegi で Go を動かす処理（`go/`）                         | `go test`                | `syscall/js`、`syscall`、`unsafe`、`os/exec` の import が失敗すること、ディレクトリの package の import を解決できること、終了コードとテストの関数を集められることを確認する |
+| unit         | `packages/go-runtime` の `GoRunner` と、Web Worker の `fetch` の差し替え           | Vitest                   | Web Worker のモックで、実行、止める、package ごとのテスト、読み込みと Web Worker の失敗と、ほかの origin へのリクエストを止める処理を踏む                                    |
+| unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                              |
+| E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                                                           |
+| E2E          | 記事のページの表と図の枠（`apps/web/e2e/specs/`）                                  | Playwright               | 本文の列からあふれた表と図の枠にだけ、右に続きがある間、右端を背景の色で薄くする。動きを減らす設定では、右端まで送ったときに一度に消す                                       |
+| 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                                                 |
+| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                 |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -42,16 +48,28 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 `apps/web` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 対象は、次のモジュール。
 
-- `src/features/top-garden/` の、墨の絵の SVG を作る `layout.ts`、`brush.ts`、`ink-art.ts`、`ink-svg.ts`
-- `src/features/top-garden/` の、季節と時間帯を返す `season.ts`
-- `src/features/top-garden/` の、最初の訪問かを返す `visit.ts`
-- `src/features/top-garden/` の、季節と時間帯を `html` に書き、庭を出すかを決める `stage.ts`
+- `src/features/top-garden/` の、墨の絵の SVG を作る `layout.ts` と `rng.ts`（直下）と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`
+- `src/features/top-garden/scene/` の、時間帯と季節から場面の色を決める `scene-colors.ts`
+- `src/features/top-garden/stage/` の、季節と時間帯を返す `season.ts`、最初の訪問かを返す `visit.ts`、季節と時間帯を `html` に書き庭を出すかを決める `stage.ts`
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
 - `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
+- `src/lib/subset-fonts.ts`（ビルドの後に、見出しの書体のファイルを、使う字だけに作り直す）
 
-`apps/playground` には、分岐、関数、行、文のカバレッジ 90% を求める。  
-対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
-対象のファイルは、まだ無い。
+`src/lib/` では、次のモジュールも対象。
+
+- 公開するかを判定し、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `content/article-pages.ts`
+- 一覧に載せる記事の並びと、シリーズのページに載せる記事の読む順を返す `content/article-list.ts`
+- RSS の文書を組む `content/rss.ts`
+- `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
+- 和文の間の改行を消す `rehype-ja-linebreak.ts`
+- 表と図を横に送れる枠で包む `rehype-scroll-box.ts`
+
+`apps/playground`、`packages/sql-runtime`、`packages/go-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
+`packages/playground-project` には、100% を求める。  
+`apps/playground` と `packages/go-runtime` の対象は、`src/**/*.ts` のうちテストのファイルを除いたものである。React のコンポーネントと、各ツールの `main.tsx`（`.tsx`）は、対象に入れない。  
+`packages/sql-runtime` と `packages/go-runtime` の `src/worker/index.ts` と `src/worker/worker.ts` は、対象に入れない。  
+2 つは `Worker` と `import.meta.url` を使い、Node では動かないためである。2 つのファイルは、テストする `database.ts` と `handler.ts`（`go-runtime` では `runner.ts`、`guard.ts`、`parts.ts`）を呼ぶだけにする。  
+`packages/go-runtime` の `test` の script は、Vitest の後に `go test` を実行するので、`mise.toml` の Go が要る。
 
 E2E を足すのは、ビルドは通るが表示の意味が誤っているケースだけにする。  
 静的なサイトなので、ビルドが通れば大半のページは出る。  
@@ -66,14 +84,24 @@ CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/8
 
 見た目の回帰のチェックは、E2E のエビデンスの静止画を、変更の前後で並べて比べる。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
-サイトの E2E の package（`packages/e2e`）は、まだ無い。
+サイトの E2E の package（`packages/e2e`）は、まだ無い。  
+`apps/web` の E2E の spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。
+
+記事のページの表と図の枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
+あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  
+`scroll-box-fade.spec.ts` は検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
+
+トップの庭は、Playwright のスクリーンショットの比較で確認する。  
+庭は WebGL で描き、目で比べても色の小さな違いに気づけないためである。  
+実行の方法は [E2E のテスト](testing/e2e.md) にある。
 
 ## Runtime Requirements
 
 - unit test は Node.js の上で動かし、ブラウザの環境を要求しない。
+  - 例外は、`apps/playground/src/code-editor/search-panel.ts` のテストである。CodeMirror のパネルは DOM を組むので、jsdom の上で動かす。
 - E2E を足すときは、ビルド済みの `dist/` を静的に配信して実行し、dev server を対象にしない。
   - Astro の dev と build で出力が違う場合があり、本番に近い側をチェックする。
-- 実行に要る環境変数、ポート、外部のサービスは、未定。
+- 見た目の回帰の配信のポートと環境変数は、[E2E のテスト](testing/e2e.md) にある。外部のサービスは、未定。
 
 ## Mocking and Test Data
 

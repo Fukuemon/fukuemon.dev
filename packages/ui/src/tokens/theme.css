@@ -189,6 +189,17 @@
   }
 }
 
+/* 動きを減らす設定では、--fd-scroll-fade-ease が step-end になる。薄い色は、右端の手前まで濃さを保ち、右端まで送ったときに一度に消える */
+@keyframes fd-scroll-fade-end {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* フォーカスの表示は、このユーティリティだけで書く。要素から 2px 離して、墨の 2px の輪を 1 重に引く */
 @utility focus-ring {
   outline: 2px solid var(--fd-color-focus);
@@ -338,8 +349,49 @@
   }
 }
 
-/* OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない */
+/*
+ * 横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする。薄い色は、右端まで送る手前から消え始め、送りきったときに消えきる。
+ * 中身と ::after を grid の同じセルに重ねる。枠に mask を当てると、外へ広がるフォーカスの輪も切れるためである。
+ * あふれない枠ではスクロールの timeline が働かず、opacity: 0 のままになる。
+ * 要素の子を 1 つだけ持ち、surface の背景の上にある枠に付ける。枠の display は grid になる。
+ */
+@utility scroll-fade-end {
+  display: grid;
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    &::after {
+      content: "";
+      grid-area: 1 / 1;
+      justify-self: end;
+      position: sticky;
+      inset-inline-end: 0;
+      width: calc(var(--spacing) * 12);
+      background-image: linear-gradient(to right, transparent, var(--fd-color-surface));
+      opacity: 0;
+      pointer-events: none;
+      /* shorthand で書くと、ビルドが animation-timeline まで shorthand にまとめ、ブラウザが宣言ごと捨てる */
+      animation-name: fd-scroll-fade-end;
+      animation-timing-function: var(--fd-scroll-fade-ease, linear);
+      animation-fill-mode: both;
+      animation-timeline: scroll(nearest inline);
+    }
+  }
+}
+
+/*
+ * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
+ * scroll-fade-end の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。
+ * step-end がほかのスクロールに合わせた動きに及ばないよう、緩急は変数で scroll-fade-end にだけ渡す。
+ */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --fd-scroll-fade-ease: step-end;
+  }
+
   *,
   *::before,
   *::after,

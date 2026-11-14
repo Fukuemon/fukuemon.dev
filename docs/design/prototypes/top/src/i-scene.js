@@ -344,7 +344,7 @@ export async function start(stage, opts) {
     return t;
   });
 
-  // 舞う物。動き続けるので、止めるボタンを持つ。
+  // パーティクル。動き続けるので、止めるボタンを持つ。
   const N = S.n, glow = S.shape === "glow";
   const fallOn = !glow || opts.time === "evening" || opts.time === "night";
   const fall = new InstancedMesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({

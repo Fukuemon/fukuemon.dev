@@ -1,0 +1,191 @@
+import type { TreeNode } from "@fukuemon/ui";
+
+/**
+ * Go を動かすツールのファイルの一式。ファイルはツールのルートからのパスで持つ。
+ * directories は、訪問者が作ったディレクトリである。ファイルを持たないディレクトリも、一覧に出して保存するために持つ。
+ * ファイルの親のディレクトリは、directories に無くても、一覧に出す。
+ */
+export type GoFileSet = {
+  files: Readonly<Record<string, string>>;
+  directories: readonly string[];
+};
+
+export type EntryKind = "file" | "directory";
+
+export type FileEntry = { path: string; kind: EntryKind };
+
+/** 変更の結果。path は正規化した後のパスで、rename のときは移した後、from は移す前である。 */
+export type Change =
+  | { ok: true; fileSet: GoFileSet; path: string; from?: string }
+  | { ok: false; reason: string };
+
+/** 相対パスを、先頭と末尾の `/` と `./` を除いた形にする。`..`、空の階層、`\` を含むパスは undefined を返す。 */
+export function normalizePath(path: string): string | undefined {
+  const segments = path
+    .trim()
+    .replace(/^\.?\/+/, "")
+    .replace(/\/+$/, "")
+    .split("/");
+  if (segments.some((s) => s === "" || s === "." || s === ".." || s.includes("\\"))) {
+    return undefined;
+  }
+  return segments.join("/");
+}
+
+const parentsOf = (path: string): string[] => {
+  const parts = path.split("/");
+  return parts.slice(1).map((_, i) => parts.slice(0, i + 1).join("/"));
+};
+
+const isUnder = (path: string, directory: string) => path.startsWith(`${directory}/`);
+
+/** path が target と同じか、target のディレクトリの下にあるか。 */
+export const isSameOrUnder = (path: string, target: string) =>
+  path === target || isUnder(path, target);
+
+/** path が from と同じか from の下にあるときに、from を to に置き換えたパスを返す。 */
+export const movePath = (path: string, from: string, to: string) =>
+  isSameOrUnder(path, from) ? to + path.slice(from.length) : path;
+
+const allDirectories = (fileSet: GoFileSet): Set<string> => {
+  const directories = new Set<string>();
+  for (const directory of fileSet.directories) {
+    directories.add(directory);
+    for (const parent of parentsOf(directory)) directories.add(parent);
+  }
+  for (const path of Object.keys(fileSet.files)) {
+    for (const parent of parentsOf(path)) directories.add(parent);
+  }
+  return directories;
+};
+
+export function kindOf(fileSet: GoFileSet, path: string): EntryKind | undefined {
+  if (Object.hasOwn(fileSet.files, path)) return "file";
+  return allDirectories(fileSet).has(path) ? "directory" : undefined;
+}
+
+/** ディレクトリとファイルを、パスの順で返す。path を渡すと、その下の全ての階層だけを返す。 */
+export function listEntries(fileSet: GoFileSet, path?: string): FileEntry[] {
+  const entries: FileEntry[] = [
+    ...[...allDirectories(fileSet)].map((p) => ({ path: p, kind: "directory" as const })),
+    ...Object.keys(fileSet.files).map((p) => ({ path: p, kind: "file" as const })),
+  ];
+  return entries
+    .filter((entry) => path === undefined || isUnder(entry.path, path))
+    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+}
+
+const failed = (reason: string): Change => ({ ok: false, reason });
+
+const checkNew = (fileSet: GoFileSet, path: string): string | undefined => {
+  if (kindOf(fileSet, path)) return `「${path}」は既にあります`;
+  const blocking = parentsOf(path).find((parent) => kindOf(fileSet, parent) === "file");
+  return blocking ? `「${blocking}」はファイルなので、その下に作れません` : undefined;
+};
+
+/** ファイルを書く。無ければ作り、親のディレクトリも一覧に出す。 */
+export function writeFile(fileSet: GoFileSet, rawPath: string, contents: string): Change {
+  const path = normalizePath(rawPath);
+  if (!path) return failed(`「${rawPath}」はファイルのパスにできません`);
+  if (kindOf(fileSet, path) === "directory") return failed(`「${path}」はディレクトリです`);
+  if (!Object.hasOwn(fileSet.files, path)) {
+    const reason = checkNew(fileSet, path);
+    if (reason) return failed(reason);
+  }
+  return {
+    ok: true,
+    path,
+    fileSet: { ...fileSet, files: { ...fileSet.files, [path]: contents } },
+  };
+}
+
+/** 空のファイルを作る。既にあるパスには作らない。 */
+export function createFile(fileSet: GoFileSet, rawPath: string): Change {
+  const path = normalizePath(rawPath);
+  if (!path) return failed(`「${rawPath}」はファイルのパスにできません`);
+  const reason = checkNew(fileSet, path);
+  if (reason) return failed(reason);
+  return writeFile(fileSet, path, "");
+}
+
+/** 親のディレクトリの下のパスにする。親が無いときは、ルートのパスにする。 */
+export const joinPath = (parent: string | undefined, name: string) =>
+  parent ? `${parent}/${name}` : name;
+
+/** 親のディレクトリのパス。ルートの直下は undefined を返す。 */
+export const parentOf = (path: string) =>
+  path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : undefined;
+
+/** パスの最後の名前。 */
+export const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
+
+/** タブの名前。開いているほかのファイルと名前が重なるときだけ、親のディレクトリを添える。 */
+export function tabLabel(path: string, openPaths: readonly string[]): string {
+  const name = baseName(path);
+  const clashes = openPaths.filter((other) => baseName(other) === name).length > 1;
+  return clashes ? `${name} — ${parentOf(path) ?? "/"}` : name;
+}
+
+export function createDirectory(fileSet: GoFileSet, rawPath: string): Change {
+  const path = normalizePath(rawPath);
+  if (!path) return failed(`「${rawPath}」はディレクトリのパスにできません`);
+  const reason = checkNew(fileSet, path);
+  if (reason) return failed(reason);
+  return {
+    ok: true,
+    path,
+    fileSet: { ...fileSet, directories: [...fileSet.directories, path] },
+  };
+}
+
+/** ファイルかディレクトリの名前を変える。ディレクトリのときは、下のファイルとディレクトリも移す。 */
+export function rename(fileSet: GoFileSet, rawFrom: string, rawTo: string): Change {
+  const from = normalizePath(rawFrom);
+  const to = normalizePath(rawTo);
+  const kind = from && kindOf(fileSet, from);
+  if (!from || !kind) return failed(`「${rawFrom}」はありません`);
+  if (!to) return failed(`「${rawTo}」は名前にできません`);
+  if (to === from) return { ok: true, fileSet, path: to, from };
+  if (isUnder(to, from)) return failed("ディレクトリを、自分の下に移せません");
+  const reason = checkNew(fileSet, to);
+  if (reason) return failed(reason);
+  const files = Object.fromEntries(
+    Object.entries(fileSet.files).map(([path, contents]) => [movePath(path, from, to), contents]),
+  );
+  const directories = fileSet.directories.map((path) => movePath(path, from, to));
+  return { ok: true, fileSet: { files, directories }, path: to, from };
+}
+
+/** ファイルかディレクトリを消す。ディレクトリのときは、下のファイルとディレクトリも消す。 */
+export function remove(fileSet: GoFileSet, rawPath: string): Change {
+  const path = normalizePath(rawPath);
+  if (!path || !kindOf(fileSet, path)) return failed(`「${rawPath}」はありません`);
+  const keep = (p: string) => p !== path && !isUnder(p, path);
+  const files = Object.fromEntries(Object.entries(fileSet.files).filter(([p]) => keep(p)));
+  // 消したディレクトリの親が空になっても、一覧から消えないようにする
+  const parent = parentOf(path);
+  const directories = [...fileSet.directories.filter(keep), ...(parent ? [parent] : [])];
+  return { ok: true, path, fileSet: { files, directories: [...new Set(directories)] } };
+}
+
+/** FileTree に渡す木。各階層で、ディレクトリを先に、名前の順で並べる。項目の id はパスである。 */
+export function toTree(fileSet: GoFileSet): TreeNode[] {
+  const entries = listEntries(fileSet);
+  const build = (parent: string | undefined): TreeNode[] => {
+    const prefix = parent === undefined ? "" : `${parent}/`;
+    const children = entries.filter(
+      (entry) => entry.path.startsWith(prefix) && !entry.path.slice(prefix.length).includes("/"),
+    );
+    const directories = children.filter((e) => e.kind === "directory");
+    const files = children.filter((e) => e.kind === "file");
+    return [
+      ...directories.map((e) => ({
+        id: e.path,
+        label: e.path.slice(prefix.length),
+        children: build(e.path),
+      })),
+      ...files.map((e) => ({ id: e.path, label: e.path.slice(prefix.length) })),
+    ];
+  };
+  return build(undefined);
+}

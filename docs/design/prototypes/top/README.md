@@ -9,7 +9,7 @@
 
 ## Running
 
-場面の束は three を含み、Git で追跡しない。  
+場面のバンドルは three を含み、Git で追跡しない。  
 three は、バージョン 0.187.0 を使う。  
 コマンドは、リポジトリの直下で流す。
 
@@ -28,7 +28,7 @@ three は、バージョン 0.187.0 を使う。
    rm docs/design/prototypes/top/vendor/three-0.187.0.tgz
    ```
 
-3. `i-mon.html` と、場面の束 `vendor/i-scene.bundle.js` を書く。
+3. `i-mon.html` と、場面のバンドル `vendor/i-scene.bundle.js` を書く。
 
    ```sh
    node docs/design/prototypes/top/build-i.mjs
@@ -74,7 +74,7 @@ node docs/design/prototypes/top/record-i.mjs
 署名は `src/sign.svg` である。  
 `build-i.mjs` は、このファイルを読んで `i-mon.html` に置く。
 
-- 自筆の署名に替えるときは、`src/sign.svg` を、同じ形の SVG に差し替えて、束を作り直す。
+- 自筆の署名に替えるときは、`src/sign.svg` を、同じ形の SVG に差し替えて、バンドルを作り直す。
   - 同じ形は、`viewBox` と、輪郭を塗った `path` を 1 本持つ SVG である。
   - 線（`stroke`）で描いた SVG は、今の作りでは出ない。
 - 書体から作り直すときは、書体のファイルを取得して、`src/sign-path.py` で輪郭を取り出す。
@@ -101,5 +101,5 @@ Great Vibes は SIL Open Font License 1.1 で配られている。
 
 次のものは、この試作のディレクトリに置かない。
 
-- three を含む束（`vendor/`）。上の手順で作り直す。
+- three を含むバンドル（`vendor/`）。上の手順で作り直す。
 - 試作を作るときに参考にした素材の画像と、ほかのサイトの画面。公開できないためである。

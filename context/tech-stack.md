@@ -19,7 +19,8 @@ verified_commit: 63b37ad
 ## Toolchain
 
 npm のパッケージのバージョンは、各 package の `package.json` に書いてある。  
-Node.js、uv、apm、similarity-ts のバージョンは、`mise.toml` に書いてある。  
+Node.js、Go、uv、apm、similarity-ts のバージョンは、`mise.toml` に書いてある。  
+Yaegi のバージョンは、`packages/go-runtime/go/go.mod` に書いてある。  
 pnpm のバージョンは、ルートの `package.json` の `packageManager` に書いてある。
 
 - ADR-0011: [ツールのバージョンを mise で固定する](../docs/adr/0011-pin-tool-versions-with-mise.md)
@@ -43,6 +44,11 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - story は、Vitest のブラウザのモードでテストとして動かす。ブラウザは Playwright の chromium を使う。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
 - `@electric-sql/pglite` は、プレイグラウンドで、`@fukuemon/sql-runtime` が SQL だけを動かすツールに使う。Node の実行環境の中の DB のプロセスには、`@fukuemon/node-runtime` の `guest/` の `package.json` に書いた同じバージョンを、実行環境の中で `npm install` する。
+- Go と Yaegi は、プレイグラウンドの Go を動かすツールに使う。`@fukuemon/go-runtime` の `build` の script が、Yaegi で訪問者のコードを動かす WASM を、`mise.toml` の Go でビルドする。`wasm_exec.js` は、同じ Go のものをコミットする。
+  - Go のバージョンを上げるときは、`$(go env GOROOT)/lib/wasm/wasm_exec.js` を `packages/go-runtime/src/worker/vendor/` にコピーする。ビルドの script は、2 つが違うと失敗する。
+  - ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](../docs/adr/0037-go-with-yaegi.md)
+- CodeMirror 6 は、プレイグラウンドのツールの入力欄のエディタに使う。色は、`packages/ui` のテーマ変数を読む。
+- CodeMirror 6 は、プレイグラウンドのツールのエディタに使う。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。`vp build` は、`apps/playground` の build に使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
@@ -54,7 +60,12 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
 - knip は、未使用の export、依存、ファイルの検出に使う。
 - Vitest は unit test に使う。
-- Playwright は、`packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）、トップの試作の録画に使う。
+- Playwright は、次のことに使う。
+  - `packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）
+  - トップの庭の見た目の回帰と、記事のページの表と図の枠の E2E（`apps/web/e2e/`）
+  - トップの試作の録画
+- three は、トップの立体の庭を描く場面のバンドルにだけ使う。
+  - 庭を出すときだけ読み込み、ほかのページには配らない。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
 - Wrangler は、サイトの Worker（`apps/web`）、カタログの Worker（`packages/ui`）、プレイグラウンドの Worker（`apps/playground`）の deploy に使う。

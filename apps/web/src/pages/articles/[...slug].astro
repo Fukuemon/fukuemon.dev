@@ -1,0 +1,47 @@
+---
+import { SeriesPager } from "@fukuemon/ui";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getArticlePaths, renderArticle, type ArticlePageProps } from "../../lib/content/articles";
+
+export const getStaticPaths = getArticlePaths;
+
+type Props = ArticlePageProps;
+const { id, title, description, publishedAt, updatedAt, series } = Astro.props;
+const Content = await renderArticle(id);
+
+const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<SiteLayout title={`${title} | fukuemon.dev`} description={description}>
+  <div class="mx-auto max-w-page px-4 py-8 md:px-6">
+    <article class="flex max-w-(--container-prose) flex-col gap-8">
+      <header class="flex flex-col gap-2">
+        <h1 class="font-heading text-heading-lg font-semibold">{title}</h1>
+        <p class="text-caption text-text-secondary">
+          <time datetime={toIsoDate(publishedAt)}>{toIsoDate(publishedAt)}</time>
+          {
+            updatedAt && (
+              <>
+                {" "}（更新 <time datetime={toIsoDate(updatedAt)}>{toIsoDate(updatedAt)}</time>）
+              </>
+            )
+          }
+        </p>
+      </header>
+      <div class="prose">
+        <Content />
+      </div>
+      {
+        series && (
+          <SeriesPager
+            series={series.title}
+            position={series.position}
+            total={series.total}
+            prev={series.prev}
+            next={series.next}
+          />
+        )
+      }
+    </article>
+  </div>
+</SiteLayout>

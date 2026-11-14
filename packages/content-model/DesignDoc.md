@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: Content Model
-description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef へのloader との結線
+description: 記事とシリーズの schema、安定識別子 contentId、シリーズの構造のチェック、相互参照のグラフ、ContentRef の型、loader との結線
 status: stable
 governs:
   - packages/content-model/
@@ -195,12 +195,24 @@ flowchart TD
     subgraph web ["apps/web"]
         config["content.config.ts<br/>loader と schema の結線"]
         loader["lib/content/articles-loader.ts<br/>読み込み後のシリーズのチェック"]
+        articles["lib/content/articles.ts<br/>ページが使う astro:content の読み出し"]
+        pages["lib/content/article-pages.ts<br/>isPublic() / planArticlePages()"]
+        list["lib/content/article-list.ts<br/>listArticles() / planSeriesPages()"]
+        rss["lib/content/rss.ts<br/>buildRss()"]
     end
     ac["astro:content"]
     config --> ac
     config --> schema
     config --> loader
     loader --> series
+    articles --> ac
+    articles --> pages
+    articles --> list
+    list --> pages
+    list --> types
+    list --> schema
+    rss --> types
+    pages --> schema
     graph --> types
 ```
 
@@ -247,9 +259,28 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 - `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
 - `apps/web/src/content.config.ts`: collection の結線
 - `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
-- 一覧と詳細のページが使う関数（`listContent()` など）と、公開するかを判定する `isPublic()` は、まだ無い。
+- `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `planArticlePages()`
+- `apps/web/src/lib/content/article-list.ts`: 一覧とシリーズのページの関数
+  - `listArticles()`: 一覧と RSS に載せる記事を返す
+  - `planSeriesPages()`: シリーズのページを組む
+- `apps/web/src/lib/content/rss.ts`: `ContentRef` の並びから RSS 2.0 の文書を組む `buildRss()`
+- `apps/web/src/lib/content/articles.ts`: ページが `astro:content` を読む関数
+  - 記事のページが使う `getArticlePaths()` と `renderArticle()`
+  - 一覧と RSS が使う `getArticleList()`
+  - シリーズのページが使う `getSeriesPaths()`
 
-`isPublic()` を作るときは、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
+`isPublic()` は、dev server ではすべてを、build では `status` が `published` のものだけを通す。  
+`planArticlePages()` は、シリーズの位置と前後を、`isPublic()` を通った記事だけで数える。  
+シリーズの所属と読む順は、Astro の `id` の先頭のディレクトリ名と `order` から、`planArticlePages()` が導く。  
+`listArticles()` は、`isPublic()` を通った記事を、公開の日付の新しい順に返す。  
+同じ日の記事は、`href` の順にする。  
+`planSeriesPages()` は、`isPublic()` を通った記事を、シリーズごとに `order` の昇順に並べる。  
+公開した記事が 1 本も無いシリーズのページは書き出さない。  
+`listArticles()` と `planSeriesPages()` は、記事を `ContentRef` にして返す。  
+2 つとも、`isPublic()` を通った記事に、`index.md` の無いディレクトリの記事があると throw し、ビルドを失敗させる。  
+読み込みのときに `planSeries()` が先に止めるので、この throw に届くのは、loader と collection の対応を誤ったときだけである。  
+`buildRss()` は、題、説明、URL に XML 1.0 で使えない文字があると throw し、ビルドを失敗させる。  
+`planSeries()` は、読み込みのときのチェックにだけ使い、戻り値はページに渡さない。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
 
