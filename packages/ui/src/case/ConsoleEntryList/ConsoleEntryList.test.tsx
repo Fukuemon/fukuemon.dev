@@ -11,9 +11,9 @@ import {
 } from "./ConsoleEntryList";
 import * as stories from "./ConsoleEntryList.stories";
 import { type ConsoleValue, preview } from "./consoleValue";
-import { ENTRIES, MANY_ENTRIES } from "./fixtures";
+import { MANY_ENTRIES } from "./fixtures";
 
-const { Default, ErrorOnly, FixedHeight, Empty, Loading, Error } = composeStories(stories);
+const { Default, ErrorOnly, FixedHeight, Empty, Loading, Pending, Error } = composeStories(stories);
 
 const rows = () => within(screen.getByRole("list")).getAllByRole("listitem");
 const row = (index: number) => rows()[index] as HTMLElement;
@@ -293,7 +293,7 @@ describe("ConsoleEntryList", () => {
   });
 
   it("起動を待つ間は、題だけを出し、ログレベルのボタンと行を出さない", () => {
-    render(<ConsoleEntryList entries={ENTRIES} state={{ kind: "pending" }} />);
+    render(<Pending />);
     expect({
       title: screen.queryByText("コンソール") !== null,
       levels: screen.queryByRole("group", { name: "表示するログレベル" }),

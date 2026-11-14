@@ -48,6 +48,7 @@ export const FixedHeight: Story = {
 export const ErrorOnly: Story = { name: "error だけを表示", args: { defaultLevels: ["error"] } };
 export const NoMatch: Story = { name: "選んだログレベルの行が無い", args: { defaultLevels: [] } };
 export const Empty: Story = { name: "空", args: { entries: [] } };
+export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",
   args: { state: { kind: "loading", label: "実行環境を起動しています" } },
