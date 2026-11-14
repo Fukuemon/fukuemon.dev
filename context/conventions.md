@@ -225,7 +225,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - `packages/ui/src/case/ConsoleEntryList/ConsoleEntryList.tsx` の 1 行の値の並び。`console.*` に同じ値の引数を渡すことがあり、値だけでは key が重なる。
   - どの一覧も、描いた後に並びが変わらない。
 - Oxlint の `jsx-a11y` の規則は全てエラーにする。次の 3 種類だけ、理由を書いて抑制する。
-  - `no-noninteractive-tabindex`: 横か縦に送る領域（`Table`、`ConsoleEntryList`、`ResultView`、`SplitPane` の story）に `tabIndex={0}` を付ける。キーボードだけで送れるようにするためである（WCAG 2.1.1）。`role="region"` か `role="log"` を書いた要素は、設定（`roles`）で許す。`section` の region は行ごとに抑制する。
+  - `no-noninteractive-tabindex`: 横か縦に送る領域（`Table`、`ConsoleEntryList`、`ResultView`、`SplitPane` の story）に `tabIndex={0}` を付ける。キーボードだけで送れるようにするためである（WCAG 2.1.1）。`role="region"` か `role="log"` を書いた要素は、設定（`roles`）で許す。`role` を書かない要素（`section`、story の `ol`）は行ごとに抑制する。
   - `prefer-tag-over-role`: 次の 3 か所の `role`。
     - `pre` の `role="region"`。`section` に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる。
     - `SplitPane` の `role="separator"`。`hr` は子を持てず、押せる領域の中に線を描けない。
