@@ -7,6 +7,7 @@
     "./theme.css": "./src/tokens/theme.css",
     "./fonts.css": "./src/tokens/fonts.css",
     "./sources.css": "./src/sources.css",
+    "./code-theme": "./src/tokens/code-theme.ts",
     "./code-theme.json": "./src/tokens/code-theme.gen.json"
   },
   "scripts": {

@@ -2,3 +2,95 @@
 @import "@fukuemon/ui/fonts.css";
 @import "@fukuemon/ui/theme.css";
 @import "@fukuemon/ui/sources.css";
+
+/* 記事の本文。Markdown から出る要素には class が付かないので、要素で当てる */
+@layer components {
+  .prose {
+    @apply flex flex-col gap-4 text-body;
+  }
+  .prose :where(h2) {
+    @apply mt-8 border-b border-border pb-2 font-heading text-heading-md font-semibold;
+  }
+  .prose :where(h3) {
+    @apply mt-4 font-heading text-heading-sm font-semibold;
+  }
+  .prose :where(ul) {
+    @apply list-disc ps-6;
+  }
+  .prose :where(ol) {
+    @apply list-decimal ps-6;
+  }
+  .prose :where(li > ul, li > ol) {
+    @apply mt-2;
+  }
+  .prose :where(blockquote) {
+    @apply border-s-2 border-border-field ps-4 text-text-secondary;
+  }
+  /* packages/ui の Link と Table の文中の形と同じにする。フォーカスの輪が外へ 4px 広がるので、左右を 6px 空ける */
+  .prose :where(a) {
+    @apply mx-1.5 text-link underline underline-offset-4 link-rule link-rule-below-underline visited:text-link-visited focus-visible:focus-ring;
+  }
+  .prose :where(a[href^="http"]:not([href^="https://fukuemon.dev"])) {
+    @apply text-link-external visited:text-link-external;
+  }
+  .prose :where(:not(pre) > code) {
+    @apply bg-code-surface px-1 font-mono text-code text-code-text;
+  }
+  .prose :where(table) {
+    @apply w-full border-collapse text-body-dense;
+  }
+  .prose :where(thead) {
+    @apply border-t-2 border-text;
+  }
+  .prose :where(th, td) {
+    @apply border-b border-border px-4 py-2 text-start align-top;
+  }
+  .prose :where(th) {
+    @apply font-bold;
+  }
+  .prose :where(thead th) {
+    @apply border-text;
+  }
+  /* rehype-scroll-box が表と図を包む枠。縮めずに横に送り、右に続きがある間は右端を薄くする */
+  .prose :where(.scroll-box) {
+    @apply scroll-fade-end overflow-x-auto focus-visible:focus-ring;
+  }
+  /* w-full のままだと、表は送られずに列を潰して収まる */
+  .prose :where(.scroll-box > table) {
+    @apply w-max min-w-full;
+  }
+
+  /* Pele の SVG の色を、Pele の変数からトークンへ対応させる。1 枚の SVG のままライトとダークを切り替える (ADR-0016) */
+  .prose svg.pele {
+    --pele-bg: var(--color-surface);
+    --pele-fg: var(--color-text);
+    --pele-muted: var(--color-text-secondary);
+    --pele-line: var(--color-text);
+    --pele-surface: var(--color-surface-subtle);
+    --pele-surface-alt: var(--color-surface);
+    --pele-border: var(--color-border-field);
+    --pele-accent: var(--color-primary);
+    /* 角を丸めるのは操作できる要素と重なる面だけで、図の箱は罫で示す (ADR-0028) */
+    --pele-radius: 0;
+    @apply block;
+    /* Pele は SVG の style に max-width: 100% を書き、列に合わせて文字ごと縮める。!important でないと style に勝てない */
+    max-width: none !important;
+  }
+}
+
+/*
+ * Expressive Code のコピーのボタン、吹き出し、フォーカスを、packages/ui の角丸、押せる範囲、動きの長さ、フォーカスの輪にそろえる。
+ * 吹き出しは下から上へ動かして出すので、位置を動かさず、濃さだけで出す (docs/design/DesignDoc.md の「動き」)。
+ * Expressive Code の CSS は層の外にあり、後から読まれるので、層の外に置き、.prose で詳細度を上げる。
+ */
+.prose .expressive-code .copy .feedback {
+  @apply rounded-control duration-150;
+  transform: none;
+  transition-property: opacity;
+}
+.prose .expressive-code .copy button {
+  @apply size-11 rounded-control duration-150;
+}
+.prose .expressive-code :is(pre, .copy button):focus-visible {
+  @apply focus-ring;
+}
