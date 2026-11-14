@@ -129,21 +129,8 @@ const skip =
     z-index: 40;
   }
 
-  /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、左右の余白と間を詰め、ロゴを小さくする */
+  /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、ロゴをさらに小さくする。左右の余白と間は、ヘッダーの側で詰めてある */
   @media not (min-width: 48rem) {
-    :global(html.stage-on [data-site-header]) {
-      padding-inline: 0.5rem;
-    }
-
-    :global(html.stage-on [data-site-header] ul),
-    :global(html.stage-on [data-site-header] > div) {
-      column-gap: 0.5rem;
-    }
-
-    :global(html.stage-on [data-site-header-tools]) {
-      column-gap: 0;
-    }
-
     :global(html.stage-on [data-site-logo] svg) {
       block-size: 1.5rem;
     }
