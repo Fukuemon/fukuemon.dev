@@ -29,6 +29,7 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
   }, [isOpen]);
 
   return (
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- 背景のクリックはマウスの便宜で、キーボードでは Esc のキーと閉じるボタンで閉じる
     <dialog
       aria-labelledby={titleId}
       className={clsx(

@@ -221,7 +221,13 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - `packages/ui/src/case/ToolPane/fixtures.tsx` のコードの行。同じ中身の行が並ぶことがあり、中身だけでは key が重なる。
   - `packages/ui/src/case/ConsoleEntryList/ConsoleEntryList.tsx` の 1 行の値の並び。`console.*` に同じ値の引数を渡すことがあり、値だけでは key が重なる。
   - どの一覧も、描いた後に並びが変わらない。
-- Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
+- Oxlint の `jsx-a11y` の規則は全てエラーにする。次の 3 種類だけ、理由を書いて抑制する。
+  - `no-noninteractive-tabindex`: 横か縦に送る領域（`Table`、`ConsoleEntryList`、`ResultView`、`SplitPane` の story）に `tabIndex={0}` を付ける。キーボードだけで送れるようにするためである（WCAG 2.1.1）。`role="region"` を明示した要素は、設定（`roles`）で許す。
+  - `prefer-tag-over-role`: 次の 3 か所の `role`。
+    - `pre` の `role="region"`。`section` に替えられない。
+    - `SplitPane` の `role="separator"`。`hr` は focus と `aria-valuenow` を持てない。
+    - `SearchBox` の `combobox`、`listbox`、`option`。APG の Combobox の形で、候補は遷移するリンクである。
+  - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
 - 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
   - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。

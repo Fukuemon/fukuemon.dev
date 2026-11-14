@@ -60,6 +60,7 @@ function MessageBody({ label, body }: { label: string; body: string }) {
       <pre
         aria-labelledby={labelId}
         className="overflow-x-auto bg-code-surface p-2 font-mono text-code-compact text-code-text focus-visible:focus-ring"
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- pre は section に替えられない。送る領域に名前を付ける role
         role="region"
         tabIndex={0}
       >

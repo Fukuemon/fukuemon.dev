@@ -104,6 +104,7 @@ export function SplitPane({
         onLostPointerCapture={() => {
           isDraggingRef.current = false;
         }}
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- 操作できる分割線は APG の Window Splitter で、hr は focus と aria-valuenow を持てない
         role="separator"
         tabIndex={0}
       >

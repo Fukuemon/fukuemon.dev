@@ -204,6 +204,45 @@ const noPackagesToApps: Restriction[] = [
   },
 ];
 
+// jsx-a11y の規則は、既定では警告で、lint を失敗させない。全てエラーにする (context/conventions.md の Check Exclusions)
+const JSX_A11Y_RULES = [
+  "jsx-a11y/alt-text",
+  "jsx-a11y/anchor-ambiguous-text",
+  "jsx-a11y/anchor-has-content",
+  "jsx-a11y/anchor-is-valid",
+  "jsx-a11y/aria-activedescendant-has-tabindex",
+  "jsx-a11y/aria-props",
+  "jsx-a11y/aria-proptypes",
+  "jsx-a11y/aria-role",
+  "jsx-a11y/aria-unsupported-elements",
+  "jsx-a11y/autocomplete-valid",
+  "jsx-a11y/click-events-have-key-events",
+  "jsx-a11y/control-has-associated-label",
+  "jsx-a11y/heading-has-content",
+  "jsx-a11y/html-has-lang",
+  "jsx-a11y/iframe-has-title",
+  "jsx-a11y/img-redundant-alt",
+  "jsx-a11y/interactive-supports-focus",
+  "jsx-a11y/label-has-associated-control",
+  "jsx-a11y/lang",
+  "jsx-a11y/media-has-caption",
+  "jsx-a11y/mouse-events-have-key-events",
+  "jsx-a11y/no-access-key",
+  "jsx-a11y/no-aria-hidden-on-focusable",
+  "jsx-a11y/no-autofocus",
+  "jsx-a11y/no-distracting-elements",
+  "jsx-a11y/no-interactive-element-to-noninteractive-role",
+  "jsx-a11y/no-noninteractive-element-interactions",
+  "jsx-a11y/no-noninteractive-element-to-interactive-role",
+  "jsx-a11y/no-redundant-roles",
+  "jsx-a11y/no-static-element-interactions",
+  "jsx-a11y/prefer-tag-over-role",
+  "jsx-a11y/role-has-required-aria-props",
+  "jsx-a11y/role-supports-aria-props",
+  "jsx-a11y/scope",
+  "jsx-a11y/tabindex-no-positive",
+];
+
 export default defineConfig({
   plugins: ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y", "import"],
   ignorePatterns: [
@@ -223,6 +262,9 @@ export default defineConfig({
     "react/immutability": "error",
     "react/refs": "error",
     "no-restricted-imports": ["error", { paths: noWebcontainer }],
+    ...Object.fromEntries(JSX_A11Y_RULES.map((rule) => [rule, "error"])),
+    // 横に送る領域と縦に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)。名前を付けた region はその形である
+    "jsx-a11y/no-noninteractive-tabindex": ["error", { roles: ["tabpanel", "region"] }],
   },
   overrides: [
     {
