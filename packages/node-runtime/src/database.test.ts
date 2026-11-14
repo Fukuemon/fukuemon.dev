@@ -59,11 +59,61 @@ describe("createStdioDatabase", () => {
     const line = reply({ id: "1", response: ok }).replace("\n", "\r\n");
     process.emit('{"id":"1","sql":"select 1"}\nlog line\n');
     process.emit(`log ${reply({ id: "1", response: { results: [], ms: 9 } })}`);
-    process.emit(`${SQL_PREFIX}{\n${SQL_PREFIX}[]\n${SQL_PREFIX}{"id":"1"}\n`);
-    process.emit(`${SQL_PREFIX}{"id":"1","response":{"x":1}}\n`);
+    process.emit(`${SQL_PREFIX}{\n${SQL_PREFIX}[]\n${SQL_PREFIX}{"id":1}\n`);
     process.emit(line.slice(0, 10));
     process.emit(line.slice(10));
     expect(await running).toStrictEqual(ok);
+  });
+
+  it("id があり、応答が SqlResponse の形に合わない行には、error を持つ値を返す", async () => {
+    const { process, db } = await createDatabase();
+    const running = Promise.all([1, 2, 3, 4].map((n) => db.database.run(`select ${n}`)));
+    process.emit(reply({ id: "1", response: { results: "x", ms: 1 } }));
+    process.emit(reply({ id: "2", response: { results: [{ fields: [1] }], ms: 1 } }));
+    process.emit(reply({ id: "3", response: { error: { message: {} }, ms: 1 } }));
+    process.emit(reply({ id: "4", response: { results: [] } }));
+    const invalid = { error: { message: "DB のプロセスの応答を読めませんでした" }, ms: 0 };
+    expect(await running).toStrictEqual([invalid, invalid, invalid, invalid]);
+  });
+
+  const result = { fields: ["a"], rows: [[1]], affectedRows: 1, totalRows: 1, truncated: false };
+
+  it.each([
+    ["応答がオブジェクトでない", "x"],
+    ["ms が数でない", { results: [] }],
+    ["結果がオブジェクトでない", { results: [1], ms: 1 }],
+    ["列の名前が文字列でない", { results: [{ ...result, fields: [1] }], ms: 1 }],
+    ["行が配列でない", { results: [{ ...result, rows: [1] }], ms: 1 }],
+    ["件数が負の数", { results: [{ ...result, affectedRows: -1 }], ms: 1 }],
+    ["全体の行の数が整数でない", { results: [{ ...result, totalRows: 1.5 }], ms: 1 }],
+    ["切ったかどうかが真偽値でない", { results: [{ ...result, truncated: "no" }], ms: 1 }],
+    ["エラーがオブジェクトでない", { error: "x", ms: 1 }],
+    ["SQLSTATE が文字列でない", { error: { message: "x", code: 1 }, ms: 1 }],
+    ["位置が数でない", { error: { message: "x", position: "1" }, ms: 1 }],
+  ])("%s応答には、error を持つ値を返す", async (_, response) => {
+    const { process, db } = await createDatabase();
+    const running = db.database.run("select 1");
+    process.emit(reply({ id: "1", response }));
+    expect(await running).toStrictEqual({
+      error: { message: "DB のプロセスの応答を読めませんでした" },
+      ms: 0,
+    });
+  });
+
+  it.each([
+    ["結果", { results: [result], ms: 1 }],
+    ["SQLSTATE と位置を持つエラー", { error: { message: "x", code: "42601", position: 3 }, ms: 1 }],
+  ])("形に合う%sの応答は、そのまま返す", async (_, response) => {
+    const { process, db } = await createDatabase();
+    const running = db.database.run("select 1");
+    process.emit(reply({ id: "1", response }));
+    expect(await running).toStrictEqual(response);
+  });
+
+  it("SQL の U+2028 と U+2029 をエスケープし、リクエストを 1 行で書く", async () => {
+    const { process, db } = await createDatabase();
+    void db.database.run("select '\u2028\u2029'");
+    expect(process.written).toStrictEqual([`{"id":"1","sql":"select '\\u2028\\u2029'"}\n`]);
   });
 
   it("プロセスが終了したら、待っているリクエストに error を返す", async () => {

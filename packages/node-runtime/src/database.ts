@@ -6,25 +6,70 @@ import { createStore } from "./store";
 
 const INITIAL_SQL_FAILED = "初期データの SQL が失敗しました: ";
 
+const INVALID_REPLY: SqlResponse = {
+  error: { message: "DB のプロセスの応答を読めませんでした" },
+  ms: 0,
+};
+
 type Reply = { id: string; response: SqlResponse };
 
-/** DB のプロセスの応答の行の中身を読む。形に合わない行は undefined を返す。 */
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isCount = (value: unknown) =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0;
+
+function isSqlResult(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const { fields, rows, affectedRows, totalRows, truncated } = value;
+  return (
+    Array.isArray(fields) &&
+    fields.every((field) => typeof field === "string") &&
+    Array.isArray(rows) &&
+    rows.every(Array.isArray) &&
+    isCount(affectedRows) &&
+    isCount(totalRows) &&
+    typeof truncated === "boolean"
+  );
+}
+
+function isSqlError(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const { message, code, position } = value;
+  return (
+    typeof message === "string" &&
+    (code === undefined || typeof code === "string") &&
+    (position === undefined || typeof position === "number")
+  );
+}
+
+/** 画面が描ける SqlResponse の形か。実行環境の中は訪問者が触れるので、DB のプロセスの応答も信頼しない。 */
+function isSqlResponse(value: unknown): value is SqlResponse {
+  if (!isRecord(value) || typeof value.ms !== "number") return false;
+  if ("error" in value) return isSqlError(value.error);
+  return Array.isArray(value.results) && value.results.every(isSqlResult);
+}
+
+/**
+ * DB のプロセスの応答の行の中身を読む。id の無い行は undefined を返す。
+ * id があり、応答が SqlResponse の形に合わない行は、待っている画面を止めないよう、error を持つ値にする。
+ */
 function parseReply(text: string): { ready: true } | Reply | undefined {
   try {
-    const value = JSON.parse(text) as unknown;
-    if (typeof value !== "object" || value === null) return undefined;
-    const message = value as Record<string, unknown>;
+    const message = JSON.parse(text) as unknown;
+    if (!isRecord(message)) return undefined;
     if (message.ready === true) return { ready: true };
     const { id, response } = message;
-    if (typeof id !== "string" || typeof response !== "object" || response === null)
-      return undefined;
-    return "results" in response || "error" in response
-      ? { id, response: response as SqlResponse }
-      : undefined;
+    if (typeof id !== "string") return undefined;
+    return { id, response: isSqlResponse(response) ? response : INVALID_REPLY };
   } catch {
     return undefined;
   }
 }
+
+/** 1 行の JSON にする。JSON.stringify は U+2028 と U+2029 をそのまま残し、readline はそれを行の区切りとして読むので、エスケープする。 */
+const toLine = (value: unknown) =>
+  JSON.stringify(value).replaceAll("\u2028", "\\u2028").replaceAll("\u2029", "\\u2029");
 
 /** 出力を行に分け、onLine に渡す。行の途中で切れた出力は、改行が届くまで手元に置く。 */
 function splitLines(onLine: (line: string) => void) {
@@ -98,7 +143,7 @@ export function createStdioDatabase(process: BackendProcess): {
         const id = String(sequence);
         return new Promise<SqlResponse>((resolve) => {
           pending.set(id, resolve);
-          process.write(`${JSON.stringify({ id, sql })}\n`);
+          process.write(`${toLine({ id, sql })}\n`);
         });
       },
     },
