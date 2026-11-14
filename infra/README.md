@@ -91,7 +91,7 @@ docs_allowed_emails = ["<ドキュメントサイトを開けるメールアド�
 ```
 
 `docs_allowed_emails` は、ドキュメントサイトの Access のポリシーに渡す。
-ドキュメントサイトを初めて公開する順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
+ドキュメントサイトを初めて公開する手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 
 ## CI から apply する
 

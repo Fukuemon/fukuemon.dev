@@ -100,10 +100,10 @@ Cloudflare Registrar がドメインを取得したときに作った zone を�
 
 ### ドキュメントサイトの Access
 
-`docs.<zone>` に、Access のアプリケーション（`self_hosted`）と、メールアドレスで通すポリシーを置く。
+`docs.<zone>` に、Access のアプリケーション（`self_hosted`）と、メールアドレスで通すポリシーを置く。  
 ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#2-アクセスの認証)
 
-- ポリシーは、アプリケーションから `policies` で参照する、アカウントのポリシーにする。
+- ポリシーは、アプリケーションの中に書かず、`cloudflare_zero_trust_access_policy` として作り、アプリケーションの `policies` から参照する。
 - 許可するメールアドレスは、変数 `docs_allowed_emails` で受け取る。変数に `sensitive = true` を付け、plan のログに出さない。
 - custom domain の `docs` は、Access のアプリケーションに `depends_on` を持つ。同じ apply で作るときに、ホスト名が認証なしで開ける時間を作らないためである。
 - Zero Trust の組織は Terraform で持たない。最初の 1 回だけ、運用者がダッシュボードで作る。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
@@ -152,7 +152,8 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `apps/docs-site/wrangler.jsonc`: ドキュメントサイトの Worker の設定。`workers_dev` と `preview_urls` を切り、`docs.<zone>` だけで公開する
 
 変数の値は、手元では各ディレクトリの `terraform.tfvars` に置き、commit しない。  
-CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name`、`TF_VAR_docs_allowed_emails` を渡す。値は secret と variable から取る。  
+CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name`、`TF_VAR_docs_allowed_emails` を渡す。  
+値は secret と variable から取る。  
 `worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` と、bootstrap の `location` はデフォルト値を持つ。
 
 ### 実行するコマンドとチェック

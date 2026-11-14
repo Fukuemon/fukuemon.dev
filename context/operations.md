@@ -196,7 +196,7 @@ token の権限は、スコープ、権限グループ、アクセスレベル�
 - bootstrap 用の token を CI へ渡さない。
 - deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy の 5 つの workflow は custom domain を触らない。
 - DNS の権限は要らない。custom domain が作るレコード（サイトの apex、カタログの `design`、プレイグラウンドの `play`、ドキュメントサイトの `docs`）は `Workers Scripts` の配下にある。
-- `Access: Apps and Policies` の名前は、provider の schema にある権限の名前から取った。ダッシュボードでの表示の名前は未確認である。
+- `Access: Apps and Policies` は、provider の schema にある権限の名前である。ダッシュボードでの表示の名前は未確認である。
 - deploy 用の token に Access の権限を与えない。deploy の workflow から Access のポリシーを変えられないようにするためである。
 - `Zone / Zone / Edit` の Zone Resources は、対象の zone だけに限る。
 - R2 の S3 互換キーは、R2 の画面から発行したものだけを使う。

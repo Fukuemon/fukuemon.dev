@@ -22,7 +22,8 @@ verified_commit: ab2da87
 - `infra/` は、どこからも import されないので、`packages/` に入れず、workspace の package にもしない。
 - `apps/` には、1 つの Worker に deploy するアプリを 1 つずつ置く。
   サイトは `apps/web`、プレイグラウンドは `apps/playground`、ドキュメントサイトは `apps/docs-site` である。
-- ドキュメントサイトの Zensical の設定（`zensical.toml`）と Python の依存（`pyproject.toml`、`uv.lock`）は、リポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs/` を読まないためである。
+- ドキュメントサイトの Zensical の設定（`zensical.toml`）は、リポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs/` を読まないためである。
+  Python の依存（`pyproject.toml`、`uv.lock`）も、同じディレクトリで uv が解決するように、ルートに置く。
 - サイトのほかのアプリを、`apps/web` に置くか、別の app と Worker にするかは、ADR-0031 の規則で決める。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
 
