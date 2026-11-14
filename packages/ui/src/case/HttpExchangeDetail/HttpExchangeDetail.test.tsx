@@ -98,8 +98,12 @@ describe("HttpExchangeDetail", () => {
     it("本文は、ぼかしと同じセルに重なり、行が増えない", async () => {
       const body = await renderLongBody();
       const code = body.querySelector("code") as Element;
-      const padding = parseFloat(getComputedStyle(body).paddingTop) * 2;
-      expect(body.clientHeight - padding).toBeCloseTo(code.getBoundingClientRect().height, 0);
+      expect(body.clientHeight).toBeCloseTo(code.getBoundingClientRect().height, 0);
+    });
+
+    it("余白は本文の側にあり、ぼかしは枠の右端まで届く", async () => {
+      const body = await renderLongBody();
+      expect(getComputedStyle(body).paddingRight).toBe("0px");
     });
   });
 
