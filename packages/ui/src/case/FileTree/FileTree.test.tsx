@@ -143,19 +143,19 @@ describe("FileTree", () => {
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
   });
 
-  it("新しい項目の欄と「作る」ボタンは、上端と下端がそろい、間が 12 px 空く", async () => {
+  it("新しい項目の欄と「作る」ボタンは、28 px の高さで上端と下端がそろい、間が 12 px 空く（ADR-0062）", async () => {
     render(<NoSelection />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
-    // 欄は、40 px の見た目の上下に 2 px ずつ押せる範囲を広げている（TextField の文書コメント）
     const field = screen.getByRole("textbox").getBoundingClientRect();
     const button = screen.getByRole("button", { name: "作る" }).getBoundingClientRect();
-    expect(button.top).toBe(field.top + 2);
-    expect(button.bottom).toBe(field.bottom - 2);
+    expect(field.height).toBe(28);
+    expect(button.top).toBe(field.top);
+    expect(button.bottom).toBe(field.bottom);
     // フォーカスの輪（外へ 4 px）とボタンの枠を離すため、欄とボタンの間は 12 px にする
     expect(button.left - field.right).toBe(12);
   });
 
-  it("題の右の操作と木の項目は、44 px 四方以上で押せる", () => {
+  it("題の右の操作は 28 px 四方、木の項目は 24 px の高さと 13 px の文字で押せる（ADR-0062）", () => {
     render(<Default />);
     const targets = [
       screen.getByRole("button", { name: "新しいファイル" }),
@@ -164,11 +164,12 @@ describe("FileTree", () => {
     ];
     for (const target of targets) {
       const rect = target.getBoundingClientRect();
-      expect(rect.width).toBeGreaterThanOrEqual(44);
-      expect(rect.height).toBeGreaterThanOrEqual(44);
+      expect(rect.width).toBe(28);
+      expect(rect.height).toBe(28);
     }
     for (const item of screen.getAllByRole("treeitem")) {
-      expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(item.getBoundingClientRect().height).toBe(24);
+      expect(getComputedStyle(item).fontSize).toBe("13px");
     }
   });
 

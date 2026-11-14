@@ -41,16 +41,17 @@ import * as Stories from "./Text.stories";
   <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
     {[
       ["text-body", "font-sans text-body", "記事の本文"],
-      [
-        "text-body-dense",
-        "font-sans text-body-dense",
-        "表のセル、入力欄の値、ファイルのツリーの行",
-      ],
+      ["text-body-dense", "font-sans text-body-dense", "表のセル、入力欄の値、木の行"],
       ["text-label", "font-sans text-label", "ボタン、タブ"],
       [
         "text-label-compact",
         "font-sans text-label-compact",
-        "コードを動かす画面のコンソールのログレベルのボタン（ADR-0062）",
+        "コードを動かす画面の領域の題、タブ、ボタン、開閉の要約、入力欄の見出し、HTTP の本文の見出し（ADR-0062）",
+      ],
+      [
+        "text-body-compact",
+        "font-sans text-body-compact",
+        "コードを動かす画面のファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文、注意の枠の本文、読み込み中の文（ADR-0067、提案）",
       ],
       ["text-caption", "font-sans text-caption", "補足、図の説明、時刻"],
     ].map(([name, cls, use]) => (
@@ -69,23 +70,24 @@ import * as Stories from "./Text.stories";
 <Unstyled>
   <div className="fd-sample flex flex-col gap-6 border border-border bg-surface p-6 text-text">
     {[
-      [
-        "text-code",
-        "font-mono text-code",
-        "コードブロック、エディタ、端末",
-        'const 値 = fetch("/api");',
-      ],
+      ["text-code", "font-mono text-code", "コードブロック", 'const 値 = fetch("/api");'],
       [
         "text-code-dense",
         "font-mono text-code-dense",
-        "HTTP のヘッダと本文、端末の狭い表示",
+        "プレイグラウンドの SQL の実行計画の文字",
         "content-type: application/json",
       ],
       [
         "text-compact",
         "font-mono text-compact",
-        "コードを動かす画面のコンソールの値、時刻、出力元、行の数（ADR-0062）",
+        "コードを動かす画面のコンソールの値、時刻、出力元、行の数、下の状態の帯、HTTP の流れの通信する者と状態コード、入力欄の補足と誤りの文（ADR-0062）",
         "10:00:00.120 server.js",
+      ],
+      [
+        "text-code-compact",
+        "font-mono text-code-compact",
+        "コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダと本文（ADR-0067、提案）",
+        'const 値 = fetch("/api");',
       ],
     ].map(([name, cls, use, sample]) => (
       <div key={name} className="flex flex-col gap-1">

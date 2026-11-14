@@ -17,3 +17,4 @@ export const Install: Story = {
   name: "パッケージのインストール",
   args: { label: "パッケージをインストールしています" },
 };
+export const Compact: Story = { name: "compact", args: { density: "compact" } };

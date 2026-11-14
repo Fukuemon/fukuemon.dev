@@ -11,11 +11,20 @@ const FILES: TabItem[] = [
 ];
 
 /** 選んだタブと開いているタブを state で持つ例。 */
-function TabsExample({ items, panel }: { items: TabItem[]; panel?: TabsProps["panel"] }) {
+function TabsExample({
+  items,
+  panel,
+  density,
+}: {
+  items: TabItem[];
+  panel?: TabsProps["panel"];
+  density?: TabsProps["density"];
+}) {
   const [open, setOpen] = useState(items);
   const [selectedId, setSelectedId] = useState(items[0]?.id ?? "");
   return (
     <Tabs
+      density={density}
       items={open}
       label="開いているファイル"
       onClose={(id) => {
@@ -60,3 +69,4 @@ export const Flush: Story = {
     })),
   },
 };
+export const Compact: Story = { name: "compact", args: { density: "compact" } };

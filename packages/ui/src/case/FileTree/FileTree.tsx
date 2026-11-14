@@ -122,10 +122,11 @@ export function FileTree({
           {onCreate !== undefined && (
             <IconButton
               icon={
-                <svg aria-hidden="true" height="20" viewBox="0 0 20 20" width="20">
+                <svg aria-hidden="true" height="16" viewBox="0 0 20 20" width="16">
                   <path d="M10 4v12M4 10h12" fill="none" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               }
+              density="compact"
               label="新しいファイル"
               onClick={() => setEditing({ kind: "file" })}
             />
@@ -133,7 +134,7 @@ export function FileTree({
           {onCreateDirectory !== undefined && (
             <IconButton
               icon={
-                <svg aria-hidden="true" height="20" viewBox="0 0 20 20" width="20">
+                <svg aria-hidden="true" height="16" viewBox="0 0 20 20" width="16">
                   <path
                     d="M2.5 5.5h5l1.5 2h8.5v8h-15zM10 9.5v4M8 11.5h4"
                     fill="none"
@@ -142,12 +143,17 @@ export function FileTree({
                   />
                 </svg>
               }
+              density="compact"
               label="新しいディレクトリ"
               onClick={() => setEditing({ kind: "directory" })}
             />
           )}
           {menuItems.length > 0 && selected && (
-            <ActionMenu items={menuItems} label={`${selected.node.label} の操作`} />
+            <ActionMenu
+              density="compact"
+              items={menuItems}
+              label={`${selected.node.label} の操作`}
+            />
           )}
         </>
       }
@@ -156,7 +162,7 @@ export function FileTree({
       toolbar={
         editing && (
           <form
-            className="flex items-end gap-3 border-b border-border p-2"
+            className="flex items-end gap-3 border-b border-border p-1"
             key={editing.kind === "rename" ? editing.node.id : editing.kind}
             onSubmit={handleSubmit}
           >
@@ -165,21 +171,23 @@ export function FileTree({
                 // 欄は、ボタンかメニューで開いた直後に入力するためのものなので、開いたときにフォーカスを移す
                 autoFocus
                 defaultValue={editing.kind === "rename" ? editing.node.label : ""}
+                density="compact"
                 label={FIELD_LABEL[editing.kind]}
                 name="name"
                 onKeyDown={handleKeyDown}
               />
             </div>
-            <Button size="S" type="submit" variant="secondary">
+            <Button size="XS" type="submit" variant="secondary">
               {editing.kind === "rename" ? "変える" : "作る"}
             </Button>
           </form>
         )
       }
     >
-      <div className="py-1">
+      <div className="min-h-0 flex-1 overflow-y-auto py-1">
         <TreeView
           defaultExpandedIds={defaultExpandedIds}
+          density="compact"
           items={withIcons(items)}
           label={title}
           onRequestRename={
@@ -193,6 +201,7 @@ export function FileTree({
           onRequestDelete={onDelete}
           onSelect={onSelect}
           selectedId={selectedId}
+          textSize="body-compact"
         />
       </div>
     </ToolPane>

@@ -24,6 +24,11 @@ export type TabsProps = {
    * `flush` は余白とフォーカスを持たず、中身が自分でフォーカスを受けるときに使う（エディタのエンジン）。
    */
   panel?: "padded" | "flush";
+  /**
+   * compact は、タブを 32px の高さと 13px の文字、閉じるボタンを 28px、選んだタブの筆の線を 3px にする。
+   * コードを動かす画面のエディタのタブに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
+   */
+  density?: "default" | "compact";
 };
 
 /**
@@ -34,7 +39,16 @@ export type TabsProps = {
  * 閉じられるタブは、マウスの中ボタンでも閉じる。
  * キーボードと読み上げでは、選んだタブで Delete のキーを押して閉じる。閉じられるタブは `aria-keyshortcuts` でこのキーを示す。
  */
-export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "padded" }: TabsProps) {
+export function Tabs({
+  label,
+  items,
+  selectedId,
+  onSelect,
+  onClose,
+  panel = "padded",
+  density = "default",
+}: TabsProps) {
+  const isCompact = density === "compact";
   const baseId = useId();
   const tabRefs = useRef(new Map<string, HTMLButtonElement>());
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
@@ -76,7 +90,10 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
               {isSelected && (
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1 animate-stroke bg-primary stroke-brush"
+                  className={clsx(
+                    "pointer-events-none absolute inset-x-0 bottom-0 animate-stroke bg-primary stroke-brush",
+                    isCompact ? "h-0.75" : "h-1",
+                  )}
                 />
               )}
               <button
@@ -84,7 +101,9 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
                 aria-keyshortcuts={item.closable ? "Delete" : undefined}
                 aria-selected={isSelected}
                 className={clsx(
-                  "flex h-11 cursor-pointer items-center gap-2 px-4 text-label transition-colors focus-visible:focus-ring",
+                  "flex cursor-pointer items-center transition-colors",
+                  isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
+                  isCompact ? "h-8 gap-1.5 px-3 text-label-compact" : "h-11 gap-2 px-4 text-label",
                   isSelected ? "text-text" : "text-text-secondary hover:text-text",
                 )}
                 id={`${baseId}-tab-${item.id}`}
@@ -114,7 +133,11 @@ export function Tabs({ label, items, selectedId, onSelect, onClose, panel = "pad
                 <button
                   aria-hidden="true"
                   aria-label={`${item.label} を閉じる`}
-                  className="inline-grid size-11 cursor-pointer place-items-center rounded-control text-text-secondary transition-colors hover:text-text focus-visible:focus-ring"
+                  className={clsx(
+                    "inline-grid cursor-pointer place-items-center rounded-control text-text-secondary transition-colors hover:text-text",
+                    isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
+                    isCompact ? "size-7" : "size-11",
+                  )}
                   onClick={() => onClose?.(item.id)}
                   tabIndex={-1}
                   type="button"

@@ -59,11 +59,12 @@ export function EditorFrame({
             icon: <FileIcon kind="file" name={file.label} />,
             content: (
               // スクロールはエンジンが持つ。枠でもスクロールさせると、スクロールバーが 2 重になる
-              <div className="flex min-h-48 min-w-0 flex-1 flex-col overflow-hidden bg-code-surface font-mono text-code text-code-text">
+              <div className="flex min-h-48 min-w-0 flex-1 flex-col overflow-hidden bg-code-surface font-mono text-code-compact text-code-text">
                 {file.id === selected.id && children(theme, file)}
               </div>
             ),
           }))}
+          density="compact"
           label="開いたファイル"
           onClose={onClose}
           onSelect={onSelect}

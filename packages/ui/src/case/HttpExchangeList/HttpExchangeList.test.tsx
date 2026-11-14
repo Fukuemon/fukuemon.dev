@@ -34,11 +34,15 @@ describe("HttpExchangeList", () => {
     );
   });
 
-  it("行は 44 px 以上の高さで押せ、押した行を選ぶ", async () => {
+  it("行は 24 px 以上の高さで押せ、メソッドと URL を 13 px、者を 12 px で書き、押した行を選ぶ（ADR-0062）", async () => {
     render(<Default />);
     for (const row of rows()) {
-      expect(row.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(row.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+      expect(getComputedStyle(row).paddingTop).toBe("4px");
     }
+    const first = rows()[0] as HTMLElement;
+    expect(getComputedStyle(first.querySelector(".font-mono") as Element).fontSize).toBe("13px");
+    expect(getComputedStyle(first.firstElementChild as Element).fontSize).toBe("12px");
     expect(rows()[2]).toHaveAttribute("aria-current", "true");
     await userEvent.click(rows()[0] as HTMLElement);
     expect(rows()[0]).toHaveAttribute("aria-current", "true");
@@ -69,5 +73,13 @@ describe("HttpExchangeList", () => {
     render(<Error />);
     expect(screen.getByRole("alert")).toHaveTextContent("通信の記録を読めませんでした");
     expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+
+  it("行のフォーカスの輪は、行の内側に引く（ADR-0066）", async () => {
+    render(<Default />);
+    await userEvent.tab();
+    const focused = document.activeElement as Element;
+    expect(focused.tagName).toBe("BUTTON");
+    expect(getComputedStyle(focused).outlineOffset).toBe("-2px");
   });
 });

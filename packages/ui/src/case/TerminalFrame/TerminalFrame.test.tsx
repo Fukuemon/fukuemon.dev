@@ -35,4 +35,15 @@ describe("TerminalFrame", () => {
     render(<WithActions />);
     expect(screen.getByRole("button", { name: "端末を消す" })).toBeInTheDocument();
   });
+
+  it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0066）", () => {
+    render(<Default />);
+    const engine = screen.getByRole("region", { name: "端末の出力" });
+    engine.focus();
+    const ring = getComputedStyle(engine.parentElement as HTMLElement, "::after");
+    expect({
+      ring: [ring.outlineStyle, ring.outlineOffset],
+      own: getComputedStyle(engine).outlineStyle,
+    }).toStrictEqual({ ring: ["solid", "-2px"], own: "none" });
+  });
 });

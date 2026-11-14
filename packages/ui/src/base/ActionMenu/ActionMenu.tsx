@@ -13,6 +13,8 @@ export type ActionMenuProps = {
   /** 開くボタンの読み上げる名前。 */
   label: string;
   items: readonly ActionMenuItem[];
+  /** compact はボタンと項目を 28px の高さ、項目の文字を 13px にする。コードを動かす画面の帯に置くメニューに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  density?: "default" | "compact";
 };
 
 /**
@@ -20,7 +22,8 @@ export type ActionMenuProps = {
  * 開くと最初の項目へフォーカスを移し、上下の矢印のキーで項目の間を移る。Home と End で端へ移る。
  * 項目を選ぶか、Esc のキーを押すか、メニューの外を押すと閉じる。項目を選んだときと Esc のキーでは、フォーカスをボタンに戻す。
  */
-export function ActionMenu({ label, items }: ActionMenuProps) {
+export function ActionMenu({ label, items, density = "default" }: ActionMenuProps) {
+  const isCompact = density === "compact";
   const menuId = useId();
   const rootRef = useRef<HTMLSpanElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -71,7 +74,10 @@ export function ActionMenu({ label, items }: ActionMenuProps) {
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label={label}
-        className="inline-grid size-11 cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring"
+        className={clsx(
+          "inline-grid cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
+          isCompact ? "size-7" : "size-11",
+        )}
         onClick={() => setOpen(!isOpen)}
         ref={buttonRef}
         type="button"
@@ -93,7 +99,8 @@ export function ActionMenu({ label, items }: ActionMenuProps) {
           {ordered.map((item, index) => (
             <button
               className={clsx(
-                "min-h-11 cursor-pointer px-4 text-left text-body-dense hover:bg-surface-subtle focus-visible:focus-ring",
+                "cursor-pointer text-left hover:bg-surface-subtle focus-visible:focus-ring",
+                isCompact ? "min-h-7 px-3 text-body-compact" : "min-h-11 px-4 text-body-dense",
                 item.isDanger ? "text-danger" : "text-text",
                 item.isDanger && index > 0 && "border-t border-border",
               )}
