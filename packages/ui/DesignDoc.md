@@ -99,11 +99,12 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 ### 文字
 
 書体は、本文にシステムフォントの 400 と 700、記事の題と見出しに Zen Old Mincho の 600、等幅に Noto Sans Mono を使う。  
-本文は Web フォントを読み込まない。Web フォントは Fontsource で self-host し、外部の CDN から読まない。
+本文は Web フォントを読み込まない。  
+Web フォントは Fontsource で self-host し、外部の CDN から読まない。
 
 - Zen Old Mincho は、ビルドで見出しに使う字だけのファイルにする。
 - 等幅の和文の字は、BIZ UDGothic の 400 と 700 で受ける。M PLUS 1 Code と比べて、見出しの字に絞ったときのファイルが小さく（400 字で約 70 KB と約 150 KB）、Fontsource に静的なウェイトがあるためである。
-- 本文の `font-family` は、プリミティブトークンの `--fd-primitive-font-family-sans` に置く。記事の題と見出しの代替も、この値にする。
+- 本文の `font-family` は、プリミティブトークンの `--fd-primitive-font-family-sans` に置く。記事の題と見出しの代替の書体も、この値にする。
 - 見出しの明朝のウェイトは、テーマ変数の `font-semibold`（600）で書く。
 - どの Web フォントも `font-display: swap` にし、和文の分割は preload しない。
 - ADR-0075: [本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする](../../docs/adr/0075-system-font-for-body-text.md)

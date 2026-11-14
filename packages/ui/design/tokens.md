@@ -97,9 +97,10 @@ fukuemon.dev はダークを持つ。
 | `text-body-compact`  | 13px のスタイル        | コードを動かす画面のファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文、注意の枠の本文、読み込み中の文 |
 | `text-code-compact`  | 等幅の 13px のスタイル | コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダと本文                                                             |
 
-- 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0075）。
-- 本文はシステムフォント（`font-sans`）、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。DADS の本文は Noto Sans JP だが、本文の Web フォントの取得をなくすためである（ADR-0075）。
-- プリミティブトークンが持つ書体は、本文の `font-family` だけである。見出しと等幅の書体（テーマ変数の `font-heading` と `font-mono`）は、Web フォントの名前を直に持つ（ADR-0075）。
+- 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである（ADR-0075）。大きさと行高は DADS のスタイルのまま使う。
+- 本文はシステムフォント（`font-sans`）で描く。DADS の本文の書体は Noto Sans JP だが、本文の Web フォントの取得をなくすためである（ADR-0075）。
+- 等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
+- プリミティブトークンは、書体では本文の `font-family` だけを持つ。テーマ変数の `font-heading` と `font-mono` は、見出しと等幅の Web フォントの名前を直に持つ（ADR-0075）。
 - 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字である（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
 - 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べ、隣の 13px の題とタブに文字の大きさをそろえるためである（ADR-0062、ADR-0067）。

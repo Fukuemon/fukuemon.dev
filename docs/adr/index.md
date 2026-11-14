@@ -78,7 +78,7 @@ ADR-0060（[フォーカスの色を、DADS の値で持つ](0060-focus-color-fr
 
 - ADR-0004（[和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する](0004-typography-static-weights.md)）
 - ADR-0019（[欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う](0019-latin-font-stix-two-text.md)）
-- ADR-0023（[個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](0023-keep-art-and-key-color.md)）。主の色、角丸と影、版面の決定は、先に ADR-0024 に置換した。
+- ADR-0023（[個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](0023-keep-art-and-key-color.md)）。主の色、角丸と影、版面の決定は、ADR-0024 に置換した。
 
 ## 挿絵とトップの演出
 
@@ -348,7 +348,9 @@ flowchart TB
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  
-置換した ADR への依存は、図に描かない。ADR-0026 の Context は、置換した ADR-0009 を前提にしている。ADR-0024 の Context は、置換した ADR-0023 を前提にしている。
+置換した ADR への依存は、図に描かない。  
+ADR-0026 の Context は、置換した ADR-0009 を前提にしている。  
+ADR-0024 の Context は、置換した ADR-0023 を前提にしている。
 
 ## 番号の対応
 
