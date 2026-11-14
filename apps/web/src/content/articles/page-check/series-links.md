@@ -4,6 +4,7 @@ title: シリーズの前後のリンク
 description: シリーズの 2 本目として、前の記事へのリンクを確認する検証用の記事である。
 tags: [検証]
 status: published
+verificationOnly: true
 publishedAt: 2026-11-14
 order: 2
 ---
