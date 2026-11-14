@@ -213,14 +213,20 @@ test.describe("「飛ばす」の色と位置", () => {
     text: string;
   }
   interface SkipLog {
-    __skip?: { beforeTint?: Colors; paper?: string; gaps?: number[]; enter?: Colors };
+    __skip?: {
+      beforeTint?: Colors;
+      paper?: string;
+      gaps?: number[];
+      duration?: string;
+      enter?: Colors;
+    };
   }
 
   for (const [time, hour] of [
     ["day", 12],
     ["night", 22],
   ] as const) {
-    test(`${time} の場面で、色を差す前はテーマの色で狭い画面の端から 0.5rem に出し、色を差し始めると庭の中のボタンと同じ時間帯の色にする`, async ({
+    test(`${time} の場面で、色を差す前はテーマの色で狭い画面の端から 0.5rem に出し、色を差し始めると 150ms かけて庭の中のボタンと同じ時間帯の色にする`, async ({
       page,
     }) => {
       // 時間帯は Date の時で決まる。イントロの時刻は performance.now で決まるので、時だけを差し替える
@@ -251,6 +257,9 @@ test.describe("「飛ばす」の色と位置", () => {
             ).backgroundColor;
           }
           if (!root.classList.contains("enter")) return;
+          // 色は遷移で替わる。遷移の途中の値を読まないよう、「飛ばす」が消えて遷移が止まる garden-ready の時点で色を読む
+          log.duration ??= getComputedStyle(el).transitionDuration;
+          if (!root.classList.contains("garden-ready")) return;
           observer.disconnect();
           log.enter = colors(el);
         }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
@@ -268,10 +277,51 @@ test.describe("「飛ばす」の色と位置", () => {
       expect({
         gaps: skip?.gaps,
         beforeTintIsPaper: skip?.beforeTint?.bg === skip?.paper,
+        duration: skip?.duration,
         enter: skip?.enter,
-      }).toStrictEqual({ gaps: [8, 8], beforeTintIsPaper: true, enter: station });
+      }).toStrictEqual({
+        gaps: [8, 8],
+        beforeTintIsPaper: true,
+        duration: "0.15s",
+        enter: station,
+      });
     });
   }
+});
+
+test.describe("「本文へスキップ」のリンク", () => {
+  /** フォーカスが当たった要素が、画面に固定した庭とヘッダーに隠れず、いちばん上に出ている */
+  const focusedOnTop = (page: Page) =>
+    page.evaluate(() => {
+      const el = document.activeElement!;
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return { link: el.getAttribute("href"), onTop: top === el || el.contains(top) };
+    });
+
+  test("2 回目の訪問の庭で Tab を押すと、リンクがヘッダーに隠れずに出る", async ({ page }) => {
+    await seenBefore(page);
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/garden-ready/, { timeout: 30_000 });
+    await page.keyboard.press("Tab");
+    expect(await focusedOnTop(page)).toStrictEqual({ link: "#main", onTop: true });
+  });
+
+  test("イントロを Esc で飛ばした後に Tab を押すと、リンクがヘッダーに隠れずに出る", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        if (!document.documentElement.classList.contains("scene-ready")) return;
+        observer.disconnect();
+        document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    });
+    await page.goto("/");
+    await expectGardenEnd(page);
+    await page.keyboard.press("Tab");
+    expect(await focusedOnTop(page)).toStrictEqual({ link: "#main", onTop: true });
+  });
 });
 
 test.describe("場面の準備が遅いとき", () => {
