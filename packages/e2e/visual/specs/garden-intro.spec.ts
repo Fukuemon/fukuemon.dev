@@ -58,11 +58,15 @@ const expectGardenEnd = async (page: Page) => {
     .toBe(true);
 };
 
-/** プロフィールの文の、今の位置（px）と不透明度。待たずに 1 回だけ読む */
+/** プロフィールの文の、今の中心の位置（px）と不透明度。待たずに 1 回だけ読む。文の高さは字の読み込みで変わるが、中心は変わらない */
 const profileAt = (page: Page) =>
   profile(page).evaluate((el) => {
     const r = el.getBoundingClientRect();
-    return { x: Math.round(r.x), y: Math.round(r.y), opacity: getComputedStyle(el).opacity };
+    return {
+      x: Math.round(r.x + r.width / 2),
+      y: Math.round(r.y + r.height / 2),
+      opacity: getComputedStyle(el).opacity,
+    };
   });
 
 /** カメラが動かずに最後の位置にある。操作の直後の文の位置が、カメラが止まった後の位置と同じ */
@@ -145,8 +149,8 @@ test.describe("イントロの途中", () => {
           const el = document.querySelector('[data-garden-card][aria-labelledby="profile"]')!;
           const r = el.getBoundingClientRect();
           (window as Jumped).__jumped = {
-            x: Math.round(r.x),
-            y: Math.round(r.y),
+            x: Math.round(r.x + r.width / 2),
+            y: Math.round(r.y + r.height / 2),
             opacity: getComputedStyle(el).opacity,
           };
         }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
