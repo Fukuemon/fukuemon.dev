@@ -38,9 +38,12 @@ const theme = EditorView.theme({
     height: "100%",
     backgroundColor: "var(--color-code-surface)",
     color: "var(--color-code-text)",
-    fontSize: "var(--text-code)",
+    fontSize: "var(--text-code-compact)",
   },
-  ".cm-scroller": { fontFamily: "var(--font-mono)", lineHeight: "var(--text-code--line-height)" },
+  ".cm-scroller": {
+    fontFamily: "var(--font-mono)",
+    lineHeight: "var(--text-code-compact--line-height)",
+  },
   ".cm-gutters": {
     backgroundColor: "var(--color-code-surface)",
     color: "var(--color-code-comment)",
