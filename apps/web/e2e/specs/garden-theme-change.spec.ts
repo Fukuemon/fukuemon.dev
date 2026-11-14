@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { meanDiff } from "../support/mean-diff";
+import { seenBefore } from "../support/visit";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
 const AUTUMN_NOON = new Date(2026, 10, 13, 12);
@@ -7,6 +8,7 @@ const VIEWPORT = { width: 1440, height: 900 };
 
 const openGarden = async (browser: Browser, colorScheme: "light" | "dark") => {
   const page = await browser.newPage({ viewport: VIEWPORT, colorScheme });
+  await seenBefore(page);
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await page.waitForFunction(
