@@ -171,6 +171,15 @@ describe("console-trace.cjs", () => {
     ]);
   });
 
+  it("組み込みの Error が自身に持つ別の関数の stack の getter も呼ぶ（WebContainers の Node の形）", async () => {
+    const args = await argsOf(
+      `Object.defineProperty(new Error("w"), "stack", { get: () => "Error: w\\n    at wc (/w.js:1:1)" })`,
+    );
+    expect(args).toStrictEqual([
+      { kind: "error", name: "Error", message: "w", stack: ["at wc (/w.js:1:1)"] },
+    ]);
+  });
+
   it("循環した参照は circular にし、同じ値を 2 か所に持つだけのものは両方を写す", async () => {
     const { records } = await run(
       `const shared = { v: 1 }; const a = { shared, again: shared }; a.self = a; console.log(a);`,

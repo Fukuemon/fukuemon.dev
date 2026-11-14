@@ -107,7 +107,9 @@ export function createRecordLineFilter(
 
   const push = (chunk: string) => {
     stopTimer();
-    const taken = takeRecordLines(held + chunk, onLine);
+    const text = held + chunk;
+    held = "";
+    const taken = takeRecordLines(text, onLine);
     held = taken.held;
     if (taken.out !== "") onText(taken.out);
     if (!taken.waitingForEnd && held !== "") timer = setTimeout(release, HOLD_MS);

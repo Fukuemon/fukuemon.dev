@@ -125,7 +125,6 @@ function toConsoleValues(args, describe, isNativeError) {
         key === "stack" && target === value && isNativeError !== undefined && isNativeError(value);
       // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
       if (!isOwnNativeStack && !errorGetters.get(key)?.has(found.get)) return undefined;
-      if (typeof found.get !== "function") return undefined;
       try {
         return found.get.call(value);
       } catch {

@@ -245,7 +245,7 @@ describe("createConsoleRecords", () => {
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2", "3"]);
   });
 
-  it("文字を持たない値も重さに数え、値の多い記録から捨てる", () => {
+  it("文字を持たない値も重さに数え、上限を超えたら古いものから捨てる", () => {
     const frames = manualFrames();
     const records = createConsoleRecords({ maxWeight: 30, schedule: frames.schedule });
     records.acceptLine(

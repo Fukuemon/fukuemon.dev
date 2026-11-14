@@ -15,7 +15,7 @@ export const PREVIEW_CONSOLE_MESSAGE = "fukuemon:console";
 const MAX_RECORDS = 1000;
 /**
  * 1 つの実行環境が持つコンソールの記録の重さの合計の上限。超えたときは、古いものから捨てる。
- * 1 件の重さは、値の木が持つ文字数に、値の数に VALUE_WEIGHT を掛けた数を足したものである。
+ * 1 件の重さは、値の木が持つ文字数に、値と Error のスタックの行の数に VALUE_WEIGHT を掛けた数を足したものである。
  * 真偽値、null、配列、オブジェクトのように文字を持たない値も、メモリを使うので数える。
  */
 const MAX_TOTAL_WEIGHT = 4 * 1024 * 1024;
@@ -69,9 +69,9 @@ const reject = (): never => {
  * 1 件の記録で読める値の数と文字数の残りと、値の数のほかに重さに数える項目の数。
  * Error のスタックの行は、値の数の上限に数えない。写す側が、文字数を使い切った後も Error ごとに「…」の行を出すためである。重さには、値と同じく数える。
  */
-type Budget = { nodes: number; chars: number; weighedItems: number };
+type Budget = { nodes: number; chars: number; stackLines: number };
 
-const createBudget = (): Budget => ({ nodes: MAX_NODES, chars: MAX_CHARS, weighedItems: 0 });
+const createBudget = (): Budget => ({ nodes: MAX_NODES, chars: MAX_CHARS, stackLines: 0 });
 
 /**
  * 配列の要素を、先頭から順に読む。長さを先に確かめ、穴は undefined として読む。
@@ -151,7 +151,7 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
           : Array.isArray(raw.stack) && raw.stack.length <= MAX_STACK
             ? each(raw.stack, text)
             : reject();
-      budget.weighedItems += stack?.length ?? 0;
+      budget.stackLines += stack?.length ?? 0;
       return {
         kind: "error",
         name: text(raw.name),
@@ -166,7 +166,7 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
 
 type Parsed = { record: Pick<ConsoleRecord, "level" | "time" | "args">; weight: number };
 
-/** 記録の中身と、値の木の重さ（文字数と、値の数に VALUE_WEIGHT を掛けた数の和）を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
+/** 記録の中身と、値の木の重さ（文字数と、値と Error のスタックの行の数に VALUE_WEIGHT を掛けた数の和）を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
 function parseWithWeight(value: unknown): Parsed | undefined {
   if (!isObject(value) || !isLevel(value.level) || !isTime(value.time)) return undefined;
   const { level, time } = value;
@@ -176,7 +176,7 @@ function parseWithWeight(value: unknown): Parsed | undefined {
     return {
       record: { level, time, args },
       weight:
-        MAX_CHARS - budget.chars + (MAX_NODES - budget.nodes + budget.weighedItems) * VALUE_WEIGHT,
+        MAX_CHARS - budget.chars + (MAX_NODES - budget.nodes + budget.stackLines) * VALUE_WEIGHT,
     };
   } catch (error) {
     if (error instanceof Rejected) return undefined;

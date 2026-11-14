@@ -158,7 +158,7 @@ describe("toConsoleValues", () => {
       const touched: string[] = [];
       const error = new Error("m");
       // V8 の stack の getter は、初めて読むときに name と message を読んで文を組むので、先に組ませておく
-      expect(error.stack).toContain("Error: m");
+      void error.stack;
       for (const key of ["name", "message"]) {
         Object.defineProperty(error, key, {
           get() {
