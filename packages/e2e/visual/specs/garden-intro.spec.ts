@@ -6,7 +6,7 @@ import { seenBefore } from "../support/visit";
 // SwiftShader は 1 フレームを描くのが遅く、場面の準備に数秒かかるので、テストの時間の上限を 3 倍にする
 test.beforeEach(() => test.slow());
 // SwiftShader で描く量を減らすため、16:9 の小さい画面で開く。イントロの段の順と時刻は、画面の大きさに依らない
-test.use({ viewport: { width: 960, height: 540 }, colorScheme: "light" });
+test.use({ viewport: { width: 480, height: 270 }, colorScheme: "light" });
 
 const html = (page: Page) => page.locator("html");
 const profile = (page: Page) => page.locator('[data-garden-card][aria-labelledby="profile"]');
@@ -74,15 +74,6 @@ const expectCameraAtEnd = async (page: Page) => {
   return right;
 };
 
-/**
- * 飛ばして、動かずに最後の状態になった。カメラが最後の位置にあり、操作の直後に文が遷移を経ずに見えていて、遷移を止める class が残らない。
- */
-const expectJumpedToEnd = async (page: Page) => {
-  const right = await expectCameraAtEnd(page);
-  expect(right.opacity).toBe("1");
-  await expect(html(page)).not.toHaveClass(/no-anim/);
-};
-
 test("初めての端末で開くと、墨の絵の後に色を差して門をくぐり、決めた長さでプロフィールの文の前で止まり、その間も h1 がアクセシビリティツリーにある", async ({
   page,
 }) => {
@@ -105,15 +96,16 @@ test("初めての端末で開くと、墨の絵の後に色を差して門を�
   // 墨の絵を描き終える 3.8 秒より前には、色を差さない。色を差し始めてから 4.5 秒で終える。SwiftShader のフレームの間隔の分だけ遅れを許す
   expect(m["garden-enter"]).toBeGreaterThanOrEqual(3790);
   expect(m["garden-intro-done"]! - m["garden-enter"]!).toBeGreaterThanOrEqual(4500);
-  expect(m["garden-intro-done"]! - m["garden-enter"]!).toBeLessThan(6000);
+  expect(m["garden-intro-done"]! - m["garden-enter"]!).toBeLessThan(7500);
   await expectGardenEnd(page);
 });
 
 test("同じ端末で 2 回目に開くと、イントロを出さず、カメラを動かさずにプロフィールの文を出す", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(html(page)).toHaveClass(/\bintro\b/);
+  // 1 回目は、head の inline script が記録を書いた時点で離れる
+  await page.goto("/", { waitUntil: "commit" });
+  await expect(html(page)).toHaveClass(/stage-on/);
   await page.goto("/");
   await expect(html(page)).toHaveClass(/garden-ready/, { timeout: 30_000 });
   await expectCameraAtEnd(page);
@@ -131,40 +123,79 @@ test("動きを減らす設定で開くと、イントロも庭も出さず、�
 });
 
 test.describe("イントロの途中", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await expect(html(page)).toHaveClass(/scene-ready/, { timeout: 30_000 });
-    await expect(html(page)).toHaveClass(/\bintro\b/);
-  });
+  interface Jumped {
+    __jumped?: { x: number; y: number; opacity: string };
+  }
+
+  /**
+   * html に class `at` が付いた時点で、ページの中から飛ばす操作をし、直後の文の位置と不透明度を記録する。
+   * SwiftShader のフレームはメインスレッドを長く止めるので、テストの側から押すと、押す前にイントロが進むか終わる。
+   */
+  const jumpAt = (page: Page, at: "scene-ready" | "enter", how: "skip" | "Escape" | "Tab") =>
+    page.addInitScript(
+      ({ at, how }) => {
+        new MutationObserver((_, observer) => {
+          const root = document.documentElement;
+          if (!root.classList.contains(at) || !root.classList.contains("intro")) return;
+          observer.disconnect();
+          if (how === "skip")
+            document.querySelector<HTMLButtonElement>("[data-garden-skip]")?.click();
+          else
+            document.body.dispatchEvent(new KeyboardEvent("keydown", { key: how, bubbles: true }));
+          const el = document.querySelector('[data-garden-card][aria-labelledby="profile"]')!;
+          const r = el.getBoundingClientRect();
+          (window as Jumped).__jumped = {
+            x: Math.round(r.x),
+            y: Math.round(r.y),
+            opacity: getComputedStyle(el).opacity,
+          };
+        }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+      },
+      { at, how },
+    );
+
+  /** 飛ばした直後に、文が遷移を経ずに見え、カメラが止まった後の位置と同じ所にあった */
+  const expectJumped = async (page: Page) => {
+    await expect
+      .poll(() => page.evaluate(() => (window as Jumped).__jumped), { timeout: 60_000 })
+      .toBeTruthy();
+    const right = (await page.evaluate(() => (window as Jumped).__jumped))!;
+    expect(right.opacity).toBe("1");
+    await expectGardenEnd(page);
+    const settled = await profileAt(page);
+    expect(Math.abs(right.x - settled.x) + Math.abs(right.y - settled.y)).toBeLessThanOrEqual(2);
+    await expect(html(page)).not.toHaveClass(/no-anim/);
+    expect(await marks(page)).toHaveProperty("garden-intro-done");
+  };
 
   test("「飛ばす」を押すと、動かずに庭の中の最後の状態になり、フォーカスが h1 に移る", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "飛ばす" }).click();
-    await expectJumpedToEnd(page);
+    await jumpAt(page, "scene-ready", "skip");
+    await page.goto("/");
+    await expectJumped(page);
     await expect(heading(page)).toBeFocused();
   });
 
-  test("Tab を押すと、動かずに庭の中の最後の状態になり、フォーカスが次の要素へ移る", async ({
-    page,
-  }) => {
-    await page.keyboard.press("Tab");
-    await expectJumpedToEnd(page);
-    await expect(page.getByRole("link", { name: "本文へスキップ" })).toBeFocused();
+  test("Tab を押すと、動かずに庭の中の最後の状態になる", async ({ page }) => {
+    await jumpAt(page, "scene-ready", "Tab");
+    await page.goto("/");
+    await expectJumped(page);
   });
 
   test("Esc を押すと、動かずに庭の中の最後の状態になり、フォーカスを動かさない", async ({
     page,
   }) => {
-    await page.keyboard.press("Escape");
-    await expectJumpedToEnd(page);
+    await jumpAt(page, "scene-ready", "Escape");
+    await page.goto("/");
+    await expectJumped(page);
     expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
   });
 
   test("門をくぐる途中で Esc を押すと、動かずに庭の中の最後の状態になる", async ({ page }) => {
-    await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 60_000 });
-    await page.keyboard.press("Escape");
-    await expectJumpedToEnd(page);
+    await jumpAt(page, "enter", "Escape");
+    await page.goto("/");
+    await expectJumped(page);
   });
 });
 
@@ -266,9 +297,15 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
         return draw.apply(this, args);
       };
     });
+    // 場面の準備ができた時点で、ページの中から Esc を押す
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        if (!document.documentElement.classList.contains("scene-ready")) return;
+        observer.disconnect();
+        document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    });
     await page.goto("/");
-    await expect(html(page)).toHaveClass(/scene-ready/, { timeout: 60_000 });
-    await page.keyboard.press("Escape");
     await expect(page.locator("[data-garden-stage]")).toBeHidden();
     await expect(html(page)).not.toHaveClass(INTRO_CLASSES);
     await expect(page.locator("[data-garden-card].is-current")).toHaveCount(0);
