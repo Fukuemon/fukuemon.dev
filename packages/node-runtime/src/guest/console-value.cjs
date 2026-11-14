@@ -16,13 +16,17 @@ const MAX_STACK = 30;
 
 const ELLIPSIS = "…";
 
-const isNative = (fn) => {
-  try {
-    return /\{\s*\[native code\]\s*\}\s*$/.test(Function.prototype.toString.call(fn));
-  } catch {
-    return false;
-  }
-};
+/**
+ * 呼んでよい組み込みの stack の getter。V8 はインスタンスに、Firefox は Error.prototype に定義する。
+ * Function.prototype.toString の「[native code]」で見分けると、bind した訪問者の関数も通るので、同じ関数かで比べる。
+ */
+const stackGetters = new Set(
+  [new Error(), Error.prototype]
+    .map((target) => Object.getOwnPropertyDescriptor(target, "stack"))
+    // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
+    .map((descriptor) => descriptor && descriptor.get)
+    .filter((get) => typeof get === "function"),
+);
 
 /** 組み込みの getter を、訪問者が上書きしたメソッドを通さずに呼ぶ。 */
 // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
@@ -100,14 +104,14 @@ function toConsoleValues(args, describe) {
     return name && typeof name.value === "string" ? name.value : "";
   };
 
-  /** key を、自分か継承した記述子から読む。getter は、組み込みのもの（V8 と Firefox の stack）だけを呼ぶ。 */
+  /** key を、自分か継承した記述子から読む。getter は、組み込みの stack の getter だけを呼ぶ。 */
   const readProperty = (value, key) => {
     for (let target = value; target; target = Object.getPrototypeOf(target)) {
       const found = Object.getOwnPropertyDescriptor(target, key);
       if (!found) continue;
       if ("value" in found) return found.value;
       // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
-      if (typeof found.get !== "function" || !isNative(found.get)) return undefined;
+      if (key !== "stack" || !stackGetters.has(found.get)) return undefined;
       try {
         return found.get.call(value);
       } catch {
@@ -190,10 +194,16 @@ function toConsoleValues(args, describe) {
     try {
       if (Array.isArray(value)) {
         let index = 0;
-        return {
-          kind: "array",
-          items: take(value.length, () => walk(value[index++], depth + 1), rest),
+        const item = () => {
+          // 穴は undefined として写す。getter は、オブジェクトの項目と同じく動かさない
+          const descriptor = Object.getOwnPropertyDescriptor(value, index++);
+          if (descriptor === undefined || "value" in descriptor) {
+            return walk(descriptor?.value, depth + 1);
+          }
+          budget.nodes -= 1;
+          return text("(...)");
         };
+        return { kind: "array", items: take(value.length, item, rest) };
       }
       if (value instanceof Error) return errorOf(value);
       if (value instanceof Map) {

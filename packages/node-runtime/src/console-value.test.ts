@@ -116,6 +116,37 @@ describe("toConsoleValues", () => {
     expect(values[4]).toStrictEqual({ kind: "text", value: "/a+/gi" });
   });
 
+  it("bind した stack の getter と、配列の添字の getter を呼ばない", () => {
+    const touched: string[] = [];
+    const error = new Error("m");
+    Object.defineProperty(error, "stack", {
+      get: function () {
+        touched.push("stack");
+        return "";
+      }.bind(null),
+    });
+    const array: unknown[] = [];
+    Object.defineProperty(array, 0, {
+      enumerable: true,
+      get() {
+        touched.push("index");
+        return 1;
+      },
+    });
+    expect(copy(error, array)).toStrictEqual([
+      { kind: "error", name: "Error", message: "m" },
+      { kind: "array", items: [{ kind: "text", value: "(...)" }] },
+    ]);
+    expect(touched).toStrictEqual([]);
+  });
+
+  it("配列の穴は undefined として写す", () => {
+    // oxlint-disable-next-line no-sparse-arrays -- 穴のある配列を写す
+    expect(copy([, 1])).toStrictEqual([
+      { kind: "array", items: [{ kind: "undefined" }, { kind: "number", value: "1" }] },
+    ]);
+  });
+
   it("型付き配列のクラスの名前も、上限で切る", () => {
     class Long extends Uint8Array {}
     Object.defineProperty(Long, "name", { value: "x".repeat(10_002) });
