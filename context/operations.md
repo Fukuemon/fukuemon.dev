@@ -61,6 +61,8 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 3. 変更が本番の可用性かドメインへの到達に影響するなら、Terraform にする。
 4. どれにも当たらなければ、Terraform にする。変更の履歴とレビューを残せる。
 
+ドキュメントサイトの Access のアプリケーションとポリシーは、3 の例外で、ダッシュボードで設定する。運営者がオンとオフを頻繁に切り替えるためである（ADR-0081）。
+
 - `cloudflare_workers_script` で静的アセットを配らない。deploy が Terraform を経由し、apply の権限が日常の CI へ降りる。
 - Terraform が作ったリソースの識別子（R2 のバケット名、D1 の database id など）を Wrangler へ渡す方法は、データを保持するリソースが 2 つ目になる前にこの節に定める。
 

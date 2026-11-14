@@ -87,7 +87,7 @@ Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` �
 
 1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
    ほかの差分が出たら、apply しない。
-   とくに、Access のアプリケーションかポリシー（`cloudflare_zero_trust_access_*.docs`）の destroy が出たら、Terraform で Access を作ったことがある。apply すると Access が消える。
+   とくに、Access のアプリケーションかポリシー（`cloudflare_zero_trust_access_*.docs`）の destroy が出たら、state に Access が残っている。apply すると Access が消えるので、扱いを決めてから進める。
 2. 確認したら、`mode=apply` で起動し直す。
 
 ### 5. 公開の範囲を確認する
