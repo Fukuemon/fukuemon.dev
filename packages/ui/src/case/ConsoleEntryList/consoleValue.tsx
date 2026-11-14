@@ -156,11 +156,20 @@ export function toTreeNode(
     </span>
   );
   if (!isExpandable(value)) return { id, label, content };
-  const children =
-    value.kind === "error"
-      ? stackNodes(id, value.stack ?? [])
-      : childrenOf(value).map((child, index) =>
-          toTreeNode(child.value, `${id}/${index}`, child.key, child.separator),
-        );
-  return { id, label, content, children };
+  // 子は、初めて読まれたときに 1 段だけ作る。大きい値の記録がまとめて届くと、閉じた枝の子まで作る時間で描画が 500 ms を超えたためである
+  let children: TreeNode[] | undefined;
+  return {
+    id,
+    label,
+    content,
+    get children() {
+      children ??=
+        value.kind === "error"
+          ? stackNodes(id, value.stack ?? [])
+          : childrenOf(value).map((child, index) =>
+              toTreeNode(child.value, `${id}/${index}`, child.key, child.separator),
+            );
+      return children;
+    },
+  };
 }
