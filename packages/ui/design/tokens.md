@@ -126,7 +126,6 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 | 動き             | `animate-fade-in`                                            | ダイアログ、メニュー、候補の一覧が、濃度を上げて出る                                                                                                                                                                                                                                                                                 |
 | 動き             | `loading-dots`                                               | `Button` の読み込み中の、3 つの点の印                                                                                                                                                                                                                                                                                                |
 | 動き             | `animate-loading`                                            | `Loading` の読み込み中の印の罫                                                                                                                                                                                                                                                                                                       |
-| ハイコントラスト | `forced-frame`、`forced-on` など `forced-*`                  | `forced-colors: active` で消える枠と塗りを、システムの色で引く。通常の表示には何も変わらない。使い方は DESIGN.md の「ハイコントラスト」にある                                                                                                                                                                                        |
 | 動き             | `scroll-fade-end`                                            | `Table` と、記事の本文の表と図を横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする。薄い色は、右端まで送る手前から消え始める。枠を grid にし、薄い色（`::after`）を中身と同じセルに重ねる。そのため、要素の子を 1 つだけ持つ枠に付ける。薄い色は `surface` の色で、別の面の上では `--fd-scroll-fade-bg` にその面の色を渡す |
 
 - 余白の段は、DADS が値を決めず使う側に任せているので、Tailwind のデフォルトの段を使う。
@@ -141,3 +140,23 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 - 動きを減らす設定での止め方は、テーマ変数のファイル（`src/tokens/theme.css`）の末尾の 1 か所にある（`MOTION-REDUCE`）。罫と筆の線を引く動きは、止めると全長の線が最初から出る。`Button` の読み込み中の印は、濃い 3 つの点で止まる。`scroll-fade-end` の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。
 
 ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+
+## ハイコントラスト
+
+`forced-colors: active` で消える枠と塗りを、システムの色で引くユーティリティである。通常の表示には何も変わらない。
+足す規則は DESIGN.md の「ハイコントラスト」にある。
+
+| ユーティリティ                                                                                 | 描くもの                                                                                                   |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `forced-frame`                                                                                 | `CanvasText` の 1px の枠。`ring` で枠を表す要素（`Button`、`Switch`、`Checkbox`）に付ける                  |
+| `forced-on`                                                                                    | 選択とオンの塗りと、その上の文字と印                                                                       |
+| `forced-off-disabled`、`forced-on-disabled`                                                    | 無効の要素の枠、文字、塗り（`GrayText`）                                                                   |
+| `forced-fill`、`forced-fill-on`                                                                | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯）の塗り                      |
+| `forced-mark`、`forced-mark-disabled`                                                          | `Checkbox` のチェックの印の色                                                                              |
+| `forced-edge-hidden`                                                                           | 透明の枠（選んでいない項目の左の枠）を、背景の色にして隠す。ハイコントラストでは、透明の枠が見える色になる |
+| `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-off-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                                  |
+
+- 選択とオンの色は、変数 `--fd-forced-on` と `--fd-forced-on-text` が持つ。値は `SelectedItem` と `SelectedItemText` で、使えないブラウザでは `Highlight` と `HighlightText` になる。
+- ブラウザは、システムの色以外の値を置き換える。通常の色の指定（`bg-primary` など）に勝つよう、`forced-*` の宣言は `!important` にしている。
+- `loading-dots` は、ユーティリティの中で点を `CanvasText` で塗る。`forced-*` を足す必要はない。
+- `forced-frame` は 1px の枠を足す。`absolute` の子を持つ要素では、子の位置を 1px 戻す。`Switch` のつまみは `forced-colors:left-px` で戻している。

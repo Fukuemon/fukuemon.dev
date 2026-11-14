@@ -58,6 +58,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 | セマンティックトークン | `src/tokens/semantic.css`、`src/tokens/semantic-dark.css` | 役割の名前。プリミティブトークンを参照し、テーマごとに参照先を替える                                           |
 | テーマ変数             | `src/tokens/theme.css`                                    | Tailwind CSS のユーティリティの名前。Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す |
 
+- 例外は、ハイコントラスト（`forced-colors: active`）用の `forced-*` のユーティリティである。システムの色（`CanvasText`、`GrayText`、`SelectedItem` など）は、ブラウザが決める値で、テーマごとに変わらない。そのため、プリミティブトークンを通さず `theme.css` に直に書く。
 - 接頭辞は、プリミティブトークンを `--fd-primitive-`、セマンティックトークンを `--fd-color-` にする。
 - テーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）は、lint（oxlint の JS プラグインの eslint-plugin-better-tailwindcss）がエラーにする。Tailwind のデフォルトを消しただけでは、テーマ変数にないクラスは CSS を出さないだけでビルドが通るためである。
 - プリミティブトークンは、セマンティックトークンとテーマ変数が参照する値だけを持つ。
