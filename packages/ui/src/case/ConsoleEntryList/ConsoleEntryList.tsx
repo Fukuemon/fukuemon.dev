@@ -31,9 +31,9 @@ export type ConsoleEntryListProps = {
 const LEVELS: readonly ConsoleLevel[] = ["debug", "log", "info", "warn", "error"];
 
 const ROW_CLASS_NAME: Record<ConsoleLevel, string> = {
-  debug: "border-transparent",
-  log: "border-transparent",
-  info: "border-transparent",
+  debug: "border-transparent forced-edge-hidden",
+  log: "border-transparent forced-edge-hidden",
+  info: "border-transparent forced-edge-hidden",
   warn: "border-warning bg-warning-surface",
   error: "border-danger bg-danger-surface",
 };
@@ -294,7 +294,7 @@ export function ConsoleEntryList({
   const toolbar = (
     <fieldset
       aria-label="表示するログレベル"
-      className="flex min-w-0 flex-wrap border-b border-border px-2 py-1"
+      className="flex min-w-0 flex-wrap gap-1 border-b border-border px-2 py-1"
     >
       {LEVELS.map((level) => {
         const isOn = levels.has(level);
