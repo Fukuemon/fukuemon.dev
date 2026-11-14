@@ -49,8 +49,13 @@ jobs:
           AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
       # GitHub は secret の値の全体だけを伏せる。リストの 1 件だけがログに出たときも伏せるよう、1 件ずつ登録する
+      # 値が JSON として読めないときに、伏せないまま plan へ進まないよう、jq の失敗と 0 件で止める
       - name: メールアドレスを伏せる
-        run: jq -r '.[]' <<< "$DOCS_ALLOWED_EMAILS" | while IFS= read -r email; do echo "::add-mask::$email"; done
+        shell: bash
+        run: |
+          set -euo pipefail
+          emails=$(jq -er '.[]' <<< "$DOCS_ALLOWED_EMAILS")
+          while IFS= read -r email; do echo "::add-mask::$email"; done <<< "$emails"
         env:
           DOCS_ALLOWED_EMAILS: ${{ secrets.DOCS_ALLOWED_EMAILS }}
 
@@ -64,7 +69,7 @@ jobs:
           TF_VAR_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_zone_name: ${{ vars.ZONE_NAME }}
-          # メールアドレスの一覧。値は ["a@example.com"] の形の HCL のリストで登録する
+          # メールアドレスの一覧。値は ["a@example.com"] の形の、JSON として読める 1 行のリストで登録する
           TF_VAR_docs_allowed_emails: ${{ secrets.DOCS_ALLOWED_EMAILS }}
 
       # 変数は plan file が持つため TF_VAR を渡さない
