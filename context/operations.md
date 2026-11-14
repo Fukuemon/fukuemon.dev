@@ -119,6 +119,12 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
   - JSON を読む origin は、`apps/playground` の開発サーバー（`vp dev`）でだけ、環境変数 `VITE_SITE_ORIGIN` で替えられる。本番のビルドは読まない。
 - `/` は、`apps/playground/public/_redirects` で `https://fukuemon.dev/playground` へリダイレクトする。
 
+`docs.fukuemon.dev` が返すヘッダは次のとおり。
+
+- すべてのパスに、`X-Robots-Tag: noindex` と、カタログと同じ `X-Content-Type-Options`、`Referrer-Policy`、`Strict-Transport-Security` を返す。
+  - noindex は、Access の外へ文書のサイトが漏れたときに、検索の結果に載せないためである。
+- すべてのパスに、`Content-Security-Policy: frame-ancestors 'none'` を返す。文書のサイトを埋め込むページは無いので、自分の origin にも埋め込ませない。
+
 ## Deployment Conditions
 
 - サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
@@ -213,6 +219,7 @@ secret を Terraform の state に載せない。
 - Terraform は secret の名前だけを変数として扱い、値を扱わない。
 - 認証情報（R2 の access key など）は Terraform の外で発行し、GitHub Actions の secret に登録する。
 - Terraform の変数 `account_id` と `zone_id` には `sensitive = true` を付ける。付けないと、public のリポジトリの Actions のログに実値が出る。
+- ドキュメントサイトを開けるメールアドレス（`docs_allowed_emails`）は、認証情報ではないので、state と plan file に載せてよい。state は非公開の R2 のバケットに置き、plan file は runner のディスクから出さない。
 
 次のものは、文書とコミットに書かない。
 
