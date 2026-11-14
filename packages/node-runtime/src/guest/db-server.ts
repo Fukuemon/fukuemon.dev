@@ -4,7 +4,7 @@ import { createInterface } from "node:readline";
 
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { runSql, toJsonResponse, toSqlError } from "@fukuemon/sql-runtime";
+import { keepLastRows, runSql, toJsonResponse, toSqlError } from "@fukuemon/sql-runtime";
 
 import { DB_SOCKET_PATH, SQL_PREFIX, parseSqlRequest } from "./db-protocol";
 
@@ -30,7 +30,10 @@ createInterface({ input: process.stdin }).on("line", (line) => {
   queue = queue.then(async () => {
     // 1 件の応答を作れなくても、後のリクエストを止めない
     try {
-      send({ id: request.id, response: toJsonResponse(await runSql(db, request.sql)) });
+      send({
+        id: request.id,
+        response: toJsonResponse(keepLastRows(await runSql(db, request.sql))),
+      });
     } catch (error) {
       send({ id: request.id, response: { error: toSqlError(error), ms: 0 } });
     }

@@ -157,9 +157,11 @@ export const webContainerBackend: RuntimeBackend = {
     try {
       await container.mount(toTree(files));
       if (database) {
-        await writeOutside(container, KEEP_ALIVE_FILE, keepAliveSource);
-        await writeOutside(container, `${DB_DIRECTORY}/package.json`, dbPackageSource);
-        await writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource);
+        await Promise.all([
+          writeOutside(container, KEEP_ALIVE_FILE, keepAliveSource),
+          writeOutside(container, `${DB_DIRECTORY}/package.json`, dbPackageSource),
+          writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource),
+        ]);
       }
       const env = visitorEnv({ database, portsFile: PORTS_FILE, keepAliveFile: KEEP_ALIVE_FILE });
       const ports = createPorts(container);

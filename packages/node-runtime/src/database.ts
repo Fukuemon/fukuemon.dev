@@ -71,13 +71,22 @@ function parseReply(text: string): { ready: true } | Reply | undefined {
 const toLine = (value: unknown) =>
   JSON.stringify(value).replaceAll("\u2028", "\\u2028").replaceAll("\u2029", "\\u2029");
 
-/** 出力を行に分け、onLine に渡す。行の途中で切れた出力は、改行が届くまで手元に置く。 */
+/**
+ * 出力を行に分け、onLine に渡す。行の途中で切れた出力は、改行が届くまで配列にためる。
+ * 応答の行は 10 MB を超えることがあるので、届いた chunk だけで改行を探し、ためた分を毎回走査し直さない。
+ */
 function splitLines(onLine: (line: string) => void) {
-  let held = "";
+  let held: string[] = [];
+  const emit = (line: string) => onLine(line.endsWith("\r") ? line.slice(0, -1) : line);
   return (chunk: string) => {
-    const lines = (held + chunk).split("\n");
-    held = lines.pop() ?? "";
-    for (const line of lines) onLine(line.replace(/\r$/, ""));
+    let start = 0;
+    for (let end = chunk.indexOf("\n"); end !== -1; end = chunk.indexOf("\n", start)) {
+      held.push(chunk.slice(start, end));
+      emit(held.join(""));
+      held = [];
+      start = end + 1;
+    }
+    if (start < chunk.length) held.push(chunk.slice(start));
   };
 }
 

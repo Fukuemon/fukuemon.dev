@@ -596,7 +596,7 @@ type SqlResult = {
 ```
 
 - 複数の文を 1 回で渡したときは、`results` に、文ごとの結果が入る。SQL の画面は、最後の文の結果を表示する。
-  - Web Worker で動かす実装は、最後の文のほかの結果の `rows` を空にしてから送る。`fields`、`affectedRows`、`totalRows` は残す。
+  - Web Worker で動かす実装と DB のプロセスは、最後の文のほかの結果の `rows` を空にしてから送る。`fields`、`affectedRows`、`totalRows` は残す。
 - 1 つの文が失敗したときは、全部を取り消す。SQL の画面は、エラーと、全部を取り消したことを表示する。
   - 失敗したときは、`ROLLBACK` を流す。SQL の中の `BEGIN` で始めたトランザクションが失敗したまま残ると、次の SQL が全て失敗するためである。
   - 前の実行で `BEGIN` を流し、開いたままのトランザクションも、この `ROLLBACK` で取り消す。`ROLLBACK` も失敗したときは、元のエラーを返す。
