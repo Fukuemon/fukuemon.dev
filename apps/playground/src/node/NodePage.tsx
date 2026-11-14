@@ -25,6 +25,9 @@ const startRuntime = createRuntimeStarter();
 
 const pendingState = { kind: "pending" } as const;
 
+// プロジェクトの読み込みから起動へ続けて進むので、2 つの待ちで文を替えない（packages/ui/design/components.md の PageLoading）
+const bootLabel = "実行環境を起動しています";
+
 /** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */
 function BootWait() {
   useRuntime();
@@ -61,7 +64,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
   return (
     <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
       <SelectionContext value={{ selection, dispatch }}>
-        <Suspense fallback={<PageLoading label="実行環境を起動しています" />}>
+        <Suspense fallback={<PageLoading label={bootLabel} />}>
           <BootWait />
         </Suspense>
         <div className="min-h-0 flex-1">
@@ -145,8 +148,7 @@ export function NodePage({ search, embedded }: { search: string; embedded: boole
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
       )}
-      {/* プロジェクトの読み込みから起動へ続けて進むので、起動の待ちと同じ文にし、読み上げを 1 回にする。 */}
-      <Suspense fallback={<PageLoading label="実行環境を起動しています" />}>
+      <Suspense fallback={<PageLoading label={bootLabel} />}>
         <NodeTool search={search} />
       </Suspense>
     </main>

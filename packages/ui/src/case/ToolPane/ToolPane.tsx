@@ -6,8 +6,7 @@ import { Notice } from "../../base/Notice/Notice";
 
 /**
  * 領域の中身の状態。loading と error の間は、中身の代わりに待ちの印か誤りの知らせを出す。
- * pending の間は、操作、帯、中身を出さずに題だけを出し、待ちの印は画面全体の `PageLoading` に任せる。画面の全ての領域が同じ処理を待つときに使う。
- * 操作と帯を出さないのは、待ちが終わって領域が描き直されたときに、そこにあったフォーカスが失われるためである。
+ * pending の間は、操作、帯、中身を出さずに題だけを出し、待ちの印は画面全体の `PageLoading` に任せる。画面の全ての領域が同じ処理を待つときに使う（packages/ui/DesignDoc.md の「画面ごとのコンポーネント」）。
  */
 export type ToolPaneState =
   | { kind: "ready" }

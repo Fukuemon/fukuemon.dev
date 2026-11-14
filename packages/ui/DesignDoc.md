@@ -384,6 +384,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 - 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
 - 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
   - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
+    - `pending` の領域は、操作と帯も出さない。待ちが終わって領域が描き直されると、そこにあったフォーカスが失われるためである。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
 

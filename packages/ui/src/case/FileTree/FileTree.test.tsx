@@ -200,11 +200,14 @@ describe("FileTree", () => {
     expect(screen.queryByRole("tree")).toBeNull();
   });
 
-  it("起動を待つ pending のときは、木も、空の文も、待ちの文も出さない", () => {
+  it("起動を待つ pending のときは、木も、空の文も、待ちの文も、操作のボタンも出さない", () => {
     render(<Pending />);
-    expect(screen.getByRole("region", { name: "ファイル" })).toBeInTheDocument();
-    expect(screen.queryByRole("tree")).toBeNull();
-    expect(screen.queryByRole("status")).toBeNull();
-    expect(screen.queryByText("ファイルがありません。")).toBeNull();
+    expect({
+      region: screen.getByRole("region", { name: "ファイル" }) !== null,
+      tree: screen.queryByRole("tree"),
+      status: screen.queryByRole("status"),
+      empty: screen.queryByText("ファイルがありません。"),
+      button: screen.queryByRole("button"),
+    }).toStrictEqual({ region: true, tree: null, status: null, empty: null, button: null });
   });
 });
