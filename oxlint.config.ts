@@ -263,7 +263,7 @@ export default defineConfig({
     "react/refs": "error",
     "no-restricted-imports": ["error", { paths: noWebcontainer }],
     ...Object.fromEntries(JSX_A11Y_RULES.map((rule) => [rule, "error"])),
-    // 横に送る領域と縦に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)。role="region" か role="log" を書いた要素だけを許す。role を書かない要素（section、story の ol）は行ごとに抑制する
+    // 横か縦にスクロールする領域は、キーボードでスクロールできるよう tabIndex={0} を付ける (WCAG 2.1.1)。role="region" か role="log" を書いた要素だけを許す。role を書かない要素（section、story の ol）は行ごとに抑制する
     "jsx-a11y/no-noninteractive-tabindex": ["error", { roles: ["tabpanel", "region", "log"] }],
   },
   overrides: [
