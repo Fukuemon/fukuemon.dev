@@ -61,12 +61,12 @@ pnpm --filter @fukuemon/e2e capture
 node .claude/skills/playwright-capture/scripts/collect.mjs packages/e2e/tests/evidence/.playwright/改修後.json packages/e2e/tests/evidence
 ```
 
-### 庭の見た目の回帰と、表と図の枠の E2E
+### project visual の E2E
 
 `packages/e2e/visual/specs/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
 config は `packages/e2e/playwright.config.ts` の project `visual` である。
-記事のページの表と図の枠の E2E も、同じ project で実行する。
-この spec は `tests/` の外にあるので、E2E の lint の規則は掛からない。
+記事のページの表と図の枠の E2E と、コードブロックのコピーの吹き出しの E2E も、同じ project で実行する。
+`visual/specs/` の spec は `tests/` の外にあるので、E2E の lint の規則は掛からない。
 CI では、`pnpm run check` がビルドの後に実行する。
 ローカル環境では、ビルドしてから次を実行する。
 
