@@ -116,7 +116,7 @@ export type NodeSession = {
   runtime: Store<Promise<RuntimeResult>>;
   /** IndexedDB を読めず、ファイルを保存できないときは false である。 */
   canSave: boolean;
-  /** 保存が失敗したときは true である。書き直しが通っても戻さず、訪問者の変更の保存が通ると false に戻る。 */
+  /** 保存が失敗したときは true である。書き直しが通っても戻さず、訪問者の変更の保存が通るか、初期の状態に戻すと false に戻る。 */
   saveFailed: Store<boolean>;
   /** 最後に読んだ作業ディレクトリが、保存の上限を超えたときは true である。上限を下回って読めたときと、初期の状態に戻したときに false に戻る。 */
   overLimit: Store<boolean>;

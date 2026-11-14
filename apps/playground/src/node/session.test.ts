@@ -304,7 +304,7 @@ describe("起動", () => {
     });
   });
 
-  it("書き直しが失敗したときは、次の変更で、除いた後のレコードを書く", async () => {
+  it("書き直しが失敗したときは、次の変更で、読んだファイルのレコードを書く", async () => {
     const { workspace, saves } = fakeWorkspace();
     workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
     const runtimes: Fake[] = [];
@@ -320,9 +320,9 @@ describe("起動", () => {
       },
     });
     await settle(session);
-    runtimes[0]?.change("index.js");
+    runtimes[0]?.change("index.js", "c");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
-    expect(saves.map((saved) => saved.files)).toStrictEqual([{ "index.js": "b" }]);
+    expect(saves.map((saved) => saved.files)).toStrictEqual([{ "index.js": "c" }]);
   });
 
   it("保存しないファイルだけを持つレコードは、空の作業ディレクトリで起動し、空のレコードを書き直す", async () => {
