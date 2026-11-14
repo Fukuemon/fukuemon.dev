@@ -2,6 +2,12 @@ import { bootWithBackend } from "./runtime";
 import type { BootOptions, NodeRuntime } from "./types";
 import { webContainerBackend } from "./webcontainer";
 
+export type {
+  ConsoleLevel,
+  ConsoleRecord,
+  ConsoleRecordValue,
+  ConsoleSource,
+} from "./console-records";
 export { BootError } from "./types";
 export type {
   BootFailureReason,

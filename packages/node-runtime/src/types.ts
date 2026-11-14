@@ -1,5 +1,7 @@
 import type { Store } from "@fukuemon/sql-runtime";
 
+import type { ConsoleRecord } from "./console-records";
+
 export type { Store };
 
 export type TerminalSize = { cols: number; rows: number };
@@ -65,8 +67,8 @@ export type NodeRuntime = {
   ports: Store<readonly OpenPort[]>;
   /** HTTP の記録。記録を取る preload を足すまでは、空のままである。 */
   httpExchanges: Store<readonly never[]>;
-  /** コンソールの記録。記録を取るスクリプトを足すまでは、空のままである。 */
-  consoleEntries: Store<readonly never[]>;
+  /** コンソールの記録。届いた順に並べ、古いものから捨てる。 */
+  consoleEntries: Store<readonly ConsoleRecord[]>;
   dispose: () => Promise<void>;
 };
 

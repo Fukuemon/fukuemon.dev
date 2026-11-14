@@ -1,5 +1,7 @@
 import type { BackendInstance, RuntimeBackend } from "./backend";
+import { createConsoleRecords } from "./console-records";
 import { createFiles } from "./files";
+import { previewConsoleScript } from "./preview-console";
 import { createProcesses } from "./processes";
 import { createStore } from "./store";
 import { BootError, type BootOptions, type NodeRuntime, type OpenPort } from "./types";
@@ -14,11 +16,13 @@ const ignore = () => undefined;
  * 同じ origin のページを、allow-same-origin を付けた iframe で開くと、プレビューのスクリプトがこのページを操作できるためである。
  */
 function isPreviewUrl(url: string) {
-  const pageOrigin = "location" in globalThis ? globalThis.location.origin : undefined;
   if (!URL.canParse(url)) return false;
   const parsed = new URL(url);
-  return parsed.protocol === "https:" && parsed.origin !== pageOrigin;
+  return parsed.protocol === "https:" && parsed.origin !== pageOrigin();
 }
+
+/** このページの origin。ブラウザの外（テスト）では undefined である。 */
+const pageOrigin = () => ("location" in globalThis ? globalThis.location.origin : undefined);
 
 async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime> {
   const files = await createFiles(instance.files);
@@ -27,16 +31,22 @@ async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime
   const unsubscribePorts = instance.ports.subscribe((open) =>
     ports.set(open.filter((port) => isPreviewUrl(port.url))),
   );
+  const consoleRecords = createConsoleRecords();
+  const unsubscribePreview = instance.previewMessages.subscribe(
+    consoleRecords.acceptPreviewMessage,
+  );
   let disposed: Promise<void> | undefined;
   return {
     files: files.api,
     processes: processes.api,
     ports,
     httpExchanges: createStore<readonly never[]>([]),
-    consoleEntries: createStore<readonly never[]>([]),
+    consoleEntries: consoleRecords.store,
     dispose: () => {
       disposed ??= (async () => {
         unsubscribePorts();
+        unsubscribePreview();
+        consoleRecords.dispose();
         files.dispose();
         processes.dispose();
         await instance.teardown();
@@ -57,7 +67,10 @@ export async function bootWithBackend(
 ): Promise<NodeRuntime> {
   if (!backend.isSupported()) throw new BootError("not-isolated");
   const booting = (async () => {
-    const instance = await backend.boot({ files: options.files });
+    const instance = await backend.boot({
+      files: options.files,
+      previewScript: previewConsoleScript(pageOrigin() ?? "null"),
+    });
     try {
       return await createNodeRuntime(instance);
     } catch (cause) {

@@ -156,6 +156,7 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
 /** WebContainers の代わりに、テストが使う実装。起動した実行環境と、起動したプロセスを、テストから読める。 */
 export function createFakeBackend(options: { supported?: boolean } = {}) {
   const instances: ReturnType<typeof createInstance>[] = [];
+  const previewScripts: string[] = [];
   let bootGate: Promise<void> = Promise.resolve();
   let bootError: unknown;
 
@@ -163,6 +164,7 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
     const files = createFakeFiles(initial);
     const processes: FakeProcess[] = [];
     const portListeners = new Set<(ports: readonly OpenPort[]) => void>();
+    const messageListeners = new Set<(message: unknown, port: number) => void>();
     const state = { tornDown: false };
     const instance: BackendInstance = {
       files: files.api,
@@ -182,6 +184,12 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
           return () => portListeners.delete(onChange);
         },
       },
+      previewMessages: {
+        subscribe: (onMessage) => {
+          messageListeners.add(onMessage);
+          return () => messageListeners.delete(onMessage);
+        },
+      },
       teardown: async () => {
         state.tornDown = true;
       },
@@ -195,14 +203,19 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
         for (const listener of portListeners) listener(ports);
       },
       portListeners: () => portListeners.size,
+      emitPreviewMessage: (message: unknown, port: number) => {
+        for (const listener of messageListeners) listener(message, port);
+      },
+      messageListeners: () => messageListeners.size,
     };
   }
 
   const backend: RuntimeBackend = {
     isSupported: () => options.supported ?? true,
-    boot: async ({ files }) => {
+    boot: async ({ files, previewScript }) => {
       await bootGate;
       if (bootError !== undefined) throw bootError;
+      previewScripts.push(previewScript);
       const created = createInstance(files);
       instances.push(created);
       return created.instance;
@@ -212,6 +225,7 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
   return {
     backend,
     instances,
+    previewScripts,
     /** 返した関数を呼ぶまで、boot を終わらせない。 */
     holdBoot: () => {
       let release: () => void = () => undefined;

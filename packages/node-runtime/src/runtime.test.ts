@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PREVIEW_CONSOLE_MESSAGE } from "./console-records";
 import { bootWithBackend } from "./runtime";
 import { bootFake, createFakeBackend, flush, initialFiles } from "./test/fake-backend";
 import { BootError } from "./types";
@@ -114,6 +115,41 @@ describe("records", () => {
       runtime.httpExchanges.getSnapshot(),
       runtime.consoleEntries.getSnapshot(),
     ]).toStrictEqual([[], []]);
+  });
+
+  it("プレビューのページから届いたコンソールの記録を、コンソールの store に入れる", async () => {
+    vi.useFakeTimers();
+    try {
+      const { runtime, created } = await bootFake();
+      created.emitPreviewMessage(
+        { type: PREVIEW_CONSOLE_MESSAGE, level: "info", time: 5, args: [{ kind: "null" }] },
+        3000,
+      );
+      vi.advanceTimersByTime(20);
+      expect(runtime.consoleEntries.getSnapshot()).toStrictEqual([
+        {
+          id: "1",
+          level: "info",
+          time: 5,
+          source: { kind: "preview", port: 3000 },
+          args: [{ kind: "null" }],
+        },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("プレビューに入れるスクリプトに、記録を送る先として、このページの origin を渡す", async () => {
+    vi.stubGlobal("location", { origin: "https://play.example.test" });
+    const { fake } = await bootFake();
+    expect(fake.previewScripts[0]).toContain('"https://play.example.test"');
+  });
+
+  it("dispose の後は、プレビューのメッセージを受けない", async () => {
+    const { runtime, created } = await bootFake();
+    await runtime.dispose();
+    expect(created.messageListeners()).toBe(0);
   });
 });
 

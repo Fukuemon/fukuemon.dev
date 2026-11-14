@@ -132,6 +132,21 @@ function createPorts(container: WebContainer) {
         return () => listeners.delete(onChange);
       },
     },
+    previewMessages: {
+      subscribe: (onMessage: (message: unknown, port: number) => void) => {
+        // 待ち受けているポートの origin から届いたものだけを受ける。ほかの iframe とウィンドウからの記録を、コンソールに混ぜない
+        const receive = (event: MessageEvent) => {
+          for (const [port, url] of open) {
+            if (URL.canParse(url) && new URL(url).origin === event.origin) {
+              onMessage(event.data, port);
+              return;
+            }
+          }
+        };
+        globalThis.addEventListener("message", receive);
+        return () => globalThis.removeEventListener("message", receive);
+      },
+    },
     dispose: unsubscribe,
   };
 }
@@ -139,10 +154,11 @@ function createPorts(container: WebContainer) {
 /** WebContainers で動く実行環境。WebContainers を import するのは、このファイルだけである (apps/playground/DesignDoc.md)。 */
 export const webContainerBackend: RuntimeBackend = {
   isSupported: () => globalThis.crossOriginIsolated === true,
-  boot: async ({ files }): Promise<BackendInstance> => {
+  boot: async ({ files, previewScript }): Promise<BackendInstance> => {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
+      await container.setPreviewScript(previewScript);
       const ports = createPorts(container);
       await ports.ready();
       return {
@@ -162,6 +178,7 @@ export const webContainerBackend: RuntimeBackend = {
             }),
           ),
         ports: ports.ports,
+        previewMessages: ports.previewMessages,
         teardown: async () => {
           ports.dispose();
           container.teardown();
