@@ -247,11 +247,10 @@ export function FileTree({
   const selected = selectedId === undefined ? undefined : find(items, selectedId);
 
   // 呼ぶ側が決めるまでは、別の欄を開かない。決まった後の更新が、後から開いた欄を閉じるのを防ぐ
-  const isDeciding = useRef(false);
-  const startRename = (id: string) =>
-    !isDeciding.current && setEdit({ editing: { kind: "rename", id } });
+  const [isDeciding, setDeciding] = useState(false);
+  const startRename = (id: string) => !isDeciding && setEdit({ editing: { kind: "rename", id } });
   const startCreate = (kind: "file" | "directory") => {
-    if (isDeciding.current) return;
+    if (isDeciding) return;
     const parent = selected?.node.children ? selected.node : selected?.parent;
     setAwaitingFirst(false);
     setEdit({ editing: { kind, parentId: parent?.id } });
@@ -291,9 +290,9 @@ export function FileTree({
             ? onRename?.(editing.id, name)
             : undefined;
     if (!(outcome instanceof Promise)) return settle(outcome);
-    isDeciding.current = true;
+    setDeciding(true);
     return outcome.then(settle).finally(() => {
-      isDeciding.current = false;
+      setDeciding(false);
     });
   };
 
