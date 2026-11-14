@@ -27,8 +27,8 @@ const quietly = (run) => {
 const write = (record) =>
   quietly(() => process.stdout.write(PREFIX + JSON.stringify(record) + "\n"));
 
-// 届いた順と受けた順が違う記録を並べ直すので、同じミリ秒の中の順も分かる細かさで取る
-const now = () => performance.timeOrigin + performance.now();
+// 記録はプロセスをまたいで時刻の順に並べ直すので、プロセスの間でそろう時計を使う。WebContainers では、performance.timeOrigin がプロセスごとにずれる
+const now = () => Date.now();
 
 const portOf = (server) => {
   const address = server.address();

@@ -113,6 +113,9 @@ export function withoutRecordLines(
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
+const isPort = (value: unknown): value is number =>
+  Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 65535;
+
 const toHeaders = (value: unknown): HttpHeaderLine[] | undefined => {
   if (!Array.isArray(value)) return undefined;
   const headers: HttpHeaderLine[] = [];
@@ -157,7 +160,7 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
   }
   if (!isObject(value)) return undefined;
   if (value.type === "listen") {
-    return typeof value.port === "number" ? { type: "listen", port: value.port } : undefined;
+    return isPort(value.port) ? { type: "listen", port: value.port } : undefined;
   }
   if (value.type !== "exchange" || !isObject(value.request)) return undefined;
   const { from, to, method, url, startedAt, durationMs, request, response } = value;
@@ -165,7 +168,7 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
   const requestBody = toBody(request.body);
   if (
     !(typeof from === "string" || from === null) ||
-    typeof to !== "number" ||
+    !isPort(to) ||
     typeof method !== "string" ||
     typeof url !== "string" ||
     typeof startedAt !== "number" ||
@@ -181,14 +184,14 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
     const responseBody = isObject(response) ? toBody(response.body) : false;
     if (
       !isObject(response) ||
-      typeof response.status !== "number" ||
+      !Number.isInteger(response.status) ||
       responseHeaders === undefined ||
       responseBody === false
     ) {
       return undefined;
     }
     parsedResponse = {
-      status: response.status,
+      status: response.status as number,
       headers: responseHeaders,
       ...(responseBody && { body: responseBody }),
     };
