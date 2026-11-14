@@ -2,8 +2,8 @@ import {
   EditorFrame,
   FileTree,
   Link,
-  Loading,
   Notice,
+  PageLoading,
   PreviewFrame,
   SplitPane,
   TerminalFrame,
@@ -12,7 +12,7 @@ import { type ReactNode, Suspense, use, useReducer } from "react";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
-import { RuntimeContext, SelectionContext } from "./context";
+import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
 import { PreviewPane } from "./PreviewPane";
@@ -23,7 +23,13 @@ import { TerminalPane } from "./TerminalPane";
 const loadProject = createProjectLoader("node", nodeDefaultProject);
 const startRuntime = createRuntimeStarter();
 
-const booting = { kind: "loading", label: "実行環境を起動しています" } as const;
+// 起動を待つ間、ペインは空にし、待ちの印は画面の右下の PageLoading の 1 つだけにする
+const booting = { kind: "pending" } as const;
+
+function BootWait() {
+  useRuntime();
+  return null;
+}
 
 /**
  * SplitPane の領域を、ペインで埋める。ToolPane は高さを持たないので、縦の flex で広げる。
@@ -55,6 +61,9 @@ function NodeLayout({ project }: { project: NodeProject }) {
   return (
     <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
       <SelectionContext value={{ selection, dispatch }}>
+        <Suspense fallback={<PageLoading label="実行環境を起動しています" />}>
+          <BootWait />
+        </Suspense>
         <div className="min-h-0 flex-1">
           <SplitPane
             defaultSize={20}
@@ -134,7 +143,7 @@ export function NodePage({ search, embedded }: { search: string; embedded: boole
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
       )}
-      <Suspense fallback={<Loading label="プロジェクトを読み込んでいます" />}>
+      <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
         <NodeTool search={search} />
       </Suspense>
     </main>
