@@ -193,7 +193,7 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
       {entry.time !== undefined && (
         <span
           className={clsx(
-            "flex h-4 min-w-22 shrink-0 items-center text-compact text-text tabular-nums",
+            "flex h-4 min-w-22 shrink-0 items-center text-compact text-text-secondary tabular-nums",
             startsWithTree && "mt-1",
           )}
         >
@@ -225,7 +225,7 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
         </div>
         <span
           className={clsx(
-            "ml-auto flex h-4 shrink-0 items-center text-compact text-text",
+            "ml-auto flex h-4 shrink-0 items-center text-compact text-text-secondary",
             startsWithTree && "mt-1",
           )}
         >

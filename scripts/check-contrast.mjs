@@ -62,6 +62,9 @@ const TEXT_PAIRS = [
     [state, `${state}-surface`],
     ["text", `${state}-surface`],
   ]),
+  // コンソールの warn と error の行は、時刻と出力元を副の文字で載せる
+  ["text-secondary", "warning-surface"],
+  ["text-secondary", "danger-surface"],
   // コードの字句と端末の色は、コードの面の上で本文と同じ基準にする（コメントも含む）
   // エディタの今いる行（surface-subtle）、選択と補完の選んだ行（primary-surface）、検索の一致（info-surface）、パネル（surface、surface-raised）の上にも、コードの字句が載る
   ...[
