@@ -42,22 +42,25 @@
 
 ## 書体、トークン、コンポーネント
 
-| ADR                                                      | 題                                                                                                                                                                   |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-0004](0004-typography-static-weights.md)            | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
-| [ADR-0019](0019-latin-font-stix-two-text.md)             | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
-| [ADR-0023](0023-keep-art-and-key-color.md)               | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
-| [ADR-0010](0010-tailwind-as-styling-base.md)             | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
-| [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md) | サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う                                                                  |
-| [ADR-0024](0024-tokens-of-fukuemon-dev.md)               | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
-| [ADR-0028](0028-radius-shadow-and-brush-motion.md)       | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                    |
-| [ADR-0061](0061-sumi-focus-ring.md)                      | フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする                                                                                       |
-| [ADR-0021](0021-ui-components-and-catalog.md)            | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
-| [ADR-0022](0022-code-colors-from-tokens.md)              | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
-| [ADR-0062](0062-dense-text-and-targets-in-playground.md) | コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                           |
-| [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)      | コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く                                                                                                 |
-| [ADR-0067](0067-compact-text-tokens-in-dense-panes.md)   | コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う                                                                 |
-| [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md) | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                                         |
+| ADR                                                          | 題                                                                                                                                                                   |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-0004](0004-typography-static-weights.md)                | 和文に静的 2 ウェイトの Zen Old Mincho を採り、可変フォントを使わず self-host する                                                                                   |
+| [ADR-0019](0019-latin-font-stix-two-text.md)                 | 欧文の書体に、x-height と線の太さが和文に近い STIX Two Text を使う                                                                                                   |
+| [ADR-0023](0023-keep-art-and-key-color.md)                   | 個性として和の感じを残し、見出しを明朝にし、主の色を緑にする                                                                                                         |
+| [ADR-0010](0010-tailwind-as-styling-base.md)                 | Tailwind CSS v4 を CSS スタイリングの基盤にし、コンポーネントの CSS を utility へ移す                                                                                |
+| [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md)     | サイトの共通の CSS で Tailwind CSS の preflight を読み、トークンを packages/ui のテーマ変数から使う                                                                  |
+| [ADR-0024](0024-tokens-of-fukuemon-dev.md)                   | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする |
+| [ADR-0028](0028-radius-shadow-and-brush-motion.md)           | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                                                    |
+| [ADR-0061](0061-sumi-focus-ring.md)                          | フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする                                                                                       |
+| [ADR-0021](0021-ui-components-and-catalog.md)                | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                                               |
+| [ADR-0022](0022-code-colors-from-tokens.md)                  | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                                       |
+| [ADR-0062](0062-dense-text-and-targets-in-playground.md)     | コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                           |
+| [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)          | コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く                                                                                                 |
+| [ADR-0067](0067-compact-text-tokens-in-dense-panes.md)       | コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う                                                                 |
+| [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md)     | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                                         |
+| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | 指で押す端末では、コードを動かす画面の押せる領域を 44px にし、iOS の入力時の拡大を viewport の指定で止める                                                           |
+| [ADR-0072](0072-short-landscape-layout-in-playground.md)     | 高さが 500px 未満の画面では、幅が広くても、コードを動かす画面を狭い配置にする                                                                                        |
+| [ADR-0073](0073-layered-panes-and-radius-in-playground.md)   | コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める                                                                            |
 
 ADR-0010 の Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」は、ADR-0055 に置換した。
 
@@ -160,6 +163,9 @@ flowchart TB
     A0066["ADR-0066"]
     A0067["ADR-0067"]
     A0068["ADR-0068"]
+    A0071["ADR-0071"]
+    A0072["ADR-0072"]
+    A0073["ADR-0073"]
     A0024["ADR-0024"]
     A0028["ADR-0028"]
     A0061["ADR-0061"]
@@ -332,6 +338,12 @@ flowchart TB
   A0067 --> A0062
   A0067 --> A0024
   A0068 --> A0028
+  A0071 --> A0062
+  A0071 --> A0067
+  A0072 --> A0024
+  A0072 --> A0071
+  A0073 --> A0028
+  A0073 --> A0062
   A0063 --> A0031
   A0063 --> A0037
   A0063 --> A0044
