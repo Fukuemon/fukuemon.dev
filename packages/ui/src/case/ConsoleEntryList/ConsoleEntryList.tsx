@@ -116,7 +116,18 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
         <LevelIcon level={entry.level} />
       </span>
       <span className="sr-only">{entry.level}</span>
-      {/* 狭い幅では、時刻と出力元を値の下へ折り返し、値の幅を空ける */}
+      {/* 時刻は印の右の固定幅の列に置き、行をまたいで縦にそろえる。HH:MM:SS.mmm の 12 字が収まる幅にし、長い書式では列を広げる */}
+      {entry.time !== undefined && (
+        <span
+          className={clsx(
+            "flex h-4 min-w-22 shrink-0 items-center text-compact text-text tabular-nums",
+            startsWithTree && "mt-1",
+          )}
+        >
+          {entry.time}
+        </span>
+      )}
+      {/* 狭い幅では、出力元を値の下へ折り返し、値の幅を空ける */}
       <div className="flex min-w-0 flex-1 flex-wrap gap-x-4">
         <div className="flex min-w-0 flex-1 basis-48 flex-wrap items-start gap-x-2 gap-y-1 font-mono text-compact text-text">
           {entry.args.map((arg, index) =>
@@ -139,12 +150,11 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
         </div>
         <span
           className={clsx(
-            "ml-auto flex h-4 shrink-0 items-center gap-2 text-compact text-text",
+            "ml-auto flex h-4 shrink-0 items-center text-compact text-text",
             startsWithTree && "mt-1",
           )}
         >
-          {entry.time !== undefined && <span className="tabular-nums">{entry.time}</span>}
-          <span>{entry.source}</span>
+          {entry.source}
         </span>
       </div>
     </li>
@@ -152,7 +162,7 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
 }
 
 /**
- * `console.*` の出力を、起きた順に並べたコンソール。行ごとに、ログレベルの印、値、時刻、出力元を出す。
+ * `console.*` の出力を、起きた順に並べたコンソール。行ごとに、ログレベルの印、時刻、値、出力元を出す。
  * 題の下のボタンで、表示するログレベルを選ぶ。配列、オブジェクト、`Error`、`Map`、`Set` は、TreeView で開いて中を見られる。
  * 高さは呼ぶ側が決める。高さを決めたときは、行の領域だけをスクロールさせる。
  * 行の領域だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。

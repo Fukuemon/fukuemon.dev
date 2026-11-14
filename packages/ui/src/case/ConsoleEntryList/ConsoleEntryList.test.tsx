@@ -41,14 +41,46 @@ describe("ConsoleEntryList", () => {
     expect(row(4).querySelector("svg")).toHaveClass("text-danger");
   });
 
-  it("行に、時刻があれば時刻を、出力元を出す", () => {
+  it("行に、印、時刻があれば時刻、値、出力元の順に出す", () => {
+    const value = { kind: "string", value: "a" } as const;
     const entries: ConsoleEntry[] = [
-      { id: "1", level: "log", source: "server.js", time: "10:00:00.120", args: [] },
-      { id: "2", level: "log", source: "プレビュー", args: [] },
+      { id: "1", level: "log", source: "server.js", time: "10:00:00.120", args: [value] },
+      { id: "2", level: "log", source: "プレビュー", args: [value] },
     ];
     render(<ConsoleEntryList entries={entries} />);
-    expect(row(0)).toHaveTextContent("10:00:00.120server.js");
-    expect(row(1)).toHaveTextContent(/^logプレビュー$/);
+    expect([row(0).textContent, row(1).textContent]).toStrictEqual([
+      "log10:00:00.120aserver.js",
+      "logaプレビュー",
+    ]);
+  });
+
+  it("時刻を、行をまたいで同じ位置の列に置く", () => {
+    const entries: ConsoleEntry[] = [
+      {
+        id: "1",
+        level: "log",
+        source: "p",
+        time: "10:00:00.120",
+        args: [{ kind: "string", value: "a" }],
+      },
+      {
+        id: "2",
+        level: "log",
+        source: "p",
+        time: "10:00:01.000",
+        args: [{ kind: "array", items: [] }],
+      },
+    ];
+    render(<ConsoleEntryList entries={entries} />);
+    const box = (text: string) => screen.getByText(text).getBoundingClientRect();
+    const [first, second] = [box("10:00:00.120"), box("10:00:01.000")];
+    const valueLeft = (index: number) =>
+      (row(index).querySelector(".font-mono") as Element).getBoundingClientRect().left;
+    expect({
+      left: second.left - first.left,
+      width: second.width - first.width,
+      values: valueLeft(1) - valueLeft(0),
+    }).toStrictEqual({ left: 0, width: 0, values: 0 });
   });
 
   it("ログレベルのボタンを押すと、そのログレベルの行を隠し、もう 1 回押すと戻す", async () => {
