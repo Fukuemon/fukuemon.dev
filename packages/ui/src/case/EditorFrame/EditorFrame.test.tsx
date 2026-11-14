@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./EditorFrame.stories";
 
-const { Default, Closable, Empty, Error, Pending } = composeStories(stories);
+const { Default, Closable, Empty, Error, Pending, Short } = composeStories(stories);
 
 describe("EditorFrame", () => {
   it("選んだファイルのエンジンに、テーマの名前のテーマとファイルを渡す", () => {
@@ -86,6 +86,19 @@ describe("EditorFrame", () => {
       ring: [ring.outlineStyle, ring.outlineOffset],
       own: getComputedStyle(engine).outlineStyle,
     }).toStrictEqual({ before: "none", ring: ["solid", "-2px"], own: "none" });
+  });
+
+  it("minBodyHeight が none のときは、枠を置く側の 160px に収め、既定では中身に 192px を取る", () => {
+    const { unmount } = render(<Short />);
+    const short = screen.getByRole("region", { name: "エディタ" });
+    const shortHeight = short.getBoundingClientRect().height;
+    unmount();
+    render(<Default />);
+    const engine = screen.getByRole("region", { name: "server.js のコード" });
+    expect({
+      shortHeight,
+      defaultMinHeight: getComputedStyle(engine.parentElement as HTMLElement).minHeight,
+    }).toStrictEqual({ shortHeight: 160, defaultMinHeight: "192px" });
   });
 
   it("起動を待つ pending のときは、ファイルのタブも、エンジンも、待ちの文も出さない", () => {
