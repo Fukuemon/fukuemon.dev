@@ -186,8 +186,8 @@ export const STATIONS: readonly Station[] = [
     tree: { at: [5.9, -4.2], s: 1.25, dir: -1, leaf: "pine" },
   },
   {
-    id: "articles",
-    label: "記事",
+    id: "portfolio",
+    label: "ポートフォリオ",
     pos: [0.4, 1.45, -10.6],
     rot: -0.1,
     tree: { at: [2.6, -11.3], s: 1.5, dir: -1, leaf: "season" },

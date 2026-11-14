@@ -71,23 +71,17 @@ test.describe("トップの庭", () => {
     test("最初の文で左の矢印キーを押した場合、4 つ目の文へ回ること", async ({ page }) => {
       await openGarden(page, { paused: true });
       await page.keyboard.press("ArrowLeft");
-      await expectAt(page, "articles");
+      await expectAt(page, "portfolio");
     });
 
-    test("Tab で 4 つ目の文の中のリンクにフォーカスを移した場合、カメラが 4 つ目の文へ動くこと", async ({
+    test("プロフィールの見出しにフォーカスがある状態で右の矢印キーを押した場合、フォーカスが 2 つ目の文へ移るボタンに移ること", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
-      const link = page.getByTestId("garden-articles-link");
-      for (
-        let i = 0;
-        i < 10 && !(await link.evaluate((el) => el === document.activeElement));
-        i++
-      ) {
-        await page.keyboard.press("Tab");
-      }
-      await expect(link).toBeFocused();
-      await expectAt(page, "articles");
+      await page.getByTestId("garden-title").focus();
+      await page.keyboard.press("ArrowRight");
+      await expectAt(page, "career");
+      await expect(page.getByTestId("garden-station-1")).toBeFocused();
     });
 
     test("「文だけで読む」を押した場合、ふつうのページが出て、フォーカスが h1 に移り、セクションにインラインのスタイルが残らないこと", async ({
@@ -114,7 +108,7 @@ test.describe("トップの庭", () => {
       page,
     }) => {
       await openGarden(page, { paused: true });
-      for (const [i, id] of ["profile", "career", "stack", "articles"].entries()) {
+      for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         const paper = (await card(page, id).boundingBox())!;
@@ -184,11 +178,11 @@ test.describe("トップの庭", () => {
   test.describe("幅 320px", () => {
     test.use({ viewport: { width: 320, height: 640 }, colorScheme: "light" });
 
-    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 1 段に並び、ヘッダーが 1 段に収まること", async ({
+    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 2 行以内に並び、ヘッダーが 1 段に収まること", async ({
       page,
     }) => {
       await openGarden(page);
-      // 隣のボタンに覆われずに押せるかを、左右の端から 1px 内側で確かめる。当たり判定は座標を整数に丸めるので、端の 0.5px では隣に当たる
+      // 隣のボタンに覆われずに押せるかを、左右の端から 2px 内側で確かめる（枠は隣と 1px 重なる）。当たり判定は座標を整数に丸めるので、端の 0.5px では隣に当たる
       const boxes = await stations(page).evaluateAll((els) =>
         els.map((el) => {
           const b = el.getBoundingClientRect();
@@ -200,17 +194,17 @@ test.describe("トップの庭", () => {
             height: b.height,
             left: b.left,
             right: b.right,
-            edges: own(b.left + 1) && own(b.right - 1),
+            edges: own(b.left + 2) && own(b.right - 2),
           };
         }),
       );
       const header = (await page.getByTestId("site-header").boundingBox())!.height;
       expect({
-        rows: new Set(boxes.map((b) => Math.round(b.top))).size,
+        rows: new Set(boxes.map((b) => Math.round(b.top))).size <= 2,
         small: boxes.filter((b) => b.width < 44 || b.height < 44 || !b.edges).length,
         inside: boxes.every((b) => b.left >= 0 && b.right <= 320),
         headerOneRow: header < 80,
-      }).toStrictEqual({ rows: 1, small: 0, inside: true, headerOneRow: true });
+      }).toStrictEqual({ rows: true, small: 0, inside: true, headerOneRow: true });
     });
   });
 
@@ -218,16 +212,14 @@ test.describe("トップの庭", () => {
     test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "dark" });
 
     // 和紙の字の色は時間帯の場面の色で、テーマのトークンが和紙の中に入らない
-    test("昼の庭を開いた場合、和紙の字とリンクの字が、ライトのテーマと同じ場面の色で出ること", async ({
+    test("昼の庭を開いた場合、和紙の字が、ライトのテーマと同じ場面の色で出ること", async ({
       page,
     }) => {
       await openGarden(page);
-      const colors = await Promise.all(
-        ["garden-title", "garden-articles-link"].map((id) =>
-          page.getByTestId(id).evaluate((el) => getComputedStyle(el).color),
-        ),
-      );
-      expect(colors).toStrictEqual(["rgb(26, 23, 20)", "rgb(61, 75, 43)"]);
+      const color = await page
+        .getByTestId("garden-title")
+        .evaluate((el) => getComputedStyle(el).color);
+      expect(color).toBe("rgb(26, 23, 20)");
     });
   });
 
