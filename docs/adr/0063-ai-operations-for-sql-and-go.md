@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+承認（Decision 2 に ADR-0064 を足す）
 
 ## Context
 
@@ -98,10 +98,23 @@ ADR-0045 の Decision 6 と同じく、エージェントの操作で読み込�
 | `unsafe`                               | import がエラーになった                              |
 | `net/http`                             | import できた。呼び出しは、Node の上でエラーを返した |
 
-- ブラウザの中では、確認していない。
-- Yaegi で動かすコードが、ブラウザの中で `net/http` から外部へリクエストを送れるかは、未確認である。
+承認の条件の 2 つは、Go を動かすツールの実装のタスクで、ブラウザの中で確認した。  
+確認のために、`stdlib.Symbols` だけを渡した Yaegi 0.16.3 と Go 1.26.4 の WASM を作った。  
+その WASM を、Playwright 1.64.1 の Chromium 156 と WebKit 27.2 の Web Worker の中で動かした。  
+ファイルは `src/<モジュールの名前>/` に置き、`GoPath` を `.` にした。
+
+| Yaegi で動かすコード                                                                             | Chromium と WebKit の結果                                                   |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `syscall/js`、`syscall`、`unsafe`、`os/exec` を import する                                      | どれも `import "…" error: unable to find source related to: "…"` で失敗した |
+| `main.go` が、別のディレクトリの `play/greet` を import する                                     | 標準出力が出た                                                              |
+| `main` の package を 2 つのファイルに分け、`play/internal/a` が `play/internal/b` を import する | 標準出力が出た                                                              |
+| `net/http` で、同じ origin のパスを取得する                                                      | 応答を読めた                                                                |
+| `net/http` で、別の origin のパスを取得する                                                      | 応答は読めなかった。別の origin のサーバーにリクエストが届いた              |
+
+- import が失敗するのは、`stdlib.Symbols` に symbol が無く、Yaegi がソースを読むファイルシステムに、訪問者のファイルしか無いためである。
+- `net/http` のリクエストの扱いは、ADR-0064 が決める。
+  - ADR-0064: [Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す](0064-go-net-http-same-origin-only.md)
 - `COPY` と `pg_read_file` のような、ファイルを読み書きする SQL が、Web Worker の外のファイルを読み書きできるかは、未確認である。
-- 複数の package に分けたファイルの import を、Yaegi の WASM で解決できるかは、未確認である。
 
 ## Considered Options
 
@@ -135,4 +148,5 @@ ADR-0045 の Decision 6 と同じく、エージェントの操作で読み込�
 - スイッチがオンの間は、利用者が実行のボタンを押していなくても、エージェントの操作で、PGlite と Yaegi の WASM を読み込む。
 - `GoRunner` は、Yaegi に `stdlib.Symbols` のほかの symbol を渡さない。渡すときは、Go を実行する操作に確認を出すかを決め直す。
 - `GoRunner` に、複数の package の import を解決する処理が要る。
-- Yaegi で動かすコードは、`net/http` を import できる。ブラウザの中で外部へリクエストを送れるかを、実装のタスクで確認する。
+- Yaegi で動かすコードは、`net/http` を import できる。ほかの origin へのリクエストの扱いは、ADR-0064 が決める。
+  - ADR-0064: [Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す](0064-go-net-http-same-origin-only.md)

@@ -78,10 +78,10 @@ apps/playground/
   go/index.html           Go を動かすツールのエントリーポイント
   src/
     node/                 Node の実行環境のページ。レイアウト、ペインのコンポーネント、Context、選択の状態、起動と保存を進める React の外のモジュール
-    sql/                  SQL だけを動かすツールのページ
-    go/                   Go を動かすツールのページ
-    sql-console/          SQL の入力欄と、結果の表
-    code-editor/          EditorFrame に、エディタのエンジンを渡すコンポーネント
+    sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
+    go/                   Go を動かすツールのページ。ファイル、実行中かどうか、出力、実行とテストの関数を持つ React の外のモジュール
+    sql-console/          SQL の入力欄、結果の表、実行計画のツリー
+    code-editor/          EditorFrame に渡すエディタのエンジン（CodeMirror 6）と、拡張の組み立て
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
     ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
@@ -91,19 +91,21 @@ packages/
   node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
     webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
     guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
-  go-runtime/src/         GoRunner の型、Yaegi の読み込みと実行
+  go-runtime/src/         GoRunner の型、import のパスと、テストを持つ package を求める関数
+    worker/               Yaegi を Web Worker で動かす GoRunner の実装、Web Worker の fetch を差し替える処理
+  go-runtime/go/          WASM にする Go のコード。Yaegi で訪問者のファイルを実行する処理
 ```
 
 - キャンバスとスライドのエディタは、追加するときに、`apps/playground/src/` の同じ階層に並べる。
   - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
   - スライドのエディタのディレクトリ（`slides/`）と、`@fukuemon/slides` への import の向きは、[スライドの Design Doc](../../docs/design/features/slides/DesignDoc.md#ディレクトリと依存) にある。Oxlint は、`slides/` も、ツールのページの間の import を止める対象にする。
-- `code-editor/` は、Node の実行環境のページ（`src/node/`）と、スライドのエディタのページ（`src/slides/`）が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
+- `code-editor/` は、Node の実行環境のページ（`src/node/`）、スライドのエディタのページ（`src/slides/`）、Go を動かすツールのページ（`src/go/`）、`sql-console/` が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
   - `@fukuemon/go-runtime`（`packages/go-runtime`）: Go のコードを実行する処理。
   - 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。`@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
-  - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。
+  - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。`@fukuemon/go-runtime` の WASM だけは、package の `build` の script がビルドする（[Go](#go)）。
 - この文書では、`node-runtime/` は `packages/node-runtime/src/` を、`webcontainer/` と `guest/` はその下のディレクトリを指す。
 - `@fukuemon/sql-runtime` は、エントリーポイントを 2 つに分ける。
   - 型と、PGlite で SQL を実行して結果の形にする関数。このエントリーポイントは、PGlite から型だけを import する。関数はブラウザと Node の両方で動くので、このエントリーポイントは DOM と Worker の API を使わない。`Store` の型も、このエントリーポイントに置く。
@@ -124,7 +126,7 @@ flowchart TB
   sql["src/sql"]
   go["src/go"]
   console["sql-console"]
-  editor["code-editor"]
+  codeeditor["code-editor"]
   runtime["@fukuemon/node-runtime"]
   database["@fukuemon/sql-runtime"]
   runner["@fukuemon/go-runtime"]
@@ -136,7 +138,7 @@ flowchart TB
 
   node --> runtime
   node --> console
-  node --> editor
+  node --> codeeditor
   node --> project
   node --> workspace
   node --> database
@@ -150,13 +152,15 @@ flowchart TB
   sql --> ui
   sql --> ai
   go --> runner
+  go --> codeeditor
   go --> project
   go --> workspace
   go --> ui
   go --> ai
   console --> database
+  console --> editor
   console --> ui
-  editor --> ui
+  codeeditor --> ui
   runtime --> database
   workspace --> project
   project --> pp
@@ -361,18 +365,44 @@ flowchart TB
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
   - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
-  - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値を、props で受ける。`status` は、`useSyncExternalStore` で読む。
+  - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値、入力欄のファイルの名前、DB が止まったときに出す案内の文を、props で受ける。`status` は、`useSyncExternalStore` で読む。
+  - DB が止まった後の戻り方は `SqlDatabase` の実装ごとに違うので、案内の文は呼ぶ側が渡す。
+  - 実行の結果は、`sql-console/` のコンポーネントが持ち、表に出す。
   - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
-- `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
+- `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
 - Node の実行環境では、実行のボタンの、実行中かどうかの値を、`useTransition` で持つ。
 - SQL だけを動かすツールと、Go を動かすツールでは、`src/sql/` と `src/go/` の React の外のモジュールが、実行中かどうかの値を持つ。コンポーネントは、この値を `useSyncExternalStore` で読む。AI からの操作で実行している間も、ボタンを実行中の表示にするためである。モジュールは、PGlite と Yaegi を読み込んでいる間も、値を実行中にする。
 - SQL だけを動かすツールの PGlite と、Go を動かすツールの Yaegi は、訪問者が実行のボタンを押したときと、AI からの操作の `sql_run_query`、`go_run`、`go_test` が呼ばれたときに読み込む。ページを開いたときには、読み込まない。
   - ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../docs/adr/0063-ai-operations-for-sql-and-go.md)
+
+SQL だけを動かすツールのページは、次のとおり組む。
+
+- `src/sql/` の React の外のモジュールが、埋め込みの ID ごとに 1 つの `SqlSession` を作る。`SqlSession` は、次のものを持つ。
+  - 入力欄の SQL を持つ store と、値を変える関数。初期値は、プロジェクトの `files` の、`open` のファイルの中身である。
+  - 実行中かどうかの store。
+  - `SqlDatabase` を Web Worker で動かす実装（`@fukuemon/sql-runtime`）と、PGlite の読み込みを始める関数。
+  - 実行する関数。`SqlDatabase` の `run` を呼び、`SqlResponse` を返す。呼んでから返すまで、実行中かどうかの値を実行中にする。
+  - 実行する関数を実行中に呼んだときは、実行せずに `error` を持つ値を返す。
+- 同じモジュールが、ページの URL のクエリからプロジェクトを読み、埋め込みの ID の `SqlSession` を返す関数を持つ。ページは、この関数の Promise を `use` で読む。
+- ページは、このモジュールの値を `useSyncExternalStore` で読み、`sql-console/` のコンポーネントに渡す。
+- 入力欄のエディタは、CodeMirror 6 にする。Ctrl か ⌘ と Enter で実行する。
+- CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境、Go を動かすツール、スライドのエディタも、同じ組み立てを使い、言語の拡張だけを足す。
+  - 行番号、アクティブ行のハイライト、インデントガイド、対応する括弧のハイライトを出す。折りたたみのガターは出さない。
+  - Tab キーでインデントする。補完の一覧が開いているときは、Tab キーで補完を確定する。
+  - Esc の後 2 秒の間の Tab キーで、エディタの外へ移る。このことを、実行のボタンの横に書く。
+  - 選択があるときは、アクティブ行のハイライトを消す。ハイライトは選択の範囲より上に描かれ、選択を隠すためである。
+  - Ctrl か ⌘ と F で、検索と置換のパネルをエディタの上端に出す。パネルの文言は日本語にする。
+  - 置換の行は、最初は畳んで出し、パネルのボタンで開く。狭い幅でも、エディタの行が見えるようにするためである。
+  - 補完の一覧の行は、44px の高さにする。
+  - CodeMirror は、ビルドで `code-editor` のチャンクに分け、エディタを持つページの間で共有する。
+  - 色は、`packages/ui` のテーマ変数を読む。CodeMirror のデフォルトの色は、ダークのテーマで読めないので残さない。
+  - フォーカスの表示は、エディタを囲む要素に付ける。CodeMirror が作る要素には `focus-ring` のユーティリティを付けられないので、検索パネルの入力欄とボタンには、同じ値を書く。
+- 実行のボタンを押してから結果が出るまで、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つの段階を `Loading` で出す。
 
 ### プロジェクト
 
@@ -387,6 +417,8 @@ ADR-0049: [記事の埋め込みの初期ファイルと設定を、`apps/web` �
 - JSON を読めないときと、埋め込みの ID に当たるプロジェクトが無いときは、ツールのページに、エラーと、`https://fukuemon.dev/playground` へのリンクを出す。デフォルトのプロジェクトは開かない。
 - デフォルトのプロジェクトは、`apps/playground` が、ツールごとに 1 つ持つ。置き場は、`project/` である。
 - JSON と `playground.json` の型と schema は、`@fukuemon/playground-project` が持つ。`apps/web` のビルドは、この schema で `playground.json` を検証する。`project/` は、読んだ JSON を、同じ schema で検証する。schema に合わないときは、JSON を読めないときと同じ表示にする。
+- 埋め込みの ID が `<英小文字、数字、ハイフン>/<英小文字、数字、ハイフン>` の形式に合わないときと、JSON の `tool` が開いたページのツールと違うときも、JSON を読めないときと同じ表示にする。
+  - 形式に合わない ID では、JSON を取得せず、エラーの文に ID を出さない。URL を作った人の任意の文を、ページに出さないためである。
 
 JSON は、次の値を持つ。
 
@@ -409,6 +441,7 @@ ADR-0050: [訪問者のファイルを、埋め込みの ID ごとに、IndexedD
 
 - キーは、ツールの名前と、埋め込みの ID の組である。デフォルトのプロジェクトは、固定のキーを使う。
 - SQL だけを動かすツールは、入力欄の SQL を保存する。Go を動かすツールは、ファイルを保存する。
+- Go を動かすツールのレコードは、ファイルのパスと中身、訪問者が作ったディレクトリ、保存した時刻、初期ファイルのバージョンを持つ。ファイルを変えると、レコードを丸ごと置き換える。保存の途中に来た変更は、最新の 1 件だけを後で書く。
 
 Node の実行環境は、次のとおり保存する。
 
@@ -528,9 +561,20 @@ type SqlResult = {
 ```
 
 - 複数の文を 1 回で渡したときは、`results` に、文ごとの結果が入る。SQL の画面は、最後の文の結果を表示する。
+  - Web Worker で動かす実装は、最後の文のほかの結果の `rows` を空にしてから送る。`fields`、`affectedRows`、`totalRows` は残す。
 - 1 つの文が失敗したときは、全部を取り消す。SQL の画面は、エラーと、全部を取り消したことを表示する。
+  - 失敗したときは、`ROLLBACK` を流す。SQL の中の `BEGIN` で始めたトランザクションが失敗したまま残ると、次の SQL が全て失敗するためである。
+  - 前の実行で `BEGIN` を流し、開いたままのトランザクションも、この `ROLLBACK` で取り消す。`ROLLBACK` も失敗したときは、元のエラーを返す。
+  - SQL の画面が、全部を取り消したことを表示するのは、`error` が `code`（SQLSTATE）を持つときだけである。`code` を持たない `error`（PGlite の読み込みの失敗、Web Worker の異常終了）では、取り消した文は無いので、メッセージだけを出す。
 - 1 つの結果が 100,000 行を超えるときは、`rows` に先頭の 100,000 行を入れ、`totalRows` に全体の行の数を、`truncated` に `true` を入れる。SQL の画面は、切ったことと、全体の行の数を表示する。
 - SQL の画面は、結果をページ送りで表示する。1 ページの行の数は、訪問者が 10、50、100、500 から選ぶ。デフォルトは 100 である。
+- 結果の列が `QUERY PLAN` の 1 つだけのときは、実行計画として表示する。
+  - 1 行で JSON の値のときは、`FORMAT JSON` の出力として、ノードのツリー（`TreeView`）と、`Planning Time` と `Execution Time` を出す。
+  - それ以外は、行をつないだテキストで出す。
+  - SQL の画面は、訪問者が書いた文を書き換えて実行し直さない。`EXPLAIN ANALYZE` は文を実際に実行するので、書き換えて 2 回実行すると、`INSERT` のような文も 2 回実行されるためである。
+  - 実行計画のツリーは、使うのが `sql-console/` だけなので、`packages/ui` に置かず `sql-console/` に置く。
+- 結果のセルは、`NULL` を `NULL` と出し、空の文字列と見分けられるようにする。日時は ISO 8601、`bytea` は `\x` で始まる 16 進数、JSON とそのほかのオブジェクトは JSON の文字列で出す。
+- SQL だけを動かすツールの DB の中身は、保存しない。ページを開き直すと、初期データの SQL を実行した状態に戻る。
 - `run` は、SQL の失敗でも、DB が止まっているときでも、Promise を失敗させず、`error` を持つ値を返す。
 - SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`@fukuemon/sql-runtime` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
   - `guest/` の DB のプロセスのスクリプトは、この関数を import し、ビルドで 1 つのファイルに束ねる。PGlite と `pglite-socket` は束ねず、実行環境の中で `npm install` する。
@@ -547,6 +591,70 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
 - `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。
+- Web Worker で動かす実装は、`SqlDatabase` に加えて、読み込みの段階の store（`idle`、`loading`、`seeding`、`ready`、`failed`）と、読み込みを始める関数を持つ。Web Worker は、最初に読み込みを始める関数か `run` を呼んだときに作る。
+- PGlite を読み込めないとき、初期データの SQL が失敗したとき、Web Worker を作れないときは、`run` が `error` を持つ値を返し、Web Worker を終了する。次の `run` で、Web Worker を作り直す。
+  - 初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
+- Web Worker を終了し、待っている `run` に `error` を返す処理は、`@fukuemon/sql-runtime` の中の 1 つの関数に置く。
+
+### Go
+
+Go を動かすツールは、Yaegi のインタプリタの WASM で、訪問者の Go のコードを動かす。  
+ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](../../docs/adr/0037-go-with-yaegi.md)
+
+ファイルの形と、実行する範囲は、次のとおり。
+
+- ファイルは、ディレクトリに分けて持つ。訪問者が作った空のディレクトリも、一覧に出して保存する。
+- ルートのディレクトリの import のパスは、ルートの `go.mod` の `module` の行から読む。`go.mod` が無いときと、`module` の行が無いときは、`play` にする。
+  - ディレクトリの package は、`<モジュールの名前>/<ディレクトリ>` で import する。ローカルの Go と同じ書き方にして、訪問者がファイルをコピーすれば `go run` で動くようにするためである。
+- 実行のボタンは、ルートのディレクトリの直下にある `main` の package を動かす。テストのボタンは、テストのファイル（`_test.go`）を持つ全ての package のテストを、package の名前の順に動かす。
+- テストは、package ごとに、Web Worker と WASM のインスタンスを作り直して動かす。`testing.Main` が `os.Exit` で終わるためである。package ごとに、`go test` と同じ `ok` か `FAIL` の行を、出力に足す。
+- 終了コードは、正常に終わると 0、コンパイルのエラーとテストの失敗は 1、panic は 2、`os.Exit` を呼んだときは渡した値である。テストは、どれかの package が失敗すると 1 にする。
+
+`GoRunner`（`@fukuemon/go-runtime`）の形は、次のとおり。
+
+```ts
+type GoRunner = {
+  phase: Store<LoadPhase>;
+  load: () => Promise<void>;
+  run: (files: GoFiles, onOutput: (chunk: string) => void) => GoExecution;
+  test: (files: GoFiles, onOutput: (chunk: string) => void) => GoExecution;
+};
+
+type GoExecution = { done: Promise<GoExit>; stop: () => void };
+
+type GoExit =
+  | { kind: "exited"; exitCode: number }
+  | { kind: "stopped" }
+  | { kind: "failed"; message: string };
+```
+
+- `load` は、Yaegi の WASM を取得して、ページのメインスレッドで 1 度だけコンパイルする。実行のたびに、コンパイルした `WebAssembly.Module` を、新しい Web Worker に渡す。
+- `stop` は、Web Worker を終了させる。無限ループでも止まり、次の実行は新しい Web Worker で動く。
+- Yaegi に渡す symbol は、`stdlib.Symbols` だけである。Yaegi がソースを読むファイルシステムには、訪問者のファイルだけを、`src/<モジュールの名前>/` に置く。
+  - ADR-0063: [AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む](../../docs/adr/0063-ai-operations-for-sql-and-go.md)
+- Web Worker は、Yaegi を起動する前に、Web Worker の `fetch` を、同じ origin へのリクエストだけを通すものに差し替える。
+  - ADR-0064: [Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す](../../docs/adr/0064-go-net-http-same-origin-only.md)
+- Yaegi の標準出力と標準エラーは、1 つの出力として、出た順に `onOutput` に渡す。エラーの中のファイルのパスは、ツールのルートからのパスにする。
+
+WASM のビルドと配信は、次のとおり。
+
+- `@fukuemon/go-runtime` の `build` の script が、`go/` のコードを `GOOS=js GOARCH=wasm` でビルドする。WASM はコミットしない。`apps/playground` の `dev` と `build` は、先にこの script を動かす。
+- WASM は、2 つのファイルに分けて配る。WASM の全体が、Cloudflare Workers の静的アセットの 1 ファイルの上限（25 MiB）を超えるためである。ブラウザは、2 つを順につないで、取得しながらコンパイルする。
+- Go の `lib/wasm/wasm_exec.js` は、`go-runtime/src/worker/vendor/` にコミットする。ビルドの script は、mise で入れた Go のものと中身を比べ、違うときは失敗する。
+
+ページは、次のとおり組む。
+
+- `src/go/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、次のものを持つ。
+  - ファイルとディレクトリの一式の store、実行中かどうかの store、出力の store。
+  - ファイルの一覧、読み込み、書き込み、ディレクトリの作成、名前の変更、削除の関数。
+  - 実行とテストの関数。時間の上限を受け取り、実行を始めたときのファイルのコピーを `GoRunner` に渡す。実行中に呼んだときは、実行せずに、実行中であることを返す。
+- 出力の store は、1,000,000 文字を上限にし、上限に達した後の出力を捨てる。
+- 画面は、左にファイルの一覧（`FileTree`）、右上にエディタ（`EditorFrame`）、右下に出力（`TerminalFrame`）を置く。`SplitPane` で、幅と高さを変えられる。ヘッダに、実行のボタン、テストのボタン、停止のボタンを置く。
+- エディタのファイルごとの `EditorState` は、ページが持つ。タブを切り替えても、元に戻す履歴とカーソルの位置を残すためである。
+- 出力は、`--- PASS` と `ok` の行、`--- FAIL` と `FAIL` の行、コンパイルのエラーと panic の行を、色で分ける。
+- 出力の欄の下に、Yaegi で動かしていることと、`iter` と一部のジェネリックな関数を使えないことを、常に出す。
+- 実行のボタンを押してから終わるまで、待っている段階を `Loading` で出す。段階は、Yaegi の読み込み、実行、テストの実行の 3 つである。
+- ファイルとディレクトリを消すときは、`ConfirmDialog` で確認する。
 
 ## Interface
 

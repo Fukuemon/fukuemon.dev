@@ -133,7 +133,10 @@ const noPackagesToApps: Restriction[] = [
 
 export default defineConfig({
   plugins: ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y", "import"],
-  ignorePatterns: ["docs/design/prototypes/**/vendor/"],
+  ignorePatterns: [
+    "docs/design/prototypes/**/vendor/",
+    "packages/go-runtime/src/worker/vendor/wasm_exec.js",
+  ],
   rules: {
     "import/no-cycle": "error",
     "react/rules-of-hooks": "error",
