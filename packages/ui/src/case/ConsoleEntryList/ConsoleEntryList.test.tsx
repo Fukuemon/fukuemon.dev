@@ -160,14 +160,90 @@ describe("ConsoleEntryList", () => {
     await userEvent.keyboard("{Enter}");
     expect(levelButton(/^debug/)).toHaveAttribute("aria-pressed", "true");
     for (let i = 0; i < 5; i++) await userEvent.tab();
-    expect(screen.getByRole("region", { name: "ログの行" })).toHaveFocus();
-    await userEvent.tab();
+    await userEvent.keyboard("{Home}{ArrowDown}{ArrowDown}{Enter}");
     const root = treeItem(/^\{id: 42/);
-    expect(root).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    const opened = root.getAttribute("aria-expanded");
+    await userEvent.keyboard(" ");
+    expect({ opened, closed: root.getAttribute("aria-expanded") }).toStrictEqual({
+      opened: "true",
+      closed: "false",
+    });
+  });
+
+  it("行の領域で Tab のキーが止まるのは、一番新しい行の 1 か所だけにする", async () => {
+    render(
+      <>
+        <Default />
+        <button type="button">後</button>
+      </>,
+    );
+    for (let i = 0; i < 6; i++) await userEvent.tab();
+    const stop = document.activeElement;
+    await userEvent.tab();
+    expect({ stop: stop === row(6), next: document.activeElement?.textContent }).toStrictEqual({
+      stop: true,
+      next: "後",
+    });
+  });
+
+  it("行で上下の矢印のキーを押すと前後の行へ、Home と End で端の行へ移る", async () => {
+    render(<Default />);
+    row(6).focus();
+    const focused = async (keys: string) => {
+      await userEvent.keyboard(keys);
+      return rows().indexOf(document.activeElement as HTMLElement);
+    };
+    expect([
+      await focused("{ArrowUp}"),
+      await focused("{Home}"),
+      await focused("{ArrowUp}"),
+      await focused("{ArrowDown}"),
+      await focused("{End}"),
+      await focused("{ArrowDown}"),
+    ]).toStrictEqual([5, 0, 0, 1, 6, 6]);
+  });
+
+  it("行で右の矢印のキーを押すと木へ入り、木の根で左の矢印のキーを押すと行へ戻る", async () => {
+    render(<Default />);
+    row(2).focus();
     await userEvent.keyboard("{ArrowRight}");
-    expect(root).toHaveAttribute("aria-expanded", "true");
+    const entered = document.activeElement === treeItem(/^\{id: 42/);
     await userEvent.keyboard("{ArrowLeft}");
-    expect(root).toHaveAttribute("aria-expanded", "false");
+    expect({ entered, back: document.activeElement === row(2) }).toStrictEqual({
+      entered: true,
+      back: true,
+    });
+  });
+
+  it("1 行に木が 2 つあるとき、木の端の上下の矢印のキーで、隣の木、行、次の行へ移る", async () => {
+    render(<Default />);
+    row(5).focus();
+    const map = treeItem(/^Map\(2\)/);
+    const set = treeItem(/^Set\(2\)/);
+    const at = async (keys: string) => {
+      await userEvent.keyboard(keys);
+      const active = document.activeElement;
+      return active === map
+        ? "map"
+        : active === set
+          ? "set"
+          : rows().indexOf(active as HTMLElement);
+    };
+    expect([
+      await at("{ArrowRight}"),
+      await at("{ArrowDown}"),
+      await at("{ArrowUp}"),
+      await at("{ArrowUp}"),
+      await at("{ArrowRight}{ArrowDown}{ArrowDown}"),
+    ]).toStrictEqual(["map", "set", "map", 5, 6]);
+  });
+
+  it("止まる行が上限かフィルタで消えたら、一番新しい行を止まる箇所にする", async () => {
+    render(<Default />);
+    row(2).focus();
+    await userEvent.click(levelButton(/^info/));
+    expect(rows().map((item) => item.tabIndex)).toStrictEqual([-1, -1, -1, -1, -1, 0]);
   });
 
   it("ログレベルのボタンは 28 px、ツリーの項目は 24 px 以上の高さで押せる", () => {
@@ -379,28 +455,19 @@ describe("preview", () => {
     expect(preview(value, isNested)).toBe(expected);
   });
 
-  it("行の領域のフォーカスの輪は、領域の内側に引く（ADR-0066）", () => {
+  it("行と値の木の項目のフォーカスの輪は、要素の内側に引く（ADR-0066）", async () => {
     render(<Default />);
-    const rows = screen.getByRole("region", { name: "ログの行" });
-    const frame = rows.parentElement as HTMLElement;
-    const before = getComputedStyle(frame, "::after").outlineStyle;
-    rows.focus();
-    const ring = getComputedStyle(frame, "::after");
-    expect({
-      before,
-      ring: [ring.outlineStyle, ring.outlineOffset],
-      own: getComputedStyle(rows).outlineStyle,
-    }).toStrictEqual({ before: "none", ring: ["solid", "-2px"], own: "none" });
-  });
-
-  it("値の木の項目にフォーカスを置くと、行の領域の外側の輪は出ず、項目の輪が内側に引かれる（ADR-0066）", () => {
-    render(<Default />);
-    const frame = screen.getByRole("region", { name: "ログの行" }).parentElement as HTMLElement;
-    const item = screen.getAllByRole("treeitem")[0] as HTMLElement;
-    item.focus();
-    expect({
-      frame: getComputedStyle(frame, "::after").outlineStyle,
-      item: [getComputedStyle(item).outlineStyle, getComputedStyle(item).outlineOffset],
-    }).toStrictEqual({ frame: "none", item: ["solid", "-2px"] });
+    row(2).focus();
+    await userEvent.keyboard("{ArrowDown}");
+    const ring = (element: Element) => [
+      getComputedStyle(element).outlineStyle,
+      getComputedStyle(element).outlineOffset,
+    ];
+    const rowRing = ring(row(3));
+    await userEvent.keyboard("{ArrowUp}{ArrowRight}");
+    expect({ row: rowRing, item: ring(treeItem(/^\{id: 42/)) }).toStrictEqual({
+      row: ["solid", "-2px"],
+      item: ["solid", "-2px"],
+    });
   });
 });

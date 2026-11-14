@@ -64,4 +64,11 @@ export const Error: Story = {
   },
 };
 export const LongValue: Story = { name: "長い値", args: { entries: [LONG_ENTRY] } };
+export const KeyboardInTree: Story = {
+  name: "キーボードで値の木へ入る",
+  play: async ({ canvas, userEvent }) => {
+    canvas.getAllByRole("listitem")[2]?.focus();
+    await userEvent.keyboard("{ArrowRight}{Enter}{ArrowDown}");
+  },
+};
 export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { focusVisible: true } } };

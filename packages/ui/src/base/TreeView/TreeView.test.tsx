@@ -3,9 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
+import { TreeView } from "./TreeView";
 import * as stories from "./TreeView.stories";
 
-const { Collapsed, Compact, Expanded, WithContent, CompactBody } = composeStories(stories);
+const { Collapsed, Compact, Expanded, WithContent, CompactBody, WithoutSelect } =
+  composeStories(stories);
+
+const EDGE_ITEMS = [{ id: "a", label: "a", children: [{ id: "a/b", label: "b" }] }];
 
 const item = (name: string) => screen.getByRole("treeitem", { name });
 
@@ -72,6 +76,42 @@ describe("TreeView", () => {
     expect(item("token.ts")).toHaveAttribute("aria-selected", "false");
     const tabStops = screen.getAllByRole("treeitem").filter((el) => el.tabIndex === 0);
     expect(tabStops).toEqual([item("package.json")]);
+  });
+
+  it("選ぶ操作の無い木では、Enter と Space のキーで枝を開閉する", async () => {
+    render(<WithoutSelect />);
+    await userEvent.tab();
+    const states = [];
+    for (const key of ["{Enter}", " ", " ", "{Enter}"]) {
+      await userEvent.keyboard(key);
+      states.push(item("src").getAttribute("aria-expanded"));
+    }
+    expect(states).toStrictEqual(["true", "false", "true", "false"]);
+  });
+
+  it("選ぶ操作のある木では、Space のキーで枝を開閉せず、選ばない", async () => {
+    render(<Expanded />);
+    await userEvent.tab();
+    await userEvent.keyboard("{Home} ");
+    expect([item("src").getAttribute("aria-expanded"), item("src").ariaSelected]).toStrictEqual([
+      "true",
+      "false",
+    ]);
+  });
+
+  it("isTabStop を false にすると、どの項目も Tab のキーの順に入れない", () => {
+    render(<TreeView defaultExpandedIds={["a"]} isTabStop={false} items={EDGE_ITEMS} label="値" />);
+    expect(screen.getAllByRole("treeitem").map((el) => el.tabIndex)).toStrictEqual([-1, -1]);
+  });
+
+  it("木の端の上下の矢印と、閉じた根の左の矢印で onEdge を呼び、端でない項目では呼ばない", async () => {
+    const keys: string[] = [];
+    render(<TreeView items={EDGE_ITEMS} label="値" onEdge={(key) => keys.push(key)} />);
+    await userEvent.tab();
+    await userEvent.keyboard(
+      "{ArrowUp}{ArrowLeft}{ArrowRight}{ArrowRight}{ArrowLeft}{ArrowDown}{ArrowDown}",
+    );
+    expect(keys).toStrictEqual(["ArrowUp", "ArrowLeft", "ArrowDown"]);
   });
 
   it("項目は 44 px の高さで押せ、枝を押すと開閉する", async () => {

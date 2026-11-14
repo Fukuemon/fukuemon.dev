@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { TreeView } from "../../base/TreeView/TreeView";
 import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
@@ -102,15 +102,80 @@ function CheckIcon({ isChecked }: { isChecked: boolean }) {
   );
 }
 
-function EntryRow({ entry }: { entry: ConsoleEntry }) {
+type RowMove = "previous" | "next" | "first" | "last";
+
+const treeItems = (tree: Element | undefined) => [
+  ...(tree?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? []),
+];
+
+type EntryRowProps = {
+  entry: ConsoleEntry;
+  /** Tab のキーで止まる行か。一覧の中で 1 つの行だけを止まる箇所にする。 */
+  isTabStop: boolean;
+  onFocus: () => void;
+  /** フォーカスを、この行から見た前後か端の行へ移す。 */
+  onMove: (to: RowMove) => void;
+  rowRef: (element: HTMLLIElement | null) => void;
+};
+
+/**
+ * コンソールの 1 行。行を 1 つのフォーカスの止まる箇所にし、行の中の値の木へは矢印のキーで入る。
+ * 行で右の矢印か Enter を押すと、最初の木の最初の項目へ移る。木の根で左の矢印を押すと、行へ戻る。
+ * 木の最初の項目で上の矢印を押すと、前の木の最後の項目か、前の木が無ければ行へ移る。最後の項目で下の矢印を押すと、次の木の最初の項目か、次の木が無ければ次の行へ移る。
+ */
+function EntryRow({ entry, isTabStop, onFocus, onMove, rowRef }: EntryRowProps) {
+  const element = useRef<HTMLLIElement>(null);
   // ツリーの項目は文字の上に余白を持つので、値がツリーで始まる行は、印と時刻をその 1 行目にそろえる
   const startsWithTree = entry.args[0] !== undefined && isExpandable(entry.args[0]);
+  const trees = () => [...(element.current?.querySelectorAll('[role="tree"]') ?? [])];
+  const enterTree = (tree: Element | undefined, at: "first" | "last") => {
+    const items = treeItems(tree);
+    (at === "first" ? items[0] : items.at(-1))?.focus();
+  };
+  const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>) => {
+    // 木の項目から上がってきたキーは、木が扱う
+    if (event.target !== event.currentTarget) return;
+    const keys: Record<string, () => void> = {
+      ArrowUp: () => onMove("previous"),
+      ArrowDown: () => onMove("next"),
+      Home: () => onMove("first"),
+      End: () => onMove("last"),
+      ArrowRight: () => enterTree(trees()[0], "first"),
+      Enter: () => enterTree(trees()[0], "first"),
+    };
+    const action = keys[event.key];
+    if (!action) return;
+    event.preventDefault();
+    action();
+  };
+  const handleEdge = (treeIndex: number) => (key: "ArrowUp" | "ArrowDown" | "ArrowLeft") => {
+    const all = trees();
+    if (key === "ArrowDown") {
+      if (all[treeIndex + 1]) enterTree(all[treeIndex + 1], "first");
+      else onMove("next");
+    } else if (key === "ArrowUp" && all[treeIndex - 1]) {
+      enterTree(all[treeIndex - 1], "last");
+    } else {
+      element.current?.focus();
+    }
+  };
   return (
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- 行を移る一覧の行は、矢印のキーで前後の行と行の中の木へ移る (context/conventions.md)
     <li
       className={clsx(
-        "flex gap-2 border-b border-l-2 border-b-border py-0.5 pr-4 pl-3.5 last:border-b-0",
+        "flex gap-2 border-b border-l-2 border-b-border py-0.5 pr-4 pl-3.5 last:border-b-0 focus-visible:focus-ring-inset",
         ROW_CLASS_NAME[entry.level],
       )}
+      onFocus={(event) => {
+        if (event.target === event.currentTarget) onFocus();
+      }}
+      onKeyDown={handleKeyDown}
+      ref={(node) => {
+        element.current = node;
+        rowRef(node);
+      }}
+      // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 行を移る一覧は、1 つの行だけを Tab のキーの順に入れる (context/conventions.md)
+      tabIndex={isTabStop ? 0 : -1}
     >
       <span className={clsx("flex h-4 items-center", startsWithTree && "mt-1")}>
         <LevelIcon level={entry.level} />
@@ -137,7 +202,9 @@ function EntryRow({ entry }: { entry: ConsoleEntry }) {
                 <TreeView
                   density="compact"
                   items={[toTreeNode(arg, `${entry.id}/${index}`)]}
+                  isTabStop={false}
                   label="ログの値"
+                  onEdge={handleEdge(entry.args.slice(0, index).filter(isExpandable).length)}
                 />
               </div>
             ) : (
@@ -190,6 +257,21 @@ export function ConsoleEntryList({
   };
 
   const lastId = visible.at(-1)?.id;
+  // 行は 1 つだけを Tab のキーで止まる箇所にする。止まっていた行が上限かフィルタで消えたときは、一番新しい行にする
+  const [focusedId, setFocusedId] = useState<string | undefined>(undefined);
+  const tabStopId = visible.some((entry) => entry.id === focusedId) ? focusedId : lastId;
+  const rowRefs = useRef(new Map<string, HTMLLIElement>());
+  const moveFocus = (index: number, to: RowMove) => {
+    const target = {
+      previous: visible[index - 1],
+      next: visible[index + 1],
+      first: visible[0],
+      last: visible.at(-1),
+    }[to];
+    if (!target) return;
+    setFocusedId(target.id);
+    rowRefs.current.get(target.id)?.focus();
+  };
   const paneState: ToolPaneState =
     state ??
     (entries.length === 0
@@ -245,14 +327,12 @@ export function ConsoleEntryList({
   return (
     <ToolPane state={paneState} title={title} toolbar={toolbar}>
       {/* 高さを呼ぶ側が決めたときは、題とボタンを残して、行の領域だけをスクロールさせる */}
-      <div className="flex min-h-0 flex-1 flex-col focus-ring-frame">
+      <div className="flex min-h-0 flex-1 flex-col">
         <section
           aria-label="ログの行"
           className="min-h-0 flex-1 overflow-y-auto"
           onScroll={handleScroll}
           ref={rowsRef}
-          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 縦に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
-          tabIndex={0}
         >
           {visible.length === 0 ? (
             <p className="p-3 text-body-compact text-text-secondary">
@@ -260,8 +340,18 @@ export function ConsoleEntryList({
             </p>
           ) : (
             <ol className="flex flex-col">
-              {visible.map((entry) => (
-                <EntryRow entry={entry} key={entry.id} />
+              {visible.map((entry, index) => (
+                <EntryRow
+                  entry={entry}
+                  isTabStop={entry.id === tabStopId}
+                  key={entry.id}
+                  onFocus={() => setFocusedId(entry.id)}
+                  onMove={(to) => moveFocus(index, to)}
+                  rowRef={(element) => {
+                    if (element) rowRefs.current.set(entry.id, element);
+                    else rowRefs.current.delete(entry.id);
+                  }}
+                />
               ))}
             </ol>
           )}
