@@ -11,8 +11,8 @@ import * as stories from "./FileTree.stories";
 const { Default, NoSelection, ReadOnly, Empty, Pending } = composeStories(stories);
 
 /** 50 ミリ秒後に決まる Promise。呼ぶ側が実行環境に問い合わせる間を表す。 */
-const delayed = <T,>(value: T) =>
-  new Promise<T>((resolve) => window.setTimeout(() => resolve(value), 50));
+const delayed = <T,>(value: T, ms = 50) =>
+  new Promise<T>((resolve) => window.setTimeout(() => resolve(value), ms));
 
 /** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
 function DelayedSelectTree() {
@@ -567,6 +567,22 @@ describe("FileTree", () => {
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("a.js{Enter}{Escape}");
     expect(screen.getByRole("textbox", { name: "新しいファイルの名前" })).toBeVisible();
+  });
+
+  it("呼ぶ側が決めるまで、別の欄を開くボタンを押しても欄を増やさない", async () => {
+    const onCreate = vi.fn(() => delayed({ id: "a.js" }, 1000));
+    render(
+      <FileTree
+        items={[]}
+        onCreate={onCreate}
+        onCreateDirectory={() => ({ id: "d" })}
+        onSelect={() => undefined}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: "新しいディレクトリ" }));
+    expect(screen.queryByRole("textbox", { name: "新しいディレクトリの名前" })).toBeNull();
   });
 
   it("待つ間にフォーカスが外れ、呼ぶ側が断ったときは、欄をやめる", async () => {

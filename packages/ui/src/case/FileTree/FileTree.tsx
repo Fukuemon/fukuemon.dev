@@ -14,7 +14,7 @@ import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
  */
 export type FileTreeResult = { id: string } | { error: string };
 
-/** 呼ぶ側が実行環境に問い合わせてから決めるときは、Promise で返す。FileTree は、決まるまで欄を開いたまま、確定を重ねて受けない。 */
+/** 呼ぶ側が非同期に決めるときは、Promise で返す。FileTree は、決まるまで欄を開いたまま、確定を重ねて受けない。 */
 export type FileTreeOutcome = FileTreeResult | Promise<FileTreeResult>;
 
 export type FileTreeProps = {
@@ -246,8 +246,12 @@ export function FileTree({
   if (editingTargetId !== undefined && editingTarget === undefined) setEdit({});
   const selected = selectedId === undefined ? undefined : find(items, selectedId);
 
-  const startRename = (id: string) => setEdit({ editing: { kind: "rename", id } });
+  // 呼ぶ側が決めるまでは、別の欄を開かない。決まった後の更新が、後から開いた欄を閉じるのを防ぐ
+  const isDeciding = useRef(false);
+  const startRename = (id: string) =>
+    !isDeciding.current && setEdit({ editing: { kind: "rename", id } });
   const startCreate = (kind: "file" | "directory") => {
+    if (isDeciding.current) return;
     const parent = selected?.node.children ? selected.node : selected?.parent;
     setAwaitingFirst(false);
     setEdit({ editing: { kind, parentId: parent?.id } });
@@ -286,7 +290,11 @@ export function FileTree({
           : editing?.kind === "rename"
             ? onRename?.(editing.id, name)
             : undefined;
-    return outcome instanceof Promise ? outcome.then(settle) : settle(outcome);
+    if (!(outcome instanceof Promise)) return settle(outcome);
+    isDeciding.current = true;
+    return outcome.then(settle).finally(() => {
+      isDeciding.current = false;
+    });
   };
 
   const cancel = () => {

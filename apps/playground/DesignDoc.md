@@ -310,7 +310,7 @@ type BackendProcess = {
 
 名前は、実装のときに変えてよい。
 
-- `BackendFiles` は、ファイルかディレクトリかを持つ一覧、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store と `files.readAll` は、`node-runtime/` の直下が、この操作から組み立てる。
+- `BackendFiles` は、ファイルかディレクトリかを持つ一覧、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store、`files.readAll`、`files.exists` は、`node-runtime/` の直下が、この操作から組み立てる。
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
   - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
