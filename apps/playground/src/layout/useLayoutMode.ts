@@ -10,7 +10,8 @@ export type LayoutMode = "wide" | "narrow" | "short";
 const SHORT_QUERY = "(max-height: 499.98px)";
 const NARROW_QUERY = "(max-width: 47.98rem)";
 
-function subscribe(onChange: () => void) {
+/** 配置を決める 2 つの media query の変化を購読し、解除の関数を返す。 */
+export function subscribeLayoutMode(onChange: () => void) {
   const queries = [SHORT_QUERY, NARROW_QUERY].map((query) => window.matchMedia(query));
   for (const query of queries) query.addEventListener("change", onChange);
   return () => {
@@ -18,7 +19,8 @@ function subscribe(onChange: () => void) {
   };
 }
 
-function snapshot(): LayoutMode {
+/** 今の画面の配置を返す。高さの条件を幅より先に見る。横に向けたスマートフォンは幅が 48rem を超えるためである（ADR-0072）。 */
+export function currentLayoutMode(): LayoutMode {
   if (window.matchMedia(SHORT_QUERY).matches) return "short";
   if (window.matchMedia(NARROW_QUERY).matches) return "narrow";
   return "wide";
@@ -26,5 +28,5 @@ function snapshot(): LayoutMode {
 
 /** 画面の幅と高さから配置を決め、回したときや窓の大きさを変えたときに替える。 */
 export function useLayoutMode(): LayoutMode {
-  return useSyncExternalStore(subscribe, snapshot, () => "wide");
+  return useSyncExternalStore(subscribeLayoutMode, currentLayoutMode, () => "wide");
 }

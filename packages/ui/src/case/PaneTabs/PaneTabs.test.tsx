@@ -80,4 +80,29 @@ describe("PaneTabs", () => {
       expect(screen.getByRole("heading", { name: "出力" })).toHaveClass("sr-only");
     },
   );
+
+  it("題を隠したペインに、描くものの無い操作を渡すと、題の帯を見た目に出さない", () => {
+    render(
+      <PaneTabs
+        items={[
+          {
+            id: "a",
+            label: "出力",
+            icon: null,
+            content: (
+              <ToolPane actions={false} title="出力">
+                中身
+              </ToolPane>
+            ),
+          },
+        ]}
+        label="ペイン"
+        onSelect={() => {}}
+        placement="bottom"
+        selectedId="a"
+      />,
+    );
+    const band = screen.getByRole("heading", { name: "出力" }).parentElement!;
+    expect(band.getBoundingClientRect().height).toBeLessThanOrEqual(1);
+  });
 });

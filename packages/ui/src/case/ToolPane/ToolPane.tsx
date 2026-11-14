@@ -45,8 +45,7 @@ export function ToolPaneTabPanel({ flush, children }: { flush: boolean; children
 }
 
 /**
- * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は四方に 1px の罫を引き、左と上へ 1px ずらして隣の罫に重ねる。
- * 隣の領域と高さや幅がそろわない並びでも、領域の間の罫は 1px になる。並べ方（flex、grid）は呼ぶ側が書き、領域の間の隙間を空けない。
+ * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は、左と上へ 1px ずらして隣に重ねる。ツールのページは使わず、ペインの間を 8px 空けて並べる（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  */
 export function ToolPaneGroup({ children }: { children: ReactNode }) {
   return <JoinedContext value>{children}</JoinedContext>;
@@ -73,7 +72,9 @@ export function ToolPane({
   const isJoined = use(JoinedContext);
   const tabPanel = use(TabPanelContext);
   const isTitleHidden = tabPanel !== undefined;
-  const hasActions = actions !== undefined && state.kind !== "pending";
+  // 条件で出す操作は false か null で渡るので、描くものが無いときは帯を操作の無い形にする
+  const hasActions =
+    actions !== undefined && actions !== null && actions !== false && state.kind !== "pending";
   return (
     <section
       aria-labelledby={titleId}

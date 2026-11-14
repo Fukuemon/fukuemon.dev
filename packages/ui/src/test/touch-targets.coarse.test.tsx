@@ -8,6 +8,7 @@ import * as actionMenu from "../base/ActionMenu/ActionMenu.stories";
 import * as button from "../base/Button/Button.stories";
 import * as disclosure from "../base/Disclosure/Disclosure.stories";
 import * as iconButton from "../base/IconButton/IconButton.stories";
+import * as splitPane from "../base/SplitPane/SplitPane.stories";
 import * as tabs from "../base/Tabs/Tabs.stories";
 import * as textField from "../base/TextField/TextField.stories";
 import * as treeView from "../base/TreeView/TreeView.stories";
@@ -20,15 +21,20 @@ import * as previewFrame from "../case/PreviewFrame/PreviewFrame.stories";
 const TARGETS =
   "button, a[href], input, summary, [role=tab], [role=treeitem], [role=menuitem], [role=separator][tabindex]";
 
-/** 見えている押せる要素のうち、幅か高さが 44px に届かないものを、名前と大きさで返す。 */
-const smallTargets = (root: ParentNode) =>
-  [...root.querySelectorAll(TARGETS)].flatMap((element) => {
+/** 見えている押せる要素の数と、そのうち幅か高さが 44px に届かないものの名前と大きさを返す。 */
+const measureTargets = (root: ParentNode) => {
+  const visible = [...root.querySelectorAll(TARGETS)].filter((element) => {
     const { width, height } = element.getBoundingClientRect();
-    if (width === 0 && height === 0) return [];
+    return width > 0 || height > 0;
+  });
+  const small = visible.flatMap((element) => {
+    const { width, height } = element.getBoundingClientRect();
     if (width >= 44 && height >= 44) return [];
     const name = element.getAttribute("aria-label") ?? element.textContent?.trim() ?? "";
     return [`${element.tagName.toLowerCase()} ${name} ${Math.round(width)}x${Math.round(height)}`];
   });
+  return { hasTargets: visible.length > 0, small };
+};
 
 const cases: [string, ComponentType][] = [
   ["Button の XS", composeStories(button).ExtraSmall],
@@ -44,6 +50,8 @@ const cases: [string, ComponentType][] = [
   ["FileTree", composeStories(fileTree).Default],
   ["EditorFrame", composeStories(editorFrame).Closable],
   ["PreviewFrame", composeStories(previewFrame).Default],
+  ["SplitPane の左右の仕切り", composeStories(splitPane).Horizontal],
+  ["SplitPane の上下の仕切り", composeStories(splitPane).Vertical],
 ];
 
 // 触る端末（pointer: coarse）では、コードを動かす画面の押せる要素を全て 44×44 CSS px 以上にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）
@@ -54,15 +62,14 @@ describe("触る端末の押せる領域", () => {
 
   it.each(cases)("%s の押せる要素は 44×44 px 以上で押せる", (_, Story) => {
     const { container } = render(<Story />);
-    expect(smallTargets(container)).toEqual([]);
+    expect(measureTargets(container)).toStrictEqual({ hasTargets: true, small: [] });
   });
 
   it("ActionMenu の compact の項目は 44 px の高さで押せる", async () => {
     const { Compact } = composeStories(actionMenu);
     render(<Compact />);
     await userEvent.click(screen.getByRole("button"));
-    expect(screen.getAllByRole("menuitem").length).toBeGreaterThan(0);
-    expect(smallTargets(screen.getByRole("menu"))).toEqual([]);
+    expect(measureTargets(screen.getByRole("menu"))).toStrictEqual({ hasTargets: true, small: [] });
   });
 
   it("FileTree の名前の欄は 44 px の高さで押せ、行の高さは 44 px のままにする", async () => {

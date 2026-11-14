@@ -24,7 +24,7 @@ export default defineConfig({
         test: {
           name: "component",
           include: ["src/**/*.test.tsx", "src/**/*.test.ts"],
-          exclude: ["src/**/*.coarse.test.tsx"],
+          exclude: ["src/**/*.coarse.test.{ts,tsx}"],
           setupFiles: ["src/test/setup.ts"],
           browser: browser(),
         },
@@ -34,7 +34,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "component-coarse",
-          include: ["src/**/*.coarse.test.tsx"],
+          include: ["src/**/*.coarse.test.{ts,tsx}"],
           setupFiles: ["src/test/setup.ts"],
           browser: browser({ hasTouch: true }),
         },

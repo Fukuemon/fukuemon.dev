@@ -17,6 +17,7 @@ describe("isAppleTouchDevice", () => {
     ["iPhone の Chrome を iOS とみなす", IPHONE_CHROME, 5, true],
     ["Mac の UA を名乗る iPad の Safari を iPadOS とみなす", MAC_SAFARI, 5, true],
     ["Mac の Safari を iOS とみなさない", MAC_SAFARI, 0, false],
+    ["Mac の UA で触る点が 1 つなら iPadOS とみなさない", MAC_SAFARI, 1, false],
     ["Android の Chrome を iOS とみなさない", ANDROID_CHROME, 5, false],
   ])("%s", (_, userAgent, maxTouchPoints, expected) => {
     expect(isAppleTouchDevice({ userAgent, maxTouchPoints })).toBe(expected);
@@ -51,5 +52,11 @@ describe("limitIosInputZoom", () => {
     const { doc, meta } = setUp();
     limitIosInputZoom(doc, { userAgent: ANDROID_CHROME, maxTouchPoints: 5 });
     expect(meta.content).toBe("width=device-width, initial-scale=1");
+  });
+
+  it("viewport の指定が無い文書では、何もせずに終わる", () => {
+    const doc = document.implementation.createHTMLDocument();
+    limitIosInputZoom(doc, { userAgent: IPHONE_SAFARI, maxTouchPoints: 5 });
+    expect(doc.querySelector("meta")).toBeNull();
   });
 });
