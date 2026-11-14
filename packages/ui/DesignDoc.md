@@ -142,7 +142,11 @@ DADS の 150% では、行は 19.5px になる。
 - `Link` は、文中に置くかで左右の余白を分ける。
   - 文中のリンクは、左右を 6px 空ける。フォーカスの表示が外へ 4px 広がり、前後の文字に重なるためである。
   - 記事の一覧の題のように文中に置かないリンクは、`isStandalone` を付けて左右を空けない。見出しや帯と左端をそろえるためである。
-- 操作できる要素と重なる面の角は、2px で丸める。テーマ変数に置く角丸の名前は、`rounded-control` の 1 つだけにする。
+- 操作できる要素と重なる面の角は、2px（`rounded-control`）で丸める。
+  - コードを動かす画面だけ、角を 3 つの段で丸める。紙の面の重なりを、角の丸めで見分けるためである（ADR-0073）。
+    - ペインの紙の面は 10px（`rounded-pane`）、タブの帯とファイルのドロワーは 14px（`rounded-sheet`）にする。
+    - `density="compact"` と `size="XS"` の操作できる要素は 6px（`rounded-control-compact`）にする。
+  - コードを動かす画面の外では、角丸の名前を `rounded-control` の 1 つだけ使う。
   - 丸めるのは、`Button`、`IconButton`、`boxed` の `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。
   - `Switch` のトラックとつまみ、`Checkbox` の枠も丸める。
   - `ConsoleEntryList` のログレベルのボタンも丸める。
@@ -151,7 +155,12 @@ DADS の 150% では、行は 19.5px になる。
   - 影は、ぼかさずに右下へ 4px ずらす。ぼかした影は、ダークの面の上でほぼ見えないためである。
   - 影は、重なる面だけに付ける。ボタンと入力欄には付けない。影が、重なりだけを表すためである。テーマ変数に置く影の名前は、`shadow-raised` の 1 つだけにする。
 - ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+- ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
+  - コードを動かす画面の配置だけ、高さが 500px 未満の画面を custom variant の `short` で分ける（ADR-0072）。
+  - 触る端末は、Tailwind の `pointer-coarse:` の variant で分ける。コードを動かす画面のコンポーネントが、押せる領域を 44px にするのに使う（ADR-0071）。
+- ADR-0071: [触る端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める](../../docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md)
+- ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)
 - 記事の本文の幅は、1 行を全角 40 字前後にする。測度の値は、テーマ変数の `--container-prose` に置く。
 - ヘッダーと本文の外枠は、旧サイトの一覧の幅の 68rem にそろえ、テーマ変数の `--container-page` に置く。記事の一覧は、題と日付の列を青海波の帯と同じ外枠の幅に広げ、日付を右端に寄せる。記事の本文の列だけを、`--container-prose` に抑える。ヘッダーのロゴの左端と本文の左端は、余白を外枠の外側に置いてそろえる。
 
@@ -440,17 +449,18 @@ DADS から外れる点と理由は次のとおり。
 
 置くファイルは次のとおり。
 
-| パス                                                  | 持つもの                                                                                                        |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `packages/ui/DESIGN.md`                               | 画面を作るときの原則と手順、アクセシビリティ                                                                    |
-| `packages/ui/design/tokens.md`                        | トークンの使う場面                                                                                              |
-| `packages/ui/design/components.md`                    | コンポーネントの選び方と、コンポーネントごとの規則                                                              |
-| `packages/ui/design/catalog.md`                       | カタログのページと title の規則                                                                                 |
-| `packages/ui/src/tokens/`                             | 3 つの層の CSS、書体の読み込み、生成したコードのテーマ                                                          |
-| `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト。`src/patterns/` は、パターンを置くときに作る                                   |
-| `packages/ui/.storybook/`                             | Storybook の設定と、カタログが返すレスポンスヘッダ（`public/_headers`）                                         |
-| `packages/ui/wrangler.jsonc`                          | カタログを `design.fukuemon.dev` へ配信する Worker の設定                                                       |
-| `scripts/`                                            | トークンの CSS の生成、コントラストのチェック、色の値のチェック、ユーティリティのチェック、コードのテーマの生成 |
+| パス                                                  | 持つもの                                                                                                                                           |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/ui/DESIGN.md`                               | 画面を作るときの原則と手順、アクセシビリティ                                                                                                       |
+| `packages/ui/design/tokens.md`                        | トークンの使う場面                                                                                                                                 |
+| `packages/ui/design/components.md`                    | コンポーネントの選び方と、コンポーネントごとの規則                                                                                                 |
+| `packages/ui/design/catalog.md`                       | カタログのページと title の規則                                                                                                                    |
+| `packages/ui/src/tokens/`                             | 3 つの層の CSS、書体の読み込み、生成したコードのテーマ                                                                                             |
+| `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト。`src/patterns/` は、パターンを置くときに作る                                                                      |
+| `packages/ui/src/platform/`                           | React に依存しない、ブラウザの判定と設定の関数。サブパスの export（`@fukuemon/ui/ios-viewport`）で配り、ページの読み込みの初めのスクリプトから呼ぶ |
+| `packages/ui/.storybook/`                             | Storybook の設定と、カタログが返すレスポンスヘッダ（`public/_headers`）                                                                            |
+| `packages/ui/wrangler.jsonc`                          | カタログを `design.fukuemon.dev` へ配信する Worker の設定                                                                                          |
+| `scripts/`                                            | トークンの CSS の生成、コントラストのチェック、色の値のチェック、ユーティリティのチェック、コードのテーマの生成                                    |
 
 チェックは、パッケージ design-system の手順で入れ、CI で流す。
 

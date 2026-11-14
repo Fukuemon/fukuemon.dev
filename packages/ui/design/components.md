@@ -19,7 +19,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: コードの写し、実行、ファイルの操作のように、画面の中で何かを起こす操作。
 - 使わない場面と、代わりに使うもの: ほかのページへ移るときは `Link`。文字を持たない小さな操作は `IconButton`。
-- 変種: `primary`、`secondary`、`danger` と、大きさの `M`、`S`、`XS`。`XS` は 28px で、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
+- 変種: `primary`、`secondary`、`danger` と、大きさの `M`、`S`、`XS`。`XS` は 28px で、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。`XS` も、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
   - DADS の文字だけのボタンは持たない。文字だけの操作は `Link` か `IconButton` で足りるためである。
   - `danger` は、ファイルの削除のように、データを失う操作を確定するボタンに使う。DADS のボタンには、この種類がない。
   - `primary` は、1 つの画面かダイアログに 1 つまでにする（`PRIMARY-ACTION-ONE`）。
@@ -35,7 +35,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 
 - 使う場面: 題の右の操作、再読み込み、閉じるのように、印だけで意味が伝わる小さな操作。
 - 使わない場面と、代わりに使うもの: 印だけで意味が伝わらない操作は、文を持つ `Button`。
-- 変種: 密度の `default`（44px）と `compact`（28px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
+- 変種: 密度の `default`（44px）と `compact`（28px）。`compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。`compact` も、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
 - 状態: デフォルト、hover、フォーカス、無効。
 - 内容の制約: `label` を必ず渡す。`label` が読み上げの名前になる。
 - キーボード: Enter と Space で押す。
@@ -59,7 +59,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 使う場面: 記事の中の例の切り替え、エディタのファイルのタブ、狭い画面での 2 つのペインの切り替え。
 - 使わない場面と、代わりに使うもの: 内容を開いて閉じるだけなら `Disclosure`。ページを移るなら `Link`。
 - 変種: パネルの余白の `padded` と `flush`。タブごとの `closable`。
-  - 密度の `default` と `compact`（タブ 32px、閉じるボタン 28px、筆の線 3px）。
+  - 密度の `default` と `compact`（タブ 32px、閉じるボタン 28px、筆の線 3px）。タブと閉じるボタンは、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
   - `compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062）。
 - 状態: デフォルト、hover、フォーカス、選択。選んだタブの下には、緑の筆の線を左から 1 回引く。
 - 内容の制約: `label` をタブの並びの名前に渡す。
@@ -85,7 +85,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 使う場面: ファイルとディレクトリの操作のメニュー。プレイグラウンドのツールのページで、ヘッダに置く操作のメニュー（テンプレートを足す、ファイルを開く、書き出す）。
 - 使わない場面と、代わりに使うもの: 操作が 1 つか 2 つなら、`Button` か `IconButton` を並べる。
 - 変種: 項目ごとの `isDanger`。データを失う操作の項目を赤くし、最後に並べる。
-  - 密度の `default` と `compact`（ボタンと項目 28px）。
+  - 密度の `default` と `compact`（ボタンと項目 28px）。ボタンと項目は、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
   - `compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062、ADR-0067）。
 - 状態: 閉じている、開いている、項目の hover とフォーカス。
 - 内容の制約: `label` を開くボタンの名前に渡す。
@@ -98,7 +98,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 変種: 面と下罫の `boxed` と、下罫だけの `underline`。補足（`description`）、見出しを画面に出さない `isLabelHidden`、必須の表示。
   - `boxed` は、4 辺の枠を持たず、薄い面（`surface-subtle`）と 1px の下罫（`border-field`）で欄を示す。見た目の高さは 40px で、押せる領域は上下に 2px ずつ広げた 44px にする（`TARGET-SIZE`）。
     - DADS のインプットテキストは 4 辺の枠を使う。運営者が、4 辺の枠は硬く見えるので面と下罫にすると決めた。
-  - `boxed` の密度の `default` と `compact`（見た目も押せる領域も 28px）。
+  - `boxed` の密度の `default` と `compact`（見た目も押せる領域も 28px）。欄は、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
     - `compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062、ADR-0067）。
   - `underline` は、検索の欄だけに使う。墨の下罫だけを引き、フォーカスすると緑の筆の線を左から 1 回引く。DADS のインプットテキストは枠と標準のフォーカスの表示を使うが、運営者が検索の欄の和の感じを罫で出すと決めたためである。例外の理由は [Design Doc の「フォーカスの表示」](../DesignDoc.md#フォーカスの表示)にある（`FOCUS-ONE`）。
 - 状態: デフォルト、hover（`underline`）、フォーカス、エラー、無効。
@@ -175,7 +175,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 使う場面: 記事の補足と、リクエストとレスポンスの詳細。
 - 使わない場面と、代わりに使うもの: 並んだ内容から 1 つを選んで見せるなら `Tabs`。
 - 変種: 最初から開いた `defaultOpen`。
-  - 密度の `default` と `compact`（要約 24px）。
+  - 密度の `default` と `compact`（要約 24px）。要約は、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
   - `compact` は、コードを動かす画面のコンポーネントだけに使う（ADR-0062、ADR-0067）。
 - 状態: 閉じている、開いている、hover、フォーカス。JavaScript が無くても開閉できる（`<details>`）。
 - 内容の制約: `summary` に、開いて読める内容が分かる文を渡す。
@@ -225,6 +225,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 変種: 項目の高さの `default`（44px）と `compact`（24px）。
   - `compact` は、コードを動かす画面のコンポーネントだけに使う。
   - 押せる領域を 44×44 CSS px 以上にする原則（`TARGET-SIZE`）の例外で、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする（ADR-0062）。
+  - 触る端末（`pointer: coarse`）では、行の高さを 44px にする（ADR-0071）。24px の行に 44px の押せる領域を重ねると、隣の行の押せる領域と重なるためである。
   - `compact` の文字は、`textSize` で 12px（コンソールの値の木）か 13px（ファイルの木）にする（ADR-0067、提案）。
   - 13px では、選んだ項目を太字にせず、面の色と左の 2px の `primary` の罫で示す。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
@@ -255,6 +256,11 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 変種: 左右に分ける `horizontal` と、上下に分ける `vertical`。
 - 状態: デフォルト、フォーカス、引いている間。
 - 内容の制約: `label` を仕切りの名前に渡す。
+- 押せる領域: 仕切りの押せる幅は 8px にし、両側のペインの余白に 4px ずつ重ねて置く。ペインの間は 8px になる（ADR-0073）。
+  - 8px は、`TARGET-SIZE` の例外である。マウスで押す配置だけで使い、キーボードの矢印のキーで同じ操作ができる。
+  - 触る端末（`pointer: coarse`）では、押せる幅とペインの間を 44px にする（ADR-0071、ADR-0073）。
+  - 線はふだん出さず、マウスを載せたときに 2px の線を出す。ハイコントラストのときは、線をいつも出す。
+  - フォーカスの輪は、仕切りの内側に引く（`focus-ring-inset`）。8px の外に輪を引くと、両側のペインの面に重なるためである。
 - キーボード: APG の Window Splitter に従う。左右（`vertical` では上下）の矢印のキーで仕切りを動かし、Home と End で端まで動かす。
 
 ### FileIcon
@@ -318,7 +324,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
   - 作成と名前の変更は、木の行の中の欄で行う。ペインの上に欄を出すと、どの場所に項目ができるかが欄から分からないためである。
   - 作成の欄の行は、選んだディレクトリ（ファイルを選んでいるときは、そのファイルのディレクトリ）の子の先頭に足す。そのディレクトリまでの枝を開き、行の字下げとアイコンをほかの行とそろえる。
   - 名前の変更の欄は、その行の名前の代わりに出す。ファイルは拡張子の前までを選んで始め、ディレクトリと `.` で始まる名前は全体を選ぶ。
-  - 欄の行は 24px の高さで、欄の枠は `border-field`、誤りのときは `danger` の 1px の罫にする。
+  - 欄の行は 24px（触る端末では 44px）の高さで、欄の枠は `border-field`、誤りのときは `danger` の 1px の罫にする。
     - 欄にフォーカスがある間は、輪が `danger` の罫に重なる。そのため、`danger` の罫は、ほかのウィンドウへ移って欄からフォーカスが外れたときだけ見える。
     - `TextField` の面と下罫でなく、4 辺の枠にする。24px の行の中で、薄い面と下罫だけでは欄の範囲が分かりにくいためである。
   - 欄にフォーカスがある間は、欄の枠に重ねて、内側の輪（`focus-ring-inset`）を引く。欄の行には輪を引かない。
@@ -443,7 +449,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
   - ログレベルを外して戻すと、その行の値の木は閉じた状態で出る。読み込み中とエラーを挟んだときも同じである。
 - 密度: `TEXT-MIN-SIZE` と `TARGET-SIZE` の例外である（ADR-0062）。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
-  - 値の行は高さ 21px 以上で文字 12px（`text-compact`）、ログレベルのボタンは高さ 28px 以上で文字 13px（`text-label-compact`）にする。
+  - 値の行は高さ 21px 以上で文字 12px（`text-compact`）、ログレベルのボタンは高さ 28px 以上で文字 13px（`text-label-compact`）にする。ログレベルのボタンは、触る端末（`pointer: coarse`）では 44px にする（ADR-0071）。
   - 値の木は `TreeView` の `compact`（24px）にする。
 - 内容の制約: 値は、記録の形から `ConsoleValue` に変換して渡す。行の数の上限と、上限を超えたときの古い行の扱いは、呼ぶ側が決める。
   - 値の深さ、要素の数、文字列の長さの上限も、呼ぶ側が決める。コンポーネントは、渡された値の全てを木にするためである。
@@ -464,4 +470,11 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
   - 縦の狭い配置（幅 48rem 未満）: ファイルの木を `FileDrawer` で出し、ほかのペインを `PaneTabs` の下の帯で 1 つずつ出す。
   - 横の狭い配置（高さ 500px 未満）: `PaneTabs` の帯を左の縦の帯にする。ページの題は読み上げだけに残す。
   - 記事に埋め込んだ狭い配置: `PaneTabs` の帯を枠の上に置き、地を出さず、ペインの面を枠いっぱいに置いて角を丸めない。
+- ペインの面: `ToolPane` は、`surface-pane` の面を 10px（`rounded-pane`）で丸め、四方の枠を引かない。面と地の濃さの差で区切る（ADR-0073）。
+  - ハイコントラストのときだけ、面に 1px の枠を引く。面の塗りが消え、ペインの区切りが見えなくなるためである。
+  - 題の帯は 28px の高さにし、題を 12px の薄い墨（`text-compact`、`text-secondary`）で書く。触る端末では、帯を 44px にする（ADR-0071）。
+  - ペインの中の罫は、タブの帯の下の罫だけにする。題の帯の下、行番号の縦、下の状態の帯、プレビューの URL の帯の下には罫を引かない。
+- 触る端末: `pointer: coarse` の端末では、配置によらず、ペインの中の押せる要素と、木の行、タブの帯、題の帯を 44px にする。コンポーネントが `pointer-coarse:` の variant で自分で大きさを替えるので、画面のコードは端末を見分けない（ADR-0071）。
+  - ADR-0071: [触る端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める](../../../docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md)
+  - iOS と iPadOS では、ツールのページと実行環境を埋め込んだ記事のページの読み込みの初めに、`@fukuemon/ui/ios-viewport` の `limitIosInputZoom` を呼ぶ。13px の入力欄にフォーカスしたときの拡大を止めるためである。
 - 配置の切り替え: 画面を回したときと、ウィンドウの大きさを変えたときに、配置を替える。配置を替えても、端末の出力は実行環境が、ファイルは保存が持つので消えない。
