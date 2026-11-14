@@ -27,6 +27,9 @@ test.describe("ヘッダーの歯車の設定", () => {
     await expect(garden(page)).toHaveAttribute("aria-checked", "true");
     await expect(introAgain(page)).toBeVisible();
     await expect(introAgain(page)).toHaveAttribute("aria-disabled", "true");
+    // aria-disabled のボタンは Playwright が押せない要素として待つので、押せることを確かめずに押す
+    await introAgain(page).click({ force: true });
+    await expect(page).toHaveURL(/\/articles$/);
   });
 
   test("アニメーションをオフにした場合、ヘッダーの筆の線が動かなくなること", async ({ page }) => {

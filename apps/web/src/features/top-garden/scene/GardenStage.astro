@@ -100,12 +100,13 @@ const skip =
     border-color: transparent;
   }
 
-  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない。「飛ばす」も、色が差した後は場面と明るさをそろえるよう、同じ色にする */
+  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない。歯車の hover の面も霞の色にし、テーマの面の色を霞の上に出さない。「飛ばす」も、色が差した後は場面と明るさをそろえるよう、同じ色にする */
   :global(html.stage-on.garden-ready [data-site-header]),
   :global(html.stage-on.garden-ready) .garden-nav,
   :global(html.stage-on.garden-ready) .garden-mist,
   :global(html.stage-on.enter) .garden-skip {
     --fd-color-surface: var(--fd-color-garden-mist-day);
+    --fd-color-surface-subtle: var(--fd-color-garden-mist-day);
     --fd-color-text: var(--fd-color-garden-ink-day);
     --fd-color-border-field: var(--fd-color-garden-edge-day);
     --fd-color-focus: var(--fd-color-garden-ink-day);
@@ -116,6 +117,7 @@ const skip =
   :global(html.stage-on.garden-ready[data-time="night"]) .garden-mist,
   :global(html.stage-on.enter[data-time="night"]) .garden-skip {
     --fd-color-surface: var(--fd-color-garden-mist-night);
+    --fd-color-surface-subtle: var(--fd-color-garden-mist-night);
     --fd-color-text: var(--fd-color-garden-ink-night);
     --fd-color-border-field: var(--fd-color-garden-edge-night);
     --fd-color-focus: var(--fd-color-garden-ink-night);
@@ -153,9 +155,7 @@ const skip =
     inset: auto 0.5rem 0.5rem;
     z-index: 30;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
     pointer-events: none;
   }
 
@@ -166,9 +166,6 @@ const skip =
   @media (min-width: 48rem) {
     :global(html.stage-on.garden-ready) .garden-nav {
       inset: auto 1.25rem 1.25rem;
-      flex-direction: row;
-      justify-content: center;
-      gap: 1.5rem;
     }
 
     .garden-mist-bottom {

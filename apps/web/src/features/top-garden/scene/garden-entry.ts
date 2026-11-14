@@ -54,7 +54,7 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       if (
         e.target instanceof Element &&
-        e.target.closest("input, textarea, select, [contenteditable]")
+        e.target.closest("input, textarea, select, [contenteditable], [popover]")
       )
         return;
       if (e.key === "ArrowRight") select(garden.current() + 1, true);

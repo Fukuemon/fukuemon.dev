@@ -52,7 +52,7 @@ function run(
       root,
       now: NOV_13_20H,
       override: {},
-      again: false,
+      introAgain: false,
       storage: () => store,
       load: (onError) => void loads.push(onError),
       later: (fn, ms) => void timers.push({ fn, ms }),
@@ -113,11 +113,14 @@ describe("applyStage", () => {
   });
 
   it("「イントロをもう一度見る」から開くと、2 回目でもイントロを出す", () => {
-    expect(summary(run({ seen: true, again: true })).classes).toStrictEqual(["intro", "stage-on"]);
+    expect(summary(run({ seen: true, introAgain: true })).classes).toStrictEqual([
+      "intro",
+      "stage-on",
+    ]);
   });
 
   it("「イントロをもう一度見る」から開いても、アニメーションがオフならイントロを出さない", () => {
-    expect(summary(run({ seen: true, again: true, motion: "off" })).classes).toStrictEqual([
+    expect(summary(run({ seen: true, introAgain: true, motion: "off" })).classes).toStrictEqual([
       "stage-on",
     ]);
   });
@@ -169,7 +172,7 @@ describe("applyStage", () => {
         root,
         now: NOV_13_20H,
         override: {},
-        again: false,
+        introAgain: false,
         storage: () => {
           throw new DOMException("blocked", "SecurityError");
         },
@@ -253,6 +256,24 @@ describe("stageScript", () => {
       classes: ["intro", "stage-on"],
       replaced: ["/"],
     });
+  });
+
+  it("URL の引数 intro を消すときは、ほかの引数を残す", () => {
+    const b = browser("?intro&season=winter");
+    runInNewContext(stageScript({ dev: true }), b.globals);
+    expect(b.replaced).toStrictEqual(["/?season=winter"]);
+  });
+
+  it("庭を出しているときは、歯車の設定で庭の表示をオンにしても読み込み直さない", () => {
+    const b = browser();
+    let reloads = 0;
+    runInNewContext(stageScript({ dev: false }), {
+      ...b.globals,
+      location: { ...b.globals.location, reload: () => void reloads++ },
+    });
+    b.root.classList.add("stage-on");
+    b.root.listeners.get(SETTINGS_CHANGE)?.({ detail: { name: "garden", on: true } });
+    expect(reloads).toBe(0);
   });
 
   it("本番の文字列を動かすと、引数を無視して端末の日付と時刻を書き、記録し、庭を出さない", () => {
@@ -364,7 +385,7 @@ describe("inline script に埋め込む形", () => {
         root,
         now: NOV_13_20H,
         override: {},
-        again: false,
+        introAgain: false,
         storage: () => memory(),
         load: () => {},
         later: () => {},

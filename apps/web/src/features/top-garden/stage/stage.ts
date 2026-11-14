@@ -16,7 +16,7 @@ export interface StageEnv {
   readonly now: Date;
   readonly override: StageOverride;
   /** 設定の面の「イントロをもう一度見る」から開いた。inline script では、URL の引数 `intro` があるか */
-  readonly again: boolean;
+  readonly introAgain: boolean;
   readonly storage: () => SeenStore;
   /** 場面のバンドルを読み込む。失敗したら、渡した関数を呼ぶ。バンドルが無いときは null */
   readonly load: ((onError: () => void) => void) | null;
@@ -48,7 +48,7 @@ export function applyStage(env: StageEnv, fns: StageFns): void {
   const first = fns.takeFirstVisit(env.storage);
   if (root.dataset.garden === "off" || !env.load) return;
   root.classList.add("stage-on");
-  if ((first || env.again) && root.dataset.motion !== "off") root.classList.add("intro");
+  if ((first || env.introAgain) && root.dataset.motion !== "off") root.classList.add("intro");
   const plain = () => root.classList.remove("stage-on", "intro");
   env.load(plain);
   env.later(() => {
@@ -83,11 +83,11 @@ export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }):
     ? `function(e){var s=document.createElement("script");s.type="module";s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
     : "null";
   return (
-    `(function(){var again=new URLSearchParams(location.search).has(${JSON.stringify(INTRO_PARAM)});` +
+    `(function(){var q=new URLSearchParams(location.search),p=${JSON.stringify(INTRO_PARAM)},introAgain=q.has(p);` +
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +
-    `again:again,storage:function(){return localStorage},load:${load},later:function(f,m){setTimeout(f,m)}},` +
+    `introAgain:introAgain,storage:function(){return localStorage},load:${load},later:function(f,m){setTimeout(f,m)}},` +
     `{seasonOf:${seasonOf.toString()},timeOfDayOf:${timeOfDayOf.toString()},takeFirstVisit:${takeFirstVisit.toString()}});` +
-    `if(again)history.replaceState(history.state,"",location.pathname+location.hash);` +
+    `if(introAgain){q.delete(p);var s=q.toString();history.replaceState(history.state,"",location.pathname+(s?"?"+s:"")+location.hash)}` +
     `var root=document.documentElement;root.addEventListener(${JSON.stringify(SETTINGS_CHANGE)},function(e){if(e.detail.name==="garden"&&e.detail.on&&!root.classList.contains("stage-on"))location.reload()})})()`
   );
 }

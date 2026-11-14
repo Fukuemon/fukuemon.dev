@@ -1,7 +1,7 @@
 ---
 import { signSvg } from "./sign/sign";
 import signSource from "./sign/sign.svg?raw";
-import SiteSettings from "./site-settings/SiteSettings.astro";
+import { SiteSettingsButton } from "./site-settings/SiteSettingsButton";
 import { SITE_NAV, ariaCurrent } from "./site-nav";
 
 const { pathname } = Astro.url;
@@ -37,7 +37,7 @@ const sign = signSvg(signSource, "h-10 w-auto fill-current");
         }
       </ul>
     </nav>
-    <SiteSettings />
+    <SiteSettingsButton />
     </div>
   </div>
 </header>

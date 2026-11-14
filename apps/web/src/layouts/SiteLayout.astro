@@ -1,5 +1,6 @@
 ---
 import SiteHeader from "../components/SiteHeader.astro";
+import SiteSettingsPopover from "../components/site-settings/SiteSettingsPopover.astro";
 import { settingsScript } from "../components/site-settings/settings";
 import "../styles/site.css";
 
@@ -34,6 +35,7 @@ const url = new URL(Astro.url.pathname, Astro.site);
       data-skip-link>本文へスキップ</a
     >
     <SiteHeader />
+    <SiteSettingsPopover />
     <main id="main"><slot /></main>
   </body>
 </html>

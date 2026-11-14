@@ -1,7 +1,7 @@
 /** 訪問者がヘッダーの歯車から変える設定の名前。`html` の `data-<名前>` と、`localStorage` の `fd-<名前>` に書く */
 export type SettingName = "motion" | "garden";
 
-export type SettingStore = Pick<Storage, "getItem" | "setItem">;
+type SettingStore = Pick<Storage, "getItem" | "setItem">;
 
 interface SettingsRoot {
   readonly dataset: DOMStringMap;
@@ -9,6 +9,9 @@ interface SettingsRoot {
 
 /** 設定を書き換えたときに `html` の要素へ送るイベントの名前。トップの庭の場面が受ける */
 export const SETTINGS_CHANGE = "fd-settings-change";
+
+/** 設定の面の要素の id。歯車のボタンの `popovertarget` が指す */
+export const SITE_SETTINGS_ID = "site-settings";
 
 /** 設定の面の「イントロをもう一度見る」が、トップを開く URL に付ける引数の名前 */
 export const INTRO_PARAM = "intro";

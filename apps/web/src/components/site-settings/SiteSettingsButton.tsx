@@ -1,7 +1,8 @@
 import { IconButton } from "@fukuemon/ui";
+import { SITE_SETTINGS_ID } from "./settings";
 
 /** ヘッダーの歯車のボタン。`client:*` を付けずに静的な HTML に描き、popover の `popovertarget` で設定の面を開く */
-export function SettingsButton({ target }: { target: string }) {
+export function SiteSettingsButton() {
   return (
     <IconButton
       data-testid="site-settings-open"
@@ -22,7 +23,7 @@ export function SettingsButton({ target }: { target: string }) {
         </svg>
       }
       label="表示の設定"
-      popoverTarget={target}
+      popoverTarget={SITE_SETTINGS_ID}
     />
   );
 }
