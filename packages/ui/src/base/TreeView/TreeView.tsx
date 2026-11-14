@@ -172,6 +172,7 @@ export function TreeView({
   };
 
   const isEditing = editor !== undefined;
+  const follow = useRef<{ from: string; selectedId: string | undefined } | undefined>(undefined);
   const readSelectedId = useEffectEvent(() => selectedId);
   // 欄を外すまでに選んだ項目が変わったらその項目へ、変わらなければ前にいた項目へ戻す。
   // フォーカスがほかの要素にあるときは、欄の外を押して確定したときなので、動かさない
@@ -180,11 +181,33 @@ export function TreeView({
     if (active !== null && active !== document.body) return;
     const isNewSelection =
       selectedId !== selectedAtStart && visible.some((v) => v.node.id === selectedId);
-    focus(isNewSelection ? selectedId : tabStopId);
+    const target = isNewSelection ? selectedId : tabStopId;
+    focus(target);
+    // 呼ぶ側が、保存を待ってから作った項目を選ぶことがある。選ぶ項目が後から変わったら、その項目へ移る
+    if (!isNewSelection && target !== undefined) follow.current = { from: target, selectedId };
   });
+
+  // フォーカスがまだ戻した項目にあり、選ぶ項目が変わって見えるようになったら、その項目へ移る。フォーカスが動いたらやめる
+  const followSelection = useEffectEvent(() => {
+    const pending = follow.current;
+    if (pending === undefined) return;
+    const active = document.activeElement;
+    // 名前の変更でパスが変わると、戻した項目が消えてフォーカスが body に落ちる。そのときも追い続ける
+    const isLost =
+      (active === null || active === document.body) && !itemRefs.current.has(pending.from);
+    if (active !== itemRefs.current.get(pending.from) && !isLost) {
+      follow.current = undefined;
+      return;
+    }
+    if (selectedId === pending.selectedId || !visible.some((v) => v.node.id === selectedId)) return;
+    follow.current = undefined;
+    focus(selectedId);
+  });
+  useEffect(() => followSelection());
 
   useEffect(() => {
     if (!isEditing) return;
+    follow.current = undefined;
     const selectedAtStart = readSelectedId();
     // blur での確定は、フォーカスが次の要素へ移る前に描き直すので、移り終えた後に見る
     return () => {

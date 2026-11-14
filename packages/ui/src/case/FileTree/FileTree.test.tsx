@@ -2,10 +2,38 @@ import { composeStories } from "@storybook/react-vite";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
+import { useState } from "react";
 
+import type { TreeNode } from "../../base/TreeView/TreeView";
+import { FileTree } from "./FileTree";
 import * as stories from "./FileTree.stories";
 
 const { Default, NoSelection, ReadOnly, Empty } = composeStories(stories);
+
+/** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
+function DelayedSelectTree() {
+  const [items, setItems] = useState<TreeNode[]>([{ id: "index.js", label: "index.js" }]);
+  const [selectedId, setSelectedId] = useState<string | undefined>("index.js");
+  return (
+    <FileTree
+      items={items}
+      onCreate={(name) => {
+        window.setTimeout(() => {
+          setItems((current) => [...current, { id: name, label: name }]);
+          setSelectedId(name);
+        }, 50);
+      }}
+      onRename={(id, name) => {
+        window.setTimeout(() => {
+          setItems((current) => current.map((n) => (n.id === id ? { id: name, label: name } : n)));
+          setSelectedId(name);
+        }, 50);
+      }}
+      onSelect={setSelectedId}
+      selectedId={selectedId}
+    />
+  );
+}
 
 const labels = () => screen.getAllByRole("treeitem").map((item) => item.textContent);
 
@@ -285,6 +313,22 @@ describe("FileTree", () => {
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("README.md{Enter}");
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
+  });
+
+  it("呼ぶ側が保存を待ってから作った項目を選ぶときも、選んだ後にその項目へフォーカスが移る", async () => {
+    render(<DelayedSelectTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("util.js{Enter}");
+    const item = await screen.findByRole("treeitem", { name: "util.js" });
+    await expect.poll(() => document.activeElement).toBe(item);
+  });
+
+  it("呼ぶ側が保存を待ってから名前を変えた項目を選ぶときも、元の行が消えた後に新しい行へフォーカスが移る", async () => {
+    render(<DelayedSelectTree />);
+    screen.getByRole("treeitem", { name: "index.js" }).focus();
+    await userEvent.keyboard("{F2}main{Enter}");
+    const item = await screen.findByRole("treeitem", { name: "main.js" });
+    await expect.poll(() => document.activeElement).toBe(item);
   });
 
   it("何も選んでいないときは、欄の行を木の先頭に、1 段目の字下げで出す", async () => {
