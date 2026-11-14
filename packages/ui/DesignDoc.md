@@ -349,7 +349,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `Switch`               | AI からの操作の許可のように、すぐに反映される設定 | APG の Switch                                   |
 | `Checkbox`             | 確認の画面の「今後尋ねない」のような選択          | DADS のチェックボックス                         |
 | `Loading`              | 領域の中の待ち、パッケージのインストール          | DADS のプログレスインジケーター                 |
-| `PageLoading`          | 画面全体が使えるようになるまでの待ち              | 自前（`Loading` の動きと筆の線）                |
+| `PageLoading`          | コードを動かせるようになるまでの待ち              | 自前（`Loading` の動きと筆の線）                |
 | `Breadcrumb`           | 記事とシリーズの位置                              | DADS のパンくずリスト                           |
 | `TreeView`             | `FileTree` と `ConsoleEntryList` が組む木の表示   | APG の Tree View                                |
 | `SplitPane`            | エディタ、端末、プレビューの間の境界              | APG の Window Splitter                          |
@@ -383,7 +383,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
   - 中の `ToolPane` は、四方の罫を左と上へ 1px ずらして隣の罫に重ねる。高さのそろわない並びでも、罫は 2 重にならない。
 - 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
 - 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
-  - 全ての領域が同じ起動を待つ間は、領域の `state` を `pending` にして中身を空にし、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
+  - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
 

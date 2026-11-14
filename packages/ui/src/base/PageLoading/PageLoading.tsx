@@ -4,7 +4,7 @@ export type PageLoadingProps = {
 };
 
 /**
- * 画面全体が使えるようになるまでの待ちを、画面の右下に 1 つだけ出す。文の下に、主の色の筆の線を右寄せで置き、左から伸びて右へ抜ける。
+ * コードを動かせるようになるまでの待ちを、画面の右下に 1 つだけ出す。文の下に、主の色の筆の線を右寄せで置き、左から伸びて右へ抜ける。
  * 領域ごとの待ちには `Loading` を使う。文は `role="status"` に入れ、読み上げの対象にする。
  */
 export function PageLoading({ label }: PageLoadingProps) {
