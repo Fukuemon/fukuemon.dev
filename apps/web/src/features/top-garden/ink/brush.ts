@@ -36,6 +36,15 @@ export interface Tint {
   readonly r: number;
 }
 
+/** 一様な Catmull-Rom の曲線の、b と c の間の位置 t（0〜1）の値。a と d は前後の制御点 */
+export function catmullRom(a: number, b: number, c: number, d: number, t: number): number {
+  const t2 = t * t,
+    t3 = t2 * t;
+  return (
+    0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (3 * b - a - 3 * c + d) * t3)
+  );
+}
+
 /** 点の列を Catmull-Rom の曲線でつなぎ、step（px）ほどの間隔で取り直す。 */
 export function sample(pts: readonly Vec2[], step: number): Vec2[] {
   const out: Vec2[] = [];
@@ -46,17 +55,7 @@ export function sample(pts: readonly Vec2[], step: number): Vec2[] {
       c = at(i + 1),
       d = at(i + 2);
     const n = Math.max(2, Math.ceil(Math.hypot(c[0] - b[0], c[1] - b[1]) / step));
-    const f = (j: 0 | 1, t: number) => {
-      const t2 = t * t,
-        t3 = t2 * t;
-      return (
-        0.5 *
-        (2 * b[j] +
-          (c[j] - a[j]) * t +
-          (2 * a[j] - 5 * b[j] + 4 * c[j] - d[j]) * t2 +
-          (3 * b[j] - a[j] - 3 * c[j] + d[j]) * t3)
-      );
-    };
+    const f = (j: 0 | 1, t: number) => catmullRom(a[j], b[j], c[j], d[j], t);
     for (let k = 0; k < n; k++) out.push([f(0, k / n), f(1, k / n)]);
   }
   out.push(at(pts.length - 1));
