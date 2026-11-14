@@ -1,22 +1,11 @@
 import { expect, test, type Locator } from "@playwright/test";
 
+import { scrollToRatio } from "../../widgets/actions/scroll-to-ratio";
 import { figure, longCode, shortCode, smallTable, wideTable } from "../../selectors/article-body";
 
 // ぼかしは CSS の scroll-driven animation だけで出し分けるので、ブラウザで描かないと確かめられない
 const fadeOpacity = (box: Locator) =>
   box.evaluate((el) => Number(getComputedStyle(el, "::after").opacity));
-
-// scroll timeline の進みはフレームごとに取り込まれるので、送った後に 2 フレーム待ってから読む
-const scrollToRatio = async (box: Locator, ratio: number) => {
-  await box.evaluate(
-    (el, r) =>
-      new Promise((done) => {
-        el.scrollTo({ left: (el.scrollWidth - el.clientWidth) * r });
-        requestAnimationFrame(() => requestAnimationFrame(done));
-      }),
-    ratio,
-  );
-};
 
 test.use({ viewport: { width: 1280, height: 900 } });
 

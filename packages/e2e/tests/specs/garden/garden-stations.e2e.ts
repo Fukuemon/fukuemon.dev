@@ -13,8 +13,7 @@ import {
   styledCards,
 } from "../../selectors/garden";
 
-// 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
-const AUTUMN_NOON = new Date(2026, 10, 13, 12);
+import { AUTUMN_NOON } from "./garden-time";
 
 // SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかるので、テストの時間の上限を 3 倍にする
 test.beforeEach(() => test.slow());

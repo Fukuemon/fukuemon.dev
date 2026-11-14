@@ -3,8 +3,7 @@ import { expect, test } from "@playwright/test";
 import { waitForGardenCanvasWidth } from "../../widgets/waits/canvas-width";
 import { waitForPresentedFrames } from "../../widgets/waits/presented-frames";
 
-// 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
-const AUTUMN_NOON = new Date(2026, 10, 13, 12);
+import { AUTUMN_NOON } from "./garden-time";
 
 test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
 
