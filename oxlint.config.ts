@@ -80,6 +80,8 @@ function escapeRegex(s: string): string {
 }
 
 const TOP_GARDEN_README = "apps/web/src/features/top-garden/README.md";
+// alias、../ の連続、./../ の形で書いた top-garden 内の兄弟ディレクトリを当てる
+const GARDEN_PREFIX = "^(~/features/top-garden/|(\\.\\./)+(top-garden/)?|\\./(\\.\\./)+)";
 
 // stage/ の関数は文字列にして head の inline script に埋め込むので、scene/ のコードを import できない。
 // 例外は、TopStageScript.astro が読む場面のバンドルの URL (?worker&url) だけ
@@ -88,7 +90,7 @@ const topGardenSubdirs: { name: string; patterns: Restriction[] }[] = [
     name: "ink",
     patterns: [
       {
-        regex: "^\\.\\./scene(/|$)",
+        regex: `${GARDEN_PREFIX}scene(/|$)`,
         message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_README})`,
       },
     ],
@@ -97,11 +99,11 @@ const topGardenSubdirs: { name: string; patterns: Restriction[] }[] = [
     name: "scene",
     patterns: [
       {
-        regex: "^\\.\\./ink(/|$)",
+        regex: `${GARDEN_PREFIX}ink(/|$)`,
         message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_README})`,
       },
       {
-        regex: "^\\.\\./stage(/|$)",
+        regex: `${GARDEN_PREFIX}stage(/|$)`,
         allowTypeImports: true,
         message: `scene/ から stage/ へは型だけを import する (${TOP_GARDEN_README})`,
       },
@@ -112,8 +114,7 @@ const topGardenSubdirs: { name: string; patterns: Restriction[] }[] = [
     patterns: [
       {
         // 先読みが無いので、接尾辞の無い import と、?worker&url 以外の接尾辞を止める
-        regex:
-          "^\\.\\./scene/[^?]*$|^\\.\\./scene/.*\\?(?:[^w]|w[^o]|wo[^r]|wor[^k]|work[^e]|worke[^r]|worker[^&]|worker&[^u]|worker&u[^r]|worker&ur[^l]|worker&url.)",
+        regex: `${GARDEN_PREFIX}scene(/[^?]*)?$|${GARDEN_PREFIX}scene/.*\\?(?:$|[^w]|w(?:$|[^o])|wo(?:$|[^r])|wor(?:$|[^k])|work(?:$|[^e])|worke(?:$|[^r])|worker(?:$|[^&])|worker&(?:$|[^u])|worker&u(?:$|[^r])|worker&ur(?:$|[^l])|worker&url.)`,
         message: `stage/ から scene/ へは場面のバンドルの URL (?worker&url) だけを import する (${TOP_GARDEN_README})`,
       },
     ],
@@ -142,6 +143,13 @@ function featureOverrides(): OxlintOverride[] {
         .filter((d) => d.isDirectory())
         .map((d) => d.name)
     : [];
+  // 名前がずれたまま禁止が消えて通らないよう、サブディレクトリの実在を確かめる
+  for (const [feature, entries] of Object.entries(subdirs)) {
+    for (const { name } of entries) {
+      if (!existsSync(join(root, feature, name)))
+        throw new Error(`${FEATURES_DIR}/${feature}/${name} が無い。subdirs を直す`);
+    }
+  }
   return features.flatMap((feature) => {
     const others = features.filter((f) => f !== feature);
     // Oxlint の regex は先読みを持たないので、自分以外の feature を 1 つずつ並べる
