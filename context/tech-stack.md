@@ -13,7 +13,7 @@ governs:
   - packages/ui/package.json
   - packages/ui/vite.config.ts
   - .github/workflows/
-verified_commit: 63b37ad
+verified_commit: f1fe9fe
 ---
 
 # 技術スタック
@@ -48,8 +48,12 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Go と Yaegi は、プレイグラウンドの Go を動かすツールに使う。`@fukuemon/go-runtime` の `build` の script が、Yaegi で訪問者のコードを動かす WASM を、`mise.toml` の Go でビルドする。`wasm_exec.js` は、同じ Go のものをコミットする。
   - Go のバージョンを上げるときは、`$(go env GOROOT)/lib/wasm/wasm_exec.js` を `packages/go-runtime/src/worker/vendor/` にコピーする。ビルドの script は、2 つが違うと失敗する。
   - ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](../docs/adr/0037-go-with-yaegi.md)
-- CodeMirror 6 は、プレイグラウンドのツールの入力欄のエディタに使う。色は、`packages/ui` のテーマ変数を読む。
-- CodeMirror 6 は、プレイグラウンドのツールのエディタに使う。
+- CodeMirror 6 は、プレイグラウンドのツールのエディタに使う。色は、`packages/ui` のテーマ変数を読む。
+- xterm.js は、プレイグラウンドの Node の実行環境の端末の表示に使う。
+- Expressive Code（`astro-expressive-code`）は、記事のコードブロックの描画に使う。
+- Pele は、記事の mermaid の図を、ビルドのときに SVG にするのに使う。
+  - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)
+- subset-font は、ビルドの後に、見出しの書体のファイルを、使う字だけに作り直すのに使う。
 - pnpm は、workspace の package manager として使う。ルートの script から `pnpm -r` で package を束ねる。
 - Vite+ の `vp run` は、`apps/web` の build のタスクの実行とキャッシュに使う。`vp build` は、`apps/playground` の build に使う。`vp test` は、`packages/ui` のテストに使う。取り決めは [Vite+ の取り決め](#vite-の取り決め) にある。
 - Oxlint は lint に、Oxfmt は format に使う。Oxlint は `--type-aware` で実行する。
@@ -57,7 +61,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - 組み込みのプラグインは、デフォルトの `eslint`、`typescript`、`unicorn`、`oxc` に、`react`、`jsx-a11y`、`import` を加えて有効にする。`plugins` を書くとデフォルトのプラグインが外れるので、デフォルトのプラグインも並べる。
   - 外部のプラグインは、`jsPlugins` で `eslint-plugin-better-tailwindcss` を読む。
   - react-doctor は差分だけを見るので、全てのファイルに掛ける React の規則は Oxlint が持つ。
-- 型のチェックには、`apps/web` では `astro check` を、`packages/content-model` と `packages/ui` では `tsc` を使う。
+- 型のチェックには、`apps/web` では `astro check` を、`apps/playground` と `packages/` の package では `tsc` を使う。
   - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
 - knip は、未使用の export、依存、ファイルの検出に使う。
 - Vitest は unit test に使う。
