@@ -102,7 +102,7 @@ const flatten = (
 ): VisibleNode[] =>
   nodes.flatMap((node, index) => [
     { node, level, parentId, setSize: nodes.length, posInSet: index + 1 },
-    ...(expanded.has(node.id) && node.children
+    ...(node.children && expanded.has(node.id)
       ? flatten(node.children, expanded, level + 1, node.id)
       : []),
   ]);

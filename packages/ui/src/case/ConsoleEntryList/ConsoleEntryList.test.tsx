@@ -67,13 +67,13 @@ describe("ConsoleEntryList", () => {
         id: "2",
         level: "log",
         source: "p",
-        time: "10:00:01.000",
+        time: "10:00:01",
         args: [{ kind: "array", items: [] }],
       },
     ];
     render(<ConsoleEntryList entries={entries} />);
     const box = (text: string) => screen.getByText(text).getBoundingClientRect();
-    const [first, second] = [box("10:00:00.120"), box("10:00:01.000")];
+    const [first, second] = [box("10:00:00.120"), box("10:00:01")];
     const valueLeft = (index: number) =>
       (row(index).querySelector(".font-mono") as Element).getBoundingClientRect().left;
     expect({
@@ -153,19 +153,28 @@ describe("ConsoleEntryList", () => {
   it("キーボードだけで、ログレベルを切り替え、ツリーを開閉できる", async () => {
     render(<Default />);
     await userEvent.tab();
-    expect(levelButton(/^debug/)).toHaveFocus();
+    const debug = levelButton(/^debug/);
+    const focused = document.activeElement === debug;
     await userEvent.keyboard(" ");
-    expect(levelButton(/^debug/)).toHaveAttribute("aria-pressed", "false");
-    expect(rows()).toHaveLength(6);
+    const released = { pressed: debug.getAttribute("aria-pressed"), rows: rows().length };
     await userEvent.keyboard("{Enter}");
-    expect(levelButton(/^debug/)).toHaveAttribute("aria-pressed", "true");
+    const pressed = debug.getAttribute("aria-pressed");
     for (let i = 0; i < 5; i++) await userEvent.tab();
     await userEvent.keyboard("{Home}{ArrowDown}{ArrowDown}{Enter}");
     const root = treeItem(/^\{id: 42/);
     await userEvent.keyboard("{Enter}");
     const opened = root.getAttribute("aria-expanded");
     await userEvent.keyboard(" ");
-    expect({ opened, closed: root.getAttribute("aria-expanded") }).toStrictEqual({
+    expect({
+      focused,
+      released,
+      pressed,
+      opened,
+      closed: root.getAttribute("aria-expanded"),
+    }).toStrictEqual({
+      focused: true,
+      released: { pressed: "false", rows: 6 },
+      pressed: "true",
       opened: "true",
       closed: "false",
     });
@@ -249,6 +258,22 @@ describe("ConsoleEntryList", () => {
       await at("{ArrowUp}"),
       await at("{ArrowRight}{ArrowDown}{ArrowDown}"),
     ]).toStrictEqual(["map", "set", "map", 5, 6]);
+  });
+
+  it("後の木の最初の項目で上の矢印のキーを押すと、開いた前の木の最後の項目へ移る", async () => {
+    render(<Default />);
+    row(5).focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}{ArrowDown}{ArrowDown}{ArrowDown}");
+    const onSet = document.activeElement === treeItem(/^Set\(2\)/);
+    await userEvent.keyboard("{ArrowUp}");
+    const [mapTree] = within(row(5)).getAllByRole("tree");
+    const last = within(mapTree as HTMLElement)
+      .getAllByRole("treeitem")
+      .at(-1);
+    expect({ onSet, onLast: document.activeElement === last }).toStrictEqual({
+      onSet: true,
+      onLast: true,
+    });
   });
 
   it("止まる行が上限かフィルタで消えたら、一番新しい行を止まる箇所にする", async () => {

@@ -156,7 +156,7 @@ export function toTreeNode(
     </span>
   );
   if (!isExpandable(value)) return { id, label, content };
-  // 子は、初めて読まれたときに 1 段だけ作る。大きい値の記録がまとめて届くと、閉じた枝の子まで作る時間で描画が 500 ms を超えたためである
+  // 子は、初めて読まれたときに 1 段だけ作る。閉じた枝の子まで作ると、大きい値の記録がまとめて届いたときに描画が遅くなるためである
   let children: TreeNode[] | undefined;
   return {
     id,

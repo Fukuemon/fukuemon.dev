@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 
-import { TreeView } from "./TreeView";
+import { type TreeNode, TreeView } from "./TreeView";
 import * as stories from "./TreeView.stories";
 
 const { Collapsed, Compact, Expanded, WithContent, CompactBody, WithoutSelect } =
@@ -14,6 +14,26 @@ const EDGE_ITEMS = [{ id: "a", label: "a", children: [{ id: "a/b", label: "b" }]
 const item = (name: string) => screen.getByRole("treeitem", { name });
 
 describe("TreeView", () => {
+  it("閉じた枝の子の children は、開くまで読まない", async () => {
+    const reads: string[] = [];
+    const lazy = (id: string, children: () => TreeNode[]): TreeNode => ({
+      id,
+      label: id,
+      get children() {
+        reads.push(id);
+        return children();
+      },
+    });
+    const items = [lazy("root", () => [lazy("child", () => [{ id: "leaf", label: "leaf" }])])];
+    render(<TreeView items={items} label="木" />);
+    const closed = new Set(reads);
+    await userEvent.click(screen.getByRole("treeitem", { name: "root" }));
+    expect({ closed: [...closed], opened: [...new Set(reads)] }).toStrictEqual({
+      closed: ["root"],
+      opened: ["root", "child"],
+    });
+  });
+
   it("右の矢印のキーで、閉じた枝を開き、開いた枝では最初の子へ移る", async () => {
     render(<Collapsed />);
     await userEvent.tab();

@@ -15,7 +15,6 @@ export const PREVIEW_CONSOLE_MESSAGE = "fukuemon:console";
 const MAX_RECORDS = 1000;
 /**
  * 1 つの実行環境が持つコンソールの記録の文字数の合計の上限。超えたときは、古いものから捨てる。
- * 1 件の上限（MAX_CHARS）より大きいので、最新の 1 件は必ず残る。
  */
 const MAX_TOTAL_CHARS = 4 * 1024 * 1024;
 
