@@ -79,7 +79,9 @@ export function startGarden(
     }
     cssRenderer.domElement.remove();
     for (const k of sceneVars.keys()) vars.removeProperty(k);
+    // 場面のテクスチャと絵の GPU のメモリを、ページを閉じるまで残さないよう、コンテキストごと捨てる。
     renderer.dispose();
+    renderer.forceContextLoss();
   }
   const broken = (e: unknown) => {
     if (stopped) return;
@@ -134,6 +136,9 @@ export function startGarden(
         n: new Vector3(Math.sin(st.rot), 0, Math.cos(st.rot)),
       };
     });
+    // 光と影を落とす物は動かないので、影は最初のフレームで 1 回だけ描く。
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
 
     const fov = () => (portrait() ? 62 : 46);
     /** `i` 番目の和紙を、画面に収まる距離から正面に見るカメラの位置 */
@@ -229,7 +234,9 @@ export function startGarden(
     return {
       go(i) {
         const n = slots.length;
-        state.current = ((i % n) + n) % n;
+        const next = ((i % n) + n) % n;
+        if (next === state.current) return next;
+        state.current = next;
         kick();
         return state.current;
       },
@@ -241,7 +248,7 @@ export function startGarden(
       pointer(x, y) {
         state.px = x;
         state.py = y;
-        if (!state.paused) kick();
+        if (!state.paused && !portrait()) kick();
       },
       stop: cleanup,
     };
