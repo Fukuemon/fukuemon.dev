@@ -112,7 +112,7 @@ packages/
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
 - `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
-- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
+- `guest/` の `db-package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。`webcontainer/` は、このファイルを実行環境の中の `package.json` として書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つのファイルの PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
@@ -290,7 +290,7 @@ type BackendInstance = {
   spawn: (
     command: string,
     args: readonly string[],
-    options?: { terminal?: TerminalSize; internal?: boolean; cwd?: string },
+    options?: { terminal?: TerminalSize; internal?: boolean },
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
@@ -314,7 +314,7 @@ type BackendProcess = {
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
   - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
-  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
+  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload と接続先の環境変数を渡さず、端末も付けない。`node-runtime/` の直下は、DB の依存を `npm install --prefix <guestDirectory>` で入れ、DB のプロセスを `guestDirectory` の下のスクリプトの絶対パスで起動する。
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
@@ -376,6 +376,7 @@ flowchart TB
   - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値、入力欄のファイルの名前、DB が止まったときに出す案内の文を、props で受ける。`status` は、`useSyncExternalStore` で読む。
   - DB が止まった後の戻り方は `SqlDatabase` の実装ごとに違うので、案内の文は呼ぶ側が渡す。
   - 実行の結果は、`sql-console/` のコンポーネントが持ち、表に出す。
+  - `SqlPane` は、DB を使うプロジェクトのときだけ、右の列のプレビューの下に置く。Node のコードの結果と、DB の中身を並べて見るためである。
   - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
@@ -608,7 +609,7 @@ type SqlResult = {
 - `run` は、SQL の失敗でも、DB が止まっているときでも、Promise を失敗させず、`error` を持つ値を返す。
 - SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`@fukuemon/sql-runtime` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
   - `guest/` の DB のプロセスのスクリプトは、この関数を import し、ビルドで 1 つのファイルに束ねる。PGlite と `pglite-socket` は束ねず、実行環境の中で `npm install` する。
-  - 束ねる処理は、`@fukuemon/node-runtime` が export する Vite の plugin が持つ。`apps/playground` の `vite.config` は、plugin を登録するだけである。束ねた結果は、コミットしない。
+  - 束ねる処理は、`@fukuemon/node-runtime/vite` が export する Vite の plugin（`guestBundle`）が持つ。plugin は、`<パス>?bundle` の import を、パスのファイルを 1 つの ES module に束ねた文字列にする。`apps/playground` の `vite.config` と `vitest.config` は、plugin を登録するだけである。束ねた結果は、コミットしない。
   - plugin は、ブラウザのコードと別のエントリーポイントから export する。`webcontainer/` は、plugin が束ねた結果を、文字列として import する。
   - `@fukuemon/node-runtime` は、npm に公開しない。plugin を使うのは、このリポジトリの中だけである。
   - 束ねられないときは、関数を `guest/` にコピーし、同じテストの入力で、2 つの実装をテストする。束ねられるかは、実装のタスクで確認する。
@@ -618,6 +619,10 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - リクエスト: 1 行の JSON（`{"id": "<連番>", "sql": "<SQL>"}`）。
 - レスポンス: 行頭にプレフィックスを付けた、1 行の JSON。`id` と、`SqlResponse` の値を持つ。
 - `node-runtime/` は、`id` でリクエストとレスポンスを対応づける。プレフィックスの無い行（DB のプロセスのログと、入力のエコー）は捨てる。
+- DB のプロセスは、ソケットで待ち受けた後に、プレフィックスを付けた `{"ready": true}` の行を出す。`node-runtime/` は、この行を受けてから、初期データの SQL を送る。
+- DB のプロセスは、結果のセルの bigint、日時、`bytea` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
+- DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
+- `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
 - `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。

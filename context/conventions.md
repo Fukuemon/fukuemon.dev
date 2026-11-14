@@ -85,6 +85,12 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - プロジェクトは、記事の Markdown があるディレクトリの `playground/<埋め込みの名前>/` に置く。`playground.json` と初期ファイルを置く。形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#プロジェクト) にある。
   - プロジェクトのディレクトリの全てのファイルが、公開の JSON に入る。ドットで始まるファイルとディレクトリ（`.env` など）を置くと、ビルドが失敗する。初期ファイルは、UTF-8 の文字列にする。
   - 埋め込みの名前は、英小文字、数字、ハイフンで書き、1 本の記事の中で重複させない。
+  - Node のコードから DB に接続する記事は、`playground.json` に `"database": true` を書き、初期データの SQL のファイルを `initialSql` に書く。
+    `package.json` の依存に `pg` を書く。
+  - DB に接続するコードは、接続先を書かずに `new Pool()` と書くか、`new Pool({ connectionString: process.env.DATABASE_URL })` と書く。
+    実行環境が、接続先を環境変数（`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`）で渡す。
+    `host: "localhost"` と `port: 5432` では接続できない。実行環境は、TCP で待ち受けないためである。
+  - ADR-0053: [Node のコードから DB に接続する記事](../docs/adr/0053-pglite-database-in-playground.md#2-node-のコードから-db-に接続する記事)
   - Node の実行環境を埋め込む記事には、別の origin の画像と埋め込み（`img`、`iframe`、`video` など）を置かない。SQL と Go のツールも置かない。
     記事には `COEP: require-corp` を返すので、ブラウザがそれらを読み込まないためである。置くと、ビルドが失敗する。
   - ADR-0034: [記事への埋め込み](../docs/adr/0034-playground-origin-and-embedding.md#3-記事への埋め込み)
