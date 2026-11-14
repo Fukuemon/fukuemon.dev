@@ -134,10 +134,29 @@ function toConsoleValues(args, describe, isNativeError) {
     return undefined;
   };
 
+  /**
+   * V8 の組み込みの stack の getter は、初めて読むときに name と message を読んで文にする。
+   * そのときに訪問者のコードが動かないのは、どちらも文字列のデータか組み込みの getter か、無いときだけである。
+   */
+  const isPlainText = (value, key) => {
+    for (let target = value; target; target = Object.getPrototypeOf(target)) {
+      const found = Object.getOwnPropertyDescriptor(target, key);
+      if (!found) continue;
+      // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、同じ関数かを比べるだけで呼ばない
+      return "value" in found
+        ? typeof found.value === "string"
+        : errorGetters.get(key).has(found.get);
+    }
+    return true;
+  };
+
   const errorOf = (value) => {
     const name = readProperty(value, "name");
     const message = readProperty(value, "message");
-    const stack = readProperty(value, "stack");
+    const stack =
+      isPlainText(value, "name") && isPlainText(value, "message")
+        ? readProperty(value, "stack")
+        : undefined;
     // V8 は「    at 関数 (場所)」、Firefox と Safari は「関数@場所」の行を並べる。V8 の 1 行目は name と message である
     const lines = typeof stack === "string" ? stack.split("\n") : [];
     const v8 = lines.filter((line) => /^\s+at\s/.test(line));

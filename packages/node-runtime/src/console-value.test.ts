@@ -171,6 +171,41 @@ describe("toConsoleValues", () => {
       expect(touched).toStrictEqual([]);
     });
 
+    it("name か message が文字列のデータでも組み込みの getter でもない Error は、stack を読まず、訪問者のコードを動かさない", () => {
+      const touched: string[] = [];
+      const own = new Error("m");
+      Object.defineProperty(own, "message", {
+        get() {
+          touched.push("own");
+          return "x";
+        },
+      });
+      class Inherited extends Error {
+        override get name() {
+          touched.push("inherited");
+          return "I";
+        }
+      }
+      const object = new Error("m");
+      Object.defineProperty(object, "message", {
+        value: {
+          toString() {
+            touched.push("toString");
+            return "x";
+          },
+        },
+      });
+      const values = copyInNode(own, new Inherited("m"), object);
+      expect({ touched, values }).toStrictEqual({
+        touched: [],
+        values: [
+          { kind: "error", name: "Error", message: "" },
+          { kind: "error", name: "Error", message: "m" },
+          { kind: "error", name: "Error", message: "" },
+        ],
+      });
+    });
+
     it("組み込みの Error でない値の自身の getter、継承した getter、例外を投げる getter からは stack を写さない", () => {
       const touched: string[] = [];
       const fake = ownStack(Object.create(Error.prototype) as object, () => {
