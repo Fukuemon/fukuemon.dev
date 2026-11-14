@@ -72,7 +72,7 @@ export function FileDrawer({
         </div>
         <button
           aria-label="閉じる"
-          className="inline-grid size-11 shrink-0 cursor-pointer place-items-center rounded-control hover:bg-surface-subtle focus-visible:focus-ring-inset"
+          className="inline-grid size-11 shrink-0 cursor-pointer place-items-center rounded-control-compact hover:bg-surface-pane-subtle focus-visible:focus-ring-inset"
           onClick={onClose}
           type="button"
         >

@@ -105,7 +105,7 @@ function OutputPane({ session }: { session: GoSession }) {
       {() => (
         <div
           aria-label="出力"
-          className="min-h-0 flex-1 overflow-auto p-3 focus-visible:focus-ring"
+          className="min-h-0 flex-1 overflow-auto p-3 focus-visible:focus-ring-inset"
           onScroll={(event) => {
             const log = event.currentTarget;
             atBottom.current = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
@@ -115,9 +115,9 @@ function OutputPane({ session }: { session: GoSession }) {
           // 長い出力をキーボードで送れるよう、スクロールする領域をフォーカスできるようにする
           tabIndex={0}
         >
-          {progress !== undefined && <Loading label={progress} />}
+          {progress !== undefined && <Loading density="compact" label={progress} />}
           {groups.length === 0 && progress === undefined && output.exit === undefined && (
-            <p className="font-sans text-body-dense text-code-comment">
+            <p className="font-sans text-body-compact text-code-comment">
               実行するか、テストすると、標準出力と標準エラーがここに出ます。
             </p>
           )}
