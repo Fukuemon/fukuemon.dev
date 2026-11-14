@@ -124,6 +124,8 @@ export function startGarden(
     };
     const pass = createInkPass(inkColors());
     const camera = new PerspectiveCamera(46, 1, 0.05, 400);
+    // 和紙の文の場面は px の単位で組み、カメラの位置だけを PX 倍して写す。要素に scale(1/PX) を掛けると、iOS の Safari が和紙の文を立体の和紙からずらして描くためである。
+    const cssCamera = new PerspectiveCamera();
 
     // 和紙の色と余白は、セクションの CSS が読む。セクションはまだ stage の外にあるので html に書き、和紙の大きさを測る前に書く。
     sceneVars
@@ -140,9 +142,8 @@ export function startGarden(
     const slots = cards.map((el, i) => {
       const st = STATIONS[i]!;
       const o = new CSS3DObject(el);
-      o.position.set(...st.pos);
+      o.position.set(...st.pos).multiplyScalar(PX);
       o.rotation.y = st.rot;
-      o.scale.setScalar(1 / PX);
       cssScene.add(o);
       return {
         w: 0,
@@ -207,7 +208,9 @@ export function startGarden(
       renderer.render(scene, camera);
       renderer.copyFramebufferToTexture(target!);
       renderer.render(pass.scene, pass.camera);
-      cssRenderer.render(cssScene, camera);
+      cssCamera.copy(camera);
+      cssCamera.position.multiplyScalar(PX);
+      cssRenderer.render(cssScene, cssCamera);
     };
 
     /** 門をくぐる間のカメラと淡彩を、色を差し始めてからの時刻で決める。@returns カメラの縦の画角 */
