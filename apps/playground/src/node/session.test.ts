@@ -418,14 +418,14 @@ describe("restart", () => {
     });
   });
 
-  it("作業ディレクトリを上限までに読めないときは、起動したときのファイルで起動し直す", async () => {
+  it("作業ディレクトリを上限までに読めず、保存のために読んだ結果も無いときは、初期ファイルで起動し直す", async () => {
     const { session, booted, latest } = setup({ kind: "saved", record: savedRecord });
     await settle(session);
     latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
     const restarted = session.restart();
     await vi.advanceTimersByTimeAsync(RESTART_READ_TIMEOUT_MS);
     await restarted;
-    expect(booted.at(-1)).toStrictEqual(savedRecord.files);
+    expect(booted.at(-1)).toStrictEqual(project.files);
   });
 
   it("起動し直している間は busy を true にし、終わると false に戻す", async () => {

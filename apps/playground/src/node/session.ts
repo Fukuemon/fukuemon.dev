@@ -398,7 +398,7 @@ export function createNodeSession({
 
   // 起動し直す直前の変更も残すため、読んだファイルを保存してから起動し直す
   const readWorkdir = async (old: Instance) => {
-    if (!old.runtime) return { files: bootFiles, touched: old.touched };
+    if (!old.runtime) return { files: lastRead ?? project.files, touched: old.touched };
     try {
       const files = savedFiles(
         await withTimeout(old.runtime.files.readAll(SAVE_RULES), RESTART_READ_TIMEOUT_MS),
@@ -407,7 +407,7 @@ export function createNodeSession({
       return { files, touched: old.touched };
     } catch (error) {
       console.error("起動し直す前に作業ディレクトリを読めない", error);
-      return { files: lastRead ?? bootFiles, touched: old.touched };
+      return { files: lastRead ?? project.files, touched: old.touched };
     }
   };
 
