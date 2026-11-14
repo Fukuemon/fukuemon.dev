@@ -3,6 +3,7 @@ import { test, type Page } from "@playwright/test";
 /** 字幕のバナーの位置。判定する要素にバナーが重なるときは bottom にする */
 export type Position = "top" | "bottom";
 
+// similarity-ignore: packages/ui/e2e/fixtures/caption.ts と同じスキルの写しで、直したときは両方を直す
 type Kind = { label: string; color: string };
 
 const KINDS: Record<string, Kind> = {
@@ -86,6 +87,7 @@ export const step = (
  * 判定の step は操作を持たず、show.actions の止めが入らないため止める。
  * スキルの scripts/collect.mjs が、添付の順に check-<番号>.png としてエビデンスのフォルダに書く。改修前と改修後の同じ番号の静止画を並べて比べられる
  */
+// similarity-ignore: packages/ui/e2e/fixtures/caption.ts と同じスキルの写し
 export const check = (
   page: Page,
   text: string,
