@@ -300,6 +300,10 @@ deploy と apply の条件は [context/operations.md](../../context/operations.m
 
 - E2E は、配信した状態のサイトを、ブラウザで操作して確認する。サイトのコードを import しない。
 - E2E は、録画と字幕のエビデンスを撮れる形で書く。
+- 庭の見た目の回帰と、記事のページの表と図の枠の E2E は、`packages/e2e/visual/` に置く。
+  - ADR-0029 の 3 は、E2E を `packages/e2e/tests/` の下に置き、E2E の lint の規則を掛けると決めている。`visual/` はその例外である。
+  - `visual/` の spec は、`getByRole`、CSS のセレクタ、`getAttribute` を使う。規則に合わせるには、spec の書き直しと、サイトのマークアップへの `data-testid` の追加が要るためである。
+  - 規則に合わせて書き直した spec は、`tests/specs/` に移す。
 - テストの種類と保証の範囲は [context/testing.md](../../context/testing.md) にある。
 
 ### 条件つきで追加する機能の形
