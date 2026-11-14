@@ -294,9 +294,11 @@ describe("ConsoleEntryList", () => {
 
   it("起動を待つ間は、題だけを出し、ログレベルのボタンと行を出さない", () => {
     render(<ConsoleEntryList entries={ENTRIES} state={{ kind: "pending" }} />);
-    expect(screen.getByText("コンソール")).toBeInTheDocument();
-    expect(screen.queryByRole("group", { name: "表示するログレベル" })).toBeNull();
-    expect(screen.queryByRole("list")).toBeNull();
+    expect({
+      title: screen.queryByText("コンソール") !== null,
+      levels: screen.queryByRole("group", { name: "表示するログレベル" }),
+      rows: screen.queryByRole("list"),
+    }).toStrictEqual({ title: true, levels: null, rows: null });
   });
 });
 

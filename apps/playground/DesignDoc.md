@@ -318,7 +318,7 @@ type BackendProcess = {
 - `BackendFiles` は、ファイルかディレクトリかを持つ一覧、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store、`files.readAll`、`files.exists` は、`node-runtime/` の直下が、この操作から組み立てる。
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
-  - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
+  - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。スクリプトを登録できなかったときは、プレビューの記録が欠けるだけなので、起動を続ける。
   - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
@@ -342,12 +342,18 @@ type BackendProcess = {
   - 引数は、呼んだ時点の値を、値の木に写す。写す処理（`guest/console-value.cjs`）は、preload とスクリプトが共有する。
   - 値の木は、文字列、数、bigint、真偽値、`null`、`undefined`、symbol、関数の名前、循環を区別する。入れ子の値は、配列、オブジェクト（クラスの名前と、自分の列挙できる項目）、`Map`、`Set`、`Error`（名前、メッセージ、呼び出し元のフレームの行）を区別する。数は、NaN、Infinity、-0 を JSON で運べるよう、文字で運ぶ。ほかの値（`Date`、正規表現、Proxy、DOM の要素など）は、文字にする。
   - getter、`toJSON`、Proxy の罠は動かさない。getter の項目は `(...)` にする。訪問者のコードを、記録のために動かさないためである。
+    - `Map` と `Set` の中身と大きさは、組み込みのメソッドで読み、サブクラスが上書きしたメソッドを呼ばない。
+    - `Error` の `stack` だけは、組み込みの getter（V8 と Firefox）を呼ぶ。訪問者が定義した getter は呼ばない。
+    - プレビューのページでは、ブラウザの JavaScript が Proxy を見分けられないので、Proxy の罠が動く。
   - 深さは 6 段、1 つの入れ子の要素は 100 個、1 つの文字列は 1 万字、Error の呼び出し元のフレームの行は 30 行まで写す。1 回の呼び出しで写す値は 2000 個、文字は 256 K 字までにする。超えた分は「…」と残りの件数の文字にする。1 件の記録が、記録の行を抜き出す処理の上限を超えないようにするためである。
   - preload は、記録を `@@fd:console ` を付けた 1 行の JSON にして、標準出力に書く。記録を書く途中で呼ばれた `console.*` は、記録しない。
+  - 記録するのは、上の 5 つの関数だけである。`console.table`、`console.dir`、`console.trace`、`console.assert`、`console.group` と、書式の指定（`%s`、`%o`）は扱わない。プレビューの捕まえなかった例外と、拒否された Promise も記録しない。
   - プレビューに入れるスクリプトは、iframe の中のページでだけ `console.*` を包む。記録は、ツールのページの origin を宛先にして、`window.parent` へ `postMessage` で送る。ツールのページの origin は、`node-runtime/` の直下がスクリプトを組むときに埋める。スクリプトは 1 つの関数に包み、ページのグローバルに名前を足さない。
 - `node-runtime/` の直下は、記録の行とプレビューのメッセージを `ConsoleRecord` にして、`consoleEntries` の store に入れる。
   - `ConsoleRecord` は、ID、ログレベル、出力元、時刻、値の木を持つ。出力元は、Node のプロセス（`start` の `name`）か、プレビュー（ページを返したサーバーのポート）である。
   - 訪問者のプログラムとプレビューのページも、同じ形の記録を出せる。形に合わない記録と、写す側の上限を超えた記録は捨てる。
+    写す側が出せる最大の記録は、読む側の上限に収まる。
+  - 時刻は、HTTP の記録と同じく、0 以上の安全な整数で、今より 1 日を超えて先でない記録だけを受ける。
   - 記録は、届いた順に並べる。プロセスとプレビューをまたいで、時刻の順に並べ直さない。
   - 届いた記録は、描画の 1 回分（`requestAnimationFrame`）ずつまとめて store に入れる。1 件ごとに入れると、表示中の全ての行の再描画とレイアウトが、1 件ごとに起きるためである。
 - プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。

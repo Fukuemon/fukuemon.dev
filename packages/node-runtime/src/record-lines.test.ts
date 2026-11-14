@@ -42,15 +42,16 @@ describe("createRecordLineFilter", () => {
     const { text, lines, kinds } = filtered(
       `a\n${CONSOLE_PREFIX}{"c":1}\n${HTTP_PREFIX}{"h":1}\nb ${CONSOLE_PREFIX}{"c":2}\n`,
     );
-    expect(text.join("")).toBe("a\nb ");
-    expect(lines).toStrictEqual(['{"c":1}', '{"h":1}', '{"c":2}']);
-    expect(kinds).toStrictEqual(["console", "http", "console"]);
+    expect({ text: text.join(""), lines, kinds }).toStrictEqual({
+      text: "a\nb ",
+      lines: ['{"c":1}', '{"h":1}', '{"c":2}'],
+      kinds: ["console", "http", "console"],
+    });
   });
 
   it("コンソールの記録の頭の途中で切れた出力は、続きが届いたら記録の行にする", () => {
     const { lines, kinds } = filtered("$ @@fd:con", 'sole {"c":1}\n');
-    expect(lines).toStrictEqual(['{"c":1}']);
-    expect(kinds).toStrictEqual(["console"]);
+    expect({ lines, kinds }).toStrictEqual({ lines: ['{"c":1}'], kinds: ["console"] });
   });
 
   it("記録の行の中身を、端末の改行の \\r を外して渡す", () => {

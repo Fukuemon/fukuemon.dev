@@ -44,15 +44,32 @@ function runInPreview(page: string, { framed = true, failing = false } = {}) {
 }
 
 describe("previewConsoleScript", () => {
-  it("console.* の呼び出しを、ツールのページの origin に送り、元の console も呼ぶ", () => {
-    const { posted, logged } = runInPreview(`console.warn("w", { a: 1 });`);
-    expect(posted).toHaveLength(1);
-    expect(posted[0]?.origin).toBe(TOOL_ORIGIN);
-    expect(posted[0]?.message).toMatchObject({ type: PREVIEW_CONSOLE_MESSAGE, level: "warn" });
-    expect(parseConsoleRecord(posted[0]?.message)?.args).toStrictEqual([
-      { kind: "string", value: "w" },
-      { kind: "object", entries: [{ key: "a", value: { kind: "number", value: 1 } }] },
+  it("console.* の呼び出しを、記録の形にして、ツールのページの origin に送る", () => {
+    const { posted } = runInPreview(`console.warn("w", { a: 1 });`);
+    expect(
+      posted.map(({ message, origin }) => ({
+        origin,
+        type: (message as { type?: unknown }).type,
+        record: parseConsoleRecord(message),
+      })),
+    ).toStrictEqual([
+      {
+        origin: TOOL_ORIGIN,
+        type: PREVIEW_CONSOLE_MESSAGE,
+        record: {
+          level: "warn",
+          time: expect.any(Number) as unknown,
+          args: [
+            { kind: "string", value: "w" },
+            { kind: "object", entries: [{ key: "a", value: { kind: "number", value: 1 } }] },
+          ],
+        },
+      },
     ]);
+  });
+
+  it("元の console も呼ぶ", () => {
+    const { logged } = runInPreview(`console.warn("w", { a: 1 });`);
     expect(logged).toStrictEqual([["warn", "w", { a: 1 }]]);
   });
 
@@ -67,8 +84,7 @@ describe("previewConsoleScript", () => {
 
   it("iframe の外で開いたページでは、console を包まない", () => {
     const { posted, logged } = runInPreview(`console.log("x");`, { framed: false });
-    expect(posted).toStrictEqual([]);
-    expect(logged).toStrictEqual([["log", "x"]]);
+    expect({ posted, logged }).toStrictEqual({ posted: [], logged: [["log", "x"]] });
   });
 
   it("送るのに失敗しても、元の console を呼ぶ", () => {
@@ -83,7 +99,9 @@ describe("previewConsoleScript", () => {
       module: { exports: "page" },
     };
     runInNewContext(previewConsoleScript(TOOL_ORIGIN), context);
-    expect(Object.keys(context)).toStrictEqual(["window", "console", "module"]);
-    expect(context.module.exports).toBe("page");
+    expect({ keys: Object.keys(context), exports: context.module.exports }).toStrictEqual({
+      keys: ["window", "console", "module"],
+      exports: "page",
+    });
   });
 });

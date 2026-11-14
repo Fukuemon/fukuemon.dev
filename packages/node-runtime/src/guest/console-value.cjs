@@ -4,7 +4,7 @@
 
 /** 値の木の深さ。超えた入れ子は、中身を写さずに文字にする。 */
 const MAX_DEPTH = 6;
-/** 1 つの配列、オブジェクト、Map、Set から写す要素の数。 */
+/** 1 回の呼び出しから写す引数の数と、1 つの配列、オブジェクト、Map、Set から写す要素の数。 */
 const MAX_ITEMS = 100;
 /** 1 つの文字列から写す文字数。 */
 const MAX_STRING = 10000;
@@ -16,9 +16,25 @@ const MAX_STACK = 30;
 
 const ELLIPSIS = "…";
 
+const isNative = (fn) => {
+  try {
+    return /\{\s*\[native code\]\s*\}\s*$/.test(Function.prototype.toString.call(fn));
+  } catch {
+    return false;
+  }
+};
+
+/** 組み込みの getter を、訪問者が上書きしたメソッドを通さずに呼ぶ。 */
+const builtinGetter = (proto, key) => Object.getOwnPropertyDescriptor(proto, key).get;
+const mapSize = builtinGetter(Map.prototype, "size");
+const setSize = builtinGetter(Set.prototype, "size");
+const typedArrayLength = builtinGetter(Object.getPrototypeOf(Uint8Array.prototype), "length");
+const viewByteLength = builtinGetter(DataView.prototype, "byteLength");
+
 /**
  * args を値の木の配列にする。describe は、実行する場所に固有の値（Proxy、DOM の要素）を文字にする関数で、当てはまらないときは undefined を返す。
  * 数は、NaN、Infinity、-0 を JSON で運べるよう、文字で持つ。
+ * 値の数を使い切ったら、残りの兄弟を写さずに、残りの件数の印を 1 つだけ足す。印は、開いている入れ子ごとに 1 つまでなので、値の数は MAX_NODES に深さの分を足した数を超えない。
  */
 function toConsoleValues(args, describe) {
   const budget = { nodes: MAX_NODES, chars: MAX_CHARS };
@@ -35,7 +51,18 @@ function toConsoleValues(args, describe) {
 
   const rest = (count) => text(`${ELLIPSIS}ほか ${count} 件`);
 
-  const tagOf = (value) => Object.prototype.toString.call(value).slice(8, -1);
+  /** total 個の要素のうち、先頭から写す。上限か値の数で止めたときは、mark で残りの件数の印を足す。 */
+  const take = (total, nextItem, mark) => {
+    const out = [];
+    for (let index = 0; index < total; index += 1) {
+      if (index >= MAX_ITEMS || budget.nodes <= 0) {
+        out.push(mark(total - index));
+        break;
+      }
+      out.push(nextItem());
+    }
+    return out;
+  };
 
   const classNameOf = (value) => {
     const proto = Object.getPrototypeOf(value);
@@ -51,26 +78,26 @@ function toConsoleValues(args, describe) {
     return name && typeof name.value === "string" ? name.value : "";
   };
 
-  const errorOf = (value) => {
-    const read = (key) => {
-      const own = Object.getOwnPropertyDescriptor(value, key);
-      if (own) return "value" in own ? own.value : undefined;
-      // name は Error.prototype が持つ。継承した getter は動かさない
-      for (let proto = Object.getPrototypeOf(value); proto; proto = Object.getPrototypeOf(proto)) {
-        const found = Object.getOwnPropertyDescriptor(proto, key);
-        if (found) return "value" in found ? found.value : undefined;
+  /** key を、自分か継承した記述子から読む。getter は、組み込みのもの（V8 と Firefox の stack）だけを呼ぶ。 */
+  const readProperty = (value, key) => {
+    for (let target = value; target; target = Object.getPrototypeOf(target)) {
+      const found = Object.getOwnPropertyDescriptor(target, key);
+      if (!found) continue;
+      if ("value" in found) return found.value;
+      if (typeof found.get !== "function" || !isNative(found.get)) return undefined;
+      try {
+        return found.get.call(value);
+      } catch {
+        return undefined;
       }
-      return undefined;
-    };
-    const name = read("name");
-    const message = read("message");
-    // V8 の stack は、インスタンスが持つ組み込みの getter なので、例外だけを止めて読む
-    let stack;
-    try {
-      stack = value.stack;
-    } catch {
-      stack = undefined;
     }
+    return undefined;
+  };
+
+  const errorOf = (value) => {
+    const name = readProperty(value, "name");
+    const message = readProperty(value, "message");
+    const stack = readProperty(value, "stack");
     // V8 は「    at 関数 (場所)」、Firefox と Safari は「関数@場所」の行を並べる。V8 の 1 行目は name と message である
     const lines = typeof stack === "string" ? stack.split("\n") : [];
     const v8 = lines.filter((line) => /^\s+at\s/.test(line));
@@ -87,38 +114,42 @@ function toConsoleValues(args, describe) {
 
   const ownEntries = (value, depth) => {
     const keys = Object.keys(value);
-    const entries = [];
-    for (const key of keys.slice(0, MAX_ITEMS)) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-      if (!descriptor) continue;
-      entries.push({
-        key: cut(key),
-        // getter は動かさない。DevTools と同じく、読んでいないことを示す
-        value: "value" in descriptor ? walk(descriptor.value, depth + 1) : text("(...)"),
-      });
-    }
-    if (keys.length > MAX_ITEMS) {
-      entries.push({ key: ELLIPSIS, value: rest(keys.length - MAX_ITEMS) });
-    }
-    return entries;
+    let index = 0;
+    return take(
+      keys.length,
+      () => {
+        const key = keys[index++];
+        const descriptor = Object.getOwnPropertyDescriptor(value, key);
+        return {
+          key: cut(key),
+          // getter は動かさない。DevTools と同じく、読んでいないことを示す
+          value:
+            descriptor && "value" in descriptor ? walk(descriptor.value, depth + 1) : text("(...)"),
+        };
+      },
+      (count) => ({ key: ELLIPSIS, value: rest(count) }),
+    );
   };
 
-  const items = (list, depth) => {
-    const out = list.slice(0, MAX_ITEMS).map((item) => walk(item, depth + 1));
-    if (list.length > MAX_ITEMS) out.push(rest(list.length - MAX_ITEMS));
-    return out;
+  const fromIterator = (total, iterator, toItem) =>
+    take(total, () => toItem(iterator.next().value), rest);
+
+  /** 深さの上限で、中身を写さずに出す文字。 */
+  const summary = (value) => {
+    if (Array.isArray(value)) return `Array(${value.length})`;
+    const className = classNameOf(value);
+    return className === undefined || className === "Object" ? "{…}" : className;
   };
 
   function walk(value, depth) {
     budget.nodes -= 1;
-    if (budget.nodes < 0) return text(ELLIPSIS);
     switch (typeof value) {
       case "string":
         return { kind: "string", value: cut(value) };
       case "number":
         return { kind: "number", value: Object.is(value, -0) ? "-0" : String(value) };
       case "bigint":
-        return { kind: "bigint", value: String(value) };
+        return { kind: "bigint", value: cut(String(value)) };
       case "boolean":
         return { kind: "boolean", value };
       case "undefined":
@@ -134,33 +165,48 @@ function toConsoleValues(args, describe) {
     const described = describe(value);
     if (typeof described === "string") return text(cut(described));
     if (ancestors.includes(value)) return { kind: "circular" };
-    const tag = tagOf(value);
-    if (depth >= MAX_DEPTH) {
-      return text(Array.isArray(value) ? `Array(${value.length})` : tag === "Object" ? "{…}" : tag);
-    }
+    if (depth >= MAX_DEPTH) return text(cut(summary(value)));
     ancestors.push(value);
     try {
-      if (Array.isArray(value)) return { kind: "array", items: items(value, depth) };
-      if (value instanceof Error || tag === "Error") return errorOf(value);
+      if (Array.isArray(value)) {
+        let index = 0;
+        return {
+          kind: "array",
+          items: take(value.length, () => walk(value[index++], depth + 1), rest),
+        };
+      }
+      if (value instanceof Error) return errorOf(value);
       if (value instanceof Map) {
-        const all = [...value.entries()];
-        const entries = all.slice(0, MAX_ITEMS).map(([key, item]) => ({
-          key: walk(key, depth + 1),
-          value: walk(item, depth + 1),
-        }));
-        if (all.length > MAX_ITEMS) {
-          entries.push({ key: text(ELLIPSIS), value: rest(all.length - MAX_ITEMS) });
-        }
+        const iterator = Map.prototype.entries.call(value);
+        const entries = take(
+          mapSize.call(value),
+          () => {
+            const [key, item] = iterator.next().value;
+            return { key: walk(key, depth + 1), value: walk(item, depth + 1) };
+          },
+          (count) => ({ key: text(ELLIPSIS), value: rest(count) }),
+        );
         return { kind: "map", entries };
       }
-      if (value instanceof Set) return { kind: "set", items: items([...value], depth) };
-      if (value instanceof Date) {
-        return text(Number.isNaN(value.getTime()) ? "Invalid Date" : value.toISOString());
+      if (value instanceof Set) {
+        const items = fromIterator(setSize.call(value), Set.prototype.values.call(value), (item) =>
+          walk(item, depth + 1),
+        );
+        return { kind: "set", items };
       }
-      if (value instanceof RegExp) return text(cut(String(value)));
-      if (ArrayBuffer.isView(value)) return text(`${tag}(${value.length ?? value.byteLength})`);
-      if (tag === "Promise" || tag === "WeakMap" || tag === "WeakSet" || tag === "WeakRef") {
-        return text(tag);
+      if (value instanceof Date) {
+        const time = Date.prototype.getTime.call(value);
+        return text(Number.isNaN(time) ? "Invalid Date" : Date.prototype.toISOString.call(value));
+      }
+      if (value instanceof RegExp) return text(cut(RegExp.prototype.toString.call(value)));
+      if (ArrayBuffer.isView(value)) {
+        const size =
+          value instanceof DataView ? viewByteLength.call(value) : typedArrayLength.call(value);
+        return text(`${classNameOf(value) ?? "ArrayBuffer"}(${size})`);
+      }
+      for (const builtin of ["Promise", "WeakMap", "WeakSet", "WeakRef"]) {
+        const ctor = globalThis[builtin];
+        if (typeof ctor === "function" && value instanceof ctor) return text(builtin);
       }
       const className = classNameOf(value);
       return {
@@ -173,16 +219,20 @@ function toConsoleValues(args, describe) {
     }
   }
 
-  const values = [];
-  for (const arg of args) {
-    try {
-      values.push(walk(arg, 0));
-    } catch {
-      // 写せない値は、記録を止めずに印を残す
-      values.push(text("(写せない値)"));
-    }
-  }
-  return values;
+  let index = 0;
+  return take(
+    args.length,
+    () => {
+      const arg = args[index++];
+      try {
+        return walk(arg, 0);
+      } catch {
+        // 写せない値は、記録を止めずに印を残す
+        return text("(写せない値)");
+      }
+    },
+    rest,
+  );
 }
 
 if (typeof module === "object" && module !== null) module.exports = { toConsoleValues };

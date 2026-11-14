@@ -11,6 +11,7 @@ import type { OpenPort, TerminalSize } from "../types";
 import consoleTraceSource from "../guest/console-trace.cjs?raw";
 import consoleValueSource from "../guest/console-value.cjs?raw";
 import httpTraceSource from "../guest/http-trace.cjs?raw";
+import { portOfOrigin } from "./preview-origin";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
@@ -149,14 +150,9 @@ function createPorts(container: WebContainer) {
     },
     previewMessages: {
       subscribe: (onMessage: (message: unknown, port: number) => void) => {
-        // 待ち受けているポートの origin から届いたものだけを受ける。ほかの iframe とウィンドウからの記録を、コンソールに混ぜない
         const receive = (event: MessageEvent) => {
-          for (const [port, url] of open) {
-            if (URL.canParse(url) && new URL(url).origin === event.origin) {
-              onMessage(event.data, port);
-              return;
-            }
-          }
+          const port = portOfOrigin(open, event.origin);
+          if (port !== undefined) onMessage(event.data, port);
         };
         globalThis.addEventListener("message", receive);
         return () => globalThis.removeEventListener("message", receive);
@@ -176,7 +172,8 @@ export const webContainerBackend: RuntimeBackend = {
       await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
       await writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource);
       await writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource);
-      await container.setPreviewScript(previewScript);
+      // 登録できなくても、プレビューの記録が欠けるだけなので、起動は続ける (docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
+      await container.setPreviewScript(previewScript).catch(() => undefined);
       const ports = createPorts(container);
       await ports.ready();
       return {

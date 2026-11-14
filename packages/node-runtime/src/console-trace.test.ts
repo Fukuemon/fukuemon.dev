@@ -43,27 +43,34 @@ const argsOf = async (expression: string) => {
 };
 
 describe("console-trace.cjs", () => {
-  it("ログレベルごとに 1 行の記録を書き、元の出力も残す", async () => {
-    const { records, stdout, stderr } = await run(
+  const everyLevel = () =>
+    run(
       `for (const level of ["debug", "log", "info", "warn", "error"]) console[level](level + "!");`,
     );
-    expect(records.map((record) => record?.level)).toStrictEqual([
-      "debug",
-      "log",
-      "info",
-      "warn",
-      "error",
-    ]);
-    expect(records[3]?.args).toStrictEqual([{ kind: "string", value: "warn!" }]);
-    expect(stdout).toStrictEqual(["debug!", "log!", "info!"]);
-    expect(stderr).toStrictEqual(["warn!", "error!"]);
+
+  it("ログレベルごとに 1 行の記録を書く", async () => {
+    const { records } = await everyLevel();
+    expect(records.map((record) => [record?.level, record?.args])).toStrictEqual(
+      ["debug", "log", "info", "warn", "error"].map((level) => [
+        level,
+        [{ kind: "string", value: `${level}!` }],
+      ]),
+    );
+  });
+
+  it("元の出力も、標準出力と標準エラー出力に残す", async () => {
+    const { stdout, stderr } = await everyLevel();
+    expect({ stdout, stderr }).toStrictEqual({
+      stdout: ["debug!", "log!", "info!"],
+      stderr: ["warn!", "error!"],
+    });
   });
 
   it("記録に、呼んだ時刻を入れる", async () => {
     const before = Date.now();
     const { records } = await run(`console.log("x");`);
-    expect(records[0]?.time).toBeGreaterThanOrEqual(before);
-    expect(records[0]?.time).toBeLessThanOrEqual(Date.now());
+    const time = records[0]?.time ?? 0;
+    expect(time >= before && time <= Date.now()).toBe(true);
   });
 
   it("入れ子のオブジェクトと配列を、項目の名前と値の木にする", async () => {
@@ -114,9 +121,13 @@ describe("console-trace.cjs", () => {
     const args = await argsOf(
       `new TypeError("bad"), new Map([["k", 1]]), new Set([true]), new (class Point { constructor() { this.x = 1; } })()`,
     );
-    expect(args?.[0]).toMatchObject({ kind: "error", name: "TypeError", message: "bad" });
-    expect(args?.[0]).toHaveProperty("stack.0", expect.stringMatching(/^at /));
-    expect(args?.slice(1)).toStrictEqual([
+    expect(args).toStrictEqual([
+      {
+        kind: "error",
+        name: "TypeError",
+        message: "bad",
+        stack: expect.arrayContaining([expect.stringMatching(/^at /)]) as unknown,
+      },
       {
         kind: "map",
         entries: [{ key: { kind: "string", value: "k" }, value: { kind: "number", value: 1 } }],
@@ -147,8 +158,8 @@ describe("console-trace.cjs", () => {
     ]);
   });
 
-  it("getter、toJSON、Proxy の罠を動かさない", async () => {
-    const { records, stdout } = await run(
+  const trapped = () =>
+    run(
       [
         `const touched = [];`,
         `const target = { toJSON() { touched.push("toJSON"); return 1; } };`,
@@ -158,7 +169,14 @@ describe("console-trace.cjs", () => {
         `process.stdout.write("touched:" + touched.join(",") + "\\n");`,
       ].join("\n"),
     );
+
+  it("getter、toJSON、Proxy の罠を動かさない", async () => {
+    const { stdout } = await trapped();
     expect(stdout.at(-1)).toBe("touched:");
+  });
+
+  it("getter の項目は (...) にし、Proxy は文字にする", async () => {
+    const { records } = await trapped();
     expect(records[0]?.args).toStrictEqual([
       {
         kind: "object",
@@ -180,12 +198,15 @@ describe("console-trace.cjs", () => {
     for (let depth = 0; depth < 6; depth += 1) {
       node = node?.kind === "object" ? node.entries[0]?.value : undefined;
     }
-    expect(node).toStrictEqual({ kind: "text", value: "{…}" });
-    expect(many?.kind === "array" && many.items.at(-1)).toStrictEqual({
-      kind: "text",
-      value: "…ほか 1 件",
+    expect({
+      node,
+      last: many?.kind === "array" && many.items.at(-1),
+      length: long?.kind === "string" && long.value.length,
+    }).toStrictEqual({
+      node: { kind: "text", value: "{…}" },
+      last: { kind: "text", value: "…ほか 1 件" },
+      length: 10001,
     });
-    expect(long?.kind === "string" && long.value.length).toBe(10001);
   });
 
   it("stdout の write を包んだコードが console を呼んでも、2 重に記録しない", async () => {

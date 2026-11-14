@@ -16,11 +16,14 @@ const MAX_RECORDS = 1000;
 
 /**
  * 1 件の記録の大きさの上限。訪問者のプログラムとプレビューのページも記録を出せるので、写す側（guest/console-value.cjs）の上限を超えた分を捨てる。
- * 深さは、写す側の上限で文字にした値と、Map の鍵の分を足す。
+ * 深さは、写す側が中身を写さずに文字にした段を含める。値の数は、写す側の上限に、入れ子ごとに 1 つ足す残りの件数の印の分の余裕を足す。
+ * 引数は、写す側の上限の 100 個に、残りの件数の印を 1 つ足した数まで受ける。
  */
-const MAX_DEPTH = 8;
+const MAX_DEPTH = 6;
 const MAX_NODES = 2100;
-const MAX_ARGS = 100;
+const MAX_ARGS = 101;
+/** 時刻は、HTTP の記録と同じく、0 以上の安全な整数で、今より 1 日を超えて先でないものだけを受ける。 */
+const MAX_FUTURE_MS = 24 * 60 * 60 * 1000;
 const MAX_TEXT = 10_001;
 const MAX_STACK = 30;
 
@@ -119,8 +122,9 @@ export function parseConsoleRecord(
   if (
     !isObject(value) ||
     !isLevel(value.level) ||
-    typeof value.time !== "number" ||
-    !Number.isFinite(value.time) ||
+    !Number.isSafeInteger(value.time) ||
+    (value.time as number) < 0 ||
+    (value.time as number) > Date.now() + MAX_FUTURE_MS ||
     !Array.isArray(value.args) ||
     value.args.length > MAX_ARGS
   ) {
@@ -129,7 +133,7 @@ export function parseConsoleRecord(
   const budget = { nodes: MAX_NODES };
   try {
     const args = value.args.map((arg: unknown) => toValue(arg, 0, budget));
-    return { level: value.level, time: value.time, args };
+    return { level: value.level, time: value.time as number, args };
   } catch (error) {
     if (error instanceof Rejected) return undefined;
     throw error;
@@ -186,7 +190,6 @@ export function createConsoleRecords({
     if (parsed === undefined || disposed) return;
     count += 1;
     pending.push({ id: String(count), source, ...parsed });
-    // 上限を超えて届いた分は、store に入れる前に捨てる
     if (pending.length > max) pending = pending.slice(pending.length - max);
     cancel ??= schedule(flush);
   };

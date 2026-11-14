@@ -158,16 +158,21 @@ describe("records", () => {
       const line = JSON.stringify({ level: "error", time: 7, args: [{ kind: "null" }] });
       created.processes[0]?.emit(`ok\n${CONSOLE_PREFIX}${line}\n`);
       vi.advanceTimersByTime(20);
-      expect(runtime.consoleEntries.getSnapshot()).toStrictEqual([
-        {
-          id: "1",
-          level: "error",
-          time: 7,
-          source: { kind: "process", name: "サーバー" },
-          args: [{ kind: "null" }],
-        },
-      ]);
-      expect(handle.output.read()).toBe("ok\n");
+      expect({
+        records: runtime.consoleEntries.getSnapshot(),
+        terminal: handle.output.read(),
+      }).toStrictEqual({
+        records: [
+          {
+            id: "1",
+            level: "error",
+            time: 7,
+            source: { kind: "process", name: "サーバー" },
+            args: [{ kind: "null" }],
+          },
+        ],
+        terminal: "ok\n",
+      });
     } finally {
       vi.useRealTimers();
     }
