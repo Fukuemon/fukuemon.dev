@@ -7,14 +7,15 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import subsetFont from "subset-font";
 
 /**
- * 和文の書体のスライスを、その書体を当てる要素の字だけに作り直し、使う字の無いスライスの @font-face を CSS から外す。
+ * 和文の書体のスライスを、その書体を当てる要素の字だけに作り直し、使う字の無い分割の @font-face を CSS から外す。
  * 書体を当てる要素は、ビルドした CSS で、その書体を font-family に持つクラスのセレクタから決める。
  * 要素を特定できないときは、字を取りこぼさないように、全ての HTML の字を使う。
  * 使う字のあるスライスの分け方と unicode-range はそのまま残すので、ページは今までと同じスライスだけを取得する。
- * 使う字の無いスライスの規則は、どのページも取得しないのに、描画を止める CSS の転送量を増やすので外す。
+ * 使う字の無い分割の規則は、どのページも取得しないのに、描画を止める CSS の転送量を増やすので外す。外した規則が指すファイルも消す。
  * 作り直したファイルは中身の hash で名前を付け直す。同じ名前のまま中身を変えると、
  * 長く保存したキャッシュが古い字の集合を返し、新しく使った字が別の書体で描かれる。
- * @param options.rebuild false のときは、使う字のあるスライスを作り直さず、使う字の無いスライスの規則を外すだけにする
+ * @param options.rebuild false のときは、使う字のある分割を作り直さず、使う字の無い分割の規則を外すだけにする。
+ *   要素を特定できないことの警告も出さない。代替の書体として当てる書体は、全ての HTML の字を使うのが前提だからである
  */
 export function subsetFonts(
   family: string,
@@ -30,13 +31,14 @@ export function subsetFonts(
         const rules = await collectFontRules(files, family);
         if (rules.classes.size === 0 && rules.unresolved.length === 0)
           throw new Error(`${family}: 書体を当てる規則が CSS に見つからない`);
-        for (const selector of new Set(rules.unresolved))
-          logger.warn(`${family}: ${selector} の要素を特定できないので、全ての HTML の字を使う`);
+        if (rebuild)
+          for (const selector of new Set(rules.unresolved))
+            logger.warn(`${family}: ${selector} の要素を特定できないので、全ての HTML の字を使う`);
         const used = await usedChars(files, css, rules, family);
         const chars = [...used];
         const faces = await collectFaces(css, family);
         if (faces.length === 0)
-          throw new Error(`${family}: 作り直す @font-face が CSS に見つからない`);
+          throw new Error(`${family}: 対象の @font-face が CSS に見つからない`);
         const paths = new Map(faces.map((face) => [face.url, inside(root, face.url)]));
         if (rebuild)
           for (const face of faces)
@@ -51,7 +53,7 @@ export function subsetFonts(
           const path = paths.get(face.url)!;
           if (text === "") {
             unused.add(face.url);
-            await rm(path, { force: true });
+            await rm(path);
             continue;
           }
           if (!rebuild) continue;
@@ -64,31 +66,40 @@ export function subsetFonts(
           before += src.length;
           after += subset.length;
         }
+        const removed = new Set<string>();
         for (const f of css) {
           const body = await readFile(f, "utf8");
-          let next = removeFaces(body, unused);
+          let next = removeFaces(body, unused, removed);
           for (const [from, to] of renames) next = next.replace(urlOf(from), `$1${to}$2`);
           if (next !== body) await writeFile(f, next);
         }
+        for (const url of removed) if (!unused.has(url)) await rm(inside(root, url));
         logger.info(
-          `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars), ${unused.size} unused faces removed`,
+          rebuild
+            ? `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars), ${unused.size} unused faces removed`
+            : `${family}: ${unused.size} unused faces removed (${used.size} chars)`,
         );
       },
     },
   };
 }
 
-/** woff2 の URL が `urls` にある @font-face を、CSS から外す */
-function removeFaces(css: string, urls: ReadonlySet<string>): string {
+/** woff2 の URL が `urls` にある @font-face を、CSS から外す。外した規則の src の URL を `removed` に足す */
+function removeFaces(css: string, urls: ReadonlySet<string>, removed: Set<string>): string {
   if (urls.size === 0) return css;
   return css.replace(/@font-face\s*\{([^}]*)\}/g, (rule, body: string) => {
     const url = woff2Of(body);
-    return url !== undefined && urls.has(url) ? "" : rule;
+    if (url === undefined || !urls.has(url)) return rule;
+    for (const [, src] of body.matchAll(FONT_URL)) removed.add(src!);
+    return "";
   });
 }
 
+/** url() の中身。引用符で囲んでも囲まなくてもよい */
+const FONT_URL = /url\(["']?([^)"']+)["']?\)/g;
+
 const woff2Of = (body: string): string | undefined =>
-  /url\(([^)]+\.woff2)\)/.exec(body)?.[1]?.replace(/^["']|["']$/g, "");
+  [...body.matchAll(FONT_URL)].map((m) => m[1]!).find((u) => u.endsWith(".woff2"));
 
 interface Face {
   url: string;

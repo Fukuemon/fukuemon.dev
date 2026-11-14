@@ -315,25 +315,71 @@ describe("ビルド後の作り直し", () => {
     expect(texts()).toStrictEqual(["A—"]);
   });
 
-  it("使う字がないスライスは、@font-face を CSS から外し、ファイルを消す", async () => {
-    await build({ html: heading("あ"), css: both });
-
-    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).not.toContain("b.AAAAAAAA");
-    expect(await readdir(join(dir, "_astro"))).not.toContain("b.AAAAAAAA.woff2");
+  const state = async () => ({
+    site: await readFile(join(dir, "_astro/site.css"), "utf8"),
+    files: (await readdir(join(dir, "_astro"))).sort(),
+    subsets: subsetFont.mock.calls.length,
   });
 
-  it("使う字がないスライスの @font-face は、どの CSS からも外す", async () => {
+  it("使う字が無い分割は、@font-face を CSS から外し、ファイルを消す", async () => {
+    await build({ html: heading("あ"), css: both });
+
+    expect(await state()).toStrictEqual({
+      site: face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed) + RULE,
+      files: ["app.js", "page.css", "site.css", renamed].sort(),
+      subsets: 1,
+    });
+  });
+
+  it("使う字が無い分割の規則を外すときは、規則が指す woff のファイルも消す", async () => {
+    const withWoff = face("b", "U+3044").replace(
+      'format("woff2")',
+      'format("woff2"),url("/_astro/b.BBBBBBBB.woff")format("woff")',
+    );
+    await build({
+      html: heading("あ"),
+      css: face("a", "U+3042") + withWoff,
+      extraFile: "b.BBBBBBBB.woff",
+    });
+
+    expect((await state()).files).toStrictEqual(["app.js", "page.css", "site.css", renamed].sort());
+  });
+
+  it("使う字が無い分割の @font-face は、どの CSS からも外す", async () => {
     await build({ html: heading("あ"), css: both, pageCss: face("b", "U+3044") });
 
     expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe("");
   });
 
-  it("rebuild が false のときは、使う字のあるスライスを作り直さず、使う字の無いスライスの規則だけを外す", async () => {
+  it("引用符で囲んだ URL の規則も外す", async () => {
+    const quoted = face("b", "U+3044").replace(
+      "url(/_astro/b.AAAAAAAA.woff2)",
+      'url("/_astro/b.AAAAAAAA.woff2")',
+    );
+    await build({ html: heading("あ"), css: face("a", "U+3042") + quoted });
+
+    expect((await state()).site).not.toContain("b.AAAAAAAA");
+  });
+
+  it("rebuild が false のときは、使う字のある分割を作り直さず、使う字の無い分割の規則だけを外す", async () => {
     await build({ html: heading("あ"), css: both, options: { rebuild: false } });
 
-    expect(subsetFont).not.toHaveBeenCalled();
-    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(face("a", "U+3042") + RULE);
-    expect(await readdir(join(dir, "_astro"))).toContain("a.AAAAAAAA.woff2");
+    expect(await state()).toStrictEqual({
+      site: face("a", "U+3042") + RULE,
+      files: ["a.AAAAAAAA.woff2", "app.js", "page.css", "site.css"],
+      subsets: 0,
+    });
+  });
+
+  it("rebuild が false のときは、要素を特定できなくても警告しない", async () => {
+    await build({
+      html: heading("あ"),
+      css: face("a", "U+3042"),
+      rule: `h2{font-family:"Zen Old Mincho"}`,
+      options: { rebuild: false },
+    });
+
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("rebuild が false のときは、名前に hash の無いファイルでもビルドを止めない", async () => {

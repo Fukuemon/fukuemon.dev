@@ -11,7 +11,7 @@ const round1 = (v: number) => String(Math.round(v * 10) / 10);
 
 /**
  * 点の列を、0.1 の単位に丸めた折れ線の `d` にする。
- * 2 点目からは前の点からの差（`l`）で書く。HTML の転送量を減らし、トップの LCP を早めるためである。
+ * 2 点目からは前の点からの差（`l`）で書く。
  * 差は丸めた座標どうしで取るので、絶対の座標で書いたときと同じ点を通る。
  */
 export function pathData(pts: readonly (readonly [number, number])[]): string {
