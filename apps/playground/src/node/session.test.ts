@@ -611,6 +611,55 @@ describe("保存しないファイル", () => {
     expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "b" }]);
   });
 
+  it("書き直しが失敗した後に、初期の状態に戻す途中で保存のための読み込みが失敗しても、除いた後のレコードを書かない", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    let failRead: (error: Error) => void = () => undefined;
+    latest().readAll.mockImplementationOnce(() => new Promise((_, reject) => (failRead = reject)));
+    let finishClear: () => void = () => undefined;
+    workspace.clear.mockImplementationOnce(
+      () => new Promise<undefined>((resolve) => (finishClear = () => resolve(undefined))),
+    );
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    const reset = session.reset();
+    await vi.advanceTimersByTimeAsync(0);
+    failRead(new Error("ELOOP"));
+    await vi.advanceTimersByTimeAsync(0);
+    finishClear();
+    await reset;
+    await vi.advanceTimersByTimeAsync(0);
+    expect({ saves: saves.length, hasSaved: session.hasSaved.getSnapshot() }).toStrictEqual({
+      saves: 0,
+      hasSaved: false,
+    });
+  });
+
+  it("書き直しが失敗した後に新しい保存がキューにあれば、保存しないパスだけの通知が来ても、除いた後のレコードを書かない", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    let finish: () => void = () => undefined;
+    workspace.save.mockImplementationOnce(async (record) => {
+      await new Promise<void>((resolve) => (finish = resolve));
+      saves.push(record);
+    });
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    latest().change("node_modules/ms/index.js", "x");
+    await vi.advanceTimersByTimeAsync(0);
+    finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "c" }]);
+  });
+
   it("書き直しが失敗した後に、保存しないパスだけの通知が来ても、除いた後のレコードを書く", async () => {
     const { session, workspace, saves, latest } = setup({
       kind: "saved",

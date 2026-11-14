@@ -351,6 +351,17 @@ describe("files.readAll", () => {
     expect(max).toBe(32);
   });
 
+  it("読めないシンボリックリンクは、limit の数と大きさに数えない", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("loop", "");
+    const readFile = created.files.api.readFile;
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "loop" ? Promise.reject(new Error("ELOOP")) : readFile(path),
+    );
+    const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
+    expect(files).toHaveLength(3);
+  });
+
   it("limit の数と大きさちょうどなら、読み終える", async () => {
     const { runtime } = await bootFake();
     const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });

@@ -219,7 +219,7 @@ export function createNodeSession({
     if (pendingRewrite) queue({ ...pendingRewrite, savedAt: now() });
   };
   rewrite();
-  // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る
+  // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る (ADR-0070)
   const rewriteIfUnsaved = () => {
     if (lastSaved === undefined) rewrite();
   };
