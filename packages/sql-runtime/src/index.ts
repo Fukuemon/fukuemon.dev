@@ -77,25 +77,33 @@ export function keepLastRows(response: SqlResponse): SqlResponse {
   };
 }
 
-/** セルを、JSON で送っても表に出す文字列が変わらない値にする。表は、日時を ISO 8601 で、bytea を `\x` で始まる 16 進数で出す。 */
+const hex = (bytes: Uint8Array) =>
+  `\\x${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+
+const isoDate = (date: Date) =>
+  Number.isNaN(date.getTime()) ? "Invalid Date" : date.toISOString();
+
+const bigintAsText = (_: string, item: unknown) =>
+  typeof item === "bigint" ? item.toString() : item;
+
+/**
+ * セルを、JSON で送っても表に出す文字列が変わらない値にする。表は、日時を ISO 8601 で、bytea を `\x` で始まる 16 進数で出す。
+ * NaN と Infinity は JSON で null になり、表が NULL と出すので、文字列にする。配列と JSON の中の bigint も、文字列にする。
+ */
 function toJsonCell(value: unknown): unknown {
-  // NaN と Infinity は JSON で null になり、表が NULL と出すので、文字列にする
-  if (typeof value === "bigint" || (typeof value === "number" && !Number.isFinite(value)))
-    return String(value);
-  if (value instanceof Date)
-    return Number.isNaN(value.getTime()) ? "Invalid Date" : value.toISOString();
-  if (value instanceof Uint8Array) {
-    return `\\x${Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  switch (typeof value) {
+    case "bigint":
+      return value.toString();
+    case "number":
+      return Number.isFinite(value) ? value : String(value);
+    case "object":
+      if (value === null) return null;
+      if (value instanceof Date) return isoDate(value);
+      if (value instanceof Uint8Array) return hex(value);
+      return JSON.parse(JSON.stringify(value, bigintAsText)) as unknown;
+    default:
+      return value;
   }
-  if (typeof value === "object" && value !== null) {
-    // 配列と JSON の中の bigint は、JSON.stringify が投げるので文字列にする。表も、同じ文字列で出す
-    return JSON.parse(
-      JSON.stringify(value, (_, item: unknown) =>
-        typeof item === "bigint" ? item.toString() : item,
-      ),
-    ) as unknown;
-  }
-  return value;
 }
 
 /**
