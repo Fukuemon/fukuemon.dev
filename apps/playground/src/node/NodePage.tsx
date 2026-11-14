@@ -145,7 +145,8 @@ export function NodePage({ search, embedded }: { search: string; embedded: boole
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
       )}
-      <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
+      {/* プロジェクトの読み込みから起動へ続けて進むので、起動の待ちと同じ文にし、読み上げを 1 回にする。 */}
+      <Suspense fallback={<PageLoading label="実行環境を起動しています" />}>
         <NodeTool search={search} />
       </Suspense>
     </main>

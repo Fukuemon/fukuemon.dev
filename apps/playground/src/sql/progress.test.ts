@@ -5,12 +5,12 @@ import { bootLabel, progressLabel } from "./progress";
 const failed = { kind: "failed", error: { message: "PGlite を読み込めませんでした" } } as const;
 
 describe("bootLabel", () => {
-  it.each([
-    [{ kind: "loading" } as const, "PGlite を読み込んでいます"],
-    [{ kind: "seeding" } as const, "初期データを入れています"],
-  ])("%o の間は、%s と出す", (phase, label) => {
-    expect(bootLabel(phase)).toBe(label);
-  });
+  it.each([{ kind: "loading" } as const, { kind: "seeding" } as const])(
+    "%o の間は、同じ文 PGlite を読み込んでいます を出す",
+    (phase) => {
+      expect(bootLabel(phase)).toBe("PGlite を読み込んでいます");
+    },
+  );
 
   it.each([{ kind: "idle" } as const, { kind: "ready" } as const, failed])(
     "%o の間は、何も出さない",
