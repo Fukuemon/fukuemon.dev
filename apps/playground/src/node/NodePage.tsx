@@ -25,7 +25,7 @@ const startRuntime = createRuntimeStarter();
 
 const pendingState = { kind: "pending" } as const;
 
-// プロジェクトの読み込みから起動へ続けて進むので、2 つの待ちで文を替えない（packages/ui/design/components.md の PageLoading）
+// プロジェクトの読み込みから起動へ続けて起きるので、2 つの待ちで文を替えない（packages/ui/design/components.md の PageLoading）
 const bootLabel = "実行環境を起動しています";
 
 /** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */

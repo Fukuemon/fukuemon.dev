@@ -2,7 +2,7 @@ import type { LoadPhase } from "@fukuemon/sql-runtime/worker";
 
 /** PGlite を使えるようになるまでの、画面全体の待ちの文。待っていないときは undefined を返す。 */
 export function bootLabel(phase: LoadPhase): string | undefined {
-  // 続けて進む待ちでは文を替えない。替えると、スクリーンリーダーが 2 回読み上げる（packages/ui/design/components.md の PageLoading）
+  // 続けて起きる 2 つの待ちでは文を替えない。替えると、スクリーンリーダーが 2 回読み上げる（packages/ui/design/components.md の PageLoading）
   if (phase.kind === "loading" || phase.kind === "seeding") return "PGlite を読み込んでいます";
   return undefined;
 }

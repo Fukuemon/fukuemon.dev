@@ -43,7 +43,9 @@ import * as Stories from "./FileTree.stories";
 
 ### 起動を待つ空
 
-`state` に `pending` を渡すと、題だけを出し、操作、帯、中身を出さない。画面の全ての領域が同じ処理を待つ間に使う。待ちの印は `PageLoading` が画面の右下に出す。
+`state` に `pending` を渡すと、題だけを出し、操作のボタン、名前を入力する欄、ファイルの木を出さない。  
+画面の全ての領域が同じ処理を待つ間に使う。  
+待ちの印は `PageLoading` が画面の右下に出す。
 
 <Canvas of={Stories.Pending} />
 
