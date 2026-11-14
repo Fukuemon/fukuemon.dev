@@ -67,6 +67,12 @@ test.describe("幅 1440px", () => {
     await expectAt(page, "stack");
   });
 
+  test("最初の文で左の矢印キーを押すと、4 つ目の文へ回る", async ({ page }) => {
+    await openGarden(page);
+    await page.keyboard.press("ArrowLeft");
+    await expectAt(page, "articles");
+  });
+
   test("Tab で 4 つ目の文の中のリンクにフォーカスを移すと、カメラが 4 つ目の文へ動く", async ({
     page,
   }) => {
@@ -91,13 +97,19 @@ test.describe("幅 1440px", () => {
     await expect(page.locator("main [data-garden-card]")).toHaveCount(4);
     await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
     await expect(page.locator("[data-garden-card].is-current")).toHaveCount(0);
+    await expect(page.locator("[data-garden-card][draggable]")).toHaveCount(0);
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("style") ?? ""),
+    ).not.toContain("--scene-");
   });
 });
 
 test.describe("幅 390px", () => {
   test.use({ viewport: { width: 390, height: 844 }, colorScheme: "light" });
 
-  test("庭を開くと、和紙が画面の幅に収まり、ボタンが文に重ならない", async ({ page }) => {
+  test("4 つの文のどれへ移っても、和紙が画面の幅に収まり、ボタンが文に重ならない", async ({
+    page,
+  }) => {
     await openGarden(page);
     for (const [i, id] of ["profile", "career", "stack", "articles"].entries()) {
       await page.locator(`[data-station="${i}"]`).click();
@@ -112,5 +124,40 @@ test.describe("幅 390px", () => {
       );
       expect(paper.y + paper.height).toBeLessThanOrEqual(top);
     }
+  });
+});
+
+test.describe("ダークのテーマ", () => {
+  test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "dark" });
+
+  // 和紙の字の色は時間帯の場面の色で、テーマのトークンが和紙の中に入らない
+  test("昼の庭を開くと、和紙の字とリンクの字が、ライトのテーマと同じ場面の色で出る", async ({
+    page,
+  }) => {
+    await openGarden(page);
+    const colors = await page.evaluate(() => {
+      const of = (sel: string) => getComputedStyle(document.querySelector(sel)!).color;
+      return [of("#profile"), of('[aria-labelledby="articles"] a')];
+    });
+    expect(colors).toEqual(["rgb(26, 23, 20)", "rgb(61, 75, 43)"]);
+  });
+});
+
+test.describe("描く途中の例外", () => {
+  test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
+
+  test("場面を描く途中で例外が出ると、ふつうのページに戻り、セクションにインラインのスタイルが残らない", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      WebGL2RenderingContext.prototype.drawElements = () => {
+        throw new Error("描画の失敗");
+      };
+    });
+    await page.clock.setFixedTime(AUTUMN_NOON);
+    await page.goto("/");
+    await expect(page.locator("[data-garden-stage]")).toBeHidden();
+    await expect(page.locator("main [data-garden-card]")).toHaveCount(4);
+    await expect(page.locator("[data-garden-card][style]")).toHaveCount(0);
   });
 });

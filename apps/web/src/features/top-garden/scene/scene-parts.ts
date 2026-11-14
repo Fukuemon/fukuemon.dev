@@ -111,10 +111,10 @@ export interface TreeLeaf {
   readonly colors: readonly string[];
 }
 
-export interface Tree {
+interface Tree {
   readonly group: Group;
   /** 和紙を掛ける枝を伸ばし始める幹の点。木の原点からの位置（m） */
-  readonly top: Vector3;
+  readonly boughFrom: Vector3;
 }
 
 /**
@@ -205,7 +205,7 @@ export function tree(
     g.add(m);
   }
   g.scale.setScalar(s);
-  return { group: g, top: trunk.getPoint(0.86).multiplyScalar(s) };
+  return { group: g, boughFrom: trunk.getPoint(0.86).multiplyScalar(s) };
 }
 
 /**

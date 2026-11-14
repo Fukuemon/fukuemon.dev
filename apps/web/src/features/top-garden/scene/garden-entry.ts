@@ -6,47 +6,62 @@ import { STATIONS } from "../layout";
 import type { Season, TimeOfDay } from "../stage/season";
 
 const root = document.documentElement;
-const leave = () => root.classList.remove("stage-on", "intro", "garden-ready");
+const wiring = new AbortController();
+const on = { signal: wiring.signal };
+
+/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと「文だけで読む」で呼ぶ */
+function leave(cards: readonly HTMLElement[]): void {
+  wiring.abort();
+  for (const el of cards) el.classList.remove("is-current");
+  root.classList.remove("stage-on", "intro", "garden-ready");
+}
 
 /** 庭の中のボタン、矢印キー、セクションへのフォーカスで、和紙の間を移る */
 function wire(garden: Garden, cards: readonly HTMLElement[]): void {
   const nav = document.querySelector<HTMLElement>("[data-garden-nav]");
   const live = document.querySelector<HTMLElement>("[data-garden-live]");
-  const tabs = [...(nav?.querySelectorAll<HTMLButtonElement>("[data-station]") ?? [])];
+  const stops = [...(nav?.querySelectorAll<HTMLButtonElement>("[data-station]") ?? [])];
   const pause = nav?.querySelector<HTMLButtonElement>("[data-garden-pause]");
   const plain = nav?.querySelector<HTMLButtonElement>("[data-garden-plain]");
-  // 「文だけで読む」で、庭の操作の listener をまとめて外す。
-  const wiring = new AbortController();
-  const on = { signal: wiring.signal };
 
   const select = (i: number, announce: boolean) => {
     const s = garden.go(i);
-    tabs.forEach((b, k) => b.setAttribute("aria-current", String(k === s)));
+    stops.forEach((b, k) => b.setAttribute("aria-current", String(k === s)));
     cards.forEach((el, k) => el.classList.toggle("is-current", k === s));
-    const heading = cards[s]?.querySelector("h1, h2")?.textContent?.trim();
-    if (announce && live && heading) live.textContent = heading;
+    // 見えなくなった和紙にフォーカスが残らないよう、移った先のボタンへフォーカスを移す。
+    const focused = document.activeElement;
+    if (focused && cards.some((el, k) => k !== s && el.contains(focused))) stops[s]?.focus();
+    if (!announce || !live) return;
+    // 同じ見出しを続けて書いても読み上げられるよう、いったん空にしてから書く。
+    live.textContent = "";
+    requestAnimationFrame(() => {
+      live.textContent = cards[s]?.querySelector("h1, h2")?.textContent?.trim() ?? "";
+    });
   };
-  tabs.forEach((b, i) => b.addEventListener("click", () => select(i, true), on));
+  stops.forEach((b, i) => b.addEventListener("click", () => select(i, true), on));
   cards.forEach((el, i) =>
     el.addEventListener(
       "focusin",
       () => {
-        if (garden.station() !== i) select(i, false);
+        if (garden.current() !== i) select(i, false);
       },
       on,
     ),
   );
-  const onKey = (e: KeyboardEvent) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    if (
-      e.target instanceof Element &&
-      e.target.closest("input, textarea, select, [contenteditable]")
-    )
-      return;
-    if (e.key === "ArrowRight") select(garden.station() + 1, true);
-    else if (e.key === "ArrowLeft") select(garden.station() - 1, true);
-  };
-  addEventListener("keydown", onKey, on);
+  addEventListener(
+    "keydown",
+    (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (
+        e.target instanceof Element &&
+        e.target.closest("input, textarea, select, [contenteditable]")
+      )
+        return;
+      if (e.key === "ArrowRight") select(garden.current() + 1, true);
+      else if (e.key === "ArrowLeft") select(garden.current() - 1, true);
+    },
+    on,
+  );
   pause?.addEventListener(
     "click",
     () => {
@@ -57,21 +72,28 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
     on,
   );
   const fine = matchMedia("(hover: hover) and (pointer: fine)");
-  const onPointer = (e: PointerEvent) => {
-    if (fine.matches)
-      garden.pointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
-  };
-  addEventListener("pointermove", onPointer, on);
-  plain?.addEventListener("click", () => {
-    wiring.abort();
-    try {
-      garden.stop();
-    } finally {
-      cards.forEach((el) => el.classList.remove("is-current"));
-      leave();
-    }
-    cards[0]?.querySelector<HTMLElement>("h1")?.focus();
-  });
+  addEventListener(
+    "pointermove",
+    (e) => {
+      if (fine.matches)
+        garden.pointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
+    },
+    on,
+  );
+  plain?.addEventListener(
+    "click",
+    () => {
+      try {
+        garden.stop();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        leave(cards);
+        cards[0]?.querySelector<HTMLElement>("h1")?.focus();
+      }
+    },
+    on,
+  );
   select(0, false);
 }
 
@@ -86,13 +108,13 @@ function boot(): void {
   const opts = { season: root.dataset.season as Season, time: root.dataset.time as TimeOfDay };
   let garden: Garden | null = null;
   try {
-    if (stage !== null && cards.length === STATIONS.length)
-      garden = startGarden(stage, opts, cards);
+    if (cards.length !== STATIONS.length) console.warn("和紙に置くセクションが足りない");
+    else if (stage !== null) garden = startGarden(stage, opts, cards, () => leave(cards));
   } catch (e) {
     console.error(e);
   }
   if (!garden) {
-    leave();
+    leave(cards);
     return;
   }
   wire(garden, cards);

@@ -19,10 +19,10 @@ import type { ScenePalette } from "./scene-colors";
 const CORD = 0.42;
 
 /**
- * 和紙と軸木と紐を組み、`from` から和紙の上の両端へ枝を伸ばして、`scene` に足す。
+ * 和紙と軸木と紐を組み、`boughFrom` から和紙の上の両端へ枝を伸ばして、`scene` に足す。
  * @param pw 和紙の幅（m）
  * @param ph 和紙の高さ（m）
- * @param from 枝を伸ばし始める、和紙を掛ける木の幹の点
+ * @param boughFrom 枝を伸ばし始める、和紙を掛ける木の幹の点
  */
 export function hangPaper(
   scene: Scene,
@@ -30,7 +30,7 @@ export function hangPaper(
   st: Station,
   pw: number,
   ph: number,
-  from: Vector3,
+  boughFrom: Vector3,
 ): void {
   const wood = new MeshLambertMaterial({ color: C.wood });
   const g = new Group();
@@ -60,10 +60,10 @@ export function hangPaper(
       .addScaledVector(right, k * (pw / 2 + 0.25))
       .setY(y),
   ) as [Vector3, Vector3];
-  if (from.distanceTo(ends[0]) > from.distanceTo(ends[1])) ends.reverse();
+  if (boughFrom.distanceTo(ends[0]) > boughFrom.distanceTo(ends[1])) ends.reverse();
   const curve = new CatmullRomCurve3([
-    from,
-    from
+    boughFrom,
+    boughFrom
       .clone()
       .lerp(ends[0], 0.55)
       .add(new Vector3(0, 0.22, 0)),

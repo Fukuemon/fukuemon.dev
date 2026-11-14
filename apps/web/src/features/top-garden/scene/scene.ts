@@ -342,15 +342,15 @@ export function buildGarden(
     colors: [C.pine, C.pineLight, mixHex(C.pine, C.pineLight, 0.5)],
   };
   const plant = (x: number, z: number, s: number, dir: 1 | -1, leaf: TreeLeaf | null) => {
-    const { group, top } = tree(R, C.bark, s, dir, leaf);
+    const { group, boughFrom } = tree(R, C.bark, s, dir, leaf);
     group.position.set(x, 0, z);
     scene.add(group);
-    return group.position.clone().add(top);
+    return group.position.clone().add(boughFrom);
   };
   plant(-9.0, -11.2, 1.35, 1, pineLeaf);
   plant(6.4, -1.4, 1.0, -1, pineLeaf);
-  const boughFrom = STATIONS.map(({ tree: t }) =>
+  const stationBoughs = STATIONS.map(({ tree: t }) =>
     plant(t.at[0], t.at[1], t.s, t.dir, t.leaf === "pine" ? pineLeaf : C.leaf),
   );
-  return { scene, boughFrom };
+  return { scene, boughFrom: stationBoughs };
 }
