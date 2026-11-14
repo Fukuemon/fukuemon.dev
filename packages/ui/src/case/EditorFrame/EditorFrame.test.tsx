@@ -77,10 +77,14 @@ describe("EditorFrame", () => {
   it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0066）", () => {
     render(<Default />);
     const engine = screen.getByRole("region", { name: "server.js のコード" });
+    const frame = engine.parentElement as HTMLElement;
+    const before = getComputedStyle(frame, "::after").outlineStyle;
     engine.focus();
-    const ring = getComputedStyle(engine.parentElement as HTMLElement, "::after");
-    expect(ring.outlineOffset).toBe("-2px");
-    expect(ring.outlineStyle).toBe("solid");
-    expect(getComputedStyle(engine).outlineStyle).toBe("none");
+    const ring = getComputedStyle(frame, "::after");
+    expect({
+      before,
+      ring: [ring.outlineStyle, ring.outlineOffset],
+      own: getComputedStyle(engine).outlineStyle,
+    }).toStrictEqual({ before: "none", ring: ["solid", "-2px"], own: "none" });
   });
 });

@@ -201,9 +201,12 @@
   outline-offset: -2px;
 }
 
-/* ペインの全体を占める、フォーカスできるスクロールする領域の外側の要素に付ける。直下の領域自身の輪は消し、領域にフォーカスが来たときだけ、輪を外側の要素の内側に重ねて引く。スクロールする領域自身の輪は、中の行の背景に隠れて欠ける（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
+/* フォーカスできるスクロールする領域 1 つを直下に置く外側の要素に付ける。領域自身の輪は、中の行や帯の背景に隠れて欠けるので、外側の ::after に引く。isolation は、領域の中の z-index が輪を覆わないようにする（docs/adr/0066-inset-focus-ring-in-dense-panes.md） */
 @utility focus-ring-frame {
   position: relative;
+  & > * {
+    isolation: isolate;
+  }
   & > :focus-visible {
     outline: none;
   }

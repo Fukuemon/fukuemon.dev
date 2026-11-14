@@ -42,6 +42,7 @@ export function ToolPaneGroup({ children }: { children: ReactNode }) {
  * 文字と帯は、コードを動かす画面の密度にする（題の帯 32px、題 13px、下の帯 24px と 12px。docs/adr/0062-dense-text-and-targets-in-playground.md）。
  * ToolPane は高さを指定しない。中身だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。
  * スクロールさせる要素は、中身として渡す側が `min-h-0 flex-1 overflow-y-auto` を付けて用意する。
+ * フォーカスできるスクロールさせる要素は、`focus-ring-frame` を付けた要素の直下に 1 つだけ置く（docs/adr/0066-inset-focus-ring-in-dense-panes.md）。
  */
 export function ToolPane({
   title,

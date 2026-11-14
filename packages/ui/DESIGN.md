@@ -80,11 +80,10 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 確認: レビューで、画面の主の操作が 1 つに決まるかを見る。
 - `FOCUS-ONE`: フォーカスの表示は 1 つのユーティリティ（墨の 2px の 1 重の輪）だけを使い、コンポーネントごとに色や太さを変えない。例外の理由は DesignDoc の「フォーカスの表示」に書いた。
   - 例外: 検索の欄（`TextField` の `appearance="underline"`）の緑の罫。
-  - 例外: コードを動かす画面の詰めたペインの中の行と、ペインの全体を占めるスクロールする領域の、内側に引く輪（`focus-ring-inset`）。
-    - スクロールする領域は、外側の要素に `focus-ring-frame` を付けて、輪を外側の `::after` に引く。
+  - 例外: コードを動かす画面の詰めたペインの中の行の、内側に引く輪（`focus-ring-inset`）と、ペインの全体を占めるスクロールする領域の、外側の要素の `::after` に引く内側の輪（`focus-ring-frame`）。
     - ADR-0066（提案）: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
   - DADS は、黄色の輪と黒の枠の 2 重の表示を求める。墨の輪にする理由は、DesignDoc の「フォーカスの表示」にある。
-  - 確認: `pnpm run check:utilities`。`focus-ring-inset` を詰めたペインの外で使っていないかは、レビューで見る。
+  - 確認: `pnpm run check:utilities`。`focus-ring-inset` と `focus-ring-frame` を詰めたペインの外で使っていないかは、レビューで見る。
 - `TARGET-SIZE`: 押せる領域は 44×44 CSS px 以上にする。WCAG 2.2 の AA（2.5.8）の 24×24 より厳しい、AAA（2.5.5）の値を選んでいる。見た目を小さくするときは、見た目の外に押せる領域を広げる。
   - 例外: `Link` は対象にせず、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。本文の中の文字のリンクを 44×44 CSS px にすると、行の高さが崩れるためである。
   - 例外: コードを動かす画面のコンポーネントは、WCAG 2.2 の AA（2.5.8）の 24×24 CSS px 以上にする。木の行と開閉の要約（`Disclosure`）は 24px、ボタン、入力欄、タブは 28〜32px にする（ADR-0062）。
@@ -109,7 +108,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | `STATE-NOT-COLOR-ONLY` | レビュー                                                                      |                                                                                                                                             |
 | `TEXT-MIN-SIZE`        | `pnpm run check:utilities`                                                    | compact の 4 つの文字のトークンを、コードを動かす画面の外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                       |
 | `PRIMARY-ACTION-ONE`   | レビュー                                                                      |                                                                                                                                             |
-| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | `focus-ring-inset` を、コードを動かす画面の詰めたペインの外で使った書き方。クラスの名前を文字列の連結で組み立てた書き方                     |
+| `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | フォーカスの変種に ring、outline、border、shadow を直に書いた書き方。クラスの名前を文字列の連結で組み立てた書き方                           |
 | `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
 | `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
 | `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
