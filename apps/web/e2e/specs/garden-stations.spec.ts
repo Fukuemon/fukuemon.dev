@@ -127,6 +127,26 @@ test.describe("幅 390px", () => {
   });
 });
 
+test.describe("幅 320px", () => {
+  test.use({ viewport: { width: 320, height: 640 }, colorScheme: "light" });
+
+  test("庭を開くと、4 つの文へ移るボタンが 44px 四方以上の大きさで 1 段に並び、ヘッダーが 1 段に収まる", async ({
+    page,
+  }) => {
+    await openGarden(page);
+    const boxes = await page
+      .locator("[data-station]")
+      .evaluateAll((els) => els.map((el) => el.getBoundingClientRect()));
+    const header = await page.locator("[data-site-header]").evaluate((el) => el.offsetHeight);
+    expect({
+      rows: new Set(boxes.map((b) => Math.round(b.top))).size,
+      small: boxes.filter((b) => b.width < 44 || b.height < 44).length,
+      inside: boxes.every((b) => b.left >= 0 && b.right <= 320),
+      headerOneRow: header < 80,
+    }).toStrictEqual({ rows: 1, small: 0, inside: true, headerOneRow: true });
+  });
+});
+
 test.describe("ダークのテーマ", () => {
   test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "dark" });
 
