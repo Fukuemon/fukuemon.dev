@@ -28,12 +28,14 @@ const pageOrigin = () => ("location" in globalThis ? globalThis.location.origin 
 async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime> {
   const files = await createFiles(instance.files);
   const http = createHttpRecords();
-  const processes = createProcesses(instance, http.accept);
+  const consoleRecords = createConsoleRecords();
+  const processes = createProcesses(instance, (line, source, kind) =>
+    kind === "http" ? http.accept(line, source) : consoleRecords.acceptLine(line, source),
+  );
   const ports = createStore<readonly OpenPort[]>([]);
   const unsubscribePorts = instance.ports.subscribe((open) =>
     ports.set(open.filter((port) => isPreviewUrl(port.url))),
   );
-  const consoleRecords = createConsoleRecords();
   const unsubscribePreview = instance.previewMessages.subscribe(
     consoleRecords.acceptPreviewMessage,
   );

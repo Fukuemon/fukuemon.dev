@@ -8,6 +8,8 @@ import type {
   RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
+import consoleTraceSource from "../guest/console-trace.cjs?raw";
+import consoleValueSource from "../guest/console-value.cjs?raw";
 import httpTraceSource from "../guest/http-trace.cjs?raw";
 import { toTree } from "./tree";
 
@@ -15,6 +17,9 @@ import { toTree } from "./tree";
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
 const HTTP_TRACE_FILE = `${RUNTIME_DIRECTORY}/http-trace.cjs`;
+const CONSOLE_TRACE_FILE = `${RUNTIME_DIRECTORY}/console-trace.cjs`;
+// console-trace.cjs が、同じディレクトリから require する
+const CONSOLE_VALUE_FILE = `${RUNTIME_DIRECTORY}/console-value.cjs`;
 
 // プレビューは WebContainers が割り当てる別の origin で開くので、同じ origin の権限を渡しても、このページには届かない
 const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-modals allow-popups";
@@ -23,7 +28,10 @@ const PREVIEW_ALLOW = "cross-origin-isolated";
 const DEFAULT_TERMINAL: TerminalSize = { cols: 80, rows: 24 };
 
 // 実行環境が自分で起動するプロセス（writeOutside の node）には渡さない
-const env = { PLAYGROUND_PORTS_FILE: PORTS_FILE, NODE_OPTIONS: `--require ${HTTP_TRACE_FILE}` };
+const env = {
+  PLAYGROUND_PORTS_FILE: PORTS_FILE,
+  NODE_OPTIONS: `--require ${HTTP_TRACE_FILE} --require ${CONSOLE_TRACE_FILE}`,
+};
 
 function toBackendProcess(process: WebContainerProcess): BackendProcess {
   const listeners = new Set<(chunk: string) => void>();
@@ -166,6 +174,8 @@ export const webContainerBackend: RuntimeBackend = {
     try {
       await container.mount(toTree(files));
       await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
+      await writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource);
+      await writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource);
       await container.setPreviewScript(previewScript);
       const ports = createPorts(container);
       await ports.ready();

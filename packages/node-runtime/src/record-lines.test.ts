@@ -1,18 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { BackendProcess } from "./backend";
-import { HTTP_PREFIX, createRecordLineFilter, withoutRecordLines } from "./record-lines";
+import {
+  CONSOLE_PREFIX,
+  HTTP_PREFIX,
+  type RecordKind,
+  createRecordLineFilter,
+  withoutRecordLines,
+} from "./record-lines";
 
 /** 抜き出す処理に chunks を順に渡し、端末に渡した出力と記録の行を返す。 */
 const filtered = (...chunks: string[]) => {
   const text: string[] = [];
   const lines: string[] = [];
+  const kinds: RecordKind[] = [];
   const filter = createRecordLineFilter(
     (chunk) => text.push(chunk),
-    (line) => lines.push(line),
+    (line, kind) => {
+      lines.push(line);
+      kinds.push(kind);
+    },
   );
   for (const chunk of chunks) filter.push(chunk);
-  return { filter, text, lines };
+  return { filter, text, lines, kinds };
 };
 
 describe("createRecordLineFilter", () => {
@@ -26,6 +36,21 @@ describe("createRecordLineFilter", () => {
   it("記録の行を除いた出力を端末に渡す", () => {
     const { text } = filtered(`listening\r\n${HTTP_PREFIX}{"a":1}\r\nnext\r\n`);
     expect(text.join("")).toBe("listening\r\nnext\r\n");
+  });
+
+  it("HTTP とコンソールの記録の行を、出た順に種類と一緒に渡す", () => {
+    const { text, lines, kinds } = filtered(
+      `a\n${CONSOLE_PREFIX}{"c":1}\n${HTTP_PREFIX}{"h":1}\nb ${CONSOLE_PREFIX}{"c":2}\n`,
+    );
+    expect(text.join("")).toBe("a\nb ");
+    expect(lines).toStrictEqual(['{"c":1}', '{"h":1}', '{"c":2}']);
+    expect(kinds).toStrictEqual(["console", "http", "console"]);
+  });
+
+  it("コンソールの記録の頭の途中で切れた出力は、続きが届いたら記録の行にする", () => {
+    const { lines, kinds } = filtered("$ @@fd:con", 'sole {"c":1}\n');
+    expect(lines).toStrictEqual(['{"c":1}']);
+    expect(kinds).toStrictEqual(["console"]);
   });
 
   it("記録の行の中身を、端末の改行の \\r を外して渡す", () => {

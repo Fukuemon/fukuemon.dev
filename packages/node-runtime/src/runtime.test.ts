@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PREVIEW_CONSOLE_MESSAGE } from "./console-records";
+import { CONSOLE_PREFIX } from "./record-lines";
 import { bootWithBackend } from "./runtime";
 import { bootFake, createFakeBackend, flush, initialFiles } from "./test/fake-backend";
 import { BootError } from "./types";
@@ -135,6 +136,29 @@ describe("records", () => {
           args: [{ kind: "null" }],
         },
       ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("プロセスが出したコンソールの記録の行を、プロセスの名前を出力元にしてコンソールの store に入れ、端末に出さない", async () => {
+    vi.useFakeTimers();
+    try {
+      const { runtime, created } = await bootFake();
+      const handle = await runtime.processes.start("node", ["index.js"], { name: "サーバー" });
+      const line = JSON.stringify({ level: "error", time: 7, args: [{ kind: "null" }] });
+      created.processes[0]?.emit(`ok\n${CONSOLE_PREFIX}${line}\n`);
+      vi.advanceTimersByTime(20);
+      expect(runtime.consoleEntries.getSnapshot()).toStrictEqual([
+        {
+          id: "1",
+          level: "error",
+          time: 7,
+          source: { kind: "process", name: "サーバー" },
+          args: [{ kind: "null" }],
+        },
+      ]);
+      expect(handle.output.read()).toBe("ok\n");
     } finally {
       vi.useRealTimers();
     }

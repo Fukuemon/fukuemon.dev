@@ -7,7 +7,8 @@ import { promisify } from "node:util";
 
 import { afterAll, describe, expect, it } from "vitest";
 
-import { CONSOLE_PREFIX, parseConsoleLine } from "./console-records";
+import { parseConsoleLine } from "./console-records";
+import { CONSOLE_PREFIX } from "./record-lines";
 
 const PRELOAD = fileURLToPath(new URL("./guest/console-trace.cjs", import.meta.url));
 

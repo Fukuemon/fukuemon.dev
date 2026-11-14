@@ -43,9 +43,6 @@ export type ConsoleRecord = {
   args: readonly ConsoleRecordValue[];
 };
 
-/** preload が記録の行の頭に付ける文字列。guest/console-trace.cjs と同じ値にする (apps/playground/DesignDoc.md の「記録を読む形」)。 */
-export const CONSOLE_PREFIX = "@@fd:console ";
-
 /** プレビューに入れるスクリプトが送るメッセージの type。 */
 export const PREVIEW_CONSOLE_MESSAGE = "fukuemon:console";
 
