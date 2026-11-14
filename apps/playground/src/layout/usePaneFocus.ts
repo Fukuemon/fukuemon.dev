@@ -5,7 +5,7 @@ type Target = "tab" | "editor";
 /**
  * 狭い配置で、タブを替えたりドロワーを閉じたりした後のフォーカスの移り先を決める。
  * 返した `rootRef` を、タブの帯とドロワーを囲む要素に付ける。
- * 移すのは、描き直してドロワーを閉じた後の Effect である。ドロワーの dialog は、閉じると開く前の要素へフォーカスを戻すので、その後に移す。
+ * 移すのは、描き直してドロワーを閉じた後の Effect で、エディタへは次のフレームで移す。ドロワーの dialog は、閉じると開く前の要素へフォーカスを戻すので、その後に移す。
  */
 export function usePaneFocus() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -16,8 +16,11 @@ export function usePaneFocus() {
     const root = rootRef.current;
     if (request === undefined || root === null) return;
     if (request.target === "editor") {
-      root.querySelector<HTMLElement>(".cm-content")?.focus();
-      return;
+      // 開いたファイルのエディタは、同じ描画の Effect で作り直すので、次のフレームで探す
+      const frame = requestAnimationFrame(() =>
+        root.querySelector<HTMLElement>(".cm-content")?.focus(),
+      );
+      return () => cancelAnimationFrame(frame);
     }
     // 実行のボタンのように、見えたままの要素にあるフォーカスは動かさない
     const active = document.activeElement;

@@ -46,9 +46,10 @@ describe("usePaneFocus", () => {
     act(() => root.render(<Layout isEditorHidden={isEditorHidden} />));
   const byTestId = (id: string) => container.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 
-  it("エディタへ移すと、CodeMirror の入力の領域にフォーカスする", () => {
+  it("エディタへ移すと、次のフレームで CodeMirror の入力の領域にフォーカスする", async () => {
     render(false);
     act(() => focus.focusEditor());
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(document.activeElement).toBe(byTestId("editor"));
   });
 
