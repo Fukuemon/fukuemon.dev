@@ -3,22 +3,22 @@
 // 和紙に置いたセクションは、場面のバンドルがこの中へ移すので、外側の要素は読み上げから隠さない。
 import { STATIONS } from "../layout";
 
-// 夜の場面は、テーマに依らず暗いので、霞と字を夜の色にする（top-garden の Design Doc の「庭の中のボタンの並び」）
-const mist = "garden-mist from-surface to-transparent in-data-[time=night]:from-garden-mist-night";
+// 色は surface、text、border-field で書き、庭の範囲で時間帯の霞の色に差し替える（top-garden の Design Doc の「ヘッダーと霞」）
+const mist = "garden-mist from-surface to-transparent";
 const stop =
-  "-ms-px min-h-11 cursor-pointer border border-border-field bg-surface px-3 text-label text-text first:ms-0 focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
+  "-ms-px min-h-11 cursor-pointer border border-border-field bg-surface px-2 text-label text-text first:ms-0 focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
 const tool =
-  "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2 in-data-[time=night]:text-garden-ink-night";
+  "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2";
 ---
 
 <div class="garden-stage bg-surface" data-garden-stage>
   <canvas aria-hidden="true"></canvas>
 </div>
 <div class:list={[mist, "garden-mist-top bg-linear-to-b from-65%"]} aria-hidden="true"></div>
-<div class:list={[mist, "garden-mist-bottom bg-linear-to-t from-50% md:from-65%"]} aria-hidden="true">
+<div class:list={[mist, "garden-mist-bottom bg-linear-to-t from-65%"]} aria-hidden="true">
 </div>
 <nav class="garden-nav" data-garden-nav aria-label="庭の中の移動">
-  <div class="flex">
+  <div class="flex flex-wrap justify-center">
     {
       STATIONS.map(({ label }, i) => (
         <button type="button" class={stop} data-station={i} aria-current={i === 0 ? "true" : "false"}>
@@ -84,7 +84,7 @@ const tool =
 
   .garden-mist-bottom {
     inset-block-end: 0;
-    block-size: 7.5rem;
+    block-size: 8.5rem;
   }
 
   /* ヘッダーは、庭の上に重ね、地を透かして霞の上に置く */
@@ -95,14 +95,38 @@ const tool =
     border-color: transparent;
   }
 
-  :global(html.stage-on.garden-ready[data-time="night"] [data-site-header] a) {
-    color: var(--fd-color-garden-ink-night);
+  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない */
+  :global(html.stage-on.garden-ready [data-site-header]),
+  :global(html.stage-on.garden-ready) .garden-nav,
+  :global(html.stage-on.garden-ready) .garden-mist {
+    --fd-color-surface: var(--fd-color-garden-mist-day);
+    --fd-color-text: var(--fd-color-garden-ink-day);
+    --fd-color-border-field: var(--fd-color-garden-edge-day);
+    --fd-color-focus: var(--fd-color-garden-ink-day);
   }
 
-  /* 夜の霞の上では、墨のフォーカスの輪が沈むので、focus-ring が読む色を夜の字の色に替える */
   :global(html.stage-on.garden-ready[data-time="night"] [data-site-header]),
-  :global(html.stage-on.garden-ready[data-time="night"]) .garden-nav {
+  :global(html.stage-on.garden-ready[data-time="night"]) .garden-nav,
+  :global(html.stage-on.garden-ready[data-time="night"]) .garden-mist {
+    --fd-color-surface: var(--fd-color-garden-mist-night);
+    --fd-color-text: var(--fd-color-garden-ink-night);
+    --fd-color-border-field: var(--fd-color-garden-edge-night);
     --fd-color-focus: var(--fd-color-garden-ink-night);
+  }
+
+  /* 狭い画面でも、ヘッダーを霞の色が残る範囲の 1 段に収める */
+  :global(html.stage-on.garden-ready [data-site-header] ul) {
+    gap: 1rem;
+  }
+
+  @media not (min-width: 48rem) {
+    :global(html.stage-on.garden-ready [data-site-header] > div) {
+      column-gap: 1rem;
+    }
+
+    :global(html.stage-on.garden-ready [data-site-header] svg) {
+      block-size: 2rem;
+    }
   }
 
   /* 狭い画面では、4 つの文へ移るボタンと 2 つの操作を 2 段に分け、広い画面では 1 段に並べる */

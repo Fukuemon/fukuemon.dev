@@ -196,10 +196,14 @@
   --fd-color-categorical-5: var(--fd-primitive-color-ochre-700);
   --fd-color-categorical-6: var(--fd-primitive-color-blue-700);
 
-  /* トップの庭の夜の霞: 夜の場面の上端と下端に敷き、ヘッダーと庭の中の字ボタンを載せる。夜の場面の色は
-     テーマに依らないので、ダークでも同じ値にする。朝、昼、夕の霞は surface と text を使う */
+  /* トップの庭の霞と、霞の上のヘッダーと庭の中のボタン。場面の色は時間帯で決まりテーマに依らないので、
+     ダークでも同じ値にする。庭を出している間だけ、surface、text、border-field、focus をこの値に差し替える */
+  --fd-color-garden-mist-day: var(--fd-primitive-color-sumi-0);
+  --fd-color-garden-ink-day: var(--fd-primitive-color-sumi-900);
+  --fd-color-garden-edge-day: var(--fd-primitive-color-sumi-500);
   --fd-color-garden-mist-night: var(--fd-primitive-color-indigo-900);
   --fd-color-garden-ink-night: var(--fd-primitive-color-sumi-25);
+  --fd-color-garden-edge-night: var(--fd-primitive-color-sumi-400);
 
   /* コード: 記事のコードブロック、エディタ、端末の字句。どの色も code-surface の上で 4.5:1 以上（docs/adr/0022-code-colors-from-tokens.md）
      端末の bright の色は、ライトの面で読めるよう、通常の色より暗い階調にする */

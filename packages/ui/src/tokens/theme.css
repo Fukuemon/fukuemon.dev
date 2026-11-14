@@ -62,10 +62,6 @@
   --color-categorical-5: var(--fd-color-categorical-5);
   --color-categorical-6: var(--fd-color-categorical-6);
 
-  /* トップの庭の夜の霞と、その上の字 */
-  --color-garden-mist-night: var(--fd-color-garden-mist-night);
-  --color-garden-ink-night: var(--fd-color-garden-ink-night);
-
   /* コード: 記事のコードブロック、エディタ、端末。エンジンに渡すテーマは code-theme.gen.json から作る */
   --color-code-surface: var(--fd-color-code-surface);
   --color-code-text: var(--fd-color-code-text);
