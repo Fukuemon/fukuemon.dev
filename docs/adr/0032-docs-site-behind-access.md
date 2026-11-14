@@ -8,7 +8,8 @@
 
 設計の文書（PRD、Design Doc、ADR）を、ビルドしたサイトとして読めるようにする。
 
-- ドキュメントサイトは `docs.fukuemon.dev` に置き、運営者が許可した人だけに見せる。文書の原本は、公開のリポジトリにある。隠すのは、ビルドしたサイトだけである。
+- ドキュメントサイトは `docs.fukuemon.dev` に置く。
+- 文書の原本は、公開のリポジトリにある。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
 - 文書は `docs/` に集め、機能ごとの Design Doc を `docs/design/` からシンボリックリンクで指す。
   - ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く](0029-repository-layout-like-buddy.md)
@@ -16,11 +17,13 @@
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](0021-ui-components-and-catalog.md)
 - 到達に関わる設定は Terraform が、deploy は Wrangler が管理する。管轄を判断できないリソースは、本番の可用性かドメインへの到達に影響するなら Terraform にする。
   - ADR-0005: [Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する](0005-workers-terraform-wrangler-boundary.md)
-- buddy は、Zensical（Python のツール。uv で実行する）で `docs/` をビルドし、`apps/docs-site/` の Worker から配信している。
+- buddy は、Zensical で `docs/` をビルドし、`apps/docs-site/` の Worker から配信している。
   - 出典: [buddy](https://github.com/Fukuemon/buddy)
+- Zensical は Python のツールで、uv で実行する。
 - サイトの本体は、Starlight を採っていない。
   - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code で組む](0001-starlight-as-docs-renderer.md)
-- Worker は、何も書かないと、workers.dev の URL とバージョンごとの URL でも開ける。Access は `docs.fukuemon.dev` のホスト名に設定するので、この 2 つの URL を閉じる。
+- Worker は、`workers_dev` と `preview_urls` を指定しないと、workers.dev の URL とバージョンごとの URL でも開ける。
+- Access は `docs.fukuemon.dev` のホスト名にだけ掛かり、この 2 つの URL には掛からない。
 - 運営者は、Access のオンとオフを頻繁に切り替える。運営者の言葉は次のとおり。
   - 「accessのonoffを切り替えることがよくある。buddyとかもいまはoffだけどonにもするし。こういう切り替えが多い」
 - Access を Terraform で持つと、切り替えのたびに、コードの変更、pull request、apply の workflow の起動と `infra` environment の承認が要る。
@@ -39,19 +42,20 @@
 
 ### 2. ほかの URL を閉じる
 
-- Worker の `workers_dev` と `preview_urls` を `false` にする。Access は `docs.<zone>` のホスト名にだけ掛かるので、custom domain のほかの URL で開けないようにするためである。
+- Worker の `workers_dev` と `preview_urls` を `false` にする。
+  - custom domain 以外の URL（workers.dev の URL とバージョンごとの URL）で開けないようにするためである。
 
 ### 3. アクセスの認証
 
 `docs.fukuemon.dev` に Cloudflare Access を設定する。  
-Access は、組み立てたサイトを開発者向けにし、訪問者や検索に見せないためのものである。  
+Access は、ビルドしたサイトを開発者向けにし、訪問者や検索に見せないためのものである。  
 文書の中身の秘密を守るものではない。
 
 - Access のアプリケーションとポリシーは、Terraform で持たず、運営者が Cloudflare のダッシュボードで設定する。切り替えの多い設定を、apply を通さずに変えられるようにするためである。
-  - この決定は、ADR-0005 の管轄の判定の例外にする。
+  - この決定は、ADR-0005 の管轄の判定の 3（ドメインへの到達に影響するなら Terraform）の例外にする。
   - 例外は、ドキュメントサイトの Access のアプリケーションとポリシーに限る。
 - `docs.<zone>` の custom domain（`cloudflare_workers_custom_domain.docs`）は、Terraform で持つ。ホスト名の作成は、ほかのサブドメインと同じ管轄にそろえる。
-- Terraform では、Access と custom domain を作る順序を制御しない。初めて公開するときは、Terraform で custom domain を先に作り、Access は運営者が後から掛けてよい。手順は `apps/docs-site/README.md` にある。
+- Terraform では、Access と custom domain を作る順序を制御しない。初めて公開するときは、Terraform で custom domain を先に作り、Access は運営者が後から掛けてよい。手順は [apps/docs-site/README.md](../../apps/docs-site/README.md#初めて公開する) にある。
 - Access をオフにしている間は、ドキュメントサイトを誰でも開ける。文書の原本は公開のリポジトリにあるので、Access をオフにしても、新しく公開される内容は無い。
 - 許可するメールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、Terraform の state、GitHub の secret に置かない。
 - apply 用と deploy 用の token に Access の権限を与えない。
@@ -60,8 +64,8 @@ Access は、組み立てたサイトを開発者向けにし、訪問者や検�
 
 次の 2 つを確認する。
 
-- Access をオフにする操作が、アプリケーションの削除か、消さずに無効にする設定か。運営者が初めて Access を掛けるときに確認する。
-- `workers_dev` と `preview_urls` を `false` にした Worker が、custom domain のほかの URL で開けないこと。ドキュメントサイトを公開するときに確認する。
+- Access をオフにする操作が、アプリケーションの削除か、消さずに無効にする設定か。運営者が初めて Access を掛けるときに確認する。無効にする設定があれば、`apps/docs-site/README.md` の切り替えの手順を、削除から無効に直す。
+- `workers_dev` と `preview_urls` を `false` にした Worker が、custom domain 以外の URL で開けないこと。ドキュメントサイトを公開するときに確認する。
 
 ## Considered Options
 

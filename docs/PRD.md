@@ -128,7 +128,7 @@ C4Context
     Rel(reader, site, "閲覧と、コードの実行")
     Rel(author, github, "push")
     Rel(author, catalog, "閲覧")
-    Rel(author, docs, "認証を通って閲覧")
+    Rel(author, docs, "閲覧")
     Rel(github, cf, "配信物と基盤の設定の反映")
     Rel(cf, site, "配信")
     Rel(cf, catalog, "配信")
@@ -199,7 +199,7 @@ C4Context
 ### カタログとドキュメントサイト
 
 - カタログ: デザインシステムのコンポーネントを、誰でも開ける。
-- ドキュメントサイト: PRD、Design Doc、ADR をビルドしたサイトを、運営者が許可した人だけが開ける。文書の原本は、公開のリポジトリにある。
+- ドキュメントサイト: PRD、Design Doc、ADR をビルドしたサイトを、Access をオンにしている間は、運営者が許可した人だけが開ける。文書の原本は、公開のリポジトリにある。
 
 ### Milestones
 
