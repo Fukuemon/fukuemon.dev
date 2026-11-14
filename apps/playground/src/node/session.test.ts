@@ -14,7 +14,6 @@ import type { ProjectLoad } from "../project/project";
 import type { Workspace, WorkspaceLoad } from "../workspace/workspace";
 import {
   type NodeProject,
-  type NodeRecord,
   type NodeSession,
   type NodeSessionOptions,
   READ_TIMEOUT_MS,
@@ -23,6 +22,7 @@ import {
   createNodeSession,
   createNodeSessionOpener,
 } from "./session";
+import type { NodeRecord } from "./record-saver";
 import { SAVE_LIMIT } from "./save-rules";
 
 const project: NodeProject = {

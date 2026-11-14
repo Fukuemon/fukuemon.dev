@@ -9,20 +9,12 @@ import {
   bootNodeRuntime,
 } from "@fukuemon/node-runtime";
 
-import { type ProjectLoad, isEmbedId, isSafeFilePath } from "../project/project";
+import { type ProjectLoad, isEmbedId } from "../project/project";
 import { type Workspace, type WorkspaceLoad, createWorkspace } from "../workspace/workspace";
 import { shellName } from "./messages";
-import { type NodeRecord, type SaveRead, createRecordSaver } from "./record-saver";
-import {
-  RESTART_READ,
-  SAVE_READ,
-  isExcludedFromSave,
-  filesForRestart,
-  withoutExcludedFromSave,
-} from "./save-rules";
+import { type NodeRecord, type SaveRead, createRecordSaver, readSavedRecord } from "./record-saver";
+import { RESTART_READ, SAVE_READ, isExcludedFromSave, filesForRestart } from "./save-rules";
 import { createStore } from "./store";
-
-export type { NodeRecord } from "./record-saver";
 
 export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["project"];
 
@@ -42,33 +34,6 @@ export const READ_TIMEOUT_MS = 5_000;
 
 /** 実行のボタンで、前の起動のコマンドの終了を待つ上限（ms）。ポートが空くのを待つためである。 */
 const STOP_TIMEOUT_MS = 2_000;
-
-/**
- * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
- * パスは、プロジェクトの JSON と同じ規則で確かめる。WebContainers の mount に、作業ディレクトリの外を指すパスを渡さないためである。
- */
-function isNodeRecord(value: unknown): value is NodeRecord {
-  if (typeof value !== "object" || value === null) return false;
-  const { files, version } = value as Partial<Record<keyof NodeRecord, unknown>>;
-  return (
-    typeof version === "string" &&
-    typeof files === "object" &&
-    files !== null &&
-    Object.entries(files).every(
-      ([path, contents]) => isSafeFilePath(path) && typeof contents === "string",
-    ) &&
-    !hasFileAsDirectory(Object.keys(files))
-  );
-}
-
-/** あるファイルのパスが、別のファイルのパスの途中のディレクトリになっているか（`a` と `a/b`）。そのファイルの一式は、作業ディレクトリに書けない。 */
-function hasFileAsDirectory(paths: readonly string[]): boolean {
-  const files = new Set(paths);
-  return paths.some((path) => {
-    const parts = path.split("/");
-    return parts.slice(1).some((_, i) => files.has(parts.slice(0, i + 1).join("/")));
-  });
-}
 
 const withTimeout = <T>(promise: Promise<T>, ms: number) =>
   new Promise<T>((resolve, reject) => {
@@ -136,8 +101,7 @@ export function createNodeSession({
   boot = bootNodeRuntime,
   now = Date.now,
 }: NodeSessionOptions): NodeSession {
-  const loaded = saved.kind === "saved" && isNodeRecord(saved.record) ? saved.record : undefined;
-  const record = loaded && { ...loaded, files: withoutExcludedFromSave(loaded.files) };
+  const { record, needsRewrite } = readSavedRecord(saved);
   const canSave = saved.kind !== "unavailable";
   // 記事から開いていないページ（デフォルトのプロジェクト）では、記事の初期ファイルが変わったとは出さない
   const versionChanged = createStore(
@@ -146,19 +110,14 @@ export function createNodeSession({
   const busy = createStore(false);
   const commandFailed = createStore(false);
   const restartReadFailed = createStore(false);
-  // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
-  let version = record?.version ?? project.version;
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
   const saving = createRecordSaver({
     storage,
     record,
-    needsRewrite:
-      loaded !== undefined &&
-      record !== undefined &&
-      Object.keys(record.files).length !== Object.keys(loaded.files).length,
+    needsRewrite,
     canSave,
-    version: () => version,
+    projectVersion: project.version,
     now,
   });
   const { persist, rewriteIfUnsaved } = saving;
@@ -423,9 +382,7 @@ export function createNodeSession({
   };
 
   const toInitialState = async () => {
-    version = project.version;
     lastRead = undefined;
-    saving.forget();
     versionChanged.set(false);
     restartReadFailed.set(false);
     return { files: project.files, touched: false };

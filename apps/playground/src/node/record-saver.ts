@@ -1,7 +1,8 @@
 import type { FileContents, Store } from "@fukuemon/node-runtime";
 
-import { type Workspace, createSaver } from "../workspace/workspace";
-import { filesToSave } from "./save-rules";
+import { isSafeFilePath } from "../project/project";
+import { type Workspace, type WorkspaceLoad, createSaver } from "../workspace/workspace";
+import { filesToSave, withoutExcludedFromSave } from "./save-rules";
 import { createStore } from "./store";
 
 /** IndexedDB に保存する 1 件。作業ディレクトリのファイルの一式を、丸ごと置き換える。 */
@@ -10,6 +11,51 @@ export type NodeRecord = { files: Record<string, string>; version: string; saved
 /** 保存のために読んだ作業ディレクトリ。読んでいる途中で上限を超えたときは over-limit である。 */
 export type SaveRead = { kind: "read"; entries: readonly FileContents[] } | { kind: "over-limit" };
 
+/**
+ * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
+ * パスは、プロジェクトの JSON と同じ規則で確かめる。WebContainers の mount に、作業ディレクトリの外を指すパスを渡さないためである。
+ */
+function isNodeRecord(value: unknown): value is NodeRecord {
+  if (typeof value !== "object" || value === null) return false;
+  const { files, version } = value as Partial<Record<keyof NodeRecord, unknown>>;
+  return (
+    typeof version === "string" &&
+    typeof files === "object" &&
+    files !== null &&
+    Object.entries(files).every(
+      ([path, contents]) => isSafeFilePath(path) && typeof contents === "string",
+    ) &&
+    !hasFileAsDirectory(Object.keys(files))
+  );
+}
+
+/** あるファイルのパスが、別のファイルのパスの途中のディレクトリになっているか（`a` と `a/b`）。そのファイルの一式は、作業ディレクトリに書けない。 */
+function hasFileAsDirectory(paths: readonly string[]): boolean {
+  const files = new Set(paths);
+  return paths.some((path) => {
+    const parts = path.split("/");
+    return parts.slice(1).some((_, i) => files.has(parts.slice(0, i + 1).join("/")));
+  });
+}
+
+/**
+ * IndexedDB から読んだ結果から、起動と保存に使うレコードを作る。形に合わない値は、保存したファイルが無いときと同じに扱う。
+ * 保存しないファイルを除き、除いたファイルがあれば、除いた後のレコードを書き直す必要がある (ADR-0070)。
+ */
+export function readSavedRecord(saved: WorkspaceLoad<NodeRecord>): {
+  record: NodeRecord | undefined;
+  needsRewrite: boolean;
+} {
+  if (saved.kind !== "saved" || !isNodeRecord(saved.record))
+    return { record: undefined, needsRewrite: false };
+  const loaded = saved.record;
+  const files = withoutExcludedFromSave(loaded.files);
+  return {
+    record: { ...loaded, files },
+    needsRewrite: Object.keys(files).length !== Object.keys(loaded.files).length,
+  };
+}
+
 export type RecordSaverOptions = {
   storage: Workspace<NodeRecord>;
   /** 開いたときに読んだレコードから、保存しないファイルを除いたもの。保存したファイルが無いときは undefined である。 */
@@ -17,8 +63,8 @@ export type RecordSaverOptions = {
   /** 除いたファイルがあり、record を IndexedDB に書き直す必要があるか。 */
   needsRewrite: boolean;
   canSave: boolean;
-  /** 次に保存するレコードに付ける、初期ファイルのバージョン。 */
-  version: () => string;
+  /** プロジェクトの初期ファイルのバージョン。保存したファイルが無いときと、消した後のレコードに付ける。 */
+  projectVersion: string;
   now: () => number;
 };
 
@@ -34,10 +80,8 @@ export type RecordSaver = {
   persist: (read: SaveRead) => void;
   /** 書き直しが済んでおらず、新しい保存がキューにも無く、成功もしていなければ、除いた後のレコードを書き直す。 */
   rewriteIfUnsaved: () => void;
-  /** 待っている保存を捨て、保存したレコードを消す。消せなかったときは、次の保存で今の中身を書き直す扱いにしてから失敗する。 */
+  /** 待っている保存を捨て、保存したレコードを消し、保存した中身とその状態を忘れる。消せなかったときは、次の保存で今の中身を書き直す扱いにしてから失敗する。 */
   clear: () => Promise<void>;
-  /** 初期の状態に戻したときに、保存した中身とその状態を忘れる。 */
-  forget: () => void;
 };
 
 const sameFiles = (a: Record<string, string>, b: Record<string, string> | undefined) =>
@@ -50,12 +94,14 @@ export function createRecordSaver({
   record,
   needsRewrite,
   canSave,
-  version,
+  projectVersion,
   now,
 }: RecordSaverOptions): RecordSaver {
   const hasSaved = createStore(record !== undefined);
   const saveFailed = createStore(false);
   const overLimit = createStore(false);
+  // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
+  let version = record?.version ?? projectVersion;
   let lastSaved = record?.files;
   // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0070)
   let pendingRewrite = needsRewrite ? record : undefined;
@@ -124,7 +170,7 @@ export function createRecordSaver({
       const { files } = saving;
       if (sameFiles(files, lastSaved)) return;
       lastSaved = files;
-      queue({ files, version: version(), savedAt: now() });
+      queue({ files, version, savedAt: now() });
     },
     clear: async () => {
       // 消すと待ちの書き直しも捨てるので、書き直しの印も外す
@@ -139,8 +185,7 @@ export function createRecordSaver({
       pendingRewrite = undefined;
       visitorSaveFailed = false;
       saveFailed.set(false);
-    },
-    forget: () => {
+      version = projectVersion;
       lastSaved = undefined;
       hasSaved.set(false);
       overLimit.set(false);
