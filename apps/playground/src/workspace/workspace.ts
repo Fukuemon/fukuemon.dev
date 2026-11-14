@@ -6,8 +6,12 @@ export type WorkspaceLoad<T> =
   | { kind: "saved"; record: T }
   | { kind: "unavailable" };
 
-/** 値と、値が変わったことの購読。React の useSyncExternalStore で読む。 */
-export type Store<T> = { subscribe: (onChange: () => void) => () => void; getSnapshot: () => T };
+/** 値と、値が変わったことの購読と、値を変える関数。 */
+type Listenable<T> = {
+  subscribe: (onChange: () => void) => () => void;
+  getSnapshot: () => T;
+  set: (value: T) => void;
+};
 
 export type Workspace<T> = {
   load: () => Promise<WorkspaceLoad<T>>;
@@ -92,7 +96,7 @@ export type Saver<T> = {
   /** 待っているレコードを捨て、途中の保存が終わってから、保存してあるレコードを消す。 */
   clear: () => Promise<void>;
   /** 最後の保存が失敗したときは true である。次の保存が通ると false に戻る。 */
-  failed: Store<boolean>;
+  failed: { subscribe: (onChange: () => void) => () => void; getSnapshot: () => boolean };
 };
 
 /**
@@ -139,7 +143,7 @@ export function createSaver<T>(workspace: Workspace<T>): Saver<T> {
   };
 }
 
-function createStore<T>(initial: T): Store<T> & { set: (value: T) => void } {
+function createStore<T>(initial: T): Listenable<T> {
   let value = initial;
   const listeners = new Set<() => void>();
   return {

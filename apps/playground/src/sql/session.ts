@@ -57,7 +57,7 @@ export type SqlSession = {
 export type SqlRecord = { sql: string; version: string; savedAt: number };
 
 /** IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存した SQL が無いときと同じに扱う。 */
-export function isSqlRecord(value: unknown): value is SqlRecord {
+function isSqlRecord(value: unknown): value is SqlRecord {
   if (typeof value !== "object" || value === null) return false;
   const { sql, version } = value as Partial<Record<keyof SqlRecord, unknown>>;
   return typeof sql === "string" && typeof version === "string";

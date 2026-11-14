@@ -30,7 +30,7 @@ export type RuntimeResult =
 export type NodeRecord = { files: Record<string, string>; version: string; savedAt: number };
 
 /** 保存しないファイルの規則。起動し直すときの files.readAll にも同じ値を渡す (apps/playground/DesignDoc.md)。 */
-export const SAVE_RULES: ReadAllOptions = { exclude: ["node_modules"], maxBytes: 1_048_576 };
+const SAVE_RULES: ReadAllOptions = { exclude: ["node_modules"], maxBytes: 1_048_576 };
 
 /** 変更の通知を受けてから、作業ディレクトリを読むまでの時間（ms）。待つ間に来た通知は、1 回の保存にまとめる。 */
 export const SAVE_DELAY_MS = 500;
@@ -39,7 +39,7 @@ export const SAVE_DELAY_MS = 500;
 export const RESTART_READ_TIMEOUT_MS = 5_000;
 
 /** 実行のボタンで、前の起動のコマンドの終了を待つ上限（ms）。ポートが空くのを待つためである。 */
-export const STOP_TIMEOUT_MS = 2_000;
+const STOP_TIMEOUT_MS = 2_000;
 
 type WritableStore<T> = Store<T> & { set: (value: T) => void };
 
@@ -67,7 +67,7 @@ const isExcluded = (path: string) =>
  * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
  * パスは、プロジェクトの JSON と同じ規則で確かめる。WebContainers の mount に、作業ディレクトリの外を指すパスを渡さないためである。
  */
-export function isNodeRecord(value: unknown): value is NodeRecord {
+function isNodeRecord(value: unknown): value is NodeRecord {
   if (typeof value !== "object" || value === null) return false;
   const { files, version } = value as Partial<Record<keyof NodeRecord, unknown>>;
   return (
@@ -372,27 +372,33 @@ export function createNodeSessionOpener(
   create: (options: NodeSessionOptions) => NodeSession = createNodeSession,
 ) {
   const opened = new WeakMap<Promise<ProjectLoad<"node">>, Promise<NodeSessionLoad>>();
+  // 形に合わない埋め込みの ID では、プロジェクトを開けないので、IndexedDB も読まない
+  const readSaved = (search: string) => {
+    const embedId = new URLSearchParams(search).get("project") ?? undefined;
+    if (embedId !== undefined && !isEmbedId(embedId)) return undefined;
+    const storage = openWorkspace(embedId);
+    return { storage, saved: storage.load() };
+  };
+  const open = async (
+    load: Promise<ProjectLoad<"node">>,
+    early: ReturnType<typeof readSaved>,
+  ): Promise<NodeSessionLoad> => {
+    const result = await load;
+    // 形に合わない埋め込みの ID では、project/ もプロジェクトを開けずに failed を返す
+    if (result.kind === "failed" || !early)
+      return { kind: "failed", embedId: result.embedId ?? "" };
+    return {
+      kind: "opened",
+      session: create({
+        project: result.project,
+        saved: await early.saved,
+        storage: early.storage,
+      }),
+    };
+  };
   return (search: string): Promise<NodeSessionLoad> => {
     const load = loadProject(search);
-    const existing = opened.get(load);
-    if (existing) return existing;
-    const embedId = new URLSearchParams(search).get("project") ?? undefined;
-    // 形に合わない埋め込みの ID では、プロジェクトを開けないので、IndexedDB も読まない
-    const workspace =
-      embedId === undefined || isEmbedId(embedId) ? openWorkspace(embedId) : undefined;
-    const saved = workspace?.load();
-    const session = load.then(async (result): Promise<NodeSessionLoad> => {
-      if (result.kind === "failed") return result;
-      const storage = workspace ?? openWorkspace(result.embedId);
-      return {
-        kind: "opened",
-        session: create({
-          project: result.project,
-          saved: await (saved ?? storage.load()),
-          storage,
-        }),
-      };
-    });
+    const session = opened.get(load) ?? open(load, readSaved(search));
     opened.set(load, session);
     return session;
   };
