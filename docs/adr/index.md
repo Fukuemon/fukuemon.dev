@@ -57,7 +57,7 @@
 | [ADR-0062](0062-dense-text-and-targets-in-playground.md) | コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする                                                                           |
 | [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)      | コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く                                                                                                 |
 | [ADR-0067](0067-compact-text-tokens-in-dense-panes.md)   | コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う                                                                 |
-| [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md) | （提案）ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                                 |
+| [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md) | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                                         |
 
 ADR-0010 の Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」は、ADR-0055 に置換した。
 
@@ -70,6 +70,8 @@ ADR-0024 の、行高を DADS 2.1.0 の値に限った決定のうち、154% の
 ADR-0061 の、コードを動かす画面の詰めたペインの行とスクロールする領域について、輪を要素から 2px 離して引く決定と、表示を `focus-ring` 1 つで書く決定は、ADR-0066 に置換した。
 
 ADR-0062 の、テーマ変数に置く compact のトークンを 2 つとした決定と、13px にしてよい文字の範囲は、ADR-0067 に置換した。
+
+ADR-0028 の Decision の「動きを付ける操作」のうち、選んだタブの罫を筆の線の形にする決定の、ハイコントラストのときの分は、ADR-0068 に置換した。
 
 ADR-0060（[フォーカスの色を、DADS の値で持つ](0060-focus-color-from-dads.md)）は、ADR-0061 に置換した。
 
