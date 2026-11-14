@@ -60,6 +60,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 | セマンティックトークン | `src/tokens/semantic.css`、`src/tokens/semantic-dark.css` | 役割の名前。プリミティブトークンを参照し、テーマごとに参照先を替える                                           |
 | テーマ変数             | `src/tokens/theme.css`                                    | Tailwind CSS のユーティリティの名前。Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す |
 
+- 例外は、ハイコントラスト（`forced-colors: active`）用の `forced-*` のユーティリティである。システムの色（`CanvasText`、`GrayText`、`SelectedItem` など）は、ブラウザが決める値で、テーマごとに変わらない。そのため、プリミティブトークンを通さず `theme.css` に直に書く。
 - 接頭辞は、プリミティブトークンを `--fd-primitive-`、セマンティックトークンを `--fd-color-` にする。
 - テーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）は、lint（oxlint の JS プラグインの eslint-plugin-better-tailwindcss）がエラーにする。Tailwind のデフォルトを消しただけでは、テーマ変数にないクラスは CSS を出さないだけでビルドが通るためである。
 - プリミティブトークンは、セマンティックトークンとテーマ変数が参照する値だけを持つ。
@@ -207,7 +208,7 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
   - フォーカスの表示には、ナビゲーションでも動きを付けない。
 - `Button` は、押している間は面を濃くし、離すと文字の色の墨がにじんで消える（`ink-press`、480ms 以下）。
 - ダイアログ、メニュー、検索の候補の一覧と候補が無いときの文は、濃度を上げて出る（`animate-fade-in`、150ms）。ダイアログは、上端に墨の筆の線を 1 回引く。
-- 横に送る枠で右に続きがある間は、右端を背景の色で薄くする（`scroll-fade-end`）。薄い色は、右端まで送る手前から消え始める。JavaScript を使わない。`Table` の枠と、記事の本文の表と図の枠で使う。薄い色は `surface` の色で、枠が別の面の上にあるときは、`--fd-scroll-fade-bg` にその面の色を渡す。
+- 横に送る枠で右に続きがある間は、右端を背景の色で薄くする（`scroll-fade-end`）。薄い色は、右端まで送る手前から消え始める。JavaScript を使わない。`Table` の枠、記事の本文の表と図とコードブロックの枠、`HttpExchangeDetail` の本文の枠、プレイグラウンドの SQL の実行計画の枠で使う。薄い色は `surface` の色で、枠が別の面の上にあるときは、`--fd-scroll-fade-bg` にその面の色を渡す。`code-surface` の上では、`scroll-fade-code` を並べて付ける。
 - `Button` の読み込み中は、3 つの点が左から順に薄くなる（`loading-dots`、1 周 1200ms）。`Loading` は、薄い罫の上を主の色の罫が伸びて抜ける（`animate-loading`、1 周 1600ms）。`PageLoading` は、同じ動きで、主の色の筆の線が伸びて抜ける（`animate-loading` と `stroke-brush`）。
 
 #### 動きの長さ

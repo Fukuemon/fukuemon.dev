@@ -70,6 +70,43 @@ describe("HttpExchangeDetail", () => {
     );
   });
 
+  describe("本文の右端のぼかし", () => {
+    const renderLongBody = async () => {
+      await page.viewport(360, 800);
+      render(<LongUrlAndHeaders />);
+      return screen.getByRole("region", { name: "レスポンスの本文" });
+    };
+
+    it("横に続くあいだは、右端のぼかしを出す", async () => {
+      const body = await renderLongBody();
+      await expect.poll(() => getComputedStyle(body, "::after").opacity).toBe("1");
+    });
+
+    it("右端まで送ると、ぼかしを消す", async () => {
+      const body = await renderLongBody();
+      body.scrollLeft = body.scrollWidth;
+      await expect.poll(() => getComputedStyle(body, "::after").opacity).toBe("0");
+    });
+
+    it("ぼかしは、本文の背景と同じ色で終わる", async () => {
+      const body = await renderLongBody();
+      expect(getComputedStyle(body, "::after").backgroundImage).toContain(
+        getComputedStyle(body).backgroundColor,
+      );
+    });
+
+    it("本文は、ぼかしと同じセルに重なり、行が増えない", async () => {
+      const body = await renderLongBody();
+      const code = body.querySelector("code") as Element;
+      expect(body.clientHeight).toBeCloseTo(code.getBoundingClientRect().height, 0);
+    });
+
+    it("余白は本文の側にあり、ぼかしは枠の右端まで届く", async () => {
+      const body = await renderLongBody();
+      expect(getComputedStyle(body).paddingRight).toBe("0px");
+    });
+  });
+
   it("開閉の要約は 24 px の高さで押せ、表のセルの上下の余白は 2px、文字は 13 px にする（ADR-0062）", () => {
     render(<Default />);
     for (const summary of document.querySelectorAll("summary")) {
