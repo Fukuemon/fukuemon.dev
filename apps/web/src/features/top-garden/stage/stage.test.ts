@@ -219,10 +219,11 @@ function browser(search = "") {
   const globals = {
     document: { documentElement: root },
     localStorage: store,
-    location: { search, pathname: "/", hash: "" },
+    location: { search, href: `https://fukuemon.dev/${search}` },
+    URL,
     history: {
       state: null,
-      replaceState: (_: unknown, __: string, url: string) => void replaced.push(url),
+      replaceState: (_: unknown, __: string, url: URL) => void replaced.push(String(url)),
     },
     matchMedia: () => ({ matches: false }),
     setTimeout: () => {},
@@ -254,14 +255,14 @@ describe("stageScript", () => {
     });
     expect({ classes: [...b.root.classes].sort(), replaced: b.replaced }).toStrictEqual({
       classes: ["intro", "stage-on"],
-      replaced: ["/"],
+      replaced: ["https://fukuemon.dev/"],
     });
   });
 
   it("URL の引数 intro を消すときは、ほかの引数を残す", () => {
     const b = browser("?intro&season=winter");
     runInNewContext(stageScript({ dev: true }), b.globals);
-    expect(b.replaced).toStrictEqual(["/?season=winter"]);
+    expect(b.replaced).toStrictEqual(["https://fukuemon.dev/?season=winter"]);
   });
 
   it("庭を出しているときは、歯車の設定で庭の表示をオンにしても読み込み直さない", () => {

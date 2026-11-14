@@ -87,7 +87,7 @@ export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }):
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +
     `introAgain:introAgain,storage:function(){return localStorage},load:${load},later:function(f,m){setTimeout(f,m)}},` +
     `{seasonOf:${seasonOf.toString()},timeOfDayOf:${timeOfDayOf.toString()},takeFirstVisit:${takeFirstVisit.toString()}});` +
-    `if(introAgain){q.delete(p);var s=q.toString();history.replaceState(history.state,"",location.pathname+(s?"?"+s:"")+location.hash)}` +
+    `if(introAgain){var u=new URL(location.href);u.searchParams.delete(p);history.replaceState(history.state,"",u)}` +
     `var root=document.documentElement;root.addEventListener(${JSON.stringify(SETTINGS_CHANGE)},function(e){if(e.detail.name==="garden"&&e.detail.on&&!root.classList.contains("stage-on"))location.reload()})})()`
   );
 }
