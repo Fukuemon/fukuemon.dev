@@ -33,7 +33,7 @@ function seriesHref(name: string): string {
   return `/series/${name}`;
 }
 
-function toContentRef(a: ArticleListSource): ContentRef {
+export function toContentRef(a: ArticleListSource): ContentRef {
   const { contentId, format, title, description, tags, publishedAt } = a.data;
   return {
     contentId,

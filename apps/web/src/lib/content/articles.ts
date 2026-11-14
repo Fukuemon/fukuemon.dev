@@ -1,4 +1,5 @@
 import { getCollection, getEntry, render } from "astro:content";
+import { assertContentGraph } from "./article-graph";
 import { listArticles, planSeriesPages, type SeriesSource } from "./article-list";
 import { type ArticleSeries, planArticlePages } from "./article-pages";
 
@@ -17,6 +18,7 @@ async function loadArticlesAndSeries() {
     getCollection("articles"),
     getCollection("series"),
   ]);
+  assertContentGraph(articles.map((a) => ({ id: a.id, data: a.data })));
   // series の glob は `<series>/index.md` を読み、id はディレクトリ名から始まる
   const seriesSources: SeriesSource[] = series.map((s) => ({
     name: s.id.split("/")[0] as string,
