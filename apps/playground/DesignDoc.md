@@ -294,7 +294,9 @@ type BackendInstance = {
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
-  previewMessages: { subscribe: (onMessage: (message: unknown) => void) => () => void };
+  previewMessages: {
+    subscribe: (onMessage: (message: unknown, port: number) => void) => () => void;
+  };
   guestDirectory: string;
   teardown: () => Promise<void>;
 };
@@ -317,7 +319,7 @@ type BackendProcess = {
   - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
-  - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
+  - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。待ち受けているポートの URL と同じ origin から届いたメッセージだけを、そのポートと一緒に渡す。ほかの iframe とウィンドウからのメッセージは渡さない。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
 - `node-runtime/` の直下は、`webcontainer/` が知らせたポートのうち、URL が `https:` で、ツールのページと別の origin のものだけを、`ports` の store に入れる。
   合わないポートは、プレビューのタブに出さない。
@@ -332,6 +334,19 @@ type BackendProcess = {
 - プロセスの出力は、`OutputLog` で公開する。端末のペインは、Effect の中で、`read` の結果を端末のエンジンに書いてから、`subscribe` で追加の出力を書く。
 - preload は、記録の行の行頭に、固定のプレフィックスを付ける。`node-runtime/` の直下（`webcontainer/` の外）の処理が、`BackendProcess` の `output` から受けたそのままの出力から、プレフィックスの付いた行を抜き出して、store に入れる。`OutputLog` には、抜き出した後の出力を渡す。
 - コンソールの記録の、出力したプロセスの名前は、行を抜き出す処理が付ける。名前は、行を出力したプロセスの、`start` の `name` である。シェルで起動したプロセスの行には、シェルの名前が付く。
+- コンソールの記録を取る preload（`guest/console-trace.cjs`）とプレビューに入れるスクリプト（`guest/preview-console.cjs`）は、次のことを行う。
+  - `console.debug`、`console.log`、`console.info`、`console.warn`、`console.error` を包み、ログレベル、時刻（`Date.now()`）、引数を 1 件の記録にする。元の関数も呼ぶので、端末の出力とプレビューのページの DevTools の出力は変わらない。
+  - 引数は、呼んだ時点の値を、値の木に写す。写す処理（`guest/console-value.cjs`）は、preload とスクリプトが共有する。
+  - 値の木は、文字列、数、bigint、真偽値、`null`、`undefined`、symbol、関数の名前、循環を区別する。入れ子の値は、配列、オブジェクト（クラスの名前と、自分の列挙できる項目）、`Map`、`Set`、`Error`（名前、メッセージ、呼び出し元のフレームの行）を区別する。数は、NaN、Infinity、-0 を JSON で運べるよう、文字で運ぶ。ほかの値（`Date`、正規表現、Proxy、DOM の要素など）は、文字にする。
+  - getter、`toJSON`、Proxy の罠は動かさない。getter の項目は `(...)` にする。訪問者のコードを、記録のために動かさないためである。
+  - 深さは 6 段、1 つの入れ子の要素は 100 個、1 つの文字列は 1 万字、Error の呼び出し元のフレームの行は 30 行まで写す。1 回の呼び出しで写す値は 2000 個、文字は 256 K 字までにする。超えた分は「…」と残りの件数の文字にする。1 件の記録が、記録の行を抜き出す処理の上限を超えないようにするためである。
+  - preload は、記録を `@@fd:console ` を付けた 1 行の JSON にして、標準出力に書く。記録を書く途中で呼ばれた `console.*` は、記録しない。
+  - プレビューに入れるスクリプトは、iframe の中のページでだけ `console.*` を包む。記録は、ツールのページの origin を宛先にして、`window.parent` へ `postMessage` で送る。ツールのページの origin は、`node-runtime/` の直下がスクリプトを組むときに埋める。スクリプトは 1 つの関数に包み、ページのグローバルに名前を足さない。
+- `node-runtime/` の直下は、記録の行とプレビューのメッセージを `ConsoleRecord` にして、`consoleEntries` の store に入れる。
+  - `ConsoleRecord` は、ID、ログレベル、出力元、時刻、値の木を持つ。出力元は、Node のプロセス（`start` の `name`）か、プレビュー（ページを返したサーバーのポート）である。
+  - 訪問者のプログラムとプレビューのページも、同じ形の記録を出せる。形に合わない記録と、写す側の上限を超えた記録は捨てる。
+  - 記録は、届いた順に並べる。プロセスとプレビューをまたいで、時刻の順に並べ直さない。
+  - 届いた記録は、描画の 1 回分（`requestAnimationFrame`）ずつまとめて store に入れる。1 件ごとに入れると、表示中の全ての行の再描画とレイアウトが、1 件ごとに起きるためである。
 - プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
   - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](../../docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
 - 出力のチャンクは、記録の行の途中で切れて届く。行を抜き出す処理（`record-lines.ts`）は、プレフィックスから改行までがそろうまで、その部分を端末に渡さない。チャンクの末尾がプレフィックスの先頭の数文字で終わるときは、続きを 50 ms 待ち、続きが来なければ端末に渡す。端末で打った `@` のような文字が、次の入力まで出なくならないようにするためである。プレフィックスから 4 MB を超えても改行が来ないときは、記録の行でないとみなして端末に渡す。プロセスが終わったときは、手元の出力を端末に渡す。プロセスの終わりが、最後の出力より先に届くかは確認していない。
@@ -429,7 +444,7 @@ SQL だけを動かすツールのページは、次のとおり組む。
 
 Node の実行環境のページは、次のとおり組む。
 
-- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末とコンソールと HTTP の流れを置く。下のペインは、端末、コンソール、HTTP の流れをタブで切り替え、最初は端末を出す。コンソールと HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
 - `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。ペインの外の `Suspense` が、画面の右下に `PageLoading` を出す。プロジェクトを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
