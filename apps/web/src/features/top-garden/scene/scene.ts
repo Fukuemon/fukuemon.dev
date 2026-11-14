@@ -22,6 +22,7 @@ import {
   GATE,
   GATE_Z,
   MOUNTAINS,
+  OTHER_TREES,
   POND,
   STATIONS,
   STEP_R,
@@ -347,8 +348,7 @@ export function buildGarden(
     scene.add(group);
     return group.position.clone().add(boughFrom);
   };
-  plant(-9.0, -11.2, 1.35, 1, pineLeaf);
-  plant(6.4, -1.4, 1.0, -1, pineLeaf);
+  for (const t of OTHER_TREES) plant(t.at[0], t.at[1], t.s, t.dir, pineLeaf);
   const stationBoughs = STATIONS.map(({ tree: t }) =>
     plant(t.at[0], t.at[1], t.s, t.dir, t.leaf === "pine" ? pineLeaf : C.leaf),
   );

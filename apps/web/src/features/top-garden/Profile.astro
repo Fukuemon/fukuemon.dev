@@ -1,6 +1,4 @@
 ---
-import { Link } from "@fukuemon/ui";
-
 const career = [
   { year: "2018", text: "経歴の見本の 1 行目。所属と役割を書く。" },
   { year: "2021", text: "経歴の見本の 2 行目。担当した領域を書く。" },
@@ -21,7 +19,7 @@ const row = "border-t border-border py-2";
     <section class={section} data-garden-card data-testid="garden-card-profile" aria-labelledby="profile">
       <h1 id="profile" data-testid="garden-title" tabindex="-1" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
       <p class="mb-4 text-text-secondary">自己紹介の見本。どんな仕事をしていて、このサイトに何を書いているかを、数行で書く。</p>
-      <p>関心のある技術と、記事で扱う主題を書く。</p>
+      <p>関心のある技術と、書いている主題を書く。</p>
     </section>
     <section class={section} data-garden-card data-testid="garden-card-career" aria-labelledby="career">
       <h2 id="career" class:list={[heading, "text-heading-md"]}>経歴</h2>
@@ -49,10 +47,9 @@ const row = "border-t border-border py-2";
         }
       </dl>
     </section>
-    <section class={section} data-garden-card data-testid="garden-card-articles" aria-labelledby="articles">
-      <h2 id="articles" class:list={[heading, "text-heading-md"]}>記事</h2>
-      <p class="mb-4">記事の一覧への入口の見本。</p>
-      <Link href="/articles" isStandalone data-testid="garden-articles-link">記事の一覧を開く</Link>
+    <section class={section} data-garden-card data-testid="garden-card-portfolio" aria-labelledby="portfolio">
+      <h2 id="portfolio" class:list={[heading, "text-heading-md"]}>ポートフォリオ</h2>
+      <p>整備中です。公開まで、しばらくお待ちください。</p>
     </section>
   </div>
 </div>
@@ -87,6 +84,11 @@ const row = "border-t border-border py-2";
   :global(html.stage-on) [data-garden-card] p {
     margin-block-end: 1rem;
     color: inherit;
+  }
+
+  /* 整備中の文が、狭い画面で語の途中で折れないようにする */
+  :global(html.stage-on) #portfolio + p {
+    word-break: auto-phrase;
   }
 
   :global(html.stage-on) [data-garden-card] p:last-child {
