@@ -20,9 +20,9 @@ verified_commit: 01101c7
 
 ## Environments
 
-環境は本番の 1 つだけで、staging を持たない。
-本番を作り直したサイトに切り替えるまでは、開発中のサイトを、本番と別の Worker（`fukuemon-dev-preview`）に配信する。
-プレビューの Worker は custom domain を持たず、workers.dev の URL で開く。
+環境は本番の 1 つだけで、staging を持たない。  
+本番を、作り直したサイトに切り替えるまでは、開発中のサイトを、本番と別の Worker（`fukuemon-dev-preview`）に配信する。  
+プレビューの Worker は custom domain を持たず、workers.dev の URL で公開する。  
 ADR-0031: [切り替えまでのプレビュー](../docs/adr/0031-subdomains-and-workers.md#6-切り替えまでのプレビュー)
 
 - Cloudflare のアカウントは 1 つ、zone は 1 つにする。
@@ -89,7 +89,8 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - `apps/web` の `build:preview` が、ビルドの出力の `dist/` を `dist-preview/` に複製し、複製の `_headers` の先頭に noindex の規則を足す。プレビューの Worker は `dist-preview/` を配る。
 - `dist/` と `apps/web/public/_headers` には noindex を書かない。本番の Worker へ `dist/` を配ったときに、noindex が入らないようにするためである。
 - 本番を切り替えるときに、プレビューの Worker と deploy-preview workflow を消す。
-  - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。noindex を足した配信物を Worker に出すのは、deploy-preview workflow が呼ぶ `deploy:preview` だけである。
+  - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。
+  - `deploy:preview` を実行するのは deploy-preview workflow だけなので、workflow を消すと、noindex を足したアセットの deploy も止まる。
 
 `play.fukuemon.dev` が返すヘッダとリダイレクトは次のとおり。
 

@@ -69,8 +69,7 @@ Worker のコードの変更は、通常の pull request に含まれる。
 `develop` には branch protection を掛けていないので、pull request を通すのは慣行であり、仕組みでは強制しない。  
 deploy 用の token は Workers Scripts の権限を持つので、custom domain の apex のレコードにも届きうる。deploy の workflow がそれを触らないのは、`wrangler deploy` の振る舞いによる。  
 apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md) にある。  
-カタログ、プレイグラウンド、プレビューの Worker は、develop の check workflow が通るたびに出す。  
-出す workflow は、それぞれ deploy-catalog、deploy-playground、deploy-preview である。  
+develop の check workflow が通るたびに、deploy-catalog、deploy-playground、deploy-preview の workflow が、それぞれの Worker へ deploy する。  
 初回と出し直しは、運用者が `develop` から手で起動する。  
 どの Worker もハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
 
