@@ -68,7 +68,7 @@ const tool =
     pointer-events: none !important;
   }
 
-  /* 霞は、ヘッダーと庭の中の字のボタンの後ろに敷き、字の後ろを霞の色で埋める。面を持たない字は、霞の色が残る範囲に収める */
+  /* 霞は、ヘッダーと庭の中の字のボタンの後ろに敷き、字の後ろを霞の色で埋める。面を持たない字は、霞の色で塗りつぶす範囲に収める */
   :global(html.stage-on.garden-ready) .garden-mist {
     position: fixed;
     inset-inline: 0;
@@ -114,7 +114,7 @@ const tool =
     --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
-  /* 狭い画面では、幅 320px でもヘッダーを霞の色が残る範囲の 1 段に収めるよう、間を詰める */
+  /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、間を詰める */
   @media not (min-width: 48rem) {
     :global(html.stage-on.garden-ready [data-site-header] ul),
     :global(html.stage-on.garden-ready [data-site-header] > div) {
