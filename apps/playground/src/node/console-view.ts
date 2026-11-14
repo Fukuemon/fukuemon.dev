@@ -1,8 +1,9 @@
 import type { ConsoleRecord, ConsoleSource } from "@fukuemon/node-runtime";
 import type { ConsoleEntry } from "@fukuemon/ui";
 
-/** コンソールのペインが、起動できなかったときに出す題。 */
-const CONSOLE_FAILURE_TITLE = "コンソールを記録できません";
+/** 下のペインのコンソールのタブの文。記録の件数を添え、ほかのタブを見ている間も記録が届いたことが分かるようにする。 */
+export const consoleTabLabel = (count: number) =>
+  count === 0 ? "コンソール" : `コンソール（${count}）`;
 
 /** 出力元の名前。プロセスは `start` の `name`、プレビューはページを返したサーバーのポートで呼ぶ。 */
 export const sourceName = (source: ConsoleSource) =>

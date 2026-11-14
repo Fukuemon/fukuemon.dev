@@ -1,7 +1,7 @@
 import type { ConsoleRecord } from "@fukuemon/node-runtime";
 import { describe, expect, it } from "vitest";
 
-import { formatTime, sourceName, toEntry } from "./console-view";
+import { consoleTabLabel, formatTime, sourceName, toEntry } from "./console-view";
 
 const record: ConsoleRecord = {
   id: "1",
@@ -36,5 +36,15 @@ describe("sourceName", () => {
 describe("formatTime", () => {
   it("2 桁と 3 桁にそろえる", () => {
     expect(formatTime(new Date(2026, 0, 1, 23, 59, 0, 5).getTime())).toBe("23:59:00.005");
+  });
+});
+
+describe("consoleTabLabel", () => {
+  it("記録が無いときは、件数を添えない", () => {
+    expect(consoleTabLabel(0)).toBe("コンソール");
+  });
+
+  it("記録があるときは、件数を添える", () => {
+    expect(consoleTabLabel(3)).toBe("コンソール（3）");
   });
 });
