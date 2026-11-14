@@ -13,7 +13,15 @@
 // longestTaskMs は、区間と重なる renderer のメインスレッドの RunTask の最長である。
 // dropped は、trace の PipelineReporter の state が STATE_DROPPED のフレームの数である。frames は、その区間で始まったフレームの数である。
 import { createServer } from "node:http";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { extname, join, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
@@ -33,8 +41,13 @@ const runs = Number(opt.runs);
 const cpu = Number(opt.cpu);
 const bundleDelay = Number(opt["bundle-delay"]);
 const DIST = resolve(opt.dist);
-if (![runs, cpu, bundleDelay].every((n) => Number.isFinite(n) && n >= 0) || runs < 1 || cpu < 1) {
-  console.error("--runs と --cpu は 1 以上、--bundle-delay は 0 以上の数にする");
+if (
+  ![runs, cpu, bundleDelay].every((n) => Number.isFinite(n) && n >= 0) ||
+  runs < 1 ||
+  cpu < 1 ||
+  !Number.isInteger(runs)
+) {
+  console.error("--runs は 1 以上の整数、--cpu は 1 以上、--bundle-delay は 0 以上の数にする");
   process.exit(2);
 }
 
@@ -47,6 +60,8 @@ const TYPES = {
   ".woff2": "font/woff2",
 };
 const GZIP = new Set([".html", ".js", ".css", ".svg", ".json"]);
+/** 遅らせた応答の数。--bundle-delay が掛かったかの確認に使う */
+let delayedResponses = 0;
 const server = createServer((req, res) => {
   try {
     const path = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname);
@@ -62,16 +77,23 @@ const server = createServer((req, res) => {
       body = gzipSync(body);
       head["content-encoding"] = "gzip";
     }
-    setTimeout(
-      () => res.writeHead(200, head).end(body),
-      path.includes("garden-entry") ? bundleDelay : 0,
-    );
+    const delayed = path.includes("garden-entry");
+    if (delayed) delayedResponses++;
+    setTimeout(() => res.writeHead(200, head).end(body), delayed ? bundleDelay : 0);
   } catch {
     res.writeHead(404).end();
   }
 });
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 const origin = `http://localhost:${server.address().port}`;
+if (!existsSync(join(DIST, "index.html"))) {
+  console.error(`${DIST}/index.html が無い。pnpm run build の後に流す`);
+  process.exit(2);
+}
+if (!existsSync(chromium.executablePath())) {
+  console.error("Playwright の Chromium が無い。pnpm exec playwright install chromium で入れる");
+  process.exit(2);
+}
 mkdirSync(opt.out, { recursive: true });
 
 const CATEGORIES = [
@@ -96,19 +118,13 @@ function analyze(text) {
       main = { pid: e.pid, tid: e.tid };
     }
   }
-  if (!main || marks.intro === undefined || marks["garden-ready"] === undefined)
-    throw new Error("イントロの class の時刻が trace に無い");
+  const missing = CLASSES.filter((c) => marks[c] === undefined);
+  if (!main || missing.length > 0)
+    throw new Error(`イントロの class の時刻が trace に無い: ${missing.join(", ")}`);
   const base = marks.intro;
   const rel = (ts) => (ts - base) / 1000;
   const tasks = events
-    .filter(
-      (e) =>
-        e.name === "RunTask" &&
-        e.ph === "X" &&
-        e.pid === main.pid &&
-        e.tid === main.tid &&
-        e.ts >= base,
-    )
+    .filter((e) => e.name === "RunTask" && e.ph === "X" && e.pid === main.pid && e.tid === main.tid)
     .map((e) => ({ start: rel(e.ts), end: rel(e.ts + e.dur), dur: e.dur / 1000 }));
   const frames = events
     .filter(
@@ -198,6 +214,8 @@ try {
         if (eof) break;
       }
       const row = { run: i, ...analyze(text) };
+      if (bundleDelay > 0 && delayedResponses === 0)
+        throw new Error("場面のバンドルの応答が無く、--bundle-delay が掛かっていない");
       rows.push(row);
       console.log(JSON.stringify(row));
     } finally {
