@@ -149,17 +149,40 @@ export function createStdioDatabase(process: BackendProcess): {
 /** 失敗したときに cause に入れる、出力の末尾の文字数。 */
 const FAILED_OUTPUT_TAIL_LENGTH = 4096;
 
+/** 制御の文字を除く前に持つ、出力の末尾の文字数。npm のスピナーの文字は、除くと残らないので、多めに持つ。 */
+const RAW_OUTPUT_TAIL_LENGTH = FAILED_OUTPUT_TAIL_LENGTH * 4;
+
+const ESCAPE = String.fromCharCode(27);
+/** 行の先頭に戻す制御（`\r` と、1 列目へ動かす CSI）。この前の文字は、後の文字で書き直される。 */
+const LINE_RESET = new RegExp(`\\r|${ESCAPE}\\[1?G`);
+const CSI = new RegExp(`${ESCAPE}\\[[0-9;?]*[ -/]*[@-~]`, "g");
+
+/**
+ * 端末に向けた出力を、コンソールで読める文字にする。
+ * 行ごとに、行の先頭に戻した後の文字だけを残し、色などの CSI を除く。npm のスピナーは、行の先頭に戻して書き直すので、残らない。
+ */
+function plainTerminalOutput(raw: string): string {
+  return raw
+    .split("\n")
+    .map((line) => (line.replace(/\r$/, "").split(LINE_RESET).at(-1) ?? "").replace(CSI, ""))
+    .join("\n");
+}
+
 /**
  * spawn が 0 でない終了コードで終わったときに投げる。
- * 画面には出さない原因をコンソールで読めるよう、出力の末尾の FAILED_OUTPUT_TAIL_LENGTH 文字を、投げる Error の cause に入れる。
+ * 画面には出さない原因をコンソールで読めるよう、制御の文字を除いた出力の末尾の FAILED_OUTPUT_TAIL_LENGTH 文字を、投げる Error の cause に入れる。
  */
 async function runToEnd(process: BackendProcess, what: string) {
   let tail = "";
   process.output.subscribe((chunk) => {
-    tail = (tail + chunk).slice(-FAILED_OUTPUT_TAIL_LENGTH);
+    tail = (tail + chunk).slice(-RAW_OUTPUT_TAIL_LENGTH);
   });
   const code = await process.exit;
-  if (code !== 0) throw new Error(`${what}が失敗した: ${code}`, { cause: tail });
+  if (code !== 0) {
+    throw new Error(`${what}が失敗した: ${code}`, {
+      cause: plainTerminalOutput(tail).slice(-FAILED_OUTPUT_TAIL_LENGTH),
+    });
+  }
 }
 
 /**

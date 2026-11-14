@@ -304,8 +304,23 @@ describe("bootWithBackend の DB", () => {
       ["a".repeat(5000), "b".repeat(96)],
       "a".repeat(4000) + "b".repeat(96),
     ],
+    [
+      "出力にスピナーと色の制御の文字がある",
+      [
+        "\u001b[1G\u001b[0K\\\u001b[1G\u001b[0K|\u001b[1G\u001b[0K/\u001b[1G\u001b[0K-\u001b[1G\u001b[0K",
+        "\u001b[1mnpm\u001b[22m \u001b[31merror\u001b[39m \u001b[94mcode\u001b[39m E404\n",
+        "\u001b[1G\u001b[0K-\u001b[1G\u001b[0K\u001b[1mnpm\u001b[22m \u001b[31merror\u001b[39m 404 Not Found\r\n",
+        "\u001b[1G\u001b[0K-\u001b[1G\u001b[0K",
+      ],
+      "npm error code E404\nnpm error 404 Not Found\n",
+    ],
+    [
+      "制御の文字を除いた後も 4096 文字を超える",
+      ["\u001b[31m" + "a".repeat(5000) + "\u001b[39m", "b".repeat(96)],
+      "a".repeat(4000) + "b".repeat(96),
+    ],
   ])(
-    "依存の npm install が失敗し、%sときは、出力の末尾の 4096 文字までを cause に入れる",
+    "依存の npm install が失敗し、%sときは、制御の文字を除いた出力の末尾の 4096 文字までを cause に入れる",
     async (_, installOutput, tail) => {
       const fake = databaseBackend({ install: 1, installOutput });
       const error = await failure(
