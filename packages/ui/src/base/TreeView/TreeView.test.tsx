@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TreeView.stories";
 
-const { Collapsed, Compact, Expanded, WithContent } = composeStories(stories);
+const { Collapsed, Compact, Expanded, WithContent, CompactBody } = composeStories(stories);
 
 const item = (name: string) => screen.getByRole("treeitem", { name });
 
@@ -96,5 +96,23 @@ describe("TreeView", () => {
     await userEvent.tab();
     await userEvent.keyboard("n");
     expect(item("名前の項目")).toHaveFocus();
+  });
+
+  it("textSize を body-compact にすると、項目は 24 px の高さと 13 px の文字になり、選んだ項目を太字にしない（ADR-0062）", () => {
+    render(<CompactBody />);
+    for (const treeitem of screen.getAllByRole("treeitem")) {
+      expect(treeitem.getBoundingClientRect().height).toBe(24);
+      expect(getComputedStyle(treeitem).fontSize).toBe("13px");
+      expect(getComputedStyle(treeitem).fontWeight).toBe("400");
+    }
+  });
+
+  it("compact の項目は、フォーカスの輪を項目の内側に引く（ADR-0066）", async () => {
+    render(<CompactBody />);
+    await userEvent.tab();
+    const focused = document.activeElement as Element;
+    expect(focused).toHaveAttribute("role", "treeitem");
+    expect(getComputedStyle(focused).outlineStyle).toBe("solid");
+    expect(getComputedStyle(focused).outlineOffset).toBe("-2px");
   });
 });

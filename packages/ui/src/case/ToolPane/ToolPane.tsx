@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { type ReactNode, useId } from "react";
+import { type ReactNode, createContext, use, useId } from "react";
 
 import { Loading } from "../../base/Loading/Loading";
 import { Notice } from "../../base/Notice/Notice";
@@ -26,11 +26,23 @@ export type ToolPaneProps = {
   children?: ReactNode;
 };
 
+const JoinedContext = createContext(false);
+
+/**
+ * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は四方に 1px の罫を引き、左と上へ 1px ずらして隣の罫に重ねる。
+ * 隣の領域と高さや幅がそろわない並びでも、領域の間の罫は 1px になる。並べ方（flex、grid）は呼ぶ側が書き、領域の間の隙間を空けない。
+ */
+export function ToolPaneGroup({ children }: { children: ReactNode }) {
+  return <JoinedContext value>{children}</JoinedContext>;
+}
+
 /**
  * コードを動かす画面の 1 つの領域。題の帯、操作、中身を、罫で区切って縦に積む。
  * 中身の空、読み込み中、エラーの状態を、どの領域でも同じ形で出す。
+ * 文字と帯は、コードを動かす画面の密度にする（題の帯 32px、題 13px、下の帯 24px と 12px。docs/adr/0062-dense-text-and-targets-in-playground.md）。
  * ToolPane は高さを指定しない。中身だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。
  * スクロールさせる要素は、中身として渡す側が `min-h-0 flex-1 overflow-y-auto` を付けて用意する。
+ * フォーカスできるスクロールさせる要素は、`focus-ring-frame` を付けた要素の直下に 1 つだけ置く（docs/adr/0066-inset-focus-ring-in-dense-panes.md）。
  */
 export function ToolPane({
   title,
@@ -42,13 +54,18 @@ export function ToolPane({
   children,
 }: ToolPaneProps) {
   const titleId = useId();
+  const isJoined = use(JoinedContext);
   return (
     <section
       aria-labelledby={titleId}
-      className="flex min-h-0 min-w-0 flex-col border border-border bg-surface text-text"
+      className={clsx(
+        "flex min-h-0 min-w-0 flex-col border-border bg-surface text-text",
+        "border",
+        isJoined && "-mt-px -ml-px",
+      )}
     >
-      <div className="flex min-h-11 items-center justify-between gap-2 border-b border-border pl-4">
-        <h2 className="text-label text-text" id={titleId}>
+      <div className="flex min-h-8 items-center justify-between gap-2 border-b border-border pr-1 pl-3">
+        <h2 className="text-label-compact text-text" id={titleId}>
           {title}
         </h2>
         {actions !== undefined && <div className="flex items-center">{actions}</div>}
@@ -58,29 +75,29 @@ export function ToolPane({
         className={clsx(
           "flex min-h-0 min-w-0 flex-1 flex-col",
           surface === "code" && state.kind === "ready"
-            ? "bg-code-surface font-mono text-code text-code-text"
+            ? "bg-code-surface font-mono text-code-compact text-code-text"
             : "bg-surface",
         )}
       >
         {state.kind === "ready" && children}
         {state.kind === "empty" && (
-          <p className="p-4 text-body-dense text-text-secondary">{state.message}</p>
+          <p className="p-3 text-body-compact text-text-secondary">{state.message}</p>
         )}
         {state.kind === "loading" && (
-          <div className="p-4">
-            <Loading label={state.label} />
+          <div className="p-3">
+            <Loading density="compact" label={state.label} />
           </div>
         )}
         {state.kind === "error" && (
-          <div className="p-4">
-            <Notice isAlert title={state.title} tone="danger">
+          <div className="p-3">
+            <Notice density="compact" isAlert title={state.title} tone="danger">
               {state.message}
             </Notice>
           </div>
         )}
       </div>
       {state.kind === "ready" && footer !== undefined && (
-        <div className="flex min-h-8 items-center justify-between gap-4 border-t border-border px-4 text-caption text-text-secondary">
+        <div className="flex min-h-6 items-center justify-between gap-4 border-t border-border px-3 text-compact text-text-secondary">
           {footer}
         </div>
       )}

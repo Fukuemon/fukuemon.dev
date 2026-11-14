@@ -5,7 +5,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import * as stories from "./Notice.stories";
 
-const { Danger, Warning } = composeStories(stories);
+const { Compact, Danger, Warning } = composeStories(stories);
 
 describe("Notice", () => {
   it("静的に描いた HTML に、題と本文の文字がある", () => {
@@ -20,5 +20,12 @@ describe("Notice", () => {
     unmount();
     render(<Danger />);
     expect(screen.getByRole("alert")).toHaveTextContent("実行に失敗しました");
+  });
+
+  it("density を compact にすると、題を 13 px、余白を 8 px にする（ADR-0062）", () => {
+    render(<Compact />);
+    const title = screen.getByText(/./, { selector: "p" });
+    expect(getComputedStyle(title).fontSize).toBe("13px");
+    expect(getComputedStyle(title.parentElement?.parentElement as Element).paddingTop).toBe("8px");
   });
 });

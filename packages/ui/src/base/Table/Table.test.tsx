@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Table.stories";
 
-const { Default, Wide } = composeStories(stories);
+const { Default, Wide, Compact } = composeStories(stories);
 
 describe("Table", () => {
   it("静的に描いた HTML に、題と見出しとセルの文字がある", () => {
@@ -31,5 +31,15 @@ describe("Table", () => {
     expect(region).toHaveFocus();
     await userEvent.keyboard("{ArrowRight}");
     await expect.poll(() => region.scrollLeft).toBeGreaterThan(0);
+  });
+
+  it("density を compact にすると、セルの余白は上下 2px と左右 8px、文字は 13 px になる（ADR-0062）", () => {
+    render(<Compact />);
+    for (const cell of document.querySelectorAll("th, td")) {
+      const style = getComputedStyle(cell);
+      expect(style.paddingTop).toBe("2px");
+      expect(style.paddingLeft).toBe("8px");
+      expect(style.fontSize).toBe("13px");
+    }
   });
 });

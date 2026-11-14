@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import type { ReactNode } from "react";
 
 export type DisclosureProps = {
@@ -5,16 +6,31 @@ export type DisclosureProps = {
   summary: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  /** compact は、要約を 24px の高さと太字の 13px にし、中身の余白を詰める。コードを動かす画面に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  density?: "default" | "compact";
 };
 
 /**
  * 要約を押すと中身を開閉する枠。DADS のアコーディオンを元にする。
  * JavaScript なしでも開閉できるよう、`<details>` と `<summary>` だけで組む。
  */
-export function Disclosure({ summary, children, defaultOpen = false }: DisclosureProps) {
+export function Disclosure({
+  summary,
+  children,
+  defaultOpen = false,
+  density = "default",
+}: DisclosureProps) {
+  const isCompact = density === "compact";
   return (
     <details className="group border-y border-border" open={defaultOpen}>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-control px-2 py-2 text-body-dense font-bold text-text hover:bg-surface-subtle focus-visible:focus-ring">
+      <summary
+        className={clsx(
+          "flex cursor-pointer list-none items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
+          isCompact
+            ? "min-h-6 gap-1 px-1 py-0.5 text-label-compact"
+            : "min-h-11 gap-2 px-2 py-2 text-body-dense font-bold",
+        )}
+      >
         <svg
           aria-hidden="true"
           className="shrink-0 transition-transform group-open:rotate-90"
@@ -26,7 +42,14 @@ export function Disclosure({ summary, children, defaultOpen = false }: Disclosur
         </svg>
         {summary}
       </summary>
-      <div className="px-2 pt-2 pb-4 pl-8 text-body text-text">{children}</div>
+      <div
+        className={clsx(
+          "text-text",
+          isCompact ? "px-1 pt-1 pb-2 pl-6 text-body-compact" : "px-2 pt-2 pb-4 pl-8 text-body",
+        )}
+      >
+        {children}
+      </div>
     </details>
   );
 }

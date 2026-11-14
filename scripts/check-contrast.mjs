@@ -69,8 +69,10 @@ const NON_TEXT_PAIRS = [
     ["primary", bg],
     ["danger", bg],
   ]),
-  // フォーカスの表示は、要素から離して引く墨の輪が、輪の乗る面（選んだ行とコードの面を含む）に対して 3:1 以上を保つ
-  ...[...SURFACES, "primary-surface", "code-surface"].map((bg) => ["focus", bg]),
+  // フォーカスの表示は、墨の輪が、輪の乗る面（選んだ行、コードの面、コンソールの warn と error の行を含む）に対して 3:1 以上を保つ
+  ...[...SURFACES, "primary-surface", "code-surface", "warning-surface", "danger-surface"].map(
+    (bg) => ["focus", bg],
+  ),
 ];
 
 const MAX_DEPTH = 10;
