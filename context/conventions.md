@@ -260,8 +260,9 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - Oxlint の `import/default` は、`?worker&url` の import の 1 行だけで抑制する。
   - 対象は `apps/web/src/features/top-garden/stage/TopStageScript.astro` である。
   - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
-- Oxlint の `typescript/unbound-method` を、`packages/node-runtime/src/guest/console-value.cjs` の組み込みの getter を取り出す行だけで抑制する。
-  - 訪問者のコードが上書きしたメソッドを呼ばないよう、組み込みの getter を取り出して、`call` で値を `this` にして呼ぶためである。
+- Oxlint の `typescript/unbound-method` を、`packages/node-runtime/src/guest/` で、組み込みの getter とメソッドを `this` から切り離して読む行だけで抑制する。
+  - `console-value.cjs` は、訪問者のコードが上書きしたメソッドを呼ばないよう、組み込みの getter を取り出して、`call` で値を `this` にして呼ぶ。
+  - `http-trace.cjs` は、包んだ `emit` から、元の `emit` をサーバーを `this` にして呼ぶ。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 
