@@ -22,7 +22,7 @@ const date = article.date.toISOString().slice(0, 10);
           <span class="shrink-0 text-caption text-text-secondary">{position} 本目</span>
         )
       }
-      <Link href={article.href} isStandalone>{article.title}</Link>
+      <Link href={article.href} isStandalone data-testid="article-link">{article.title}</Link>
     </div>
     <p class="flex flex-wrap gap-x-4 text-caption text-text-secondary">
       {

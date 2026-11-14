@@ -3,7 +3,7 @@
   "light": {
     "surface": "#f1eee6",
     "text": "#1a1714",
-    "comment": "#6a6459",
+    "comment": "#57534b",
     "keyword": "#5e1b33",
     "string": "#3d4b2b",
     "number": "#7a4a12",
@@ -31,7 +31,7 @@
   "dark": {
     "surface": "#0d0b08",
     "text": "#f4f1ea",
-    "comment": "#938d80",
+    "comment": "#9a948a",
     "keyword": "#e48fa8",
     "string": "#b4c4a0",
     "number": "#e8c08a",

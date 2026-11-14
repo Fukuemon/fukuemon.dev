@@ -1,0 +1,9 @@
+{
+  "extends": "@fukuemon/config/tsconfig/base.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["*.ts", "tests/**/*.ts"]
+}

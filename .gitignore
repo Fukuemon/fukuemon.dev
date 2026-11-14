@@ -92,3 +92,4 @@ apm_modules/
 /.claude/skills/write-e2e-test/
 /.claude/skills/write-verification-spec/
 packages/go-runtime/wasm/
+packages/e2e/tests/evidence/
