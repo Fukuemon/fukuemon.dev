@@ -114,7 +114,7 @@ packages/
 - `guest/` のファイルは、ツールのページではなく、実行環境の中の Node か、プレビューのページで動く。tsconfig と lint の対象を、ツールのページのコードと分ける。
   - 実行環境の中の Node で動くファイルは、`webcontainer/` が中身を文字列として読み込み、実行環境に書く。
   - プレビューに入れるスクリプト（`guest/preview-console.cjs`）は、`node-runtime/` の直下が中身を文字列として読み込み、`previewScript` で `webcontainer/` に渡す。
-  - 値の木に写す処理（`guest/console-value.cjs`）は、preload とプレビューに入れるスクリプトが共有する。
+  - 値の木に写す処理（`guest/console-value.cjs`）は、preload とプレビューに入れるスクリプトが共有する。`webcontainer/` と `node-runtime/` の直下の両方が、中身を文字列として読み込む。
 - `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。

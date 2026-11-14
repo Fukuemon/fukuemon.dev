@@ -175,7 +175,7 @@ export const webContainerBackend: RuntimeBackend = {
         writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource),
         writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource),
       ]);
-      // 登録できなくても、プレビューの記録が欠けるだけなので、起動は続ける (docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
+      // 登録できなくても、プレビューの記録が欠けるだけなので、起動は続ける (apps/playground/DesignDoc.md)
       await container.setPreviewScript(previewScript).catch(() => undefined);
       const ports = createPorts(container);
       await ports.ready();

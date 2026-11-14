@@ -4,9 +4,12 @@ import type { ProcessInfo } from "./types";
 /** 記録の行を出したプロセス。サーバーの名前に、起動のコマンドの名前を使う。 */
 export type RecordSource = Pick<ProcessInfo, "kind" | "name">;
 
+/** どの記録の行の頭にも共通する先頭。頭を探すときは、この文字列を 1 回だけ探し、見つけた位置で種類を見分ける。 */
+const COMMON_HEAD = "@@fd:";
+
 /** preload が記録の行の頭に付ける文字列。guest/http-trace.cjs と guest/console-trace.cjs と同じ値にする (apps/playground/DesignDoc.md の「記録を読む形」)。 */
-export const HTTP_PREFIX = "@@fd:http ";
-export const CONSOLE_PREFIX = "@@fd:console ";
+export const HTTP_PREFIX = `${COMMON_HEAD}http `;
+export const CONSOLE_PREFIX = `${COMMON_HEAD}console `;
 
 /** 記録の行の種類。行の頭で見分ける。 */
 export type RecordKind = "http" | "console";
@@ -15,9 +18,6 @@ const PREFIXES: readonly (readonly [RecordKind, string])[] = [
   ["http", HTTP_PREFIX],
   ["console", CONSOLE_PREFIX],
 ];
-
-/** どの記録の行の頭にも共通する先頭。頭を探すときは、この文字列を 1 回だけ探し、見つけた位置で種類を見分ける。 */
-const COMMON_HEAD = "@@fd:";
 
 /** text に最初に現れる記録の行の頭と、その位置。 */
 function findPrefix(text: string): { at: number; kind: RecordKind; prefix: string } | undefined {
