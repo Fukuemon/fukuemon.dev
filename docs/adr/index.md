@@ -117,16 +117,16 @@ ADR-0026 の Decision の「ヘッダーの『筆者について』は `/` を�
 | [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)            | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                             |
 | [ADR-0063](0063-ai-operations-for-sql-and-go.md)                 | AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む |
 | [ADR-0064](0064-go-net-http-same-origin-only.md)                 | Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す                                         |
-| [ADR-0069](0069-node-runtime-commands-without-visitor-action.md) | （提案）Node の実行環境を起動し直すときに、作業ディレクトリを読めなければ、前に起動したときのファイルで起動する                       |
-| [ADR-0070](0070-node-save-targets.md)                            | （提案）Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける                         |
+| [ADR-0069](0069-node-runtime-commands-without-visitor-action.md) | Node の実行環境を起動し直すときに、作業ディレクトリを読めなければ、前に起動したときのファイルで起動する                               |
+| [ADR-0070](0070-node-save-targets.md)                            | Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける                                 |
 
 ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
 ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。  
 ADR-0044 の Decision 4 と、ADR-0045 の Decision 4 は、ADR-0063 に置換した。  
 ADR-0037 の Decision の「Yaegi の WASM は、訪問者が実行のボタンを押してから読み込む」は、ADR-0063 に置換した。  
-ADR-0051 の Decision 2 の「保存のために最後に読んだファイルで起動する」と「それも無いときは、初期ファイルで起動する」は、ADR-0069（提案）が変える。保存のためか起動し直すときに最後に読めたファイルか、前に起動したときのファイルで起動し、案内を出す。  
-ADR-0051 の Decision 2 の「起動し直すときは、破棄する前の実行環境から読んだ、作業ディレクトリのファイルで起動する」は、ADR-0070（提案）が、リンクと規則に合わないパスを渡さない形に変える。  
-ADR-0050 の Decision の「保存する対象は、訪問者の作業ディレクトリの全体のうち、`node_modules` を除いたものにする」は、ADR-0070（提案）が、Node の実行環境で除くものを増やし、上限を付ける形に変える。
+ADR-0051 の Decision 2 の「保存のために最後に読んだファイルで起動する」と「それも無いときは、初期ファイルで起動する」は、ADR-0069が変える。保存のためか起動し直すときに最後に読めたファイルか、前に起動したときのファイルで起動し、案内を出す。  
+ADR-0051 の Decision 2 の「起動し直すときは、破棄する前の実行環境から読んだ、作業ディレクトリのファイルで起動する」は、ADR-0070が、リンクと規則に合わないパスを渡さない形に変える。  
+ADR-0050 の Decision の「保存する対象は、訪問者の作業ディレクトリの全体のうち、`node_modules` を除いたものにする」は、ADR-0070が、Node の実行環境で除くものを増やし、上限を付ける形に変える。
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  
