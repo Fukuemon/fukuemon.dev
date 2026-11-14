@@ -30,15 +30,13 @@ export function FilesPane() {
    * 保存は待たずにパスを返す。FileTree は、そのパスの項目が木に出たらフォーカスを移す。
    */
   const runNamed = async (
+    files: NonNullable<typeof runtime>["files"],
     name: string,
     path: string,
     operation: () => Promise<void>,
   ): Promise<FileTreeResult> => {
-    const invalid = await nameErrorInRuntime(
-      name,
-      path,
-      new Set(kinds.keys()),
-      (target) => files?.exists(target) ?? Promise.resolve(false),
+    const invalid = await nameErrorInRuntime(name, path, new Set(kinds.keys()), (target) =>
+      files.exists(target),
     );
     if (invalid !== undefined) return { error: invalid };
     run(operation);
@@ -53,7 +51,7 @@ export function FilesPane() {
           files &&
           ((name, parentId) => {
             const path = childPath(parentId, name);
-            return runNamed(name, path, async () => {
+            return runNamed(files, name, path, async () => {
               await files.write(path, "");
               dispatch({ type: "select-item", path, isFile: true });
             });
@@ -63,7 +61,7 @@ export function FilesPane() {
           files &&
           ((name, parentId) => {
             const path = childPath(parentId, name);
-            return runNamed(name, path, async () => {
+            return runNamed(files, name, path, async () => {
               await files.createDirectory(path);
               dispatch({ type: "select-item", path, isFile: false });
             });
@@ -75,7 +73,7 @@ export function FilesPane() {
           ((id, name) => {
             const to = renamedPath(id, name);
             if (to === id) return { id };
-            return runNamed(name, to, async () => {
+            return runNamed(files, name, to, async () => {
               await files.rename(id, to);
               dispatch({ type: "renamed", from: id, to });
             });

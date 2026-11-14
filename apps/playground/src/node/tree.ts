@@ -50,6 +50,8 @@ export function projectEntries(files: Readonly<Record<string, string>>): FileEnt
   ];
 }
 
+const existsMessage = (path: string) => `${path} は既にあります。別の名前にしてください。`;
+
 /**
  * 新しい項目と、名前を変えた項目の名前を確かめ、使えないときは理由の文を返す。
  * 同じパスの項目があるときは、上書きしない。`/` を含む名前と、`.` と `..` は、ほかのディレクトリを指すので断る。
@@ -63,7 +65,7 @@ export function nameError(
   if (name.includes("/") || name === "." || name === "..") {
     return "名前に / を含めることと、. と .. だけの名前にすることはできません。";
   }
-  if (existing.has(path)) return `${path} は既にあります。別の名前にしてください。`;
+  if (existing.has(path)) return existsMessage(path);
   return undefined;
 }
 
@@ -80,7 +82,7 @@ export async function nameErrorInRuntime(
   const invalid = nameError(name, path, existing);
   if (invalid !== undefined) return invalid;
   try {
-    if (await exists(path)) return `${path} は既にあります。別の名前にしてください。`;
+    if (await exists(path)) return existsMessage(path);
   } catch {
     return `${path} が既にあるかを確認できませんでした。もう一度試してください。`;
   }

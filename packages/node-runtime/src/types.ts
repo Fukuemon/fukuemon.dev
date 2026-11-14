@@ -44,7 +44,7 @@ export type NodeRuntime = {
   files: {
     tree: Store<readonly FileEntry[]>;
     changes: { subscribe: (onChange: (paths: readonly string[]) => void) => () => void };
-    /** 同じパスのファイルかディレクトリが、実行環境にあるか。ツリーに出さない node_modules のパッケージの中身も確かめる。 */
+    /** 同じパスのファイルかディレクトリが、実行環境にあるか。ツリーに出さない node_modules のパッケージの中身も確かめる。親のディレクトリが無いときは、失敗する。 */
     exists: (path: string) => Promise<boolean>;
     read: (path: string) => Promise<string>;
     write: (path: string, contents: string) => Promise<void>;

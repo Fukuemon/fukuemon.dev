@@ -19,14 +19,18 @@ describe("files", () => {
     expect(await runtime.files.read("src/new.js")).toBe("1");
   });
 
-  it("exists は、ツリーに出さない node_modules のパッケージの中身も確かめる", async () => {
+  it.each([
+    ["node_modules のパッケージの中のファイル", "node_modules/cookie/index.js", true],
+    ["node_modules のパッケージのディレクトリ", "node_modules/cookie", true],
+    ["node_modules のパッケージの中の無いファイル", "node_modules/cookie/other.js", false],
+    ["作業ディレクトリの直下にあるファイル", "index.js", true],
+    ["作業ディレクトリの直下に無いファイル", "none.js", false],
+  ])("exists は、%s を確認する", async (_, path, expected) => {
     const { runtime, created } = await bootFake();
     created.files.putFromCommand("node_modules/cookie/index.js", "");
+    created.files.putFromCommand("index.js", "");
     await flush();
-    expect(treePaths(runtime)).not.toContain("node_modules/cookie/index.js");
-    expect(await runtime.files.exists("node_modules/cookie/index.js")).toBe(true);
-    expect(await runtime.files.exists("node_modules/cookie")).toBe(true);
-    expect(await runtime.files.exists("node_modules/cookie/other.js")).toBe(false);
+    expect(await runtime.files.exists(path)).toBe(expected);
   });
 
   it("ディレクトリを作ると、ツリーにディレクトリとして出る", async () => {

@@ -47,6 +47,9 @@ const FIELD_LABEL: Record<Editing["kind"], string> = {
   rename: "新しい名前",
 };
 
+/** 呼ぶ側の Promise が失敗したときに、欄の下に出す理由。 */
+const REJECTED_MESSAGE = "名前を確認できませんでした。もう一度試してください。";
+
 type Found = { node: TreeNode; parent: TreeNode | undefined };
 
 const find = (nodes: readonly TreeNode[], id: string, parent?: TreeNode): Found | undefined => {
@@ -108,9 +111,9 @@ function NameField({
   const inputRef = useRef<HTMLInputElement>(null);
   // Enter か Esc で終えた後に、欄が外れて blur が届いても、2 度目の確定ややめるを呼ばない
   const isDone = useRef(false);
-  const isPending = useRef(false);
-  const blurredWhilePending = useRef(false);
-  const [isBusy, setPending] = useState(false);
+  const isBusyRef = useRef(false);
+  const blurredWhileBusy = useRef(false);
+  const [isBusy, setBusy] = useState(false);
   const errorId = useId();
 
   useEffect(() => {
@@ -119,7 +122,8 @@ function NameField({
   }, [selectionEnd]);
 
   const cancel = () => {
-    if (isDone.current) return;
+    // 呼ぶ側が決める前にやめると、決まった後の操作だけが実行される。決まるまでは、やめるを受けない
+    if (isDone.current || isBusyRef.current) return;
     isDone.current = true;
     onCancel();
   };
@@ -134,7 +138,7 @@ function NameField({
   };
 
   const submit = (isBlur: boolean) => {
-    if (isDone.current || isPending.current) return;
+    if (isDone.current || isBusyRef.current) return;
     const name = value.trim();
     if (name !== "" && name === initialValue) return cancel();
     const invalid = problemOf(name, siblings);
@@ -142,15 +146,16 @@ function NameField({
     const outcome = onCommit(name);
     if (!(outcome instanceof Promise)) return finish(outcome, isBlur);
     // 呼ぶ側が決めるまで、確定を重ねて受けない。待つ間にフォーカスが外れたときは、断られたらやめる
-    isPending.current = true;
-    blurredWhilePending.current = false;
-    setPending(true);
+    isBusyRef.current = true;
+    blurredWhileBusy.current = false;
+    setBusy(true);
     void outcome
-      .finally(() => {
-        isPending.current = false;
-        setPending(false);
-      })
-      .then((problem) => finish(problem, isBlur || blurredWhilePending.current));
+      .catch(() => REJECTED_MESSAGE)
+      .then((problem) => {
+        isBusyRef.current = false;
+        setBusy(false);
+        finish(problem, isBlur || blurredWhileBusy.current);
+      });
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -182,7 +187,7 @@ function NameField({
         onBlur={() => {
           // ほかのウィンドウへ移ったときは、戻ると欄にフォーカスが戻るので、確定もやめるもしない
           if (!document.hasFocus()) return;
-          if (isPending.current) blurredWhilePending.current = true;
+          if (isBusyRef.current) blurredWhileBusy.current = true;
           else submit(true);
         }}
         onChange={(event) => {
