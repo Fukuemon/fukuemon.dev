@@ -161,7 +161,7 @@ describe("parseHttpLine", () => {
     ["ポートが数でない", '{"type":"listen","port":"3000"}'],
     ["ポートが整数でない", '{"type":"listen","port":3000.5}'],
     ["受けたポートが範囲の外", exchange({ to: 70000 })],
-    ["状態コードが整数でない", exchange({ response: { status: 1e999, headers: [] } })],
+    ["状態コードが整数でない", exchange({ response: { status: 302.5, headers: [] } })],
     ["ヘッダの形が違う", exchange({ request: { headers: [["a", "b"]] } })],
     ["本文の形が違う", exchange({ request: { headers: [], body: { text: 1 } } })],
     ["状態コードが無い", exchange({ response: { headers: [] } })],
