@@ -30,9 +30,24 @@ function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: 
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
+  const saveFailed = useSyncExternalStore(
+    session.saveFailed.subscribe,
+    session.saveFailed.getSnapshot,
+  );
   const bootText = bootLabel(phase);
   return (
     <>
+      {session.canSave && saveFailed && (
+        <Notice isAlert title="SQL を保存できませんでした" tone="warning">
+          ブラウザの保存の容量が足りないか、保存できない状態です。次に SQL
+          を変えたときに、もう一度保存します。
+        </Notice>
+      )}
+      {!session.canSave && (
+        <Notice title="SQL を保存できません" tone="warning">
+          このブラウザでは IndexedDB を使えないので、ページを閉じると変えた SQL が消えます。
+        </Notice>
+      )}
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
         embedded={embedded}

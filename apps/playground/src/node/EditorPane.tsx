@@ -1,7 +1,7 @@
 import { EditorFrame } from "@fukuemon/ui";
 import { useId, useSyncExternalStore } from "react";
 
-import { useRuntime, useSelection } from "./context";
+import { runtimeKey, useRuntime, useSelection } from "./context";
 import { FileEditor } from "./FileEditor";
 import { shownFiles } from "./selection";
 import { nameOf } from "./tree";
@@ -36,7 +36,7 @@ export function EditorPane() {
           initialText={
             (Object.hasOwn(project.files, file.id) ? project.files[file.id] : undefined) ?? ""
           }
-          key={file.id}
+          key={`${runtimeKey(runtime)}:${file.id}`}
           path={file.id}
         />
       )}

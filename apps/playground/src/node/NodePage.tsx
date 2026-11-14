@@ -13,7 +13,7 @@ import {
   SplitPane,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { type ReactNode, Suspense, use, useReducer, useState } from "react";
+import { type ReactNode, Suspense, use, useReducer, useState, useSyncExternalStore } from "react";
 
 import {
   EDITOR_ICON,
@@ -36,11 +36,11 @@ import { HttpDetailPane, HttpListPane } from "./HttpPane";
 import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { type SelectionAction, initialSelection, selectionReducer } from "./selection";
-import { type NodeProject, createRuntimeStarter } from "./session";
+import { type NodeSession, createNodeSessionOpener } from "./session";
 import { TerminalPane } from "./TerminalPane";
+import { Toolbar } from "./Toolbar";
 
-const loadProject = createProjectLoader("node", nodeDefaultProject);
-const startRuntime = createRuntimeStarter();
+const openSession = createNodeSessionOpener(createProjectLoader("node", nodeDefaultProject));
 
 const pendingState = { kind: "pending" } as const;
 
@@ -100,6 +100,13 @@ const previewFallback = (
   </PreviewFrame>
 );
 const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</TerminalFrame>;
+
+// 高さの低い画面では、題を読み上げだけに残す（docs/adr/0072-short-landscape-layout-in-playground.md）
+const title = (
+  <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
+    Node の実行環境
+  </h1>
+);
 
 /**
  * HTTP の流れのペイン。一覧と、選んだ通信の詳細を、仕切りで分けて並べる。
@@ -275,13 +282,16 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
   );
 }
 
-function NodeLayout({ project, embedded }: { project: NodeProject; embedded: boolean }) {
+function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boolean }) {
+  const { project } = session;
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   // 配置が替わってエディタを作り直しても、ファイルごとの元に戻す履歴とカーソルを残す
   const [editorStates] = useState<EditorStates>(() => new Map());
   const mode = useLayoutMode();
+  const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   return (
-    <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
+    <RuntimeContext value={{ project, runtime }}>
+      <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
           <BootWait />
@@ -295,19 +305,22 @@ function NodeLayout({ project, embedded }: { project: NodeProject; embedded: boo
 }
 
 function NodeTool({ search, embedded }: { search: string; embedded: boolean }) {
-  const load = use(loadProject(search));
+  const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
-      <Notice title="プロジェクトを開けませんでした" tone="danger">
-        {isEmbedId(load.embedId)
-          ? `埋め込みの ID「${load.embedId}」のプロジェクトを読めませんでした。`
-          : "プロジェクトを読めませんでした。"}{" "}
-        <Link href={`${SITE_ORIGIN}/playground`}>プレイグラウンドの一覧</Link>
-        から開き直してください。
-      </Notice>
+      <>
+        {!embedded && title}
+        <Notice title="プロジェクトを開けませんでした" tone="danger">
+          {isEmbedId(load.embedId)
+            ? `埋め込みの ID「${load.embedId}」のプロジェクトを読めませんでした。`
+            : "プロジェクトを読めませんでした。"}{" "}
+          <Link href={`${SITE_ORIGIN}/playground`}>プレイグラウンドの一覧</Link>
+          から開き直してください。
+        </Notice>
+      </>
     );
   }
-  return <NodeLayout embedded={embedded} project={load.project} />;
+  return <NodeLayout embedded={embedded} session={load.session} />;
 }
 
 /** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。高さの低い画面では、題を出さない。 */
@@ -321,11 +334,6 @@ export function NodePage({ search, embedded }: { search: string; embedded: boole
           : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
       }
     >
-      {!embedded && (
-        <h1 className="px-1.5 font-heading text-heading-sm font-semibold text-text short:sr-only">
-          Node の実行環境
-        </h1>
-      )}
       <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
         <NodeTool embedded={embedded} search={search} />
       </Suspense>

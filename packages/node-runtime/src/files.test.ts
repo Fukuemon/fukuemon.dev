@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PathNotFoundError } from "./backend";
 import { bootFake, flush, treePaths } from "./test/fake-backend";
+import { ReadLimitError } from "./types";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -194,5 +196,235 @@ describe("files", () => {
     created.files.putFromCommand("b.txt", "");
     await flush();
     expect(treePaths(runtime)).toContain("b.txt");
+  });
+});
+
+describe("files.readAll", () => {
+  const options = { exclude: ["node_modules"], maxBytes: 4 };
+
+  it("作業ディレクトリのファイルを、パスと大きさと中身で、パスの順に返す", async () => {
+    const { runtime } = await bootFake();
+    expect(await runtime.files.readAll({ ...options, maxBytes: 100 })).toStrictEqual([
+      { path: "index.js", kind: "file", size: 14, text: "console.log(1)" },
+      { path: "package.json", kind: "file", size: 2, text: "{}" },
+      { path: "src/app.js", kind: "file", size: 0, text: "" },
+    ]);
+  });
+
+  it("exclude の名前に当たるディレクトリは、入れ子のものも読まない", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand("node_modules/a/index.js", "");
+    created.files.putFromCommand("src/node_modules/b/index.js", "");
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["index.js", "package.json", "src/app.js"]);
+  });
+
+  it.each([
+    ["maxBytes を超えるファイル", "big.txt", "12345"],
+    ["NUL を含むファイル", "nul.bin", new Uint8Array([0x61, 0])],
+    ["UTF-8 として正しくないファイル", "bad.bin", new Uint8Array([0xff])],
+  ])("%s は、text を null にして返す", async (_, path, contents) => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand(path, contents);
+    const file = (await runtime.files.readAll(options)).find((entry) => entry.path === path);
+    expect(file?.text).toBeNull();
+  });
+
+  it("ファイルでもディレクトリでもないもの（リンク）は、kind を other にして、指す先の中身を返す", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("link.txt", "ab");
+    const file = (await runtime.files.readAll(options)).find((entry) => entry.path === "link.txt");
+    expect(file).toStrictEqual({ path: "link.txt", kind: "other", size: 2, text: "ab" });
+  });
+
+  it("ファイルでもディレクトリでもないもの（リンク）は、ツリーにファイルとして出す", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("link.txt", "ab");
+    await flush();
+    const entry = runtime.files.tree.getSnapshot().find(({ path }) => path === "link.txt");
+    expect(entry).toStrictEqual({ path: "link.txt", kind: "file" });
+  });
+
+  it("exclude に当たるものは、limit に数えない", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putFromCommand("node_modules/a/index.js", "1234567890");
+    const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
+    expect(files).toHaveLength(3);
+  });
+
+  it.each([
+    ["ファイルの数", { files: 2, bytes: 100 }],
+    ["読んだ大きさの合計", { files: 100, bytes: 10 }],
+  ])("%s が limit を超えると、ReadLimitError で失敗する", async (_, limit) => {
+    const { runtime } = await bootFake();
+    await expect(runtime.files.readAll({ ...options, limit })).rejects.toBeInstanceOf(
+      ReadLimitError,
+    );
+  });
+
+  it("limit を超えたら、残りのディレクトリの一覧を読まない", async () => {
+    const { runtime, created } = await bootFake();
+    for (const name of ["a", "b", "c"]) created.files.putFromCommand(`${name}/x/y/z.txt`, "");
+    await flush();
+    const countLists = async (read: () => Promise<unknown>) => {
+      const before = created.files.api.listCalls;
+      await read().catch(() => undefined);
+      // 失敗した後も動いている枝が、一覧を読み始めるかを見る
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return created.files.api.listCalls - before;
+    };
+    // 子のディレクトリの一覧を、ルートのファイルを読み終えた後に返す
+    const list = created.files.api.list;
+    created.files.api.list = async (directory) => {
+      if (directory !== "") await new Promise((resolve) => setTimeout(resolve, 0));
+      return list(directory);
+    };
+    const all = await countLists(() => runtime.files.readAll(options));
+    const limited = await countLists(() =>
+      runtime.files.readAll({ ...options, limit: { files: 1, bytes: 100 } }),
+    );
+    // ルートのファイルを読んだ時点で超えるので、子のディレクトリの下の一覧を読まない
+    expect(limited).toBeLessThan(all);
+  });
+
+  it("limit を超えたら、待っているファイルを読まない", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++) created.files.putFromCommand(`many/${i}.txt`, "");
+    const readFile = vi.spyOn(created.files.api, "readFile");
+    await expect(
+      runtime.files.readAll({ ...options, limit: { files: 1, bytes: 100 } }),
+    ).rejects.toBeInstanceOf(ReadLimitError);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    // 同時に読む数（32）と、超えるまでに読んだ分だけを読む
+    expect(readFile.mock.calls.length).toBeLessThan(40);
+  });
+
+  it("同時に読むファイルの数より多いファイルも、limit が無ければ全てをパスの順に返す", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++)
+      created.files.putFromCommand(`many/${String(i).padStart(3, "0")}`, "");
+    const paths = (await runtime.files.readAll(options))
+      .map(({ path }) => path)
+      .filter((path) => path.startsWith("many/"));
+    expect(paths).toStrictEqual(
+      Array.from({ length: 100 }, (_, i) => `many/${String(i).padStart(3, "0")}`),
+    );
+  });
+
+  it("同時に読むファイルは、32 個までである", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++) created.files.putFromCommand(`many/${i}.txt`, "");
+    const readFile = created.files.api.readFile;
+    let active = 0;
+    let max = 0;
+    created.files.api.readFile = async (path) => {
+      active += 1;
+      max = Math.max(max, active);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      active -= 1;
+      return readFile(path);
+    };
+    await runtime.files.readAll(options);
+    expect(max).toBe(32);
+  });
+
+  it("同時に読むディレクトリの一覧も、ファイルと合わせて 32 個までである", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++) created.files.putFromCommand(`dirs/${i}/a.txt`, "");
+    // ツリーの store が通知を受けて一覧を読み直すのを、数える前に終わらせる
+    for (let i = 0; i < 10; i++) await flush();
+    const { list, readFile } = created.files.api;
+    let active = 0;
+    let max = 0;
+    const counted =
+      <A extends unknown[], R>(operation: (...args: A) => Promise<R>) =>
+      async (...args: A) => {
+        active += 1;
+        max = Math.max(max, active);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        active -= 1;
+        return operation(...args);
+      };
+    created.files.api.list = counted(list);
+    created.files.api.readFile = counted(readFile);
+    await runtime.files.readAll(options);
+    expect(max).toBe(32);
+  });
+
+  it("読めないシンボリックリンクは、limit の数と大きさに数えない", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("loop", "");
+    const readFile = created.files.api.readFile;
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "loop" ? Promise.reject(new Error("ELOOP")) : readFile(path),
+    );
+    const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
+    expect(files).toHaveLength(3);
+  });
+
+  it("limit の数と大きさちょうどなら、読み終える", async () => {
+    const { runtime } = await bootFake();
+    const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
+    expect(files).toHaveLength(3);
+  });
+
+  it("一覧を読んだ後に消えたファイルは、飛ばして返す", async () => {
+    const { runtime, created } = await bootFake();
+    const readFile = created.files.api.readFile;
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "index.js" ? Promise.reject(new PathNotFoundError("ENOENT")) : readFile(path),
+    );
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["package.json", "src/app.js"]);
+  });
+
+  it("消えた以外の理由でファイルを読めないときは、失敗する", async () => {
+    const { runtime, created } = await bootFake();
+    const readFile = created.files.api.readFile;
+    const error = new Error("EIO");
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "index.js" ? Promise.reject(error) : readFile(path),
+    );
+    await expect(runtime.files.readAll(options)).rejects.toBe(error);
+  });
+
+  it("ファイルでもディレクトリでもない項目を読めないときは、どの理由でも飛ばして返す", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("loop", "");
+    const readFile = created.files.api.readFile;
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "loop"
+        ? Promise.reject(new Error("ELOOP: too many symbolic links encountered"))
+        : readFile(path),
+    );
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["index.js", "package.json", "src/app.js"]);
+  });
+
+  it("親の一覧を読んだ後に消えたディレクトリは、飛ばして返す", async () => {
+    const { runtime, created } = await bootFake();
+    const list = created.files.api.list;
+    vi.spyOn(created.files.api, "list").mockImplementation((directory) =>
+      directory === "src" ? Promise.reject(new PathNotFoundError("ENOENT")) : list(directory),
+    );
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["index.js", "package.json"]);
+  });
+
+  it("作業ディレクトリそのものが無いときは、失敗する", async () => {
+    const { runtime, created } = await bootFake();
+    const error = new PathNotFoundError("ENOENT");
+    vi.spyOn(created.files.api, "list").mockRejectedValue(error);
+    await expect(runtime.files.readAll(options)).rejects.toBe(error);
+  });
+
+  it("消えた以外の理由でディレクトリの一覧を読めないときは、失敗する", async () => {
+    const { runtime, created } = await bootFake();
+    const list = created.files.api.list;
+    const error = new Error("EIO");
+    vi.spyOn(created.files.api, "list").mockImplementation((directory) =>
+      directory === "src" ? Promise.reject(error) : list(directory),
+    );
+    await expect(runtime.files.readAll(options)).rejects.toBe(error);
   });
 });

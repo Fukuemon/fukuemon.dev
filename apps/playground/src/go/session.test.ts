@@ -49,6 +49,7 @@ function fakeWorkspace() {
     save: vi.fn(async (record: GoRecord) => {
       saved.push(record);
     }),
+    clear: async () => undefined,
   };
   return { workspace, saved };
 }
@@ -163,7 +164,7 @@ describe("createGoSession", () => {
       project,
       embedId: undefined,
       saved: { kind: "empty" },
-      storage: { load: async () => ({ kind: "empty" }), save },
+      storage: { load: async () => ({ kind: "empty" }), save, clear: async () => undefined },
       runner,
     });
     const seen: boolean[] = [];
