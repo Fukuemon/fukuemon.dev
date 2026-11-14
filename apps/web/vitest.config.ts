@@ -19,6 +19,7 @@ export default defineConfig({
         "src/components/sign/sign.ts",
         "src/features/top-garden/stage/stage.ts",
         "src/features/top-garden/stage/visit.ts",
+        "src/lib/content/article-graph.ts",
         "src/lib/content/article-list.ts",
         "src/lib/content/article-pages.ts",
         "src/lib/content/rss.ts",
