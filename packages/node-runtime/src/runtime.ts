@@ -1,6 +1,7 @@
 import type { BackendInstance, RuntimeBackend } from "./backend";
 import { startDatabase } from "./database";
 import { createFiles } from "./files";
+import { createHttpRecords } from "./http-records";
 import { createProcesses } from "./processes";
 import { createStore } from "./store";
 import { BootError, type BootOptions, type NodeRuntime, type OpenPort } from "./types";
@@ -28,7 +29,8 @@ async function createNodeRuntime(
   // DB のプロセスは、訪問者のプロセスより先に起動する。訪問者のコードが、起動のコマンドで接続するためである
   const db = options.database ? await startDatabase(instance, options.initialSql) : undefined;
   const files = await createFiles(instance.files);
-  const processes = createProcesses(instance);
+  const http = createHttpRecords();
+  const processes = createProcesses(instance, http.accept);
   const ports = createStore<readonly OpenPort[]>([]);
   const unsubscribePorts = instance.ports.subscribe((open) =>
     ports.set(open.filter((port) => isPreviewUrl(port.url))),
@@ -38,7 +40,7 @@ async function createNodeRuntime(
     files: files.api,
     processes: processes.api,
     ports,
-    httpExchanges: createStore<readonly never[]>([]),
+    httpExchanges: http.store,
     consoleEntries: createStore<readonly never[]>([]),
     ...(db && { database: db.database }),
     dispose: () => {

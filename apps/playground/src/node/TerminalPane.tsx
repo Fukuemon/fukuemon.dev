@@ -68,6 +68,7 @@ export function TerminalPane() {
               label: processLabel(info),
               content: handle && <ProcessTerminal handle={handle} key={handle.id} theme={theme} />,
             }))}
+            density="compact"
             label="プロセス"
             onSelect={(id) => dispatch({ type: "select-terminal", id })}
             panel="flush"

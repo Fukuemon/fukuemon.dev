@@ -156,6 +156,7 @@ export function Tabs({
           );
         })}
       </div>
+      {/* パネルに key を付けない。どのタブにも同じ中身を渡す呼び出し側（apps/playground の BottomTabs）が、タブを替えても中身の状態を残せるようにするためである */}
       {selected && (
         <div
           aria-labelledby={`${baseId}-tab-${selected.id}`}

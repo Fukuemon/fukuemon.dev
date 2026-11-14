@@ -13,6 +13,7 @@ import dbPackageSource from "../guest/db-package.json?raw";
 import { DB_SERVER_FILE } from "../guest/db-protocol";
 // oxlint-disable-next-line import/default -- vite.ts の guestBundle が、束ねた文字列を default で返す
 import dbServerSource from "../guest/db-server.ts?bundle";
+import httpTraceSource from "../guest/http-trace.cjs?raw";
 import keepAliveSource from "../guest/keep-alive.cjs?raw";
 import type { OpenPort, TerminalSize } from "../types";
 import { visitorEnv } from "./env";
@@ -21,6 +22,7 @@ import { toTree } from "./tree";
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
+const HTTP_TRACE_FILE = `${RUNTIME_DIRECTORY}/http-trace.cjs`;
 // DB のプロセスのスクリプトと、npm install で入れる依存を置く
 const DB_DIRECTORY = `${RUNTIME_DIRECTORY}/db`;
 const KEEP_ALIVE_FILE = `${DB_DIRECTORY}/keep-alive.cjs`;
@@ -156,6 +158,7 @@ export const webContainerBackend: RuntimeBackend = {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
+      await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
       if (database) {
         await Promise.all([
           writeOutside(container, KEEP_ALIVE_FILE, keepAliveSource),
@@ -163,7 +166,12 @@ export const webContainerBackend: RuntimeBackend = {
           writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource),
         ]);
       }
-      const env = visitorEnv({ database, portsFile: PORTS_FILE, keepAliveFile: KEEP_ALIVE_FILE });
+      const env = visitorEnv({
+        database,
+        portsFile: PORTS_FILE,
+        httpTraceFile: HTTP_TRACE_FILE,
+        keepAliveFile: KEEP_ALIVE_FILE,
+      });
       const ports = createPorts(container);
       await ports.ready();
       return {

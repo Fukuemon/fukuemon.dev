@@ -35,3 +35,7 @@ export const SQL_PANE_QUERY = "-- Node のコードと同じ DB に、SQL を実
 
 /** DB が止まったときに、SQL のペインに出す復帰の案内。 */
 export const SQL_STOPPED_HINT = "ページを読み込み直すと、実行環境を起動し直します。";
+
+/** 下のペインの HTTP のタブの文。記録があれば件数を添える。 */
+export const httpTabLabel = (count: number) =>
+  count === 0 ? "HTTP の流れ" : `HTTP の流れ（${count}）`;

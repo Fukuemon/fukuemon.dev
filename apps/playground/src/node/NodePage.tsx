@@ -1,6 +1,8 @@
 import {
   EditorFrame,
   FileTree,
+  HttpExchangeDetail,
+  HttpExchangeList,
   Link,
   Notice,
   PageLoading,
@@ -13,9 +15,11 @@ import { Activity, type ReactNode, Suspense, use, useReducer, useState } from "r
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
+import { BottomTabs } from "./BottomTabs";
 import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
+import { HttpDetailPane, HttpListPane } from "./HttpPane";
 import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
@@ -116,6 +120,34 @@ function PreviewColumn({ database }: { database: boolean }) {
   );
 }
 
+/** 下のペインの HTTP のタブ。一覧と、選んだ通信の詳細を、左右に並べる。 */
+function HttpPanes() {
+  return (
+    <SplitPane
+      label="HTTP の一覧の幅"
+      primary={
+        <Pane
+          fallback={
+            <HttpExchangeList
+              actors={[]}
+              exchanges={[]}
+              onSelect={() => undefined}
+              state={pendingState}
+            />
+          }
+        >
+          <HttpListPane />
+        </Pane>
+      }
+      secondary={
+        <Pane fallback={<HttpExchangeDetail actors={[]} state={pendingState} />}>
+          <HttpDetailPane />
+        </Pane>
+      }
+    />
+  );
+}
+
 function NodeLayout({ project }: { project: NodeProject }) {
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   return (
@@ -137,7 +169,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
             }
             secondary={
               <SplitPane
-                defaultSize={70}
+                defaultSize={58}
                 label="端末の高さ"
                 orientation="vertical"
                 primary={
@@ -159,9 +191,16 @@ function NodeLayout({ project }: { project: NodeProject }) {
                   />
                 }
                 secondary={
-                  <Pane fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}>
-                    <TerminalPane />
-                  </Pane>
+                  <BottomTabs
+                    http={<HttpPanes />}
+                    terminal={
+                      <Pane
+                        fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}
+                      >
+                        <TerminalPane />
+                      </Pane>
+                    }
+                  />
                 }
               />
             }
