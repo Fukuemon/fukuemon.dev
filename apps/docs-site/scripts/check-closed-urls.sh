@@ -18,13 +18,27 @@ for file in "$WRANGLER" "$HEADERS"; do
   fi
 done
 
-# wrangler は wrangler.json を wrangler.jsonc より先に読み、.wrangler/deploy/config.json で設定を差し替える
-for other in wrangler.json .wrangler/deploy/config.json; do
-  if [ -e "$APP/$other" ]; then
-    echo "$other があります。wrangler.jsonc のほかに wrangler の設定ファイルを置かない。" >&2
+# wrangler は .wrangler/deploy/config.json で設定を差し替える。
+# wrangler.json は親のディレクトリへ遡って探し、見つかれば wrangler.jsonc より先に読む
+if [ -e "$APP/.wrangler/deploy/config.json" ]; then
+  echo ".wrangler/deploy/config.json があります。wrangler.jsonc のほかに wrangler の設定ファイルを置かない。" >&2
+  status=1
+fi
+dir="$APP"
+while :; do
+  if [ -e "$dir/wrangler.json" ]; then
+    echo "$dir/wrangler.json があります。wrangler.jsonc のほかに wrangler の設定ファイルを置かない。" >&2
     status=1
   fi
+  [ "$dir" = "/" ] && break
+  dir="$(dirname "$dir")"
 done
+
+# ブロックコメントの中の行は、下の行ごとの確認では除けない
+if grep -qF '/*' "$WRANGLER"; then
+  echo "wrangler.jsonc にブロックコメントがあります。コメントは // で書く。" >&2
+  status=1
+fi
 
 code="$(grep -vE '^[[:space:]]*//' "$WRANGLER")"
 
