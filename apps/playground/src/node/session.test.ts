@@ -425,11 +425,21 @@ describe("SQL のペインの入力欄の保存", () => {
 
   it.each([
     ["SQL を持つ", { ...savedRecord, sql: "select 3;" }, "select 3;"],
+    [
+      "ちょうど 1 MB の SQL を持つ",
+      { ...savedRecord, sql: "x".repeat(1_048_576) },
+      "x".repeat(1_048_576),
+    ],
     ["SQL を持たない", savedRecord, SQL_PANE_QUERY],
     ["文字列でない SQL を持つ", { ...savedRecord, sql: 1 }, SQL_PANE_QUERY],
     ["1 MB を超える SQL を持つ", { ...savedRecord, sql: "x".repeat(1_048_577) }, SQL_PANE_QUERY],
+    [
+      "文字数は 1 MB より少ないが、UTF-8 で 1 MB を超える SQL を持つ",
+      { ...savedRecord, sql: "あ".repeat(349_526) },
+      SQL_PANE_QUERY,
+    ],
   ])(
-    "保存したレコードが %s ときは、保存したファイルで起動し、入力欄をその SQL で始め、書き直さない",
+    "保存したレコードが %s ときは、保存したファイルで起動し、入力欄を使える SQL か最初の SQL で始め、書き直さない",
     async (_, record, query) => {
       const { session, booted, saves } = setup(
         { kind: "saved", record: record as NodeRecord },
@@ -443,6 +453,52 @@ describe("SQL のペインの入力欄の保存", () => {
       });
     },
   );
+
+  it.each([
+    ["SQL を持つ", { ...savedRecord, sql: "select 3;" }],
+    ["SQL を持たない", savedRecord],
+  ])(
+    "保存したレコードが %s ときは、同じ中身のファイルの通知だけでは保存しない",
+    async (_, record) => {
+      const { session, saves, latest } = setup({ kind: "saved", record }, withDatabase);
+      await settle(session);
+      latest().change("index.js");
+      await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+      expect(saves).toStrictEqual([]);
+    },
+  );
+
+  it("保存したレコードがあるときも、ファイルを変えずに SQL だけを替えると、1 件保存する", async () => {
+    const { session, saves } = setup(
+      { kind: "saved", record: { ...savedRecord, sql: "select 3;" } },
+      withDatabase,
+    );
+    await settle(session);
+    session.setSqlQuery("select 5;");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves).toStrictEqual([
+      { files: savedRecord.files, version: "v1", savedAt: 9, sql: "select 5;" },
+    ]);
+  });
+
+  it("起動し直している間に替えた SQL も、起動した後に保存する", async () => {
+    const { session, saves, runtimes } = setup(
+      { kind: "saved", record: savedRecord },
+      withDatabase,
+    );
+    await settle(session);
+    let release: () => void = () => undefined;
+    vi.mocked(runtimes[0]!.runtime.dispose).mockReturnValueOnce(
+      new Promise<void>((resolve) => (release = resolve)),
+    );
+    const restarting = session.restart();
+    await vi.advanceTimersByTimeAsync(0);
+    session.setSqlQuery("select 6;");
+    release();
+    await restarting;
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((saved) => saved.sql)).toStrictEqual(["select 6;"]);
+  });
 
   it("作業ディレクトリが保存の上限を超えている間は、SQL も保存しない", async () => {
     const { session, saves, latest } = setup({ kind: "empty" }, withDatabase);
@@ -477,8 +533,11 @@ describe("SQL のペインの入力欄の保存", () => {
     await settle(session);
     session.setSqlQuery("select 4;");
     vi.mocked(workspace.clear).mockRejectedValueOnce(new Error("消せない"));
-    await expect(session.reset()).rejects.toThrow("消せない");
-    expect(session.sqlQuery.getSnapshot()).toBe("select 4;");
+    const error = await session.reset().catch((cause: unknown) => (cause as Error).message);
+    expect({ error, query: session.sqlQuery.getSnapshot() }).toStrictEqual({
+      error: "消せない",
+      query: "select 4;",
+    });
   });
 
   it("同じ SQL を渡したときは、操作とみなさず、保存を予約しない", async () => {

@@ -15,7 +15,7 @@ export const bootFailureMessage = (reason: BootFailureReason) =>
   `${REASONS[reason]}${SUPPORTED_BROWSERS}`;
 
 /** 保存の上限を超えたときの案内の本文。ページを閉じたときに残るものを、保存したファイルがあるかで書き分ける。 */
-export const overLimitMessage = (hasSaved: boolean, database = false) =>
+export const overLimitMessage = (hasSaved: boolean, database: boolean) =>
   `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${database ? "SQL のペインの入力欄の SQL も保存しません。" : ""}${hasSaved ? "ページを閉じると、前に保存したときのファイルに戻ります。" : "ページを閉じると、変えたファイルが消えます。"}ファイルを減らすと、また保存します。`;
 
 /** 「初期の状態に戻す」の確認の文。DB を使うプロジェクトでは、SQL のペインの入力欄も戻ることを書く。 */

@@ -94,11 +94,17 @@ describe("useRestart", () => {
 });
 
 describe("useSqlQuery", () => {
+  const setSqlQuery = () => undefined;
   function QueryProbe() {
-    return <p>{useSqlQuery()[0]}</p>;
+    const [query, set] = useSqlQuery();
+    return (
+      <p>
+        {query} {set === setSqlQuery ? "same" : "other"}
+      </p>
+    );
   }
 
-  it("provider の SQL の store の値を返す", () => {
+  it("provider の SQL の store の値と、setSqlQuery を返す", () => {
     const result: RuntimeResult = { kind: "unavailable", reason: "timeout" };
     const html = renderToStaticMarkup(
       <RuntimeContext
@@ -108,13 +114,13 @@ describe("useSqlQuery", () => {
           restart: async () => undefined,
           busy: createStore(false),
           sqlQuery: createStore("select 1;"),
-          setSqlQuery: () => undefined,
+          setSqlQuery,
         }}
       >
         <QueryProbe />
       </RuntimeContext>,
     );
-    expect(html).toBe("<p>select 1;</p>");
+    expect(html).toBe("<p>select 1; same</p>");
   });
 
   it("provider の外では、誤りにする", () => {

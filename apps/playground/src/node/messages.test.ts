@@ -22,7 +22,7 @@ describe("overLimitMessage", () => {
       "作業ディレクトリのファイルが 1000 個か 10 MB を超えました。ページを閉じると、変えたファイルが消えます。ファイルを減らすと、また保存します。",
     ],
   ])("保存したファイルがあるかが %s のときの本文", (hasSaved, message) => {
-    expect(overLimitMessage(hasSaved)).toBe(message);
+    expect(overLimitMessage(hasSaved, false)).toBe(message);
   });
 
   it("DB を使うプロジェクトでは、SQL も保存しないことを書く", () => {

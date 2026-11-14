@@ -122,7 +122,8 @@ export function createRecordSaver({
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   let version = record?.version ?? projectVersion;
   let lastSaved = record?.files;
-  let lastSavedSql = record?.sql;
+  // 保存したレコードがあるときは、入力欄の最初の SQL を保存済みとみなす。SQL の無いレコードを、訪問者が何も変えないうちに書き直さないためである
+  let lastSavedSql = record !== undefined ? currentSql?.() : undefined;
   // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0070)
   let pendingRewrite = needsRewrite ? record : undefined;
   // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける

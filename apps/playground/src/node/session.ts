@@ -74,7 +74,7 @@ export type NodeSession = {
   busy: Store<boolean>;
   /** SQL のペインの入力欄の SQL。起動し直すときは残し、初期の状態に戻すと最初の SQL に戻る。 */
   sqlQuery: Store<string>;
-  /** SQL のペインの入力欄の SQL を替える。訪問者の操作とみなし、DB を使うプロジェクトでは、ファイルと合わせて保存する。 */
+  /** SQL のペインの入力欄の SQL を替える。訪問者の操作とみなして保存を予約する。レコードに SQL を入れるのは、DB を使うプロジェクトだけである。 */
   setSqlQuery: (sql: string) => void;
   /** npm install の後に、起動のコマンドを実行する。前に実行した起動のコマンドが動いていれば、止めてから実行する。 */
   run: () => Promise<void>;
@@ -298,6 +298,7 @@ export function createNodeSession({
   };
 
   let current: Instance;
+  let sqlChangedWhileRelaunching = false;
 
   const launch = (
     files: Readonly<Record<string, string>>,
@@ -320,6 +321,12 @@ export function createNodeSession({
         const watcher = watchForSave(instance, runtime);
         instance.stopSaving = watcher.stop;
         instance.requestSave = watcher.request;
+        // 起動し直す間に替えた SQL は、前の実行環境の保存が止まっていて保存できていないので、起動した後に保存する
+        if (sqlChangedWhileRelaunching) {
+          sqlChangedWhileRelaunching = false;
+          instance.touched = true;
+          watcher.request();
+        }
         void startup(runtime)
           .then(async (code) => {
             installed(code);
@@ -418,6 +425,8 @@ export function createNodeSession({
     versionChanged.set(false);
     restartReadFailed.set(false);
     sqlQuery.set(SQL_PANE_QUERY);
+    // 戻す前に替えた SQL は、最初の SQL で上書きしたので保存しない
+    sqlChangedWhileRelaunching = false;
     return { files: project.files, touched: false };
   };
 
@@ -437,6 +446,7 @@ export function createNodeSession({
       if (sql === sqlQuery.getSnapshot()) return;
       sqlQuery.set(sql);
       current.touched = true;
+      if (busy.getSnapshot()) sqlChangedWhileRelaunching = true;
       current.requestSave();
     },
     run: async () => {
