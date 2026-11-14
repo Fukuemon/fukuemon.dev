@@ -2,7 +2,7 @@ import tsParser from "@typescript-eslint/parser";
 import { rule } from "./eslint/e2e-authoring-rule.mjs";
 
 export default [
-  { ignores: ["tests/evidence/**", "test-results/**", "playwright-report/**"] },
+  { ignores: ["tests/evidence/**"] },
   {
     files: ["tests/**/*.ts"],
     languageOptions: { parser: tsParser },
