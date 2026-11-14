@@ -117,8 +117,6 @@ hydrate するページはその framework のランタイムを配るので、2
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
 - プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#保存) にある。
-- プレイグラウンドは、訪問者が作った図とスライドを、訪問者のファイルと別の IndexedDB のデータベースに置く。レコードの形は、[キャンバスの Design Doc](../docs/design/features/canvas/DesignDoc.md#保存するデータ) にある。
-- プレイグラウンドは、AI からの操作の許可のスイッチの状態と、「このページでは今後尋ねない」の状態を、ツールごとに `localStorage` に置く。キーと値の形は、[AI からの操作の Design Doc](../docs/design/features/ai-operations/DesignDoc.md#スイッチと確認の状態の保存) にある。
 - トップ（`/`）は、端末でトップを開いたことを、`localStorage` の `fd-top-seen` に記録する。
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
   - 例外は、Lighthouse の計測のスクリプト（`scripts/measure-top-lighthouse.mjs`）である。2 回目以降の訪問の状態を作るために、測る前のプロファイルに書く。
@@ -202,5 +200,3 @@ ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md)
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
 - `/playground-projects/*` は、記事に埋め込む実行環境のプロジェクトの JSON に使う。
-- `/figures/*` は、記事の図の、元データ入りの SVG に使う。
-  - ADR-0040: [記事の図の置き場と URL](../docs/adr/0040-canvas-figures-in-articles.md)
