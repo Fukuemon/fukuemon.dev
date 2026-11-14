@@ -95,6 +95,7 @@ export function ActionMenu({ label, items, density = "default" }: ActionMenuProp
           id={menuId}
           onKeyDown={handleMenuKeyDown}
           role="menu"
+          tabIndex={-1}
         >
           {ordered.map((item, index) => (
             <button

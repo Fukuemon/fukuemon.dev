@@ -120,6 +120,7 @@ export function DummyEngine({
         aria-label={label}
         className={clsx("min-h-0 flex-1 overflow-auto", isSource ? "flex py-1" : "px-3 py-2")}
         data-code-theme={theme.name}
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- pre は section に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる
         role="region"
         tabIndex={0}
       >

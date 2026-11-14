@@ -9,22 +9,21 @@ export type LoadingProps = {
 
 /**
  * 終わりの見えない待ちを示す、罫の印と文。薄い罫の上を、主の色の罫が左から伸びて右へ抜ける。DADS のプログレスインジケーターを元にする。
- * 文は `role="status"` に入れ、読み上げの対象にする。
+ * 文は `<output>`（暗黙の `role="status"`）に入れ、読み上げの対象にする。
  */
 export function Loading({ label, density = "default" }: LoadingProps) {
   return (
-    <div
+    <output
       className={clsx(
         "inline-flex items-center text-text",
         density === "compact" ? "gap-2 text-body-compact" : "gap-3 text-body-dense",
       )}
-      role="status"
     >
       <span
         aria-hidden="true"
         className="relative h-0.5 w-6 shrink-0 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-primary"
       />
       {label}
-    </div>
+    </output>
   );
 }
