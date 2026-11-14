@@ -11,7 +11,10 @@ export function PageLoading({ label }: PageLoadingProps) {
   return (
     <output className="pointer-events-none fixed right-6 bottom-6 z-20 flex flex-col items-end gap-2 text-body-compact text-text">
       {label}
-      <span aria-hidden="true" className="h-1.5 w-28 animate-loading bg-primary stroke-brush" />
+      <span
+        aria-hidden="true"
+        className="h-1.5 w-28 animate-loading bg-primary stroke-brush forced-fill-on"
+      />
     </output>
   );
 }
