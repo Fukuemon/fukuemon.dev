@@ -7,10 +7,16 @@ const AUTUMN_NOON = new Date(2026, 10, 13, 12);
 // SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかるので、テストの時間の上限を 3 倍にする
 test.beforeEach(() => test.slow());
 
-const openGarden = async (page: Page) => {
+/**
+ * 庭を開く。`snap` が true のときは、続けて「動きを止める」を押す。
+ * カメラは、止めると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると 45 秒の上限を超える。
+ * 移動の動き自体を確かめるテスト以外は、止めてから移る。
+ */
+const openGarden = async (page: Page, { snap = false } = {}) => {
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await expect(page.locator("html")).toHaveClass(/garden-ready/);
+  if (snap) await page.getByRole("button", { name: "動きを止める" }).click();
 };
 
 const card = (page: Page, id: string) =>
@@ -61,7 +67,7 @@ test.describe("幅 1440px", () => {
   });
 
   test("右の矢印キーを押すと、次の文へ移る", async ({ page }) => {
-    await openGarden(page);
+    await openGarden(page, { snap: true });
     await page.keyboard.press("ArrowRight");
     await expectAt(page, "career");
     await page.keyboard.press("ArrowRight");
@@ -69,7 +75,7 @@ test.describe("幅 1440px", () => {
   });
 
   test("最初の文で左の矢印キーを押すと、4 つ目の文へ回る", async ({ page }) => {
-    await openGarden(page);
+    await openGarden(page, { snap: true });
     await page.keyboard.press("ArrowLeft");
     await expectAt(page, "articles");
   });
@@ -77,7 +83,7 @@ test.describe("幅 1440px", () => {
   test("Tab で 4 つ目の文の中のリンクにフォーカスを移すと、カメラが 4 つ目の文へ動く", async ({
     page,
   }) => {
-    await openGarden(page);
+    await openGarden(page, { snap: true });
     const link = card(page, "articles").getByRole("link");
     for (let i = 0; i < 10 && !(await link.evaluate((el) => el === document.activeElement)); i++) {
       await page.keyboard.press("Tab");
@@ -111,7 +117,7 @@ test.describe("幅 390px", () => {
   test("4 つの文のどれへ移っても、和紙が画面の幅に収まり、ボタンが文に重ならない", async ({
     page,
   }) => {
-    await openGarden(page);
+    await openGarden(page, { snap: true });
     for (const [i, id] of ["profile", "career", "stack", "articles"].entries()) {
       await page.locator(`[data-station="${i}"]`).click();
       await expectAt(page, id);
@@ -135,7 +141,7 @@ test.describe("画面の幅の変更", () => {
   test("幅 1440px で開いた庭を幅 390px にすると、和紙が画面の幅に収まり、幅の 8 割以上になる", async ({
     page,
   }) => {
-    await openGarden(page);
+    await openGarden(page, { snap: true });
     await expectAt(page, "profile");
     await page.setViewportSize({ width: 390, height: 844 });
     await expectAt(page, "profile");
@@ -153,7 +159,7 @@ test.describe("画面の幅の変更", () => {
     browser,
   }) => {
     await page.setViewportSize({ width: 700, height: 600 });
-    await openGarden(page);
+    await openGarden(page, { snap: true });
     await expectAt(page, "profile");
     await page.setViewportSize({ width: 1000, height: 700 });
     await expectAt(page, "profile");
@@ -170,7 +176,7 @@ test.describe("画面の幅の変更", () => {
       colorScheme: "light",
     });
     try {
-      await openGarden(fresh);
+      await openGarden(fresh, { snap: true });
       await expectAt(fresh, "profile");
       expect(await meanDiff(page, widened, await fresh.screenshot({ clip }))).toBeLessThan(3);
     } finally {

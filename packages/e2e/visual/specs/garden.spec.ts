@@ -1,9 +1,13 @@
 import { expect, test } from "@playwright/test";
+import { waitForPresentedFrames } from "../support/presented-frames";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
 const AUTUMN_NOON = new Date(2026, 10, 13, 12);
 
 test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
+
+// SwiftShader は、ほかの spec と並べると最初の絵が出るまでに数秒かかるので、テストの時間の上限を 3 倍にする
+test.beforeEach(() => test.slow());
 
 test("秋の昼のトップを開くと、止めた庭の絵が基準の画像と同じに出る", async ({ page }) => {
   await page.clock.setFixedTime(AUTUMN_NOON);
@@ -13,5 +17,6 @@ test("秋の昼のトップを開くと、止めた庭の絵が基準の画像�
   await page.waitForFunction(
     () => document.querySelector<HTMLCanvasElement>("[data-garden-stage] canvas")?.width === 1440,
   );
+  await waitForPresentedFrames(page);
   await expect(stage).toHaveScreenshot("garden-autumn-day.png", { maxDiffPixelRatio: 0.01 });
 });
