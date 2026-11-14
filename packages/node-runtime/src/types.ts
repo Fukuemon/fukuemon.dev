@@ -100,6 +100,7 @@ export type ConsoleLevel = "debug" | "log" | "info" | "warn" | "error";
 /**
  * 記録した 1 つの値。呼んだ時点の値を写した木で、関数、DOM の要素のように写せない値は、名前か文字で持つ。
  * `text` は、ほかの種類に当たらない値と、上限で切った部分の印である。循環した参照は `circular` で持つ。
+ * `array` の `length` は元の配列の長さで、`items` を上限で切っても変えない。
  */
 export type ConsoleRecordValue =
   | { kind: "string"; value: string }
@@ -112,7 +113,7 @@ export type ConsoleRecordValue =
   | { kind: "function"; name: string }
   | { kind: "text"; value: string }
   | { kind: "circular" }
-  | { kind: "array"; items: readonly ConsoleRecordValue[] }
+  | { kind: "array"; length: number; items: readonly ConsoleRecordValue[] }
   | {
       kind: "object";
       className?: string;

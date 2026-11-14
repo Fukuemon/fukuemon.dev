@@ -153,7 +153,7 @@ describe("toConsoleValues", () => {
       touched: [],
       values: [
         { kind: "error", name: "Error", message: "m" },
-        { kind: "array", items: [{ kind: "text", value: "(...)" }] },
+        { kind: "array", length: 1, items: [{ kind: "text", value: "(...)" }] },
       ],
     });
   });
@@ -168,7 +168,7 @@ describe("toConsoleValues", () => {
     const holes: unknown[] = [];
     holes[1] = 1;
     expect(copy(holes)).toStrictEqual([
-      { kind: "array", items: [{ kind: "undefined" }, { kind: "number", value: "1" }] },
+      { kind: "array", length: 2, items: [{ kind: "undefined" }, { kind: "number", value: "1" }] },
     ]);
   });
 
@@ -198,6 +198,13 @@ describe("toConsoleValues", () => {
       kind: "text",
       value: "…ほか 2 件",
     });
+  });
+
+  it("101 個以上の要素を持つ配列は、100 個と残りの件数の印にし、元の長さを持つ", () => {
+    const [array] = copy(Array.from({ length: 150 }, () => 0));
+    expect(array).toHaveProperty("length", 150);
+    expect(array).toHaveProperty("items.length", 101);
+    expect(array).toHaveProperty(["items", "100"], { kind: "text", value: "…ほか 50 件" });
   });
 
   it("101 個以上の項目を持つ Map は、100 個と残りの件数の印にする", () => {

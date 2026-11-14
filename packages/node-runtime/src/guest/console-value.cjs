@@ -209,7 +209,7 @@ function toConsoleValues(args, describe) {
           budget.nodes -= 1;
           return text("(...)");
         };
-        return { kind: "array", items: take(value.length, item, rest) };
+        return { kind: "array", length: value.length, items: take(value.length, item, rest) };
       }
       if (value instanceof Error) return errorOf(value);
       if (value instanceof Map) {

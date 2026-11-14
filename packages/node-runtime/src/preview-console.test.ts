@@ -73,6 +73,12 @@ describe("previewConsoleScript", () => {
     expect(logged).toStrictEqual([["warn", "w", { a: 1 }]]);
   });
 
+  it("要素を切った配列も、ツールのページが読める記録にして送る", () => {
+    const { posted } = runInPreview(`console.log(Array.from({ length: 150 }, () => 0));`);
+    const [array] = parseConsoleRecord(posted[0]?.message)?.args ?? [];
+    expect(array?.kind === "array" && array.length).toBe(150);
+  });
+
   it("DOM の要素とウィンドウを、文字にして送る", () => {
     const { posted } = runInPreview(`console.log(new Element(), new Node(), window);`);
     expect(parseConsoleRecord(posted[0]?.message)?.args).toStrictEqual([

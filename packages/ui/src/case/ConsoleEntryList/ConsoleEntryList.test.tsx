@@ -496,6 +496,8 @@ describe("preview", () => {
     [{ kind: "circular" }, false, "[Circular]"],
     [{ kind: "array", items: [] }, true, "Array(0)"],
     [{ kind: "array", items: numbers(6) }, false, "Array(6) [0, 1, 2, 3, 4, …]"],
+    [{ kind: "array", length: 150, items: numbers(6) }, false, "Array(150) [0, 1, 2, 3, 4, …]"],
+    [{ kind: "array", length: 150, items: numbers(6) }, true, "Array(150)"],
     [{ kind: "set", items: numbers(2) }, false, "Set(2) {0, 1}"],
     [{ kind: "set", items: numbers(2) }, true, "Set(2)"],
     [

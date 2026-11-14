@@ -47,6 +47,10 @@ const isTime = (value: unknown): value is number =>
   (value as number) >= 0 &&
   (value as number) <= Date.now() + MAX_FUTURE_MS;
 
+/** 配列の長さ。写した要素の数（残りの件数の印を含む）より短くなく、JavaScript の配列の長さの上限を超えない。 */
+const isArrayLength = (value: unknown, items: number): value is number =>
+  Number.isSafeInteger(value) && (value as number) >= items && (value as number) <= 2 ** 32 - 1;
+
 const isText = (value: unknown): value is string =>
   typeof value === "string" && value.length <= MAX_TEXT;
 
@@ -109,9 +113,14 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
       return { kind: "symbol", description: text(raw.description) };
     case "function":
       return { kind: "function", name: text(raw.name) };
-    case "array":
+    case "array": {
+      const items = list(raw.items);
+      return isArrayLength(raw.length, items.length)
+        ? { kind: "array", length: raw.length, items }
+        : reject();
+    }
     case "set":
-      return { kind: raw.kind, items: list(raw.items) };
+      return { kind: "set", items: list(raw.items) };
     case "object": {
       const entries = each(raw.entries, (entry) =>
         isObject(entry) ? { key: text(entry.key), value: next(entry.value) } : reject(),

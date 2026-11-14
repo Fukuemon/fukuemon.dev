@@ -117,6 +117,7 @@ describe("console-trace.cjs", () => {
                   key: "tags",
                   value: {
                     kind: "array",
+                    length: 2,
                     items: [
                       { kind: "string", value: "x" },
                       { kind: "number", value: 1 },

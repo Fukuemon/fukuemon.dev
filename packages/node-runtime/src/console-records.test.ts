@@ -44,6 +44,11 @@ describe("parseConsoleRecord", () => {
     ["循環", { kind: "circular" }],
     ["symbol", { kind: "symbol", description: "s" }],
     ["関数", { kind: "function", name: "f" }],
+    ["配列", { kind: "array", length: 1, items: [{ kind: "null" }] }],
+    [
+      "要素を切った配列",
+      { kind: "array", length: 150, items: [{ kind: "text", value: "…ほか 150 件" }] },
+    ],
     ["Set", { kind: "set", items: [{ kind: "null" }] }],
     ["クラスのインスタンス", { kind: "object", className: "Point", entries: [] }],
     [
@@ -85,7 +90,16 @@ describe("parseConsoleRecord", () => {
     ["数が数として読めない", record([{ kind: "number", value: "one" }])],
     ["真偽値が真偽値でない", record([{ kind: "boolean", value: "true" }])],
     ["文字列が長すぎる", record([{ kind: "string", value: "x".repeat(10_002) }])],
-    ["配列の items が配列でない", record([{ kind: "array", items: {} }])],
+    ["配列の長さが無い", record([{ kind: "array", items: [] }])],
+    ["配列の長さが数でない", record([{ kind: "array", length: "1", items: [{ kind: "null" }] }])],
+    ["配列の長さが負", record([{ kind: "array", length: -1, items: [] }])],
+    ["配列の長さが整数でない", record([{ kind: "array", length: 1.5, items: [{ kind: "null" }] }])],
+    [
+      "配列の長さが要素の数より短い",
+      record([{ kind: "array", length: 1, items: [{ kind: "null" }, { kind: "null" }] }]),
+    ],
+    ["配列の長さが上限を超える", record([{ kind: "array", length: 2 ** 32, items: [] }])],
+    ["配列の items が配列でない", record([{ kind: "array", length: 0, items: {} }])],
     ["オブジェクトの項目が配列でない", record([{ kind: "object", entries: {} }])],
     ["オブジェクトの項目がオブジェクトでない", record([{ kind: "object", entries: [1] }])],
     ["Map の項目が配列でない", record([{ kind: "map", entries: {} }])],
@@ -100,9 +114,12 @@ describe("parseConsoleRecord", () => {
     ["bigint が数字でない", record([{ kind: "bigint", value: "abc" }])],
     [
       "1 つの入れ子の要素が多すぎる",
-      record([{ kind: "array", items: Array(102).fill({ kind: "null" }) }]),
+      record([{ kind: "array", length: 102, items: Array(102).fill({ kind: "null" }) }]),
     ],
-    ["穴のある配列", record([{ kind: "array", items: Object.assign([], { length: 3 }) }])],
+    [
+      "穴のある配列",
+      record([{ kind: "array", length: 3, items: Object.assign([], { length: 3 }) }]),
+    ],
     [
       "文字数の合計が多すぎる",
       record(Array.from({ length: 60 }, () => ({ kind: "string", value: "x".repeat(10_000) }))),
@@ -113,13 +130,16 @@ describe("parseConsoleRecord", () => {
 
   it("深すぎる入れ子は、記録を捨てる", () => {
     let value: unknown = { kind: "null" };
-    for (let depth = 0; depth < 10; depth += 1) value = { kind: "array", items: [value] };
+    for (let depth = 0; depth < 10; depth += 1)
+      value = { kind: "array", length: 1, items: [value] };
     expect(parseConsoleRecord(record([value]))).toBeUndefined();
   });
 
   it("値の数が上限を超えたら、記録を捨てる", () => {
     const items = Array.from({ length: 2100 }, () => ({ kind: "null" }));
-    expect(parseConsoleRecord(record([{ kind: "array", items }]))).toBeUndefined();
+    expect(
+      parseConsoleRecord(record([{ kind: "array", length: items.length, items }])),
+    ).toBeUndefined();
   });
 });
 
