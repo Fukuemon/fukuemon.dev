@@ -18,7 +18,7 @@ const HOLD_MS = 50;
 const MAX_LINE_CHARS = 4 * 1024 * 1024;
 
 /** text の末尾が、prefix の先頭の何文字と一致するか。prefix の全体と一致するときは数えない。 */
-function partialPrefixLength(text: string, prefix: string): number {
+function partialPrefixLength(text: string, prefix = HTTP_PREFIX): number {
   for (let length = Math.min(prefix.length - 1, text.length); length > 0; length--) {
     if (text.endsWith(prefix.slice(0, length))) return length;
   }
@@ -32,14 +32,15 @@ function partialPrefixLength(text: string, prefix: string): number {
 export function createRecordLineFilter(
   onText: (text: string) => void,
   onLine: (line: string) => void,
-  prefix = HTTP_PREFIX,
 ) {
+  const prefix = HTTP_PREFIX;
   let held = "";
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let discarded = false;
 
   const release = () => {
     timer = undefined;
-    if (held === "") return;
+    if (held === "" || discarded) return;
     const text = held;
     held = "";
     onText(text);
@@ -80,12 +81,18 @@ export function createRecordLineFilter(
       clearTimeout(timer);
       release();
     },
+    /** 手元に置いた出力を捨て、この後の flush でも渡さない。購読を外したときに呼ぶ。 */
+    discard: () => {
+      clearTimeout(timer);
+      held = "";
+      discarded = true;
+    },
   };
 }
 
 /**
- * process の出力から記録の行を除き、onLine に渡す。購読ごとに、行を抜き出す処理を 1 つ作る。
- * プロセスが終わったときは、手元に置いた出力を、記録の行でなかったものとして購読した側に渡す。
+ * process の出力から記録の行を除き、onLine に渡す。購読ごとに、行を抜き出す処理を 1 つ作るので、購読は 1 つだけにする。
+ * プロセスが終わったときは、手元に置いた出力を、記録の行でなかったものとして購読した側に渡す。購読を外したときは捨てる。
  */
 export function withoutRecordLines(
   process: BackendProcess,
@@ -94,7 +101,11 @@ export function withoutRecordLines(
   const subscribe = (onChunk: (chunk: string) => void) => {
     const filter = createRecordLineFilter(onChunk, onLine);
     void process.exit.then(filter.flush, filter.flush);
-    return process.output.subscribe(filter.push);
+    const stop = process.output.subscribe(filter.push);
+    return () => {
+      filter.discard();
+      stop();
+    };
   };
   return { ...process, output: { subscribe } };
 }
@@ -203,6 +214,7 @@ const portName = (port: number) => `${port} 番のサーバー`;
 
 /**
  * 送信元を示すヘッダの値を、通信した側にする。値が無いものは、ブラウザからの通信である。
+ * 待ち受けていないプロセスは、区別の色が足りなくならないよう、まとめて 1 つの側にする。
  * 値は preload が付けたものとは限らない。訪問者が付けた値は、そのまま名前にする。
  */
 function peerOf(from: string | null, names: ReadonlyMap<number, string>): HttpPeer {
@@ -211,8 +223,7 @@ function peerOf(from: string | null, names: ReadonlyMap<number, string>): HttpPe
     const port = Number(from);
     return { id: `port:${port}`, name: names.get(port) ?? portName(port) };
   }
-  const pid = /^pid-(\d+)$/.exec(from)?.[1];
-  if (pid !== undefined) return { id: `pid:${pid}`, name: "Node のプロセス" };
+  if (/^pid-\d+$/.test(from)) return { id: "process", name: "Node のプロセス" };
   return { id: `header:${from}`, name: from };
 }
 

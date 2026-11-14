@@ -1,180 +1,271 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+
+import { HTTP_PREFIX } from "../http-records";
 
 const PRELOAD = fileURLToPath(new URL("./http-trace.cjs", import.meta.url));
-const PREFIX = "@@fd:http ";
 
-type Line = Record<string, unknown> & { type: string };
+type Line = Record<string, unknown>;
 
-/** preload を読み込んだ Node で script を動かし、標準出力の記録の行と、ほかの行を分けて返す。 */
-async function run(script: string): Promise<{ records: Line[]; text: string[] }> {
+const dirs: string[] = [];
+afterAll(async () => {
+  await Promise.all(dirs.map((dir) => rm(dir, { recursive: true, force: true })));
+});
+
+/**
+ * preload を読み込んだ Node で script を動かし、標準出力の記録の行と、ほかの行を分けて返す。
+ * before を渡すと、preload より先に読み込む。記録の行の時刻は、比べられるように消す。
+ */
+async function run(script: string, before?: string): Promise<{ records: Line[]; text: string[] }> {
   const dir = await mkdtemp(join(tmpdir(), "http-trace-"));
+  dirs.push(dir);
   const file = join(dir, "main.cjs");
   await writeFile(file, script);
+  const requires = [`--require ${PRELOAD}`];
+  if (before !== undefined) {
+    await writeFile(join(dir, "before.cjs"), before);
+    requires.unshift(`--require ${join(dir, "before.cjs")}`);
+  }
   const { stdout } = await promisify(execFile)(process.execPath, [file], {
-    env: { ...process.env, NODE_OPTIONS: `--require ${PRELOAD}` },
+    env: { ...process.env, NODE_OPTIONS: requires.join(" ") },
     timeout: 10_000,
   });
   const lines = stdout.split("\n").filter(Boolean);
   return {
     records: lines
-      .filter((l) => l.startsWith(PREFIX))
-      .map((l) => JSON.parse(l.slice(PREFIX.length)) as Line),
-    text: lines.filter((l) => !l.startsWith(PREFIX)),
+      .filter((l) => l.startsWith(HTTP_PREFIX))
+      .map((l) => {
+        const {
+          startedAt: _,
+          durationMs: __,
+          ...rest
+        } = JSON.parse(l.slice(HTTP_PREFIX.length)) as Line;
+        return rest;
+      }),
+    text: lines.filter((l) => !l.startsWith(HTTP_PREFIX)),
   };
 }
 
 const exchanges = (records: Line[]) => records.filter((r) => r.type === "exchange");
 
-// 2 つのサーバーを待ち受け、片方がもう片方へ fetch する。手続きは、ポートを 0 にして空いた番号を使う
+const responseBody = (records: Line[]) =>
+  (exchanges(records)[0]?.response as Line | undefined)?.body;
+
+/** 1 つのサーバーを 3000 番で待ち受け、handler で応答し、client を流してから閉じる script。 */
+const oneServer = (handler: string, client: string) => String.raw`
+const http = require("node:http");
+const server = http.createServer(${handler});
+server.listen(3000, "127.0.0.1", async () => {
+  const base = "http://127.0.0.1:3000";
+  ${client}
+  server.close();
+});
+`;
+
+// 認可サーバー（3001 番）とクライアント（3000 番）を 1 つのプロセスで待ち受け、クライアントが認可サーバーへ fetch する
 const TWO_SERVERS = String.raw`
 const http = require("node:http");
-const listen = (server) => new Promise((r) => server.listen(0, "127.0.0.1", () => r(server.address().port)));
+const listen = (server, port) => new Promise((r) => server.listen(port, "127.0.0.1", r));
 (async () => {
   const auth = http.createServer((req, res) => {
     let body = "";
     req.setEncoding("utf8");
     req.on("data", (c) => (body += c));
-    req.on("end", () => {
-      res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({ got: body }));
-    });
+    req.on("end", () => res.end("got " + body));
   });
-  const authPort = await listen(auth);
+  await listen(auth, 3001);
   const client = http.createServer(async (req, res) => {
-    if (req.url === "/login") {
-      res.writeHead(302, { location: "/next", "set-cookie": ["state=a; HttpOnly", "other=b"] });
-      res.end();
-      return;
-    }
-    const r = await fetch("http://localhost:" + authPort + "/token", { method: "POST", body: "code=x" });
+    const r = await fetch("http://localhost:3001/token", { method: "POST", body: "code=x" });
     res.end(await r.text());
   });
-  const clientPort = await listen(client);
-  console.log("ports", clientPort, authPort);
-  await fetch("http://127.0.0.1:" + clientPort + "/login", { redirect: "manual" });
-  const final = await fetch("http://127.0.0.1:" + clientPort + "/callback");
-  console.log("final", await final.text());
+  await listen(client, 3000);
+  console.log(await (await fetch("http://127.0.0.1:3000/callback")).text());
   auth.close();
   client.close();
 })();
 `;
 
-describe("http-trace", () => {
-  it("待ち受けたポートと、受けたリクエストとレスポンスを、1 行ずつ記録する", async () => {
-    const { records, text } = await run(TWO_SERVERS);
-    const [clientPort, authPort] = (
-      text
-        .find((l) => l.startsWith("ports"))
-        ?.split(" ")
-        .slice(1) ?? []
-    ).map(Number);
-    expect(records.filter((r) => r.type === "listen").map((r) => r.port)).toEqual([
-      authPort,
-      clientPort,
-    ]);
-    expect(text).toContain('final {"got":"code=x"}');
-
-    const [login, token, callback] = exchanges(records);
-    expect(login).toMatchObject({
-      method: "GET",
-      url: "/login",
-      to: clientPort,
-      response: { status: 302 },
+const LOGIN = oneServer(
+  String.raw`(req, res) => {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      res.writeHead(302, { location: "/next", "set-cookie": ["state=a; HttpOnly", "other=b"] });
+      res.end("moved");
     });
-    expect(login?.response).toMatchObject({
-      headers: expect.arrayContaining([
+  }`,
+  String.raw`await fetch(base + "/login", { method: "POST", body: "a=1", redirect: "manual", headers: { "x-playground-from": "mine", accept: "text/plain" } });`,
+);
+
+describe("http-trace", () => {
+  it("待ち受けたポートを、待ち受けた順に 1 行ずつ記録する", async () => {
+    const { records } = await run(TWO_SERVERS);
+    expect(records.filter((r) => r.type === "listen")).toStrictEqual([
+      { type: "listen", port: 3001 },
+      { type: "listen", port: 3000 },
+    ]);
+  });
+
+  it("リクエストを処理している間の fetch は、そのリクエストを受けたサーバーのポートを送信元にする", async () => {
+    const { records } = await run(TWO_SERVERS);
+    expect(exchanges(records).map((r) => [r.url, r.from, r.to])).toStrictEqual([
+      ["/token", "3000", 3001],
+      ["/callback", "3001", 3000],
+    ]);
+  });
+
+  it("訪問者の処理が受け取る本文を、渡したまま受け取れる", async () => {
+    const { text } = await run(TWO_SERVERS);
+    expect(text).toStrictEqual(["got code=x"]);
+  });
+
+  it("リクエストの、送信元のヘッダの値、メソッド、URL、本文を記録する", async () => {
+    const { records } = await run(LOGIN);
+    const { request, response: _, ...rest } = exchanges(records)[0] ?? {};
+    expect({ ...rest, body: (request as Line).body }).toStrictEqual({
+      type: "exchange",
+      from: "mine",
+      to: 3000,
+      method: "POST",
+      url: "/login",
+      body: { text: "a=1", size: 3, truncated: false },
+    });
+  });
+
+  it("訪問者が付けた送信元のヘッダを、書き換えずに送る", async () => {
+    const { records } = await run(LOGIN);
+    const headers =
+      (exchanges(records)[0]?.request as { headers: Line[] } | undefined)?.headers ?? [];
+    expect(
+      headers.filter((h) => ["accept", "x-playground-from"].includes(String(h.name))),
+    ).toStrictEqual([
+      { name: "x-playground-from", value: "mine" },
+      { name: "accept", value: "text/plain" },
+    ]);
+  });
+
+  it("レスポンスのステータスコードと、writeHead に渡したヘッダと、本文を記録する", async () => {
+    const { records } = await run(LOGIN);
+    const response = exchanges(records)[0]?.response as { headers: Line[] };
+    expect({
+      ...response,
+      headers: response.headers.filter((h) => h.name !== "Date"),
+    }).toStrictEqual({
+      status: 302,
+      headers: [
         { name: "location", value: "/next" },
         { name: "set-cookie", value: "state=a; HttpOnly" },
         { name: "set-cookie", value: "other=b" },
-      ]),
+        { name: "Connection", value: "keep-alive" },
+        { name: "Keep-Alive", value: "timeout=5" },
+        { name: "Transfer-Encoding", value: "chunked" },
+      ],
+      body: { text: "moved", size: 5, truncated: false },
     });
-    expect(token).toMatchObject({
-      method: "POST",
-      url: "/token",
-      to: authPort,
-      from: String(clientPort),
-      request: { body: { text: "code=x", size: 6, truncated: false } },
-      response: { status: 200, body: { text: '{"got":"code=x"}', truncated: false } },
-    });
-    expect(callback).toMatchObject({ url: "/callback", to: clientPort });
   });
 
   it("待ち受けていないプロセスの fetch は、プロセスの ID を送信元にする", async () => {
-    const { records } = await run(String.raw`
-const http = require("node:http");
-const server = http.createServer((req, res) => res.end("ok"));
-server.listen(0, "127.0.0.1", async () => {
-  const port = server.address().port;
-  // 子のプロセスは、NODE_OPTIONS を受け継ぎ、preload を読む
-  const code = "fetch('http://localhost:" + port + "/').then(() => process.exit(0))";
-  require("node:child_process").execFile(process.execPath, ["-e", code], () => server.close());
-});
-`);
-    const [exchange] = exchanges(records);
-    expect(exchange?.from).toMatch(/^pid-\d+$/);
+    const { records } = await run(
+      oneServer(
+        `(req, res) => res.end("ok")`,
+        // 子のプロセスは、NODE_OPTIONS を受け継ぎ、preload を読む
+        String.raw`await new Promise((r) => require("node:child_process").execFile(process.execPath, ["-e", "fetch('http://localhost:3000/')"], r));`,
+      ),
+    );
+    expect(String(exchanges(records)[0]?.from)).toMatch(/^pid-\d+$/);
   });
 
-  it("訪問者が付けた送信元のヘッダは、書き換えない", async () => {
-    const { records } = await run(String.raw`
-const http = require("node:http");
-const server = http.createServer((req, res) => res.end("ok"));
-server.listen(0, "127.0.0.1", async () => {
-  const url = "http://127.0.0.1:" + server.address().port + "/";
-  await fetch(new Request(url, { headers: { "x-playground-from": "mine", accept: "text/plain" } }));
-  server.close();
-});
-`);
-    const [exchange] = exchanges(records);
-    expect(exchange?.from).toBe("mine");
-    expect(exchange?.request).toMatchObject({
-      headers: expect.arrayContaining([{ name: "accept", value: "text/plain" }]),
+  it("外のホストへの fetch には、送信元を示すヘッダを足さない", async () => {
+    const { text } = await run(
+      `fetch("https://example.invalid/", { headers: { a: "1" } }).then(() => {});`,
+      // preload が包む前の fetch を差し替え、届いた引数を出す
+      `globalThis.fetch = async (input, init) => { console.log(JSON.stringify([input, init])); return new Response(""); };`,
+    );
+    expect(text).toStrictEqual(['["https://example.invalid/",{"headers":{"a":"1"}}]']);
+  });
+
+  it("ヘッダを組めない fetch は、元の fetch に任せ、Promise の失敗で返す", async () => {
+    const { text } = await run(
+      `fetch("http://localhost:1/", { headers: { "bad name": "x" } }).catch((e) => console.log(e.name));`,
+    );
+    expect(text).toStrictEqual(["TypeError"]);
+  });
+
+  it("res.write で送った本文も記録する", async () => {
+    const { records } = await run(
+      oneServer(
+        `(req, res) => { res.write("ab"); res.end(Buffer.from("cd")); }`,
+        `await (await fetch(base)).text();`,
+      ),
+    );
+    expect(responseBody(records)).toStrictEqual({ text: "abcd", size: 4, truncated: false });
+  });
+
+  it("本文は 64 KB で切り、途中で切れた文字は捨てる", async () => {
+    const { records } = await run(
+      oneServer(`(req, res) => res.end("あ".repeat(30000))`, `await (await fetch(base)).text();`),
+    );
+    expect(responseBody(records)).toStrictEqual({
+      text: "あ".repeat(Math.floor((64 * 1024) / 3)),
+      size: 90000,
+      truncated: true,
     });
   });
 
-  it("本文は、64 KB で切り、テキストとして読めないものは text を null にする", async () => {
-    const { records } = await run(String.raw`
-const http = require("node:http");
-const server = http.createServer((req, res) => {
-  if (req.url === "/big") res.end("あ".repeat(30000));
-  else res.end(Buffer.from([0, 1, 2]));
-});
-server.listen(0, "127.0.0.1", async () => {
-  const base = "http://127.0.0.1:" + server.address().port;
-  await (await fetch(base + "/big")).text();
-  await (await fetch(base + "/bin")).arrayBuffer();
-  server.close();
-});
-`);
-    const [big, bin] = exchanges(records);
-    expect(big?.response).toMatchObject({
-      body: { size: 90000, truncated: true, text: "あ".repeat(Math.floor((64 * 1024) / 3)) },
-    });
-    expect(bin?.response).toMatchObject({ body: { text: null, size: 3, truncated: false } });
+  it("NUL を含む本文は、テキストとして記録しない", async () => {
+    const { records } = await run(
+      oneServer(
+        `(req, res) => res.end(Buffer.from([0, 1, 2]))`,
+        `await (await fetch(base)).arrayBuffer();`,
+      ),
+    );
+    expect(responseBody(records)).toStrictEqual({ text: null, size: 3, truncated: false });
   });
 
-  it("訪問者の処理が、待ってから本文を読んでも、本文を受け取れる", async () => {
-    const { records, text } = await run(String.raw`
+  it("訪問者の処理が待ってから本文を読んでも、訪問者は本文を受け取れる", async () => {
+    const { text } = await run(
+      oneServer(
+        String.raw`async (req, res) => {
+          await new Promise((r) => setTimeout(r, 50));
+          let body = "";
+          for await (const c of req) body += c;
+          res.end("got " + body);
+        }`,
+        `console.log(await (await fetch(base, { method: "POST", body: "late" })).text());`,
+      ),
+    );
+    expect(text).toStrictEqual(["got late"]);
+  });
+
+  it("レスポンスを返す前に切れた通信は、response を null にする", async () => {
+    const { records } = await run(
+      oneServer(`(req, res) => req.socket.destroy()`, `await fetch(base).catch(() => {});`),
+    );
+    expect(exchanges(records)[0]?.response).toBeNull();
+  });
+
+  it("応答の直後にサーバーを閉じても、受けたポートを記録する", async () => {
+    const { records } = await run(String.raw`
 const http = require("node:http");
-const server = http.createServer(async (req, res) => {
-  await new Promise((r) => setTimeout(r, 50));
-  let body = "";
-  for await (const c of req) body += c;
-  res.end("got " + body);
-});
-server.listen(0, "127.0.0.1", async () => {
-  const r = await fetch("http://127.0.0.1:" + server.address().port, { method: "POST", body: "late" });
-  console.log(await r.text());
-  server.close();
-});
+const server = http.createServer((req, res) => { res.end("ok"); server.close(); });
+server.listen(3000, "127.0.0.1", () => fetch("http://127.0.0.1:3000/").then((r) => r.text()));
 `);
-    expect(text).toContain("got late");
-    expect(exchanges(records)[0]?.request).toMatchObject({ body: { text: "late" } });
+    expect(exchanges(records).map((r) => r.to)).toStrictEqual([3000]);
+  });
+
+  it("同じリクエストで request を出し直しても、1 回だけ記録する", async () => {
+    const { records } = await run(
+      oneServer(
+        `function (req, res) { if (!req.again) { req.again = true; this.emit("request", req, res); return; } res.end("ok"); }`,
+        `await (await fetch(base)).text();`,
+      ),
+    );
+    expect(exchanges(records)).toHaveLength(1);
   });
 });

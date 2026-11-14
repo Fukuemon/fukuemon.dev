@@ -53,7 +53,7 @@ function trackProcess(
 /** 起動したプロセスの一覧と、出力の記録。終了したプロセスも一覧に残し、出力を読める。 */
 export function createProcesses(
   instance: BackendInstance,
-  onRecordLine: (line: string, source: RecordSource) => void = () => undefined,
+  onRecordLine: (line: string, source: RecordSource) => void,
 ): {
   api: NodeRuntime["processes"];
   dispose: () => void;

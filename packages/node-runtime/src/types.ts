@@ -46,7 +46,7 @@ export type HttpBody = { text: string | null; size: number; truncated: boolean }
 /** 実行環境の中のサーバーが受けた、1 つのリクエストとレスポンス。response が無いものは、レスポンスを返す前に切れた。 */
 export type HttpRecord = {
   id: string;
-  /** 送った側と受けた側。id は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `pid:<ID>` である。 */
+  /** 送った側と受けた側。id は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `process`、訪問者が送信元のヘッダに付けた値が `header:<値>` である。 */
   from: { id: string; name: string };
   to: { id: string; name: string };
   method: string;

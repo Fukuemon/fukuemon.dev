@@ -58,7 +58,7 @@ describe("processes", () => {
     expect(handle.output.read()).toBe("ab");
   });
 
-  it("HTTP の記録の行を、出力から除いて、起動のコマンドの名前で httpExchanges に入れる", async () => {
+  const emitRecords = async () => {
     const { runtime, created } = await bootFake();
     const handle = await runtime.processes.start("node", ["client.js"], { name: "クライアント" });
     created.processes[0]?.emit('ok\r\n@@fd:http {"type":"listen","port":3000}\r\n');
@@ -66,9 +66,18 @@ describe("processes", () => {
       '@@fd:http {"type":"exchange","from":null,"to":3000,"startedAt":1,"durationMs":2,' +
         '"method":"GET","url":"/","request":{"headers":[]},"response":null}\r\ndone',
     );
+    return { runtime, handle };
+  };
+
+  it("HTTP の記録の行を、プロセスの出力から除く", async () => {
+    const { handle } = await emitRecords();
     expect(handle.output.read()).toBe("ok\r\ndone");
-    expect(runtime.httpExchanges.getSnapshot()).toMatchObject([
-      { url: "/", to: { id: "port:3000", name: "クライアント" } },
+  });
+
+  it("HTTP の記録の行を、起動のコマンドの名前で httpExchanges に入れる", async () => {
+    const { runtime } = await emitRecords();
+    expect(runtime.httpExchanges.getSnapshot().map((r) => [r.url, r.to])).toStrictEqual([
+      ["/", { id: "port:3000", name: "クライアント" }],
     ]);
   });
 
