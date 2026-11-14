@@ -54,6 +54,7 @@ ADR-0062 の Decision のうち、押せる領域を 24×24 CSS px 以上にす�
 - 同じ端末で、ツールのページと記事のページの両方を、ピンチズームで拡大できること。
 - 実機の iPad の Safari（デスクトップの UA を名乗る設定）を iPadOS と見分けて指定を足し、上の 3 つの条件を iPad でも満たすこと。Mac の Safari には指定を足さないこと。
 - Safari のほかの WebKit のブラウザとして、iPhone の Chrome でも拡大しないこと。
+- iPhone の Chrome と、アプリの中のブラウザ（WKWebView）の 1 つで、ツールのページと記事のページの両方を、ピンチズームで拡大できること。拡大できなければ、Decision の最後の項目のとおり、入力の要素を 16px にする形に書き直す。
 
 ## Considered Options
 
