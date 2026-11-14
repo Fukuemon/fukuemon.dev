@@ -39,13 +39,13 @@
 GPU、スロットリング、訪問、回数は、スクリプトの引数の今のデフォルトと同じである。  
 集計は、スクリプトと違い、庭を出すトップで `lcpIsFcp` の回を除いてから中央値を取る。
 
-| 項目             | 条件                                                                             |
-| ---------------- | -------------------------------------------------------------------------------- |
-| GPU              | Metal（macOS の GPU）                                                            |
-| スロットリング   | simulate（Lighthouse のデフォルト）                                              |
-| 回数と集計       | 5 回測り、`lcpIsFcp` の回を除いて、Performance と LCP をそれぞれ中央値で判定する |
-| 訪問             | 2 回目以降の訪問。庭を出さないトップは `--visit reduced-motion` で同じ条件で測る |
-| 端末の画面と回線 | Lighthouse のデフォルトの mobile（Moto G Power、Slow 4G）                        |
+| 項目             | 条件                                                                                                |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| GPU              | Metal（macOS の GPU）                                                                               |
+| スロットリング   | simulate（Lighthouse のデフォルト）                                                                 |
+| 回数と集計       | 5 回測り、庭を出すトップでは `lcpIsFcp` の回を除いて、Performance と LCP をそれぞれ中央値で判定する |
+| 訪問             | 2 回目以降の訪問。庭を出さないトップは `--visit reduced-motion` で同じ条件で測る                    |
+| 端末の画面と回線 | Lighthouse のデフォルトの mobile（Moto G Power、Slow 4G）                                           |
 
 - GPU を Metal にするのは、多くの訪問者の端末は GPU で庭を描くと推測するためである。SwiftShader で測ると、GPU の無い環境で CPU が描く時間を測ることになる。
 - スロットリングを simulate にするのは、PRD の条件が Lighthouse のデフォルトの mobile を指し、PageSpeed Insights でも同じ方法で測り直せるためである。
@@ -66,14 +66,15 @@ GPU、スロットリング、訪問、回数は、スクリプトの引数の�
 1. 合否に使う GPU。推奨は Metal。
 2. 合否に使うスロットリング。推奨は simulate。
 3. 回数と集計。推奨は 5 回の中央値で、庭を出すトップでは `lcpIsFcp` の回を除き、測り直しは 1 度だけにする。
-4. PRD の性能の要求を満たすために、庭の描画を軽くする作業を行うか。推奨は行わない。1 で Metal を選ぶと、SwiftShader の値は合否に入らないためである。
+4. PRD の性能の要求を満たすために、庭の描画を軽くする作業を行うか。推奨は行わない。1 で Metal を選ぶと、SwiftShader の値は合否に入らないためである。Metal でも庭を出すトップの LCP は要求を満たさず、その扱いは ADR-0026 の承認の条件による。
+5. トップの性能を変える pull request に、参考の値として devtools の Metal の値を添えるか。推奨は添える。simulate の推定が実際の読み込みより速く出たときに、気づけるためである。
 
 承認の後に行うことは、次の 3 つ。
 
 - PRD の「トップの最初の訪問は、この条件の対象から除く。」の項目の下に、次の 1 行を足す。
   > トップの合否を判定する GPU、スロットリング、回数は、ADR-0078 にある。
-- `apps/web/src/features/top-garden/README.md` の「Lighthouse で測る」に、この ADR の条件で合否を判定することと、ADR-0078 へのリンクを足す。トップの性能を変える pull request に、参考の値として devtools の Metal の値を添えるかどうかも、README の同じセクションに書く。
-- スクリプトが、`lcpIsFcp` の回を除いた中央値と、除いた回数を出すようにする。測り直しと合否の判定は、人が行う。
+- `apps/web/src/features/top-garden/README.md` の「Lighthouse で測る」に、この ADR の条件で合否を判定することと、ADR-0078 へのリンクを足す。論点 5 の答えも、README の同じセクションに書く。
+- スクリプトが、`--visit reduced-motion` のほかでは、`lcpIsFcp` の回を除いた中央値と、除いた回数を出すようにする。測り直しと合否の判定は、人が行う。
 
 ## Verification
 
@@ -104,7 +105,7 @@ develop の 4286172 をビルドし、`pnpm run measure:top` で測った。
 | **採用:** Metal と simulate の 5 回の中央値     | GPU で描く端末に近い。PRD の条件の Lighthouse のデフォルトで、PageSpeed Insights と同じ方法である。スクリプトの引数のデフォルトを変えずに済む | macOS でしか測れない。LCP は推定の値で、20 回に 2 回は実際より良く出た。M2 の GPU で描くので、GPU で庭を描く時間を少なく見積もる |
 | Metal と devtools の 5 回の中央値               | 実際にスロットリングを掛けて読み込むので、LCP が実際に描画した時刻になる。`lcpIsFcp` の回が出ず、10 回の範囲が simulate より狭い              | PageSpeed Insights と方法が違い、同じ値で測り直せない。macOS でしか測れない。M2 の GPU で描く                                    |
 | SwiftShader と simulate の 5 回の中央値         | どの OS でも測れる。CI の庭の E2E と同じ描き方である                                                                                          | 5 回とも `lcpIsFcp` で、LCP の値を判定に使えない。GPU の無い環境で CPU が描く時間を測り、GPU で描く端末の値と離れる              |
-| SwiftShader と devtools の 5 回の中央値         | どの OS でも測れる。GPU の無い環境の値を測る                                                                                                  | GPU で描く端末の値と離れる。合否に使うなら、PRD の性能の要求を満たすために、庭の描画を軽くする作業が要る                         |
+| SwiftShader と devtools の 5 回の中央値         | どの OS でも測れる。GPU の無い環境の値を測る                                                                                                  | GPU で描く端末の値と離れる                                                                                                       |
 | Metal と simulate で、`lcpIsFcp` の回を除かない | スクリプトの中央値をそのまま判定に使える                                                                                                      | 推定の誤りの回が入ると、中央値が合格の側にずれる。2 回入ると、Performance の中央値は残り 3 回の最も良い値になる                  |
 | 回数を 5 回より増やす                           | 外れ値の回の影響が減る                                                                                                                        | 測る時間が延びる。Metal と simulate の 4 組では、組ごとの中央値の差が 1 だった                                                   |
 | 中央値の代わりに最も悪い値を使う                | 外れ値の回が判定に入る                                                                                                                        | simulate の 1 回ごとのばらつき（91〜97）で合否が変わりうる                                                                       |
