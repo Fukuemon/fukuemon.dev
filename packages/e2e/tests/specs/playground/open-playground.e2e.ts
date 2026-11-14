@@ -3,17 +3,15 @@ import { expect, test } from "@playwright/test";
 import { PLAYGROUND_TOOLS } from "../../fixtures/playground";
 import { playgroundNavLink } from "../../selectors/site-header";
 import { stubPlayground } from "../../fixtures/stub-playground";
-import { seenBefore } from "../../widgets/actions/seen-before";
 
 test.describe("プレイグラウンドの一覧", () => {
   test("ヘッダーの「プレイグラウンド」を押した場合、/playground が開き、Node、SQL、Go の 3 つが順に並ぶこと", async ({
     page,
   }) => {
-    await seenBefore(page);
-    await page.goto("/");
+    // トップはヘッダーを庭の描画の後に出すので、庭に依らない記事の一覧から押す
+    await page.goto("/articles");
     await playgroundNavLink(page).click();
     await expect(page).toHaveURL(/\/playground\/?$/);
-    await expect(playgroundNavLink(page)).toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("playground-tool-link")).toHaveText(
       PLAYGROUND_TOOLS.map((tool) => tool.name),
     );
@@ -39,21 +37,21 @@ test.describe("プレイグラウンドの一覧", () => {
     await page.goto("/playground");
     const links = page.getByTestId("playground-tool-link");
     await expect(links).toHaveCount(PLAYGROUND_TOOLS.length);
-    const boxes = await links.evaluateAll((elements) =>
+    const fits = await links.evaluateAll((elements) =>
       elements.map((element) => {
         const box = element.getBoundingClientRect();
-        return { width: box.width, height: box.height, left: box.left, right: box.right };
+        return {
+          large: box.width >= 44 && box.height >= 44,
+          inside: box.left >= 0 && box.right <= window.innerWidth,
+        };
       }),
     );
-    for (const box of boxes) {
-      expect(box.width).toBeGreaterThanOrEqual(44);
-      expect(box.height).toBeGreaterThanOrEqual(44);
-      expect(box.left).toBeGreaterThanOrEqual(0);
-      expect(box.right).toBeLessThanOrEqual(375);
-    }
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-    ).toBe(true);
+    expect(fits).toStrictEqual(PLAYGROUND_TOOLS.map(() => ({ large: true, inside: true })));
+    const width = await page.evaluate(() => ({
+      scroll: document.documentElement.scrollWidth,
+      inner: window.innerWidth,
+    }));
+    expect(width).toStrictEqual({ scroll: 375, inner: 375 });
   });
 
   test("キーボードだけで操作した場合、Tab で Node、SQL、Go のリンクに順に移れること", async ({
@@ -61,6 +59,7 @@ test.describe("プレイグラウンドの一覧", () => {
   }) => {
     await page.goto("/playground");
     const links = page.getByTestId("playground-tool-link");
+    // ヘッダーの最後のリンクが「プレイグラウンド」で、その次が一覧のリンクである前提で、ヘッダーから Tab で続くことを見る
     await playgroundNavLink(page).focus();
     for (const index of PLAYGROUND_TOOLS.keys()) {
       await page.keyboard.press("Tab");

@@ -11,7 +11,8 @@ status: draft
 
 E2E は Playwright（`@playwright/test`）で書く。
 要素は testid（`getByTestId`）で拾い、確認は `expect(locator)` の自動の待ちに任せる。
-画面の文字を比べるときは、`packages/e2e/tests/fixtures/articles.ts` の定数を、確認の両側に渡す。値を読んでから比べない。
+画面の文字を比べるときは、`packages/e2e/tests/fixtures/` の定数（記事の題は `articles.ts`、プレイグラウンドのツールは `playground.ts`）を、確認の両側に渡す。  
+値を読んでから比べない。
 
 ## Test IDs
 

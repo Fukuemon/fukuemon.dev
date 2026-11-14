@@ -59,8 +59,8 @@ describe("Link", () => {
   });
 
   it("押せる領域を広げたリンクは、44×44 px 以上を押せる", () => {
-    render(<LargeTarget>開く</LargeTarget>);
-    const box = screen.getByRole("link", { name: "開く" }).getBoundingClientRect();
+    render(<LargeTarget />);
+    const box = screen.getByRole("link", { name: "Go" }).getBoundingClientRect();
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
   });
