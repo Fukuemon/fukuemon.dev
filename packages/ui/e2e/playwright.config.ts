@@ -18,7 +18,7 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command: `pnpm run build-storybook --quiet && pnpm exec vite preview --outDir storybook-static --port ${PORT} --strictPort`,
+        command: `pnpm run build-storybook --quiet && pnpm exec vp preview --outDir storybook-static --port ${PORT} --strictPort`,
         url: `http://localhost:${PORT}`,
         timeout: 300_000,
         stdout: "pipe",
