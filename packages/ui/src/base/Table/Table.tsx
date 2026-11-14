@@ -21,10 +21,10 @@ const cellClassName = (density: "default" | "compact") =>
 export function Table({ caption, children, density = "default" }: TableProps) {
   const captionId = useId();
   return (
-    <div
+    <section
       aria-labelledby={captionId}
       className="scroll-fade-end overflow-x-auto focus-visible:focus-ring"
-      role="region"
+      // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 横に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
       tabIndex={0}
     >
       <table
@@ -41,7 +41,7 @@ export function Table({ caption, children, density = "default" }: TableProps) {
         </caption>
         <DensityContext value={density}>{children}</DensityContext>
       </table>
-    </div>
+    </section>
   );
 }
 

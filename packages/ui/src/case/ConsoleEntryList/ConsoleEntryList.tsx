@@ -187,7 +187,7 @@ export function ConsoleEntryList({
       : { kind: "ready" });
 
   // DevTools のコンソールと同じく、最初は一番下を見ている扱いにし、上へ戻したら送らない
-  const rowsRef = useRef<HTMLDivElement>(null);
+  const rowsRef = useRef<HTMLElement>(null);
   const isAtBottom = useRef(true);
   const handleScroll = () => {
     const rows = rowsRef.current;
@@ -204,10 +204,9 @@ export function ConsoleEntryList({
     if (isAtBottom.current) rows.scrollTop = rows.scrollHeight;
   }, [lastId, paneState.kind]);
   const toolbar = (
-    <div
+    <fieldset
       aria-label="表示するログレベル"
-      className="flex flex-wrap border-b border-border px-2 py-1"
-      role="group"
+      className="flex min-w-0 flex-wrap border-b border-border px-2 py-1"
     >
       {LEVELS.map((level) => {
         const isOn = levels.has(level);
@@ -231,18 +230,18 @@ export function ConsoleEntryList({
           </button>
         );
       })}
-    </div>
+    </fieldset>
   );
   return (
     <ToolPane state={paneState} title={title} toolbar={toolbar}>
       {/* 高さを呼ぶ側が決めたときは、題とボタンを残して、行の領域だけをスクロールさせる */}
       <div className="flex min-h-0 flex-1 flex-col focus-ring-frame">
-        <div
+        <section
           aria-label="ログの行"
           className="min-h-0 flex-1 overflow-y-auto"
           onScroll={handleScroll}
           ref={rowsRef}
-          role="region"
+          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 縦に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
           tabIndex={0}
         >
           {visible.length === 0 ? (
@@ -256,7 +255,7 @@ export function ConsoleEntryList({
               ))}
             </ol>
           )}
-        </div>
+        </section>
       </div>
     </ToolPane>
   );

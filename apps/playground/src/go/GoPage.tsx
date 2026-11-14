@@ -106,7 +106,6 @@ function OutputPane({ session }: { session: GoSession }) {
           ref={logRef}
           role="log"
           // 長い出力をキーボードで送れるよう、スクロールする領域をフォーカスできるようにする
-          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
         >
           {progress !== undefined && <Loading label={progress} />}

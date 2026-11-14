@@ -38,6 +38,7 @@ export const Focus: Story = { name: "フォーカス", parameters: { pseudo: { f
 const LINES = Array.from({ length: 60 }, (_, i) => `${i + 1} 行目`);
 const Lines = ({ name }: { name: string }) => (
   // エディタと端末のように、送る領域の中身はフォーカスを受ける
+  // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
   <ol aria-label={name} className="p-4 text-code text-text focus-visible:focus-ring" tabIndex={0}>
     {LINES.map((line) => (
       <li key={line}>{line}</li>
