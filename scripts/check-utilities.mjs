@@ -80,6 +80,12 @@ const RULES = [
         /(?:^|-)surface-(?:ground|pane(?:-subtle)?)(?:\/\d+)?$/.test(utility) ||
         /^rounded(?:-[a-z]{1,2})?-(?:pane|sheet|control-compact)$/.test(utility)),
   },
+  {
+    id: "BODY-WIDTH",
+    label: "書体の「0」の幅で変わる文字の列の幅（max-w-prose）",
+    // Tailwind の max-w-prose はテーマ変数を読まず、65ch に固定されている
+    test: (variants, utility) => utility === "max-w-prose",
+  },
 ];
 
 // PLAYGROUND-ONLY の名前を使ってよい置き場。コードを動かす画面と、そのコンポーネント
