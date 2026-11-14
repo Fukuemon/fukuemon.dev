@@ -6,9 +6,9 @@ import { STATIONS } from "../layout";
 // 夜の場面は、テーマに依らず暗いので、霞と字を夜の色にする（top-garden の Design Doc の「庭の中のボタンの並び」）
 const mist = "garden-mist from-surface to-transparent in-data-[time=night]:from-garden-mist-night";
 const stop =
-  "-ms-px min-h-11 cursor-pointer border border-border-field bg-surface px-3 text-label text-text first:ms-0 focus-visible:focus-ring in-data-[time=night]:focus-visible:outline-garden-ink-night aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
+  "-ms-px min-h-11 cursor-pointer border border-border-field bg-surface px-3 text-label text-text first:ms-0 focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
 const tool =
-  "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2 in-data-[time=night]:text-garden-ink-night in-data-[time=night]:focus-visible:outline-garden-ink-night";
+  "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2 in-data-[time=night]:text-garden-ink-night";
 ---
 
 <div class="garden-stage bg-surface" data-garden-stage>
@@ -97,7 +97,12 @@ const tool =
 
   :global(html.stage-on.garden-ready[data-time="night"] [data-site-header] a) {
     color: var(--fd-color-garden-ink-night);
-    outline-color: var(--fd-color-garden-ink-night);
+  }
+
+  /* 夜の霞の上では、墨のフォーカスの輪が沈むので、focus-ring が読む色を夜の字の色に替える */
+  :global(html.stage-on.garden-ready[data-time="night"] [data-site-header]),
+  :global(html.stage-on.garden-ready[data-time="night"]) .garden-nav {
+    --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
   /* 狭い画面では、4 つの文へ移るボタンと 2 つの操作を 2 段に分け、広い画面では 1 段に並べる */
