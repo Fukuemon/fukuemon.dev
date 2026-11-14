@@ -35,3 +35,7 @@ export function shellName(processes: readonly ProcessInfo[]): string {
   const shells = processes.filter((info) => info.kind === "shell").length;
   return shells === 0 ? "シェル" : `シェル ${shells + 1}`;
 }
+
+/** 下のペインの HTTP のタブの文。記録があれば件数を添える。 */
+export const httpTabLabel = (count: number) =>
+  count === 0 ? "HTTP の流れ" : `HTTP の流れ（${count}）`;

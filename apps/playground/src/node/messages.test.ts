@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   SUPPORTED_BROWSERS,
   bootFailureMessage,
+  httpTabLabel,
   overLimitMessage,
   processLabel,
   shellName,
@@ -67,5 +68,14 @@ describe("shellName", () => {
     ["3 つ目のシェルは、3 を付ける", [shell("シェル"), shell("シェル 2")], "シェル 3"],
   ])("%s", (_, processes, expected) => {
     expect(shellName(processes)).toBe(expected);
+  });
+});
+
+describe("httpTabLabel", () => {
+  it.each([
+    ["記録が無いときは、件数を添えない", 0, "HTTP の流れ"],
+    ["記録があるときは、件数を添える", 8, "HTTP の流れ（8）"],
+  ])("%s", (_, count, expected) => {
+    expect(httpTabLabel(count)).toBe(expected);
   });
 });
