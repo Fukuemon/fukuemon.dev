@@ -1,16 +1,17 @@
 import { WebContainer, type WebContainerProcess } from "@webcontainer/api";
 
-import type {
-  BackendFiles,
-  BackendInstance,
-  BackendProcess,
-  DirectoryItem,
-  RuntimeBackend,
+import {
+  type BackendFiles,
+  type BackendInstance,
+  type BackendProcess,
+  type DirectoryItem,
+  type RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
 import consoleTraceSource from "../guest/console-trace.cjs?raw";
 import consoleValueSource from "../guest/console-value.cjs?raw";
 import httpTraceSource from "../guest/http-trace.cjs?raw";
+import { toBackendError } from "./errors";
 import { portOfOrigin } from "./preview-origin";
 import { toTree } from "./tree";
 
@@ -65,19 +66,26 @@ function toBackendProcess(process: WebContainerProcess): BackendProcess {
   };
 }
 
+const rethrow = (error: unknown) => {
+  throw toBackendError(error);
+};
+
 function createBackendFiles(container: WebContainer): BackendFiles {
   const fs = container.fs;
   return {
     list: async (directory) => {
-      const items = await fs.readdir(directory === "" ? "." : directory, { withFileTypes: true });
+      const items = await fs
+        .readdir(directory === "" ? "." : directory, { withFileTypes: true })
+        .catch(rethrow);
       return items.map(
         (item): DirectoryItem => ({
           name: item.name,
-          kind: item.isDirectory() ? "directory" : "file",
+          // WebContainers の Dirent には isSymbolicLink が無く、リンクは isFile も isDirectory も false を返す
+          kind: item.isDirectory() ? "directory" : item.isFile() ? "file" : "other",
         }),
       );
     },
-    readFile: (path) => fs.readFile(path),
+    readFile: (path) => fs.readFile(path).catch(rethrow),
     writeFile: (path, contents) => fs.writeFile(path, contents),
     mkdir: async (path) => {
       await fs.mkdir(path, { recursive: true });

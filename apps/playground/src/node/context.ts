@@ -33,3 +33,20 @@ export function useSelection(): SelectionValue {
   if (!value) throw new Error("SelectionContext の provider が無い");
   return value;
 }
+
+const runtimeKeys = new WeakMap<NodeRuntime, number>();
+let nextRuntimeKey = 0;
+
+/**
+ * 実行環境ごとに違う番号。起動し直した後に、エディタを新しい実行環境につなぎ直すための key に使う。
+ * Suspense は、起動を待つ間にペインを隠すだけで、Effect の後始末を呼ばないので、key を変えないとエディタが古い実行環境に書き込む。
+ */
+export function runtimeKey(runtime: NodeRuntime | undefined): string {
+  if (!runtime) return "read-only";
+  let key = runtimeKeys.get(runtime);
+  if (key === undefined) {
+    key = nextRuntimeKey++;
+    runtimeKeys.set(runtime, key);
+  }
+  return String(key);
+}
