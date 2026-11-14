@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type ArticleSource, isPublic, planArticlePages } from "./article-pages";
+import { type ArticleSource, isPublic, planArticlePages, siteModeOf } from "./article-pages";
 
 const article = (id: string, over: Partial<ArticleSource["data"]> = {}): ArticleSource => ({
   id,
@@ -23,9 +23,9 @@ describe("isPublic", () => {
     ["published", false, true],
     ["published", true, false],
   ] as const)(
-    "本番の build では status が %s、検証用が %s の記事を書き出すかが %s になる",
-    (status, check, expected) => {
-      expect(isPublic(data(status, check), "production")).toBe(expected);
+    "本番の build では status が %s、verificationOnly が %s の記事を書き出すかが %s になる",
+    (status, verificationOnly, expected) => {
+      expect(isPublic(data(status, verificationOnly), "production")).toBe(expected);
     },
   );
 
@@ -34,9 +34,9 @@ describe("isPublic", () => {
     ["published", false, true],
     ["published", true, true],
   ] as const)(
-    "プレビューの build では status が %s、検証用が %s の記事を書き出すかが %s になる",
-    (status, check, expected) => {
-      expect(isPublic(data(status, check), "preview")).toBe(expected);
+    "内部向けの build では status が %s、verificationOnly が %s の記事を書き出すかが %s になる",
+    (status, verificationOnly, expected) => {
+      expect(isPublic(data(status, verificationOnly), "internal")).toBe(expected);
     },
   );
 
@@ -46,6 +46,21 @@ describe("isPublic", () => {
       expect(isPublic(data(status, true), "dev")).toBe(true);
     },
   );
+});
+
+describe("siteModeOf", () => {
+  it.each([
+    [true, "production", "dev"],
+    [false, undefined, "internal"],
+    [false, "", "internal"],
+    [false, "production", "production"],
+  ] as const)("dev が %s、SITE_ENV が %s のとき %s にする", (dev, siteEnv, expected) => {
+    expect(siteModeOf(dev, siteEnv)).toBe(expected);
+  });
+
+  it("production 以外の値は throw する", () => {
+    expect(() => siteModeOf(false, "prod")).toThrow("SITE_ENV の値が誤っている: prod");
+  });
 });
 
 describe("planArticlePages", () => {
@@ -89,7 +104,7 @@ describe("planArticlePages", () => {
     ]);
   });
 
-  it("build では下書きを書き出さず、位置と前後も下書きを飛ばして数える", () => {
+  it("本番の build では下書きを書き出さず、位置と前後も下書きを飛ばして数える", () => {
     const pages = planArticlePages(
       [
         article("rdbms/a", { order: 1 }),

@@ -117,8 +117,10 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 - サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
 - サイトの Worker の deploy workflow は、build に環境変数 `SITE_ENV=production` を渡す。
-  - `verificationOnly: true` の記事（検証用の原稿）は、`SITE_ENV=production` の build では、記事の一覧、RSS、記事のページ、シリーズのページに出ない。
-  - プレビュー、E2E、手元の build は `SITE_ENV` を渡さないので、検証用の原稿も書き出す。
+  - `verificationOnly: true` の記事（検証用の記事）は、`SITE_ENV=production` の build では、記事の一覧、RSS、記事のページ、シリーズのページに出ない。
+  - プレビュー、E2E、手元の build は `SITE_ENV` を渡さないので、検証用の記事も書き出す。
+  - `SITE_ENV` に `production` 以外の値を渡すと、build が失敗する。
+  - ページを書き出す記事が埋め込むプロジェクトの JSON（`/playground-projects/*`）も、検証用の記事のものは出ない。
   - 本番の記事が 0 本のとき、記事の一覧は準備中の文を出し、RSS は item の無いチャンネルを返す。
   - `SITE_ENV` は `build:site` のキャッシュの鍵に入れてある（`apps/web/vite.config.ts`）。
 - カタログの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-catalog workflow が行う。初回の deploy と出し直しは、運用者が deploy-catalog workflow を `workflow_dispatch` で `develop` から手で起動する。

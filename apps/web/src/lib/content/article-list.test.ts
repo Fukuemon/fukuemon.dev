@@ -96,7 +96,7 @@ describe("listArticles", () => {
     ]);
   });
 
-  it("build では、公開していない記事を外す", () => {
+  it("本番の build では、公開していない記事を外す", () => {
     const items = listArticles(
       [
         article("draft", "2026-11-01", { status: "draft" }),
@@ -118,22 +118,13 @@ describe("listArticles", () => {
     expect(items).toStrictEqual([]);
   });
 
-  it("プレビューと手元の build では、検証用の記事も載せる", () => {
+  it("内部向けの build では、検証用の記事も載せる", () => {
     const items = listArticles(
       [article("check", "2026-11-01", { verificationOnly: true })],
       [],
-      "preview",
+      "internal",
     );
     expect(listedHrefs(items)).toStrictEqual(["/articles/check"]);
-  });
-
-  it("本番の build では、検証用の記事だけのシリーズのページを書き出さない", () => {
-    const pages = planSeriesPages(
-      [article("rdbms/a", "2026-11-01", { order: 1, verificationOnly: true })],
-      [RDBMS],
-      "production",
-    );
-    expect(pages).toStrictEqual([]);
   });
 
   it("dev server では、公開していない記事も載せる", () => {
@@ -158,6 +149,15 @@ describe("listArticles", () => {
 });
 
 describe("planSeriesPages", () => {
+  it("本番の build では、検証用の記事だけのシリーズのページを書き出さない", () => {
+    const pages = planSeriesPages(
+      [article("rdbms/a", "2026-11-01", { order: 1, verificationOnly: true })],
+      [RDBMS],
+      "production",
+    );
+    expect(pages).toStrictEqual([]);
+  });
+
   it("シリーズの題、説明、ページの URL を持ち、記事を ContentRef にする", () => {
     const pages = planSeriesPages(
       [article("rdbms/btree", "2026-11-01", { order: 1 })],
@@ -205,7 +205,7 @@ describe("planSeriesPages", () => {
     ]);
   });
 
-  it("build では、公開していない記事を外す", () => {
+  it("本番の build では、公開していない記事を外す", () => {
     const pages = planSeriesPages(
       [
         article("rdbms/first", "2026-11-01", { order: 1 }),
@@ -245,7 +245,7 @@ describe("planSeriesPages", () => {
     ).toThrow("シリーズの題が無い: unknown");
   });
 
-  it("build では、公開していない記事だけの、index.md の無いディレクトリでは失敗しない", () => {
+  it("本番の build では、公開していない記事だけの、index.md の無いディレクトリでは失敗しない", () => {
     const pages = planSeriesPages(
       [article("unknown/a", "2026-11-01", { order: 1, status: "draft" })],
       [RDBMS],

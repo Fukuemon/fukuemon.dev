@@ -20,10 +20,21 @@ export type ArticleSeries = {
 /**
  * 書き出す範囲を決める実行の種類。
  * - dev: dev server。すべてを書き出す
- * - preview: 環境変数 SITE_ENV を指定しない build。プレビュー、E2E、手元の build で、公開した記事と検証用の記事を書き出す
+ * - internal: SITE_ENV を指定しない build。プレビューの Worker、E2E、手元の build で、公開した記事と検証用の記事を書き出す
  * - production: SITE_ENV=production の build。検証用でない公開した記事だけを書き出す
  */
-export type SiteMode = "dev" | "preview" | "production";
+export type SiteMode = "dev" | "internal" | "production";
+
+/**
+ * dev server かどうかと環境変数 SITE_ENV の値から、実行の種類を決める。
+ * 未設定は internal、`production` は production にする。打ち間違いが本番に出ないよう、ほかの値は throw する
+ */
+export function siteModeOf(dev: boolean, siteEnv: string | undefined): SiteMode {
+  if (dev) return "dev";
+  if (siteEnv === undefined || siteEnv === "") return "internal";
+  if (siteEnv === "production") return "production";
+  throw new Error(`SITE_ENV の値が誤っている: ${siteEnv}。production か、未設定にする`);
+}
 
 export function isPublic(
   data: Pick<ArticleData, "status" | "verificationOnly">,
@@ -31,7 +42,7 @@ export function isPublic(
 ): boolean {
   if (mode === "dev") return true;
   if (data.status !== "published") return false;
-  return mode === "preview" || !data.verificationOnly;
+  return mode === "internal" || !data.verificationOnly;
 }
 
 export function articleHref(id: string): string {

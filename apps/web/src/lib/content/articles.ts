@@ -1,7 +1,13 @@
 import { getCollection, getEntry, render } from "astro:content";
 import { assertContentGraph } from "./article-graph";
 import { listArticles, planSeriesPages, type SeriesSource } from "./article-list";
-import { type ArticleSeries, type SiteMode, isPublic, planArticlePages } from "./article-pages";
+import {
+  type ArticleSeries,
+  type SiteMode,
+  isPublic,
+  planArticlePages,
+  siteModeOf,
+} from "./article-pages";
 import { planProjectPages } from "../playground/project-pages";
 
 /** 記事のページが描く値。Astro のエントリの形をページに出さない (docs/adr/0002-content-model-independence.md) */
@@ -14,10 +20,8 @@ export type ArticlePageProps = {
   series?: ArticleSeries;
 };
 
-/** build の種類。SITE_ENV=production の build だけが、検証用の記事を外す (context/operations.md) */
 function siteMode(): SiteMode {
-  if (import.meta.env.DEV) return "dev";
-  return process.env["SITE_ENV"] === "production" ? "production" : "preview";
+  return siteModeOf(import.meta.env.DEV, process.env["SITE_ENV"]);
 }
 
 async function loadArticlesAndSeries() {
