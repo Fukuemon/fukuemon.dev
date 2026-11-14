@@ -208,8 +208,9 @@ export function startGarden(
       renderer.render(scene, camera);
       renderer.copyFramebufferToTexture(target!);
       renderer.render(pass.scene, pass.camera);
-      cssCamera.copy(camera);
-      cssCamera.position.multiplyScalar(PX);
+      cssCamera.position.copy(camera.position).multiplyScalar(PX);
+      cssCamera.quaternion.copy(camera.quaternion);
+      cssCamera.projectionMatrix.copy(camera.projectionMatrix);
       cssRenderer.render(cssScene, cssCamera);
     };
 
