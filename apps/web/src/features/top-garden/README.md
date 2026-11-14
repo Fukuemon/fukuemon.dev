@@ -73,7 +73,7 @@ SVG のサイズの上限は gzip で 40 KB で、ユニットテストが確認
 pnpm --filter @fukuemon/web exec vitest run src/features/top-garden
 ```
 
-止めた庭の絵の見た目の回帰、和紙の間の移動、WebGL を使えないときの E2E は、`apps/web/e2e/` にある。
+止めた庭の絵の見た目の回帰、和紙の間の移動、WebGL を使えないときの E2E は、`packages/e2e/visual/specs/` にある。
 実行の方法と基準のスナップショットの作り直し方は、[E2E のテスト](../../../../../context/testing/e2e.md) にある。
 
 ## Lighthouse で測る
