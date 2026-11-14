@@ -43,9 +43,9 @@ ADR の規則は、[README.md](README.md) にある。
 | [ADR-0021](0021-ui-components-and-catalog.md)                | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                     |
 | [ADR-0022](0022-code-colors-from-tokens.md)                  | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                             |
 | [ADR-0062](0062-dense-text-and-targets-in-playground.md)     | コードを動かす画面だけ、文字を 12px と 13px まで小さくし、押せる領域をマウスで押す端末は 24×24 CSS px、触る端末は 44×44 CSS px にする      |
-| [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)          | コードを動かす画面の詰めたペイン、木の行の中の名前の欄、仕切りで、フォーカスの輪を要素の内側に引く                                         |
+| [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)          | コードを動かす画面の詰めたペイン、木の行の中の名前の欄、`SplitPane` の仕切りで、フォーカスの輪を要素の内側に引く                           |
 | [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md)     | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                               |
-| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | コードを動かす画面の文字を端末で分けず、iOS と iPadOS の入力時の拡大を viewport の指定で止める                                             |
+| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | コードを動かす画面の文字の大きさを端末の種類で分けず、iOS と iPadOS の入力時の拡大を viewport の指定で止める                               |
 | [ADR-0072](0072-short-landscape-layout-in-playground.md)     | コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える        |
 | [ADR-0073](0073-layered-panes-and-radius-in-playground.md)   | コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める                                                  |
 

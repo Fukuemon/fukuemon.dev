@@ -170,7 +170,8 @@ package を切り出すのは、次のどちらかが成り立つときである
 
 ### apps/playground
 
-- ツールのページ（`apps/playground/` の下の、`index.html` を持つディレクトリと同じ名前の、`apps/playground/src/` のディレクトリ。今は `node/`、`sql/`、`go/`）どうしは import しない。
+- ツールのページのディレクトリどうしは import しない。
+  ツールのページのディレクトリは、`apps/playground/` の下で `index.html` を持つディレクトリと同じ名前の、`apps/playground/src/` のディレクトリである。今は `node/`、`sql/`、`go/` がある。
   2 つ以上のツールが使うものは、関心ごとのディレクトリに置く。
   - チェックは Oxlint が行う。
     `oxlint.config.ts` と `apps/playground/vite.config.ts` は、`apps/playground/` の下の `index.html` を持つディレクトリを、ツールとして読む。

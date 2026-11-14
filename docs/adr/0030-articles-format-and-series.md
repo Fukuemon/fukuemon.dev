@@ -46,7 +46,7 @@
 - 記事の schema は、実行環境の項目を持たない。手を動かす場所の 4 つの分類をやめる。
 - 実行環境の選び方と埋め込み方は、この ADR では決めない。実行環境の方式を決める ADR が決める。
   - 選び方は、[ADR-0033](0033-webcontainers-for-node.md)（Node）、[ADR-0037](0037-go-with-yaegi.md)（Go）、[ADR-0053](0053-pglite-database-in-playground.md)（DB）が決める。
-  - 記事への埋め込み方は、[ADR-0034](0034-playground-origin-and-embedding.md) と [ADR-0049](0049-playground-projects-from-articles.md) が決める。記事は実行環境を iframe で埋め込むので、island どうしをつなぐ決定は無い。
+  - 記事への埋め込み方は、[ADR-0034](0034-playground-origin-and-embedding.md) と [ADR-0049](0049-playground-projects-from-articles.md) が決める。記事は実行環境を iframe で埋め込み、island どうしをつながないので、island のつなぎ方は決めない。
 - 手順の形式は、外部の Codelab のツールを使わず、サイトのページとして描く。`h2` を手順にまとめる処理の配置先は、手順の形式を作るときに決め直す。
 - `contentId`、公開の状態（`status`）、片方向の関連は引き継ぐ。
 
