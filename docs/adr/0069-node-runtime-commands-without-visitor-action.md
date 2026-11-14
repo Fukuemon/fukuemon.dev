@@ -2,7 +2,7 @@
 
 ## Status
 
-承認
+[ADR-0076](0076-node-runtime-boot-commands-and-restart.md) に置換
 
 ## Context
 
