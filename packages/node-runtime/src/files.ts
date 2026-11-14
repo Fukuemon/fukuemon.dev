@@ -58,24 +58,25 @@ async function readAllFiles(
   directory = "",
 ): Promise<FileContents[]> {
   const items = [...(await files.list(directory))].sort((a, b) => a.name.localeCompare(b.name));
-  const result: FileContents[] = [];
-  for (const item of items) {
-    const path = join(directory, item.name);
-    if (isExcludedPath(path, exclude)) continue;
-    if (item.kind === "directory") {
-      result.push(...(await readAllFiles(files, { exclude, maxBytes }, path)));
-      continue;
-    }
-    // 一覧を読んだ後に消えたファイルは、読まずに飛ばす
-    const bytes = await files.readFile(path).catch(() => undefined);
-    if (!bytes) continue;
-    result.push({
-      path,
-      size: bytes.byteLength,
-      text: bytes.byteLength > maxBytes ? null : decodeText(bytes),
-    });
-  }
-  return result;
+  // 1 回ずつの往復を待つと、ファイルの数だけ待ち時間が積み重なるので、1 つのディレクトリの中は並べて読む
+  const read = await Promise.all(
+    items.map(async (item): Promise<FileContents[]> => {
+      const path = join(directory, item.name);
+      if (isExcludedPath(path, exclude)) return [];
+      if (item.kind === "directory") return readAllFiles(files, { exclude, maxBytes }, path);
+      // 一覧を読んだ後に消えたファイルは、読まずに飛ばす
+      const bytes = await files.readFile(path).catch(() => undefined);
+      if (!bytes) return [];
+      return [
+        {
+          path,
+          size: bytes.byteLength,
+          text: bytes.byteLength > maxBytes ? null : decodeText(bytes),
+        },
+      ];
+    }),
+  );
+  return read.flat();
 }
 
 const sameTree = (a: readonly FileEntry[], b: readonly FileEntry[]) =>

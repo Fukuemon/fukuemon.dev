@@ -36,6 +36,9 @@ const SAVE_RULES: ReadAllOptions = { exclude: ["node_modules"], maxBytes: 1_048_
 /** 変更の通知を受けてから、作業ディレクトリを読むまでの時間（ms）。待つ間に来た通知は、1 回の保存にまとめる。 */
 export const SAVE_DELAY_MS = 500;
 
+/** 変更の通知が続くときに、最初の通知から保存までを待つ上限（ms）。 */
+export const SAVE_MAX_DELAY_MS = 2_000;
+
 /** 起動し直すときに、作業ディレクトリを読み終えるのを待つ上限（ms）。 */
 export const RESTART_READ_TIMEOUT_MS = 5_000;
 
@@ -205,14 +208,33 @@ export function createNodeSession({
   const watchForSave = (instance: Instance, runtime: NodeRuntime) => {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let firstChange: number | undefined;
+    let reading = false;
+    let again = false;
+    // 読み込みは 1 本ずつにする。古い読み込みが後に終わって、古い中身で保存し直さないためである
     const save = async () => {
-      const files = await readForSave(runtime);
-      if (files && !stopped) persist(files);
+      timer = undefined;
+      firstChange = undefined;
+      if (reading) {
+        again = true;
+        return;
+      }
+      reading = true;
+      do {
+        again = false;
+        const files = await readForSave(runtime);
+        if (files && !stopped) persist(files);
+      } while (again && !stopped);
+      reading = false;
     };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
       if (!instance.touched || paths.every(isExcluded)) return;
+      // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
+      const at = Date.now();
+      firstChange ??= at;
       clearTimeout(timer);
-      timer = setTimeout(() => void save(), SAVE_DELAY_MS);
+      const wait = Math.min(SAVE_DELAY_MS, firstChange + SAVE_MAX_DELAY_MS - at);
+      timer = setTimeout(() => void save(), Math.max(0, wait));
     });
     return () => {
       stopped = true;

@@ -17,6 +17,7 @@ import {
   type NodeSessionOptions,
   RESTART_READ_TIMEOUT_MS,
   SAVE_DELAY_MS,
+  SAVE_MAX_DELAY_MS,
   createNodeSession,
   createNodeSessionOpener,
   savedFiles,
@@ -273,6 +274,40 @@ describe("保存", () => {
         savedAt: 9,
       },
     ]);
+  });
+
+  it("通知が続いても、最初の通知から上限の時間のうちに保存する", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    for (let i = 0; i < SAVE_MAX_DELAY_MS / (SAVE_DELAY_MS / 2); i++) {
+      latest().change("index.js", String(i));
+      await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS / 2);
+    }
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "7" }]);
+  });
+
+  it("読み込みの途中に保存の時が来たときは、読み終えてから 1 回だけ読み直す", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const fake = latest();
+    let release: () => void = () => undefined;
+    fake.readAll.mockImplementationOnce(async () => {
+      await new Promise<void>((resolve) => (release = resolve));
+      return [{ path: "index.js", size: 1, text: "old" }];
+    });
+    fake.change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    fake.change("index.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+    expect({
+      saves: saves.map((record) => record.files),
+      reads: fake.readAll.mock.calls.length,
+    }).toStrictEqual({
+      saves: [{ "index.js": "old" }, { "index.js": "d" }],
+      reads: 2,
+    });
   });
 
   it("端末への入力の後の変更も保存する", async () => {
