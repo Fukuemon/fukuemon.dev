@@ -1,15 +1,23 @@
 import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const NOINDEX = "/*\n  X-Robots-Tag: noindex\n";
+const ALL_PATHS = "/*";
+const NOINDEX = "  X-Robots-Tag: noindex";
 
 /**
- * `_headers` の先頭に、全てのパスへ noindex を返す規則を足す (ADR-0031)。
- * _headers の規則の数には上限があるので、ビルドが末尾に足す規則より前に置く
+ * `_headers` の全てのパスの規則に、noindex を足す (ADR-0031)。
+ * 同じパスの規則が 2 つあると、Workers Static Assets は後の規則だけを返すので、既にある `/*` の規則に 1 行足す。
+ * `/*` の規則が無いときだけ、先頭に作る
  */
 export function withNoindex(headers: string): string {
-  const current = headers.trim();
-  return current === "" ? NOINDEX : `${NOINDEX}\n${current}\n`;
+  const lines = headers.trimEnd().split("\n");
+  const at = lines.indexOf(ALL_PATHS);
+  if (at === -1) {
+    const rest = headers.trim();
+    return rest === "" ? `${ALL_PATHS}\n${NOINDEX}\n` : `${ALL_PATHS}\n${NOINDEX}\n\n${rest}\n`;
+  }
+  lines.splice(at + 1, 0, NOINDEX);
+  return `${lines.join("\n")}\n`;
 }
 
 /** ビルドの出力を複製し、複製の `_headers` に noindex を足す。ビルドの出力は変えない */

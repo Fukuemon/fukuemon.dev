@@ -4,12 +4,21 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildPreviewAssets, withNoindex } from "./preview-assets";
 
-const HANDWRITTEN = "/*\n  X-Content-Type-Options: nosniff\n";
+const HANDWRITTEN =
+  "/*\n  X-Content-Type-Options: nosniff\n\n/_astro/*\n  Cache-Control: immutable\n";
+const WITH_NOINDEX =
+  "/*\n  X-Robots-Tag: noindex\n  X-Content-Type-Options: nosniff\n\n/_astro/*\n  Cache-Control: immutable\n";
 const NOINDEX = "/*\n  X-Robots-Tag: noindex\n";
 
 describe("withNoindex", () => {
-  it("全てのパスへ noindex を返す規則を先頭に足す", () => {
-    expect(withNoindex(HANDWRITTEN)).toBe(`${NOINDEX}\n${HANDWRITTEN}`);
+  it("既にある全てのパスの規則に noindex の行を足す", () => {
+    expect(withNoindex(HANDWRITTEN)).toBe(WITH_NOINDEX);
+  });
+
+  it("全てのパスの規則が無いときは、先頭に作る", () => {
+    expect(withNoindex("/_astro/*\n  Cache-Control: immutable\n")).toBe(
+      `${NOINDEX}\n/_astro/*\n  Cache-Control: immutable\n`,
+    );
   });
 
   it("空の _headers には規則だけを書く", () => {
@@ -26,10 +35,10 @@ describe("buildPreviewAssets", () => {
     return { dir, out: join(root, "dist-preview") };
   }
 
-  it("複製の _headers の先頭に noindex を足す", () => {
+  it("複製の _headers の全てのパスの規則に noindex を足す", () => {
     const { dir, out } = dist({ "index.html": "<p>top</p>", _headers: HANDWRITTEN });
     buildPreviewAssets(dir, out);
-    expect(readFileSync(join(out, "_headers"), "utf8")).toBe(`${NOINDEX}\n${HANDWRITTEN}`);
+    expect(readFileSync(join(out, "_headers"), "utf8")).toBe(WITH_NOINDEX);
   });
 
   it("_headers 以外のファイルをそのまま複製する", () => {
