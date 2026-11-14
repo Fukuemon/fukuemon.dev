@@ -10,7 +10,7 @@ export type PageLoadingProps = {
 export function PageLoading({ label }: PageLoadingProps) {
   return (
     <div
-      className="pointer-events-none fixed right-6 bottom-5 flex flex-col items-end gap-1.5 text-body-compact text-text"
+      className="pointer-events-none fixed right-6 bottom-6 z-20 flex flex-col items-end gap-2 text-body-compact text-text"
       role="status"
     >
       {label}

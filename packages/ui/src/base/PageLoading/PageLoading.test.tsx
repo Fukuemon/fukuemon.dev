@@ -20,7 +20,7 @@ describe("PageLoading", () => {
     expect({ position, right, bottom, fontSize }).toStrictEqual({
       position: "fixed",
       right: "24px",
-      bottom: "20px",
+      bottom: "24px",
       fontSize: "13px",
     });
   });
