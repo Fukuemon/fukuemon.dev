@@ -264,7 +264,7 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 - `apps/web/src/content.config.ts`: collection の結線
 - `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
 - `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `planArticlePages()`
-- `apps/web/src/lib/content/article-graph.ts`: `buildContentGraph()` を呼び、誤りに原稿のパスを付けて throw する `assertContentGraph()`
+- `apps/web/src/lib/content/article-graph.ts`: `assertContentGraph()`。`buildContentGraph()` を呼び、誤りにはエントリの `filePath` を付けて throw する
 - `apps/web/src/lib/content/article-list.ts`: 一覧とシリーズのページの関数
   - `listArticles()`: 一覧と RSS に載せる記事を返す
   - `planSeriesPages()`: シリーズのページを組む
@@ -288,6 +288,7 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 `planSeries()` は、読み込みのときのチェックにだけ使い、戻り値はページに渡さない。  
 `articles.ts` の `loadArticlesAndSeries()` が、`assertContentGraph()` を通して `buildContentGraph()` を呼ぶ。  
 記事のページ、一覧、RSS、シリーズのページのどれを書き出すビルドも、この関数を通るので、誤りがあれば必ず失敗する。  
+記事を読む関数を足すときは、この関数を通す。  
 `buildContentGraph()` には、下書きも含めたすべての記事を渡す。  
 下書きを除いてから組むと、下書きを指す `related` が解決できない参照としてビルドを失敗させる。
 

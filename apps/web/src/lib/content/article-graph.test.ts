@@ -3,6 +3,7 @@ import { type ArticleGraphSource, assertContentGraph } from "./article-graph";
 
 const article = (id: string, contentId: string, related: string[] = []): ArticleGraphSource => ({
   id,
+  filePath: `src/content/articles/${id}.md`,
   data: {
     contentId,
     title: `題 ${id}`,
@@ -24,13 +25,13 @@ describe("assertContentGraph", () => {
 
   it("contentId が重複していたら、両方の原稿のパスを付けて throw する", () => {
     expect(() => assertContentGraph([article("a", "same"), article("rdbms/b", "same")])).toThrow(
-      /contentId が重複しています: same \(.*articles\/a, .*articles\/rdbms\/b\)/,
+      /contentId が重複しています: same \(.*articles\/a\.md, .*articles\/rdbms\/b\.md\)/,
     );
   });
 
   it("無い contentId を指す related は、書いた原稿のパスを付けて throw する", () => {
     expect(() => assertContentGraph([article("a", "a", ["missing"])])).toThrow(
-      /related の参照先が存在しません: a -> missing \(.*articles\/a\)/,
+      /related の参照先が存在しません: a -> missing \(.*articles\/a\.md\)/,
     );
   });
 

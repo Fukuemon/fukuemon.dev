@@ -5,10 +5,13 @@ import {
   buildContentGraph,
 } from "@fukuemon/content-model";
 import { type ArticleListSource, toContentRef } from "./article-list";
-import { ARTICLES_DIR } from "./articles-loader";
 
-/** `related` を持つ、記事 1 本の値 */
-export type ArticleGraphSource = ArticleListSource & { data: { related: readonly string[] } };
+/** `related` と原稿のパスを持つ、記事 1 本の値 */
+export type ArticleGraphSource = ArticleListSource & {
+  data: { related: readonly string[] };
+  /** プロジェクトのルートからの原稿のパス。Astro のエントリの `filePath` */
+  filePath?: string;
+};
 
 /**
  * 下書きも含めたすべての記事で、contentId の重複と `related` の誤りを確認する。
@@ -26,7 +29,7 @@ export function assertContentGraph(articles: readonly ArticleGraphSource[]): voi
 function pathsOf(articles: readonly ArticleGraphSource[], contentId: string): string {
   return articles
     .filter((a) => a.data.contentId === contentId)
-    .map((a) => `${ARTICLES_DIR}/${a.id}`)
+    .map((a) => a.filePath ?? a.id)
     .join(", ");
 }
 
