@@ -45,7 +45,7 @@ pnpm --filter @fukuemon/e2e test
 ```
 
 - 配信のポートは、実行のたびに空きポートを選ぶ。`PREVIEW_PORT` で決められる。`BASE_URL` を渡したときは、配信を立てない。
-- project は `chromium` だけである。
+- project は `chromium` と `visual` である。`pnpm --filter @fukuemon/e2e test` は `chromium` だけを流し、`visual` は `pnpm --filter @fukuemon/e2e test:visual` で流す。
 - 型のチェックは `pnpm --filter @fukuemon/e2e typecheck` で流す。
 - ルートの `pnpm run test:e2e` は、サイトの E2E の後に、カタログの Show code の E2E（`pnpm --filter @fukuemon/ui e2e`）を流す。
   - カタログの E2E は、config が Storybook をビルドしてポート 6126 で配信する。そのポートが使用中なら、起動が失敗する。
@@ -61,10 +61,12 @@ pnpm --filter @fukuemon/e2e capture
 node .claude/skills/playwright-capture/scripts/collect.mjs packages/e2e/tests/evidence/.playwright/改修後.json packages/e2e/tests/evidence
 ```
 
-### apps/web の E2E と見た目の回帰
+### 庭の見た目の回帰と、表と図の枠の E2E
 
-`apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
-記事のページの表と図の枠の E2E も、同じ config（`apps/web/e2e/playwright.config.ts`）とコマンドで実行する。
+`packages/e2e/visual/specs/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
+config は `packages/e2e/playwright.config.ts` の project `visual` である。
+記事のページの表と図の枠の E2E も、同じ project で実行する。
+この spec は `tests/` の外にあるので、E2E の lint の規則は掛からない。
 CI では、`pnpm run check` がビルドの後に実行する。
 ローカル環境では、ビルドしてから次を実行する。
 
@@ -78,8 +80,8 @@ pnpm run test:visual
   - ポートを決めたいときは、環境変数 `PREVIEW_PORT` に渡す。そのポートが使用中なら、preview の起動が失敗する。
   - 1〜65535 の整数でない値は、config がエラーで止める。
   - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
-- 庭は WebGL で描くので、GPU に依らないよう、chromium に SwiftShader で描かせる。
-- 基準のスナップショットは、`apps/web/e2e/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
+- 庭は WebGL で描くので、GPU に依らないよう、project `visual` が chromium に SwiftShader で描かせる。
+- 基準のスナップショットは、`packages/e2e/visual/specs/__screenshots__/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
   - macOS の chromium で実行しても、この範囲に収まる。
 - 場面を変えて基準のスナップショットを作り直すときは、CI と同じ Linux の Playwright のイメージで作る。
@@ -92,9 +94,9 @@ pnpm run test:visual
 ```sh
 pnpm run build
 python3 -m http.server 4400 --bind 127.0.0.1 --directory apps/web/dist
-docker run --rm --platform linux/amd64 --ipc=host -v "$PWD":/work -w /work/apps/web \
+docker run --rm --platform linux/amd64 --ipc=host -v "$PWD":/work -w /work/packages/e2e \
   -e BASE_URL=http://host.docker.internal:4400 mcr.microsoft.com/playwright:v1.64.1-noble \
-  node node_modules/@playwright/test/cli.js test -c e2e/playwright.config.ts --update-snapshots
+  node node_modules/@playwright/test/cli.js test --project visual --update-snapshots
 ```
 
 `python3 -m http.server` は別のターミナルで実行し、作り直した後に止める。

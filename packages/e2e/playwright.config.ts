@@ -42,7 +42,22 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? `http://localhost:${PORT}`,
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      // トップの庭の見た目の回帰と、記事のページの表と図の枠。tests/ の外に置くので、E2E の lint の規則は掛からない
+      // 庭は WebGL で描くので、GPU に依らず同じ絵になる SwiftShader で描かせる。基準の画像は Linux で作る（context/testing/e2e.md）
+      name: "visual",
+      testDir: "./visual/specs",
+      testMatch: "**/*.spec.ts",
+      // 基準の画像は Linux の 1 枚だけを持つ。名前に OS を入れない
+      snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}{ext}",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
+      },
+    },
+  ],
   webServer: process.env.BASE_URL
     ? undefined
     : {
