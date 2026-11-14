@@ -32,7 +32,12 @@ import { extname, join, resolve, sep } from "node:path";
 import { parseArgs, promisify } from "node:util";
 import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
-import { judge, medians } from "../apps/web/scripts/lighthouse-judge.ts";
+import {
+  isAdrConditions,
+  judge,
+  medians,
+  needsRemeasure,
+} from "../apps/web/scripts/lighthouse-judge.ts";
 
 const require = createRequire(import.meta.url);
 let LIGHTHOUSE_CLI;
@@ -76,6 +81,7 @@ if (!["simulate", "devtools"].includes(opt.throttling))
   fail(`--throttling が不正: ${opt.throttling}`);
 const runs = Number(opt.runs);
 if (!Number.isInteger(runs) || runs < 1) fail(`--runs が不正: ${opt.runs}`);
+const conditions = { visit: opt.visit, gpu: opt.gpu, throttling: opt.throttling, runs };
 if (!existsSync(join(DIST, "index.html")))
   fail(`${DIST}/index.html が無い。pnpm run build の後に流す`);
 // CHROME_PATH が無効だと、Lighthouse が別の Chrome で測ることがあるので、先に止める。
@@ -218,6 +224,7 @@ const writeSummary = (error) => {
       : {
           lcpIsFcpRuns: rows.filter((r) => r.lcpIsFcp).length,
           median: medians(rows),
+          adrConditions: isAdrConditions(conditions),
           judged: judge(rows, opt.visit),
         }),
     rows,
@@ -280,9 +287,7 @@ try {
 if (!process.exitCode) {
   const summary = writeSummary();
   console.log(JSON.stringify({ lcpIsFcpRuns: summary.lcpIsFcpRuns, ...summary.median }));
-  console.log(JSON.stringify({ judged: summary.judged }));
-  const adrConditions =
-    opt.visit === "second" && opt.gpu === "metal" && opt.throttling === "simulate" && runs === 5;
-  if (adrConditions && summary.judged.excludedRuns >= 3)
+  console.log(JSON.stringify({ adrConditions: summary.adrConditions, judged: summary.judged }));
+  if (needsRemeasure(conditions, summary.judged))
     console.error("lcpIsFcp の回を 3 回以上除いた。ADR-0078 の規則で、5 回を 1 度だけ測り直す");
 }

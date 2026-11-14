@@ -11,6 +11,32 @@ export type Row = {
 
 const KEYS = ["score", "fcp", "lcp", "tbt", "si", "cls"] as const;
 type Medians = Record<(typeof KEYS)[number], number>;
+type Judged = { excludedRuns: number; keptRuns: number; median: Medians | null };
+
+/** 計測の引数のうち、ADR-0078 の合否の条件に関わるもの */
+export type Conditions = { visit: string; gpu: string; throttling: string; runs: number };
+
+/** ADR-0078 で合否に使う回数と、測り直す除いた回の数 */
+const JUDGED_RUNS = 5;
+const REMEASURE_AT = 3;
+
+/**
+ * ADR-0078 の合否の条件で測ったか。条件は Metal、simulate、5 回で、
+ * 庭を出すトップは 2 回目以降の訪問（second）、庭を出さないトップは reduced-motion で測る
+ */
+export function isAdrConditions(c: Conditions): boolean {
+  return (
+    (c.visit === "second" || c.visit === "reduced-motion") &&
+    c.gpu === "metal" &&
+    c.throttling === "simulate" &&
+    c.runs === JUDGED_RUNS
+  );
+}
+
+/** ADR-0078 の規則で、5 回を測り直すか。ADR-0078 の条件で測り、lcpIsFcp の回を 3 回以上除いたときに true */
+export function needsRemeasure(c: Conditions, judged: Judged): boolean {
+  return isAdrConditions(c) && judged.excludedRuns >= REMEASURE_AT;
+}
 
 /** 指標ごとの中央値。偶数の回は中央の 2 つの値の平均にする。回が無いときは null */
 export function medians(rows: readonly Row[]): Medians | null {
@@ -28,7 +54,7 @@ export function medians(rows: readonly Row[]): Medians | null {
  * 庭を出すトップでは lcpIsFcp の回を除く。
  * 庭を出さないトップ（reduced-motion）は、本文の描画が LCP になり、どの回も lcpIsFcp になるので除かない。
  */
-export function judge(rows: readonly Row[], visit: string) {
+export function judge(rows: readonly Row[], visit: string): Judged {
   const kept = visit === "reduced-motion" ? rows : rows.filter((r) => !r.lcpIsFcp);
   return {
     excludedRuns: rows.length - kept.length,
