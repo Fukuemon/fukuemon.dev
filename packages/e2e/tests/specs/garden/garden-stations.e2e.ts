@@ -14,6 +14,7 @@ import {
 } from "../../selectors/garden";
 
 import { AUTUMN_NOON } from "./garden-time";
+import { seenBefore } from "../../widgets/actions/seen-before";
 
 // SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかるので、テストの時間の上限を 3 倍にする
 test.beforeEach(() => test.slow());
@@ -24,6 +25,7 @@ test.beforeEach(() => test.slow());
  * 移動の動き自体を確かめるテスト以外は、止めてから移る。
  */
 const openGarden = async (page: Page, { paused = false } = {}) => {
+  await seenBefore(page);
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await expect(htmlElement(page)).toHaveClass(/garden-ready/);
