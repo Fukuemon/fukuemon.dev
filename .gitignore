@@ -93,3 +93,6 @@ apm_modules/
 /.claude/skills/write-verification-spec/
 packages/go-runtime/wasm/
 packages/e2e/tests/evidence/
+
+# scripts/measure-top-lighthouse.mjs の結果
+lighthouse-results/
