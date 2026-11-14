@@ -525,7 +525,7 @@ describe("preview", () => {
     expect(preview(value, isNested)).toBe(expected);
   });
 
-  it("行と値の木の項目のフォーカスの輪は、要素の内側に引く（ADR-0066）", async () => {
+  it("行と値の木の項目のフォーカスの輪は、要素の内側に引く（ADR-0079）", async () => {
     render(<Default />);
     row(2).focus();
     await userEvent.keyboard("{ArrowDown}");
