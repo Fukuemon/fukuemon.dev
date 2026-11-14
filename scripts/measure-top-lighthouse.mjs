@@ -106,6 +106,13 @@ const server = createServer((req, res) => {
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 const origin = `http://localhost:${server.address().port}`;
 
+// npx が取得する Lighthouse には、手元の token などの環境変数を渡さない。
+const childEnv = Object.fromEntries(
+  ["PATH", "HOME", "TMPDIR", "LANG", "npm_config_cache"]
+    .filter((k) => process.env[k] !== undefined)
+    .map((k) => [k, process.env[k]]),
+);
+
 const gpuFlags =
   opt.gpu === "metal"
     ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"]
@@ -193,6 +200,8 @@ const writeSummary = (error) => {
 try {
   for (let i = 0; i < runs; i++) {
     const profile = mkdtempSync(join(tmpdir(), "measure-top-"));
+    // --chrome-flags は空白で区切られるので、空白を含むパスはフラグが割れる。
+    if (/\s/.test(profile)) fail(`一時ディレクトリのパスに空白がある: ${profile}`);
     try {
       if (opt.visit !== "first") await seed(profile);
       const report = join(opt.out, `${stamp}-${label}-${i}.json`);
@@ -211,7 +220,7 @@ try {
           `--output-path=${report}`,
           "--quiet",
         ],
-        { env: { ...process.env, CHROME_PATH: chromium.executablePath() } },
+        { env: { ...childEnv, CHROME_PATH: chromium.executablePath() } },
       );
       const r = JSON.parse(readFileSync(report, "utf8"));
       const row = {
