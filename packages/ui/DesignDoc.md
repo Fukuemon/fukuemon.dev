@@ -135,6 +135,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
   - 記事の一覧の題のように文中に置かないリンクは、`isStandalone` を付けて左右を空けない。見出しや帯と左端をそろえるためである。
 - 操作できる要素と重なる面の角は、2px で丸める。テーマ変数に置く角丸の名前は、`rounded-control` の 1 つだけにする。
   - 丸めるのは、`Button`、`IconButton`、`boxed` の `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。
+  - `Switch` のトラックとつまみ、`Checkbox` の枠も丸める。
   - `ConsoleEntryList` のログレベルのボタンも丸める。
   - `Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックの角は丸めない。罫で示す要素と、罫で区切る面のためである。
 - 面の上に重なる面（ダイアログ、メニュー、候補の一覧）は、`bg-surface-raised`、1px の `border-field` の枠、`shadow-raised` の影を組にして書く。
@@ -318,23 +319,25 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 
 両方の画面で使う Base は次のとおり。
 
-| コンポーネント         | 使う場所                                         | 元にするもの                                    |
-| ---------------------- | ------------------------------------------------ | ----------------------------------------------- |
-| `Button`、`IconButton` | コードの写し、実行、ファイルの操作               | DADS のボタン                                   |
-| `Link`                 | 本文の内部と外部のリンクと、文中に置かないリンク | DADS のリンク                                   |
-| `Tabs`                 | 記事の中の例の切り替え、エディタのファイルのタブ | DADS のタブ。エディタのために閉じるボタンを足す |
-| `Dialog`               | 検索、`ConfirmDialog` が組む確認                 | DADS のモーダルダイアログ                       |
-| `ActionMenu`           | ファイルとディレクトリの操作のメニュー           | DADS のメニューリスト                           |
-| `TextField`            | 検索の語、ファイルの名前の入力                   | DADS のインプットテキスト                       |
-| `Table`                | 記事の表、SQL の結果、HTTP のヘッダ              | DADS のテーブル                                 |
-| `StatusBadge`          | HTTP の状態コード、記事の種別                    | DADS のラベル                                   |
-| `Notice`               | 記事の注意書き、実行のエラー                     | DADS のノティフィケーションバナー               |
-| `Disclosure`           | 記事の補足、リクエストとレスポンスの詳細         | DADS のアコーディオン                           |
-| `Loading`              | 実行環境の起動、パッケージのインストール         | DADS のプログレスインジケーター                 |
-| `Breadcrumb`           | 記事とシリーズの位置                             | DADS のパンくずリスト                           |
-| `TreeView`             | `FileTree` と `ConsoleEntryList` が組む木の表示  | APG の Tree View                                |
-| `SplitPane`            | エディタ、端末、プレビューの間の境界             | APG の Window Splitter                          |
-| `FileIcon`             | ファイルの木とエディタのタブの印                 | 自前の SVG                                      |
+| コンポーネント         | 使う場所                                          | 元にするもの                                    |
+| ---------------------- | ------------------------------------------------- | ----------------------------------------------- |
+| `Button`、`IconButton` | コードの写し、実行、ファイルの操作                | DADS のボタン                                   |
+| `Link`                 | 本文の内部と外部のリンクと、文中に置かないリンク  | DADS のリンク                                   |
+| `Tabs`                 | 記事の中の例の切り替え、エディタのファイルのタブ  | DADS のタブ。エディタのために閉じるボタンを足す |
+| `Dialog`               | 検索、`ConfirmDialog` が組む確認                  | DADS のモーダルダイアログ                       |
+| `ActionMenu`           | ファイルとディレクトリの操作のメニュー            | DADS のメニューリスト                           |
+| `TextField`            | 検索の語、ファイルの名前の入力                    | DADS のインプットテキスト                       |
+| `Table`                | 記事の表、SQL の結果、HTTP のヘッダ               | DADS のテーブル                                 |
+| `StatusBadge`          | HTTP の状態コード、記事の種別                     | DADS のラベル                                   |
+| `Notice`               | 記事の注意書き、実行のエラー                      | DADS のノティフィケーションバナー               |
+| `Disclosure`           | 記事の補足、リクエストとレスポンスの詳細          | DADS のアコーディオン                           |
+| `Switch`               | AI からの操作の許可のように、すぐに反映される設定 | APG の Switch                                   |
+| `Checkbox`             | 確認の画面の「今後尋ねない」のような選択          | DADS のチェックボックス                         |
+| `Loading`              | 実行環境の起動、パッケージのインストール          | DADS のプログレスインジケーター                 |
+| `Breadcrumb`           | 記事とシリーズの位置                              | DADS のパンくずリスト                           |
+| `TreeView`             | `FileTree` と `ConsoleEntryList` が組む木の表示   | APG の Tree View                                |
+| `SplitPane`            | エディタ、端末、プレビューの間の境界              | APG の Window Splitter                          |
+| `FileIcon`             | ファイルの木とエディタのタブの印                  | 自前の SVG                                      |
 
 記事の画面の Case は次のとおり。
 
