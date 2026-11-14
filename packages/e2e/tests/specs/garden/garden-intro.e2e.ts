@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { currentCards, htmlElement, inkSvg, styledCards } from "../../selectors/garden";
+import {
+  currentCards,
+  htmlElement,
+  inkSvg,
+  profileHeading,
+  styledCards,
+} from "../../selectors/garden";
 import { delayResponse } from "../../fixtures/delay-response";
 import { settledCenterX } from "../../widgets/waits/settled-center-x";
 import { seenBefore } from "../../widgets/actions/seen-before";
@@ -95,7 +101,7 @@ test("初めての端末で開くと、墨の絵の後に色を差して門を�
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(html(page)).toHaveClass(/\bintro\b/);
   await expect(inkSvg(page)).toBeVisible();
-  await expect(heading(page)).toHaveCount(1);
+  await expect(profileHeading(page)).toHaveCount(1);
   await expect(html(page)).not.toHaveClass(/\bintro\b/);
   const states = await page.evaluate(() => (window as unknown as ClassLog).__classes);
   const at = (cls: string) => states.findIndex((s) => s.split(" ").includes(cls));

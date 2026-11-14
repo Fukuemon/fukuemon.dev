@@ -18,3 +18,7 @@ export const draggableCards = (page: Page) => page.locator("[data-garden-card][d
 
 /** イントロの墨の絵の SVG。SVG の文字列はハッシュのテストが固定しているので、testid を足さずに class で拾う */
 export const inkSvg = (page: Page) => page.locator(".ink-svg");
+
+/** プロフィールの h1。アクセシビリティツリーに h1 の役割で載ることを確かめるので、役割で拾う */
+export const profileHeading = (page: Page) =>
+  page.getByRole("heading", { level: 1, name: "プロフィール" });
