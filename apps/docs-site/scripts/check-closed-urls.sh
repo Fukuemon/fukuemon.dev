@@ -28,6 +28,14 @@ done
 
 code="$(grep -vE '^[[:space:]]*//' "$WRANGLER")"
 
+# route と routes は、apply を通らずに Access の無いホスト名を作るおそれがある。custom domain は Terraform の管轄 (ADR-0005)
+for key in route routes; do
+  if grep -qE "\"$key\"[[:space:]]*:" <<<"$code"; then
+    echo "wrangler.jsonc に $key があります（env の中も含む）。ホスト名は Terraform で作る。" >&2
+    status=1
+  fi
+done
+
 for key in workers_dev preview_urls; do
   if grep -qE "\"$key\"[[:space:]]*:[[:space:]]*true" <<<"$code"; then
     echo "wrangler.jsonc に $key が true の行があります（env の中も含む）。" >&2
