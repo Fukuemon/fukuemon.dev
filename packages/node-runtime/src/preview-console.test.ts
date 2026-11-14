@@ -92,6 +92,10 @@ describe("previewConsoleScript", () => {
     expect(logged).toStrictEqual([["error", "e"]]);
   });
 
+  it("埋める origin の < を逃がし、script 要素の中で切れないようにする", () => {
+    expect(previewConsoleScript("https://a.example</script>").includes("</script>")).toBe(false);
+  });
+
   it("ページのグローバルに名前を足さない", () => {
     const context = {
       window: { parent: { postMessage: () => undefined } },

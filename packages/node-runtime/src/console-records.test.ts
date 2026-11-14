@@ -95,6 +95,18 @@ describe("parseConsoleRecord", () => {
       record([{ kind: "error", name: "E", message: "", stack: Array(31).fill("at") }]),
     ],
     ["stack が配列でない", record([{ kind: "error", name: "E", message: "", stack: "at" }])],
+    ["数が空の文字", record([{ kind: "number", value: "" }])],
+    ["数が 16 進数の文字", record([{ kind: "number", value: "0x10" }])],
+    ["bigint が数字でない", record([{ kind: "bigint", value: "abc" }])],
+    [
+      "1 つの入れ子の要素が多すぎる",
+      record([{ kind: "array", items: Array(102).fill({ kind: "null" }) }]),
+    ],
+    ["穴のある配列", record([{ kind: "array", items: Object.assign([], { length: 3 }) }])],
+    [
+      "文字数の合計が多すぎる",
+      record(Array.from({ length: 60 }, () => ({ kind: "string", value: "x".repeat(10_000) }))),
+    ],
   ])("%sときは、記録を捨てる", (_, value) => {
     expect(parseConsoleRecord(value)).toBeUndefined();
   });

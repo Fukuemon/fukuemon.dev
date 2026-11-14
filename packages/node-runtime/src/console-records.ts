@@ -17,11 +17,14 @@ const MAX_RECORDS = 1000;
 /**
  * 1 件の記録の大きさの上限。訪問者のプログラムとプレビューのページも記録を出せるので、写す側（guest/console-value.cjs）の上限を超えた分を捨てる。
  * 深さは、写す側が中身を写さずに文字にした段を含める。値の数は、写す側の上限に、入れ子ごとに 1 つ足す残りの件数の印の分の余裕を足す。
- * 引数は、写す側の上限の 100 個に、残りの件数の印を 1 つ足した数まで受ける。
+ * 引数と 1 つの入れ子の要素は、写す側の上限の 100 個に、残りの件数の印を 1 つ足した数まで受ける。
+ * 文字数の合計は、写す側の上限の 256 K 字に、切った印と、写す側が数えない文字（数、項目の名前、残りの件数の印）の余裕を足す。
+ * プレビューのページの postMessage には大きさの上限が無いので、1 件の記録が持つ文字の全体を数える。
  */
 const MAX_DEPTH = 6;
 const MAX_NODES = 2100;
-const MAX_ARGS = 101;
+const MAX_ITEMS = 101;
+const MAX_CHARS = 512 * 1024;
 /** 時刻は、HTTP の記録と同じく、0 以上の安全な整数で、今より 1 日を超えて先でないものだけを受ける。 */
 const MAX_FUTURE_MS = 24 * 60 * 60 * 1000;
 const MAX_TEXT = 10_001;
@@ -45,23 +48,47 @@ const reject = (): never => {
   throw new Rejected();
 };
 
-const text = (value: unknown) => (isText(value) ? value : reject());
+type Budget = { nodes: number; chars: number };
 
-/** 値の木を読む。budget は、1 件の記録で読める値の残りの数である。 */
-function toValue(raw: unknown, depth: number, budget: { nodes: number }): ConsoleRecordValue {
+/** 1 件の記録で読める値の数と文字数の残り。 */
+const createBudget = (): Budget => ({ nodes: MAX_NODES, chars: MAX_CHARS });
+
+/**
+ * 配列の要素を、先頭から順に読む。長さを先に確かめ、穴は undefined として読む。
+ * map は穴で callback を呼ばないので、穴だけの長い配列を、値の数を減らさずに回してしまう。
+ */
+function each<T>(items: unknown, read: (item: unknown) => T): T[] {
+  if (!Array.isArray(items) || items.length > MAX_ITEMS) return reject();
+  const out: T[] = [];
+  for (let index = 0; index < items.length; index += 1) out.push(read(items[index]));
+  return out;
+}
+
+/** 値の木を読む。budget は、1 件の記録で読める値の数と文字数の残りである。 */
+function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValue {
   budget.nodes -= 1;
   if (budget.nodes < 0 || depth > MAX_DEPTH || !isObject(raw)) return reject();
+  const text = (value: unknown) => {
+    if (!isText(value)) return reject();
+    budget.chars -= value.length;
+    return budget.chars < 0 ? reject() : value;
+  };
   const next = (item: unknown) => toValue(item, depth + 1, budget);
-  const list = (items: unknown) =>
-    Array.isArray(items) ? items.map((item: unknown) => next(item)) : reject();
+  const list = (items: unknown) => each(items, next);
   switch (raw.kind) {
     case "string":
     case "text":
-    case "bigint":
       return { kind: raw.kind, value: text(raw.value) };
+    case "bigint": {
+      // 写す側は、長い bigint の末尾を「…」にする
+      const value = text(raw.value);
+      return /^-?\d+…?$/.test(value) ? { kind: "bigint", value } : reject();
+    }
     case "number": {
-      const value = Number(text(raw.value));
-      return raw.value === "NaN" || !Number.isNaN(value) ? { kind: "number", value } : reject();
+      // 写す側が String(数) で書いた文字だけを受ける。Number は、空の文字や 16 進数の文字も数にする
+      const source = text(raw.value);
+      const value = Number(source);
+      return source === "-0" || String(value) === source ? { kind: "number", value } : reject();
     }
     case "boolean":
       return typeof raw.value === "boolean" ? { kind: "boolean", value: raw.value } : reject();
@@ -77,11 +104,9 @@ function toValue(raw: unknown, depth: number, budget: { nodes: number }): Consol
     case "set":
       return { kind: raw.kind, items: list(raw.items) };
     case "object": {
-      const entries = Array.isArray(raw.entries)
-        ? raw.entries.map((entry: unknown) =>
-            isObject(entry) ? { key: text(entry.key), value: next(entry.value) } : reject(),
-          )
-        : reject();
+      const entries = each(raw.entries, (entry) =>
+        isObject(entry) ? { key: text(entry.key), value: next(entry.value) } : reject(),
+      );
       return {
         kind: "object",
         ...(raw.className !== undefined && { className: text(raw.className) }),
@@ -89,11 +114,9 @@ function toValue(raw: unknown, depth: number, budget: { nodes: number }): Consol
       };
     }
     case "map": {
-      const entries = Array.isArray(raw.entries)
-        ? raw.entries.map((entry: unknown) =>
-            isObject(entry) ? { key: next(entry.key), value: next(entry.value) } : reject(),
-          )
-        : reject();
+      const entries = each(raw.entries, (entry) =>
+        isObject(entry) ? { key: next(entry.key), value: next(entry.value) } : reject(),
+      );
       return { kind: "map", entries };
     }
     case "error": {
@@ -101,7 +124,7 @@ function toValue(raw: unknown, depth: number, budget: { nodes: number }): Consol
         raw.stack === undefined
           ? undefined
           : Array.isArray(raw.stack) && raw.stack.length <= MAX_STACK
-            ? raw.stack.map((line: unknown) => text(line))
+            ? each(raw.stack, text)
             : reject();
       return {
         kind: "error",
@@ -126,13 +149,13 @@ export function parseConsoleRecord(
     (value.time as number) < 0 ||
     (value.time as number) > Date.now() + MAX_FUTURE_MS ||
     !Array.isArray(value.args) ||
-    value.args.length > MAX_ARGS
+    value.args.length > MAX_ITEMS
   ) {
     return undefined;
   }
-  const budget = { nodes: MAX_NODES };
+  const budget = createBudget();
   try {
-    const args = value.args.map((arg: unknown) => toValue(arg, 0, budget));
+    const args = each(value.args, (arg) => toValue(arg, 0, budget));
     return { level: value.level, time: value.time as number, args };
   } catch (error) {
     if (error instanceof Rejected) return undefined;
