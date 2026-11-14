@@ -117,6 +117,23 @@ describe("写した値を、読む側が捨てない", () => {
     ["長い bigint", [10n ** 20_000n]],
     ["深い入れ子", [JSON.parse("[".repeat(20) + "]".repeat(20)) as unknown]],
     ["長い文字列の多い配列", [Array.from({ length: 100 }, () => "x".repeat(10_000))]],
+    [
+      "getter のプロパティの多いオブジェクトの配列",
+      [
+        Array.from({ length: 21 }, () =>
+          Object.defineProperties(
+            {},
+            Object.fromEntries(
+              Array.from({ length: 100 }, (_, i) => [`g${i}`, { enumerable: true, get: () => i }]),
+            ),
+          ),
+        ),
+      ],
+    ],
+    [
+      "文字数を使い切った後の bigint",
+      [...Array.from({ length: 27 }, () => "x".repeat(10_000)), 10n],
+    ],
   ])("%s", (_, args) => {
     expect(roundTrip(...args)).toBeDefined();
   });

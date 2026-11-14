@@ -80,9 +80,9 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
     case "text":
       return { kind: raw.kind, value: text(raw.value) };
     case "bigint": {
-      // 写す側は、長い bigint の末尾を「…」にする
+      // 写す側は、長い bigint の末尾を「…」にし、文字数を使い切った後は「…」だけにする
       const value = text(raw.value);
-      return /^-?\d+…?$/.test(value) ? { kind: "bigint", value } : reject();
+      return /^(-?\d+…?|…)$/.test(value) ? { kind: "bigint", value } : reject();
     }
     case "number": {
       // 写す側が String(数) で書いた文字だけを受ける。Number は、空の文字や 16 進数の文字も数にする

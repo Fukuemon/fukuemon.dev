@@ -122,12 +122,12 @@ function toConsoleValues(args, describe) {
       () => {
         const key = keys[index++];
         const descriptor = Object.getOwnPropertyDescriptor(value, key);
-        return {
-          key: cut(key),
-          // getter は動かさない。DevTools と同じく、読んでいないことを示す
-          value:
-            descriptor && "value" in descriptor ? walk(descriptor.value, depth + 1) : text("(...)"),
-        };
+        if (descriptor && "value" in descriptor) {
+          return { key: cut(key), value: walk(descriptor.value, depth + 1) };
+        }
+        // getter は動かさない。DevTools と同じく、読んでいないことを示す。読む側は印も値の 1 つと数える
+        budget.nodes -= 1;
+        return { key: cut(key), value: text("(...)") };
       },
       (count) => ({ key: ELLIPSIS, value: rest(count) }),
     );
