@@ -1,5 +1,5 @@
 import { composeStories } from "@storybook/react-vite";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser/context";
 import { useState } from "react";
@@ -9,6 +9,10 @@ import { FileTree } from "./FileTree";
 import * as stories from "./FileTree.stories";
 
 const { Default, NoSelection, ReadOnly, Empty, Pending } = composeStories(stories);
+
+/** 50 ミリ秒後に決まる Promise。呼ぶ側が実行環境に問い合わせる間を表す。 */
+const delayed = <T,>(value: T, ms = 50) =>
+  new Promise<T>((resolve) => window.setTimeout(() => resolve(value), ms));
 
 /** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
 function DelayedSelectTree() {
@@ -511,6 +515,93 @@ describe("FileTree", () => {
     await userEvent.keyboard("a\\b.go");
     await userEvent.click(document.body);
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("呼ぶ側が Promise で名前を断ると、欄を開いたまま理由を出す", async () => {
+    const onCreate = vi.fn(async () => ({ error: "taken.js は既にあります。" }));
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("taken.js{Enter}");
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    await waitFor(() => expect(field).toHaveAccessibleDescription("taken.js は既にあります。"));
+  });
+
+  it("Promise で断られた後に名前を直して Enter を押すと、確定して欄を閉じる", async () => {
+    const onCreate = vi.fn(async (name: string) =>
+      name === "taken.js" ? { error: "taken.js は既にあります。" } : { id: name },
+    );
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("taken.js{Enter}");
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    await waitFor(() => expect(field).toHaveAccessibleDescription("taken.js は既にあります。"));
+    await userEvent.clear(field);
+    await userEvent.keyboard("new.js{Enter}");
+    await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
+  });
+
+  it("呼ぶ側の Promise が失敗したときは、欄を開いたまま理由を出す", async () => {
+    const onCreate = vi.fn(() => Promise.reject(new Error("failed")));
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}");
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    await waitFor(() =>
+      expect(field).toHaveAccessibleDescription(
+        "名前を確認できませんでした。もう一度試してください。",
+      ),
+    );
+  });
+
+  it("呼ぶ側が決めるまで、Enter を重ねても 1 回だけ呼ぶ", async () => {
+    const onCreate = vi.fn(() => delayed({ id: "a.js" }));
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}{Enter}");
+    expect(onCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("呼ぶ側が決めるまで、Esc を押しても欄を閉じない", async () => {
+    const onCreate = vi.fn(() => delayed({ id: "a.js" }));
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}{Escape}");
+    expect(screen.getByRole("textbox", { name: "新しいファイルの名前" })).toBeVisible();
+  });
+
+  it("呼ぶ側が決めるまで、別の欄を開くボタンを押しても欄を増やさない", async () => {
+    const onCreate = vi.fn(() => delayed({ id: "a.js" }, 1000));
+    render(
+      <FileTree
+        items={[]}
+        onCreate={onCreate}
+        onCreateDirectory={() => ({ id: "d" })}
+        onSelect={() => undefined}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: "新しいディレクトリ" }));
+    expect(screen.queryByRole("textbox", { name: "新しいディレクトリの名前" })).toBeNull();
+  });
+
+  it("待つ間にフォーカスが外れ、呼ぶ側が断ったときは、欄をやめる", async () => {
+    const onCreate = vi.fn(() => delayed({ error: "taken.js は既にあります。" }));
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("taken.js{Enter}");
+    await userEvent.click(document.body);
+    await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
+  });
+
+  it("待つ間にフォーカスが外れても、呼ぶ側が受け入れたときは、確定する", async () => {
+    const onCreate = vi.fn(() => delayed({ id: "a.js" }));
+    render(<FileTree items={[]} onCreate={onCreate} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a.js{Enter}");
+    await userEvent.click(document.body);
+    await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
+    expect(onCreate).toHaveBeenCalledTimes(1);
   });
 
   it("選んでいない項目の名前を変え、呼ぶ側が選ぶ項目を変えなくても、新しい行が出たらその行へフォーカスが移る", async () => {

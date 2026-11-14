@@ -50,6 +50,8 @@ export function projectEntries(files: Readonly<Record<string, string>>): FileEnt
   ];
 }
 
+const existsMessage = (path: string) => `${path} は既にあります。別の名前にしてください。`;
+
 /**
  * 新しい項目と、名前を変えた項目の名前を確かめ、使えないときは理由の文を返す。
  * 同じパスの項目があるときは、上書きしない。`/` を含む名前と、`.` と `..` は、ほかのディレクトリを指すので断る。
@@ -58,11 +60,32 @@ export function projectEntries(files: Readonly<Record<string, string>>): FileEnt
 export function nameError(
   name: string,
   path: string,
-  existing: ReadonlySet<string>,
+  existing: { has: (path: string) => boolean },
 ): string | undefined {
+  if (name.trim() === "") return "名前を入れてください。";
   if (name.includes("/") || name === "." || name === "..") {
     return "名前に / を含めることと、. と .. だけの名前にすることはできません。";
   }
-  if (existing.has(path)) return `${path} は既にあります。別の名前にしてください。`;
+  if (existing.has(path)) return existsMessage(path);
+  return undefined;
+}
+
+/**
+ * nameError で断らない名前を、実行環境のファイルシステムでも確かめ、同じパスがあるときは理由の文を返す。
+ * ツリーに出さない node_modules のパッケージの中身は、ツリーの一覧では見えないので、ここで確かめる。確かめられないときは、確定せずに理由を返す。
+ */
+export async function nameErrorInRuntime(
+  name: string,
+  path: string,
+  existing: { has: (path: string) => boolean },
+  exists: (path: string) => Promise<boolean>,
+): Promise<string | undefined> {
+  const invalid = nameError(name, path, existing);
+  if (invalid !== undefined) return invalid;
+  try {
+    if (await exists(path)) return existsMessage(path);
+  } catch {
+    return `${path} が既にあるかを確認できませんでした。もう一度試してください。`;
+  }
   return undefined;
 }
