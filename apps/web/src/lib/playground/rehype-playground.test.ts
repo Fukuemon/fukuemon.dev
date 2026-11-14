@@ -4,6 +4,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import type { Element, Root } from "hast";
 import type { PlaygroundProject, PlaygroundTool } from "@fukuemon/playground-project";
+import { buttonClassName } from "@fukuemon/ui/button-class-name";
 import { isNodeEmbed, rehypePlayground } from "./rehype-playground";
 
 const ORIGIN = "https://play.example";
@@ -54,7 +55,13 @@ const embed = (tool: PlaygroundTool, title: string, name: string): Element => ({
     {
       type: "element",
       tagName: "button",
-      properties: { type: "button", className: ["playground-embed-open"] },
+      properties: {
+        type: "button",
+        className: [
+          ...buttonClassName({ variant: "secondary", size: "M" }).split(" "),
+          "playground-embed-open",
+        ],
+      },
       children: [{ type: "text", value: `${title}を開きます` }],
     },
   ],

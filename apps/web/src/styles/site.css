@@ -67,10 +67,6 @@
   .prose :where(.playground-embed:has(> iframe)) {
     @apply block p-0;
   }
-  /* packages/ui の Button の secondary、M と同じ見た目にする。本文は React を配らないので、クラスで写す */
-  .prose :where(.playground-embed-open) {
-    @apply relative inline-flex h-12 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-control bg-surface px-5 text-label text-primary ring-1 ring-border-field ring-inset ink-press focus-visible:focus-ring active:brightness-90;
-  }
   .prose :where(.playground-embed-frame) {
     @apply block h-160 w-full;
   }

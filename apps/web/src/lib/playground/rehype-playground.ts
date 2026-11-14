@@ -5,10 +5,14 @@ import {
   isEmbedName,
   toEmbedId,
 } from "@fukuemon/playground-project";
+import { buttonClassName } from "@fukuemon/ui/button-class-name";
 import { fromHtml } from "hast-util-from-html";
 import { PLAYGROUND_LANG, embedUrl, projectDir, readProject } from "./project";
 import { replaceFences } from "../rehype-fence";
 import { PLAYGROUND_ORIGIN } from "./origin";
+
+// 本文は React を配らないので、Button と同じクラスを素の <button> に付ける
+const OPEN_BUTTON_CLASS = buttonClassName({ variant: "secondary", size: "M" }).split(" ");
 
 const TOOL_NAME: Record<PlaygroundTool, string> = {
   node: "Node の実行環境",
@@ -91,7 +95,7 @@ function embedElement(tool: PlaygroundTool, src: string): Element {
       {
         type: "element",
         tagName: "button",
-        properties: { type: "button", className: ["playground-embed-open"] },
+        properties: { type: "button", className: [...OPEN_BUTTON_CLASS, "playground-embed-open"] },
         children: [{ type: "text", value: `${title}を開きます` }],
       },
     ],
