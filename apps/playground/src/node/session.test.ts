@@ -23,6 +23,7 @@ import {
   createNodeSessionOpener,
 } from "./session";
 import type { NodeRecord } from "./record-saver";
+import { SQL_PANE_QUERY } from "./messages";
 import { SAVE_LIMIT } from "./save-rules";
 
 const project: NodeProject = {
@@ -140,7 +141,10 @@ function fakeWorkspace() {
 
 function setup(
   saved: WorkspaceLoad<NodeRecord> = { kind: "empty" },
-  { installExit = 0 as number | Promise<number> } = {},
+  {
+    installExit = 0 as number | Promise<number>,
+    database = false,
+  }: { installExit?: number | Promise<number>; database?: boolean } = {},
 ) {
   const runtimes: Fake[] = [];
   const booted: BootOptions["files"][] = [];
@@ -152,7 +156,7 @@ function setup(
   });
   const { workspace, saves } = fakeWorkspace();
   const session = createNodeSession({
-    project,
+    project: database ? { ...project, database: true } : project,
     saved,
     storage: workspace,
     embedId: "oauth/demo",
@@ -251,6 +255,30 @@ describe("起動", () => {
       booted: [project.files],
       canSave: false,
     });
+  });
+
+  it.each([
+    [
+      "初期データの SQL があるときは、DB のプロセスと初期データの SQL",
+      { database: true, initialSql: "create table t ();" },
+      { database: true, initialSql: "create table t ();" },
+    ],
+    ["初期データの SQL が無いときは、DB のプロセスだけ", { database: true }, { database: true }],
+  ])("DB を使うプロジェクトでは、%sを起動に渡す", async (_, extra, expected) => {
+    const { workspace } = fakeWorkspace();
+    const boot = vi.fn(async ({ files }: BootOptions) => fakeRuntime(files, 0).runtime);
+    const session = createNodeSession({
+      project: { ...project, ...extra },
+      saved: { kind: "saved", record: savedRecord },
+      storage: workspace,
+      boot,
+    });
+    await settle(session);
+    await session.restart();
+    expect(boot.mock.calls).toStrictEqual([
+      [{ files: savedRecord.files, ...expected }],
+      [{ files: savedRecord.files, ...expected }],
+    ]);
   });
 
   it.each([
@@ -356,6 +384,169 @@ describe("起動", () => {
       kind: "unavailable",
       reason: "not-isolated",
     });
+  });
+});
+
+describe("SQL のペインの入力欄の保存", () => {
+  const withDatabase = { database: true };
+
+  it("DB を使うプロジェクトでは、入力欄の SQL を替えると、待ってからファイルと SQL を 1 件で保存する", async () => {
+    const { session, saves } = setup({ kind: "empty" }, withDatabase);
+    await settle(session);
+    session.setSqlQuery("select 2;");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS - 1);
+    const before = saves.length;
+    await vi.advanceTimersByTimeAsync(1);
+    expect({ before, saves, hasSaved: session.hasSaved.getSnapshot() }).toStrictEqual({
+      before: 0,
+      saves: [{ files: project.files, version: "v1", savedAt: 9, sql: "select 2;" }],
+      hasSaved: true,
+    });
+  });
+
+  it("ファイルも SQL も前に保存したものと同じときは、保存しない", async () => {
+    const { session, saves, latest } = setup({ kind: "empty" }, withDatabase);
+    await settle(session);
+    session.setSqlQuery("select 2;");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    latest().change("index.js");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.length).toBe(1);
+  });
+
+  it("DB を使わないプロジェクトでは、レコードに SQL を入れない", async () => {
+    const { session, saves, visitor, latest } = setup();
+    await settle(session);
+    await (await visitor()).files.write("index.js", "c");
+    latest().change("index.js");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((saved) => "sql" in saved)).toStrictEqual([false]);
+  });
+
+  it.each([
+    ["SQL を持つ", { ...savedRecord, sql: "select 3;" }, "select 3;"],
+    [
+      "ちょうど 1 MB の SQL を持つ",
+      { ...savedRecord, sql: "x".repeat(1_048_576) },
+      "x".repeat(1_048_576),
+    ],
+    ["SQL を持たない", savedRecord, SQL_PANE_QUERY],
+    ["文字列でない SQL を持つ", { ...savedRecord, sql: 1 }, SQL_PANE_QUERY],
+    ["1 MB を超える SQL を持つ", { ...savedRecord, sql: "x".repeat(1_048_577) }, SQL_PANE_QUERY],
+    [
+      "文字数は 1 MB より少ないが、UTF-8 で 1 MB を超える SQL を持つ",
+      { ...savedRecord, sql: "あ".repeat(349_526) },
+      SQL_PANE_QUERY,
+    ],
+  ])(
+    "保存したレコードが %s ときは、保存したファイルで起動し、入力欄を使える SQL か最初の SQL で始め、書き直さない",
+    async (_, record, query) => {
+      const { session, booted, saves } = setup(
+        { kind: "saved", record: record as NodeRecord },
+        withDatabase,
+      );
+      await settle(session);
+      expect({ booted, query: session.sqlQuery.getSnapshot(), saves }).toStrictEqual({
+        booted: [savedRecord.files],
+        query,
+        saves: [],
+      });
+    },
+  );
+
+  it.each([
+    ["SQL を持つ", { ...savedRecord, sql: "select 3;" }],
+    ["SQL を持たない", savedRecord],
+  ])(
+    "保存したレコードが %s ときは、同じ中身のファイルの通知だけでは保存しない",
+    async (_, record) => {
+      const { session, saves, latest } = setup({ kind: "saved", record }, withDatabase);
+      await settle(session);
+      latest().change("index.js");
+      await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+      expect(saves).toStrictEqual([]);
+    },
+  );
+
+  it("保存したレコードがあるときも、ファイルを変えずに SQL だけを替えると、1 件保存する", async () => {
+    const { session, saves } = setup(
+      { kind: "saved", record: { ...savedRecord, sql: "select 3;" } },
+      withDatabase,
+    );
+    await settle(session);
+    session.setSqlQuery("select 5;");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves).toStrictEqual([
+      { files: savedRecord.files, version: "v1", savedAt: 9, sql: "select 5;" },
+    ]);
+  });
+
+  it("起動し直している間に替えた SQL も、起動した後に保存する", async () => {
+    const { session, saves, runtimes } = setup(
+      { kind: "saved", record: savedRecord },
+      withDatabase,
+    );
+    await settle(session);
+    let release: () => void = () => undefined;
+    vi.mocked(runtimes[0]!.runtime.dispose).mockReturnValueOnce(
+      new Promise<void>((resolve) => (release = resolve)),
+    );
+    const restarting = session.restart();
+    await vi.advanceTimersByTimeAsync(0);
+    session.setSqlQuery("select 6;");
+    release();
+    await restarting;
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((saved) => saved.sql)).toStrictEqual(["select 6;"]);
+  });
+
+  it("作業ディレクトリが保存の上限を超えている間は、SQL も保存しない", async () => {
+    const { session, saves, latest } = setup({ kind: "empty" }, withDatabase);
+    await settle(session);
+    latest().readAll.mockRejectedValueOnce(new ReadLimitError());
+    session.setSqlQuery("select 2;");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect({ saves, overLimit: session.overLimit.getSnapshot() }).toStrictEqual({
+      saves: [],
+      overLimit: true,
+    });
+  });
+
+  it("起動し直すときは入力欄の SQL を残し、初期の状態に戻すと最初の SQL に戻す", async () => {
+    const { session } = setup(
+      { kind: "saved", record: { ...savedRecord, sql: "select 3;" } },
+      withDatabase,
+    );
+    await settle(session);
+    session.setSqlQuery("select 4;");
+    await session.restart();
+    const afterRestart = session.sqlQuery.getSnapshot();
+    await session.reset();
+    expect([afterRestart, session.sqlQuery.getSnapshot()]).toStrictEqual([
+      "select 4;",
+      SQL_PANE_QUERY,
+    ]);
+  });
+
+  it("初期の状態に戻せなかったときは、入力欄の SQL を残す", async () => {
+    const { session, workspace } = setup({ kind: "saved", record: savedRecord }, withDatabase);
+    await settle(session);
+    session.setSqlQuery("select 4;");
+    vi.mocked(workspace.clear).mockRejectedValueOnce(new Error("消せない"));
+    const error = await session.reset().catch((cause: unknown) => (cause as Error).message);
+    expect({ error, query: session.sqlQuery.getSnapshot() }).toStrictEqual({
+      error: "消せない",
+      query: "select 4;",
+    });
+  });
+
+  it("同じ SQL を渡したときは、操作とみなさず、保存を予約しない", async () => {
+    const { session, saves, latest } = setup({ kind: "empty" }, withDatabase);
+    await settle(session);
+    session.setSqlQuery(SQL_PANE_QUERY);
+    latest().change("package-lock.json", "{}");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves).toStrictEqual([]);
   });
 });
 

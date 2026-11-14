@@ -1,5 +1,8 @@
 import type { PlaygroundTool } from "../project/project";
 
+/** 保存するレコードに共通の、初期ファイルのバージョンと保存した時刻。 */
+export type RecordStamp = { version: string; savedAt: number };
+
 /** 保存したレコードの読み込みの結果。IndexedDB を読めないときは unavailable である。 */
 export type WorkspaceLoad<T> =
   | { kind: "empty" }

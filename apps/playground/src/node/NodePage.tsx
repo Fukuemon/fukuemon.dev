@@ -8,9 +8,18 @@ import {
   PageLoading,
   PreviewFrame,
   SplitPane,
+  Tabs,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { type ReactNode, Suspense, use, useReducer, useSyncExternalStore } from "react";
+import {
+  Activity,
+  type ReactNode,
+  Suspense,
+  use,
+  useReducer,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
@@ -23,6 +32,7 @@ import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
 import { type NodeSession, createNodeSessionOpener } from "./session";
+import { SqlPane } from "./SqlPane";
 import { TerminalPane } from "./TerminalPane";
 import { Toolbar } from "./Toolbar";
 
@@ -57,6 +67,61 @@ function Pane({
       >
         <Suspense fallback={fallback}>{children}</Suspense>
       </div>
+    </div>
+  );
+}
+
+/** 右の列のタブ。選んでいないタブのペインは Activity で隠し、SQL の入力欄と結果を残す。 */
+type RightTab = "preview" | "sql";
+
+/**
+ * 右の列。DB を使うプロジェクトでは、プレビューと SQL のペインをタブで切り替える。
+ * どちらのペインも列の高さを全て使い、SQL の入力欄と結果を同時に見られるようにする。
+ */
+function PreviewColumn({ database }: { database: boolean }) {
+  const [tab, setTab] = useState<RightTab>("preview");
+  const preview = (
+    <Pane
+      fallback={
+        <PreviewFrame state={pendingState} url="">
+          {null}
+        </PreviewFrame>
+      }
+    >
+      <PreviewPane />
+    </Pane>
+  );
+  if (!database) return preview;
+  // Tabs は選んだタブの中身だけを描くので、どのタブにも同じ中身を渡し、中で Activity で切り替える
+  const content = (
+    <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
+      <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
+      <Activity mode={tab === "sql" ? "visible" : "hidden"}>
+        <Pane
+          fallback={
+            <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
+              {() => null}
+            </EditorFrame>
+          }
+        >
+          <SqlPane />
+        </Pane>
+      </Activity>
+    </div>
+  );
+  return (
+    <div className="flex size-full min-h-0 flex-col">
+      <Tabs
+        density="compact"
+        items={[
+          { id: "preview", label: "プレビュー", content },
+          { id: "sql", label: "SQL", content },
+        ]}
+        label="プレビューと SQL"
+        onSelect={(id) => setTab(id as RightTab)}
+        panel="flush"
+        selectedId={tab}
+      />
     </div>
   );
 }
@@ -98,7 +163,16 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   return (
-    <RuntimeContext value={{ project, runtime }}>
+    <RuntimeContext
+      value={{
+        project,
+        runtime,
+        restart: session.restart,
+        busy: session.busy,
+        sqlQuery: session.sqlQuery,
+        setSqlQuery: session.setSqlQuery,
+      }}
+    >
       <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
@@ -135,17 +209,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
                         <EditorPane />
                       </Pane>
                     }
-                    secondary={
-                      <Pane
-                        fallback={
-                          <PreviewFrame state={pendingState} url="">
-                            {null}
-                          </PreviewFrame>
-                        }
-                      >
-                        <PreviewPane />
-                      </Pane>
-                    }
+                    secondary={<PreviewColumn database={project.database === true} />}
                   />
                 }
                 secondary={

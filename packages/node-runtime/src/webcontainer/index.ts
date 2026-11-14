@@ -1,3 +1,5 @@
+// oxlint-disable-next-line typescript/triple-slash-reference -- このファイルを import する apps/playground の tsc にも、?bundle の型を読ませる
+/// <reference path="./guest-modules.d.ts" />
 import { WebContainer, type WebContainerProcess } from "@webcontainer/api";
 
 import {
@@ -7,8 +9,14 @@ import {
   type DirectoryItem,
   type RuntimeBackend,
 } from "../backend";
-import type { OpenPort, TerminalSize } from "../types";
+import dbPackageSource from "../guest/db-package.json?raw";
+import { DB_SERVER_FILE } from "../guest/db-protocol";
+// oxlint-disable-next-line import/default -- vite.ts の guestBundle が、束ねた文字列を default で返す
+import dbServerSource from "../guest/db-server.ts?bundle";
 import httpTraceSource from "../guest/http-trace.cjs?raw";
+import keepAliveSource from "../guest/keep-alive.cjs?raw";
+import type { OpenPort, TerminalSize } from "../types";
+import { spawnOptions, visitorEnv } from "./env";
 import { toBackendError } from "./errors";
 import { toTree } from "./tree";
 
@@ -16,15 +24,15 @@ import { toTree } from "./tree";
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
 const HTTP_TRACE_FILE = `${RUNTIME_DIRECTORY}/http-trace.cjs`;
+// DB のプロセスのスクリプトと、npm install で入れる依存を置く
+const DB_DIRECTORY = `${RUNTIME_DIRECTORY}/db`;
+const KEEP_ALIVE_FILE = `${DB_DIRECTORY}/keep-alive.cjs`;
 
 // プレビューは WebContainers が割り当てる別の origin で開くので、同じ origin の権限を渡しても、このページには届かない
 const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-modals allow-popups";
 const PREVIEW_ALLOW = "cross-origin-isolated";
 
 const DEFAULT_TERMINAL: TerminalSize = { cols: 80, rows: 24 };
-
-// 実行環境が自分で起動するプロセス（writeOutside の node）には渡さない
-const env = { PLAYGROUND_PORTS_FILE: PORTS_FILE, NODE_OPTIONS: `--require ${HTTP_TRACE_FILE}` };
 
 function toBackendProcess(process: WebContainerProcess): BackendProcess {
   const listeners = new Set<(chunk: string) => void>();
@@ -154,30 +162,38 @@ function createPorts(container: WebContainer) {
 /** WebContainers で動く実行環境。WebContainers を import するのは、このファイルだけである (apps/playground/DesignDoc.md)。 */
 export const webContainerBackend: RuntimeBackend = {
   isSupported: () => globalThis.crossOriginIsolated === true,
-  boot: async ({ files }): Promise<BackendInstance> => {
+  boot: async ({ files, database }): Promise<BackendInstance> => {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
       await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
+      if (database) {
+        await Promise.all([
+          writeOutside(container, KEEP_ALIVE_FILE, keepAliveSource),
+          writeOutside(container, `${DB_DIRECTORY}/package.json`, dbPackageSource),
+          writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource),
+        ]);
+      }
+      const env = visitorEnv({
+        database,
+        portsFile: PORTS_FILE,
+        httpTraceFile: HTTP_TRACE_FILE,
+        keepAliveFile: KEEP_ALIVE_FILE,
+      });
       const ports = createPorts(container);
       await ports.ready();
       return {
         files: createBackendFiles(container),
         spawn: async (command, args, options = {}) =>
           toBackendProcess(
-            await container.spawn(command, [...args], {
-              env,
-              terminal: options.terminal ?? DEFAULT_TERMINAL,
-            }),
+            await container.spawn(command, [...args], spawnOptions(options, env, DEFAULT_TERMINAL)),
           ),
         spawnShell: async (options = {}) =>
           toBackendProcess(
-            await container.spawn("jsh", [], {
-              env,
-              terminal: options.terminal ?? DEFAULT_TERMINAL,
-            }),
+            await container.spawn("jsh", [], spawnOptions(options, env, DEFAULT_TERMINAL)),
           ),
         ports: ports.ports,
+        guestDirectory: DB_DIRECTORY,
         teardown: async () => {
           ports.dispose();
           container.teardown();

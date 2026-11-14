@@ -85,6 +85,13 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - プロジェクトは、記事の Markdown があるディレクトリの `playground/<埋め込みの名前>/` に置く。`playground.json` と初期ファイルを置く。形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#プロジェクト) にある。
   - プロジェクトのディレクトリの全てのファイルが、公開の JSON に入る。ドットで始まるファイルとディレクトリ（`.env` など）を置くと、ビルドが失敗する。初期ファイルは、UTF-8 の文字列にする。
   - 埋め込みの名前は、英小文字、数字、ハイフンで書き、1 本の記事の中で重複させない。
+  - Node のコードから DB に接続する記事は、`playground.json` に `"database": true` を書き、初期データの SQL のファイルのパスを `initialSql` に書く。
+    `package.json` の依存に `pg` を書く。
+  - DB に接続するコードは、接続先を書かずに `new Pool()` と書くか、`new Pool({ connectionString: process.env.DATABASE_URL })` と書く。
+    実行環境が、接続先を環境変数（`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`）で渡す。
+    `host: "localhost"` と `port: 5432` では接続できない。
+    実行環境は、TCP で待ち受けないためである。
+  - ADR-0053: [Node のコードから DB に接続する記事](../docs/adr/0053-pglite-database-in-playground.md#2-node-のコードから-db-に接続する記事)
   - Node の実行環境を埋め込む記事には、別の origin の画像と埋め込み（`img`、`iframe`、`video` など）を置かない。SQL と Go のツールも置かない。
     記事には `COEP: require-corp` を返すので、ブラウザがそれらを読み込まないためである。置くと、ビルドが失敗する。
   - ADR-0034: [記事への埋め込み](../docs/adr/0034-playground-origin-and-embedding.md#3-記事への埋め込み)
@@ -257,9 +264,16 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - テストは、色を混ぜる式を、色の値で確認する。
 - 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
   - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
-- Oxlint の `import/default` は、`?worker&url` の import の 1 行だけで抑制する。
-  - 対象は `apps/web/src/features/top-garden/stage/TopStageScript.astro` である。
-  - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+- Oxlint の `import/default` は、次の 2 か所の import の 1 行だけで抑制する。
+  - `apps/web/src/features/top-garden/stage/TopStageScript.astro` の `?worker&url` の import。
+    Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+  - `packages/node-runtime/src/webcontainer/index.ts` の `?bundle` の import。
+    `packages/node-runtime/vite.ts` の plugin が、束ねたスクリプトを文字列の default で返す。Oxlint は、この接尾辞を解決できない。
+- Oxlint の `typescript/triple-slash-reference` は、`packages/node-runtime/src/webcontainer/index.ts` の 1 行だけで抑制する。
+  `?bundle` の型の宣言を、このファイルを import する `apps/playground` の tsc にも読ませるためである。
+- Oxlint の `typescript/unbound-method` は、preload で Node の関数をラップする行だけで抑制する。
+  - 対象は、実行環境の中の Node が読む `packages/node-runtime/src/guest/` の `.cjs` である。
+  - ラップした関数から、元の関数を、`this` を指定して呼ぶためである。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 

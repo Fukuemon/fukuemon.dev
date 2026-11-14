@@ -29,6 +29,14 @@ import * as Stories from "./EditorFrame.stories";
 
 <Canvas of={Stories.Empty} />
 
+### 低い枠
+
+`minBodyHeight` に `none` を渡すと、エンジンを置く領域に最小の高さ（192px）を付けず、枠を置く側が決めた高さに合わせる。  
+入力欄を低くして、結果の欄と縦に並べるときに使う。  
+例は、高さ 160px の枠である。
+
+<Canvas of={Stories.Short} />
+
 ### 起動を待つ空
 
 `state` に `pending` を渡すと、題だけを出し、ファイルのタブ、コード、下の状態の帯を出さない。  

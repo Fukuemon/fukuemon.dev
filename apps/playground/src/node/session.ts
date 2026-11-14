@@ -11,7 +11,7 @@ import {
 
 import { type ProjectLoad, isEmbedId } from "../project/project";
 import { type Workspace, type WorkspaceLoad, createWorkspace } from "../workspace/workspace";
-import { shellName } from "./messages";
+import { SQL_PANE_QUERY, shellName } from "./messages";
 import { type NodeRecord, type SaveRead, createRecordSaver, readSavedRecord } from "./record-saver";
 import { RESTART_READ, SAVE_READ, isExcludedFromSave, filesForRestart } from "./save-rules";
 import { createStore } from "./store";
@@ -22,6 +22,16 @@ export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["proj
 export type RuntimeResult =
   | { kind: "running"; runtime: NodeRuntime }
   | { kind: "unavailable"; reason: BootFailureReason };
+
+/** DB を使うプロジェクトのときだけ、DB のプロセスと初期データの SQL を渡す。 */
+const bootOptions = (project: NodeProject, files: Readonly<Record<string, string>>): BootOptions =>
+  project.database === true
+    ? {
+        files,
+        database: true,
+        ...(project.initialSql !== undefined && { initialSql: project.initialSql }),
+      }
+    : { files };
 
 /** 変更の通知を受けてから、作業ディレクトリを読むまでの時間（ms）。待つ間に来た通知は、1 回の保存にまとめる。 */
 export const SAVE_DELAY_MS = 500;
@@ -62,6 +72,10 @@ export type NodeSession = {
   commandFailed: Store<boolean>;
   /** 起動し直すか、初期の状態に戻している間は true である。 */
   busy: Store<boolean>;
+  /** SQL のペインの入力欄の SQL。起動し直すときは残し、初期の状態に戻すと最初の SQL に戻る。 */
+  sqlQuery: Store<string>;
+  /** SQL のペインの入力欄の SQL を替える。訪問者の操作とみなして保存を予約する。レコードに SQL を入れるのは、DB を使うプロジェクトだけである。 */
+  setSqlQuery: (sql: string) => void;
   /** npm install の後に、起動のコマンドを実行する。前に実行した起動のコマンドが動いていれば、止めてから実行する。 */
   run: () => Promise<void>;
   /** 作業ディレクトリのファイルを読んでから、実行環境を起動し直す。起動のコマンドは実行しない。 */
@@ -91,6 +105,8 @@ type Instance = {
   /** 訪問者が、この実行環境を操作したか。操作する前の変更は保存しない。 */
   touched: boolean;
   stopSaving: () => void;
+  /** 変更の通知を受けたときと同じく、待ってから作業ディレクトリを読んで保存する。 */
+  requestSave: () => void;
 };
 
 export function createNodeSession({
@@ -110,6 +126,7 @@ export function createNodeSession({
   const busy = createStore(false);
   const commandFailed = createStore(false);
   const restartReadFailed = createStore(false);
+  const sqlQuery = createStore(record?.sql ?? SQL_PANE_QUERY);
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
   const recordSaver = createRecordSaver({
@@ -119,6 +136,7 @@ export function createNodeSession({
     canSave,
     projectVersion: project.version,
     now,
+    ...(project.database === true && { sql: sqlQuery.getSnapshot }),
   });
   const { persist, rewriteIfUnsaved } = recordSaver;
 
@@ -174,24 +192,31 @@ export function createNodeSession({
         reading = false;
       }
     };
+    // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
+    const schedule = () => {
+      if (stopped || !instance.touched) return;
+      const at = Date.now();
+      firstChange ??= at;
+      clearTimeout(timer);
+      const wait = Math.min(SAVE_DELAY_MS, firstChange + SAVE_MAX_DELAY_MS - at);
+      timer = setTimeout(() => void save(), Math.max(0, wait));
+    };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
       if (!instance.touched) return;
       if (paths.every(isExcludedFromSave)) {
         rewriteIfUnsaved();
         return;
       }
-      // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
-      const at = Date.now();
-      firstChange ??= at;
-      clearTimeout(timer);
-      const wait = Math.min(SAVE_DELAY_MS, firstChange + SAVE_MAX_DELAY_MS - at);
-      timer = setTimeout(() => void save(), Math.max(0, wait));
+      schedule();
     });
     if (saveNow) void save();
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      unsubscribe();
+    return {
+      stop: () => {
+        stopped = true;
+        clearTimeout(timer);
+        unsubscribe();
+      },
+      request: schedule,
     };
   };
 
@@ -273,6 +298,7 @@ export function createNodeSession({
   };
 
   let current: Instance;
+  let sqlChangedWhileRelaunching = false;
 
   const launch = (
     files: Readonly<Record<string, string>>,
@@ -285,13 +311,22 @@ export function createNodeSession({
       commandQueue: Promise.resolve(),
       touched,
       stopSaving: () => undefined,
+      requestSave: () => undefined,
     };
     current = instance;
     return (async (): Promise<RuntimeResult> => {
       try {
-        const runtime = await boot({ files });
+        const runtime = await boot(bootOptions(project, files));
         instance.runtime = runtime;
-        instance.stopSaving = watchForSave(instance, runtime);
+        const watcher = watchForSave(instance, runtime);
+        instance.stopSaving = watcher.stop;
+        instance.requestSave = watcher.request;
+        // 起動し直す間に替えた SQL は、前の実行環境の保存が止まっていて保存できていないので、起動した後に保存する
+        if (sqlChangedWhileRelaunching) {
+          sqlChangedWhileRelaunching = false;
+          instance.touched = true;
+          watcher.request();
+        }
         void startup(runtime)
           .then(async (code) => {
             installed(code);
@@ -376,7 +411,11 @@ export function createNodeSession({
     } catch (error) {
       // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
       // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
-      if (old.runtime) old.stopSaving = watchForSave(old, old.runtime, { saveNow: old.touched });
+      if (old.runtime) {
+        const watcher = watchForSave(old, old.runtime, { saveNow: old.touched });
+        old.stopSaving = watcher.stop;
+        old.requestSave = watcher.request;
+      }
       throw error;
     }
   };
@@ -385,6 +424,9 @@ export function createNodeSession({
     lastRead = undefined;
     versionChanged.set(false);
     restartReadFailed.set(false);
+    sqlQuery.set(SQL_PANE_QUERY);
+    // 戻す前に替えた SQL は、最初の SQL で上書きしたので保存しない
+    sqlChangedWhileRelaunching = false;
     return { files: project.files, touched: false };
   };
 
@@ -399,6 +441,14 @@ export function createNodeSession({
     versionChanged,
     busy,
     commandFailed,
+    sqlQuery,
+    setSqlQuery: (sql) => {
+      if (sql === sqlQuery.getSnapshot()) return;
+      sqlQuery.set(sql);
+      current.touched = true;
+      if (busy.getSnapshot()) sqlChangedWhileRelaunching = true;
+      current.requestSave();
+    },
     run: async () => {
       // 起動の途中に押したときは、起動を待ってから実行する
       await runtimeStore.getSnapshot();

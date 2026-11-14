@@ -10,7 +10,7 @@ import {
 
 import type { Store } from "@fukuemon/node-runtime";
 
-import { overLimitMessage } from "./messages";
+import { overLimitMessage, resetConfirmMessage } from "./messages";
 import type { NodeSession } from "./session";
 
 const useStore = <T,>(store: Store<T>) => useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -106,7 +106,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
         )}
         {session.canSave && overLimit && (
           <Notice density="compact" title="保存の上限を超えたため、保存していません" tone="warning">
-            {overLimitMessage(hasSaved)}
+            {overLimitMessage(hasSaved, session.project.database === true)}
           </Notice>
         )}
         {!session.canSave && (
@@ -148,7 +148,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
         onConfirm={reset}
         title="保存したファイルを消して、初期の状態に戻す"
       >
-        保存したファイルを消し、初期ファイルで実行環境を起動し直します。消したファイルは戻せません。
+        {resetConfirmMessage(session.project.database === true)}
       </ConfirmDialog>
     </div>
   );

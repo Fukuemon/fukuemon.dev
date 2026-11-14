@@ -1,7 +1,14 @@
 import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { MAX_ROWS, type SqlResponse, keepLastRows, runSql, toSqlError } from "./index";
+import {
+  MAX_ROWS,
+  type SqlResponse,
+  keepLastRows,
+  runSql,
+  toJsonResponse,
+  toSqlError,
+} from "./index";
 
 let pg: PGlite;
 
@@ -155,5 +162,35 @@ describe("toSqlError", () => {
 
   it("code と position の無い Error は、メッセージだけを返す", () => {
     expect(toSqlError(new Error("closed"))).toStrictEqual({ message: "closed" });
+  });
+});
+
+describe("toJsonResponse", () => {
+  it("JSON で型が残らない値を、表に出す文字列にし、JSON で往復しても変わらない値にする", async () => {
+    const response = toJsonResponse(
+      await runSql(
+        pg,
+        "select 9007199254740993::int8, '2020-01-02T03:04:05Z'::timestamptz, '\\x0aff'::bytea, array[9007199254740993::int8], '{\"a\":1}'::jsonb, null, 1, 'NaN'::float8, 'Infinity'::float8",
+      ),
+    );
+    const rows = "results" in response ? response.results[0]?.rows : undefined;
+    expect(JSON.parse(JSON.stringify(rows))).toStrictEqual([
+      [
+        "9007199254740993",
+        "2020-01-02T03:04:05.000Z",
+        "\\x0aff",
+        ["9007199254740993"],
+        { a: 1 },
+        null,
+        1,
+        "NaN",
+        "Infinity",
+      ],
+    ]);
+  });
+
+  it("失敗の応答は、そのまま返す", () => {
+    const failed = { error: { message: "x" }, ms: 1 };
+    expect(toJsonResponse(failed)).toBe(failed);
   });
 });

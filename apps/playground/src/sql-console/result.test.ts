@@ -1,3 +1,4 @@
+import { toJsonResponse } from "@fukuemon/sql-runtime";
 import { describe, expect, it } from "vitest";
 
 import { formatCell, pageRange, tablePage } from "./result";
@@ -69,5 +70,33 @@ describe("tablePage", () => {
         },
       ],
     });
+  });
+});
+
+describe("formatCell と toJsonResponse", () => {
+  const cells = [
+    9007199254740993n,
+    new Date("2020-01-02T03:04:05Z"),
+    new Date(Number.NaN),
+    new Uint8Array([10, 255]),
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    [9007199254740993n, new Date("2020-01-02T03:04:05Z")],
+    { a: 1, b: [new Uint8Array([1])] },
+    null,
+    "text",
+    1.5,
+    true,
+  ];
+
+  it("DB のプロセスが JSON で送ったセルを、Web Worker の値と同じ文字列で出す", () => {
+    const response = toJsonResponse({
+      results: [{ fields: [], rows: [cells], affectedRows: 0, totalRows: 1, truncated: false }],
+      ms: 0,
+    });
+    // DB のプロセスは標準出力に書き、ページはその行を読む
+    const line = JSON.stringify(response);
+    const sent = JSON.parse(line) as { results: { rows: unknown[][] }[] };
+    expect(sent.results[0]?.rows[0]?.map(formatCell)).toStrictEqual(cells.map(formatCell));
   });
 });

@@ -3,5 +3,6 @@
   "compilerOptions": {
     "lib": ["ES2022", "DOM"]
   },
-  "include": ["src/**/*.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "vitest.config.ts"],
+  "exclude": ["src/guest/**"]
 }

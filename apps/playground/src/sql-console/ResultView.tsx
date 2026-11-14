@@ -1,6 +1,8 @@
 import { Button, Notice, Table, TreeView } from "@fukuemon/ui";
 import type { SqlResponse, SqlResult } from "@fukuemon/sql-runtime";
-import { useId, useState } from "react";
+import { use, useId, useState } from "react";
+
+import { DenseContext } from "./density";
 
 import { type JsonPlan, toPlanView } from "./plan";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageSize, tablePage } from "./result";
@@ -8,6 +10,8 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageSize, tablePage } from "./resul
 const ms = (value: number) => `${value.toFixed(1)} ms`;
 
 function PlanTree({ plan }: { plan: JsonPlan }) {
+  const dense = use(DenseContext);
+  const text = dense ? "text-body-compact" : "text-body-dense";
   const ids: string[] = [];
   const collect = (node: JsonPlan["root"]) => {
     ids.push(node.id);
@@ -16,34 +20,43 @@ function PlanTree({ plan }: { plan: JsonPlan }) {
   collect(plan.root);
   return (
     <div className="flex flex-col gap-2">
-      <TreeView defaultExpandedIds={ids} items={[plan.root]} label="実行計画" />
+      <TreeView
+        defaultExpandedIds={ids}
+        items={[plan.root]}
+        label="実行計画"
+        {...(dense && { density: "compact", textSize: "body-compact" })}
+      />
       {plan.planningMs !== undefined && (
-        <p className="text-body-dense text-text-secondary">Planning Time: {ms(plan.planningMs)}</p>
+        <p className={`${text} text-text-secondary`}>Planning Time: {ms(plan.planningMs)}</p>
       )}
       {plan.executionMs !== undefined && (
-        <p className="text-body-dense text-text-secondary">
-          Execution Time: {ms(plan.executionMs)}
-        </p>
+        <p className={`${text} text-text-secondary`}>Execution Time: {ms(plan.executionMs)}</p>
       )}
     </div>
   );
 }
 
 function RowsTable({ result }: { result: SqlResult }) {
+  const dense = use(DenseContext);
+  const buttonSize = dense ? "XS" : "S";
+  const text = dense ? "text-body-compact" : "text-body-dense";
   const sizeId = useId();
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(0);
   const range = tablePage(result, pageSize, page);
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}>
       {result.truncated && (
-        <Notice title="結果の行を切りました" tone="warning">
+        <Notice density={dense ? "compact" : "default"} title="結果の行を切りました" tone="warning">
           全体の {result.totalRows.toLocaleString()} 行のうち、先頭の{" "}
           {result.rows.length.toLocaleString()} 行を表示しています。
         </Notice>
       )}
-      <Table caption={`結果（${result.totalRows.toLocaleString()} 行）`}>
+      <Table
+        density={dense ? "compact" : "default"}
+        caption={`結果（${result.totalRows.toLocaleString()} 行）`}
+      >
         <Table.Header>
           <Table.Row>
             {range.columns.map((column) => (
@@ -63,13 +76,13 @@ function RowsTable({ result }: { result: SqlResult }) {
           ))}
         </Table.Body>
       </Table>
-      <div className="flex flex-wrap items-center gap-4">
+      <div className={`flex flex-wrap items-center ${dense ? "gap-2" : "gap-4"}`}>
         <div className="flex items-center gap-2">
-          <label className="text-body-dense text-text" htmlFor={sizeId}>
+          <label className={`${text} text-text`} htmlFor={sizeId}>
             1 ページの行
           </label>
           <select
-            className="h-12 rounded-control bg-surface px-2 text-body-dense text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring"
+            className={`rounded-control bg-surface px-2 text-text ring-1 ring-border-field ring-inset focus-visible:focus-ring ${dense ? "h-7 text-body-compact" : "h-12 text-body-dense"}`}
             id={sizeId}
             onChange={(event) => {
               setPageSize(Number(event.target.value) as PageSize);
@@ -89,18 +102,18 @@ function RowsTable({ result }: { result: SqlResult }) {
             <Button
               disabled={range.page === 0}
               onClick={() => setPage(range.page - 1)}
-              size="S"
+              size={buttonSize}
               variant="secondary"
             >
               前のページ
             </Button>
-            <span className="text-body-dense text-text">
+            <span className={`${text} text-text`}>
               {range.page + 1} / {range.pages}
             </span>
             <Button
               disabled={range.page === range.pages - 1}
               onClick={() => setPage(range.page + 1)}
-              size="S"
+              size={buttonSize}
               variant="secondary"
             >
               次のページ
@@ -113,6 +126,7 @@ function RowsTable({ result }: { result: SqlResult }) {
 }
 
 function ResultBody({ result }: { result: SqlResult }) {
+  const dense = use(DenseContext);
   const plan = toPlanView(result);
   if (plan?.kind === "json") return <PlanTree plan={plan.plan} />;
   if (plan?.kind === "text") {
@@ -123,13 +137,17 @@ function ResultBody({ result }: { result: SqlResult }) {
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 横に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
         tabIndex={0}
       >
-        <pre className="p-4 font-mono text-code text-code-text">{plan.text}</pre>
+        <pre
+          className={`font-mono text-code-text ${dense ? "p-2 text-code-compact" : "p-4 text-code"}`}
+        >
+          {plan.text}
+        </pre>
       </section>
     );
   }
   if (result.fields.length === 0) {
     return (
-      <p className="text-body-dense text-text">
+      <p className={`${dense ? "text-body-compact" : "text-body-dense"} text-text`}>
         実行しました。{result.affectedRows.toLocaleString()} 行に影響しました。
       </p>
     );
@@ -141,18 +159,20 @@ export type ResultViewProps = { response: SqlResponse };
 
 /** 1 回の実行の結果。複数の文を実行したときは、最後の文の結果を出す。 */
 export function ResultView({ response }: ResultViewProps) {
+  const dense = use(DenseContext);
+  const density = dense ? "compact" : "default";
   if ("error" in response) {
     const { message, code, position } = response.error;
     // SQLSTATE を持つのは Postgres が返したエラーだけである。読み込みの失敗と異常終了では、取り消した文は無い
     if (code === undefined) {
       return (
-        <Notice isAlert title="実行できませんでした" tone="danger">
+        <Notice density={density} isAlert title="実行できませんでした" tone="danger">
           <span className="font-mono break-all whitespace-pre-wrap">{message}</span>
         </Notice>
       );
     }
     return (
-      <Notice isAlert title="SQL が失敗しました" tone="danger">
+      <Notice density={density} isAlert title="SQL が失敗しました" tone="danger">
         <span className="font-mono break-all whitespace-pre-wrap">{message}</span>
         <span className="block">
           SQLSTATE {code}
@@ -164,8 +184,8 @@ export function ResultView({ response }: ResultViewProps) {
   }
   const last = response.results.at(-1);
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <p className="text-caption text-text-secondary">
+    <div className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}>
+      <p className={`${dense ? "text-compact" : "text-caption"} text-text-secondary`}>
         {response.results.length} 個の文を {ms(response.ms)} で実行しました。
       </p>
       {last && <ResultBody result={last} />}

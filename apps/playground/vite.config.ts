@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { guestBundle } from "@fukuemon/node-runtime/vite";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
@@ -28,7 +29,13 @@ const isolationHeaders: Plugin = {
 
 export default defineConfig({
   // React Compiler は apps/playground にだけ入れる。外すときは babel の plugin を消す (ADR-0047)
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss(), isolationHeaders],
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    tailwindcss(),
+    isolationHeaders,
+    guestBundle(),
+  ],
   // PGlite は .wasm と .data を import.meta.url から相対で読むので、事前のバンドルから外す
   optimizeDeps: { exclude: ["@electric-sql/pglite"] },
   worker: { format: "es" },

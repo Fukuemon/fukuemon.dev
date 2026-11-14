@@ -1,6 +1,9 @@
+import { guestBundle } from "@fukuemon/node-runtime/vite";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // テストが import する @fukuemon/node-runtime は、DB のプロセスのスクリプトを束ねて読む
+  plugins: [guestBundle()],
   test: {
     include: ["test/**/*.test.ts", "src/**/*.test.{ts,tsx}"],
     coverage: {

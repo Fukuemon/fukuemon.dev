@@ -1,0 +1,7 @@
+{
+  "tool": "node",
+  "open": "server.js",
+  "start": [{ "command": "node", "args": ["server.js"], "name": "サーバー" }],
+  "database": true,
+  "initialSql": "seed.sql"
+}

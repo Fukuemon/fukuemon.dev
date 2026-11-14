@@ -21,6 +21,11 @@ export type EditorFrameProps = {
   themeName?: CodeThemeName;
   /** 渡すと、エンジンの代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
   state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
+  /**
+   * none のときは、エンジンを置く領域に最小の高さ（192px）を付けず、枠を置く側が決めた高さに合わせる。
+   * 入力欄を低くして、結果の欄と縦に並べるときに使う。
+   */
+  minBodyHeight?: "default" | "none";
   /** 選んだファイルを開くエンジン。themeName から作った VS Code の形式のテーマを受け取る。 */
   children: (theme: VsCodeTheme, file: EditorFile) => ReactNode;
 };
@@ -38,6 +43,7 @@ export function EditorFrame({
   status,
   themeName = "light",
   state,
+  minBodyHeight = "default",
   children,
 }: EditorFrameProps) {
   const selected = files.find((file) => file.id === selectedId) ?? files[0];
@@ -59,7 +65,9 @@ export function EditorFrame({
             icon: <FileIcon kind="file" name={file.label} />,
             content: (
               // スクロールはエンジンが持つ。枠でもスクロールさせると、スクロールバーが 2 重になる
-              <div className="flex min-h-48 min-w-0 flex-1 flex-col overflow-hidden bg-code-surface font-mono text-code-compact text-code-text">
+              <div
+                className={`flex min-w-0 flex-1 flex-col overflow-hidden bg-code-surface font-mono text-code-compact text-code-text ${minBodyHeight === "none" ? "min-h-0" : "min-h-48"}`}
+              >
                 {file.id === selected.id && children(theme, file)}
               </div>
             ),

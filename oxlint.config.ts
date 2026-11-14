@@ -327,6 +327,27 @@ export default defineConfig({
       rules: { "no-restricted-imports": ["error", { patterns: noPackagesToApps }] },
     },
     {
+      // guest/ は実行環境の中の Node で動き、ブラウザのコードと分ける (apps/playground/DesignDoc.md)
+      files: ["packages/node-runtime/src/guest/**"],
+      rules: restrict(
+        [
+          {
+            name: "@fukuemon/sql-runtime/worker",
+            message:
+              "guest/ は、PGlite を Web Worker で動かす実装を import しない (apps/playground/DesignDoc.md)",
+          },
+        ],
+        [
+          ...noPackagesToApps,
+          {
+            regex: "^\\.\\./",
+            message:
+              "guest/ は、node-runtime/ の直下と webcontainer/ を import しない (apps/playground/DesignDoc.md)",
+          },
+        ],
+      ),
+    },
+    {
       // decorator の useEffect は Storybook の hook で、React の hook の規則が当たらない (context/conventions.md)
       files: ["packages/ui/.storybook/**"],
       rules: { "react/rules-of-hooks": "off", "react/exhaustive-deps": "off" },
