@@ -112,7 +112,19 @@ const title = (
  * HTTP の流れのペイン。一覧と、選んだ通信の詳細を、仕切りで分けて並べる。
  * PC の配置の下のタブと横の狭い配置では左右に、縦の狭い配置では上下に並べる。
  */
-function HttpPanes({ orientation = "horizontal" }: { orientation?: "horizontal" | "vertical" }) {
+function HttpPanes({
+  orientation = "horizontal",
+  flush = false,
+}: {
+  orientation?: "horizontal" | "vertical";
+  /** 記事の枠の中で出すときに、2 つのペインを同じ面に続けて置き、間をタブの帯と同じ罫で分ける（docs/adr/0073-layered-panes-and-radius-in-playground.md）。 */
+  flush?: boolean;
+}) {
+  const detail = (
+    <Pane fallback={<HttpExchangeDetail actors={[]} state={pendingState} />} flush={flush}>
+      <HttpDetailPane />
+    </Pane>
+  );
   return (
     <SplitPane
       label={orientation === "horizontal" ? "HTTP の一覧の幅" : "HTTP の一覧の高さ"}
@@ -127,14 +139,25 @@ function HttpPanes({ orientation = "horizontal" }: { orientation?: "horizontal" 
               state={pendingState}
             />
           }
+          flush={flush}
         >
           <HttpListPane />
         </Pane>
       }
       secondary={
-        <Pane fallback={<HttpExchangeDetail actors={[]} state={pendingState} />}>
-          <HttpDetailPane />
-        </Pane>
+        flush ? (
+          <div
+            className={
+              orientation === "horizontal"
+                ? "size-full border-l border-border"
+                : "size-full border-t border-border"
+            }
+          >
+            {detail}
+          </div>
+        ) : (
+          detail
+        )
       }
     />
   );
@@ -250,8 +273,15 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
             icon: NETWORK_ICON,
             content: (
               // 一覧と詳細の包みの 4px の余白を外へ出し、ペインの縁をほかのタブのペインにそろえる
-              <div className="-m-1 flex min-h-0 flex-1 flex-col">
-                <HttpPanes orientation={mode === "narrow" ? "vertical" : "horizontal"} />
+              <div
+                className={
+                  embedded ? "flex min-h-0 flex-1 flex-col" : "-m-1 flex min-h-0 flex-1 flex-col"
+                }
+              >
+                <HttpPanes
+                  flush={embedded}
+                  orientation={mode === "narrow" ? "vertical" : "horizontal"}
+                />
               </div>
             ),
           },
