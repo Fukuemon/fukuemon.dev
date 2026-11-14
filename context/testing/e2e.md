@@ -29,7 +29,7 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
   - `apps/web/src/features/top-garden/scene/GardenStage.astro`
   - `apps/web/src/components/SiteHeader.astro`
 
-ヘッダーの歯車の設定の testid は次のとおり。
+表示の設定の testid は次のとおり。
 
 - 歯車のボタンは `site-settings-open`、設定の面は `site-settings` である。
 - アニメーションのスイッチは `setting-motion`、トップの庭のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。

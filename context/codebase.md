@@ -125,10 +125,10 @@ hydrate するページはその framework のランタイムを配るので、2
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
   - 例外は、Lighthouse の計測のスクリプト（`scripts/measure-top-lighthouse.mjs`）である。2 回目以降の訪問の状態を作るために、測る前のプロファイルに書く。
   - `fd-top-seen` の意味と、`head` の inline script が `html` に書く属性と class は、[トップの水墨の門と立体の庭の Design Doc](../docs/design/features/top-garden/DesignDoc.md#ページが持つ状態) にある。
-- サイトは、ヘッダーの歯車の設定を、`localStorage` の `fd-motion` と `fd-garden` に記録する。
+- サイトは、表示の設定を、`localStorage` の `fd-motion` と `fd-garden` に記録する。
   - 読むのは全てのページの `head` の inline script で、`html` の `data-motion` と `data-garden` に書く。画面のコードとトップの場面のコードは、`html` の属性を読む。
   - 書くのは設定の面の script（`apps/web/src/components/site-settings/`）だけにする。
-  - キーと値と、値の決め方は、[全体の Design Doc の「訪問者の設定」](../docs/design/DesignDoc.md#訪問者の設定) にある。
+  - キーと値と、値の決め方は、[全体の Design Doc の「表示の設定」](../docs/design/DesignDoc.md#表示の設定) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の分類の絞り込みは URL パラメータで表す。
   - 設計不変量 8: [docs/design/DesignDoc.md](../docs/design/DesignDoc.md#設計不変量)
