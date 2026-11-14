@@ -18,7 +18,7 @@ verified_commit: ab2da87
 | 種類         | 対象                                                                               | ツール                   | 保証すること                                                                                                                                                                 |
 | ------------ | ---------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                                                 |
-| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする                                 |
+| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS、frame-ancestors をすべてのパスに返し、`/` だけをリダイレクトする                |
 | ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                                                             |
 | unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む                                  |
 | unit         | `packages/go-runtime` の Yaegi で Go を動かす処理（`go/`）                         | `go test`                | `syscall/js`、`syscall`、`unsafe`、`os/exec` の import が失敗すること、ディレクトリの package の import を解決できること、終了コードとテストの関数を集められることを確認する |
@@ -66,6 +66,12 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
 - 和文の間の改行を消す `rehype-ja-linebreak.ts`
 - 表と図を横に送れる枠で包む `rehype-scroll-box.ts`
+- 指定した言語のコードフェンスを要素に置き換える `rehype-fence.ts`
+- `playground` のフェンスを実行環境のボタンにし、Node の実行環境を埋め込む記事に外部の画像と埋め込みがあると throw する `playground/rehype-playground.ts`
+- プロジェクトのディレクトリを読み、schema で検証して JSON に変換する `playground/project.ts`
+- 原稿から埋め込みの名前を集める `playground/embeds.ts`
+- プロジェクトの JSON のページを並べ、2 本の記事が同じプロジェクトを指すと throw する `playground/project-pages.ts`
+- Node の実行環境を埋め込むページに、cross-origin isolation のヘッダを返す規則を出力の `_headers` に足す `playground/isolation-headers.ts`
 
 `apps/playground`、`packages/sql-runtime`、`packages/go-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には、100% を求める。  

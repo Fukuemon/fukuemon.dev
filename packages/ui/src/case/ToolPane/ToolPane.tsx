@@ -14,7 +14,7 @@ export type ToolPaneState =
 export type ToolPaneProps = {
   /** 領域の題。画面に出し、領域の読み上げる名前にもする。 */
   title: string;
-  /** 題の右に並べる操作。 */
+  /** 題の右に並べる操作。題と操作が 1 行に収まらない幅では、題を折り返さずに、操作を次の行に送る。 */
   actions?: ReactNode;
   /** 題の下、中身の上に置く帯（ファイルのタブ、URL の欄）。 */
   toolbar?: ReactNode;
@@ -64,8 +64,8 @@ export function ToolPane({
         isJoined && "-mt-px -ml-px",
       )}
     >
-      <div className="flex min-h-8 items-center justify-between gap-2 border-b border-border pr-1 pl-3">
-        <h2 className="text-label-compact text-text" id={titleId}>
+      <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-2 border-b border-border pr-1 pl-3">
+        <h2 className="text-label-compact whitespace-nowrap text-text" id={titleId}>
           {title}
         </h2>
         {actions !== undefined && <div className="flex items-center">{actions}</div>}
