@@ -675,7 +675,7 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "b" }], reads: 0 });
   });
 
-  it("書き直しがキューにあるか書いている間は、保存しないパスだけの通知が来ても、書き直しを重ねない", async () => {
+  it("書き直しを書いている間は、保存しないパスだけの通知が来ても、書き直しを重ねない", async () => {
     const { session, workspace, latest } = setup({
       kind: "saved",
       record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
