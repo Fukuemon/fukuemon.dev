@@ -18,11 +18,16 @@ export type TextFieldProps = Omit<ComponentPropsWithRef<"input">, "id" | "classN
   appearance?: "boxed" | "underline";
   /** `underline` の欄の左に置く印。装飾なので読み上げから外す。 */
   leading?: ReactNode;
+  /**
+   * compact は、欄を 28px の高さ、値と見出しを 13px にする。`appearance="boxed"` だけに効く。
+   * コードを動かす画面の帯に置く欄（プレビューの URL、ファイルの名前）に使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。
+   */
+  density?: "default" | "compact";
 };
 
 /**
  * 1 行の文字の入力欄。見出し、補足、誤りの文を欄に結ぶ。
- * `boxed` の欄は、見た目の高さが 40px で、押せる領域は上下に 2px ずつ広げた 44px である。
+ * `boxed` の欄は、見た目の高さが 40px で、押せる領域は上下に 2px ずつ広げた 44px である。density が compact のときは、見た目も押せる領域も 28px にする。
  */
 export function TextField({
   label,
@@ -32,40 +37,60 @@ export function TextField({
   isLabelHidden = false,
   appearance = "boxed",
   leading,
+  density = "default",
   ...props
 }: TextFieldProps) {
+  const isCompact = density === "compact" && appearance === "boxed";
   const id = useId();
   const descriptionId = description === undefined ? undefined : `${id}-description`;
   const errorId = error === undefined ? undefined : `${id}-error`;
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className={clsx("text-label text-text", isLabelHidden && "sr-only")} htmlFor={id}>
+    <div className={clsx("flex flex-col", "gap-2")}>
+      <label
+        className={clsx(
+          isCompact ? "text-label-compact" : "text-label",
+          "text-text",
+          isLabelHidden && "sr-only",
+        )}
+        htmlFor={id}
+      >
         {label}
-        {required && <span className="ml-2 text-caption text-danger">必須</span>}
+        {required && (
+          <span className={clsx("ml-2 text-danger", isCompact ? "text-compact" : "text-caption")}>
+            必須
+          </span>
+        )}
       </label>
       {description !== undefined && (
-        <p className="text-caption text-text-secondary" id={descriptionId}>
+        <p
+          className={clsx(isCompact ? "text-compact" : "text-caption", "text-text-secondary")}
+          id={descriptionId}
+        >
           {description}
         </p>
       )}
       {appearance === "boxed" ? (
         // 押せる範囲を見た目の外へ広げるため、欄は 44px で透明にし、40px の面と下罫を後ろに重ねて描く。
         // input は疑似要素を持てないので、面は兄弟の要素にし、欄の状態を peer で受ける
-        <div className="relative isolate -my-0.5">
+        <div className={clsx("relative isolate", !isCompact && "-my-0.5")}>
           <input
             {...props}
             aria-describedby={describedBy}
             aria-invalid={error === undefined ? undefined : true}
-            className="peer relative z-10 h-11 w-full bg-transparent px-3 text-body-dense text-text outline-none disabled:text-text-disabled"
+            className={clsx(
+              "peer relative z-10 w-full bg-transparent text-text outline-none disabled:text-text-disabled",
+              isCompact ? "h-7 px-2 text-body-compact" : "h-11 px-3 text-body-dense",
+            )}
             id={id}
             required={required}
           />
           <span
             aria-hidden
             className={clsx(
-              "absolute inset-x-0 inset-y-0.5 rounded-control border-b border-border-field bg-surface-subtle",
+              "absolute inset-x-0 rounded-control border-b border-border-field bg-surface-subtle",
+              isCompact ? "inset-y-0" : "inset-y-0.5",
               "peer-focus-visible:focus-ring peer-aria-invalid:border-b-2 peer-aria-invalid:border-danger",
               "peer-disabled:border-border peer-disabled:bg-surface-disabled",
               "peer-disabled:peer-aria-invalid:border-b peer-disabled:peer-aria-invalid:border-border",
@@ -105,7 +130,13 @@ export function TextField({
         </div>
       )}
       {error !== undefined && (
-        <p className="flex items-center gap-1 text-caption text-danger" id={errorId}>
+        <p
+          className={clsx(
+            "flex items-center gap-1 text-danger",
+            isCompact ? "text-compact" : "text-caption",
+          )}
+          id={errorId}
+        >
           <svg aria-hidden="true" height="16" viewBox="0 0 16 16" width="16">
             <circle cx="8" cy="8" fill="none" r="7" stroke="currentColor" strokeWidth="1.5" />
             <path d="M8 4v5M8 11v1" stroke="currentColor" strokeWidth="1.5" />

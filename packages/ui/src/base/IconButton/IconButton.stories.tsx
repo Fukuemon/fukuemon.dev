@@ -21,3 +21,4 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const Hover: Story = { parameters: { pseudo: { hover: true } } };
 export const Focus: Story = { parameters: { pseudo: { focusVisible: true } } };
+export const Compact: Story = { name: "compact", args: { density: "compact" } };

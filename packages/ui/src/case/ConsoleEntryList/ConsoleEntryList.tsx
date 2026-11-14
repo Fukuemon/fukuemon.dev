@@ -236,25 +236,27 @@ export function ConsoleEntryList({
   return (
     <ToolPane state={paneState} title={title} toolbar={toolbar}>
       {/* 高さを呼ぶ側が決めたときは、題とボタンを残して、行の領域だけをスクロールさせる */}
-      <div
-        aria-label="ログの行"
-        className="min-h-0 flex-1 overflow-y-auto focus-visible:focus-ring"
-        onScroll={handleScroll}
-        ref={rowsRef}
-        role="region"
-        tabIndex={0}
-      >
-        {visible.length === 0 ? (
-          <p className="p-4 text-body-dense text-text-secondary">
-            選んだログレベルの行はありません。
-          </p>
-        ) : (
-          <ol className="flex flex-col">
-            {visible.map((entry) => (
-              <EntryRow entry={entry} key={entry.id} />
-            ))}
-          </ol>
-        )}
+      <div className="flex min-h-0 flex-1 flex-col focus-ring-frame">
+        <div
+          aria-label="ログの行"
+          className="min-h-0 flex-1 overflow-y-auto"
+          onScroll={handleScroll}
+          ref={rowsRef}
+          role="region"
+          tabIndex={0}
+        >
+          {visible.length === 0 ? (
+            <p className="p-3 text-body-compact text-text-secondary">
+              選んだログレベルの行はありません。
+            </p>
+          ) : (
+            <ol className="flex flex-col">
+              {visible.map((entry) => (
+                <EntryRow entry={entry} key={entry.id} />
+              ))}
+            </ol>
+          )}
+        </div>
       </div>
     </ToolPane>
   );

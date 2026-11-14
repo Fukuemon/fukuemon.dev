@@ -6,7 +6,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./ActionMenu.stories";
 
-const { Closed } = composeStories(stories);
+const { Closed, Compact } = composeStories(stories);
 
 describe("ActionMenu", () => {
   it("開くと最初の項目へフォーカスを移し、上下の矢印のキーで項目の間を回る", async () => {
@@ -57,6 +57,17 @@ describe("ActionMenu", () => {
     await userEvent.click(button);
     for (const item of screen.getAllByRole("menuitem")) {
       expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  it("density を compact にすると、ボタンと項目を 28 px、項目の文字を 13 px にする（ADR-0062）", async () => {
+    render(<Compact />);
+    const button = screen.getByRole("button");
+    expect(button.getBoundingClientRect().height).toBe(28);
+    await userEvent.click(button);
+    for (const item of screen.getAllByRole("menuitem")) {
+      expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(28);
+      expect(getComputedStyle(item).fontSize).toBe("13px");
     }
   });
 });

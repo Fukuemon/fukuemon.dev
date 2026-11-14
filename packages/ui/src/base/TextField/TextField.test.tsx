@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./TextField.stories";
 
-const { Default, WithDescription, Error, Disabled, LabelHidden, Underline } =
+const { Default, WithDescription, Error, Disabled, LabelHidden, Underline, Compact } =
   composeStories(stories);
 
 const colorOf = (className: string) => {
@@ -146,5 +146,12 @@ describe("TextField", () => {
     expect(stroke.getBoundingClientRect().height).toBe(4);
     expect(getComputedStyle(input).outlineStyle).toBe("none");
     expect(getComputedStyle(input).boxShadow).toBe("none");
+  });
+
+  it("density を compact にすると、欄は 28 px の高さと 13 px の文字になる（ADR-0062）", () => {
+    render(<Compact />);
+    const field = screen.getByRole("textbox");
+    expect(field.getBoundingClientRect().height).toBe(28);
+    expect(getComputedStyle(field).fontSize).toBe("13px");
   });
 });

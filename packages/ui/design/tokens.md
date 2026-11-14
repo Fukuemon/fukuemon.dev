@@ -30,7 +30,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 | 操作       | `link-visited`       | 訪問済みのリンク。`link` と同じ色を指す                                                                                           |
 | 操作       | `link-external`      | 外部のリンク                                                                                                                      |
 | 操作       | `current-page`       | 目次の現在地、サイトのヘッダーのナビの今いるページの筆の線                                                                        |
-| フォーカス | `focus`              | フォーカスの表示の墨の輪。画面のコードは `focus-ring` のユーティリティで書き、この名前を直に使わない                              |
+| フォーカス | `focus`              | フォーカスの表示の墨の輪。画面のコードは `focus-ring` か `focus-ring-inset` のユーティリティで書き、この名前を直に使わない        |
 | 状態       | `danger`             | エラーの文と印、データを失う操作のボタンの面、コンソールの error の行の印と罫                                                     |
 | 状態       | `danger-hover`       | `danger` のボタンの hover の面                                                                                                    |
 | 状態       | `warning`            | 注意の文と印、コンソールの warn の行の印と罫                                                                                      |
@@ -73,26 +73,29 @@ fukuemon.dev はダークを持つ。
 
 ## 文字
 
-| ユーティリティ       | DADS のスタイル        | 使う場面                                                       |
-| -------------------- | ---------------------- | -------------------------------------------------------------- |
-| `text-caption`       | Dns-14N-130            | 補足、図の説明、時刻                                           |
-| `text-body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、ファイルのツリーの行                     |
-| `text-body`          | Std-16N-170            | 記事の本文、トップのプロフィールの本文、サイトのヘッダーのナビ |
-| `text-label`         | Oln-16B-100            | ボタン、タブ                                                   |
-| `text-heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                                 |
-| `text-heading-md`    | Std-20B-150            | 記事の見出し、トップのプロフィールのセクションの見出し         |
-| `text-heading-lg`    | Std-28B-150            | 記事の題、トップのプロフィールの h1                            |
-| `text-code`          | 等幅の 16px のスタイル | コードブロック、エディタ、端末                                 |
-| `text-code-dense`    | 等幅の 14px のスタイル | HTTP のヘッダと本文、端末の狭い表示                            |
-| `text-compact`       | 12px のスタイル        | コードを動かす画面のコンソールの値、時刻、出力元、行の数       |
-| `text-label-compact` | 太字の 13px のスタイル | コードを動かす画面のコンソールのログレベルのボタン             |
+| ユーティリティ       | DADS のスタイル        | 使う場面                                                                                                                             |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `text-caption`       | Dns-14N-130            | 補足、図の説明、時刻                                                                                                                 |
+| `text-body-dense`    | Dns-16N-130            | 表のセル、入力欄の値、木の行                                                                                                         |
+| `text-body`          | Std-16N-170            | 記事の本文、トップのプロフィールの本文、サイトのヘッダーのナビ                                                                       |
+| `text-label`         | Oln-16B-100            | ボタン、タブ                                                                                                                         |
+| `text-heading-sm`    | Std-18B-160            | 記事の小見出し、ダイアログの題                                                                                                       |
+| `text-heading-md`    | Std-20B-150            | 記事の見出し、トップのプロフィールのセクションの見出し                                                                               |
+| `text-heading-lg`    | Std-28B-150            | 記事の題、トップのプロフィールの h1                                                                                                  |
+| `text-code`          | 等幅の 16px のスタイル | コードブロック                                                                                                                       |
+| `text-code-dense`    | 等幅の 14px のスタイル | プレイグラウンドの SQL の実行計画の文字                                                                                              |
+| `text-compact`       | 12px のスタイル        | コードを動かす画面のコンソールの値、時刻、出力元、行の数、下の状態の帯、HTTP の流れの通信する者と状態コード、入力欄の補足と誤りの文  |
+| `text-label-compact` | 太字の 13px のスタイル | コードを動かす画面の領域の題、タブ、ボタン、開閉の要約、入力欄の見出し、HTTP の本文の見出し                                          |
+| `text-body-compact`  | 13px のスタイル        | コードを動かす画面のファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文、注意の枠の本文、読み込み中の文 |
+| `text-code-compact`  | 等幅の 13px のスタイル | コードを動かす画面のエディタ、端末、HTTP のメソッドと URL とヘッダと本文                                                             |
 
 - 記事の題と見出しは、`font-heading` と `font-semibold` を `text-heading-*` に重ね、Zen Old Mincho の 600 で描く。DADS の見出しはゴシックの 700 だが、運営者が今のサイトの和の感じを残すと決めたためである。大きさと行高は DADS のスタイルのまま使う（ADR-0023）。
 - 本文は Noto Sans JP、等幅は Noto Sans Mono で描き、等幅の和文は BIZ UDGothic で受ける。
-- 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字で、HTTP のヘッダの長い値を 1 行に収めるために使う（`TEXT-MIN-SIZE`）。
+- 14px の文字は、`text-caption` と `text-code-dense` だけにする。`text-code-dense` は本文でない 14px の文字である（`TEXT-MIN-SIZE`）。
 - 名前に `dense` が付くスタイルは 14px 以上で行高を詰め、`compact` が付くスタイルは 14px より小さい例外にする。
-- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact` と `text-label-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べるためである（ADR-0062）。
+- 12px と 13px の文字は、コードを動かす画面のコンポーネントだけに使う（`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact`）。14px より小さい文字を使わない原則（`TEXT-MIN-SIZE`）の例外で、DevTools のコンソールに近い密度で行を並べ、隣の 13px の題とタブに文字の大きさをそろえるためである（ADR-0062、ADR-0067）。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../../docs/adr/0062-dense-text-and-targets-in-playground.md)
+  - ADR-0067: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](../../../docs/adr/0067-compact-text-tokens-in-dense-panes.md)
 
 ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主の色を緑にする](../../../docs/adr/0023-keep-art-and-key-color.md)
 
@@ -108,7 +111,9 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 | 区切り           | `border-b border-border`（向きは場所に合わせる）             | ほかの区切りの罫                                                                                                                                                                                                                                                                                |
 | 角               | `rounded-control`                                            | 操作できる要素（`Button`、`IconButton`、`boxed` の入力欄、木の行、開閉の要約、タブの閉じるボタン）と、重なる面の角                                                                                                                                                                              |
 | 重なり           | `bg-surface-raised border border-border-field shadow-raised` | ダイアログ、メニュー、候補の一覧                                                                                                                                                                                                                                                                |
-| フォーカス       | `focus-visible:focus-ring`                                   | 全ての操作できる要素のフォーカスの表示。要素から 2px 離した墨の 2px の輪（`FOCUS-ONE`）                                                                                                                                                                                                         |
+| フォーカス       | `focus-visible:focus-ring`                                   | 操作できる要素のフォーカスの表示。要素から 2px 離した墨の 2px の輪（`FOCUS-ONE`）。詰めたペインの行は次の行の `focus-ring-inset`、スクロールする領域は `focus-ring-frame` を使う                                                                                                                |
+| フォーカス       | `focus-visible:focus-ring-inset`                             | コードを動かす画面の詰めたペインの中の行。墨の 2px の輪を要素の内側に引く（`FOCUS-ONE` の例外、ADR-0066）                                                                                                                                                                                       |
+| フォーカス       | `focus-ring-frame`（外側の要素）                             | ペインの全体を占める、フォーカスできるスクロールする領域を 1 つ直下に置く外側の要素。領域自身の輪は中の背景に隠れて欠けるので、外側の `::after` に内側の輪を重ねて引く（`FOCUS-ONE` の例外、ADR-0066）                                                                                          |
 | 動き             | `transition-colors`                                          | 木の行、タブ、タブの閉じるボタンの色の切り替え（デフォルトの 150ms）                                                                                                                                                                                                                            |
 | 動き             | `transition-transform` と `rotate-90`                        | ファイルの木と `Disclosure` の山形の開閉（デフォルトの 150ms）                                                                                                                                                                                                                                  |
 | 動き             | `animate-stroke`                                             | 選んだタブの下、検索の欄のフォーカス、ダイアログの上端の罫と、サイトのヘッダーのナビの今いるページの筆の線を、左から 1 回引く                                                                                                                                                                   |

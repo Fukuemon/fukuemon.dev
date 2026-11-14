@@ -35,3 +35,7 @@ export const Danger: Story = {
   },
 };
 export const TitleOnly: Story = { name: "題だけ", args: { children: undefined } };
+export const Compact: Story = {
+  name: "compact",
+  args: { tone: "danger", density: "compact", children: undefined },
+};

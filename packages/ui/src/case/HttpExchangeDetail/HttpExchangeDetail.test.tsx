@@ -70,10 +70,14 @@ describe("HttpExchangeDetail", () => {
     );
   });
 
-  it("開閉の要約は 44 px 以上の高さで押せる", () => {
+  it("開閉の要約は 24 px の高さで押せ、表のセルの上下の余白は 2px、文字は 13 px にする（ADR-0062）", () => {
     render(<Default />);
     for (const summary of document.querySelectorAll("summary")) {
-      expect(summary.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(summary.getBoundingClientRect().height).toBe(24);
+      expect(getComputedStyle(summary).fontSize).toBe("13px");
     }
+    const cell = document.querySelector("td") as Element;
+    expect(getComputedStyle(cell).paddingTop).toBe("2px");
+    expect(getComputedStyle(cell).fontSize).toBe("13px");
   });
 });

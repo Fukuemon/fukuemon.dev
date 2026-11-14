@@ -30,3 +30,7 @@ export const DangerLoading: Story = {
   args: { variant: "danger", isLoading: true, children: "削除" },
 };
 export const Small: Story = { args: { size: "S" } };
+export const ExtraSmall: Story = {
+  name: "XS",
+  args: { size: "XS", variant: "secondary", children: "作る" },
+};
