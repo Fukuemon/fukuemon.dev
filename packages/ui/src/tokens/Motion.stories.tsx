@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /**
- * 動きのユーティリティを、見本で並べる。時間で進む動きは、画面を開いたときと hover のときに 1 回見える。
+ * 動きのユーティリティを、見本で並べる。見本の動きは、hover するか、ページを開くと見える。処理中の印だけは繰り返す。
  * 動きを減らす設定にすると、全て止まって元の形で出る。
  */
 function MotionTokens() {
@@ -20,10 +20,10 @@ function MotionTokens() {
         <h2 className="font-heading text-heading-md font-semibold">罫と筆の線を引く</h2>
         <span aria-hidden="true" className="h-1 w-64 animate-stroke bg-primary stroke-brush" />
         <code className="font-mono text-code-dense">animate-stroke stroke-brush</code>
-        <a href="#motion" className="w-fit">
+        <a href="#" className="w-fit">
           <span className="link-rule">link-rule</span>
         </a>
-        <a href="#motion" className="brush-hover w-fit pb-1">
+        <a href="#" className="brush-hover w-fit pb-1">
           brush-hover
         </a>
       </section>

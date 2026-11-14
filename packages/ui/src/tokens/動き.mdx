@@ -7,8 +7,7 @@ import * as Stories from "./Motion.stories";
 # 動き
 
 画面のコードが動きを付けるときのユーティリティを、見本と使う場面で並べる。
-時間で進む動きは、ページを開いたときと hover のときに見える。
-OS で動きを減らす設定にすると、時間で進む動きは全て止まり、元の形で出る。
+見本の動きは、hover するか、ページを開くと見える。処理中の印だけは繰り返す。
 
 - 使う場面と規則: `packages/ui/design/tokens.md` の「レイアウト、区切り、重なり、動き」
 - 動きを付ける操作、長さ、付けない所: `packages/ui/DesignDoc.md` の「動き」
@@ -18,7 +17,7 @@ OS で動きを減らす設定にすると、時間で進む動きは全て止�
 ## 色と回転の切り替え
 
 <Unstyled>
-  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+  <div className="fd-sample group flex flex-col gap-3 border border-border bg-surface p-6 text-text">
     <button
       type="button"
       className="w-fit border border-border px-4 py-2 text-label transition-colors hover:bg-primary-surface"
@@ -26,11 +25,17 @@ OS で動きを減らす設定にすると、時間で進む動きは全て止�
       hover で色が替わる
     </button>
     <p className="font-mono text-code-dense text-text-secondary">
-      transition-colors: 木の行、タブ、タブの閉じるボタンの色の切り替え（150ms）
+      transition-colors: 木の行、タブ、タブの閉じるボタンの色の切り替え（デフォルトの 150ms）
     </p>
+    <span
+      aria-hidden="true"
+      className="inline-block w-fit transition-transform group-hover:rotate-90"
+    >
+      ▶
+    </span>
     <p className="font-mono text-code-dense text-text-secondary">
       transition-transform と rotate-90: ファイルの木と Disclosure の山形の開閉、Switch
-      のつまみの移動（150ms）
+      のつまみの移動（デフォルトの 150ms）。見本は、この枠に hover すると回る
     </p>
   </div>
 </Unstyled>
@@ -41,21 +46,56 @@ OS で動きを減らす設定にすると、時間で進む動きは全て止�
   <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
     <span aria-hidden="true" className="h-1 w-64 animate-stroke bg-primary stroke-brush" />
     <p className="font-mono text-code-dense text-text-secondary">
-      animate-stroke と stroke-brush:
-      選んだタブの下、検索の欄のフォーカス、ダイアログの上端、ヘッダーのナビの今いるページ（320ms、1
-      回）
+      animate-stroke:
+      選んだタブの下、検索の欄のフォーカス、ダイアログの上端の罫と、サイトのヘッダーのナビの今いるページの筆の線を、左から
+      1 回引く
     </p>
-    <a href="#motion" className="w-fit">
+    <p className="font-mono text-code-dense text-text-secondary">
+      stroke-brush: animate-stroke で引く罫を、筆の線の形にする。animate-loading
+      と重ねて、PageLoading の筆の線にも使う
+    </p>
+    <a href="#" className="w-fit">
       <span className="link-rule">hover で罫が引かれるリンク</span>
     </a>
     <p className="font-mono text-code-dense text-text-secondary">
-      link-rule: Link、目次の見出し、前後の記事の題の hover（240ms）
+      link-rule: Link、目次の見出し、前後の記事の題の hover で、2px の罫を左から 1 回引く
     </p>
-    <a href="#motion" className="brush-hover w-fit pb-1">
+    <a href="#" className="link-rule link-rule-below-underline w-fit underline underline-offset-4">
+      罫が下線の下に引かれるリンク
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      link-rule-below-underline: Link で、link-rule の罫を 4px 下げ、下線の下に置く
+    </p>
+    <a href="#" className="brush-hover w-fit pb-1">
       hover で筆の線が引かれるリンク
     </a>
     <p className="font-mono text-code-dense text-text-secondary">
-      brush-hover: パンくずリストとヘッダーのナビの hover（240ms）
+      brush-hover: パンくずリストのリンクとサイトのヘッダーのナビの hover
+      で、リンクの箱の下に筆の線を左から 1 回引く
+    </p>
+    <a href="#" aria-current="page" className="brush-hover brush-current w-fit pb-1">
+      今いるページのリンク
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      brush-current:
+      サイトのヘッダーのナビで、今いるページとその下のページのリンクの箱の下に錆の筆の線を出す。brush-hover
+      と重ねて使う
+    </p>
+  </div>
+</Unstyled>
+
+## 押す
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <button
+      type="button"
+      className="ink-press w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
+    >
+      押して離す
+    </button>
+    <p className="font-mono text-code-dense text-text-secondary">
+      ink-press: Button を押して離すと、文字の色の墨がにじんで消える
     </p>
   </div>
 </Unstyled>
@@ -68,7 +108,7 @@ OS で動きを減らす設定にすると、時間で進む動きは全て止�
       濃度を上げて出る面
     </div>
     <p className="font-mono text-code-dense text-text-secondary">
-      animate-fade-in: ダイアログ、メニュー、候補の一覧（150ms）
+      animate-fade-in: ダイアログ、メニュー、候補の一覧が、濃度を上げて出る
     </p>
   </div>
 </Unstyled>
@@ -82,7 +122,7 @@ OS で動きを減らす設定にすると、時間で進む動きは全て止�
       className="relative h-0.5 w-24 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-primary"
     />
     <p className="font-mono text-code-dense text-text-secondary">
-      animate-loading: Loading の罫と、PageLoading の筆の線（1 周 1600ms）
+      animate-loading: Loading の読み込み中の印の罫と、PageLoading の筆の線
     </p>
     <span aria-hidden="true" className="loading-dots text-text">
       <span />
@@ -90,16 +130,39 @@ OS で動きを減らす設定にすると、時間で進む動きは全て止�
       <span />
     </span>
     <p className="font-mono text-code-dense text-text-secondary">
-      loading-dots: Button の読み込み中の 3 つの点（1 周 1200ms）
+      loading-dots: Button の読み込み中の、3 つの点の印
     </p>
   </div>
 </Unstyled>
 
-## 動きを付けない所
+## 横に送る枠の右端
 
-- 位置と配置は動かさない。
-- フォーカスの表示、入力した文字、誤りの文には、動きを付けない。
-- 動きのために JavaScript を配らない。
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <div
+      className="scroll-fade-end w-64 overflow-x-auto"
+      tabIndex={0}
+      role="region"
+      aria-label="横に送る枠の見本"
+    >
+      <p className="w-[32rem] whitespace-nowrap py-2 text-body-dense">
+        右に続きがある間だけ、右端が薄くなる。右端まで送ると、薄い色が消える。
+      </p>
+    </div>
+    <p className="font-mono text-code-dense text-text-secondary">
+      scroll-fade-end: Table、記事の本文の表と図とコードブロック、HttpExchangeDetail
+      の本文、プレイグラウンドの SQL
+      の実行計画を横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      scroll-fade-code: scroll-fade-end と並べて付け、薄い色を code-surface の色にする
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      scroll-fade-pane: scroll-fade-end と並べて付け、薄い色を surface-pane
+      の色にする。コードを動かす画面のペインの面の上で横に続く枠に使う
+    </p>
+  </div>
+</Unstyled>
 
 ## story の見本
 
