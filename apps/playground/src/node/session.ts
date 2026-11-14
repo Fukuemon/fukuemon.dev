@@ -199,25 +199,28 @@ export function createNodeSession({
     saver.save({ files, version, savedAt: now() });
   };
 
-  /** 保存のために作業ディレクトリを読む。読めなかったときと、読んでいる間に実行環境を破棄したときは undefined を返す。 */
+  /** 保存のために作業ディレクトリを読む。読めなかったときは undefined を返す。 */
   const readForSave = async (runtime: NodeRuntime): Promise<SaveRead | undefined> => {
-    let read: SaveRead | undefined;
     try {
       // 読み込みが終わらないと、次の保存が始まらないので、上限で諦める
       const entries = await withTimeout(runtime.files.readAll(SAVE_READ), READ_TIMEOUT_MS);
-      read = { kind: "read", entries };
+      return { kind: "read", entries };
     } catch (error) {
-      if (error instanceof ReadLimitError) read = { kind: "over-limit" };
-      else console.error("保存のために作業ディレクトリを読めない", error);
+      if (error instanceof ReadLimitError) return { kind: "over-limit" };
+      console.error("保存のために作業ディレクトリを読めない", error);
+      return undefined;
     }
-    // 破棄した実行環境の読み込みが後から終わっても、今の実行環境の状態を書き換えない
-    if (current.runtime !== runtime) return undefined;
-    // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
-    if (read?.kind === "read") lastRead = filesForRestart(read.entries);
-    return read;
   };
 
-  const watchForSave = (instance: Instance, runtime: NodeRuntime) => {
+  /**
+   * 変更の通知を受けて作業ディレクトリを読み、保存する。返す関数で止める。saveNow のときは、通知を待たずに 1 回読む。
+   * 止めた後（起動し直す途中）に終わった読み込みは捨てる。起動し直す前に読んだファイルや、戻した初期の状態を、古い中身で書き換えないためである。
+   */
+  const watchForSave = (
+    instance: Instance,
+    runtime: NodeRuntime,
+    { saveNow = false }: { saveNow?: boolean } = {},
+  ) => {
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let firstChange: number | undefined;
@@ -235,7 +238,11 @@ export function createNodeSession({
       do {
         again = false;
         const read = await readForSave(runtime);
-        if (read && !stopped) persist(read);
+        if (read && !stopped) {
+          // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
+          if (read.kind === "read") lastRead = filesForRestart(read.entries);
+          persist(read);
+        }
       } while (again && !stopped);
       reading = false;
     };
@@ -248,6 +255,7 @@ export function createNodeSession({
       const wait = Math.min(SAVE_DELAY_MS, firstChange + SAVE_MAX_DELAY_MS - at);
       timer = setTimeout(() => void save(), Math.max(0, wait));
     });
+    if (saveNow) void save();
     return () => {
       stopped = true;
       clearTimeout(timer);
@@ -429,13 +437,8 @@ export function createNodeSession({
     } catch (error) {
       // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
       lastSaved = undefined;
-      if (old.runtime) {
-        old.stopSaving = watchForSave(old, old.runtime);
-        // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
-        if (old.touched) {
-          void readForSave(old.runtime).then((read) => read && persist(read));
-        }
-      }
+      // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
+      if (old.runtime) old.stopSaving = watchForSave(old, old.runtime, { saveNow: old.touched });
       throw error;
     }
   };

@@ -165,6 +165,32 @@ function setup(
   return { session, workspace, saves, runtimes, booted, boot, visitor, latest };
 }
 
+/** 保存のための読み込みを始め、終わらせずに止める。破棄も止める。返す関数で、それぞれを終わらせる。 */
+const holdSaveReadAndDispose = async (fake: Fake, stale: Record<string, string>) => {
+  let finishRead: () => void = () => undefined;
+  fake.readAll.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishRead = () =>
+          resolve(
+            Object.entries(stale).map(([path, text]) => ({
+              path,
+              kind: "file",
+              size: text.length,
+              text,
+            })),
+          );
+      }),
+  );
+  let release: () => void = () => undefined;
+  vi.mocked(fake.runtime.dispose).mockReturnValueOnce(
+    new Promise<void>((resolve) => (release = resolve)),
+  );
+  fake.change("index.js");
+  await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+  return { finishRead: () => finishRead(), release: () => release() };
+};
+
 /** 起動と、起動の後のプロセスの起動が終わるまで進める。 */
 const settle = async (session: NodeSession) => {
   await session.runtime.getSnapshot();
@@ -616,6 +642,25 @@ describe("restart", () => {
     await session.restart();
     expect(seen).toStrictEqual([true, false]);
   });
+
+  it("破棄している間に前の保存の読み込みが終わっても、次に読めないときは起動し直す前に読んだファイルで起動する", async () => {
+    const { session, booted, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const fake = latest();
+    const held = await holdSaveReadAndDispose(fake, { "index.js": "old" });
+    fake.contents.set("index.js", "c");
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(0);
+    held.finishRead();
+    await vi.advanceTimersByTimeAsync(0);
+    held.release();
+    await restarted;
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    const again = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await again;
+    expect(booted.at(-1)).toStrictEqual({ "index.js": "c" });
+  });
 });
 
 describe("reset", () => {
@@ -726,6 +771,23 @@ describe("reset", () => {
     latest().change("package-lock.json", "{}");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
     expect(saves).toStrictEqual([]);
+  });
+
+  it("破棄している間に前の保存の読み込みが終わっても、戻した後に読めないときは初期ファイルで起動する", async () => {
+    const { session, booted, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const held = await holdSaveReadAndDispose(latest(), { "index.js": "old" });
+    const resetting = session.reset();
+    await vi.advanceTimersByTimeAsync(0);
+    held.finishRead();
+    await vi.advanceTimersByTimeAsync(0);
+    held.release();
+    await resetting;
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await restarted;
+    expect(booted.at(-1)).toStrictEqual(project.files);
   });
 });
 
