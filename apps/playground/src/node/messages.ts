@@ -15,8 +15,12 @@ export const bootFailureMessage = (reason: BootFailureReason) =>
   `${REASONS[reason]}${SUPPORTED_BROWSERS}`;
 
 /** 保存の上限を超えたときの案内の本文。ページを閉じたときに残るものを、保存したファイルがあるかで書き分ける。 */
-export const overLimitMessage = (hasSaved: boolean) =>
-  `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${hasSaved ? "ページを閉じると、前に保存したときのファイルに戻ります。" : "ページを閉じると、変えたファイルが消えます。"}ファイルを減らすと、また保存します。`;
+export const overLimitMessage = (hasSaved: boolean, database = false) =>
+  `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${database ? "SQL のペインの入力欄の SQL も保存しません。" : ""}${hasSaved ? "ページを閉じると、前に保存したときのファイルに戻ります。" : "ページを閉じると、変えたファイルが消えます。"}ファイルを減らすと、また保存します。`;
+
+/** 「初期の状態に戻す」の確認の文。DB を使うプロジェクトでは、SQL のペインの入力欄も戻ることを書く。 */
+export const resetConfirmMessage = (database: boolean) =>
+  `保存したファイルを消し、初期ファイルで実行環境を起動し直します。${database ? "SQL のペインの入力欄も、最初の SQL に戻ります。" : ""}消したファイルは戻せません。`;
 
 // 2 つの待ちは続けて起きるので、文を替えない。替えると、スクリーンリーダーが 2 回読み上げる（packages/ui/design/components.md の PageLoading）
 /** プロジェクトの読み込みと起動の、画面の右下の待ちの文。 */

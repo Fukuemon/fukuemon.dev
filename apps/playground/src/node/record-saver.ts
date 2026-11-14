@@ -1,12 +1,26 @@
 import type { FileContents, Store } from "@fukuemon/node-runtime";
 
 import { isSafeFilePath } from "../project/project";
-import { type Workspace, type WorkspaceLoad, createSaver } from "../workspace/workspace";
-import { filesToSave, withoutExcludedFromSave } from "./save-rules";
+import {
+  type RecordStamp,
+  type Workspace,
+  type WorkspaceLoad,
+  createSaver,
+} from "../workspace/workspace";
+import { BYTES_PER_MB, filesToSave, withoutExcludedFromSave } from "./save-rules";
 import { createStore } from "./store";
 
-/** IndexedDB に保存する 1 件。作業ディレクトリのファイルの一式を、丸ごと置き換える。 */
-export type NodeRecord = { files: Record<string, string>; version: string; savedAt: number };
+/** IndexedDB に保存する 1 件。作業ディレクトリのファイルの一式を、丸ごと置き換える。DB を使うプロジェクトでは、SQL のペインの入力欄の SQL も持つ。 */
+export type NodeRecord = RecordStamp & { files: Record<string, string>; sql?: string };
+
+/** 保存したレコードから読む SQL の上限（1 MB）。超えるか文字列でない SQL は、捨ててファイルだけを使う。 */
+const MAX_SQL_BYTES = BYTES_PER_MB;
+
+/** 保存したレコードの sql のうち、使えるもの。無いか形に合わないときは undefined を返す。 */
+function usableSql(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  return new TextEncoder().encode(value).length > MAX_SQL_BYTES ? undefined : value;
+}
 
 /** 保存のために読んだ作業ディレクトリ。読んでいる途中で上限を超えたときは over-limit である。 */
 export type SaveRead = { kind: "read"; entries: readonly FileContents[] } | { kind: "over-limit" };
@@ -41,6 +55,7 @@ function hasFileAsDirectory(paths: readonly string[]): boolean {
 /**
  * IndexedDB から読んだ結果から、起動と保存に使うレコードを作る。形に合わない値は、保存したファイルが無いときと同じに扱う。
  * 保存しないファイルを除き、除いたファイルがあれば、除いた後のレコードを書き直す必要がある (ADR-0070)。
+ * 形に合わない SQL は捨てるが、それだけでは書き直さない。次の保存で上書きする。
  */
 export function readSavedRecord(saved: WorkspaceLoad<NodeRecord>): {
   record: NodeRecord | undefined;
@@ -48,10 +63,11 @@ export function readSavedRecord(saved: WorkspaceLoad<NodeRecord>): {
 } {
   if (saved.kind !== "saved" || !isNodeRecord(saved.record))
     return { record: undefined, needsRewrite: false };
-  const loaded = saved.record;
+  const { sql: savedSql, ...loaded } = saved.record;
   const files = withoutExcludedFromSave(loaded.files);
+  const sql = usableSql(savedSql);
   return {
-    record: { ...loaded, files },
+    record: { ...loaded, files, ...(sql !== undefined && { sql }) },
     needsRewrite: Object.keys(files).length !== Object.keys(loaded.files).length,
   };
 }
@@ -66,6 +82,8 @@ export type RecordSaverOptions = {
   /** プロジェクトの初期ファイルのバージョン。保存したファイルが無いときと、消した後のレコードに付ける。 */
   projectVersion: string;
   now: () => number;
+  /** DB を使うプロジェクトでは、SQL のペインの入力欄の今の SQL を返す。保存するレコードに入れる。 */
+  sql?: () => string;
 };
 
 /** Node のページの保存の状態と判断。どのレコードを書くか、いつ書き直すか、保存の失敗の案内をいつ出し、いつ消すかを持つ。 */
@@ -96,6 +114,7 @@ export function createRecordSaver({
   canSave,
   projectVersion,
   now,
+  sql: currentSql,
 }: RecordSaverOptions): RecordSaver {
   const hasSaved = createStore(record !== undefined);
   const saveFailed = createStore(false);
@@ -103,6 +122,7 @@ export function createRecordSaver({
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   let version = record?.version ?? projectVersion;
   let lastSaved = record?.files;
+  let lastSavedSql = record?.sql;
   // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0070)
   let pendingRewrite = needsRewrite ? record : undefined;
   // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける
@@ -168,9 +188,11 @@ export function createRecordSaver({
         return;
       }
       const { files } = saving;
-      if (sameFiles(files, lastSaved)) return;
+      const sql = currentSql?.();
+      if (sameFiles(files, lastSaved) && sql === lastSavedSql) return;
       lastSaved = files;
-      queue({ files, version, savedAt: now() });
+      lastSavedSql = sql;
+      queue({ files, version, savedAt: now(), ...(sql !== undefined && { sql }) });
     },
     clear: async () => {
       // 消すと待ちの書き直しも捨てるので、書き直しの印も外す
@@ -187,6 +209,7 @@ export function createRecordSaver({
       saveFailed.set(false);
       version = projectVersion;
       lastSaved = undefined;
+      lastSavedSql = undefined;
       hasSaved.set(false);
       overLimit.set(false);
     },

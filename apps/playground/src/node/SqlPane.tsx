@@ -1,15 +1,10 @@
 import type { SqlDatabase, SqlResponse } from "@fukuemon/sql-runtime";
 import { EditorFrame } from "@fukuemon/ui";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 
 import { SqlConsole } from "../sql-console/SqlConsole";
-import { useRestart, useRuntime } from "./context";
-import {
-  SQL_PANE_QUERY,
-  SQL_PANE_RUN_LABEL,
-  SQL_STOPPED_HINT,
-  bootFailureMessage,
-} from "./messages";
+import { useRestart, useRuntime, useSqlQuery } from "./context";
+import { SQL_PANE_RUN_LABEL, SQL_STOPPED_HINT, bootFailureMessage } from "./messages";
 
 /**
  * DB を使うプロジェクトの、SQL のペイン。Node のコードと同じ DB（実行環境の中の PGlite）に、DB のプロセスの標準入出力で SQL を送る。
@@ -39,7 +34,7 @@ export function SqlPane() {
 }
 
 function SqlPaneConsole({ database }: { database: SqlDatabase }) {
-  const [query, setQuery] = useState(SQL_PANE_QUERY);
+  const [query, setQuery] = useSqlQuery();
   const [running, startRunning] = useTransition();
   const { restart, restarting } = useRestart();
 

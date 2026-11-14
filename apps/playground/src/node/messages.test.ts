@@ -6,6 +6,7 @@ import {
   bootFailureMessage,
   httpTabLabel,
   overLimitMessage,
+  resetConfirmMessage,
   processLabel,
   shellName,
 } from "./messages";
@@ -22,6 +23,27 @@ describe("overLimitMessage", () => {
     ],
   ])("保存したファイルがあるかが %s のときの本文", (hasSaved, message) => {
     expect(overLimitMessage(hasSaved)).toBe(message);
+  });
+
+  it("DB を使うプロジェクトでは、SQL も保存しないことを書く", () => {
+    expect(overLimitMessage(true, true)).toBe(
+      "作業ディレクトリのファイルが 1000 個か 10 MB を超えました。SQL のペインの入力欄の SQL も保存しません。ページを閉じると、前に保存したときのファイルに戻ります。ファイルを減らすと、また保存します。",
+    );
+  });
+});
+
+describe("resetConfirmMessage", () => {
+  it.each([
+    [
+      false,
+      "保存したファイルを消し、初期ファイルで実行環境を起動し直します。消したファイルは戻せません。",
+    ],
+    [
+      true,
+      "保存したファイルを消し、初期ファイルで実行環境を起動し直します。SQL のペインの入力欄も、最初の SQL に戻ります。消したファイルは戻せません。",
+    ],
+  ])("DB を使うかが %s のときの本文", (database, message) => {
+    expect(resetConfirmMessage(database)).toBe(message);
   });
 });
 

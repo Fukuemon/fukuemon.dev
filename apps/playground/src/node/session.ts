@@ -11,7 +11,7 @@ import {
 
 import { type ProjectLoad, isEmbedId } from "../project/project";
 import { type Workspace, type WorkspaceLoad, createWorkspace } from "../workspace/workspace";
-import { shellName } from "./messages";
+import { SQL_PANE_QUERY, shellName } from "./messages";
 import { type NodeRecord, type SaveRead, createRecordSaver, readSavedRecord } from "./record-saver";
 import { RESTART_READ, SAVE_READ, isExcludedFromSave, filesForRestart } from "./save-rules";
 import { createStore } from "./store";
@@ -72,6 +72,10 @@ export type NodeSession = {
   commandFailed: Store<boolean>;
   /** 起動し直すか、初期の状態に戻している間は true である。 */
   busy: Store<boolean>;
+  /** SQL のペインの入力欄の SQL。起動し直すときは残し、初期の状態に戻すと最初の SQL に戻る。 */
+  sqlQuery: Store<string>;
+  /** SQL のペインの入力欄の SQL を替える。訪問者の操作とみなし、DB を使うプロジェクトでは、ファイルと合わせて保存する。 */
+  setSqlQuery: (sql: string) => void;
   /** npm install の後に、起動のコマンドを実行する。前に実行した起動のコマンドが動いていれば、止めてから実行する。 */
   run: () => Promise<void>;
   /** 作業ディレクトリのファイルを読んでから、実行環境を起動し直す。起動のコマンドは実行しない。 */
@@ -101,6 +105,8 @@ type Instance = {
   /** 訪問者が、この実行環境を操作したか。操作する前の変更は保存しない。 */
   touched: boolean;
   stopSaving: () => void;
+  /** 変更の通知を受けたときと同じく、待ってから作業ディレクトリを読んで保存する。 */
+  requestSave: () => void;
 };
 
 export function createNodeSession({
@@ -120,6 +126,7 @@ export function createNodeSession({
   const busy = createStore(false);
   const commandFailed = createStore(false);
   const restartReadFailed = createStore(false);
+  const sqlQuery = createStore(record?.sql ?? SQL_PANE_QUERY);
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
   const recordSaver = createRecordSaver({
@@ -129,6 +136,7 @@ export function createNodeSession({
     canSave,
     projectVersion: project.version,
     now,
+    ...(project.database === true && { sql: sqlQuery.getSnapshot }),
   });
   const { persist, rewriteIfUnsaved } = recordSaver;
 
@@ -184,24 +192,31 @@ export function createNodeSession({
         reading = false;
       }
     };
+    // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
+    const schedule = () => {
+      if (stopped || !instance.touched) return;
+      const at = Date.now();
+      firstChange ??= at;
+      clearTimeout(timer);
+      const wait = Math.min(SAVE_DELAY_MS, firstChange + SAVE_MAX_DELAY_MS - at);
+      timer = setTimeout(() => void save(), Math.max(0, wait));
+    };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
       if (!instance.touched) return;
       if (paths.every(isExcludedFromSave)) {
         rewriteIfUnsaved();
         return;
       }
-      // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
-      const at = Date.now();
-      firstChange ??= at;
-      clearTimeout(timer);
-      const wait = Math.min(SAVE_DELAY_MS, firstChange + SAVE_MAX_DELAY_MS - at);
-      timer = setTimeout(() => void save(), Math.max(0, wait));
+      schedule();
     });
     if (saveNow) void save();
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      unsubscribe();
+    return {
+      stop: () => {
+        stopped = true;
+        clearTimeout(timer);
+        unsubscribe();
+      },
+      request: schedule,
     };
   };
 
@@ -295,13 +310,16 @@ export function createNodeSession({
       commandQueue: Promise.resolve(),
       touched,
       stopSaving: () => undefined,
+      requestSave: () => undefined,
     };
     current = instance;
     return (async (): Promise<RuntimeResult> => {
       try {
         const runtime = await boot(bootOptions(project, files));
         instance.runtime = runtime;
-        instance.stopSaving = watchForSave(instance, runtime);
+        const watcher = watchForSave(instance, runtime);
+        instance.stopSaving = watcher.stop;
+        instance.requestSave = watcher.request;
         void startup(runtime)
           .then(async (code) => {
             installed(code);
@@ -386,7 +404,11 @@ export function createNodeSession({
     } catch (error) {
       // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
       // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
-      if (old.runtime) old.stopSaving = watchForSave(old, old.runtime, { saveNow: old.touched });
+      if (old.runtime) {
+        const watcher = watchForSave(old, old.runtime, { saveNow: old.touched });
+        old.stopSaving = watcher.stop;
+        old.requestSave = watcher.request;
+      }
       throw error;
     }
   };
@@ -395,6 +417,7 @@ export function createNodeSession({
     lastRead = undefined;
     versionChanged.set(false);
     restartReadFailed.set(false);
+    sqlQuery.set(SQL_PANE_QUERY);
     return { files: project.files, touched: false };
   };
 
@@ -409,6 +432,13 @@ export function createNodeSession({
     versionChanged,
     busy,
     commandFailed,
+    sqlQuery,
+    setSqlQuery: (sql) => {
+      if (sql === sqlQuery.getSnapshot()) return;
+      sqlQuery.set(sql);
+      current.touched = true;
+      current.requestSave();
+    },
     run: async () => {
       // 起動の途中に押したときは、起動を待ってから実行する
       await runtimeStore.getSnapshot();

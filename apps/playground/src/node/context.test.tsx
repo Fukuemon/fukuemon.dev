@@ -3,7 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { nodeDefaultProject } from "../project/defaults";
-import { RuntimeContext, SelectionContext, useRestart, useRuntime, useSelection } from "./context";
+import {
+  RuntimeContext,
+  SelectionContext,
+  useRestart,
+  useRuntime,
+  useSelection,
+  useSqlQuery,
+} from "./context";
 import { initialSelection } from "./selection";
 import { createStore } from "./store";
 import type { RuntimeResult } from "./session";
@@ -29,6 +36,8 @@ const renderRuntime = (result: RuntimeResult) =>
         runtime: settled(result),
         restart: async () => undefined,
         busy: createStore(false),
+        sqlQuery: createStore(""),
+        setSqlQuery: () => undefined,
       }}
     >
       <RuntimeProbe />
@@ -69,6 +78,8 @@ describe("useRestart", () => {
           runtime: settled(result),
           restart,
           busy: createStore(busy),
+          sqlQuery: createStore(""),
+          setSqlQuery: () => undefined,
         }}
       >
         <RestartProbe />
@@ -79,6 +90,35 @@ describe("useRestart", () => {
 
   it("provider の外では、誤りにする", () => {
     expect(() => renderToStaticMarkup(<RestartProbe />)).toThrow("RuntimeContext");
+  });
+});
+
+describe("useSqlQuery", () => {
+  function QueryProbe() {
+    return <p>{useSqlQuery()[0]}</p>;
+  }
+
+  it("provider の SQL の store の値を返す", () => {
+    const result: RuntimeResult = { kind: "unavailable", reason: "timeout" };
+    const html = renderToStaticMarkup(
+      <RuntimeContext
+        value={{
+          project: nodeDefaultProject,
+          runtime: settled(result),
+          restart: async () => undefined,
+          busy: createStore(false),
+          sqlQuery: createStore("select 1;"),
+          setSqlQuery: () => undefined,
+        }}
+      >
+        <QueryProbe />
+      </RuntimeContext>,
+    );
+    expect(html).toBe("<p>select 1;</p>");
+  });
+
+  it("provider の外では、誤りにする", () => {
+    expect(() => renderToStaticMarkup(<QueryProbe />)).toThrow("RuntimeContext");
   });
 });
 

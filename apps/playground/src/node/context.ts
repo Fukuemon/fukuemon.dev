@@ -4,12 +4,14 @@ import { type ActionDispatch, createContext, use, useSyncExternalStore } from "r
 import type { Selection, SelectionAction } from "./selection";
 import type { NodeProject, RuntimeResult } from "./session";
 
-/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作と、起動し直している間かどうか。値が変わるのは、実行環境を起動し直すときだけである。 */
+/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作と、起動し直している間かどうか、SQL のペインの入力欄の SQL。値が変わるのは、実行環境を起動し直すときだけである。 */
 export type RuntimeValue = {
   project: NodeProject;
   runtime: Promise<RuntimeResult>;
   restart: () => Promise<void>;
   busy: Store<boolean>;
+  sqlQuery: Store<string>;
+  setSqlQuery: (sql: string) => void;
 };
 
 export const RuntimeContext = createContext<RuntimeValue | null>(null);
@@ -43,6 +45,18 @@ export function useRestart(): { restart: () => Promise<void>; restarting: boolea
     value.busy.getSnapshot,
   );
   return { restart: value.restart, restarting };
+}
+
+/** SQL のペインの入力欄の SQL と、替える関数。値は src/node/ のモジュールが持ち、保存する。 */
+export function useSqlQuery(): [string, (sql: string) => void] {
+  const value = use(RuntimeContext);
+  if (!value) throw new Error("RuntimeContext の provider が無い");
+  const query = useSyncExternalStore(
+    value.sqlQuery.subscribe,
+    value.sqlQuery.getSnapshot,
+    value.sqlQuery.getSnapshot,
+  );
+  return [query, value.setSqlQuery];
 }
 
 export function useSelection(): SelectionValue {

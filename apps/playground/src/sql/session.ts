@@ -7,6 +7,7 @@ import {
 
 import type { ProjectLoad } from "../project/project";
 import {
+  type RecordStamp,
   type Workspace,
   type WorkspaceLoad,
   createSaver,
@@ -54,7 +55,7 @@ export type SqlSession = {
 };
 
 /** IndexedDB に保存する 1 件。入力欄の SQL を、変えるたびに丸ごと置き換える。 */
-export type SqlRecord = { sql: string; version: string; savedAt: number };
+export type SqlRecord = RecordStamp & { sql: string };
 
 /** IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存した SQL が無いときと同じに扱う。 */
 function isSqlRecord(value: unknown): value is SqlRecord {
