@@ -76,11 +76,6 @@
           "src/*/main.tsx"
         ]
       },
-      "packages/e2e": {
-        "entry": [
-          "visual/specs/**/*.spec.ts"
-        ]
-      },
       "packages/ui": {
         "entry": [
           "src/tokens/tokens.gen.css",

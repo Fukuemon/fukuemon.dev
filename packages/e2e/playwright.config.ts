@@ -50,6 +50,8 @@ export default defineConfig({
       name: "visual",
       testDir: "./visual/specs",
       testMatch: "**/*.spec.ts",
+      // 庭の spec は、同じファイルの中のテストを直列で流す。SwiftShader の描画が重いため
+      fullyParallel: false,
       // 基準の画像は Linux の 1 枚だけを持つ。名前に OS を入れない
       snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}{ext}",
       use: {
