@@ -108,6 +108,37 @@ const treeItems = (tree: Element | undefined) => [
   ...(tree?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? []),
 ];
 
+/**
+ * 引数ごとの、行の中の木の番号。開けない引数は -1 にする。
+ * コンポーネントの外に置く。React Compiler は、ラムダが捕まえた変数を `++` で書き換えるコンポーネントをコンパイルしない。
+ */
+const treeIndexesOf = (args: readonly ConsoleValue[]) => {
+  let count = 0;
+  return args.map((arg) => (isExpandable(arg) ? count++ : -1));
+};
+
+type EntryTreeProps = {
+  value: ConsoleValue;
+  id: string;
+  onEdge: (key: "ArrowUp" | "ArrowDown" | "ArrowLeft") => void;
+};
+
+/**
+ * 行の中の、1 つの引数の値の木。
+ * 行から分けるのは、React Compiler が、行の中の要素を探す関数と同じ箇所で作った値の木をメモ化しないためである。分けると、値と id が変わらない間は値の木を作り直さない。
+ */
+function EntryTree({ value, id, onEdge }: EntryTreeProps) {
+  return (
+    <TreeView
+      density="compact"
+      items={[toTreeNode(value, id)]}
+      isTabStop={false}
+      label="ログの値"
+      onEdge={onEdge}
+    />
+  );
+}
+
 type EntryRowProps = {
   entry: ConsoleEntry;
   /** Tab のキーで止まる行か。一覧の中で 1 つの行だけを止まる箇所にする。 */
@@ -125,10 +156,8 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
   const element = useRef<HTMLLIElement>(null);
   // ツリーの項目は文字の上に余白を持つので、値がツリーで始まる行は、印と時刻をその 1 行目にそろえる
   const startsWithTree = entry.args[0] !== undefined && isExpandable(entry.args[0]);
-  // 引数ごとの、行の中の木の番号。開けない引数は -1 にする
-  let treeCount = 0;
-  const treeIndexes = entry.args.map((arg) => (isExpandable(arg) ? treeCount++ : -1));
-  const trees = () => [...(element.current?.querySelectorAll('[role="tree"]') ?? [])];
+  const treeIndexes = treeIndexesOf(entry.args);
+  const treeElements = () => [...(element.current?.querySelectorAll('[role="tree"]') ?? [])];
   const enterTree = (tree: Element | undefined, at: "first" | "last") => {
     const items = treeItems(tree);
     (at === "first" ? items[0] : items.at(-1))?.focus();
@@ -153,16 +182,16 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
       ArrowDown: () => moveFocus("next"),
       Home: () => moveFocus("first"),
       End: () => moveFocus("last"),
-      ArrowRight: () => enterTree(trees()[0], "first"),
-      Enter: () => enterTree(trees()[0], "first"),
+      ArrowRight: () => enterTree(treeElements()[0], "first"),
+      Enter: () => enterTree(treeElements()[0], "first"),
     };
     const action = keys[event.key];
     if (!action) return;
     event.preventDefault();
     action();
   };
-  const handleEdge = (treeIndex: number) => (key: "ArrowUp" | "ArrowDown" | "ArrowLeft") => {
-    const all = trees();
+  const handleEdge = (treeIndex: number, key: "ArrowUp" | "ArrowDown" | "ArrowLeft") => {
+    const all = treeElements();
     if (key === "ArrowDown") {
       if (all[treeIndex + 1]) enterTree(all[treeIndex + 1], "first");
       else moveFocus("next");
@@ -207,12 +236,10 @@ function EntryRow({ entry, isTabStop, onFocusRow }: EntryRowProps) {
             isExpandable(arg) ? (
               // oxlint-disable-next-line react/no-array-index-key -- 同じ値の引数が並ぶことがあり、並びも変わらない (context/conventions.md)
               <div className="w-full" key={index}>
-                <TreeView
-                  density="compact"
-                  items={[toTreeNode(arg, `${entry.id}/${index}`)]}
-                  isTabStop={false}
-                  label="ログの値"
-                  onEdge={handleEdge(treeIndexes[index] ?? 0)}
+                <EntryTree
+                  id={`${entry.id}/${index}`}
+                  onEdge={(key) => handleEdge(treeIndexes[index] ?? 0, key)}
+                  value={arg}
                 />
               </div>
             ) : (
