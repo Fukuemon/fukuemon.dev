@@ -123,7 +123,9 @@ ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスであ�
 ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。  
 ADR-0044 の Decision 4 と、ADR-0045 の Decision 4 は、ADR-0063 に置換した。  
 ADR-0037 の Decision の「Yaegi の WASM は、訪問者が実行のボタンを押してから読み込む」は、ADR-0063 に置換した。  
-ADR-0051 の Decision 2 の「それも無いときは、初期ファイルで起動する」は、ADR-0069（提案）が、前に起動したときのファイルで起動する形に変える。
+ADR-0051 の Decision 2 の「それも無いときは、初期ファイルで起動する」は、ADR-0069（提案）が、前に起動したときのファイルで起動し、案内を出す形に変える。  
+ADR-0051 の Decision 2 の「起動し直すときは、破棄する前の実行環境から読んだ、作業ディレクトリのファイルで起動する」は、ADR-0070（提案）が、リンクを渡さない形に変える。  
+ADR-0050 の Decision の「保存する対象は、訪問者の作業ディレクトリの全体のうち、`node_modules` を除いたものにする」は、Node の実行環境について、ADR-0070（提案）が変える。
 
 ADR-0036（[DB の記事は PGlite を単体で動かし、Node から同じ DB を使う記事は、実行環境の中の PGlite を HTTP で使う](0036-pglite-standalone-and-http-bridge.md)）は、ADR-0038 に置換した。  
 ADR-0038（[DB の記事は PGlite を使い、Node のコードからは、実行環境の中の PGlite に Unix ドメインソケットで `pg` から接続する](0038-pglite-over-unix-socket.md)）は、ADR-0053 に置換した。  

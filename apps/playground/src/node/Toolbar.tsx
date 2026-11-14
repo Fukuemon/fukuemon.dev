@@ -121,7 +121,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             title="作業ディレクトリを読めずに起動し直しました"
             tone="warning"
           >
-            前に読んだときのファイルで起動しています。その後に変えたファイルは、この実行環境にありません。
+            前に読めたときか、前に起動したときのファイルで起動しています。それより後に変えたファイルは、この実行環境にありません。
           </Notice>
         )}
         {commandFailed && (
