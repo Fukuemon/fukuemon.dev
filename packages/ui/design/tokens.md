@@ -148,3 +148,25 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 - 動きを減らす設定での止め方は、テーマ変数のファイル（`src/tokens/theme.css`）の末尾の 1 か所にある（`MOTION-REDUCE`）。罫と筆の線を引く動きは、止めると全長の線が最初から出る。`Button` の読み込み中の印は、濃い 3 つの点で止まる。`scroll-fade-end` の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。
 
 ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+
+## ハイコントラスト
+
+`forced-colors: active` で消える枠と塗りを、システムの色で引くユーティリティである。通常の表示には何も変わらない。
+足す規則は DESIGN.md の「ハイコントラスト」にある。
+
+| ユーティリティ                                                                                 | 描くもの                                                                                                                            |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `forced-frame`                                                                                 | `CanvasText` の 1px の枠。背景の色か `ring` で境界を表す要素（`Button`、`Switch`、`Checkbox`）に付ける                              |
+| `forced-on`                                                                                    | 選択とオンの塗りと、その上の文字と印                                                                                                |
+| `forced-on-row`                                                                                | 文字を持つ行（`TreeView`）の選択。文字は `CanvasText` のまま、塗りと枠を選択の色にする。Chromium が文字の下に Canvas の板を敷くため |
+| `forced-off-disabled`、`forced-on-disabled`                                                    | 無効の要素の枠、文字、塗り（`GrayText`）                                                                                            |
+| `forced-fill`（`CanvasText`）、`forced-fill-on`（選択の色。動く線に使う）                      | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯、`TextField` の下罫、`Loading` の罫）の塗り           |
+| `forced-solid`                                                                                 | 筆の形（`stroke-brush`）の罫を、全幅の帯にする。`Tabs` の選んだタブの下の帯に付ける（ADR-0068）                                     |
+| `forced-mark`、`forced-mark-disabled`                                                          | `Checkbox` のチェックの印の色                                                                                                       |
+| `forced-edge-hidden`                                                                           | 透明の枠（選んでいない項目の左の枠）を、背景の色にして隠す。ハイコントラストでは、透明の枠が見える色になる                          |
+| `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-off-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                                                           |
+
+- 選択とオンの色は、変数 `--fd-forced-on` と `--fd-forced-on-text` が持つ。この 2 つはセマンティックトークンではなく、`:root` に置く `forced-colors: active` 専用の変数である。値は `SelectedItem` と `SelectedItemText` で、使えないブラウザでは `Highlight` と `HighlightText` になる。
+- ブラウザは、システムの色以外の値を置き換える。通常の色の指定（`bg-primary` など）に勝つよう、`forced-*` の宣言は `!important` にしている。
+- `loading-dots` は、ユーティリティの中で点を `CanvasText` で塗る。`forced-*` を足す必要はない。
+- `forced-frame` は 1px の枠を足す。`absolute` の子を持つ要素では、子の位置を 1px 戻す。`Switch` のつまみは `forced-colors:left-px` で戻している。

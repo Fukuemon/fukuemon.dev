@@ -178,6 +178,22 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | キーボードの操作             | コンポーネントの文書のとおりに動く                                                                                                                                                  | `pnpm run test:ui` のコンポーネントのテスト                                                                                      |
 | 入力の誤りの伝え方           | 欄ごとの誤りの文は `aria-describedby` で欄に結び付け、`role="alert"` を付けない。送った後は最初の誤りの欄へフォーカスを移す。送れなかったときの文だけを `role="alert"` で読み上げる | `pnpm run test:ui` の `TextField` のテスト（欄ごとの誤りの文）。送った後のフォーカスの移り方と、送れなかったときの文は、レビュー |
 | 動きを減らす設定             | 設定が `reduce` のとき、位置、大きさ、回転を動かすアニメーションと遷移、スクロールに合わせた動きを止める。このプロダクトの選択（AAA の 2.3.3）                                      | レビュー（`MOTION-REDUCE`）                                                                                                      |
+| ハイコントラスト             | `forced-colors: active` で、状態を枠と塗りの違いで見分けられる。背景の色と `ring` だけで状態を表さない                                                                              | `pnpm run test:ui`（`*.forced-colors.test.tsx`）と、レビュー                                                                     |
+
+## ハイコントラスト
+
+Windows のハイコントラスト（`forced-colors: active`）では、ブラウザが背景の色と影（`ring` を含む）を消し、色をシステムの色に置き換える。
+背景の色と `ring` だけで境界と状態を表す要素は、見分けられなくなる。
+
+直し方は、`src/tokens/theme.css` の `forced-*` のユーティリティを、その要素に足すことである。
+通常の表示には何も変わらない。
+
+ユーティリティの一覧と使い方は [design/tokens.md](design/tokens.md#ハイコントラスト) にある。
+システムの色（`CanvasText`、`GrayText`、`SelectedItem` など）は、ブラウザが決める値で、テーマごとに変わらない。そのため、プリミティブトークンを通さず、`theme.css` の `forced-*` に直に書く。
+
+- フォーカスの輪は `outline` なので、ハイコントラストでも残る。`focus-ring` のユーティリティだけで書く。
+- 状態を背景の色か `ring` だけで表すコンポーネントを足すときは、`forced-*` を足す。
+- 状態の違いは、各コンポーネントの `*.forced-colors.test.tsx` が、Chromium を `forced-colors: active` にして確認する。見た目は、Chromium の DevTools の Rendering で `forced-colors: active` を再現して、カタログの story を開いて見る。
 
 ## 決まっていない選択
 

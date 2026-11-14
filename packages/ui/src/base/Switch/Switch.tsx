@@ -46,13 +46,13 @@ export function Switch({
   const isChecked = checked ?? innerChecked;
 
   return (
-    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-aria-disabled:cursor-not-allowed has-aria-disabled:text-text-disabled">
+    <label className="group/row inline-flex min-h-11 cursor-pointer items-center gap-3 text-body-dense text-text has-aria-disabled:cursor-not-allowed has-aria-disabled:text-text-disabled has-aria-disabled:forced-off-disabled">
       <button
         {...props}
         aria-checked={isChecked}
         aria-disabled={disabled || undefined}
         aria-labelledby={labelId}
-        className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center aria-disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset focus-visible:focus-ring not-aria-disabled:not-aria-checked:group-hover/row:bg-surface-subtle not-aria-disabled:not-aria-checked:group-hover/row:ring-text aria-checked:bg-primary aria-checked:ring-primary not-aria-disabled:aria-checked:group-hover/row:bg-primary-hover aria-disabled:bg-surface-disabled aria-disabled:ring-border aria-disabled:aria-checked:bg-text-disabled aria-disabled:aria-checked:ring-text-disabled"
+        className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center aria-disabled:cursor-not-allowed rounded-control bg-surface ring-1 ring-border-field ring-inset focus-visible:focus-ring not-aria-disabled:not-aria-checked:group-hover/row:bg-surface-subtle not-aria-disabled:not-aria-checked:group-hover/row:ring-text aria-checked:bg-primary aria-checked:ring-primary not-aria-disabled:aria-checked:group-hover/row:bg-primary-hover aria-disabled:bg-surface-disabled aria-disabled:ring-border aria-disabled:aria-checked:bg-text-disabled aria-disabled:aria-checked:ring-text-disabled forced-frame aria-checked:forced-on aria-disabled:forced-off-disabled aria-disabled:aria-checked:forced-on-disabled"
         onClick={(event) => {
           if (disabled) {
             event.preventDefault();
@@ -67,7 +67,7 @@ export function Switch({
       >
         <span
           aria-hidden
-          className="absolute left-0.5 flex size-5 items-center justify-center rounded-control bg-text-secondary text-text-inverse transition-transform group-aria-checked:translate-x-5 group-aria-checked:bg-surface group-aria-checked:text-primary group-aria-disabled:bg-text-disabled group-aria-disabled:group-aria-checked:bg-surface group-aria-disabled:group-aria-checked:text-text-disabled"
+          className="absolute left-0.5 flex size-5 items-center justify-center rounded-control bg-text-secondary text-text-inverse transition-transform group-aria-checked:translate-x-5 group-aria-checked:bg-surface group-aria-checked:text-primary group-aria-disabled:bg-text-disabled group-aria-disabled:group-aria-checked:bg-surface group-aria-disabled:group-aria-checked:text-text-disabled forced-colors:left-px forced-thumb-off group-aria-checked:forced-thumb-on group-aria-disabled:forced-thumb-off-disabled group-aria-disabled:group-aria-checked:forced-thumb-on-disabled"
         >
           <svg
             className="hidden group-aria-checked:block"
