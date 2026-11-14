@@ -144,7 +144,7 @@ DADS の 150% では、行は 19.5px になる。
   - 記事の一覧の題のように文中に置かないリンクは、`isStandalone` を付けて左右を空けない。見出しや帯と左端をそろえるためである。
 - 操作できる要素と重なる面の角は、2px（`rounded-control`）で丸める。
   - コードを動かす画面だけ、角を 3 つの段で丸める。紙の面の重なりを、角の丸めで見分けるためである（ADR-0073）。
-    - ペインの紙の面は 10px（`rounded-pane`）、タブの帯とファイルのドロワーは 14px（`rounded-sheet`）にする。
+    - ペインの紙の面は 10px（`rounded-pane`）、`PaneTabs` の帯とファイルのドロワーは 14px（`rounded-sheet`）にする。
     - `density="compact"` と `size="XS"` の操作できる要素は 6px（`rounded-control-compact`）にする。
   - コードを動かす画面の外では、角丸の名前を `rounded-control` の 1 つだけ使う。
   - 丸めるのは、`Button`、`IconButton`、`boxed` の `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。
@@ -390,7 +390,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `ConsoleEntryList`   | `console.*` の出力の一覧。ログレベルで絞り、値を `TreeView` で開いて見せる              |
 | `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む |
 | `PaneTabs`           | 狭い配置で、ペインを 1 つずつ切り替えるタブの帯。下、左、上に置く                       |
-| `FileDrawer`         | 狭い配置で、ファイルの木を画面の左から重ねて出す引き出し                                |
+| `FileDrawer`         | 狭い配置で、ファイルの木を画面の左から重ねて出すドロワー                                |
 
 コードを動かす画面の Case のうち、`PaneTabs`、`FileDrawer`、`ConfirmDialog` を除くものは、`ToolPane` の領域として描き、次の形にそろえる。
 
