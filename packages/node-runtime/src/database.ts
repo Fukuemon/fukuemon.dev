@@ -164,7 +164,7 @@ const CSI = new RegExp(`${ESCAPE}\\[[0-9;?]*[ -/]*[@-~]`, "g");
 function plainTerminalOutput(raw: string): string {
   return raw
     .split("\n")
-    .map((line) => (line.replace(/\r$/, "").split(LINE_RESET).at(-1) ?? "").replace(CSI, ""))
+    .map((line) => (line.replace(/\r$/, "").split(LINE_RESET).pop() ?? "").replace(CSI, ""))
     .join("\n");
 }
 

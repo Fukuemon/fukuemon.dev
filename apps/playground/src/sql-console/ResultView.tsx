@@ -159,7 +159,8 @@ export type ResultViewProps = { response: SqlResponse };
 
 /** 1 回の実行の結果。複数の文を実行したときは、最後の文の結果を出す。 */
 export function ResultView({ response }: ResultViewProps) {
-  const density = use(DenseContext) ? "compact" : "default";
+  const dense = use(DenseContext);
+  const density = dense ? "compact" : "default";
   if ("error" in response) {
     const { message, code, position } = response.error;
     // SQLSTATE を持つのは Postgres が返したエラーだけである。読み込みの失敗と異常終了では、取り消した文は無い
@@ -183,10 +184,8 @@ export function ResultView({ response }: ResultViewProps) {
   }
   const last = response.results.at(-1);
   return (
-    <div className={`flex min-w-0 flex-col ${density === "compact" ? "gap-2" : "gap-4"}`}>
-      <p
-        className={`${density === "compact" ? "text-compact" : "text-caption"} text-text-secondary`}
-      >
+    <div className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}>
+      <p className={`${dense ? "text-compact" : "text-caption"} text-text-secondary`}>
         {response.results.length} 個の文を {ms(response.ms)} で実行しました。
       </p>
       {last && <ResultBody result={last} />}

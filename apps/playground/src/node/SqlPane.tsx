@@ -49,7 +49,7 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
     });
 
   return (
-    <div className="size-full p-1">
+    <PaneBox>
       <SqlConsole
         dense
         fileName="query.sql"
@@ -61,6 +61,6 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
         stoppedHint={SQL_STOPPED_HINT}
         value={query}
       />
-    </div>
+    </PaneBox>
   );
 }

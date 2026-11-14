@@ -315,6 +315,11 @@ describe("bootWithBackend の DB", () => {
       "npm error code E404\nnpm error 404 Not Found\n",
     ],
     [
+      "行の途中で行の先頭に戻す",
+      ["fetch 10%\rfetch 90%\rnpm error A\n", "x\u001b[Gnpm error B\n"],
+      "npm error A\nnpm error B\n",
+    ],
+    [
       "制御の文字を除いた後も 4096 文字を超える",
       ["\u001b[31m" + "a".repeat(5000) + "\u001b[39m", "b".repeat(96)],
       "a".repeat(4000) + "b".repeat(96),

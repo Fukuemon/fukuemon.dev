@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { nodeDefaultProject } from "../project/defaults";
-import { RuntimeContext, SelectionContext, useRuntime, useSelection } from "./context";
+import { RuntimeContext, SelectionContext, useRestart, useRuntime, useSelection } from "./context";
 import { initialSelection } from "./selection";
 import type { RuntimeResult } from "./session";
 
@@ -44,6 +44,27 @@ describe("useRuntime", () => {
 
   it("provider の外では、誤りにする", () => {
     expect(() => renderToStaticMarkup(<RuntimeProbe />)).toThrow("RuntimeContext");
+  });
+});
+
+describe("useRestart", () => {
+  const restart = async () => undefined;
+  function RestartProbe() {
+    return <p>{useRestart() === restart ? "same" : "other"}</p>;
+  }
+
+  it("provider の値の restart を返す", () => {
+    const result: RuntimeResult = { kind: "unavailable", reason: "timeout" };
+    const html = renderToStaticMarkup(
+      <RuntimeContext value={{ project: nodeDefaultProject, runtime: settled(result), restart }}>
+        <RestartProbe />
+      </RuntimeContext>,
+    );
+    expect(html).toBe("<p>same</p>");
+  });
+
+  it("provider の外では、誤りにする", () => {
+    expect(() => renderToStaticMarkup(<RestartProbe />)).toThrow("RuntimeContext");
   });
 });
 
