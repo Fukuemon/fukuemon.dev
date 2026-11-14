@@ -13,6 +13,7 @@ const BUTTON_STORIES = [
   "Loading",
   "SecondaryLoading",
   "Small",
+  "ExtraSmall",
 ];
 
 test("Button の Docs のページを開いた直後にテーマを選ぶと、全ての story の Show code が story のソースから作ったコードを出す", async ({
