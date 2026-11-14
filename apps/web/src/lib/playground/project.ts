@@ -11,13 +11,6 @@ import {
 
 const CONFIG_FILE = "playground.json";
 
-/** 埋め込みの名前。埋め込みの ID の後ろの半分になるので、プレイグラウンドが受け付ける形に合わせる */
-const EMBED_NAME = /^[a-z0-9][a-z0-9-]*$/;
-
-export const isEmbedName = (name: string) => EMBED_NAME.test(name);
-
-export const embedId = (contentId: string, name: string) => `${contentId}/${name}`;
-
 /** 記事の Markdown があるディレクトリの下の、プロジェクトのディレクトリ */
 export const projectDir = (articlePath: string, name: string) =>
   join(dirname(articlePath), "playground", name);

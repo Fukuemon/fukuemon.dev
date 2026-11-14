@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+const SEGMENT = "[a-z0-9][a-z0-9-]*";
+
+/** 埋め込みの名前（記事の中で埋め込みを区別する名前）。記事の contentId と同じ形にする */
+export const embedNameSchema = z.string().regex(new RegExp(`^${SEGMENT}$`));
+
+/** 埋め込みの ID（`<contentId>/<埋め込みの名前>`）。`..` や `?` で、JSON の置き場の外を指せないようにする */
+export const embedIdSchema = z.string().regex(new RegExp(`^${SEGMENT}/${SEGMENT}$`));
+
+export const isEmbedName = (value: string) => embedNameSchema.safeParse(value).success;
+
+export const isEmbedId = (value: string) => embedIdSchema.safeParse(value).success;
+
+/** 記事の contentId と埋め込みの名前から、埋め込みの ID を組み立てる */
+export const toEmbedId = (contentId: string, name: string) => `${contentId}/${name}`;
+
 const startCommandSchema = z.object({
   command: z.string().min(1),
   args: z.array(z.string()),

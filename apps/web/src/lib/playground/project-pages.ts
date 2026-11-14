@@ -1,6 +1,6 @@
-import type { PlaygroundProject } from "@fukuemon/playground-project";
+import { type PlaygroundProject, isEmbedName } from "@fukuemon/playground-project";
 import { findEmbedNames } from "./embeds";
-import { isEmbedName, projectDir, readProject } from "./project";
+import { projectDir, readProject } from "./project";
 
 type EmbeddingArticle = { id: string; filePath?: string; contentId: string; body?: string };
 

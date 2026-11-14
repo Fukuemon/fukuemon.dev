@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { embedUrl, isEmbedName, projectDir, readProject } from "./project";
+import { embedUrl, projectDir, readProject } from "./project";
 
 function projectFiles(files: Record<string, string | Uint8Array>): string {
   const dir = mkdtempSync(join(tmpdir(), "playground-project-"));
@@ -119,17 +119,6 @@ describe("プロジェクトのディレクトリを読む", () => {
 });
 
 describe("埋め込みの名前と URL", () => {
-  it.each([
-    ["server", true],
-    ["node-2", true],
-    ["Server", false],
-    ["-a", false],
-    ["a/b", false],
-    ["", false],
-  ])("%s を名前として %s にする", (name, ok) => {
-    expect(isEmbedName(name)).toBe(ok);
-  });
-
   it("記事の Markdown があるディレクトリの playground/<名前>/ を指す", () => {
     expect(projectDir("src/content/articles/s/a.md", "x")).toBe(
       "src/content/articles/s/playground/x",
