@@ -34,6 +34,7 @@ export default defineConfig({
   },
   integrations: [
     subsetFonts("Zen Old Mincho"),
+    subsetFonts("BIZ UDGothic", { rebuild: false }),
     playgroundIsolationHeaders(),
     react(),
     expressiveCode({

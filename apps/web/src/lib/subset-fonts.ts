@@ -7,16 +7,21 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import subsetFont from "subset-font";
 
 /**
- * 和文の書体のスライスを、その書体を当てる要素の字だけに作り直す。
+ * 和文の書体のスライスを、その書体を当てる要素の字だけに作り直し、使う字の無いスライスの @font-face を CSS から外す。
  * 書体を当てる要素は、ビルドした CSS で、その書体を font-family に持つクラスのセレクタから決める。
  * 要素を特定できないときは、字を取りこぼさないように、全ての HTML の字を使う。
- * スライスの分け方と unicode-range はそのまま残すので、ページは今までと同じスライスだけを取得する。
+ * 使う字のあるスライスの分け方と unicode-range はそのまま残すので、ページは今までと同じスライスだけを取得する。
+ * 使う字の無いスライスの規則は、どのページも取得しないのに、描画を止める CSS の転送量を増やすので外す。
  * 作り直したファイルは中身の hash で名前を付け直す。同じ名前のまま中身を変えると、
  * 長く保存したキャッシュが古い字の集合を返し、新しく使った字が別の書体で描かれる。
+ * @param options.rebuild false のときは、使う字のあるスライスを作り直さず、使う字の無いスライスの規則を外すだけにする
  */
-export function subsetFonts(family: string): AstroIntegration {
+export function subsetFonts(
+  family: string,
+  { rebuild = true }: { rebuild?: boolean } = {},
+): AstroIntegration {
   return {
-    name: "subset-fonts",
+    name: `subset-fonts:${family}`,
     hooks: {
       "astro:build:done": async ({ dir, logger }) => {
         const root = fileURLToPath(dir);
@@ -33,16 +38,23 @@ export function subsetFonts(family: string): AstroIntegration {
         if (faces.length === 0)
           throw new Error(`${family}: 作り直す @font-face が CSS に見つからない`);
         const paths = new Map(faces.map((face) => [face.url, inside(root, face.url)]));
-        for (const face of faces)
-          if (!HASHED.test(face.url))
-            throw new Error(`${face.url}: 名前の hash を差し替えられない`);
+        if (rebuild)
+          for (const face of faces)
+            if (!HASHED.test(face.url))
+              throw new Error(`${face.url}: 名前の hash を差し替えられない`);
         const renames = new Map<string, string>();
+        const unused = new Set<string>();
         let before = 0;
         let after = 0;
         for (const face of faces) {
           const text = chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
-          if (text === "") continue;
           const path = paths.get(face.url)!;
+          if (text === "") {
+            unused.add(face.url);
+            await rm(path, { force: true });
+            continue;
+          }
+          if (!rebuild) continue;
           const src = await readFile(path);
           const subset = await subsetFont(src, text, { targetFormat: "woff2" });
           const url = hashedUrl(face.url, subset);
@@ -54,17 +66,29 @@ export function subsetFonts(family: string): AstroIntegration {
         }
         for (const f of css) {
           const body = await readFile(f, "utf8");
-          let next = body;
+          let next = removeFaces(body, unused);
           for (const [from, to] of renames) next = next.replace(urlOf(from), `$1${to}$2`);
           if (next !== body) await writeFile(f, next);
         }
         logger.info(
-          `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars)`,
+          `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars), ${unused.size} unused faces removed`,
         );
       },
     },
   };
 }
+
+/** woff2 の URL が `urls` にある @font-face を、CSS から外す */
+function removeFaces(css: string, urls: ReadonlySet<string>): string {
+  if (urls.size === 0) return css;
+  return css.replace(/@font-face\s*\{([^}]*)\}/g, (rule, body: string) => {
+    const url = woff2Of(body);
+    return url !== undefined && urls.has(url) ? "" : rule;
+  });
+}
+
+const woff2Of = (body: string): string | undefined =>
+  /url\(([^)]+\.woff2)\)/.exec(body)?.[1]?.replace(/^["']|["']$/g, "");
 
 interface Face {
   url: string;
@@ -82,7 +106,7 @@ export function parseFaces(css: string, family: string): Face[] {
   const named = new RegExp(`font-family:\\s*["']?${escapeRegExp(family)}["']?\\s*;`, "i");
   for (const [, body] of css.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
     if (!named.test(body)) continue;
-    const url = /url\(([^)]+\.woff2)\)/.exec(body)?.[1]?.replace(/^["']|["']$/g, "");
+    const url = woff2Of(body);
     const range = /unicode-range:([^;}]*)/.exec(body)?.[1];
     if (url === undefined || range === undefined) continue;
     out.push({ url, ranges: parseRanges(range) });

@@ -228,6 +228,7 @@ describe("ビルド後の作り直し", () => {
     js?: string;
     pageCss?: string;
     extraFile?: string;
+    options?: Parameters<typeof subsetFonts>[1];
   }
 
   async function build({
@@ -237,6 +238,7 @@ describe("ビルド後の作り直し", () => {
     js = "",
     pageCss = "",
     extraFile = "",
+    options,
   }: Build) {
     dir = await mkdtemp(join(tmpdir(), "subset-fonts-"));
     await mkdir(join(dir, "_astro"));
@@ -247,7 +249,7 @@ describe("ビルド後の作り直し", () => {
     await writeFile(join(dir, "_astro/a.AAAAAAAA.woff2"), "a");
     await writeFile(join(dir, "_astro/b.AAAAAAAA.woff2"), "b");
     if (extraFile !== "") await writeFile(join(dir, "_astro", extraFile), "x");
-    const hook = subsetFonts(FAMILY).hooks["astro:build:done"]!;
+    const hook = subsetFonts(FAMILY, options).hooks["astro:build:done"]!;
     await hook({ dir: pathToFileURL(`${dir}/`), logger: { info: vi.fn(), warn } } as never);
   }
 
@@ -268,7 +270,7 @@ describe("ビルド後の作り直し", () => {
     await build({ html: heading("あ"), css: both });
 
     expect((await readdir(join(dir, "_astro"))).sort()).toStrictEqual(
-      ["app.js", "b.AAAAAAAA.woff2", "page.css", "site.css", renamed].sort(),
+      ["app.js", "page.css", "site.css", renamed].sort(),
     );
   });
 
@@ -276,9 +278,7 @@ describe("ビルド後の作り直し", () => {
     await build({ html: heading("あ"), css: both });
 
     const next = face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed);
-    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(
-      next + face("b", "U+3044") + RULE,
-    );
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(next + RULE);
   });
 
   it("HTML に埋め込んだ style の content の字も使う", async () => {
@@ -315,10 +315,37 @@ describe("ビルド後の作り直し", () => {
     expect(texts()).toStrictEqual(["A—"]);
   });
 
-  it("使う字がないスライスは、そのまま残す", async () => {
-    await build({ html: "<p>z</p>", css: face("a", "U+3042") });
+  it("使う字がないスライスは、@font-face を CSS から外し、ファイルを消す", async () => {
+    await build({ html: heading("あ"), css: both });
 
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).not.toContain("b.AAAAAAAA");
+    expect(await readdir(join(dir, "_astro"))).not.toContain("b.AAAAAAAA.woff2");
+  });
+
+  it("使う字がないスライスの @font-face は、どの CSS からも外す", async () => {
+    await build({ html: heading("あ"), css: both, pageCss: face("b", "U+3044") });
+
+    expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe("");
+  });
+
+  it("rebuild が false のときは、使う字のあるスライスを作り直さず、使う字の無いスライスの規則だけを外す", async () => {
+    await build({ html: heading("あ"), css: both, options: { rebuild: false } });
+
+    expect(subsetFont).not.toHaveBeenCalled();
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(face("a", "U+3042") + RULE);
     expect(await readdir(join(dir, "_astro"))).toContain("a.AAAAAAAA.woff2");
+  });
+
+  it("rebuild が false のときは、名前に hash の無いファイルでもビルドを止めない", async () => {
+    const odd = face("a", "U+3042").replace("a.AAAAAAAA.woff2", "odd.woff2");
+    await build({
+      html: heading("あ"),
+      css: odd,
+      extraFile: "odd.woff2",
+      options: { rebuild: false },
+    });
+
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(odd + RULE);
   });
 
   it("書体を当てない要素の字では、スライスを作り直さない", async () => {
