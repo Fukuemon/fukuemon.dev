@@ -46,7 +46,7 @@ const openDatabase = (factory: IDBFactory) => {
 };
 
 /**
- * 訪問者のファイルを、ツールの名前と埋め込みの ID の組のキーで、play.fukuemon.dev の IndexedDB に保存する (ADR-0050)。
+ * 訪問者のファイルを、ツールの名前と埋め込みの ID の組のキーで、play.fukuemon.dev の IndexedDB に保存する (ADR-0077)。
  * IndexedDB を読めないことは、ページを開いている間だけ持ち、その間は書き込まない。
  */
 export function createWorkspace<T>(

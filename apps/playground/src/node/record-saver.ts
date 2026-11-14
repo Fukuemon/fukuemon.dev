@@ -54,7 +54,7 @@ function hasFileAsDirectory(paths: readonly string[]): boolean {
 
 /**
  * IndexedDB から読んだ結果から、起動と保存に使うレコードを作る。形に合わない値は、保存したファイルが無いときと同じに扱う。
- * 保存しないファイルを除き、除いたファイルがあれば、除いた後のレコードを書き直す必要がある (ADR-0070)。
+ * 保存しないファイルを除き、除いたファイルがあれば、除いた後のレコードを書き直す必要がある (ADR-0077)。
  * 形に合わない SQL は捨てるが、それだけでは書き直さない。次の保存で上書きする。
  */
 export function readSavedRecord(saved: WorkspaceLoad<NodeRecord>): {
@@ -90,7 +90,7 @@ export type RecordSaverOptions = {
 export type RecordSaver = {
   /** IndexedDB に保存したファイルがあるか。 */
   hasSaved: Store<boolean>;
-  /** 保存が失敗したときは true である。訪問者の変更の保存が通るか、消せると false に戻る。書き直しの失敗だけで立ったときは、書き直しが通っても false に戻る (ADR-0070)。 */
+  /** 保存が失敗したときは true である。訪問者の変更の保存が通るか、消せると false に戻る。書き直しの失敗だけで立ったときは、書き直しが通っても false に戻る (ADR-0077)。 */
   saveFailed: Store<boolean>;
   /** 最後に読んだ作業ディレクトリが、保存の上限を超えたときは true である。 */
   overLimit: Store<boolean>;
@@ -124,7 +124,7 @@ export function createRecordSaver({
   let lastSaved = record?.files;
   // 保存したレコードがあるときは、入力欄の最初の SQL を保存済みとみなす。SQL の無いレコードを、訪問者が何も変えないうちに書き直さないためである
   let lastSavedSql = record !== undefined ? currentSql?.() : undefined;
-  // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0070)
+  // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0077)
   let pendingRewrite = needsRewrite ? record : undefined;
   // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける
   let lastQueued: NodeRecord | undefined;
@@ -132,7 +132,7 @@ export function createRecordSaver({
   let rewriting: NodeRecord | undefined;
   // 書き直しのレコード。後の通常の保存で rewriting が外れた後も、結果が返ったときに書き直しと見分ける
   const rewrites = new WeakSet<NodeRecord>();
-  // 訪問者の変更の保存の失敗。書き直しが通っても、この失敗で出た案内は消さない (ADR-0070)
+  // 訪問者の変更の保存の失敗。書き直しが通っても、この失敗で出た案内は消さない (ADR-0077)
   let visitorSaveFailed = false;
   // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
   const saver = createSaver<NodeRecord>({
@@ -170,7 +170,7 @@ export function createRecordSaver({
     queue(next);
   };
   rewrite();
-  // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る (ADR-0070)
+  // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る (ADR-0077)
   const rewriteIfUnsaved = () => {
     if (lastSaved === undefined) rewrite();
   };
@@ -180,7 +180,7 @@ export function createRecordSaver({
     saveFailed,
     overLimit,
     rewriteIfUnsaved,
-    // 上限を超えたときは、前に保存したレコードを残す。保存しないパスを落としたレコードだけは書き直す (ADR-0070)
+    // 上限を超えたときは、前に保存したレコードを残す。保存しないパスを落としたレコードだけは書き直す (ADR-0077)
     persist: (read) => {
       const saving = read.kind === "over-limit" ? read : filesToSave(read.entries);
       overLimit.set(saving.kind === "over-limit");

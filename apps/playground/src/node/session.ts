@@ -348,7 +348,7 @@ export function createNodeSession({
     })();
   };
 
-  // 保存したファイルがあるとき（再訪）は、起動のコマンドを、訪問者が実行のボタンを押してから実行する (ADR-0051)
+  // 保存したファイルがあるとき（再訪）は、起動のコマンドを、訪問者が実行のボタンを押してから実行する (ADR-0076)
   const runtimeStore = createStore(
     launch(bootFiles, { autoStart: record === undefined, touched: record !== undefined }),
   );

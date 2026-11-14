@@ -52,6 +52,10 @@ export type SqlSession = {
   canSave: boolean;
   /** 最後の保存が失敗したときは true である。 */
   saveFailed: Store<boolean>;
+  /** IndexedDB に保存した SQL があるか。保存が通ると true に、消すと false になる。 */
+  hasSaved: Store<boolean>;
+  /** 待っている保存を捨て、保存した SQL を消し、入力欄を初期の SQL に戻す。消せないときは失敗し、入力欄を変えない。消している間の setQuery は無視し、reset を重ねて呼んだときは、同じ Promise を返す。 */
+  reset: () => Promise<void>;
 };
 
 /** IndexedDB に保存する 1 件。入力欄の SQL を、変えるたびに丸ごと置き換える。 */
@@ -89,10 +93,19 @@ export function createSqlSession(
   const database = createDatabase(project.initialSql);
   const record = saved.kind === "saved" && isSqlRecord(saved.record) ? saved.record : undefined;
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
-  const version = record?.version ?? project.version;
-  const query = createStore(record?.sql ?? project.files[project.open] ?? "");
-  const saver = createSaver(storage);
+  let version = record?.version ?? project.version;
+  const initialQuery = project.files[project.open] ?? "";
+  const query = createStore(record?.sql ?? initialQuery);
+  const canSave = saved.kind !== "unavailable";
+  const hasSaved = createStore(record !== undefined);
+  // 保存が通ったときだけ、保存した SQL がある扱いにする
+  const saver = createSaver({
+    ...storage,
+    save: (next) => storage.save(next).then(() => hasSaved.set(canSave)),
+  });
   const running = createStore(false);
+  // 消している間は、setQuery の保存を捨て、reset を重ねて呼んでも消す操作を 1 つにする
+  let resetting: Promise<void> | undefined;
   return {
     status: database.status,
     phase: database.phase,
@@ -100,6 +113,8 @@ export function createSqlSession(
     query,
     running,
     setQuery: (sql) => {
+      // エディタは、外から入力欄の値を置き換えたときも変更として通知する。同じ値を保存し直すと、戻した直後に保存が作り直される
+      if (resetting || sql === query.getSnapshot()) return;
       query.set(sql);
       saver.save({ sql, version, savedAt: now() });
     },
@@ -113,8 +128,22 @@ export function createSqlSession(
         running.set(false);
       }
     },
-    canSave: saved.kind !== "unavailable",
+    canSave,
     saveFailed: saver.failed,
+    hasSaved,
+    reset: () => {
+      resetting ??= saver
+        .clear()
+        .then(() => {
+          version = project.version;
+          hasSaved.set(false);
+          query.set(initialQuery);
+        })
+        .finally(() => {
+          resetting = undefined;
+        });
+      return resetting;
+    },
   };
 }
 

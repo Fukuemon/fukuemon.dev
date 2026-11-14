@@ -1,6 +1,6 @@
 import type { DatabaseStatus, SqlResponse, Store } from "@fukuemon/sql-runtime";
 import { Button, EditorFrame, Loading, Notice } from "@fukuemon/ui";
-import { useId, useState, useSyncExternalStore } from "react";
+import { type ReactNode, type Ref, useId, useState, useSyncExternalStore } from "react";
 
 import { DenseContext } from "./density";
 import { ResultView } from "./ResultView";
@@ -28,6 +28,10 @@ export type SqlConsoleProps = {
   progress?: string;
   /** 渡すと、入力欄を低くし、間隔と字を詰め、親の高さを埋めて結果の欄だけを送る。ほかのペインと並べて置くときに使う。 */
   dense?: boolean;
+  /** 実行のボタンへの ref。呼ぶ側が、操作の後にフォーカスをボタンへ移すために使う。 */
+  runButtonRef?: Ref<HTMLButtonElement>;
+  /** 実行のボタンの行の右端に置くもの。出入りしても、入力欄の位置が動かないようにするため、行は常にある。 */
+  actions?: ReactNode;
 };
 
 /** SQL の入力欄、実行のボタン、結果の表と実行計画。 */
@@ -44,6 +48,8 @@ export function SqlConsole({
   fileName,
   progress,
   dense = false,
+  runButtonRef,
+  actions,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
   const database = useSyncExternalStore(status.subscribe, status.getSnapshot);
@@ -83,7 +89,12 @@ export function SqlConsole({
           </EditorFrame>
         </div>
         <div className={`flex shrink-0 flex-wrap items-center ${gap}`}>
-          <Button isLoading={running} onClick={() => void run()} size={dense ? "XS" : "S"}>
+          <Button
+            isLoading={running}
+            onClick={() => void run()}
+            ref={runButtonRef}
+            size={dense ? "XS" : "S"}
+          >
             {runLabel}
           </Button>
           <span
@@ -93,6 +104,7 @@ export function SqlConsole({
             Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
             でエディタの外へ移ります
           </span>
+          {actions}
         </div>
         <section
           aria-label="実行の結果"
