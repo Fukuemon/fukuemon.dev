@@ -55,6 +55,14 @@ export function articleHref(id: string): string {
 pnpm --filter @fukuemon/web build
 ```
 
+ファイル名のないコードブロックは、帯を持たない。
+
+```ts
+export function untitledArticleHref(id: string, base: string): string {
+  return base + id;
+}
+```
+
 横に長い行は、コードブロックの中で横に送る。
 
 ```sh title="long-line.sh"
