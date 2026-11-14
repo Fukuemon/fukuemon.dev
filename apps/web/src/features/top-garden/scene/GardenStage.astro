@@ -1,6 +1,7 @@
 ---
 // 庭を描く canvas と、庭の中のボタンと、画面の上端と下端の霞を置く。html に class stage-on が付いたときだけ、画面の全体に出す。
 // 和紙に置いたセクションは、場面のバンドルがこの中へ移すので、外側の要素は読み上げから隠さない。
+// 最初の訪問のイントロの墨の絵と署名は、slot に受け取り、html に class intro が付いている間だけ出す。
 import { STATIONS } from "../layout";
 
 // 色は surface、text、border-field、focus で書き、庭の範囲で時間帯の霞の色に差し替える（top-garden の Design Doc の「ヘッダーと霞」）
@@ -9,10 +10,13 @@ const stop =
   "min-h-11 min-w-11 cursor-pointer border border-s-0 border-border-field bg-surface px-1 text-label text-text first:border-s focus-visible:focus-ring aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
 const tool =
   "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2";
+const skip =
+  "min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-4 text-label text-text focus-visible:focus-ring";
 ---
 
 <div class="garden-stage bg-surface" data-garden-stage>
   <canvas aria-hidden="true"></canvas>
+  <div class="garden-ink" aria-hidden="true"><slot /></div>
 </div>
 <div class:list={[mist, "garden-mist-top bg-linear-to-b from-65%"]} aria-hidden="true"></div>
 <div class:list={[mist, "garden-mist-bottom bg-linear-to-t from-65%"]} aria-hidden="true">
@@ -32,12 +36,15 @@ const tool =
     <button type="button" class={tool} data-garden-plain>文だけで読む</button>
   </div>
 </nav>
+<button type="button" class:list={[skip, "garden-skip"]} data-garden-skip>飛ばす</button>
 <p class="sr-only" data-garden-live aria-live="polite"></p>
 
 <style>
   .garden-stage,
   .garden-nav,
-  .garden-mist {
+  .garden-mist,
+  .garden-ink,
+  .garden-skip {
     display: none;
   }
 
@@ -153,5 +160,106 @@ const tool =
     .garden-mist-bottom {
       block-size: 6.5rem;
     }
+  }
+
+  /* 最初の訪問のイントロ。時刻は top-garden の Design Doc の「イントロの各段の時間」。署名を 0.6 秒で書き始めた後に、墨の線を筆の順に描く */
+  :global(html.stage-on.intro) .garden-ink {
+    --ink0: 600ms;
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  :global(html.intro) canvas {
+    transition: opacity 500ms linear;
+  }
+
+  :global(html.intro:not(.enter)) canvas {
+    opacity: 0;
+  }
+
+  .garden-ink :global(.ink-svg path) {
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 0;
+    transition:
+      stroke-dashoffset var(--d) cubic-bezier(0.45, 0, 0.55, 1) calc(var(--t) + var(--ink0)),
+      opacity 60ms linear calc(var(--t) + var(--ink0));
+  }
+
+  .garden-ink :global(.ink-svg .pine) {
+    transition: opacity 700ms ease calc(2700ms + var(--ink0));
+  }
+
+  @property --sign-w {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 135%;
+  }
+
+  .garden-ink :global(.sign) {
+    mask-image: linear-gradient(100deg, #000 calc(var(--sign-w) - 14%), transparent var(--sign-w));
+    transition: --sign-w 1500ms cubic-bezier(0.45, 0, 0.4, 1) 150ms;
+  }
+
+  @starting-style {
+    .garden-ink :global(.ink-svg path) {
+      stroke-dashoffset: 1.02;
+      opacity: 0;
+    }
+
+    .garden-ink :global(.ink-svg .pine) {
+      opacity: 0;
+    }
+
+    .garden-ink :global(.sign) {
+      --sign-w: 0%;
+    }
+  }
+
+  /* 色が差した後に、遠景と中景の線と署名を消し、近景の松の枝を頭上へ抜く */
+  :global(html.enter) .garden-ink :global(:is(.ink-svg .far, .ink-svg .mid, .sign)) {
+    opacity: 0;
+    transition: opacity 500ms linear 1150ms;
+  }
+
+  .garden-ink :global(.ink-svg .near) {
+    transform-origin: 100% 0;
+    transform-box: view-box;
+  }
+
+  :global(html.enter) .garden-ink :global(.ink-svg .near) {
+    opacity: 0;
+    transform: translate(14%, -20%) scale(1.8);
+    transition:
+      transform 1500ms cubic-bezier(0.5, 0, 0.9, 0.6) 1300ms,
+      opacity 900ms linear 1800ms;
+  }
+
+  /* 「飛ばす」は、場面の準備ができてから、文を出すまでの間だけ右下に出す */
+  :global(html.stage-on.intro.scene-ready:not(.garden-ready)) .garden-skip {
+    position: fixed;
+    inset: auto 1.25rem 1.25rem auto;
+    z-index: 30;
+    display: block;
+  }
+
+  /* イントロの終わりに、ヘッダー、霞、庭の中のボタンを 0.6 秒で出す */
+  @keyframes garden-appear {
+    from {
+      opacity: 0;
+    }
+  }
+
+  :global(html.intro.garden-ready [data-site-header]),
+  :global(html.intro.garden-ready) .garden-nav,
+  :global(html.intro.garden-ready) .garden-mist {
+    animation: garden-appear 600ms ease both;
+  }
+
+  /* 飛ばしたときは、遷移を止めて最後の状態を 1 度に出す */
+  :global(html.no-anim *) {
+    transition: none !important;
+    animation: none !important;
   }
 </style>

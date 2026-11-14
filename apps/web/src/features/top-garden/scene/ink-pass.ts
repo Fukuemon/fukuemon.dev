@@ -61,6 +61,8 @@ export interface InkPass {
   setTarget(texture: FramebufferTexture, pixelRatio: number, w: number, h: number): void;
   /** 紙、墨、端の余白、空の色を替える。次に描くときから使う */
   setColors(colors: InkPassColors): void;
+  /** 淡彩の濃さ（0〜1）を替える。0 は墨だけの絵、1 は淡彩の絵。次に描くときから使う */
+  setTint(tint: number): void;
 }
 
 const srgb = (c: string) => new Color(c).convertLinearToSRGB(); // design-system-allow: three の Color のコンストラクタで、色の値ではない
@@ -119,6 +121,9 @@ export function createInkPass(colors: InkPassColors): InkPass {
       U.uLine.value = c.uLine;
       U.uEdge.value = c.uEdge;
       U.uSky.value = c.uSky;
+    },
+    setTint(tint) {
+      U.uTint.value = tint;
     },
   };
 }
