@@ -22,12 +22,19 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 トップの庭の testid は次のとおり。
 
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
-- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。「動きを止める」は `garden-pause`、「文だけで読む」は `garden-plain`、イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
+- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
 - 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-stack`、`garden-card-portfolio` である。プロフィールの見出しは `garden-title` である。
 - testid は、次のファイルに付ける。
   - `apps/web/src/features/top-garden/Profile.astro`
   - `apps/web/src/features/top-garden/scene/GardenStage.astro`
   - `apps/web/src/components/SiteHeader.astro`
+
+ヘッダーの歯車の設定の testid は次のとおり。
+
+- 歯車のボタンは `site-settings-open`、設定の面は `site-settings` である。
+- アニメーションのスイッチは `setting-motion`、トップの庭のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。
+- testid は、`apps/web/src/components/site-settings/` の `SiteSettings.astro` と `SettingsButton.tsx` に付ける。
+- 開く前に設定を保存した状態にするときは、`tests/widgets/actions/preset-settings.ts` の `presetSettings` を使う。
 
 testid を付けられない要素は、`packages/e2e/tests/selectors/` にまとめる。
 記事の本文の表、図、コードブロックは Markdown の変換が作る要素なので、`selectors/article-body.ts` で指す。
@@ -100,7 +107,7 @@ pnpm run test:garden
   - `garden-appearance.e2e.ts`、`garden-intro.e2e.ts`、`garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
   - project `garden` は、`expect` の待ちを 45 秒にする。カメラが行き先に着くまでの待ちが、デフォルトの 5 秒を超えるためである。
   - `page.clock` を使うと、ページの `requestAnimationFrame` は 16ms のタイマーに替わり、画面にフレームが出るのを待たない。本物の `requestAnimationFrame` を待つときは、`tests/widgets/waits/presented-frames.ts` の `waitForPresentedFrames` を使う。
-  - カメラの移動の動きを確認しない庭の spec は、「動きを止める」を押してから移る。止めたカメラは 1 フレームで行き先に着く。
+  - カメラの移動の動きを確認しない庭の spec は、アニメーションをオフにした設定で開いてから移る。オフのカメラは 1 フレームで行き先に着く。
 - 基準のスナップショットは、`packages/e2e/tests/specs/garden/__screenshots__/<spec のファイル名>/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
   - 合否は CI の Linux で決める。
