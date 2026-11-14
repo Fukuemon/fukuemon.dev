@@ -1,6 +1,12 @@
-import type { BackendFiles } from "./backend";
+import { type BackendFiles, type DirectoryItem, PathNotFoundError } from "./backend";
 import { createStore } from "./store";
-import type { FileEntry, NodeRuntime } from "./types";
+import {
+  type FileContents,
+  type FileEntry,
+  type NodeRuntime,
+  type ReadAllOptions,
+  ReadLimitError,
+} from "./types";
 
 const NODE_MODULES = "node_modules";
 
@@ -30,12 +36,108 @@ async function listTree(files: BackendFiles, directory = ""): Promise<FileEntry[
   const entries: FileEntry[] = [];
   for (const item of items) {
     const path = join(directory, item.name);
-    entries.push({ path, kind: item.kind });
+    // リンクは、指す先を開けるかを一覧の時点で分けられないので、ツリーではファイルとして出す
+    entries.push({ path, kind: item.kind === "directory" ? "directory" : "file" });
     if (item.kind === "directory" && shouldDescend(path)) {
       entries.push(...(await listTree(files, path)));
     }
   }
   return entries;
+}
+
+/** NUL を含むものと、UTF-8 として正しくないものは、テキストとして読めないとみなす。 */
+function decodeText(bytes: Uint8Array): string | null {
+  if (bytes.includes(0)) return null;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return null;
+  }
+}
+
+/** パスの区切りの 1 つが、exclude の名前と一致するか。files.readAll は、当たるパスを読まない。 */
+export const isExcludedPath = (path: string, exclude: readonly string[]) =>
+  path.split("/").some((segment) => exclude.includes(segment));
+
+/** files.readAll が同時に読むファイルの数。上限を超えた後に読み続けるのは、この数までになる。 */
+const READ_CONCURRENCY = 32;
+
+function readAllFiles(
+  files: BackendFiles,
+  { exclude, maxBytes, limit }: ReadAllOptions,
+): Promise<FileContents[]> {
+  const count = { files: 0, bytes: 0 };
+  // 読めたファイルだけを数える。数は増えるだけなので、超えた後に一覧か読み込みを終えた枝は、ここで止まり、次の一覧と読み込みを始めない
+  const check = () => {
+    if (limit && (count.files > limit.files || count.bytes > limit.bytes)) {
+      throw new ReadLimitError();
+    }
+  };
+  // ツリーの全体で、同時に読むファイルとディレクトリの一覧の数を絞る。並べて発行した読み込みは、上限を超えても取り消せないためである
+  let active = 0;
+  const waiting: (() => void)[] = [];
+  const acquire = async () => {
+    if (active < READ_CONCURRENCY) active += 1;
+    else await new Promise<void>((resolve) => waiting.push(resolve));
+  };
+  const release = () => {
+    const next = waiting.shift();
+    if (next) next();
+    else active -= 1;
+  };
+  // 枠は 1 回の呼び出しの間だけ持つ。子のディレクトリを読む間も持つと、深いツリーで枠が埋まって進まない
+  const limited = async <T>(operation: () => Promise<T>) => {
+    await acquire();
+    try {
+      check();
+      return await operation();
+    } finally {
+      release();
+    }
+  };
+  // ファイルとディレクトリは、一覧を読んだ後に消えたものだけを飛ばす。ほかの失敗で飛ばすと、読めなかった作業ディレクトリを読めた扱いにする (ADR-0069)
+  const skipMissing =
+    <T>(fallback: T) =>
+    (error: unknown): T => {
+      if (error instanceof PathNotFoundError) return fallback;
+      throw error;
+    };
+  // ファイルでもディレクトリでもない項目（シンボリックリンク）は、保存にも起動し直しにも使わないので、どのエラーでもスキップする。互いを指すリンクは ELOOP で失敗し続けるためである (ADR-0069)
+  const readFile = (path: string, kind: DirectoryItem["kind"]) =>
+    limited(() =>
+      files.readFile(path).catch(kind === "other" ? () => undefined : skipMissing(undefined)),
+    );
+  const read = async (directory: string): Promise<FileContents[]> => {
+    // 作業ディレクトリそのものは、一覧を読んだ後に消えたものではないので、無ければ失敗させる
+    const listing = () =>
+      directory === "" ? files.list(directory) : files.list(directory).catch(skipMissing([]));
+    const items = [...(await limited(listing))]
+      .filter((item) => !isExcludedPath(join(directory, item.name), exclude))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    check();
+    // 1 回ずつの往復を待つと、ファイルの数だけ待ち時間が積み重なるので、並べて読む
+    const entries = await Promise.all(
+      items.map(async (item): Promise<FileContents[]> => {
+        const path = join(directory, item.name);
+        if (item.kind === "directory") return read(path);
+        const bytes = await readFile(path, item.kind);
+        if (!bytes) return [];
+        count.files += 1;
+        count.bytes += bytes.byteLength;
+        check();
+        return [
+          {
+            path,
+            kind: item.kind,
+            size: bytes.byteLength,
+            text: bytes.byteLength > maxBytes ? null : decodeText(bytes),
+          },
+        ];
+      }),
+    );
+    return entries.flat();
+  };
+  return read("");
 }
 
 const sameTree = (a: readonly FileEntry[], b: readonly FileEntry[]) =>
@@ -127,6 +229,7 @@ export async function createFiles(
         return items.some((item) => item.name === name);
       },
       read: async (path) => decoder.decode(await files.readFile(path)),
+      readAll: (options) => readAllFiles(files, options),
       // 既にあるファイルの中身を書いても、ツリーは変わらない
       write: async (path, contents) => {
         const exists = tree.getSnapshot().some((entry) => entry.path === path);

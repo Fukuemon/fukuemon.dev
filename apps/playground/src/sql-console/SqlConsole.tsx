@@ -1,6 +1,6 @@
 import type { DatabaseStatus, SqlResponse, Store } from "@fukuemon/sql-runtime";
 import { Button, EditorFrame, Loading, Notice } from "@fukuemon/ui";
-import { useId, useState, useSyncExternalStore } from "react";
+import { type ReactNode, type Ref, useId, useState, useSyncExternalStore } from "react";
 
 import { ResultView } from "./ResultView";
 import { SqlEditor } from "./SqlEditor";
@@ -19,6 +19,10 @@ export type SqlConsoleProps = {
   fileName: string;
   /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
   progress?: string;
+  /** 実行のボタンへの ref。呼ぶ側が、操作の後にフォーカスをボタンへ移すために使う。 */
+  runButtonRef?: Ref<HTMLButtonElement>;
+  /** 実行のボタンの行の右端に置くもの。出入りしても、入力欄の位置が動かないようにするため、行は常にある。 */
+  actions?: ReactNode;
 };
 
 /** SQL の入力欄、実行のボタン、結果の表と実行計画。 */
@@ -31,6 +35,8 @@ export function SqlConsole({
   stoppedHint,
   fileName,
   progress,
+  runButtonRef,
+  actions,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
   const database = useSyncExternalStore(status.subscribe, status.getSnapshot);
@@ -58,13 +64,14 @@ export function SqlConsole({
         </EditorFrame>
       </div>
       <div className="flex flex-wrap items-center gap-4">
-        <Button isLoading={running} onClick={() => void run()} size="S">
+        <Button isLoading={running} onClick={() => void run()} ref={runButtonRef} size="S">
           実行する
         </Button>
         <span className="text-caption text-text-secondary" id={hintId}>
           Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
           でエディタの外へ移ります
         </span>
+        {actions}
       </div>
       <section aria-label="実行の結果" className="flex min-w-0 flex-col gap-4">
         {progress !== undefined && <Loading label={progress} />}
