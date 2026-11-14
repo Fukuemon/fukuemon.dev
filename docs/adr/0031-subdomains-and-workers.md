@@ -89,7 +89,7 @@ fukuemon.dev の全体には、cross-origin isolation のヘッダを返さな�
 - develop への push で check が通ったときにデプロイする。
 - 誰でも開けるままにし、全てのレスポンスに `X-Robots-Tag: noindex` を返す。E2E と Lighthouse を、認証なしで実行するためである。
 - 本番の Worker（`fukuemon-dev`）への deploy は、運用者が手動で実行したときだけ行う。
-  - 通常の deploy workflow を push で動かすとした [ADR-0005 の 5](0005-workers-terraform-wrangler-boundary.md#5-credential-を-2-系統に分ける) は、切り替えまでの間、サイトの Worker には当てない。credential の 2 系統は変えない。
+  - 通常の deploy workflow が push で動くとした [ADR-0005 の 5](0005-workers-terraform-wrangler-boundary.md#5-credential-を-2-系統に分ける) の、切り替えまでの例外である。例外は本番の Worker だけで、credential の 2 系統は変えない。
 - 本番を新しいサイトに切り替えるときに、プレビューの Worker を消し、本番の Worker へ develop への push でデプロイする設定に変更する。
 
 ## 承認の条件
