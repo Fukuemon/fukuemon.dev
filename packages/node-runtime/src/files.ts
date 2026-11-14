@@ -73,7 +73,7 @@ function readAllFiles(
       throw new ReadLimitError();
     }
   };
-  // ツリーの全体で、同時に読むファイルの数を絞る。並べて発行した読み込みは、上限を超えても取り消せないためである
+  // ツリーの全体で、同時に読むファイルとディレクトリの一覧の数を絞る。並べて発行した読み込みは、上限を超えても取り消せないためである
   let active = 0;
   const waiting: (() => void)[] = [];
   const acquire = async () => {
@@ -85,17 +85,19 @@ function readAllFiles(
     if (next) next();
     else active -= 1;
   };
-  const readFile = async (path: string) => {
+  // 枠は 1 回の呼び出しの間だけ持つ。子のディレクトリを読む間も持つと、深いツリーで枠が埋まって進まない
+  const limited = async <T>(operation: () => Promise<T>) => {
     await acquire();
     try {
       check();
-      return await files.readFile(path).catch(() => undefined);
+      return await operation();
     } finally {
       release();
     }
   };
+  const readFile = (path: string) => limited(() => files.readFile(path).catch(() => undefined));
   const read = async (directory: string): Promise<FileContents[]> => {
-    const items = [...(await files.list(directory))]
+    const items = [...(await limited(() => files.list(directory)))]
       .filter((item) => !isExcludedPath(join(directory, item.name), exclude))
       .sort((a, b) => a.name.localeCompare(b.name));
     check();

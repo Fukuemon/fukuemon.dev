@@ -313,6 +313,29 @@ describe("files.readAll", () => {
     expect(max).toBe(32);
   });
 
+  it("同時に読むディレクトリの一覧も、ファイルと合わせて 32 個までである", async () => {
+    const { runtime, created } = await bootFake();
+    for (let i = 0; i < 100; i++) created.files.putFromCommand(`dirs/${i}/a.txt`, "");
+    // ツリーの store が通知を受けて一覧を読み直すのを、数える前に終わらせる
+    for (let i = 0; i < 10; i++) await flush();
+    const { list, readFile } = created.files.api;
+    let active = 0;
+    let max = 0;
+    const counted =
+      <A extends unknown[], R>(operation: (...args: A) => Promise<R>) =>
+      async (...args: A) => {
+        active += 1;
+        max = Math.max(max, active);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        active -= 1;
+        return operation(...args);
+      };
+    created.files.api.list = counted(list);
+    created.files.api.readFile = counted(readFile);
+    await runtime.files.readAll(options);
+    expect(max).toBe(32);
+  });
+
   it("limit の数と大きさちょうどなら、読み終える", async () => {
     const { runtime } = await bootFake();
     const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
