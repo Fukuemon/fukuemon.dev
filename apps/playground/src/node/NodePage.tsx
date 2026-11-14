@@ -50,7 +50,9 @@ function Pane({
   );
 }
 
-const title = <h1 className="font-heading text-heading-sm text-text">Node の実行環境</h1>;
+const title = (
+  <h1 className="font-heading font-semibold text-heading-sm text-text">Node の実行環境</h1>
+);
 
 function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boolean }) {
   const { project } = session;
