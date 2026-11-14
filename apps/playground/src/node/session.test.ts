@@ -712,6 +712,30 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "b" }], failed: true });
   });
 
+  it("書き直しを書いている間に訪問者の保存が待ちに入っても、書き直しが通ったときに、訪問者の保存の失敗の案内を消さない", async () => {
+    const { session, workspace, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    let finishRewrite: () => void = () => undefined;
+    workspace.save.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (finishRewrite = resolve)),
+    );
+    workspace.save.mockImplementationOnce(() => new Promise<void>(() => undefined));
+    latest().change("node_modules/ms/index.js", "x");
+    await vi.advanceTimersByTimeAsync(0);
+    latest().change("index.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    finishRewrite();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(session.saveFailed.getSnapshot()).toBe(true);
+  });
+
   it("書き直しの失敗だけで出た保存の失敗の案内は、書き直しが通ると消す", async () => {
     const { session, workspace, saves, latest } = setup({
       kind: "saved",

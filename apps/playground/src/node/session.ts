@@ -2,7 +2,6 @@ import {
   BootError,
   type BootFailureReason,
   type BootOptions,
-  type FileContents,
   type NodeRuntime,
   type ProcessHandle,
   ReadLimitError,
@@ -11,21 +10,19 @@ import {
 } from "@fukuemon/node-runtime";
 
 import { type ProjectLoad, isEmbedId, isSafeFilePath } from "../project/project";
-import {
-  type Workspace,
-  type WorkspaceLoad,
-  createSaver,
-  createWorkspace,
-} from "../workspace/workspace";
+import { type Workspace, type WorkspaceLoad, createWorkspace } from "../workspace/workspace";
 import { shellName } from "./messages";
+import { type NodeRecord, type SaveRead, createRecordSaver } from "./record-saver";
 import {
   RESTART_READ,
   SAVE_READ,
   isExcludedFromSave,
   filesForRestart,
-  filesToSave,
   withoutExcludedFromSave,
 } from "./save-rules";
+import { createStore } from "./store";
+
+export type { NodeRecord } from "./record-saver";
 
 export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["project"];
 
@@ -33,12 +30,6 @@ export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["proj
 export type RuntimeResult =
   | { kind: "running"; runtime: NodeRuntime }
   | { kind: "unavailable"; reason: BootFailureReason };
-
-/** IndexedDB に保存する 1 件。作業ディレクトリのファイルの一式を、丸ごと置き換える。 */
-export type NodeRecord = { files: Record<string, string>; version: string; savedAt: number };
-
-/** 保存のために読んだ作業ディレクトリ。読んでいる途中で上限を超えたときは over-limit である。 */
-type SaveRead = { kind: "read"; entries: readonly FileContents[] } | { kind: "over-limit" };
 
 /** 変更の通知を受けてから、作業ディレクトリを読むまでの時間（ms）。待つ間に来た通知は、1 回の保存にまとめる。 */
 export const SAVE_DELAY_MS = 500;
@@ -51,25 +42,6 @@ export const READ_TIMEOUT_MS = 5_000;
 
 /** 実行のボタンで、前の起動のコマンドの終了を待つ上限（ms）。ポートが空くのを待つためである。 */
 const STOP_TIMEOUT_MS = 2_000;
-
-type WritableStore<T> = Store<T> & { set: (value: T) => void };
-
-function createStore<T>(initial: T): WritableStore<T> {
-  let value = initial;
-  const listeners = new Set<() => void>();
-  return {
-    subscribe: (onChange) => {
-      listeners.add(onChange);
-      return () => listeners.delete(onChange);
-    },
-    getSnapshot: () => value,
-    set: (next) => {
-      if (Object.is(next, value)) return;
-      value = next;
-      for (const listener of listeners) listener();
-    },
-  };
-}
 
 /**
  * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
@@ -97,11 +69,6 @@ function hasFileAsDirectory(paths: readonly string[]): boolean {
     return parts.slice(1).some((_, i) => files.has(parts.slice(0, i + 1).join("/")));
   });
 }
-
-const sameFiles = (a: Record<string, string>, b: Record<string, string> | undefined) =>
-  b !== undefined &&
-  Object.keys(a).length === Object.keys(b).length &&
-  Object.entries(a).every(([path, text]) => Object.hasOwn(b, path) && b[path] === text);
 
 const withTimeout = <T>(promise: Promise<T>, ms: number) =>
   new Promise<T>((resolve, reject) => {
@@ -172,78 +139,29 @@ export function createNodeSession({
   const loaded = saved.kind === "saved" && isNodeRecord(saved.record) ? saved.record : undefined;
   const record = loaded && { ...loaded, files: withoutExcludedFromSave(loaded.files) };
   const canSave = saved.kind !== "unavailable";
-  const hasSaved = createStore(record !== undefined);
   // 記事から開いていないページ（デフォルトのプロジェクト）では、記事の初期ファイルが変わったとは出さない
   const versionChanged = createStore(
     record !== undefined && embedId !== undefined && record.version !== project.version,
   );
   const busy = createStore(false);
   const commandFailed = createStore(false);
-  const overLimit = createStore(false);
   const restartReadFailed = createStore(false);
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   let version = record?.version ?? project.version;
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
-  let lastSaved = record?.files;
-  // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0070)
-  let pendingRewrite =
-    loaded && record && Object.keys(record.files).length !== Object.keys(loaded.files).length
-      ? record
-      : undefined;
-  // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける
-  let lastQueued: NodeRecord | undefined;
-  // キューにあるか書いている書き直しのうち、後の通常の保存に置き換えられていないもの。終わるまで、通知のたびに書き直しを重ねない
-  let rewriting: NodeRecord | undefined;
-  // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
-  const saver = createSaver<NodeRecord>({
-    ...storage,
-    save: (next) =>
-      storage.save(next).then(
-        () => {
-          if (next === rewriting) rewriting = undefined;
-          // 保存するレコードは、どれも保存しないパスを持たないので、どれが通っても書き直しは済む
-          pendingRewrite = undefined;
-          hasSaved.set(canSave);
-        },
-        (error: unknown) => {
-          if (next === rewriting) rewriting = undefined;
-          // 後から待ちに入った新しい保存があれば、その中身を保存済みの扱いのまま残す
-          if (next === lastQueued) lastSaved = undefined;
-          throw error;
-        },
-      ),
+  const saving = createRecordSaver({
+    storage,
+    record,
+    needsRewrite:
+      loaded !== undefined &&
+      record !== undefined &&
+      Object.keys(record.files).length !== Object.keys(loaded.files).length,
+    canSave,
+    version: () => version,
+    now,
   });
-  // 書き直しは訪問者の変更の保存ではないので、通っても、訪問者の変更の保存の失敗で出た案内は消さない
-  const queue = (next: NodeRecord, { isRewrite = false }: { isRewrite?: boolean } = {}) => {
-    lastQueued = next;
-    rewriting = isRewrite ? next : undefined;
-    saver.save(next, { keepFailure: isRewrite });
-  };
-  // シークレットのファイルを IndexedDB に残さないため、開いたときに書き直す
-  const rewrite = () => {
-    if (pendingRewrite && !rewriting)
-      queue({ ...pendingRewrite, savedAt: now() }, { isRewrite: true });
-  };
-  rewrite();
-  // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る (ADR-0070)
-  const rewriteIfUnsaved = () => {
-    if (lastSaved === undefined) rewrite();
-  };
-
-  // 上限を超えたときは、前に保存したレコードを残す。保存しないパスを落としたレコードだけは書き直す (ADR-0070)
-  const persist = (read: SaveRead) => {
-    const saving = read.kind === "over-limit" ? read : filesToSave(read.entries);
-    overLimit.set(saving.kind === "over-limit");
-    if (saving.kind === "over-limit") {
-      rewriteIfUnsaved();
-      return;
-    }
-    const { files } = saving;
-    if (sameFiles(files, lastSaved)) return;
-    lastSaved = files;
-    queue({ files, version, savedAt: now() });
-  };
+  const { persist, rewriteIfUnsaved } = saving;
 
   /** 保存のために作業ディレクトリを読む。読めなかったときは undefined を返す。 */
   const readForSave = async (runtime: NodeRuntime): Promise<SaveRead | undefined> => {
@@ -495,13 +413,9 @@ export function createNodeSession({
 
   const clearSaved = async (old: Instance) => {
     try {
-      // 消すと待ちの書き直しも捨てるので、書き直しの印も外す
-      rewriting = undefined;
-      await saver.clear();
-      pendingRewrite = undefined;
+      await saving.clear();
     } catch (error) {
       // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
-      lastSaved = undefined;
       // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
       if (old.runtime) old.stopSaving = watchForSave(old, old.runtime, { saveNow: old.touched });
       throw error;
@@ -511,10 +425,8 @@ export function createNodeSession({
   const toInitialState = async () => {
     version = project.version;
     lastRead = undefined;
-    lastSaved = undefined;
-    hasSaved.set(false);
+    saving.forget();
     versionChanged.set(false);
-    overLimit.set(false);
     restartReadFailed.set(false);
     return { files: project.files, touched: false };
   };
@@ -523,10 +435,10 @@ export function createNodeSession({
     project,
     runtime: runtimeStore,
     canSave,
-    saveFailed: saver.failed,
-    overLimit,
+    saveFailed: saving.saveFailed,
+    overLimit: saving.overLimit,
     restartReadFailed,
-    hasSaved,
+    hasSaved: saving.hasSaved,
     versionChanged,
     busy,
     commandFailed,

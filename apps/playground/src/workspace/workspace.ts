@@ -92,11 +92,10 @@ export function createWorkspace<T>(
 
 /** 保存の列。保存の途中に来たレコードは、最新の 1 件だけを持ち、保存が終わってから書く。 */
 export type Saver<T> = {
-  /** keepFailure のときは、保存が通っても、keepFailure でない保存の失敗で立った failed を戻さない。訪問者の変更でない書き込みに使う。 */
-  save: (record: T, options?: { keepFailure?: boolean }) => void;
+  save: (record: T) => void;
   /** 待っているレコードを捨て、途中の保存が終わってから、保存してあるレコードを消す。 */
   clear: () => Promise<void>;
-  /** 保存が失敗したときは true である。keepFailure でない保存が通ると false に戻る。keepFailure の保存が通ったときは、keepFailure の保存の失敗だけで立っていれば false に戻る。clear が通ると false に戻る。 */
+  /** 最後の保存が失敗したときは true である。次の保存が通ると false に戻る。 */
   failed: { subscribe: (onChange: () => void) => () => void; getSnapshot: () => boolean };
 };
 
@@ -105,33 +104,25 @@ export type Saver<T> = {
  */
 export function createSaver<T>(workspace: Workspace<T>): Saver<T> {
   const failed = createStore(false);
-  // 訪問者の変更の保存の失敗は、書き直しの成功で消さないため、keepFailure でない保存の失敗を別に持つ (ADR-0070)
-  let failedByNormal = false;
-  let queued: { record: T; keepFailure: boolean } | undefined;
+  let queued: { record: T } | undefined;
   let tail = Promise.resolve();
   let draining = false;
   // clear の後に来た保存を、clear の前の列が書かないように、clear のたびに世代を進める
   let generation = 0;
   const drain = async (own: number) => {
     while (queued && own === generation) {
-      const { record, keepFailure } = queued;
+      const { record } = queued;
       queued = undefined;
       await workspace.save(record).then(
-        () => {
-          if (!keepFailure) failedByNormal = false;
-          if (!failedByNormal) failed.set(false);
-        },
-        () => {
-          if (!keepFailure) failedByNormal = true;
-          failed.set(true);
-        },
+        () => failed.set(false),
+        () => failed.set(true),
       );
     }
     if (own === generation) draining = false;
   };
   return {
-    save: (record, { keepFailure = false } = {}) => {
-      queued = { record, keepFailure };
+    save: (record) => {
+      queued = { record };
       if (draining) return;
       draining = true;
       const own = generation;
@@ -143,7 +134,6 @@ export function createSaver<T>(workspace: Workspace<T>): Saver<T> {
       draining = false;
       const cleared = tail.then(async () => {
         await workspace.clear();
-        failedByNormal = false;
         failed.set(false);
       });
       tail = cleared.catch(() => undefined);
