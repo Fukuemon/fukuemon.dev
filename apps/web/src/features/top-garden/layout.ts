@@ -134,6 +134,34 @@ export interface Station {
   };
 }
 
+/** 和紙を掛けない庭の木。根元の [x, z]、大きさ、幹の傾く向き。どちらも松である */
+export const OTHER_TREES: readonly {
+  readonly at: Vec2;
+  readonly s: number;
+  readonly dir: 1 | -1;
+}[] = [
+  { at: [-9.0, -11.2], s: 1.35, dir: 1 },
+  { at: [6.4, -1.4], s: 1.0, dir: -1 },
+];
+
+/** 木の幹の中心線の点。大きさが 1 で、幹が +x へ傾く（dir が 1）ときの値で、x に dir を掛けて使う */
+export const TRUNK: readonly Vec3[] = [
+  [0, -0.1, 0],
+  [0.12, 0.7, 0],
+  [-0.15, 1.5, 0.1],
+  [0.35, 2.3, 0],
+  [0.9, 2.9, -0.1],
+];
+
+/** 木の枝。[幹の上の位置（0〜1）, 枝の先の x のずれ（dir を掛ける）, z のずれ, 葉の広がり] */
+export const TREE_PADS: readonly (readonly [number, number, number, number])[] = [
+  [0.55, 1.2, 0.25, 0.9],
+  [0.68, -0.9, 0.1, 0.75],
+  [0.8, 1.6, -0.2, 1.0],
+  [0.92, 0.2, 0.35, 0.7],
+  [1, 1.25, 0.05, 0.8],
+];
+
 /** 和紙を掛ける 4 つの場所。プロフィールのセクションの順に並ぶ */
 export const STATIONS: readonly Station[] = [
   {

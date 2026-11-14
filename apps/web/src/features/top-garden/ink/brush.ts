@@ -63,6 +63,12 @@ export function sample(pts: readonly Vec2[], step: number): Vec2[] {
   return out;
 }
 
+/** 松の葉の線の置き方。既定は、近景の層に置き、下に淡い円を敷く */
+export interface NeedleOptions {
+  readonly layer?: Layer;
+  readonly tint?: boolean;
+}
+
 export interface Brush {
   readonly strokes: readonly Stroke[];
   readonly tints: readonly Tint[];
@@ -77,7 +83,7 @@ export interface Brush {
     t0: number,
   ): void;
   stone(cx: number, by: number, w: number, h: number, t0: number): void;
-  needles(cx: number, cy: number, r: number, t0: number): void;
+  needles(cx: number, cy: number, r: number, t0: number, o?: NeedleOptions): void;
   branch(pts: readonly Vec2[], w: number, t0: number, dur: number, n: number, r: number): void;
 }
 
@@ -226,12 +232,18 @@ export function brush(seed: number): Brush {
     }
   }
 
-  function needles(cx: number, cy: number, r: number, t0: number): void {
+  function needles(
+    cx: number,
+    cy: number,
+    r: number,
+    t0: number,
+    { layer = "near", tint = true }: NeedleOptions = {},
+  ): void {
     for (let k = 0; k < 17; k++) {
       const an = -Math.PI * (0.06 + 0.88 * (k / 16)) + (R() - 0.5) * 0.12,
         len = r * (0.75 + R() * 0.35);
       add(
-        "near",
+        layer,
         [
           [cx, cy],
           [cx + Math.cos(an) * len * 0.5, cy + Math.sin(an) * len * 0.52],
@@ -240,7 +252,7 @@ export function brush(seed: number): Brush {
         { w: 2.3, a: 0.8, dry: 0.3, t0: t0 + k * 11, dur: 110, tin: 0.05, tout: 0.5 },
       );
     }
-    tints.push({ layer: "near", x: cx, y: cy - r * 0.4, r: r * 1.15 });
+    if (tint) tints.push({ layer, x: cx, y: cy - r * 0.4, r: r * 1.15 });
   }
 
   function branch(

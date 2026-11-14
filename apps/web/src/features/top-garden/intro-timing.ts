@@ -5,7 +5,7 @@
 export const SIGN_LEAD = 600;
 
 /** 開いてから、署名と墨の絵を描き終えるまで（ms）。墨の線の遷移が取れないときも、これより前には色を差さない */
-export const INK_END = SIGN_LEAD + 3200;
+export const INK_END = SIGN_LEAD + 5000;
 
 /**
  * 色を差し始めてからの各段の時刻と長さ（ms）。

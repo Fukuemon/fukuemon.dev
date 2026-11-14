@@ -4,7 +4,7 @@ import { inkArt, type InkArt } from "./ink-art";
 import { DESIGN } from "../layout";
 
 /** 試作の時刻（ms）に掛ける倍率。試作と同じ値である。 */
-const TIME_SCALE = 3150 / 3900;
+export const TIME_SCALE = 3150 / 3900;
 const RENDER_SEED = 11;
 
 const round1 = (v: number) => String(Math.round(v * 10) / 10);
