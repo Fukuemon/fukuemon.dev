@@ -675,6 +675,61 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "b" }], reads: 0 });
   });
 
+  it("書き直しがキューにあるか書いている間は、保存しないパスだけの通知が来ても、書き直しを重ねない", async () => {
+    const { session, workspace, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    let finish: () => void = () => undefined;
+    workspace.save.mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
+    latest().change("node_modules/ms/index.js", "x");
+    await vi.advanceTimersByTimeAsync(0);
+    latest().change("node_modules/ms/index.js", "y");
+    latest().change("dist/a.js", "z");
+    await vi.advanceTimersByTimeAsync(0);
+    finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(workspace.save.mock.calls.length).toBe(2);
+  });
+
+  it("訪問者の変更の保存が失敗した後に、書き直しが通っても、保存の失敗の案内を消さない", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    latest().change("node_modules/ms/index.js", "x");
+    await vi.advanceTimersByTimeAsync(0);
+    expect({
+      saves: saves.map((record) => record.files),
+      failed: session.saveFailed.getSnapshot(),
+    }).toStrictEqual({ saves: [{ "index.js": "b" }], failed: true });
+  });
+
+  it("起動に失敗した実行環境を起動し直すときも、書き直しが失敗していれば、除いた後のレコードを書く", async () => {
+    const { workspace, saves } = fakeWorkspace();
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    const boot = vi.fn(async ({ files }: BootOptions) => fakeRuntime(files, 0).runtime);
+    boot.mockRejectedValueOnce(new Error("起動できない"));
+    const session = createNodeSession({
+      project,
+      saved: { kind: "saved", record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } } },
+      storage: workspace,
+      embedId: "oauth/demo",
+      boot,
+    });
+    await settle(session);
+    await session.restart();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "b" }]);
+  });
+
   it("書き直しが失敗した後の保存が終わる前に上限を超えても、古いレコードで置き換えない", async () => {
     const { session, workspace, saves, latest } = setup({
       kind: "saved",

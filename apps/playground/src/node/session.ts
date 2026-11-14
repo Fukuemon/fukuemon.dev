@@ -193,30 +193,37 @@ export function createNodeSession({
       : undefined;
   // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける
   let lastQueued: NodeRecord | undefined;
+  // キューにあるか書いている書き直し。終わるまで、通知のたびに書き直しを重ねない
+  let rewriting: NodeRecord | undefined;
   // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
   const saver = createSaver<NodeRecord>({
     ...storage,
     save: (next) =>
       storage.save(next).then(
         () => {
+          if (next === rewriting) rewriting = undefined;
           // 保存するレコードは、どれも保存しないパスを持たないので、どれが通っても書き直しは済む
           pendingRewrite = undefined;
           hasSaved.set(canSave);
         },
         (error: unknown) => {
+          if (next === rewriting) rewriting = undefined;
           // 後から待ちに入った新しい保存があれば、その中身を保存済みの扱いのまま残す
           if (next === lastQueued) lastSaved = undefined;
           throw error;
         },
       ),
   });
-  const queue = (next: NodeRecord) => {
+  // 書き直しは訪問者の変更の保存ではないので、通っても「ファイルを保存できませんでした」を消さない
+  const queue = (next: NodeRecord, { isRewrite = false }: { isRewrite?: boolean } = {}) => {
     lastQueued = next;
-    saver.save(next);
+    rewriting = isRewrite ? next : undefined;
+    saver.save(next, { keepFailure: isRewrite });
   };
   // シークレットのファイルを IndexedDB に残さないため、開いたときに書き直す
   const rewrite = () => {
-    if (pendingRewrite) queue({ ...pendingRewrite, savedAt: now() });
+    if (pendingRewrite && !rewriting)
+      queue({ ...pendingRewrite, savedAt: now() }, { isRewrite: true });
   };
   rewrite();
   // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る (ADR-0070)
@@ -466,7 +473,10 @@ export function createNodeSession({
 
   // 起動し直す直前の変更も残すため、読んだファイルを保存してから起動し直す
   const readWorkdir = async (old: Instance) => {
-    if (!old.runtime) return { files: bootFiles, touched: old.touched };
+    if (!old.runtime) {
+      rewriteIfUnsaved();
+      return { files: bootFiles, touched: old.touched };
+    }
     // 続けて読めなかったときも、案内を出し直す
     restartReadFailed.set(false);
     try {

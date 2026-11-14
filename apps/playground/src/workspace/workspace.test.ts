@@ -118,4 +118,16 @@ describe("createSaver", () => {
     await settle();
     expect(seen).toStrictEqual([true, false]);
   });
+
+  it("keepFailure の保存が通っても、failed を戻さない", async () => {
+    const { workspace, settle } = manualWorkspace();
+    const saver = createSaver(workspace);
+    saver.save(1);
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(2, { keepFailure: true });
+    await tick();
+    await settle();
+    expect(saver.failed.getSnapshot()).toBe(true);
+  });
 });

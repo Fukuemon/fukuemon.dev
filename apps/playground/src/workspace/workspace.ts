@@ -92,10 +92,11 @@ export function createWorkspace<T>(
 
 /** 保存の列。保存の途中に来たレコードは、最新の 1 件だけを持ち、保存が終わってから書く。 */
 export type Saver<T> = {
-  save: (record: T) => void;
+  /** keepFailure のときは、保存が通っても failed を戻さない。訪問者の変更でない書き込みに使う。 */
+  save: (record: T, options?: { keepFailure?: boolean }) => void;
   /** 待っているレコードを捨て、途中の保存が終わってから、保存してあるレコードを消す。 */
   clear: () => Promise<void>;
-  /** 最後の保存が失敗したときは true である。次の保存が通ると false に戻る。 */
+  /** 最後の保存が失敗したときは true である。keepFailure でない次の保存が通ると false に戻る。 */
   failed: { subscribe: (onChange: () => void) => () => void; getSnapshot: () => boolean };
 };
 
@@ -104,25 +105,27 @@ export type Saver<T> = {
  */
 export function createSaver<T>(workspace: Workspace<T>): Saver<T> {
   const failed = createStore(false);
-  let queued: { record: T } | undefined;
+  let queued: { record: T; keepFailure: boolean } | undefined;
   let tail = Promise.resolve();
   let draining = false;
   // clear の後に来た保存を、clear の前の列が書かないように、clear のたびに世代を進める
   let generation = 0;
   const drain = async (own: number) => {
     while (queued && own === generation) {
-      const { record } = queued;
+      const { record, keepFailure } = queued;
       queued = undefined;
       await workspace.save(record).then(
-        () => failed.set(false),
+        () => {
+          if (!keepFailure) failed.set(false);
+        },
         () => failed.set(true),
       );
     }
     if (own === generation) draining = false;
   };
   return {
-    save: (record) => {
-      queued = { record };
+    save: (record, { keepFailure = false } = {}) => {
+      queued = { record, keepFailure };
       if (draining) return;
       draining = true;
       const own = generation;
