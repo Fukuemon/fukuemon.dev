@@ -718,7 +718,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - DB のプロセスは、ソケットで待ち受けた後に、プレフィックスを付けた `{"ready": true}` の行を出す。`node-runtime/` は、この行を受けてから、初期データの SQL を送る。
 - DB のプロセスは、結果のセルの bigint、日時、`bytea`、`NaN`、`Infinity` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
 - DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
-- `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。
+- `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。`database` の `status` は変えず、その後に DB のプロセスが終了しても `stopped` にしない。訪問者が起動し直すときに、SQL のペインに DB が止まったことを出さないためである。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
 - `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。

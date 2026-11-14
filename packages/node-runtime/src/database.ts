@@ -75,7 +75,7 @@ const toLine = (value: unknown) =>
 /**
  * DB のプロセスの標準入出力で、SqlDatabase を実装する。リクエストを 1 行の JSON で書き、同じ id の応答の行で結果を返す。
  * 頭の無い行（DB のプロセスのログと、入力のエコー）は捨てる。
- * プロセスが終了したら、status を stopped にし、待っているリクエストと、その後の run に error を持つ値を返す。
+ * プロセスが終了したら、status を stopped にし、待っているリクエストと、その後の run に error を持つ値を返す。dispose の後に終了したときは、status を変えない。
  */
 export function createStdioDatabase(process: BackendProcess): {
   database: SqlDatabase;
@@ -115,18 +115,26 @@ export function createStdioDatabase(process: BackendProcess): {
     () => stop("DB のプロセスが終了しました"),
   );
 
-  function stop(reason: string) {
-    if (status.getSnapshot().kind === "stopped") return;
-    status.set({ kind: "stopped", reason });
+  // 呼ぶ側が破棄した後は、status を変えない。訪問者が起動し直すときに、DB が止まったと出さないためである
+  let disposedReason: string | undefined;
+
+  function rejectAll(reason: string) {
     failReady(new Error(reason));
     for (const resolve of pending.values()) resolve(stoppedResponse(reason));
     pending.clear();
+  }
+
+  function stop(reason: string) {
+    if (disposedReason !== undefined || status.getSnapshot().kind === "stopped") return;
+    status.set({ kind: "stopped", reason });
+    rejectAll(reason);
   }
 
   return {
     database: {
       status,
       run: (sql) => {
+        if (disposedReason !== undefined) return Promise.resolve(stoppedResponse(disposedReason));
         const current = status.getSnapshot();
         if (current.kind === "stopped") return Promise.resolve(stoppedResponse(current.reason));
         sequence += 1;
@@ -138,10 +146,12 @@ export function createStdioDatabase(process: BackendProcess): {
       },
     },
     ready,
-    /** 出力の購読を外し、待っているリクエストとその後の run に error を返す。 */
+    /** 出力の購読を外し、待っているリクエストとその後の run に error を返す。status は変えない。 */
     dispose: () => {
+      if (disposedReason !== undefined) return;
       stopOutput();
-      stop("実行環境を止めました");
+      disposedReason = "実行環境を止めました";
+      rejectAll(disposedReason);
     },
   };
 }
@@ -156,15 +166,24 @@ const ESCAPE = String.fromCharCode(27);
 /** 行の先頭に戻す制御（`\r` と、1 列目へ動かす CSI）。この前の文字は、後の文字で書き直される。 */
 const LINE_RESET = new RegExp(`\\r|${ESCAPE}\\[1?G`);
 const CSI = new RegExp(`${ESCAPE}\\[[0-9;?]*[ -/]*[@-~]`, "g");
+/** 端末の題やリンクを書く OSC。BEL か、ESC とバックスラッシュの 2 文字で終わる。 */
+const OSC = new RegExp(`${ESCAPE}\\][^\\u0007${ESCAPE}]*(?:\\u0007|${ESCAPE}\\\\)`, "g");
+/** CSI と OSC を除いた後に残る、タブ以外の C0 の制御の文字と DEL。 */
+const OTHER_CONTROLS = new RegExp("[\\u0000-\\u0008\\u000b-\\u001f\\u007f]", "g");
 
 /**
  * 端末に向けた出力を、コンソールで読める文字にする。
- * 行ごとに、行の先頭に戻した後の文字だけを残し、色などの CSI を除く。npm のスピナーは、行の先頭に戻して書き直すので、残らない。
+ * 行ごとに、行の先頭に戻した後の文字だけを残し、色などの CSI、OSC、ほかの制御の文字を除く。npm のスピナーは、行の先頭に戻して書き直すので、残らない。
  */
 function plainTerminalOutput(raw: string): string {
   return raw
     .split("\n")
-    .map((line) => (line.replace(/\r$/, "").split(LINE_RESET).pop() ?? "").replace(CSI, ""))
+    .map((line) =>
+      (line.replace(/\r$/, "").split(LINE_RESET).pop() ?? "")
+        .replace(OSC, "")
+        .replace(CSI, "")
+        .replace(OTHER_CONTROLS, ""),
+    )
     .join("\n");
 }
 

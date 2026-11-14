@@ -160,6 +160,14 @@ describe("createStdioDatabase", () => {
     ]);
   });
 
+  it("dispose の後にプロセスが終了しても、status を ready のままにする", async () => {
+    const { process, db } = await createDatabase();
+    db.dispose();
+    process.finish(0);
+    await flush();
+    expect(db.database.status.getSnapshot()).toStrictEqual({ kind: "ready" });
+  });
+
   it("dispose は、出力の購読を外す", async () => {
     const process = await createProcess();
     const unsubscribe = vi.fn();
@@ -318,6 +326,13 @@ describe("bootWithBackend の DB", () => {
       "行の途中で行の先頭に戻す",
       ["fetch 10%\rfetch 90%\rnpm error A\n", "x\u001b[Gnpm error B\n"],
       "npm error A\nnpm error B\n",
+    ],
+    [
+      "出力に OSC とほかの制御の文字がある",
+      [
+        "\u001b]0;npm install\u0007npm \u001b]8;;https://example.com\u001b\\error\u0008\u007f C\tD\n",
+      ],
+      "npm error C\tD\n",
     ],
     [
       "制御の文字を除いた後も 4096 文字を超える",
