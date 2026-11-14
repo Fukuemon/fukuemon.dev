@@ -265,6 +265,13 @@ describe("ビルド後の作り直し", () => {
     );
   });
 
+  it("末尾が同じだけの別の URL は、書き換えない", async () => {
+    const other = ".x{src:url(/other/_astro/a.AAAAAAAA.woff2)}";
+    await build({ html: heading("あ"), css: face("a", "U+3042"), pageCss: other });
+
+    expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe(other);
+  });
+
   it("複数の CSS に同じスライスがあっても、1 回だけ作り直す", async () => {
     await build({ html: heading("あ"), css: face("a", "U+3042"), pageCss: face("a", "U+3042") });
 

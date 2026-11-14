@@ -53,7 +53,7 @@ export function subsetFonts(family: string): AstroIntegration {
         for (const f of css) {
           const body = await readFile(f, "utf8");
           let next = body;
-          for (const [from, to] of renames) next = next.replaceAll(from, to);
+          for (const [from, to] of renames) next = next.replace(urlOf(from), `$1${to}$2`);
           if (next !== body) await writeFile(f, next);
         }
         logger.info(
@@ -250,7 +250,7 @@ function inside(root: string, url: string): string {
     rel.startsWith(`..${sep}`) ||
     isAbsolute(rel)
   )
-    throw new Error(`${url}: ${root} の外を指している`);
+    throw new Error(`${url}: 出力の外を指している`);
   return path;
 }
 
@@ -260,6 +260,10 @@ async function collectFaces(css: string[], family: string): Promise<Face[]> {
     for (const face of parseFaces(await readFile(f, "utf8"), family)) seen.set(face.url, face);
   return [...seen.values()];
 }
+
+/** CSS の url() の中で、URL 全体が一致する箇所を探す正規表現 */
+const urlOf = (url: string): RegExp =>
+  new RegExp(`([("'])${url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([)"'])`, "g");
 
 /** Vite の付けた hash を、作り直した中身の hash に差し替える */
 export function hashedUrl(url: string, body: Uint8Array): string {
