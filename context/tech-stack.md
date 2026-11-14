@@ -76,7 +76,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - 庭を出すときだけ読み込み、ほかのページには配らない。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
-- Wrangler は、4 つの Worker の deploy に使う。サイト（`apps/web`）、カタログ（`packages/ui`）、プレイグラウンド（`apps/playground`）、ドキュメントサイト（`apps/docs-site`）である。
+- Wrangler は、Worker の deploy に使う。対象は、サイト（`apps/web`）、カタログ（`packages/ui`）、プレイグラウンド（`apps/playground`）、ドキュメントサイト（`apps/docs-site`）である。
 - 品質のチェックには、react-doctor、knip、similarity-ts、Lefthook を使う。
   - 各ツールをチェックのどこで実行するかは [conventions.md](conventions.md#shared-configuration) にある。
   - ADR-0007: [品質のチェックの採否](../docs/adr/0007-quality-gates.md)
