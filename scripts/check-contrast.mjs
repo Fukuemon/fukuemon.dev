@@ -39,6 +39,11 @@ const TEXT_PAIRS = [
     ["current-page", bg],
   ]),
   ["primary", "primary-surface"],
+  // トップの庭の霞の上の字と、霞の上のボタンの字（今いる場所のボタンは地と字を反転する）
+  ...["day", "night"].flatMap((t) => [
+    [`garden-ink-${t}`, `garden-mist-${t}`],
+    [`garden-mist-${t}`, `garden-ink-${t}`],
+  ]),
   // 主の操作のボタンは、主の色の面に反転の文字を載せる
   ["text-inverse", "primary"],
   ["text-inverse", "primary-hover"],
@@ -74,6 +79,8 @@ const TEXT_PAIRS = [
 
 // 文字でないもの（入力欄と押せるものの枠、フォーカスの表示）と、その下の面の組。3:1 以上
 const NON_TEXT_PAIRS = [
+  // トップの庭の霞の上のボタンの枠と、フォーカスの輪（輪は字の色で引く）
+  ...["day", "night"].map((t) => [`garden-edge-${t}`, `garden-mist-${t}`]),
   ...SURFACES.flatMap((bg) => [
     ["border-field", bg],
     ["primary", bg],
