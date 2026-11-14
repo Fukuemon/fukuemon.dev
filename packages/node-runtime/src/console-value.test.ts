@@ -17,6 +17,11 @@ const roundTrip = (...args: unknown[]) =>
 const wide = (width: number, depth: number): unknown =>
   depth === 0 ? 1 : Array.from({ length: width }, () => wide(width, depth - 1));
 
+class NamelessBytes extends Uint8Array {}
+Object.defineProperty(NamelessBytes, "name", { value: "" });
+class NamelessView extends DataView<ArrayBuffer> {}
+Object.defineProperty(NamelessView, "name", { value: "" });
+
 describe("toConsoleValues", () => {
   it.each([
     ["Date", new Date(Date.UTC(2026, 10, 14)), "2026-11-14T00:00:00.000Z"],
@@ -24,6 +29,8 @@ describe("toConsoleValues", () => {
     ["正規表現", /a+/g, "/a+/g"],
     ["型付き配列", new Uint8Array(3), "Uint8Array(3)"],
     ["DataView", new DataView(new ArrayBuffer(4)), "DataView(4)"],
+    ["名前の無い型付き配列のクラス", new NamelessBytes(2), "TypedArray(2)"],
+    ["名前の無い DataView のクラス", new NamelessView(new ArrayBuffer(4)), "DataView(4)"],
     ["Promise", Promise.resolve(), "Promise"],
     ["WeakMap", new WeakMap(), "WeakMap"],
   ])("%sを文字にする", (_, value, expected) => {
@@ -110,10 +117,19 @@ describe("toConsoleValues", () => {
       new Named(),
       new LoudRegExp("a+", "gi"),
     );
-    expect(touched).toStrictEqual([]);
-    expect(values[1]).toHaveProperty(["entries", "length"], 1);
-    expect(values[2]).toHaveProperty(["items", "length"], 1);
-    expect(values[4]).toStrictEqual({ kind: "text", value: "/a+/gi" });
+    expect({ touched, values }).toStrictEqual({
+      touched: [],
+      values: [
+        { kind: "error", name: "Error", message: "m" },
+        {
+          kind: "map",
+          entries: [{ key: { kind: "number", value: "1" }, value: { kind: "number", value: "2" } }],
+        },
+        { kind: "set", items: [{ kind: "number", value: "1" }] },
+        { kind: "object", entries: [] },
+        { kind: "text", value: "/a+/gi" },
+      ],
+    });
   });
 
   it("bind した stack の getter と、配列の添字の getter を呼ばない", () => {
@@ -133,22 +149,25 @@ describe("toConsoleValues", () => {
         return 1;
       },
     });
-    expect(copy(error, array)).toStrictEqual([
-      { kind: "error", name: "Error", message: "m" },
-      { kind: "array", items: [{ kind: "text", value: "(...)" }] },
-    ]);
-    expect(touched).toStrictEqual([]);
+    expect({ touched, values: copy(error, array) }).toStrictEqual({
+      touched: [],
+      values: [
+        { kind: "error", name: "Error", message: "m" },
+        { kind: "array", items: [{ kind: "text", value: "(...)" }] },
+      ],
+    });
   });
 
   it("DOMException の名前と文は、組み込みの getter で読む", () => {
-    expect(copy(new DOMException("m", "AbortError"))).toMatchObject([
-      { kind: "error", name: "AbortError", message: "m" },
+    expect(copy(new DOMException("m", "AbortError"))).toStrictEqual([
+      { kind: "error", name: "AbortError", message: "m", stack: expect.any(Array) },
     ]);
   });
 
   it("配列の穴は undefined として写す", () => {
-    // oxlint-disable-next-line no-sparse-arrays -- 穴のある配列を写す
-    expect(copy([, 1])).toStrictEqual([
+    const holes: unknown[] = [];
+    holes[1] = 1;
+    expect(copy(holes)).toStrictEqual([
       { kind: "array", items: [{ kind: "undefined" }, { kind: "number", value: "1" }] },
     ]);
   });
@@ -210,6 +229,19 @@ describe("写した値を、読む側が捨てない", () => {
     ["長い bigint", [10n ** 20_000n]],
     ["深い入れ子", [JSON.parse("[".repeat(20) + "]".repeat(20)) as unknown]],
     ["長い文字列の多い配列", [Array.from({ length: 100 }, () => "x".repeat(10_000))]],
+    [
+      "添字の getter の多い配列の配列",
+      [
+        Array.from({ length: 21 }, () =>
+          Object.defineProperties(
+            [],
+            Object.fromEntries(
+              Array.from({ length: 100 }, (_, i) => [i, { enumerable: true, get: () => i }]),
+            ),
+          ),
+        ),
+      ],
+    ],
     [
       "getter のプロパティの多いオブジェクトの配列",
       [

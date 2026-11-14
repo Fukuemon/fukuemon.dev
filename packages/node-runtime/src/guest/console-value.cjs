@@ -28,7 +28,7 @@ const errorGetters = new Map(
     const getters = targets
       .map((target) => Object.getOwnPropertyDescriptor(target, key))
       // oxlint-disable-next-line typescript/unbound-method -- 取り出した getter は、call で値を this にして呼ぶ
-      .map((descriptor) => descriptor && descriptor.get)
+      .map((descriptor) => descriptor?.get)
       .filter((get) => typeof get === "function");
     return [key, new Set(getters)];
   }),
@@ -235,9 +235,11 @@ function toConsoleValues(args, describe) {
       }
       if (value instanceof RegExp) return text(cut(regexpText(value)));
       if (ArrayBuffer.isView(value)) {
-        const isView = value instanceof DataView;
-        const size = isView ? viewByteLength.call(value) : typedArrayLength.call(value);
-        return text(cut(`${classNameOf(value) ?? (isView ? "DataView" : "TypedArray")}(${size})`));
+        const isDataView = value instanceof DataView;
+        const size = isDataView ? viewByteLength.call(value) : typedArrayLength.call(value);
+        return text(
+          cut(`${classNameOf(value) ?? (isDataView ? "DataView" : "TypedArray")}(${size})`),
+        );
       }
       for (const builtin of ["Promise", "WeakMap", "WeakSet", "WeakRef"]) {
         const ctor = globalThis[builtin];
