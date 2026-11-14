@@ -21,9 +21,9 @@ Cloudflare Access が、許可したメールアドレスの人だけを通す�
 
 - `zensical.toml` はリポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs_dir` を読まない。
 - `pyproject.toml` と `uv.lock` もルートに置く。uv は、`zensical.toml` と同じディレクトリで依存を解決する。
-- サイトに載せる文書は、`docs/` の下（ADR のテンプレートとトップの試作を除く）と、`docs/design/` のシンボリックリンクが指す Design Doc である。`context/` とカタログは載せない。
+- サイトに載せる文書は、`docs/` の下（ADR のテンプレートとトップの試作を除く）と、`docs/design/` のシンボリックリンクが指す Design Doc とデザインシステムの文書である。`context/` とカタログは載せない。
 - ADR は、ナビゲーションに 1 本ずつ並べず、`docs/adr/index.md` からリンクで開く。
-- Design Doc を足すときは、`zensical.toml` の `nav` に足す。`docs/` の外に置く Design Doc は、`docs/design/` にシンボリックリンクを置き、`zensical.toml` の `watch` にも足す。
+- Design Doc とデザインシステムの文書を足すときは、`zensical.toml` の `nav` に足す。`docs/` の外に置く文書は、`docs/design/` にシンボリックリンクを置き、`zensical.toml` の `watch` にも足す。
 
 ## ビルドする
 
@@ -35,7 +35,7 @@ pnpm --filter @fukuemon/docs-site run build
 - 手元で開くときは `pnpm --filter @fukuemon/docs-site run dev` を実行する。
 - ビルドは警告を出すが、終了コードは 0 になる。警告は、次の 2 つのリンクがサイトの中で解決できないことを示す。
   - `context/` やコードのファイルへのリンク。サイトに載せないためである。
-  - シンボリックリンクの先の Design Doc に書いた相対リンク。リンクは元のファイルの場所から書いてあり、`docs/design/` の下からは別の場所を指す。
+  - シンボリックリンクの先の文書に書いた相対リンク。リンクは元のファイルの場所から書いてあり、`docs/design/` の下からは別の場所を指す。
 - Python は uv が用意する。`uv` のバージョンは `mise.toml` にある。
 
 ## 初めて公開する
@@ -101,6 +101,7 @@ Access が掛からない URL（workers.dev とバージョンごとの URL）�
 2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
 3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
 4. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
+5. apply workflow を `mode=plan` でもう一度起動し、plan が `No changes.` を表示することを確認する。job のログの全ての step で、メールアドレスが `***` か `(sensitive value)` で伏せてあることも確認する。
 
 ## 許可するメールアドレスを変える
 

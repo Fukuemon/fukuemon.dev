@@ -10,6 +10,8 @@ watch = [
   "packages/content-model/DesignDoc.md",
   "packages/ui/DesignDoc.md",
   "packages/ui/src/art/DesignDoc.md",
+  "packages/ui/DESIGN.md",
+  "packages/ui/design",
 ]
 # ADR のテンプレートとトップの試作は文書ではないので、サイトに載せない
 exclude_docs = """
@@ -32,6 +34,10 @@ nav = [
   ] },
   { "デザインシステム" = [
     { "packages/ui" = "design/packages/ui.md" },
+    { "使う側の規則" = "design/packages/ui-design/DESIGN.md" },
+    { "トークン" = "design/packages/ui-design/design/tokens.md" },
+    { "コンポーネントとパターン" = "design/packages/ui-design/design/components.md" },
+    { "カタログの書き方" = "design/packages/ui-design/design/catalog.md" },
     { "挿絵" = "design/packages/ui-art.md" },
     { "カタログ" = "https://design.fukuemon.dev/" },
   ] },
@@ -40,7 +46,7 @@ nav = [
 
 [project.theme]
 language = "ja"
-# 本文はシステムフォントで組む (ADR-0075)。テーマの既定は Google Fonts の欧文の書体を読み、日本語の字形を持たない
+# 本文はシステムフォントで組む。テーマの既定は Google Fonts の欧文の書体を読み、日本語の字形を持たない
 font = false
 
 [project.markdown_extensions.pymdownx.superfences]
