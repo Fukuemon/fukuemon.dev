@@ -166,9 +166,7 @@ function EntryRow({ entry, isTabStop, onFocus, onMove, rowRef }: EntryRowProps) 
         "flex gap-2 border-b border-l-2 border-b-border py-0.5 pr-4 pl-3.5 last:border-b-0 focus-visible:focus-ring-inset",
         ROW_CLASS_NAME[entry.level],
       )}
-      onFocus={(event) => {
-        if (event.target === event.currentTarget) onFocus();
-      }}
+      onFocus={onFocus}
       onKeyDown={handleKeyDown}
       ref={(node) => {
         element.current = node;

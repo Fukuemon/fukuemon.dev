@@ -187,6 +187,18 @@ describe("ConsoleEntryList", () => {
     });
   });
 
+  it("止まる行でない行の木の項目をクリックした後の Tab のキーは、一覧の外へ出る", async () => {
+    render(
+      <>
+        <Default />
+        <button type="button">後</button>
+      </>,
+    );
+    await userEvent.click(treeItem(/^\{id: 42/));
+    await userEvent.tab();
+    expect(document.activeElement?.textContent).toBe("後");
+  });
+
   it("行で上下の矢印のキーを押すと前後の行へ、Home と End で端の行へ移る", async () => {
     render(<Default />);
     row(6).focus();
