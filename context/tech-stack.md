@@ -61,7 +61,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - 組み込みのプラグインは、デフォルトの `eslint`、`typescript`、`unicorn`、`oxc` に、`react`、`jsx-a11y`、`import` を加えて有効にする。`plugins` を書くとデフォルトのプラグインが外れるので、デフォルトのプラグインも並べる。
   - 外部のプラグインは、`jsPlugins` で `eslint-plugin-better-tailwindcss` を読む。
   - react-doctor は差分だけを見るので、全てのファイルに掛ける React の規則は Oxlint が持つ。
-- 型のチェックには、`apps/web` では `astro check` を、`apps/playground` と `packages/` の package では `tsc` を使う。
+- 型のチェックには、`apps/web` では `astro check` を、`apps/playground` と、`packages/` の `config` を除く package では `tsc` を使う。
   - tsgo は、`oxlint-tsgolint` を通して、Oxlint の `--type-aware` の型の情報に使う。
 - knip は、未使用の export、依存、ファイルの検出に使う。
 - Vitest は unit test に使う。

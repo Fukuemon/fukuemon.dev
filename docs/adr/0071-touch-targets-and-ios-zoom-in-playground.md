@@ -1,4 +1,4 @@
-# ADR-0071: コードを動かす画面の文字を端末で分けずに 13px と 12px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める
+# ADR-0071: コードを動かす画面の文字を端末で分けず、iOS と iPadOS の入力時の拡大を viewport の指定で止める
 
 ## Status
 
@@ -56,7 +56,7 @@ iOS と iPadOS の入力時の拡大は、iOS と iPadOS のときだけ viewpor
 
 ### Positive
 
-- PC の画面の密度は変わらない。
+- iOS と iPadOS で、エディタと入力欄にフォーカスしても、ページが拡大しない見込みである。
 
 ### Negative
 
