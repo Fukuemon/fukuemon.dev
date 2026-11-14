@@ -371,6 +371,31 @@ describe("ビルド後の作り直し", () => {
     });
   });
 
+  it("外した規則のファイルを残した規則も指すときは、何も書き換えずにビルドを止める", async () => {
+    const shared = face("b", "U+3044").replace(
+      'format("woff2")',
+      'format("woff2"),url(/_astro/a.AAAAAAAA.woff2)format("woff2")',
+    );
+    await expect(
+      build({
+        html: heading("あ"),
+        css: face("a", "U+3042") + shared,
+        options: { rebuild: false },
+      }),
+    ).rejects.toThrow("残した規則も指している");
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toContain("b.AAAAAAAA");
+  });
+
+  it("外した規則の src にあるフォントでないファイルは消さない", async () => {
+    const svg = face("b", "U+3044").replace(
+      'format("woff2")',
+      'format("woff2"),url(/_astro/b.svg)format("svg")',
+    );
+    await build({ html: heading("あ"), css: face("a", "U+3042") + svg, extraFile: "b.svg" });
+
+    expect((await state()).files).toContain("b.svg");
+  });
+
   it("rebuild が false のときは、要素を特定できなくても警告しない", async () => {
     await build({
       html: heading("あ"),

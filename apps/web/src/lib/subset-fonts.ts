@@ -53,7 +53,6 @@ export function subsetFonts(
           const path = paths.get(face.url)!;
           if (text === "") {
             unused.add(face.url);
-            await rm(path);
             continue;
           }
           if (!rebuild) continue;
@@ -66,14 +65,24 @@ export function subsetFonts(
           before += src.length;
           after += subset.length;
         }
+        // 消すファイルは、CSS を書き換える前に全て検査する。途中で止まると、出力が書き換えの途中のまま残る。
         const removed = new Set<string>();
+        const rewrites: [string, string, string][] = [];
         for (const f of css) {
           const body = await readFile(f, "utf8");
           let next = removeFaces(body, unused, removed);
-          for (const [from, to] of renames) next = next.replace(urlOf(from), `$1${to}$2`);
-          if (next !== body) await writeFile(f, next);
+          for (const [from, to] of renames)
+            next = next.replace(urlOf(from), (_, open: string, close: string) => open + to + close);
+          rewrites.push([f, body, next]);
         }
-        for (const url of removed) if (!unused.has(url)) await rm(inside(root, url));
+        const stale = [...removed].filter((url) => /\.woff2?$/.test(url));
+        for (const url of stale) {
+          if (rewrites.some(([, , next]) => urlOf(url).test(next)))
+            throw new Error(`${url}: 外した規則のファイルを、残した規則も指している`);
+        }
+        const stalePaths = stale.map((url) => inside(root, url));
+        for (const [f, body, next] of rewrites) if (next !== body) await writeFile(f, next);
+        for (const path of stalePaths) await rm(path);
         logger.info(
           rebuild
             ? `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars), ${unused.size} unused faces removed`
@@ -179,12 +188,13 @@ export function parseFontRules(css: string, family: string): FontRules {
 
 /** .css と、HTML に埋め込まれた style の規則から、書体を持つ規則を集める */
 async function collectFontRules(files: string[], family: string): Promise<FontRules> {
-  const texts: string[] = [];
+  // ページに共通の style は、同じ文字列を 1 回だけ読む。
+  const texts = new Set<string>();
   for (const f of files) {
-    if (f.endsWith(".css")) texts.push(await readFile(f, "utf8"));
-    if (f.endsWith(".html")) texts.push(...styleTexts(await readFile(f, "utf8")));
+    if (f.endsWith(".css")) texts.add(await readFile(f, "utf8"));
+    if (f.endsWith(".html")) for (const t of styleTexts(await readFile(f, "utf8"))) texts.add(t);
   }
-  return parseFontRules(texts.join("\n"), family);
+  return parseFontRules([...texts].join("\n"), family);
 }
 
 type HtmlNode = DefaultTreeAdapterMap["node"];
@@ -287,6 +297,7 @@ function inside(root: string, url: string): string {
   if (
     !url.startsWith("/") ||
     url.startsWith("//") ||
+    rel === "" ||
     rel === ".." ||
     rel.startsWith(`..${sep}`) ||
     isAbsolute(rel)
