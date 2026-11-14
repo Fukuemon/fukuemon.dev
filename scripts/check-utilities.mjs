@@ -71,7 +71,7 @@ const RULES = [
     test: (variants, utility) => /^(?:animate|ease)-[[(]/.test(utility),
   },
   {
-    id: "PROSE-WIDTH",
+    id: "BODY-WIDTH",
     label: "書体の「0」の幅で変わる文字の列の幅（max-w-prose）",
     // Tailwind の max-w-prose はテーマ変数を読まず、65ch に固定されている
     test: (variants, utility) => utility === "max-w-prose",

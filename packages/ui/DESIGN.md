@@ -95,8 +95,9 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 確認: `pnpm run check:utilities`
   - 入力欄と、その見出し、補足の文、誤りの文の間は、`gap-2`（8px）以上にする。フォーカスの表示（`focus-ring`）は、欄の外へ 4px 広がる。狭いと、フォーカスの表示が近くの文字に重なる。
     - 確認: レビューで、欄と近くの文字の間が、その段以上かを見る。
-- `PROSE-WIDTH`: 文字の列の幅は、テーマ変数の `--container-body`（40rem）のユーティリティの `max-w-body` で抑える。`max-w-prose` を書かない。
+- `BODY-WIDTH`: 文字の列の幅は、テーマ変数の `--container-body`（40rem）のユーティリティの `max-w-body` で抑える。`max-w-prose` を書かない。
   - `max-w-prose` は Tailwind の `65ch` で、幅が本文の書体の「0」の幅で決まる。本文は端末に入っている書体で描くので、1 行の字数が端末ごとにずれる。
+  - `max-w-prose` はテーマ変数を読まないので、`--container-prose` を置いても幅は `65ch` のままである。
   - 確認: `pnpm run check:utilities`
 - `LAYOUT-OVERFLOW`: レイアウトのブレークポイントの幅ごとに、ページの横方向のオーバーフローを出さない。長い文字とデータの多い状態でも出さない。
   - 確認: ページの全体の幅は、`pnpm run test:ui` の `src/screens/Playground.test.tsx` の、名前に `LAYOUT-OVERFLOW` を含むテストで見る。320px、767px、768px、1280px の幅を見る。内側の領域で切れた文字とボタンは、撮った画像をレビューで見る。
@@ -118,6 +119,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 | `FOCUS-ONE`            | `pnpm run check:utilities`                                                    | フォーカスの変種に ring、outline、border、shadow を直に書いた書き方。クラスの名前を文字列の連結で組み立てた書き方                           |
 | `TARGET-SIZE`          | `pnpm run test:ui`（名前に「44 px」、例外は「24 px」か「28 px」を含むテスト） | `Link` の 24×24 CSS px と、画面のコードで組んだ押せる要素                                                                                   |
 | `SPACING-SCALE`        | `pnpm run check:utilities`                                                    | 任意値でない段の選び方。入力欄と近くの文字の間の段                                                                                          |
+| `BODY-WIDTH`           | `pnpm run check:utilities`                                                    | `ch` の任意値（`max-w-[65ch]`）。スタイルに直に書いた `max-width`。クラスの名前を文字列の連結で組み立てた書き方                             |
 | `LAYOUT-OVERFLOW`      | `pnpm run test:ui`（名前に `LAYOUT-OVERFLOW` を含むテスト）                   | 内側の領域で切れた文字とボタン。見た目の崩れ。コードを動かす画面のほかの画面（記事の画面）。ダークのテーマ                                  |
 | `MOTION-TOKEN`         | `pnpm run check:utilities`                                                    | 時間と遅れの任意値。任意のプロパティ（`[animation:...]`）と、スタイルに直に書いた `animation`。クラスの名前を文字列の連結で組み立てた書き方 |
 | `MOTION-REDUCE`        | レビュー                                                                      |                                                                                                                                             |
@@ -138,14 +140,14 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 
 ### 流すコマンド
 
-| コマンド                    | 見るもの                                                                                                                       | 原則の ID                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `pnpm run check:tokens`     | 2 つの生成物が、トークンと合っているか                                                                                         |                                                                              |
-| `pnpm run check:contrast`   | セマンティックトークンの組のコントラスト比                                                                                     |                                                                              |
-| `pnpm run check:raw-values` | 画面のコードの色の値とプリミティブトークンの名前                                                                               | `COLOR-TOKEN`                                                                |
-| `pnpm run check:utilities`  | 画面のコードの、原則に反するユーティリティ。規則の ID がこの文書にあるか                                                       | `TEXT-MIN-SIZE`、`FOCUS-ONE`、`SPACING-SCALE`、`MOTION-TOKEN`、`PROSE-WIDTH` |
-| `pnpm run lint`             | テーマ変数にないクラスと、任意の値のクラス                                                                                     | `COLOR-TOKEN`                                                                |
-| `pnpm run test:ui`          | コンポーネントの状態、押せる領域の大きさ、コードを動かす画面の幅ごとのページの横方向のオーバーフロー、story のアクセシビリティ | `TARGET-SIZE`、`LAYOUT-OVERFLOW`                                             |
+| コマンド                    | 見るもの                                                                                                                       | 原則の ID                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `pnpm run check:tokens`     | 2 つの生成物が、トークンと合っているか                                                                                         |                                                                             |
+| `pnpm run check:contrast`   | セマンティックトークンの組のコントラスト比                                                                                     |                                                                             |
+| `pnpm run check:raw-values` | 画面のコードの色の値とプリミティブトークンの名前                                                                               | `COLOR-TOKEN`                                                               |
+| `pnpm run check:utilities`  | 画面のコードの、原則に反するユーティリティ。規則の ID がこの文書にあるか                                                       | `TEXT-MIN-SIZE`、`FOCUS-ONE`、`SPACING-SCALE`、`MOTION-TOKEN`、`BODY-WIDTH` |
+| `pnpm run lint`             | テーマ変数にないクラスと、任意の値のクラス                                                                                     | `COLOR-TOKEN`                                                               |
+| `pnpm run test:ui`          | コンポーネントの状態、押せる領域の大きさ、コードを動かす画面の幅ごとのページの横方向のオーバーフロー、story のアクセシビリティ | `TARGET-SIZE`、`LAYOUT-OVERFLOW`                                            |
 
 ### 受け入れ条件
 
