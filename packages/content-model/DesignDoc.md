@@ -265,13 +265,16 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 - `packages/content-model/src/toc.ts`: 記事の目次を `h2` ごとの本文量つきで組む `buildToc()`
 - `apps/web/src/content.config.ts`: collection の結線
 - `apps/web/src/lib/content/articles-loader.ts`: 記事の loader とシリーズのチェック
-- `apps/web/src/lib/content/article-pages.ts`: 公開するかを判定する `isPublic()` と、記事ごとにシリーズの中の位置と前後の記事へのリンクを返す `planArticlePages()`
+- `apps/web/src/lib/content/article-pages.ts`: 次の 3 つの関数
+  - `siteModeOf()`: 実行の種類を、環境変数 `SITE_ENV` の値から決める
+  - `isPublic()`: 公開するかを判定する
+  - `planArticlePages()`: 記事ごとにシリーズの中の位置と前後の記事へのリンクを返す
 - `apps/web/src/lib/content/article-graph.ts`: `assertContentGraph()`。`buildContentGraph()` を呼び、誤りにはエントリの `filePath` を付けて throw する
 - `apps/web/src/lib/content/article-list.ts`: 一覧とシリーズのページの関数
   - `listArticles()`: 一覧と RSS に載せる記事を返す
   - `planSeriesPages()`: シリーズのページを組む
 - `apps/web/src/lib/content/rss.ts`: `ContentRef` の並びから RSS 2.0 の文書を組む `buildRss()`
-- `apps/web/src/lib/content/articles.ts`: ページが `astro:content` を読む関数
+- `apps/web/src/lib/content/articles.ts`: ページが `astro:content` を読む関数。`SITE_ENV` を読み、`siteModeOf()` で実行の種類を決める
   - 記事のページが使う `getArticlePaths()` と `renderArticle()`
   - 一覧と RSS が使う `getArticleList()`
   - シリーズのページが使う `getSeriesPaths()`

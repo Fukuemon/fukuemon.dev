@@ -84,9 +84,10 @@ export async function getSeriesPaths() {
 /** プロジェクトの JSON のページの `getStaticPaths` が返す、ページを書き出す記事が埋め込むプロジェクト (ADR-0049) */
 export async function getPlaygroundProjectPaths() {
   const { articles } = await loadArticlesAndSeries();
+  const mode = siteMode();
   return planProjectPages(
     articles
-      .filter((a) => isPublic(a.data, siteMode()))
+      .filter((a) => isPublic(a.data, mode))
       .map((a) => ({ id: a.id, filePath: a.filePath, contentId: a.data.contentId, body: a.body })),
   );
 }
