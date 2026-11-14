@@ -106,6 +106,20 @@
   @apply rounded-control duration-150;
   transform: none;
   transition-property: opacity;
+  /* コードの 1 行目の字に重ならないよう、ボタンの上に出す。ファイル名の帯のない枠では、枠の上の外に出る。矢印はボタンの向きを指せないので外す */
+  position: absolute;
+  inset-block-end: calc(100% + 0.25rem);
+  inset-inline-end: 0;
+  margin-inline-end: 0;
+  white-space: nowrap;
+}
+/* 帯のない枠では、枠の上の外に出る量が、ブロックの間 (16px) を超えると、直前の段落や見出しの罫に触れる。ボタンの左の上に寄せ、外に出る量を 16px 未満にする */
+.prose .expressive-code .frame:not(.has-title, .is-terminal) .copy .feedback {
+  inset-block-end: calc(100% - 0.35rem);
+  inset-inline-end: calc(100% + 0.25rem);
+}
+.prose .expressive-code .copy .feedback::after {
+  display: none;
 }
 .prose .expressive-code .copy button {
   @apply size-11 rounded-control duration-150;

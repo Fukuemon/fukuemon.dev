@@ -1,7 +1,7 @@
 ---
 type: design-doc
 title: fukuemon.dev Design Doc
-description: 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、条件つきで追加する機能の形
+description: 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、サイト全体の動きの規則とトップの庭の例外、条件つきで追加する機能の形
 status: draft
 ---
 
@@ -101,22 +101,19 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 
 モジュールごとの責務は次のとおり。
 
-| モジュール                     | 責務                                                                                                                                   | 持たないもの                                                        |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `apps/web`                     | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化                                                  | トークンとコンポーネントの定義                                      |
-| `apps/playground`              | プレイグラウンドのツールのページ（Node の実行環境、SQL、Go）。画面、画面の状態、訪問者のファイルの保存、プロジェクトの JSON の読み込み | 実行環境の処理と、`@webcontainer/api` への直接の依存                |
-| `apps/docs-site`               | `docs/` をビルドしたドキュメントサイトの設定と Worker                                                                                  | 文書の原本                                                          |
-| `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                                        |
-| `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                                      |
-| `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                                 |
-| `@fukuemon/figures`            | 記事の図の名前の規則と、ファイルの名前と URL のパスの形                                                                                | SVG を読む処理、`fetch`、2 つのアプリの origin の値                 |
-| `@fukuemon/slides`             | スライドのテーマとテンプレート、Marp の設定、Markdown をスライドの HTML にする関数、ページ送りつきのページを組み立てる関数             | React のコンポーネントと、React への依存。トークンの CSS のファイル |
-| `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                                              |
-| `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                                              |
-| `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                                              |
-| `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                                |
-| `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                                              |
-| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                                   |
+| モジュール                     | 責務                                                                                                                                   | 持たないもの                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `apps/web`                     | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化                                                  | トークンとコンポーネントの定義                       |
+| `apps/playground`              | プレイグラウンドのツールのページ（Node の実行環境、SQL、Go）。画面、画面の状態、訪問者のファイルの保存、プロジェクトの JSON の読み込み | 実行環境の処理と、`@webcontainer/api` への直接の依存 |
+| `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                         |
+| `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                       |
+| `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                  |
+| `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                               |
+| `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                               |
+| `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                               |
+| `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                 |
+| `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                               |
+| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                    |
 
 次の図は、package の間の依存の向きを示す。
 
@@ -127,10 +124,6 @@ flowchart TD
     web --> cm["@fukuemon/content-model"]
     web --> pp["@fukuemon/playground-project"]
     play --> pp
-    web --> fig["@fukuemon/figures"]
-    play --> fig
-    web --> slides["@fukuemon/slides"]
-    play --> slides
     play --> sqlrt["@fukuemon/sql-runtime"]
     play --> nodert["@fukuemon/node-runtime"]
     play --> gort["@fukuemon/go-runtime"]
@@ -145,7 +138,7 @@ flowchart TD
 
 - [Content Model](../../packages/content-model/DesignDoc.md): schema、`contentId`、関係グラフ、`ContentRef` への正規化
 - [UI](../../packages/ui/DesignDoc.md): トークン、コンポーネント、カタログ
-- [トップの庭](features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
+- [トップの庭](../../apps/web/src/features/top-garden/DesignDoc.md): 水墨の門、庭、季節と時間帯
 - [プレイグラウンド](../../apps/playground/DesignDoc.md): アプリの構成、パス、実行環境のインターフェース、プロジェクトと保存の形
 - [キャンバス](features/canvas/DesignDoc.md): ツールのパス、保存する図の形、図の一覧、記事の図の置き場と書き方
 - [スライド](features/slides/DesignDoc.md): エディタのパスと画面、テーマとテンプレート、`@fukuemon/slides` の関数、公開するスライドのビルドとページ送り
@@ -282,32 +275,25 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
 - three を配る。場面のバンドルは別のファイルにし、庭を出すときだけ読み込む。
 - カメラが動く。最初の訪問で門をくぐるときと、文から文へ移るときに動く。
 - パーティクル（桜の花びら、蛍、紅葉、雪）が動き続ける。庭の中の「動きを止める」のボタンで止める。
-- 最初の訪問だけに、約 8 秒のイントロを出す。イントロは画面の全体を使い、ほかの内容と並ばない。「飛ばす」のボタンと Esc と Tab で、動かさずに最後の状態にする。
+- 最初の訪問だけに、約 10 秒のイントロを出す。イントロは画面の全体を使い、ほかの内容と並ばない。「飛ばす」のボタンと Esc と Tab で、動かさずに最後の状態にする。
 
 イントロとパーティクルは、5 秒以内に止める規則の例外にする。  
 イントロは、画面の全体を使ってほかの内容と並ばず、「飛ばす」のボタンで止められるためである。  
 パーティクルは、「動きを止める」のボタンで止められるためである。
 
 ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../adr/0026-sumi-gate-and-garden-on-top.md)  
-イントロの各段の時間は [トップの水墨の門と立体の庭の Design Doc](features/top-garden/DesignDoc.md) にある。
+イントロの各段の時間は [トップの水墨の門と立体の庭の Design Doc](../../apps/web/src/features/top-garden/DesignDoc.md) にある。
 
 ### 配信
 
-- `fukuemon.dev` の Worker への deploy は、運用者が手動で実行したときだけ行う。
-- 新しいサイトは、プレビューの Worker に、develop への push で check が通ったときにデプロイする。
-- カタログとドキュメントサイトは、develop への push で check が通ったときにデプロイする。
-
-deploy と apply の条件は [context/operations.md](../../context/operations.md#deployment-conditions) にある。
+deploy と apply の条件は [context/operations.md](../../context/operations.md#deployment-conditions) にある。  
+ドキュメントサイトの deploy の条件は、[ADR-0032](../adr/0032-docs-site-behind-access.md) にある。
 
 ### 検証
 
 - E2E は、配信した状態のサイトを、ブラウザで操作して確認する。サイトのコードを import しない。
 - E2E は、録画と字幕のエビデンスを撮れる形で書く。
-- 庭の見た目の回帰と、記事のページの表と図の枠の E2E は、`packages/e2e/visual/` に置く。
-  - ADR-0029 の 3 は、E2E を `packages/e2e/tests/` の下に置き、E2E の lint の規則を掛けると決めている。`visual/` はその例外である。
-  - `visual/` の spec は、`getByRole`、CSS のセレクタ、`getAttribute` を使う。規則に合わせるには、spec の書き直しと、サイトのマークアップへの `data-testid` の追加が要るためである。
-  - 規則に合わせて書き直した spec は、`tests/specs/` に移す。
-- テストの種類と保証の範囲は [context/testing.md](../../context/testing.md) にある。
+- テストの種類と保証の範囲、spec の置き場は [context/testing.md](../../context/testing.md) にある。
 
 ### 条件つきで追加する機能の形
 
@@ -329,30 +315,6 @@ ADR-0008: [読者の identity を前提とする機能を作らない](../adr/00
 
 ## Repository Layout
 
-```text
-.
-├── docs/
-│   ├── PRD.md
-│   ├── design/
-│   │   ├── DesignDoc.md         # この文書
-│   │   ├── apps/                # コードの隣の Design Doc へのシンボリックリンク
-│   │   ├── packages/
-│   │   └── infra.md             # infra/DesignDoc.md へのシンボリックリンク
-│   └── adr/
-├── context/                     # 規約と事実
-├── apps/
-│   ├── web/                     # Astro のサイト
-│   │   └── src/content/articles/  # 記事の原稿
-│   └── docs-site/               # ドキュメントサイト
-├── packages/
-│   ├── config/                  # 共有の tsconfig
-│   ├── content-model/           # DesignDoc.md を含む
-│   ├── ui/                      # DesignDoc.md を含む
-│   └── e2e/                     # E2E のテスト
-├── infra/                       # DesignDoc.md を含む
-│   ├── bootstrap/
-│   └── cloudflare/
-├── hooks/                       # Git のフック
-├── .github/                     # CI の workflow と issue の雛形
-└── scripts/
-```
+package とディレクトリの境界は [context/codebase.md の Module Boundaries](../../context/codebase.md#module-boundaries) に、新しいコードの置き場は [Placement Rules](../../context/codebase.md#placement-rules) にある。  
+機能ごとの Design Doc を指すシンボリックリンクの置き場は、次の ADR にある。  
+ADR-0029: [リポジトリの構成を buddy に合わせる](../adr/0029-repository-layout-like-buddy.md)

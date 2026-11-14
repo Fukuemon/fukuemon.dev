@@ -9,9 +9,8 @@
 draw.io のツール、Excalidraw のツール、スライドのエディタが、IndexedDB に保存するデータの形を決める必要がある。  
 この形は、3 つのツールと、AI のエージェントからの操作で共通にする。
 
-- 3 つのツールは、名前を付けた複数の図かスライドを IndexedDB に保存し、訪問者は一覧から開くものを選ぶ。保存するデータの形は、3 つのツールでそろえる。訪問者が記事の図をキャンバスで開いたときに保存する図は、新しい図にし、保存してあった図は変えない。
+- 3 つのツールは、名前を付けた複数の図かスライドを IndexedDB に保存し、訪問者は一覧から開くものを選ぶ。保存するデータの形は、3 つのツールでそろえる。訪問者が記事の図をキャンバスで開いたときに保存する図は、新しい図にし、保存してあった図は変えない。保存するのは、訪問者が最初に編集したときである。
   - ADR-0043: [キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する](0043-multiple-named-documents-per-tool.md)
-  - 保存する時点は、ADR-0056 の Decision 5 が決めている。
 - draw.io の図は、親のページが XML で受け取る。Excalidraw の図は、`.excalidraw` の JSON である。
   - ADR-0039: [キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する](0039-canvas-drawio-and-excalidraw.md)
 - スライドのエディタは、Markdown を保存する。
@@ -21,7 +20,7 @@ draw.io のツール、Excalidraw のツール、スライドのエディタが�
 - 訪問者のファイルを保存するモジュール（`workspace/`）は、`apps/playground/src/` の、ほかの関心ごとのディレクトリを import しない。
   - ADR-0048: [Node の実行環境のモジュールを package にし、記録を store で、ファイルの書き込みとプロセスの起動を関数で公開する](0048-node-runtime-interface-and-stores.md)
 - 記事の図は、キャンバスに、図の名前で渡す。
-  - ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](0056-article-figures-directory-and-name.md)
+  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](0040-canvas-figures-in-articles.md)
 - `.excalidraw` の JSON は、訪問者が貼った画像を中に持つ。
 - IndexedDB は、レコードの一部の値だけを取り出して読むことができず、レコードの全体を読む。
 

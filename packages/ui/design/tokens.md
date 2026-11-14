@@ -41,12 +41,12 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 | 状態       | `info`                | 情報の文と印、コードの系統のファイルの印、コンソールの info の行の印                                                                                                    |
 | 状態       | `<状態>-surface`      | `danger`、`warning`、`success`、`info` の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面                                                        |
 | 区別       | `categorical-1`〜`6`  | 意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる。並びの条件は [Design Doc](../DesignDoc.md#http-の流れの色) にある             |
-| 庭         | `garden-mist-day`     | トップの立体の庭の、朝、昼、夕の場面の上端と下端に敷く霞と、庭の中のボタンの面                                                                                          |
-| 庭         | `garden-ink-day`      | `garden-mist-day` の上の字とフォーカスの輪（ヘッダーのロゴとリンク、庭の中のボタン）                                                                                    |
-| 庭         | `garden-edge-day`     | `garden-mist-day` の上の、庭の中のボタンの枠                                                                                                                            |
-| 庭         | `garden-mist-night`   | 夜の場面の霞と、庭の中のボタンの面                                                                                                                                      |
+| 庭         | `garden-mist-day`     | トップの立体の庭の、朝、昼、夕の場面の上端と下端に敷く霞と、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの面                                            |
+| 庭         | `garden-ink-day`      | `garden-mist-day` の上の字とフォーカスの輪（ヘッダーのロゴとリンク、庭の中のボタン、イントロで色が差した後の「飛ばす」のボタン）                                        |
+| 庭         | `garden-edge-day`     | `garden-mist-day` の上の、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの枠                                                                              |
+| 庭         | `garden-mist-night`   | 夜の場面の霞と、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの面                                                                                        |
 | 庭         | `garden-ink-night`    | `garden-mist-night` の上の字とフォーカスの輪                                                                                                                            |
-| 庭         | `garden-edge-night`   | `garden-mist-night` の上の、庭の中のボタンの枠                                                                                                                          |
+| 庭         | `garden-edge-night`   | `garden-mist-night` の上の、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの枠                                                                            |
 | コード     | `code-surface` など   | 記事のコードブロック、エディタ、端末の字句。当てる字句の表は [Design Doc の「コードの色」](../DesignDoc.md#コードの色) にある                                           |
 
 - `<状態>-surface` の上の文字は、同じ状態の色か `text` にする。どちらの組も、コントラストのチェックが確認する。
@@ -55,7 +55,7 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
   - 主の色の緑と成功の緑が並ぶ画面では、成功を文と印でも伝える（`STATE-NOT-COLOR-ONLY`）。
 - 訪問済みのリンクは、色で分けない。DADS は訪問済みのリンクの色を分けるが、旧サイトと同じく内部のリンクの色を 1 つに保つ（ADR-0024）。
 - `garden-` で始まる 6 つのトークンは、テーマに依らず同じ値を指す。場面の色は時間帯で決まり、テーマに依らないためである。
-  霞の置き方と、テーマの色の名前への差し替えは [トップの水墨の門と立体の庭の Design Doc の「ヘッダーと霞」](../../../docs/design/features/top-garden/DesignDoc.md#ヘッダーと霞) にある。
+  霞の置き方と、テーマの色の名前への差し替えは [トップの水墨の門と立体の庭の Design Doc の「ヘッダーと霞」](../../../apps/web/src/features/top-garden/DesignDoc.md#ヘッダーと霞) にある。
 - HTTP の状態コードに当てる状態の色は、[Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)の表にある。新しい色のトークンを作らない。
 - コンソールのログレベルに当てる状態の色は、[Design Doc の「コンソールのログレベルの色」](../DesignDoc.md#コンソールのログレベルの色)の表にある。新しい色のトークンを作らない。
 
@@ -132,7 +132,7 @@ ADR-0075: [本文をシステムフォントで描き、Web フォントを記�
 | フォーカス       | `focus-visible:focus-ring`                                   | 操作できる要素のフォーカスの表示。要素から 2px 離した墨の 2px の輪（`FOCUS-ONE`）。詰めたペインの行は次の行の `focus-ring-inset`、スクロールする領域は `focus-ring-frame` を使う                                                                                                                                                                                                                                                              |
 | フォーカス       | `focus-visible:focus-ring-inset`                             | コードを動かす画面の詰めたペインの中の行（ADR-0066）と、詰めた木の行の中の名前の欄（ADR-0074）。墨の 2px の輪を要素の内側に引く（`FOCUS-ONE` の例外）                                                                                                                                                                                                                                                                                         |
 | フォーカス       | `focus-ring-frame`（外側の要素）                             | ペインの全体を占める、フォーカスできるスクロールする領域を 1 つ直下に置く外側の要素。領域自身の輪は中の背景に隠れて欠けるので、外側の `::after` に内側の輪を重ねて引く（`FOCUS-ONE` の例外、ADR-0066）                                                                                                                                                                                                                                        |
-| 動き             | `transition-colors`                                          | 木の行、タブ、タブの閉じるボタンの色の切り替え（デフォルトの 150ms）                                                                                                                                                                                                                                                                                                                                                                          |
+| 動き             | `transition-colors`                                          | 木の行、タブ、タブの閉じるボタン、イントロで色が差すときのトップの「飛ばす」のボタンの色の切り替え（デフォルトの 150ms）                                                                                                                                                                                                                                                                                                                      |
 | 動き             | `transition-transform` と `rotate-90`                        | ファイルの木と `Disclosure` の山形の開閉、`Switch` のつまみの移動（デフォルトの 150ms）                                                                                                                                                                                                                                                                                                                                                       |
 | 動き             | `animate-stroke`                                             | 選んだタブの下、検索の欄のフォーカス、ダイアログの上端の罫と、サイトのヘッダーのナビの今いるページの筆の線を、左から 1 回引く                                                                                                                                                                                                                                                                                                                 |
 | 動き             | `stroke-brush`                                               | `animate-stroke` で引く罫を、筆の線の形にする。`animate-loading` と重ねて、`PageLoading` の筆の線にも使う                                                                                                                                                                                                                                                                                                                                     |
@@ -152,7 +152,7 @@ ADR-0075: [本文をシステムフォントで描き、Web フォントを記�
   - 出典: [DADS の余白](https://design.digital.go.jp/dads/foundations/spacing/)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
 - 影のユーティリティは、`shadow-raised` の 1 つだけを書ける。角丸のユーティリティは、`rounded-control` と、コードを動かす画面だけで使う `rounded-pane`、`rounded-sheet`、`rounded-control-compact` を書ける。DADS のコンポーネントは、コンポーネントごとに角丸と影の値を持つが、罫線で区切る版面と合わないためである（ADR-0028、ADR-0073）。
-  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロック、[トップの庭の中の文へ移るボタン](../../../docs/design/features/top-garden/DesignDoc.md#庭の中のボタンの並び)には付けない。
+  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロック、[トップの庭の中の文へ移るボタン](../../../apps/web/src/features/top-garden/DesignDoc.md#庭の中のボタンの並び)には付けない。
   - `shadow-raised` は、重なる面だけに付ける。ボタンと入力欄には付けない。
 - 動きの時間と緩急は、表のユーティリティだけで書く。テーマ変数で止められない時間の値（`duration-[…]` の任意値）を書かない（`MOTION-TOKEN`）。
 - 動きを付ける操作、長さ、付けない所は、[Design Doc の「動き」](../DesignDoc.md#動き) にある。フォーカスの表示、入力した文字、誤りの文には、動きを付けない。

@@ -36,6 +36,15 @@ export interface Tint {
   readonly r: number;
 }
 
+/** 一様な Catmull-Rom の曲線の、b と c の間の位置 t（0〜1）の値。a と d は前後の制御点 */
+function catmullRom(a: number, b: number, c: number, d: number, t: number): number {
+  const t2 = t * t,
+    t3 = t2 * t;
+  return (
+    0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (3 * b - a - 3 * c + d) * t3)
+  );
+}
+
 /** 点の列を Catmull-Rom の曲線でつなぎ、step（px）ほどの間隔で取り直す。 */
 export function sample(pts: readonly Vec2[], step: number): Vec2[] {
   const out: Vec2[] = [];
@@ -46,21 +55,19 @@ export function sample(pts: readonly Vec2[], step: number): Vec2[] {
       c = at(i + 1),
       d = at(i + 2);
     const n = Math.max(2, Math.ceil(Math.hypot(c[0] - b[0], c[1] - b[1]) / step));
-    const f = (j: 0 | 1, t: number) => {
-      const t2 = t * t,
-        t3 = t2 * t;
-      return (
-        0.5 *
-        (2 * b[j] +
-          (c[j] - a[j]) * t +
-          (2 * a[j] - 5 * b[j] + 4 * c[j] - d[j]) * t2 +
-          (3 * b[j] - a[j] - 3 * c[j] + d[j]) * t3)
-      );
-    };
+    const f = (j: 0 | 1, t: number) => catmullRom(a[j], b[j], c[j], d[j], t);
     for (let k = 0; k < n; k++) out.push([f(0, k / n), f(1, k / n)]);
   }
   out.push(at(pts.length - 1));
   return out;
+}
+
+/** 松の葉の線の置き方。既定は、近景の層に置き、下に淡い円を敷き、葉の線を切らない */
+interface NeedleOptions {
+  readonly layer?: Layer;
+  readonly tint?: boolean;
+  /** 葉の線 1 本を、描く区間の列に分ける */
+  readonly clip?: (pts: readonly Vec2[]) => readonly (readonly Vec2[])[];
 }
 
 export interface Brush {
@@ -77,7 +84,7 @@ export interface Brush {
     t0: number,
   ): void;
   stone(cx: number, by: number, w: number, h: number, t0: number): void;
-  needles(cx: number, cy: number, r: number, t0: number): void;
+  needles(cx: number, cy: number, r: number, t0: number, o?: NeedleOptions): void;
   branch(pts: readonly Vec2[], w: number, t0: number, dur: number, n: number, r: number): void;
 }
 
@@ -226,21 +233,33 @@ export function brush(seed: number): Brush {
     }
   }
 
-  function needles(cx: number, cy: number, r: number, t0: number): void {
+  function needles(
+    cx: number,
+    cy: number,
+    r: number,
+    t0: number,
+    { layer = "near", tint = true, clip = (pts) => [pts] }: NeedleOptions = {},
+  ): void {
     for (let k = 0; k < 17; k++) {
       const an = -Math.PI * (0.06 + 0.88 * (k / 16)) + (R() - 0.5) * 0.12,
         len = r * (0.75 + R() * 0.35);
-      add(
-        "near",
-        [
-          [cx, cy],
-          [cx + Math.cos(an) * len * 0.5, cy + Math.sin(an) * len * 0.52],
-          [cx + Math.cos(an) * len, cy + Math.sin(an) * len],
-        ],
-        { w: 2.3, a: 0.8, dry: 0.3, t0: t0 + k * 11, dur: 110, tin: 0.05, tout: 0.5 },
-      );
+      const needle: Vec2[] = [
+        [cx, cy],
+        [cx + Math.cos(an) * len * 0.5, cy + Math.sin(an) * len * 0.52],
+        [cx + Math.cos(an) * len, cy + Math.sin(an) * len],
+      ];
+      for (const run of clip(needle))
+        add(layer, run, {
+          w: 2.3,
+          a: 0.8,
+          dry: 0.3,
+          t0: t0 + k * 11,
+          dur: 110,
+          tin: 0.05,
+          tout: 0.5,
+        });
     }
-    tints.push({ layer: "near", x: cx, y: cy - r * 0.4, r: r * 1.15 });
+    if (tint) tints.push({ layer, x: cx, y: cy - r * 0.4, r: r * 1.15 });
   }
 
   function branch(
