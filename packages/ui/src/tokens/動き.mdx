@@ -1,0 +1,179 @@
+import { Canvas, Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import * as Stories from "./Motion.stories";
+
+<Meta of={Stories} />
+
+# 動き
+
+画面のコードが動きを付けるときのユーティリティを、見本と使う場面で並べる。
+見本の動きは、hover、押す操作、横に送る操作をするか、ページを開くと見える。
+処理中の印だけは繰り返す。
+ページを開いたときに 1 回だけ動く見本は、ページを読み込み直すと、もう一度動く。
+
+- 使う場面と規則: `packages/ui/design/tokens.md` の「レイアウト、区切り、重なり、動き」
+- 動きを付ける操作、長さ、付けない所: `packages/ui/DesignDoc.md` の「動き」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の `MOTION-TOKEN`、`MOTION-REDUCE`
+- 値: `src/tokens/theme.css`
+
+## 色と回転の切り替え
+
+<Unstyled>
+  <div className="fd-sample group flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <button
+      type="button"
+      className="w-fit border border-border px-4 py-2 text-label transition-colors hover:bg-primary-surface focus-visible:focus-ring"
+    >
+      hover で色が替わる
+    </button>
+    <p className="font-mono text-code-dense text-text-secondary">
+      transition-colors: 木の行、タブ、タブの閉じるボタンの色の切り替え（デフォルトの 150ms）
+    </p>
+    <span
+      aria-hidden="true"
+      className="inline-block w-fit transition-transform group-hover:rotate-90"
+    >
+      ▶
+    </span>
+    <p className="font-mono text-code-dense text-text-secondary">
+      transition-transform と rotate-90: ファイルの木と Disclosure の山形の開閉、Switch
+      のつまみの移動（デフォルトの 150ms）。見本は、この枠に hover すると回る
+    </p>
+  </div>
+</Unstyled>
+
+## 罫と筆の線を引く
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <span aria-hidden="true" className="h-1 w-64 animate-stroke bg-primary stroke-brush" />
+    <p className="font-mono text-code-dense text-text-secondary">
+      animate-stroke:
+      選んだタブの下、検索の欄のフォーカス、ダイアログの上端の罫と、サイトのヘッダーのナビの今いるページの筆の線を、左から
+      1 回引く
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      stroke-brush: animate-stroke で引く罫を、筆の線の形にする。animate-loading
+      と重ねて、PageLoading の筆の線にも使う
+    </p>
+    <a href="#" className="focus-visible:focus-ring w-fit">
+      <span className="link-rule">hover で罫が引かれるリンク</span>
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      link-rule: Link、目次の見出し、前後の記事の題の hover で、2px の罫を左から 1 回引く
+    </p>
+    <a
+      href="#"
+      className="link-rule link-rule-below-underline focus-visible:focus-ring w-fit underline underline-offset-4"
+    >
+      罫が下線の下に引かれるリンク
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      link-rule-below-underline: Link で、link-rule の罫を 4px 下げ、下線の下に置く
+    </p>
+    <a href="#" className="brush-hover focus-visible:focus-ring w-fit pb-1">
+      hover で筆の線が引かれるリンク
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      brush-hover: パンくずリストのリンクとサイトのヘッダーのナビの hover
+      で、リンクの箱の下に筆の線を左から 1 回引く
+    </p>
+    <a
+      href="#"
+      aria-current="page"
+      className="brush-hover brush-current focus-visible:focus-ring w-fit pb-1"
+    >
+      今いるページのリンク
+    </a>
+    <p className="font-mono text-code-dense text-text-secondary">
+      brush-current:
+      サイトのヘッダーのナビで、今いるページとその下のページのリンクの箱の下に錆の筆の線を出し、ページを開いたときに左から
+      1 回引く。brush-hover と重ねて使う
+    </p>
+  </div>
+</Unstyled>
+
+## 押す
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <button
+      type="button"
+      className="ink-press focus-visible:focus-ring w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
+    >
+      押して離す
+    </button>
+    <p className="font-mono text-code-dense text-text-secondary">
+      ink-press: Button を押して離すと、文字の色の墨がにじんで消える
+    </p>
+  </div>
+</Unstyled>
+
+## 出る
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface-subtle p-6 text-text">
+    <div className="w-64 animate-fade-in border border-border-field bg-surface-raised p-4 shadow-raised">
+      濃度を上げて出る面
+    </div>
+    <p className="font-mono text-code-dense text-text-secondary">
+      animate-fade-in: ダイアログ、メニュー、候補の一覧が、濃度を上げて出る
+    </p>
+  </div>
+</Unstyled>
+
+## 処理中の印
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <span
+      aria-hidden="true"
+      className="relative h-0.5 w-24 overflow-hidden bg-border forced-fill after:absolute after:inset-0 after:animate-loading after:bg-primary after:forced-fill-on"
+    />
+    <p className="font-mono text-code-dense text-text-secondary">
+      animate-loading: Loading の読み込み中の印の罫と、PageLoading の筆の線
+    </p>
+    <span aria-hidden="true" className="loading-dots text-text">
+      <span />
+      <span />
+      <span />
+    </span>
+    <p className="font-mono text-code-dense text-text-secondary">
+      loading-dots: Button の読み込み中の、3 つの点の印
+    </p>
+  </div>
+</Unstyled>
+
+## 横に送る枠の右端
+
+<Unstyled>
+  <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
+    <div
+      className="scroll-fade-end focus-visible:focus-ring w-64 overflow-x-auto"
+      tabIndex={0}
+      role="region"
+      aria-label="横に送る枠の見本"
+    >
+      <p className="w-lg whitespace-nowrap py-2 text-body-dense">
+        右に続きがある間だけ、右端が薄くなる。右端まで送ると、薄い色が消える。
+      </p>
+    </div>
+    <p className="font-mono text-code-dense text-text-secondary">
+      scroll-fade-end: Table、記事の本文の表と図とコードブロック、HttpExchangeDetail
+      の本文、プレイグラウンドの SQL
+      の実行計画を横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      scroll-fade-code: scroll-fade-end と並べて付け、薄い色を code-surface の色にする。code-surface
+      の面の上にある枠で使う
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      scroll-fade-pane: scroll-fade-end と並べて付け、薄い色を surface-pane
+      の色にする。コードを動かす画面のペインの面の上で横に続く枠に使う（ADR-0073）
+    </p>
+  </div>
+</Unstyled>
+
+## story の見本
+
+<Canvas of={Stories.Overview} />
