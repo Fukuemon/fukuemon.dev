@@ -84,17 +84,18 @@ pnpm --filter @fukuemon/web exec vitest run src/features/top-garden
 ## Lighthouse で測る
 
 トップの Lighthouse の値は、リポジトリの直下で、ビルドの後に次を実行して測る。
-引数を付けないときは、2 回目以降の訪問の状態で 5 回測り、中央値を出す。
 
 ```sh
 pnpm run build
 pnpm run measure:top
 ```
 
+引数を付けないときは、2 回目以降の訪問の状態で 5 回測り、中央値を出す。
+
 PRD の性能の要求の合否は、[ADR-0078](../../../../../docs/adr/0078-top-lighthouse-gpu-and-throttling.md) の条件で判定する。
 
 - 庭を出すトップは引数を付けずに、庭を出さないトップは `--visit reduced-motion` だけを付けて測る。
-  - ほかの引数を付けて測った値は、合否に使わない。
+  - ほかの引数を付けて測った値は、合否に使わない。summary の `adrConditions` は、ADR-0078 の条件で測ったときに true になる。
 - 合否には、`lighthouse-results/` の `<日時>-<条件>-summary.json` の `judged.median` を使う。同じファイルの `median` は全ての回の中央値で、合否に使わない。
   - `judged` は、庭を出すトップでは `lcpIsFcp` の回を除いて中央値を取る。除いた回数は `excludedRuns` に、残った回数は `keptRuns` にある。
   - 全ての回を除いたときは、`judged.median` が null になる。途中の回が失敗したときは、`judged` を書かない。
