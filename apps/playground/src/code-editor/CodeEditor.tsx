@@ -22,6 +22,8 @@ export type EditorConnection = { input: (text: string) => void; close: () => voi
 type CodeEditorProps = {
   /** 入力欄の読み上げる名前。 */
   label: string;
+  /** 入力欄の操作の案内を書いた要素の id。読み上げで、入力欄に入ったときに伝える。 */
+  describedBy?: string;
   initialText: string;
   /** codeEditorExtensions に足す拡張。言語の拡張と、ページに固有の keymap を渡す。 */
   extensions?: Extension[];
@@ -37,19 +39,25 @@ type CodeEditorProps = {
  * エディタは 1 度だけ作る。開くファイルを替えるときは、呼ぶ側が key を替えて作り直す。
  * フォーカスの表示は持たない。呼ぶ側が、切られない祖先に `has-[.cm-focused]:focus-ring` を付ける。
  */
-export function CodeEditor({ label, initialText, extensions, connect }: CodeEditorProps) {
+export function CodeEditor({
+  label,
+  describedBy,
+  initialText,
+  extensions,
+  connect,
+}: CodeEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const initial = useRef({ label, initialText, extensions, connect });
+  const initial = useRef({ label, describedBy, initialText, extensions, connect });
 
   useEffect(() => {
-    const { label, initialText, extensions = [], connect } = initial.current;
+    const { label, describedBy, initialText, extensions = [], connect } = initial.current;
     const editable = new Compartment();
     let connection: EditorConnection | undefined;
     const view = new EditorView({
       parent: parentRef.current ?? undefined,
       doc: initialText,
       extensions: [
-        ...codeEditorExtensions({ label }),
+        ...codeEditorExtensions({ label, describedBy }),
         ...extensions,
         editable.of(EditorState.readOnly.of(true)),
         EditorView.updateListener.of((update) => {

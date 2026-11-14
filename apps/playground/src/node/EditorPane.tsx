@@ -1,5 +1,5 @@
 import { EditorFrame } from "@fukuemon/ui";
-import { useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 
 import { useRuntime, useSelection } from "./context";
 import { FileEditor } from "./FileEditor";
@@ -15,6 +15,7 @@ export function EditorPane() {
   const tree = runtime?.files.tree ?? noTree;
   const entries = useSyncExternalStore(tree.subscribe, tree.getSnapshot);
   const { openFiles, activeFile } = shownFiles(selection, entries);
+  const hintId = useId();
 
   return (
     <EditorFrame
@@ -23,11 +24,14 @@ export function EditorPane() {
       onSelect={(path) => dispatch({ type: "select-tab", path })}
       selectedId={activeFile}
       status={
-        runtime ? "Tab でインデントし、Esc の後の Tab でエディタの外へ移ります" : "読み取り専用"
+        <span id={hintId}>
+          {runtime ? "Tab でインデントし、Esc の後の Tab でエディタの外へ移ります" : "読み取り専用"}
+        </span>
       }
     >
       {(_, file) => (
         <FileEditor
+          describedBy={hintId}
           files={runtime?.files}
           initialText={
             (Object.hasOwn(project.files, file.id) ? project.files[file.id] : undefined) ?? ""
