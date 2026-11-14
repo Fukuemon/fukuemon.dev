@@ -98,18 +98,13 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             前に保存したファイルを開いています。記事の新しいファイルで始めるときは、「初期の状態に戻す」を押してください。
           </Notice>
         )}
-        {session.canSave && saveFailed && (
+        {session.canSave && saveFailed && !overLimit && (
           <Notice density="compact" isAlert title="ファイルを保存できませんでした" tone="warning">
             ブラウザの保存の容量が足りないか、保存できない状態です。次にファイルを変えたときに、もう一度保存します。
           </Notice>
         )}
         {session.canSave && overLimit && (
-          <Notice
-            density="compact"
-            isAlert
-            title="ファイルが多いため、保存していません"
-            tone="warning"
-          >
+          <Notice density="compact" title="保存の上限を超えたため、保存していません" tone="warning">
             {overLimitMessage(hasSaved)}
           </Notice>
         )}

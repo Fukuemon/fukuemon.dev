@@ -14,9 +14,9 @@ const REASONS: Record<BootFailureReason, string> = {
 export const bootFailureMessage = (reason: BootFailureReason) =>
   `${REASONS[reason]}${SUPPORTED_BROWSERS}`;
 
-/** 保存の上限を超えたときの案内の本文。保存したファイルがあるときは、それを残していることも書く。 */
+/** 保存の上限を超えたときの案内の本文。ページを閉じたときに残るものを、保存したファイルがあるかで書き分ける。 */
 export const overLimitMessage = (hasSaved: boolean) =>
-  `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${hasSaved ? "前に保存したファイルを残しています。" : ""}ファイルを減らすと、また保存します。`;
+  `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${hasSaved ? "ページを閉じると、前に保存したときのファイルに戻ります。" : "ページを閉じると、変えたファイルが消えます。"}ファイルを減らすと、また保存します。`;
 
 export const PREVIEW_TIMEOUT_MS = 30_000;
 
