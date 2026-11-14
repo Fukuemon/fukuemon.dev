@@ -21,7 +21,6 @@
 - 手を動かす場所を、frontmatter の `interactive.level` で 4 つに分ける。
 - DB を使うハンズオンの実行環境、ハンズオンのページの island のつなぎ方、手順をまとめる処理の配置先を決めている。どれも、引き継がないコードの決定である。
 - 本文の検索を、一覧のページに置く。Pagefind の索引を最初から作る。
-  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code で組む](0001-starlight-as-docs-renderer.md)
 - about は、トップが兼ねる。
   - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](0026-sumi-gate-and-garden-on-top.md)
 - 安定した識別子の `contentId` と、片方向の関連を持つ。

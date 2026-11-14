@@ -10,6 +10,8 @@ governs:
   - apps/web/package.json
   - apps/web/vite.config.ts
   - apps/playground/package.json
+  - packages/ui/package.json
+  - packages/ui/vite.config.ts
   - .github/workflows/
 verified_commit: 63b37ad
 ---

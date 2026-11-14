@@ -11,7 +11,6 @@ CI の docs のチェックも、apm が配置したスクリプトを呼ぶ。
 apm のバージョンが CI と手元で違うと、配置されるスキルとフックが食い違う。
 
 Vite+ の `vp env` も、Node.js のバージョンを固定できる。  
-`vp env` は global の CLI にだけあり、npm の `vite-plus` には含まれない。  
 出典: vite-plus 1.3.0 の `docs/guide/env.md`（[Environment](https://viteplus.dev/guide/env)）
 
 ## Decision

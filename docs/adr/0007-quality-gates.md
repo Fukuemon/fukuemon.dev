@@ -15,7 +15,7 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 
 - 本 repo には既に `lefthook.yml` がある。
 - Vite+ が Oxlint / Oxfmt / Vitest / tsgo と Node.js runtime を同梱する。
-  - ADR-0003: [pnpm workspace の monorepo とし、package の境界を最初から物理的に分ける](0003-monorepo-and-vite-plus.md)
+  - ADR-0017: [Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の dev と build、`packages/ui` のテストに使う](0017-vp-run-cache-for-web-build.md)
 - **本サイトで React を使う範囲は小さい。** 静的 HTML で表現できるものに React を使わない方針であり、当初は Island がゼロになる見込みである。
 - Design System は「カードを使わない」「罫線と余白で階層を作る」「見出しをほとんど大きくしない」といった、汎用 UI ルールと衝突しうる規則を持つ。
 
@@ -35,7 +35,7 @@ oxlint / oxfmt / Lefthook / knip / similarity-ts / mise / react-doctor を持ち
 | **react-doctor**  | React 固有の診断 (correctness / performance / a11y / 設計)。0–100 のスコア |
 | **knip**          | 未使用の export / 依存 / ファイルの検出                                    |
 | **similarity-ts** | コード重複の検出                                                           |
-| Oxlint + Oxfmt    | デフォルトの lint / format (Vite+ 同梱)                                    |
+| Oxlint + Oxfmt    | デフォルトの lint / format                                                 |
 | Lefthook          | pre-commit のチェック                                                      |
 
 出典: [React Doctor](https://www.react.doctor/)

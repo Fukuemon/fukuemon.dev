@@ -90,7 +90,7 @@ Oxlint と Oxfmt は devDependencies に宣言したバージョンを、各 pac
 `@vitest/coverage-v8` 4.1.11 は、peer に vitest 4.1.11 を求める。vitest 5 へ上げるには、coverage-v8 も上げ、Vitest 5 への移行の手順に従う必要がある。  
 出典: vite-plus 1.3.0 の `docs/guide/test.md`（[Test](https://viteplus.dev/guide/test)）
 
-vitest を使う package は、vitest を自分の devDependencies に宣言する。  
+`vp test` を使わずに vitest を使う package は、vitest を自分の devDependencies に宣言する。  
 宣言しないと、`@vitest/coverage-v8` が vite-plus の依存の vitest 5 に解決され、`test:cov` が失敗する。
 
 ### 7. package manager は pnpm を直接実行する
@@ -126,11 +126,21 @@ Turborepo は `outputs` / `inputs` を明示宣言する方式のため、入力
 
 ## 承認の条件
 
-次の 2 つは、承認した決定を、コードの今の使い方に合わせて変える。  
+次の変更は、承認した決定を、コードの今の使い方に合わせて変える。  
 利用者が、この変更を承認する。
 
 - Decision 4: Vite+ を使う範囲に、`apps/playground` の dev、build、preview を足す。
 - Decision 6: `vp test` を使わない決定を、`packages/ui` だけ `vp test` で実行する形に変える。`packages/ui` が `vp test` を使う理由は、文書とコミットに無いので、Context には事実だけを書いた。
+- Decision 1: `vite-plus` を宣言する package を、`apps/web` の 1 つから、`apps/web`、`apps/playground`、`packages/ui` の 3 つにする。
+- Decision 2 と Decision 9: `pagefind --site dist` を実行するタスク `build:search` を外す。本文の検索と Pagefind の索引を最初は作らないことは、ADR-0030 が決めている。
+- Decision 9: 3 つの条件を確認する時期を、実装のときから、`vite-plus` か Astro を上げるときと、タスクを変えるときに変える。2 つ目の条件の対象を、`packages/design-system/` から `packages/ui` に変える。
+
+次の 3 つは、決定を変えないが、利用者が読んで判断する。
+
+- Context と Verification の事実は、vite-plus 1.3.0 で確認したものである。`pnpm-workspace.yaml` の catalog は 1.4.0 で、1.4.0 では確認し直していない。
+- Decision 4 と Decision 6 は、比べた案の記録が無い。
+- Considered Options の Turborepo の行と「Vite+ を採用しない」の行は、比べたときの文のまま残した。
+  - 弱みのうち、Node.js のバージョンの固定、package manager の管理、lint と format の同梱は、Decision 5、Decision 7、ADR-0011 で使わないと決めたものである。
 
 ## Verification
 
@@ -143,7 +153,8 @@ macOS の手元の結果で、CI の Linux では確認していない。
 - 何も変えずに 2 回目を実行すると、2/2 のキャッシュヒットになる。
 - `apps/web/dist/` を消してから実行すると、`build:site` がキャッシュから `dist/` を戻し、ファイルの一覧が build の直後と一致する。
 
-Decision 9 の 3 つの条件は満たした。
+Decision 9 の 3 つの条件は、このときの構成で満たした。  
+2 つ目の条件で確認したのは `packages/design-system` のトークンで、`packages/ui` のトークンでは確認していない。
 
 環境変数も、キャッシュの指紋に入る。  
 ルートの `pnpm run build` と `pnpm --filter @fukuemon/web run build` は、pnpm が渡す `INIT_CWD` と `PATH` が違うので、互いのキャッシュを使わない。  
@@ -157,16 +168,24 @@ Decision 9 の 3 つの条件は満たした。
 
 ## Considered Options
 
-| 選択肢                                                                                                      | 強み                                                                                                                                                                                                           | 弱み                                                                                                                                               |
-| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **採用:** コマンドを `apps/web/vite.config.ts` のタスクに置き、package.json の `build` から `vp run` で呼ぶ | 入力から `.astro/` と `dist/` を外せ、キャッシュが当たる。`pnpm run build` のコマンドが変わらない                                                                                                              | `vp` がない環境では `pnpm run build` が動かない。外すときは Decision 9 の 3 つを行う                                                               |
-| コマンドを package.json の scripts に置き、`vp run --cache` で実行する                                      | `vp` がない環境でも `pnpm run build` が同じことをする                                                                                                                                                          | 入力から外すファイルを指定できず、2 回目もキャッシュが当たらない                                                                                   |
-| タスクを `vite.config.ts` だけに置き、ルートの `build` を `vp run -r build` にする                          | `vp run` を呼ぶだけの script が要らない                                                                                                                                                                        | `pnpm --filter @fukuemon/web run build` が動かなくなり、deploy の workflow も変える。外すときに直す箇所が増える                                    |
-| タスクの `command` から package.json の script を `pnpm run` で呼ぶ                                         | コマンドが package.json に残り、knip がコマンドを読める                                                                                                                                                        | script とタスクが互いを呼び、タスクごとに pnpm の起動を挟む                                                                                        |
-| lint、format、test を Vite+ の同梱のツールに寄せる                                                          | ツールのバージョンを vite-plus 1 つで上げられる                                                                                                                                                                | vitest 5 と coverage-v8 5 への移行が要る。Oxlint と Oxfmt の設定を `vite.config.ts` に移すことになる                                               |
-| CI で `setup-vp` を使い、タスクのキャッシュを run をまたいで持ち越す                                        | CI の 2 回目から build を縮められる                                                                                                                                                                            | `setup-vp` が Node.js を入れ、mise と重なる。持ち越しの手順は experimental で、縮む時間は 3 秒ほど                                                 |
-| Turborepo を採用する                                                                                        | `outputs` / `inputs` の明示宣言によりキャッシュの入力が自明になり、Astro の build でも誤ヒットの不確かさがない。実績が長い。2.9.x を別のプロジェクトで運用している。動作要件は Node.js のみ。代替は Vite+ / Nx | Node.js runtime と package manager の管理、lint / format / test の同梱が得られず、別途ツールを入れることになる。Vite+ を入れた場合と役割が重複する |
-| Vite+ を採用しない (pnpm scripts のみ)                                                                      | beta のツールに依存しない                                                                                                                                                                                      | Node.js の固定に mise 等を別途入れることになる。タスクのキャッシュが得られない                                                                     |
+Vite+ の採否の選択肢は次のとおり。
+
+| 選択肢                                   | 強み                                                                                                                                                                                                           | 弱み                                                                                                                                               |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **採用:** Vite+ を、範囲を限って採用する | Vite+ は Vite 8 / Vitest / Oxlint を同梱し、package manager は pnpm / npm / Yarn / Bun を wrap する。代替は Turborepo / Nx / pnpm scripts                                                                      | Vite+ は 2026-07-02 に出た beta で、"stable, but not yet complete" という公式の留保がある。撤退の手段 (Decision 9) を確保した上で採用する          |
+| Turborepo を採用する                     | `outputs` / `inputs` の明示宣言によりキャッシュの入力が自明になり、Astro の build でも誤ヒットの不確かさがない。実績が長い。2.9.x を別のプロジェクトで運用している。動作要件は Node.js のみ。代替は Vite+ / Nx | Node.js runtime と package manager の管理、lint / format / test の同梱が得られず、別途ツールを入れることになる。Vite+ を入れた場合と役割が重複する |
+| Vite+ を採用しない (pnpm scripts のみ)   | beta のツールに依存しない                                                                                                                                                                                      | Node.js の固定に mise 等を別途入れることになる。タスクのキャッシュが得られない                                                                     |
+
+タスクの置き場と、同梱のツールの選択肢は次のとおり。
+
+| 選択肢                                                                                                      | 強み                                                                                              | 弱み                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **採用:** コマンドを `apps/web/vite.config.ts` のタスクに置き、package.json の `build` から `vp run` で呼ぶ | 入力から `.astro/` と `dist/` を外せ、キャッシュが当たる。`pnpm run build` のコマンドが変わらない | `vp` がない環境では `pnpm run build` が動かない。外すときは Decision 9 の 3 つを行う                            |
+| コマンドを package.json の scripts に置き、`vp run --cache` で実行する                                      | `vp` がない環境でも `pnpm run build` が同じことをする                                             | 入力から外すファイルを指定できず、2 回目もキャッシュが当たらない                                                |
+| タスクを `vite.config.ts` だけに置き、ルートの `build` を `vp run -r build` にする                          | `vp run` を呼ぶだけの script が要らない                                                           | `pnpm --filter @fukuemon/web run build` が動かなくなり、deploy の workflow も変える。外すときに直す箇所が増える |
+| タスクの `command` から package.json の script を `pnpm run` で呼ぶ                                         | コマンドが package.json に残り、knip がコマンドを読める                                           | script とタスクが互いを呼び、タスクごとに pnpm の起動を挟む                                                     |
+| lint、format、test を Vite+ の同梱のツールに寄せる                                                          | ツールのバージョンを vite-plus 1 つで上げられる                                                   | vitest 5 と coverage-v8 5 への移行が要る。Oxlint と Oxfmt の設定を `vite.config.ts` に移すことになる            |
+| CI で `setup-vp` を使い、タスクのキャッシュを run をまたいで持ち越す                                        | CI の 2 回目から build を縮められる                                                               | `setup-vp` が Node.js を入れ、mise と重なる。持ち越しの手順は experimental で、縮む時間は 3 秒ほど              |
 
 Turborepo は撤退の手段として残す。  
 Decision 9 の条件を満たさなければ、Turborepo へ切り替える。
@@ -183,6 +202,6 @@ Decision 9 の条件を満たさなければ、Turborepo へ切り替える。
 - `vp` がない環境では `pnpm run build` が動かない。外すときは Decision 9 の手順で戻す。
 - beta のツールを toolchain の中心に置く。
   - 撤退の手段で緩和するが、`vp` の破壊的変更に追従する手間は残る。
-- vite-plus が vitest 5 を依存に持つ。vitest を使う package が vitest を自分の devDependencies に宣言しないと、coverage-v8 が vitest 5 に解決されて `test:cov` が失敗する。
+- vite-plus が vitest 5 を依存に持つ。`vp test` を使わずに vitest を使う package が vitest を自分の devDependencies に宣言しないと、coverage-v8 が vitest 5 に解決されて `test:cov` が失敗する。
 - devDependencies の Oxlint、Oxfmt、Vitest と、vite-plus の同梱のバージョンが、別々に上がる。
 - 実行する場所や環境変数が変わると、入力が同じでもキャッシュが外れる。

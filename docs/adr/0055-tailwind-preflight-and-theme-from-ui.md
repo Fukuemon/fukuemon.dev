@@ -19,6 +19,20 @@ ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` �
 トークンを `@theme static` に置くことには、もう 1 つ理由があった。  
 Expressive Code が挿す CSS はこのリポジトリのビルドを通らないので、`styleOverrides` から参照するトークンを、素のカスタムプロパティとして出しておく必要があった。
 
+古いサイトの CSS の宣言を数えた。
+
+| 分類                                                        | 件数   | Tailwind での扱い                            |
+| ----------------------------------------------------------- | ------ | -------------------------------------------- |
+| `display` / `background` / `color` / `gap` / `padding` など | 約 200 | 素で対応。`py-*` は `padding-block` で論理軸 |
+| `light-dark()`                                              | 33     | `@theme` の中に書けば維持できる              |
+| `border-block-*` / `inline-size` / `block-size`             | 49     | 物理軸のみ                                   |
+| 縦組み (`writing-mode` / `text-orientation` / 縦中横)       | 10     | utility 無し                                 |
+| `@starting-style`                                           | 7      | バリアント無し                               |
+| `animation-timeline` / `animation-range`                    | 4      | バリアント無し                               |
+
+素の CSS のままでも成立していた。  
+10 ページで約 1000 行、コンポーネントごとに命名済みで、knip と oxlint が未使用を検出する。
+
 今の `packages/ui` は、次の形になっている。
 
 - トークンの値は、`packages/ui/src/tokens/primitive.css` と `semantic.css` の `:root` に、素のカスタムプロパティとして書いてある。

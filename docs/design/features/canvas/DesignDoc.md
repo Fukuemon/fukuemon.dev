@@ -368,6 +368,7 @@ apps/web/src/content/figures/
   - 指したファイルが無い。
   - ファイルの名前が、規則に合わない。
   - SVG の中の元データが、拡張子のツールと合わない。
+- 1 つの記事に複数の図を入れて、SVG の中の `id` が重なるときは、ビルドが、図ごとに `id` を付け替える。
 
 ビルドは、置いた SVG を、変えずに `https://fukuemon.dev/figures/<名前>.<ツール>.svg` に出力する。  
 `fukuemon.dev` は、`/figures/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。ヘッダは、`apps/web/public/_headers` に書く。
