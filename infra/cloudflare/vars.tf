@@ -45,6 +45,7 @@ variable "docs_allowed_emails" {
   description = "ドキュメントサイトを開けるメールアドレスの一覧"
   type        = list(string)
   sensitive   = true
+  nullable    = false
 
   validation {
     condition     = length(var.docs_allowed_emails) > 0

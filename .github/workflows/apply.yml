@@ -49,13 +49,21 @@ jobs:
           AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
       # GitHub は secret の値の全体だけを伏せる。リストの 1 件だけがログに出たときも伏せるよう、1 件ずつ登録する
-      # 値が JSON として読めないときに、伏せないまま plan へ進まないよう、jq の失敗と 0 件で止める
+      # 値が文字列の JSON のリストでないときに、伏せないまま plan へ進まないよう止める
+      # jq のエラーの文は値の先頭を含み、まだ伏せていないので捨てる
       - name: メールアドレスを伏せる
         shell: bash
         run: |
           set -euo pipefail
-          emails=$(jq -er '.[]' <<< "$DOCS_ALLOWED_EMAILS")
-          while IFS= read -r email; do echo "::add-mask::$email"; done <<< "$emails"
+          if ! emails=$(jq -er 'if type == "array" and length > 0 and all(.[]; type == "string") then .[] else error("invalid") end' <<< "$DOCS_ALLOWED_EMAILS" 2>/dev/null); then
+            echo "::error::DOCS_ALLOWED_EMAILS が、1 件以上の文字列を持つ JSON のリストではありません。"
+            exit 1
+          fi
+          # API が小文字にして返した値も伏せる
+          while IFS= read -r email; do
+            echo "::add-mask::$email"
+            echo "::add-mask::$(tr '[:upper:]' '[:lower:]' <<< "$email")"
+          done <<< "$emails"
         env:
           DOCS_ALLOWED_EMAILS: ${{ secrets.DOCS_ALLOWED_EMAILS }}
 
