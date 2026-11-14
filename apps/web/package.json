@@ -30,6 +30,7 @@
     "@types/react-dom": "^19.2.5",
     "@types/three": "0.187.0",
     "@vitest/coverage-v8": "^4.1.11",
+    "parse5": "^8.1.1",
     "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.2",

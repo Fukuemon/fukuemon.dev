@@ -3,7 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { parseFaces, parseRanges, hashedUrl, subsetFonts } from "./subset-fonts";
+import {
+  hashedUrl,
+  htmlChars,
+  parseFaces,
+  parseFontRules,
+  parseRanges,
+  subsetFonts,
+} from "./subset-fonts";
 
 const subsetFont = vi.hoisted(() =>
   vi.fn(async (_src: Uint8Array, text: string) => Buffer.from(`subset:${text}`)),
@@ -56,28 +63,92 @@ describe("名前の付け直し", () => {
   });
 });
 
+const FAMILY = "Zen Old Mincho";
+const RULE = `.font-heading{font-family:"Zen Old Mincho", sans-serif}`;
+const heading = (text: string) => `<h1 class="font-heading">${text}</h1>`;
+const sorted = (chars: Set<string>) => [...chars].sort().join("");
+
+describe("書体を当てるセレクタの読み取り", () => {
+  it("書体を font-family に持つ規則のクラスを集める", () => {
+    const css = `${RULE}.text-sm{font-size:1rem}.other{font-family:sans-serif}`;
+    expect(parseFontRules(css, FAMILY)).toStrictEqual({
+      classes: new Set(["font-heading"]),
+      unresolved: [],
+    });
+  });
+
+  it("バリアントのクラスと擬似要素のエスケープを外す", () => {
+    const css = `@media (min-width:48rem){.md\\:font-heading{font-family:"Zen Old Mincho"}}.placeholder\\:font-heading::placeholder{font-family:"Zen Old Mincho"}`;
+    expect(parseFontRules(css, FAMILY).classes).toStrictEqual(
+      new Set(["md:font-heading", "placeholder:font-heading"]),
+    );
+  });
+
+  it("@font-face は規則に数えない", () => {
+    expect(parseFontRules('@font-face{font-family:"Zen Old Mincho"}', FAMILY).classes.size).toBe(0);
+  });
+
+  it("クラス 1 つでは表せないセレクタは、特定できないものとして返す", () => {
+    const css = `.prose h2,h1{font-family:"Zen Old Mincho"}`;
+    expect(parseFontRules(css, FAMILY).unresolved).toStrictEqual([".prose h2", "h1"]);
+  });
+});
+
+describe("書体を当てる要素の字", () => {
+  const classes = new Set(["font-heading", "md:font-heading"]);
+
+  it("クラスを持つ要素の字を集め、ほかの要素の字は集めない", () => {
+    expect(sorted(htmlChars(`${heading("あい")}<p>うえ</p>`, classes))).toBe("あい");
+  });
+
+  it("子孫の字も集める", () => {
+    const html = `<h2 class="font-heading">あ<span>い<b>う</b></span></h2>`;
+    expect(sorted(htmlChars(html, classes))).toBe("あいう");
+  });
+
+  it("バリアントのクラスを持つ要素の字も集める", () => {
+    expect(sorted(htmlChars(`<p class="x md:font-heading">あ</p>`, classes))).toBe("あ");
+  });
+
+  it("placeholder の字を集める", () => {
+    expect(sorted(htmlChars(`<input class="font-heading" placeholder="あ">`, classes))).toBe("あ");
+  });
+
+  it("script と style の字は集めない", () => {
+    const html = `<div class="font-heading"><script>あ</script><style>い</style>う</div>`;
+    expect(sorted(htmlChars(html, classes))).toBe("う");
+  });
+
+  it("クラスを持たない要素の placeholder は集めない", () => {
+    expect(htmlChars(`<input placeholder="あ">`, classes).size).toBe(0);
+  });
+});
+
 describe("ビルド後の作り直し", () => {
   let dir = "";
   afterEach(async () => {
     subsetFont.mockClear();
+    warn.mockClear();
     await rm(dir, { recursive: true, force: true });
   });
 
   const face = (name: string, range: string) =>
     `@font-face{font-family:Zen Old Mincho;src:url(/_astro/${name}.AAAAAAAA.woff2)format("woff2");unicode-range:${range}}`;
 
-  async function build(html: string, css: string, js = "", css2 = "", extra = "") {
+  const warn = vi.fn();
+
+  async function build(html: string, css: string, js = "", css2 = "", extra = "", rule = RULE) {
     dir = await mkdtemp(join(tmpdir(), "subset-fonts-"));
     await mkdir(join(dir, "_astro"));
     await writeFile(join(dir, "index.html"), html);
-    await writeFile(join(dir, "_astro/site.css"), css);
+    await writeFile(join(dir, "_astro/site.css"), css + rule);
     await writeFile(join(dir, "_astro/page.css"), css2);
     await writeFile(join(dir, "_astro/app.js"), js);
     await writeFile(join(dir, "_astro/a.AAAAAAAA.woff2"), "a");
     await writeFile(join(dir, "_astro/b.AAAAAAAA.woff2"), "b");
     if (extra !== "") await writeFile(join(dir, "_astro", extra), "x");
     const hook = subsetFonts("Zen Old Mincho").hooks["astro:build:done"]!;
-    await hook({ dir: pathToFileURL(`${dir}/`), logger: { info: vi.fn() } } as never);
+    await hook({ dir: pathToFileURL(`${dir}/`), logger: { info: vi.fn(), warn } } as never);
   }
 
   const renamed = hashedUrl("/_astro/a.AAAAAAAA.woff2", Buffer.from("subset:あ")).replace(
@@ -86,13 +157,13 @@ describe("ビルド後の作り直し", () => {
   );
 
   it("使う字を含むスライスだけを、使う字で作り直す", async () => {
-    await build("<h1>あ</h1>", face("a", "U+3042") + face("b", "U+3044"));
+    await build(heading("あ"), face("a", "U+3042") + face("b", "U+3044"));
 
     expect(subsetFont.mock.calls.map(([, text]) => text)).toStrictEqual(["あ"]);
   });
 
   it("作り直したスライスを、中身の hash の名前で置く", async () => {
-    await build("<h1>あ</h1>", face("a", "U+3042") + face("b", "U+3044"));
+    await build(heading("あ"), face("a", "U+3042") + face("b", "U+3044"));
 
     expect((await readdir(join(dir, "_astro"))).sort()).toStrictEqual(
       ["app.js", "b.AAAAAAAA.woff2", "page.css", "site.css", renamed].sort(),
@@ -100,14 +171,16 @@ describe("ビルド後の作り直し", () => {
   });
 
   it("CSS の参照を、作り直した名前に差し替える", async () => {
-    await build("<h1>あ</h1>", face("a", "U+3042") + face("b", "U+3044"));
+    await build(heading("あ"), face("a", "U+3042") + face("b", "U+3044"));
 
     const next = face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed);
-    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(next + face("b", "U+3044"));
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(
+      next + face("b", "U+3044") + RULE,
+    );
   });
 
   it("複数の CSS に同じスライスがあっても、1 回だけ作り直す", async () => {
-    await build("<h1>あ</h1>", face("a", "U+3042"), "", face("a", "U+3042"));
+    await build(heading("あ"), face("a", "U+3042"), "", face("a", "U+3042"));
 
     expect(subsetFont).toHaveBeenCalledTimes(1);
   });
@@ -119,12 +192,12 @@ describe("ビルド後の作り直し", () => {
   });
 
   it("対象の書体の @font-face が CSS にないとき、ビルドを止める", async () => {
-    await expect(build("<h1>あ</h1>", "body{}")).rejects.toThrow("見つからない");
+    await expect(build(heading("あ"), "body{}")).rejects.toThrow("見つからない");
   });
 
   it("名前の hash を差し替えられないとき、ビルドを止める", async () => {
     const odd = face("a", "U+3042").replace("a.AAAAAAAA.woff2", "odd.woff2");
-    await expect(build("<h1>あ</h1>", odd, "", "", "odd.woff2")).rejects.toThrow(
+    await expect(build(heading("あ"), odd, "", "", "odd.woff2")).rejects.toThrow(
       "差し替えられない",
     );
   });
@@ -134,5 +207,44 @@ describe("ビルド後の作り直し", () => {
 
     expect(subsetFont).not.toHaveBeenCalled();
     expect(await readdir(join(dir, "_astro"))).toContain("a.AAAAAAAA.woff2");
+  });
+
+  it("書体を当てない要素の字では、スライスを作り直さない", async () => {
+    await build(`${heading("あ")}<p>い</p>`, face("a", "U+3042") + face("b", "U+3044"));
+
+    expect(subsetFont.mock.calls.map(([, text]) => text)).toStrictEqual(["あ"]);
+  });
+
+  it("書体を当てる要素を特定できないときは、全ての HTML の字を使い、警告を出す", async () => {
+    await build(
+      `${heading("あ")}<p>い</p>`,
+      face("a", "U+3042,U+3044"),
+      "",
+      "",
+      "",
+      'h2{font-family:"Zen Old Mincho"}',
+    );
+
+    expect(subsetFont).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringMatching(/^[あい<>]*$/),
+      {
+        targetFormat: "woff2",
+      },
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("h2"));
+  });
+
+  it("書体のファイルの URL が出力の外を指すとき、ビルドを止める", async () => {
+    const outside = face("a", "U+3042").replace("/_astro/a.AAAAAAAA.woff2", "/../x.AAAAAAAA.woff2");
+    await expect(build(heading("あ"), outside)).rejects.toThrow("の外を指している");
+  });
+
+  it("書体のファイルの URL が / で始まらないとき、ビルドを止める", async () => {
+    const relative = face("a", "U+3042").replace(
+      "/_astro/a.AAAAAAAA.woff2",
+      "_astro/a.AAAAAAAA.woff2",
+    );
+    await expect(build(heading("あ"), relative)).rejects.toThrow("の外を指している");
   });
 });
