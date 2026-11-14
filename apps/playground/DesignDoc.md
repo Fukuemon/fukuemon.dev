@@ -251,8 +251,10 @@ type OutputLog = {
 - 端末のシェルは、`processes.startShell` で起動する。起動するシェルのプログラムは、`webcontainer/` が決める。画面は、シェルのプログラムの名前を持たない。
 - `start` を呼ばないコンポーネントは、`processes.get` で、プロセスの出力を読む。
 - `files.changes` は、ファイルの中身が変わったことの通知である。保存と、エディタで開いているファイルの更新に使う。
+- ツリーを変えるファイルの操作（新しいファイルへの `files.write`、`files.createDirectory`、`files.rename`、`files.remove`）は、操作の後にツリーを読み直してから終わる。読み直しが失敗したときは、ログに出し、操作は成功として終える。操作の成否は、操作そのものの成否で決める。
 - `files.readAll` は、作業ディレクトリのファイルを、パス、サイズ、テキストの中身で返す。`exclude` に当たるパスは読まない。`maxBytes` を超えるファイルと、テキストとして読めないファイルは、`text` が `null` になる。`exclude` に当たるかの判定、`maxBytes` を超えるかの判定、テキストかどうかの判定は、`node-runtime/` の直下が持つ。
 - `FileEntry` は、パスを持つ。画面は、パスを、`FileTree` の項目の `id` に使う。
+- `ProcessInfo` は、ID、種別、名前、状態を持つ。種別は、`processes.startShell` で起動したプロセスが `shell`、`processes.start` で起動したプロセスが `command` である。画面は、種別でシェルの数を数え、2 つ目からのシェルの名前に番号を付ける。
 - `OpenPort` は、ポート、URL、プレビューの iframe に付ける属性（`sandbox`、`allow`）を持つ。属性の値は、`webcontainer/` が決める。
 - プレビューに入れるスクリプトから `postMessage` で送られるコンソールの記録を受けて、`consoleEntries` に入れる処理は、`node-runtime/` が持つ。スクリプトの中身と、メッセージの形は、`node-runtime/` の直下が持つ。`node-runtime/` の直下は、スクリプトの中身を、`BackendBootOptions` の `previewScript` で `webcontainer/` に渡す。メッセージの origin の確認は、`webcontainer/` が行う。
 - `database` は、DB を使うプロジェクトのときだけある。DB のプロセスの状態は、`database` の `status` で公開し、`NodeRuntime` には持たせない。
@@ -338,7 +340,7 @@ type BackendProcess = {
 ```mermaid
 flowchart TB
   page["NodePage<br/>プロジェクトと保存したファイルを読み、起動する"]
-  ctx["2 つの Context<br/>開いたプロジェクトと起動の Promise、画面の選択の状態"]
+  ctx["2 つの Context<br/>実行環境のインスタンス（起動の Promise）、画面の選択の状態"]
   layout["レイアウト"]
   files["FilesPane"]
   editor["EditorPane"]
@@ -361,7 +363,7 @@ flowchart TB
 ```
 
 - Context は 2 つで、`src/node/` に定義する。
-  - 開いたプロジェクトと、実行環境の起動の Promise を渡す Context。値が変わるのは、実行環境を起動し直すときだけである。
+  - 実行環境のインスタンスを、起動の Promise で渡す Context。開いたプロジェクトも一緒に渡す。ペインは、Promise を `use` で読み、ペインごとの `Suspense` で起動を待つ。値が変わるのは、実行環境を起動し直すときだけである。
   - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ端末のタブ、選んだプレビューのポート、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` がプロジェクトを読んだ後に描く `NodeLayout` が、`useReducer` で持つ。
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
@@ -537,6 +539,7 @@ sequenceDiagram
 - 起動のコマンドが複数あるときは、`start` の順に起動する。前のコマンドの終了を待たない。
 - 保存したバージョンと、プロジェクトの JSON のバージョンが違うときも、保存したファイルで起動し、保存したファイルがあるときと同じに扱う。
 - プレビューの iframe が 30 秒で読み込まれないときは、`PreviewPane` が、プレビューのペインにだけ、動かせない理由を出す。
+  - WebContainers のプレビューの iframe は、サーバーが応答しないときも `load` を起こす。この上限が働くのは、プレビューのページそのものが読み込まれないときだけである。応答しないサーバーの判定は、プレビューに入れるスクリプトを足すときに、スクリプトが送るメッセージで行う形に替える。
 - 訪問者は、端末で、WebContainers のシェルを制限なしで使う。
 - 「実行環境を起動し直す」の操作は、いつでも使える。起動し直した後は、保存したファイルがあるときと同じに扱う。`npm install` だけを自動で実行し、起動のコマンドは、訪問者が実行のボタンを押してから実行する。
 - DB のプロセスが終了したとき以外で、起動の後に実行環境が動かなくなったときは、訪問者が、「実行環境を起動し直す」の操作で起動し直す。画面は、実行環境の全体の状態を表示しない。
