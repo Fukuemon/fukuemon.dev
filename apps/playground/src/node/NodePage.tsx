@@ -1,6 +1,8 @@
 import {
   EditorFrame,
   FileTree,
+  HttpExchangeDetail,
+  HttpExchangeList,
   Link,
   Notice,
   PageLoading,
@@ -15,6 +17,7 @@ import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project"
 import { RuntimeContext, SelectionContext, useRuntime } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
+import { HttpDetailPane, HttpListPane } from "./HttpPane";
 import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
@@ -57,6 +60,36 @@ function Pane({
   );
 }
 
+/** プレビューの下に、HTTP の一覧と、選んだ通信の詳細を、上下に並べる。 */
+function HttpPanes() {
+  return (
+    <SplitPane
+      defaultSize={45}
+      label="HTTP の一覧の高さ"
+      orientation="vertical"
+      primary={
+        <Pane
+          fallback={
+            <HttpExchangeList
+              actors={[]}
+              exchanges={[]}
+              onSelect={() => undefined}
+              state={pendingState}
+            />
+          }
+        >
+          <HttpListPane />
+        </Pane>
+      }
+      secondary={
+        <Pane fallback={<HttpExchangeDetail actors={[]} state={pendingState} />}>
+          <HttpDetailPane />
+        </Pane>
+      }
+    />
+  );
+}
+
 function NodeLayout({ project }: { project: NodeProject }) {
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   return (
@@ -78,12 +111,13 @@ function NodeLayout({ project }: { project: NodeProject }) {
             }
             secondary={
               <SplitPane
-                defaultSize={70}
-                label="端末の高さ"
-                orientation="vertical"
+                defaultSize={55}
+                label="エディタとプレビューの幅"
                 primary={
                   <SplitPane
-                    label="エディタとプレビューの幅"
+                    defaultSize={70}
+                    label="端末の高さ"
+                    orientation="vertical"
                     primary={
                       <Pane
                         editorFocusRing
@@ -98,6 +132,20 @@ function NodeLayout({ project }: { project: NodeProject }) {
                     }
                     secondary={
                       <Pane
+                        fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}
+                      >
+                        <TerminalPane />
+                      </Pane>
+                    }
+                  />
+                }
+                secondary={
+                  <SplitPane
+                    defaultSize={40}
+                    label="プレビューの高さ"
+                    orientation="vertical"
+                    primary={
+                      <Pane
                         fallback={
                           <PreviewFrame state={pendingState} url="">
                             {null}
@@ -107,12 +155,8 @@ function NodeLayout({ project }: { project: NodeProject }) {
                         <PreviewPane />
                       </Pane>
                     }
+                    secondary={<HttpPanes />}
                   />
-                }
-                secondary={
-                  <Pane fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}>
-                    <TerminalPane />
-                  </Pane>
                 }
               />
             }

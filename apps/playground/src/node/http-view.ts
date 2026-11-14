@@ -1,0 +1,45 @@
+import type { HttpBody, HttpRecord } from "@fukuemon/node-runtime";
+import type { HttpActor, HttpExchange, HttpMessage } from "@fukuemon/ui";
+
+const bytes = (size: number) =>
+  size < 1024 ? `${size} バイト` : `${Math.round((size / 1024) * 10) / 10} KB`;
+
+/** 本文を、詳細に出す文にする。テキストでない本文と、上限で切った本文は、そのことを文で添える。 */
+export function bodyText(body: HttpBody): string {
+  if (body.text === null) return `（テキストでない本文、${bytes(body.size)}）`;
+  if (!body.truncated) return body.text;
+  return `${body.text}\n…（先頭だけを記録した。全体は ${bytes(body.size)}）`;
+}
+
+const toMessage = (message: { headers: HttpMessage["headers"]; body?: HttpBody }): HttpMessage => ({
+  headers: message.headers,
+  ...(message.body && { body: bodyText(message.body) }),
+});
+
+/**
+ * HTTP の記録を、一覧と詳細に渡す形にする。通信した側は、ブラウザを先に、記録に初めて出た順に並べる。
+ * 並べた順で区別の色が決まるので、記録が増えても、前からいる側の色は変わらない。
+ */
+export function toHttpView(records: readonly HttpRecord[]): {
+  actors: HttpActor[];
+  exchanges: HttpExchange[];
+} {
+  const actors = new Map<string, HttpActor>([["browser", { id: "browser", name: "ブラウザ" }]]);
+  const exchanges = records.map((record): HttpExchange => {
+    for (const peer of [record.from, record.to])
+      actors.set(peer.id, { id: peer.id, name: peer.name });
+    return {
+      id: record.id,
+      fromId: record.from.id,
+      toId: record.to.id,
+      method: record.method,
+      url: record.url,
+      request: toMessage(record.request),
+      ...(record.response && {
+        status: record.response.status,
+        response: toMessage(record.response),
+      }),
+    };
+  });
+  return { actors: [...actors.values()], exchanges };
+}

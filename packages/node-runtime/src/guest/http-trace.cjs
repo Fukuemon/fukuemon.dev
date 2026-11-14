@@ -135,6 +135,7 @@ function trace(server, req, res) {
   res.on("close", () => finish(res.writableFinished));
 }
 
+// oxlint-disable-next-line typescript/unbound-method -- 包んだ emit から、サーバーを this にして呼ぶ
 const serverEmit = http.Server.prototype.emit;
 http.Server.prototype.emit = function (event, ...args) {
   let port;

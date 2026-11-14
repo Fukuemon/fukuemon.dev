@@ -29,8 +29,8 @@ export type HttpExchangeListProps = {
   exchanges: readonly HttpExchange[];
   selectedId?: string;
   onSelect: (id: string) => void;
-  /** 渡すと、一覧の代わりに読み込み中かエラーを出す。 */
-  state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
+  /** 渡すと、一覧の代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
+  state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
 };
 
 // クラスの名前を連結で組むと Tailwind が CSS を出さないので、区別の色ごとに書き並べる

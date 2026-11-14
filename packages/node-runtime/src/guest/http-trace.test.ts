@@ -153,11 +153,9 @@ server.listen(0, "127.0.0.1", async () => {
 });
 `);
     const [big, bin] = exchanges(records);
-    const body = (big?.response as { body: { text: string; size: number; truncated: boolean } })
-      .body;
-    expect(body.size).toBe(90000);
-    expect(body.truncated).toBe(true);
-    expect(body.text).toBe("あ".repeat(Math.floor((64 * 1024) / 3)));
+    expect(big?.response).toMatchObject({
+      body: { size: 90000, truncated: true, text: "あ".repeat(Math.floor((64 * 1024) / 3)) },
+    });
     expect(bin?.response).toMatchObject({ body: { text: null, size: 3, truncated: false } });
   });
 
