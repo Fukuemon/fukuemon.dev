@@ -16,12 +16,12 @@ ADR の規則は、[README.md](README.md) にある。
 
 ## 開発のツール
 
-| ADR                                             | 題                                                                                                               |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| [ADR-0003](0003-monorepo-and-vite-plus.md)      | （提案）pnpm workspace の monorepo とし、package の境界を最初から物理的に分ける                                  |
-| [ADR-0007](0007-quality-gates.md)               | 品質チェックに react-doctor / knip / similarity-ts を採り、Bun / Biome を採らない                                |
-| [ADR-0011](0011-pin-tool-versions-with-mise.md) | ツールのバージョンを mise で固定する                                                                             |
-| [ADR-0017](0017-vp-run-cache-for-web-build.md)  | （提案）Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の実行、`packages/ui` のテストに限って使う |
+| ADR                                             | 題                                                                                                       |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [ADR-0003](0003-monorepo-and-vite-plus.md)      | pnpm workspace の monorepo とし、package の境界を最初から物理的に分ける                                  |
+| [ADR-0007](0007-quality-gates.md)               | 品質チェックに react-doctor / knip / similarity-ts を採り、Bun / Biome を採らない                        |
+| [ADR-0011](0011-pin-tool-versions-with-mise.md) | ツールのバージョンを mise で固定する                                                                     |
+| [ADR-0017](0017-vp-run-cache-for-web-build.md)  | Vite+ を、`apps/web` の build のキャッシュ、`apps/playground` の実行、`packages/ui` のテストに限って使う |
 
 ## 配信の基盤
 

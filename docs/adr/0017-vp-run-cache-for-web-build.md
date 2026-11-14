@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -124,25 +124,6 @@ Turborepo は `outputs` / `inputs` を明示宣言する方式のため、入力
 - `apps/web/vite.config.ts` を消す。
 - `apps/web` の devDependencies から `vite-plus` を消す。
 
-## 承認の条件
-
-次の変更は、承認した決定を、コードの今の使い方に合わせて変える。  
-利用者が、この変更を承認する。
-
-- Decision 4: Vite+ を使う範囲に、`apps/playground` の dev、build、preview を足す。
-- Decision 6: `vp test` を使わない決定を、`packages/ui` だけ `vp test` で実行する形に変える。`packages/ui` が `vp test` を使う理由は、文書とコミットに無いので、Context には事実だけを書いた。
-- Decision 1: `vite-plus` を宣言する package を、`apps/web` の 1 つから、`apps/web`、`apps/playground`、`packages/ui` の 3 つにする。
-- Decision 2 と Decision 9: `pagefind --site dist` を実行するタスク `build:search` を外す。本文の検索と Pagefind の索引を最初は作らないことは、ADR-0030 が決めている。
-- Decision 9: 3 つの条件を確認する時期を、実装のときから、`vite-plus` か Astro を上げるときと、タスクを変えるときに変える。2 つ目の条件の対象を、`packages/design-system/` から `packages/ui` に変える。
-
-次の 4 つは、決定を変えないが、利用者が読んで判断する。
-
-- Context と Verification の事実は、vite-plus 1.3.0 で確認したものである。`pnpm-workspace.yaml` の catalog は 1.4.0 で、1.4.0 では確認し直していない。
-- Decision 4 と Decision 6 は、比べた案の記録が無い。
-- Decision 9 の外す手順は、`apps/web` の分だけである。`apps/playground` と `packages/ui` から Vite+ を外す手順は、決めていない。
-- Considered Options の Turborepo の行と「Vite+ を採用しない」の行は、比べたときの文のまま残した。
-  - 弱みのうち、Node.js のバージョンの固定、package manager の管理、lint と format の同梱は、Decision 5、Decision 7、ADR-0011 で使わないと決めたものである。
-
 ## Verification
 
 `pnpm --filter @fukuemon/web run build` を、キャッシュを消してから続けて実行して確認した。  
@@ -166,6 +147,14 @@ Decision 9 の 3 つの条件は、このときの構成で満たした。
 - キャッシュが外れたとき: 4.60 秒、3.36 秒、3.37 秒
 - キャッシュが当たったとき: 0.41 秒、0.41 秒、0.40 秒
 - `vp` を通さずに `astro build && pagefind --site dist` を実行したとき: 4.20 秒、3.10 秒、3.44 秒
+
+確認していないことと、決めていないことは、次のとおり。
+
+- Context と Verification の事実は、vite-plus 1.3.0 で確認したものである。`pnpm-workspace.yaml` の catalog は 1.4.0 で、1.4.0 では確認し直していない。
+- Decision 4 と Decision 6 は、比べた案の記録が無い。
+- Decision 9 の外す手順は、`apps/web` の分だけである。`apps/playground` と `packages/ui` から Vite+ を外す手順は、決めていない。
+- Considered Options の Turborepo の行と「Vite+ を採用しない」の行は、比べたときの文のまま残した。
+  - 弱みのうち、Node.js のバージョンの固定、package manager の管理、lint と format の同梱は、Decision 5、Decision 7、ADR-0011 で使わないと決めたものである。
 
 ## Considered Options
 
