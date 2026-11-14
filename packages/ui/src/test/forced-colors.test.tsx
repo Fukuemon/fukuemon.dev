@@ -10,7 +10,7 @@ import * as switchStories from "../base/Switch/Switch.stories";
 import * as tabsStories from "../base/Tabs/Tabs.stories";
 import * as treeViewStories from "../base/TreeView/TreeView.stories";
 
-const { Primary, PrimaryDisabled } = composeStories(buttonStories);
+const { Primary, PrimaryDisabled, Loading } = composeStories(buttonStories);
 const { Unchecked, Checked, CheckedDisabled } = composeStories(checkboxStories);
 const { Horizontal } = composeStories(splitPaneStories);
 const { Off, On, OnDisabled } = composeStories(switchStories);
@@ -85,6 +85,12 @@ describe("forced-colors: active", () => {
     expect(enabled.width).toBe("1px");
     expect(disabled.width).toBe("1px");
     expect(disabled.color).not.toBe(enabled.color);
+  });
+
+  it("Button の読み込み中の 3 つの点が、背景と違う色で塗られる", () => {
+    render(<Loading />);
+    const dot = screen.getByRole("button").querySelector("[aria-hidden] > span") as Element;
+    expect(style(dot).backgroundColor).not.toBe(style(document.body).backgroundColor);
   });
 
   it("Tabs は、選んだタブの下に帯が出て、帯が背景と違う色で塗られる", () => {

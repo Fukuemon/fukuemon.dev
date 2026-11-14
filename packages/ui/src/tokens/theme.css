@@ -430,6 +430,12 @@
     animation: fd-loading-dot 1200ms ease-in-out infinite;
   }
 
+  @media (forced-colors: active) {
+    & > * {
+      background-color: CanvasText !important;
+    }
+  }
+
   & > :nth-child(2) {
     animation-delay: 200ms;
   }
