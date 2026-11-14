@@ -26,6 +26,7 @@ status: draft
 ### トップの庭の見た目の回帰
 
 `apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
+記事のページの表と図の枠の E2E も、同じ config とコマンドで流れる。
 CI では、`pnpm run check` がビルドの後に実行する。
 ローカル環境では、ビルドしてから次を実行する。
 

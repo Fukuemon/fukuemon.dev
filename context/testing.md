@@ -81,7 +81,8 @@ CI につなぐ作業は [#88](https://github.com/Fukuemon/fukuemon.dev/issues/8
 
 見た目の回帰のチェックは、E2E のエビデンスの静止画を、変更の前後で並べて比べる。  
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
-サイトの E2E の package（`packages/e2e`）は、まだ無い。
+サイトの E2E の package（`packages/e2e`）は、まだ無い。  
+`apps/web` の E2E の spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。
 
 記事のページの表と図の枠は、ぼかしを CSS の scroll-driven animation だけで出し分ける。  
 あふれたときだけ出ることは、ブラウザで描かないと確認できないので、E2E で確認する。  
@@ -89,7 +90,6 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 
 トップの庭は、Playwright のスクリーンショットの比較で確認する。  
 庭は WebGL で描き、目で比べても色の小さな違いに気づけないためである。  
-spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。  
 実行の方法は [E2E のテスト](testing/e2e.md) にある。
 
 ## Runtime Requirements
