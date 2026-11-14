@@ -5,10 +5,9 @@ import {
   type FileContents,
   type NodeRuntime,
   type ProcessHandle,
-  type ReadAllOptions,
+  ReadLimitError,
   type Store,
   bootNodeRuntime,
-  isExcludedPath,
 } from "@fukuemon/node-runtime";
 
 import { type ProjectLoad, isEmbedId, isSafeFilePath } from "../project/project";
@@ -19,6 +18,7 @@ import {
   createWorkspace,
 } from "../workspace/workspace";
 import { shellName } from "./messages";
+import { RESTART_READ, SAVE_READ, isUnsaved, restartFiles, saveFiles } from "./save-rules";
 
 export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["project"];
 
@@ -29,9 +29,6 @@ export type RuntimeResult =
 
 /** IndexedDB に保存する 1 件。作業ディレクトリのファイルの一式を、丸ごと置き換える。 */
 export type NodeRecord = { files: Record<string, string>; version: string; savedAt: number };
-
-/** 保存しないファイルの規則。起動し直すときの files.readAll にも同じ値を渡す (apps/playground/DesignDoc.md)。 */
-const SAVE_RULES: ReadAllOptions = { exclude: ["node_modules"], maxBytes: 1_048_576 };
 
 /** 変更の通知を受けてから、作業ディレクトリを読むまでの時間（ms）。待つ間に来た通知は、1 回の保存にまとめる。 */
 export const SAVE_DELAY_MS = 500;
@@ -64,8 +61,6 @@ function createStore<T>(initial: T): WritableStore<T> {
   };
 }
 
-const isExcluded = (path: string) => isExcludedPath(path, SAVE_RULES.exclude);
-
 /**
  * IndexedDB から読んだ値が、保存のレコードの形か。形でない値は、保存したファイルが無いときと同じに扱う。
  * パスは、プロジェクトの JSON と同じ規則で確かめる。WebContainers の mount に、作業ディレクトリの外を指すパスを渡さないためである。
@@ -93,15 +88,6 @@ function hasFileAsDirectory(paths: readonly string[]): boolean {
   });
 }
 
-/** files.readAll の結果のうち、保存するファイルのパスと中身。テキストとして読めないものと、規則に合わないパスは除く。 */
-export function savedFiles(entries: readonly FileContents[]): Record<string, string> {
-  const files: Record<string, string> = {};
-  for (const { path, text } of entries) {
-    if (text !== null && isSafeFilePath(path)) files[path] = text;
-  }
-  return files;
-}
-
 const sameFiles = (a: Record<string, string>, b: Record<string, string> | undefined) =>
   b !== undefined &&
   Object.keys(a).length === Object.keys(b).length &&
@@ -122,6 +108,8 @@ export type NodeSession = {
   canSave: boolean;
   /** 最後の保存が失敗したときは true である。 */
   saveFailed: Store<boolean>;
+  /** 最後に読んだ作業ディレクトリが、保存の上限を超えたときは true である。上限を下回って読めたときと、初期の状態に戻したときに false に戻る。 */
+  overLimit: Store<boolean>;
   /** IndexedDB に保存したファイルがあるか。 */
   hasSaved: Store<boolean>;
   /** 保存したファイルの初期ファイルのバージョンが、プロジェクトのものと違うか。 */
@@ -172,6 +160,7 @@ export function createNodeSession({
   const versionChanged = createStore(record !== undefined && record.version !== project.version);
   const busy = createStore(false);
   const commandFailed = createStore(false);
+  const overLimit = createStore(false);
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   let version = record?.version ?? project.version;
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
@@ -190,8 +179,12 @@ export function createNodeSession({
       ),
   });
 
-  const persist = (files: Record<string, string>) => {
-    lastRead = files;
+  // 上限を超えたときは、前に保存したレコードを残す
+  const persist = (entries: readonly FileContents[]) => {
+    const saving = saveFiles(entries);
+    overLimit.set(saving.kind === "over-limit");
+    if (saving.kind === "over-limit") return;
+    const { files } = saving;
     if (sameFiles(files, lastSaved)) return;
     lastSaved = files;
     saver.save({ files, version, savedAt: now() });
@@ -199,13 +192,16 @@ export function createNodeSession({
 
   const readForSave = async (runtime: NodeRuntime) => {
     // 読み込みが終わらないと、次の保存が始まらないので、上限で諦める
-    const entries = await withTimeout(runtime.files.readAll(SAVE_RULES), READ_TIMEOUT_MS).catch(
+    const entries = await withTimeout(runtime.files.readAll(SAVE_READ), READ_TIMEOUT_MS).catch(
       (error: unknown) => {
-        console.error("保存のために作業ディレクトリを読めない", error);
+        if (error instanceof ReadLimitError) overLimit.set(true);
+        else console.error("保存のために作業ディレクトリを読めない", error);
         return undefined;
       },
     );
-    return entries && savedFiles(entries);
+    // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
+    if (entries) lastRead = restartFiles(entries);
+    return entries;
   };
 
   const watchForSave = (instance: Instance, runtime: NodeRuntime) => {
@@ -225,13 +221,13 @@ export function createNodeSession({
       reading = true;
       do {
         again = false;
-        const files = await readForSave(runtime);
-        if (files && !stopped) persist(files);
+        const entries = await readForSave(runtime);
+        if (entries && !stopped) persist(entries);
       } while (again && !stopped);
       reading = false;
     };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
-      if (!instance.touched || paths.every(isExcluded)) return;
+      if (!instance.touched || paths.every(isUnsaved)) return;
       // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
       const at = Date.now();
       firstChange ??= at;
@@ -403,10 +399,10 @@ export function createNodeSession({
   const readWorkdir = async (old: Instance) => {
     if (!old.runtime) return { files: bootFiles, touched: old.touched };
     try {
-      const files = savedFiles(
-        await withTimeout(old.runtime.files.readAll(SAVE_RULES), READ_TIMEOUT_MS),
-      );
-      if (old.touched) persist(files);
+      const entries = await withTimeout(old.runtime.files.readAll(RESTART_READ), READ_TIMEOUT_MS);
+      const files = restartFiles(entries);
+      lastRead = files;
+      if (old.touched) persist(entries);
       return { files, touched: old.touched };
     } catch (error) {
       console.error("起動し直す前に作業ディレクトリを読めない", error);
@@ -423,7 +419,9 @@ export function createNodeSession({
       if (old.runtime) {
         old.stopSaving = watchForSave(old, old.runtime);
         // 読み込みを待たずに失敗を返す。待つと、読み込みが終わるまで busy が戻らない
-        if (old.touched) void readForSave(old.runtime).then((files) => files && persist(files));
+        if (old.touched) {
+          void readForSave(old.runtime).then((entries) => entries && persist(entries));
+        }
       }
       throw error;
     }
@@ -435,6 +433,7 @@ export function createNodeSession({
     lastSaved = undefined;
     hasSaved.set(false);
     versionChanged.set(false);
+    overLimit.set(false);
     return { files: project.files, touched: false };
   };
 
@@ -443,6 +442,7 @@ export function createNodeSession({
     runtime: runtimeStore,
     canSave,
     saveFailed: saver.failed,
+    overLimit,
     hasSaved,
     versionChanged,
     busy,

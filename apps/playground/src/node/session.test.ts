@@ -4,6 +4,8 @@ import {
   type FileContents,
   type NodeRuntime,
   type ProcessHandle,
+  type ReadAllOptions,
+  ReadLimitError,
 } from "@fukuemon/node-runtime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,8 +22,8 @@ import {
   SAVE_MAX_DELAY_MS,
   createNodeSession,
   createNodeSessionOpener,
-  savedFiles,
 } from "./session";
+import { SAVE_LIMIT } from "./save-rules";
 
 const project: NodeProject = {
   ...nodeDefaultProject,
@@ -41,6 +43,8 @@ function fakeRuntime(
   installExit: number | Promise<number>,
 ) {
   const contents = new Map(Object.entries(files));
+  /** シンボリックリンクのパス。readAll は kind を other にして返す。 */
+  const links = new Set<string>();
   const calls: string[] = [];
   const listeners = new Set<(paths: readonly string[]) => void>();
   const handles: (ProcessHandle & { killed: boolean })[] = [];
@@ -59,10 +63,16 @@ function fakeRuntime(
     handles.push(created);
     return created;
   };
-  const readAll = vi.fn(
-    async (): Promise<readonly FileContents[]> =>
-      [...contents].map(([path, text]) => ({ path, size: text.length, text })),
-  );
+  // 除くディレクトリは読み、上限は数だけを見る。除くディレクトリの絞り込みは、session が受け取った後にもう 1 度行う
+  const readAll = vi.fn(async (options?: ReadAllOptions): Promise<readonly FileContents[]> => {
+    if (options?.limit && contents.size > options.limit.files) throw new ReadLimitError();
+    return [...contents].map(([path, text]) => ({
+      path,
+      kind: links.has(path) ? "other" : "file",
+      size: text.length,
+      text,
+    }));
+  });
   const runtime = {
     files: {
       changes: {
@@ -103,6 +113,7 @@ function fakeRuntime(
     runtime,
     calls,
     contents,
+    links,
     readAll,
     handles,
     /** 実行環境の中のコマンドがファイルを書いたときと同じく、中身を変えて通知を出す。 */
@@ -304,7 +315,7 @@ describe("保存", () => {
     let release: () => void = () => undefined;
     fake.readAll.mockImplementationOnce(async () => {
       await new Promise<void>((resolve) => (release = resolve));
-      return [{ path: "index.js", size: 1, text: "old" }];
+      return [{ path: "index.js", kind: "file", size: 1, text: "old" }];
     });
     fake.change("index.js", "c");
     await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
@@ -391,15 +402,76 @@ describe("保存", () => {
   });
 });
 
-describe("savedFiles", () => {
-  it("テキストとして読めないファイルと、規則に合わないパスを除く", () => {
-    expect(
-      savedFiles([
-        { path: "a.js", size: 1, text: "a" },
-        { path: "big.bin", size: 2_000_000, text: null },
-        { path: "__proto__", size: 1, text: "x" },
-      ]),
-    ).toStrictEqual({ "a.js": "a" });
+describe("保存しないファイル", () => {
+  /** 保存しないファイルを、作業ディレクトリに置く。 */
+  const putUnsaved = (fake: Fake) => {
+    fake.contents.set(".env", "TOKEN=x");
+    fake.contents.set("dist/a.js", "d");
+    fake.contents.set(".git/HEAD", "ref");
+    fake.contents.set("link.txt", "outside");
+    fake.links.add("link.txt");
+  };
+
+  it("`.env`、`dist/`、`.git`、リンクは保存せず、起動し直した後の作業ディレクトリには残す", async () => {
+    const { session, saves, booted, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    putUnsaved(latest());
+    latest().contents.set("index.js", "c");
+    await session.restart();
+    expect({ saved: saves.at(-1)?.files, booted: booted.at(-1) }).toStrictEqual({
+      saved: { "index.js": "c" },
+      booted: {
+        "index.js": "c",
+        ".env": "TOKEN=x",
+        "dist/a.js": "d",
+        ".git/HEAD": "ref",
+        "link.txt": "outside",
+      },
+    });
+  });
+
+  it("保存しないパスだけの変更の通知では、作業ディレクトリを読まない", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const fake = latest();
+    fake.change(".env", "TOKEN=x");
+    fake.change("dist/a.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(fake.readAll).not.toHaveBeenCalled();
+  });
+
+  it("上限を超えたら、保存せずに前のレコードを残し、overLimit を立てる。下回ったら保存して戻す", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const fake = latest();
+    for (let i = 0; i < SAVE_LIMIT.files; i++) fake.contents.set(`f/${i}.txt`, "");
+    fake.change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    const over = { saves: saves.length, overLimit: session.overLimit.getSnapshot() };
+    for (let i = 0; i < SAVE_LIMIT.files; i++) fake.contents.delete(`f/${i}.txt`);
+    fake.change("index.js", "d");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect({
+      over,
+      under: {
+        saves: saves.map((record) => record.files),
+        overLimit: session.overLimit.getSnapshot(),
+      },
+    }).toStrictEqual({
+      over: { saves: 0, overLimit: true },
+      under: { saves: [{ "index.js": "d" }], overLimit: false },
+    });
+  });
+
+  it("上限を超えたまま起動し直しても、保存しない", async () => {
+    const { session, saves, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    for (let i = 0; i < SAVE_LIMIT.files; i++) latest().contents.set(`f/${i}.txt`, "");
+    await session.restart();
+    expect({ saves: saves.length, overLimit: session.overLimit.getSnapshot() }).toStrictEqual({
+      saves: 0,
+      overLimit: true,
+    });
   });
 });
 

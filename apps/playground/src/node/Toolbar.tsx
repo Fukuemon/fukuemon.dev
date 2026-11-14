@@ -10,6 +10,7 @@ import {
 
 import type { Store } from "@fukuemon/node-runtime";
 
+import { SAVE_LIMIT } from "./save-rules";
 import type { NodeSession } from "./session";
 
 const useStore = <T,>(store: Store<T>) => useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -20,6 +21,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
   const hasSaved = useStore(session.hasSaved);
   const versionChanged = useStore(session.versionChanged);
   const saveFailed = useStore(session.saveFailed);
+  const overLimit = useStore(session.overLimit);
   const commandFailed = useStore(session.commandFailed);
   const [running, startRunning] = useTransition();
   const [confirming, setConfirming] = useState(false);
@@ -99,6 +101,11 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
         {session.canSave && saveFailed && (
           <Notice density="compact" isAlert title="ファイルを保存できませんでした" tone="warning">
             ブラウザの保存の容量が足りないか、保存できない状態です。次にファイルを変えたときに、もう一度保存します。
+          </Notice>
+        )}
+        {session.canSave && overLimit && (
+          <Notice density="compact" title="ファイルが多いため、保存していません" tone="warning">
+            {`作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / 1_048_576} MB を超えたので、前に保存したファイルを残しています。ファイルを減らすと、また保存します。`}
           </Notice>
         )}
         {!session.canSave && (
