@@ -20,10 +20,10 @@ function MotionTokens() {
         <h2 className="font-heading text-heading-md font-semibold">罫と筆の線を引く</h2>
         <span aria-hidden="true" className="h-1 w-64 animate-stroke bg-primary stroke-brush" />
         <code className="font-mono text-code-dense">animate-stroke stroke-brush</code>
-        <a href="#" className="focus-visible:focus-ring w-fit">
+        <a href="/" className="focus-visible:focus-ring w-fit">
           <span className="link-rule">link-rule</span>
         </a>
-        <a href="#" className="brush-hover focus-visible:focus-ring w-fit pb-1">
+        <a href="/" className="brush-hover focus-visible:focus-ring w-fit pb-1">
           brush-hover
         </a>
       </section>
