@@ -113,8 +113,8 @@ ADR-0026 の Decision の「ヘッダーの『筆者について』は `/` を�
 | [ADR-0059](0059-slides-pager-fullscreen-and-swipe.md)            | 公開するスライドのページ送りを下の帯に置き、JavaScript が有効なときに全画面の表示とスワイプでの操作を足す                                                               |
 | [ADR-0063](0063-ai-operations-for-sql-and-go.md)                 | AI のエージェントからの操作を、SQL だけを動かすツールと Go を動かすツールにも公開し、PGlite と Yaegi を操作が呼ばれたときにも読み込む                                   |
 | [ADR-0064](0064-go-net-http-same-origin-only.md)                 | Yaegi で動かす Go のコードの HTTP のリクエストは、Web Worker と同じ origin へのものだけを通す                                                                           |
-| [ADR-0069](0069-node-runtime-commands-without-visitor-action.md) | Node の実行環境は、初期ファイルのままのときだけ起動のコマンドを自動で実行し、起動し直すときに作業ディレクトリを読めなければ前に起動したときのファイルで起動する（提案） |
-| [ADR-0070](0070-node-save-targets.md)                            | 保存する対象から、シークレットのファイル、ビルドの出力、`.git`、リンクを除き、数と大きさに上限を付ける（提案）                                                          |
+| [ADR-0069](0069-node-runtime-commands-without-visitor-action.md) | （提案）Node の実行環境は、初期ファイルのままのときだけ起動のコマンドを自動で実行し、起動し直すときに作業ディレクトリを読めなければ前に起動したときのファイルで起動する |
+| [ADR-0070](0070-node-save-targets.md)                            | （提案）Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける                                                           |
 
 ADR-0040 の Decision 3 の「識別子は、fukuemon.dev の図のパスである」は、ADR-0056 の Decision 4 が、図の名前だけを渡す形に変えた。  
 ADR-0043 の Decision の「開いた図を新しい図として保存する」は、ADR-0056 の Decision 5 が、最初に編集したときに保存する形に変えた。  
@@ -345,8 +345,10 @@ flowchart TB
   A0069 --> A0050
   A0069 --> A0051
   A0070 --> A0031
+  A0070 --> A0033
   A0070 --> A0050
   A0070 --> A0051
+  A0070 --> A0052
 ```
 
 依存の無い ADR（ADR-0011）は、図に描かない。  
