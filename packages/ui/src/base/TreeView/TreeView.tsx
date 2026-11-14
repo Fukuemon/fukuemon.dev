@@ -1,5 +1,12 @@
 import { clsx } from "clsx";
-import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react";
 
 /** 木の 1 つの項目。children を持つ項目は枝で、開閉できる。 */
 export type TreeNode = {
@@ -15,6 +22,22 @@ export type TreeNode = {
   /** ラベルの左に描く印。枝は、開いているかを受け取る。印は `aria-hidden` にする。 */
   icon?: (isOpen: boolean) => ReactNode;
 };
+
+/**
+ * 木の行の中に描く名前の欄。content に欄を渡す。
+ * rename は、id の項目の名前の代わりに content を描く。
+ * insert は、parentId の枝の子の先頭（parentId が undefined のときは木の先頭）に行を 1 つ足し、content を描く。行の印は icon で渡す。
+ * 欄のある行までの枝は開く。欄を外した後、フォーカスがどこにも無ければ、木の項目へ戻す。
+ */
+export type TreeEditor =
+  | { kind: "rename"; id: string; content: ReactNode }
+  | {
+      kind: "insert";
+      parentId: string | undefined;
+      isBranch: boolean;
+      icon?: ReactNode;
+      content: ReactNode;
+    };
 
 export type TreeViewProps = {
   /** 木の読み上げる名前。 */
@@ -35,6 +58,8 @@ export type TreeViewProps = {
    * body-compact では、選んだ項目を太字にせず、面の色と左の 2px の主の色の罫で示す。太字にすると名前の幅が変わり、行の中身の位置がずれるためである。
    */
   textSize?: "compact" | "body-compact";
+  /** 渡すと、木の行の中に名前の欄を描く。欄の中のキーとクリックは、木の操作に使わない。 */
+  editor?: TreeEditor;
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -61,6 +86,25 @@ const flatten = (
       : []),
   ]);
 
+/** id の項目の祖先の枝の id を、根から順に返す。id が木に無いときは undefined を返す。 */
+const ancestorsOf = (nodes: readonly TreeNode[], id: string): string[] | undefined => {
+  for (const node of nodes) {
+    if (node.id === id) return [];
+    const below = node.children && ancestorsOf(node.children, id);
+    if (below) return [node.id, ...below];
+  }
+  return undefined;
+};
+
+/** 欄を描くために開いておく枝。rename はその項目の祖先、insert は親とその祖先である。 */
+const branchesToOpen = (nodes: readonly TreeNode[], editor: TreeEditor | undefined): string[] => {
+  if (editor === undefined) return [];
+  const target = editor.kind === "rename" ? editor.id : editor.parentId;
+  if (target === undefined) return [];
+  const ancestors = ancestorsOf(nodes, target) ?? [];
+  return editor.kind === "rename" ? ancestors : [...ancestors, target];
+};
+
 /**
  * 項目を階層で並べる木。WAI-ARIA APG の Tree View のキーボードの操作に従う。
  * 上下の矢印のキーで見えている項目の間を移り、Home と End で端へ移る。
@@ -78,16 +122,21 @@ export function TreeView({
   onRequestDelete,
   density = "default",
   textSize = "compact",
+  editor,
 }: TreeViewProps) {
   const isCompact = density === "compact";
   const isBodyCompact = isCompact && textSize === "body-compact";
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpandedIds));
+  const closed = branchesToOpen(items, editor).filter((id) => !expanded.has(id));
+  // 欄を出すときに閉じた枝を開く。開いた状態は欄を外した後も残すので、描く間に state を直す
+  if (closed.length > 0) setExpanded(new Set([...expanded, ...closed]));
   const visible = flatten(items, expanded);
   const [focusedId, setFocusedId] = useState<string | undefined>(undefined);
   const tabStopId = visible.some((v) => v.node.id === focusedId)
     ? focusedId
     : (visible.find((v) => v.node.id === selectedId) ?? visible[0])?.node.id;
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
+  const editorRef = useRef<HTMLSpanElement>(null);
   const typed = useRef({ text: "", timer: 0 });
 
   useEffect(() => {
@@ -115,6 +164,27 @@ export function TreeView({
     itemRefs.current.get(id)?.focus();
   };
 
+  const isEditing = editor !== undefined;
+  const readSelectedId = useEffectEvent(() => selectedId);
+  // 確定で選ぶ項目が変わったら（作った項目、名前を変えてパスの変わった項目）その項目へ、変わらなければ前にいた項目へ戻す。
+  // フォーカスがほかの要素にあるときは、欄の外を押して確定したときなので、動かさない
+  const restoreFocus = useEffectEvent((selectedAtStart: string | undefined) => {
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    const isNewSelection =
+      selectedId !== selectedAtStart && visible.some((v) => v.node.id === selectedId);
+    focus(isNewSelection ? selectedId : tabStopId);
+  });
+
+  useEffect(() => {
+    if (!isEditing) return;
+    const selectedAtStart = readSelectedId();
+    return () => restoreFocus(selectedAtStart);
+  }, [isEditing]);
+
+  const isFromEditor = (event: { target: EventTarget }) =>
+    event.target instanceof Node && editorRef.current?.contains(event.target) === true;
+
   const setOpen = (id: string, isOpen: boolean) => {
     const next = new Set(expanded);
     if (isOpen) next.add(id);
@@ -123,6 +193,7 @@ export function TreeView({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>, index: number) => {
+    if (isFromEditor(event)) return;
     const current = visible[index];
     if (!current) return;
     const { node } = current;
@@ -164,6 +235,105 @@ export function TreeView({
   const shortcuts =
     [onRequestRename && "F2", onRequestDelete && "Delete"].filter(Boolean).join(" ") || undefined;
 
+  const rowClassName = clsx(
+    // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
+    "flex items-start gap-1 rounded-control pr-2 transition-colors",
+    isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
+    isBodyCompact && "border-l-2 border-transparent",
+  );
+  // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
+  const indent = (level: number) => ({
+    paddingInlineStart: `${(level - 1) * 1.5 + (isCompact ? 0 : 0.5)}rem`,
+  });
+  const markClassName = clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5");
+  const chevron = (isBranch: boolean, isOpen: boolean) => (
+    <span className={markClassName}>
+      <svg
+        aria-hidden="true"
+        className={clsx("transition-transform", isOpen && "rotate-90", !isBranch && "invisible")}
+        height="16"
+        viewBox="0 0 16 16"
+        width="16"
+      >
+        <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    </span>
+  );
+  const editorSlot = (content: ReactNode) => (
+    <span className="min-w-0 flex-1" ref={editorRef}>
+      {content}
+    </span>
+  );
+
+  const rows = visible.map(({ node, level, setSize, posInSet }, index) => {
+    const isBranch = node.children !== undefined;
+    const isOpen = expanded.has(node.id);
+    const isRenaming = editor?.kind === "rename" && editor.id === node.id;
+    return (
+      <li
+        aria-expanded={isBranch ? isOpen : undefined}
+        aria-keyshortcuts={shortcuts}
+        aria-level={level}
+        aria-posinset={posInSet}
+        aria-selected={onSelect ? node.id === selectedId : undefined}
+        aria-setsize={setSize}
+        className={clsx(
+          rowClassName,
+          isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
+          "aria-selected:bg-primary-surface",
+          isBodyCompact ? "aria-selected:border-primary" : "aria-selected:font-bold",
+          (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
+        )}
+        key={node.id}
+        onClick={(event) => {
+          if (isFromEditor(event)) return;
+          setFocusedId(node.id);
+          if (isBranch) setOpen(node.id, !isOpen);
+          onSelect?.(node.id);
+        }}
+        onFocus={(event) => {
+          if (event.target === event.currentTarget) setFocusedId(node.id);
+        }}
+        onKeyDown={(event) => handleKeyDown(event, index)}
+        ref={(element) => {
+          if (element) itemRefs.current.set(node.id, element);
+          else itemRefs.current.delete(node.id);
+        }}
+        role="treeitem"
+        style={indent(level)}
+        tabIndex={node.id === tabStopId ? 0 : -1}
+      >
+        {chevron(isBranch, isOpen)}
+        {node.icon && <span className={markClassName}>{node.icon(isOpen)}</span>}
+        {isRenaming ? editorSlot(editor.content) : (node.content ?? node.label)}
+      </li>
+    );
+  });
+
+  if (editor?.kind === "insert") {
+    const parentIndex = visible.findIndex((v) => v.node.id === editor.parentId);
+    const parent = visible[parentIndex];
+    // 親がまだ開いていない描画では、足す場所が無いので行を出さない（次の描画で開く）
+    if (editor.parentId === undefined || parent !== undefined) {
+      rows.splice(
+        parentIndex + 1,
+        0,
+        // 欄の行は、木の項目と同じ字下げと印で描く。項目ではないので、選択とキーの操作を持たない
+        <li
+          aria-level={parent ? parent.level + 1 : 1}
+          className={rowClassName}
+          key="tree-editor"
+          role="treeitem"
+          style={indent(parent ? parent.level + 1 : 1)}
+        >
+          {chevron(editor.isBranch, false)}
+          {editor.icon && <span className={markClassName}>{editor.icon}</span>}
+          {editorSlot(editor.content)}
+        </li>,
+      );
+    }
+  }
+
   return (
     <ul
       aria-label={label}
@@ -173,70 +343,7 @@ export function TreeView({
       )}
       role="tree"
     >
-      {visible.map(({ node, level, setSize, posInSet }, index) => {
-        const isBranch = node.children !== undefined;
-        const isOpen = expanded.has(node.id);
-        return (
-          <li
-            aria-expanded={isBranch ? isOpen : undefined}
-            aria-keyshortcuts={shortcuts}
-            aria-level={level}
-            aria-posinset={posInSet}
-            aria-selected={onSelect ? node.id === selectedId : undefined}
-            aria-setsize={setSize}
-            className={clsx(
-              // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
-              "flex items-start gap-1 rounded-control pr-2 transition-colors",
-              isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
-              isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
-              "aria-selected:bg-primary-surface",
-              isBodyCompact
-                ? "border-l-2 border-transparent aria-selected:border-primary"
-                : "aria-selected:font-bold",
-              (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
-            )}
-            key={node.id}
-            onClick={() => {
-              setFocusedId(node.id);
-              if (isBranch) setOpen(node.id, !isOpen);
-              onSelect?.(node.id);
-            }}
-            onKeyDown={(event) => handleKeyDown(event, index)}
-            ref={(element) => {
-              if (element) itemRefs.current.set(node.id, element);
-              else itemRefs.current.delete(node.id);
-            }}
-            role="treeitem"
-            // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
-            style={{
-              paddingInlineStart: `${(level - 1) * 1.5 + (isCompact ? 0 : 0.5)}rem`,
-            }}
-            tabIndex={node.id === tabStopId ? 0 : -1}
-          >
-            <span className={clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5")}>
-              <svg
-                aria-hidden="true"
-                className={clsx(
-                  "transition-transform",
-                  isOpen && "rotate-90",
-                  !isBranch && "invisible",
-                )}
-                height="16"
-                viewBox="0 0 16 16"
-                width="16"
-              >
-                <path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </span>
-            {node.icon && (
-              <span className={clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5")}>
-                {node.icon(isOpen)}
-              </span>
-            )}
-            {node.content ?? node.label}
-          </li>
-        );
-      })}
+      {rows}
     </ul>
   );
 }

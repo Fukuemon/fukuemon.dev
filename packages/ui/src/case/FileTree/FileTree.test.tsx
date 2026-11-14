@@ -22,54 +22,138 @@ describe("FileTree", () => {
     }
   });
 
-  it("新しいファイルの名前を Enter のキーで確定すると、選んだファイルのディレクトリに作る", async () => {
+  it("新しいファイルの欄は、選んだファイルのディレクトリの子の先頭に、ほかの行と同じ字下げで出る。Enter のキーで確定すると、そこに作り、作った項目にフォーカスが移る", async () => {
     render(<Default />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
     expect(field).toHaveFocus();
+    const row = field.closest("li")!;
+    const sibling = screen.getByRole("treeitem", { name: "server.js" });
+    expect(row.nextElementSibling).toBe(sibling);
+    expect(row).toHaveAttribute("aria-level", "2");
+    expect(getComputedStyle(row).paddingInlineStart).toBe(
+      getComputedStyle(sibling).paddingInlineStart,
+    );
+    expect(row.querySelector("[data-icon]")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "作る" })).toBeNull();
+
     await userEvent.keyboard("token.js{Enter}");
     expect(Default.args.onCreate).toHaveBeenCalledWith("token.js", "src");
     expect(screen.queryByRole("textbox")).toBeNull();
-    expect(labels()).toContain("token.js");
+    expect(screen.getByRole("treeitem", { name: "token.js" })).toHaveFocus();
   });
 
-  it("ディレクトリを選んで新しいディレクトリを作ると、そのディレクトリの中に作る", async () => {
+  it("閉じたディレクトリを選んで新しいディレクトリを作ると、そのディレクトリを開き、中に欄を出す", async () => {
     render(<Default />);
-    await userEvent.click(screen.getByRole("treeitem", { name: "src" }));
+    const src = screen.getByRole("treeitem", { name: "src" });
+    await userEvent.click(src);
+    expect(src).toHaveAttribute("aria-expanded", "false");
     await userEvent.click(screen.getByRole("button", { name: "新しいディレクトリ" }));
-    expect(screen.getByRole("textbox", { name: "新しいディレクトリの名前" })).toHaveFocus();
+    const field = screen.getByRole("textbox", { name: "新しいディレクトリの名前" });
+    expect(field).toHaveFocus();
+    expect(src).toHaveAttribute("aria-expanded", "true");
+    expect(src.nextElementSibling).toBe(field.closest("li"));
     await userEvent.keyboard("lib{Enter}");
     expect(Default.args.onCreateDirectory).toHaveBeenCalledWith("lib", "src");
     expect(Default.args.onCreate).not.toHaveBeenCalled();
   });
 
-  it("名前の欄は Esc のキーでやめ、何も作らない", async () => {
+  it("選んだファイルが閉じたディレクトリの中にあるときも、そのディレクトリを開いて欄を出す", async () => {
+    render(<Default />);
+    const src = screen.getByRole("treeitem", { name: "src" });
+    src.focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(src).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    expect(src).toHaveAttribute("aria-expanded", "true");
+    expect(src.nextElementSibling).toBe(screen.getByRole("textbox").closest("li"));
+  });
+
+  it("名前の欄は Esc のキーでやめ、木を前のままにして、フォーカスを前の項目へ戻す", async () => {
+    render(<Default />);
+    const before = labels();
+    const item = screen.getByRole("treeitem", { name: "package.json" });
+    item.focus();
+    await userEvent.keyboard("{F2}");
+    await userEvent.keyboard("draft{Escape}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(labels()).toEqual(before);
+    expect(item).toHaveFocus();
+    expect(Default.args.onRename).not.toHaveBeenCalled();
+  });
+
+  it("名前の欄で打つ文字、Delete、Enter のキーは、木の操作に使わない", async () => {
     render(<Default />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
-    await userEvent.keyboard("draft.js{Escape}");
+    await userEvent.keyboard("pack{Delete}");
+    expect(screen.getByRole("textbox")).toHaveValue("pack");
+    expect(screen.getByRole("textbox")).toHaveFocus();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await userEvent.click(screen.getByRole("textbox"));
+    expect(screen.getByRole("treeitem", { name: "src" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("同じディレクトリにある名前、/ を含む名前、. と .. と空の名前は、Enter のキーで確定せず、欄を開いたまま行の下に理由を出す", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    const field = screen.getByRole<HTMLInputElement>("textbox", { name: "新しいファイルの名前" });
+    const cases: [string, string][] = [
+      ["callback.js", "callback.js は、この場所に既にあります。"],
+      ["a/b.js", "名前に / は使えません。"],
+      ["..", ". と .. は名前に使えません。"],
+      ["   ", "名前を入れてください。"],
+    ];
+    for (const [name, reason] of cases) {
+      // clear と type は欄を外すことがあるので、欄の中の文字を選んで打ち替える
+      field.select();
+      await userEvent.keyboard(`${name}{Enter}`);
+      expect(field, name).toHaveFocus();
+      expect(field).toHaveAttribute("aria-invalid", "true");
+      expect(field).toHaveAccessibleDescription(reason);
+    }
+    expect(Default.args.onCreate).not.toHaveBeenCalled();
+    field.select();
+    await userEvent.keyboard("token.js");
+    expect(field).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("欄からフォーカスが外れたときは、名前があれば確定し、空か誤りがあればやめる", async () => {
+    render(<Default />);
+    const create = screen.getByRole("button", { name: "新しいファイル" });
+    await userEvent.click(create);
+    await userEvent.click(document.body);
+    expect(screen.queryByRole("textbox")).toBeNull();
+
+    await userEvent.click(create);
+    await userEvent.keyboard("callback.js");
+    await userEvent.click(document.body);
     expect(screen.queryByRole("textbox")).toBeNull();
     expect(Default.args.onCreate).not.toHaveBeenCalled();
+
+    await userEvent.click(create);
+    await userEvent.keyboard("token.js");
+    await userEvent.click(document.body);
+    expect(Default.args.onCreate).toHaveBeenCalledTimes(1);
+    expect(Default.args.onCreate).toHaveBeenCalledWith("token.js", "src");
   });
 
-  it("空の名前と空白だけの名前では確定せず、欄を開いたままにする", async () => {
+  it("Esc のキーでやめた後に欄が外れても、確定しない", async () => {
     render(<Default />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
-    await userEvent.keyboard("{Enter}");
-    expect(screen.getByRole("textbox", { name: "新しいファイルの名前" })).toBeInTheDocument();
-    await userEvent.keyboard("   {Enter}");
-    expect(screen.getByRole("textbox", { name: "新しいファイルの名前" })).toBeInTheDocument();
+    await userEvent.keyboard("token.js{Escape}");
+    await userEvent.click(document.body);
     expect(Default.args.onCreate).not.toHaveBeenCalled();
   });
 
-  it("メニューから、選んだ項目の名前を変え、削除する", async () => {
+  it("メニューから、選んだ項目の名前を行の中の欄で変え、削除する", async () => {
     render(<Default />);
     await userEvent.click(screen.getByRole("button", { name: "server.js の操作" }));
     await userEvent.click(screen.getByRole("menuitem", { name: "名前を変える" }));
     const field = screen.getByRole("textbox", { name: "新しい名前" });
+    expect(field).toHaveFocus();
     expect(field).toHaveValue("server.js");
-    await userEvent.clear(field);
-    await userEvent.type(field, "app.js");
-    await userEvent.click(screen.getByRole("button", { name: "変える" }));
+    expect(field.closest("[role=treeitem]")).toHaveAttribute("aria-level", "2");
+    await userEvent.keyboard("app{Enter}");
     expect(Default.args.onRename).toHaveBeenCalledWith("src/server.js", "app.js");
     expect(labels()).toContain("app.js");
 
@@ -112,18 +196,41 @@ describe("FileTree", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("木の項目で F2 のキーを押すと、その項目の名前を変える欄が開く", async () => {
+  it("木の項目で F2 のキーを押すと、その行の名前が欄になり、拡張子の前までを選ぶ。Enter のキーで確定すると、フォーカスが項目に戻る", async () => {
     render(<Default />);
     const item = screen.getByRole("treeitem", { name: "package.json" });
     expect(item).toHaveAttribute("aria-keyshortcuts", "F2 Delete");
     item.focus();
     await userEvent.keyboard("{F2}");
-    const field = screen.getByRole("textbox", { name: "新しい名前" });
+    const field = screen.getByRole<HTMLInputElement>("textbox", { name: "新しい名前" });
+    expect(item).toContainElement(field);
     expect(field).toHaveFocus();
     expect(field).toHaveValue("package.json");
-    await userEvent.clear(field);
-    await userEvent.type(field, "pkg.json{Enter}");
+    expect([field.selectionStart, field.selectionEnd]).toEqual([0, "package".length]);
+    await userEvent.keyboard("pkg{Enter}");
     expect(Default.args.onRename).toHaveBeenCalledWith("package.json", "pkg.json");
+    expect(screen.getByRole("treeitem", { name: "pkg.json" })).toHaveFocus();
+  });
+
+  it("ディレクトリと、. で始まる名前の F2 では、名前の全体を選ぶ。名前を変えずに確定すると onRename を呼ばない", async () => {
+    render(<Default />);
+    screen.getByRole("treeitem", { name: "src" }).focus();
+    await userEvent.keyboard("{F2}");
+    const field = screen.getByRole<HTMLInputElement>("textbox", { name: "新しい名前" });
+    expect([field.selectionStart, field.selectionEnd]).toEqual([0, 3]);
+    await userEvent.keyboard("{End}{Enter}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(Default.args.onRename).not.toHaveBeenCalled();
+  });
+
+  it("名前の変更では、自分の名前を同じ名前の誤りにせず、同じディレクトリのほかの名前を誤りにする", async () => {
+    render(<Default />);
+    screen.getByRole("treeitem", { name: "server.js" }).focus();
+    await userEvent.keyboard("{F2}");
+    await userEvent.keyboard("callback{Enter}");
+    const field = screen.getByRole("textbox", { name: "新しい名前" });
+    expect(field).toHaveAccessibleDescription("callback.js は、この場所に既にあります。");
+    expect(Default.args.onRename).not.toHaveBeenCalled();
   });
 
   it("onRename を渡さないときは、F2 のキーで欄を開かない", async () => {
@@ -143,16 +250,19 @@ describe("FileTree", () => {
     expect(NoSelection.args.onCreate).toHaveBeenCalledWith("README.md", undefined);
   });
 
-  it("新しい項目の欄と「作る」ボタンは、28 px の高さで上端と下端がそろい、間が 12 px 空く（ADR-0062）", async () => {
+  it("名前の欄の行は、ほかの項目と同じ 24 px の高さになる", async () => {
     render(<NoSelection />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
-    const field = screen.getByRole("textbox").getBoundingClientRect();
-    const button = screen.getByRole("button", { name: "作る" }).getBoundingClientRect();
-    expect(field.height).toBe(28);
-    expect(button.top).toBe(field.top);
-    expect(button.bottom).toBe(field.bottom);
-    // フォーカスの輪（外へ 4 px）とボタンの枠を離すため、欄とボタンの間は 12 px にする
-    expect(button.left - field.right).toBe(12);
+    const row = screen.getByRole("textbox").closest("li")!;
+    expect(row.getBoundingClientRect().height).toBe(24);
+  });
+
+  it("ファイルが無いときも、新しいファイルの欄を出して作れる", async () => {
+    render(<Empty />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    expect(screen.getByRole("tree")).toBeInTheDocument();
+    await userEvent.keyboard("main.go{Enter}");
+    expect(Empty.args.onCreate).toHaveBeenCalledWith("main.go", undefined);
   });
 
   it("題の右の操作は 28 px 四方、木の項目は 24 px の高さと 13 px の文字で押せる（ADR-0062）", () => {
