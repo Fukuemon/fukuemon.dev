@@ -23,7 +23,7 @@ export function Table({ caption, children, density = "default" }: TableProps) {
   return (
     <section
       aria-labelledby={captionId}
-      className="overflow-x-auto focus-visible:focus-ring"
+      className="scroll-fade-end overflow-x-auto focus-visible:focus-ring"
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 横に送る領域は、キーボードで送れるよう tabIndex={0} を付ける (WCAG 2.1.1)
       tabIndex={0}
     >
