@@ -60,7 +60,12 @@ ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツ�
 - `/` は、`https://fukuemon.dev/playground` へリダイレクトする。
 - 開くプロジェクトは、クエリの `project` で指定する（`/node/?project=<埋め込みの ID>`）。`project` が無いときは、デフォルトのプロジェクトを開く。
 - 記事の iframe と、トップレベルで開くページは、同じ URL を使う。ページは、`window.self !== window.top` で埋め込みかどうかを判定し、埋め込みのときは、ページのヘッダを出さず、AI のエージェントからの操作を登録しない。
-- ペインの並べ方は、ページの幅で決める。
+- ペインの並べ方は、ページの幅と高さで決める。
+  - `layout/` の `useLayoutMode` が、`matchMedia` で配置を `wide`、`narrow`、`short` のどれかに決める。高さが 500px 未満なら、幅にかかわらず `short` にする。高さが 500px 以上で幅が 48rem 未満なら `narrow`、ほかは `wide` にする。画面を回したときと、ウィンドウの大きさを変えたときに替える。
+  - `wide` は、ペインを `SplitPane` で並べる。`narrow` は、ファイルのツリーを `FileDrawer` で出し、ほかのペインを `PaneTabs` の下の帯で 1 つずつ出す。`short` は、`PaneTabs` の帯を左の縦の帯にする。記事に埋め込んだ `narrow` の配置は、帯を枠の上に置く。配置ごとの見た目は、[コードを動かす画面の配置](../../packages/ui/design/components.md#コードを動かす画面の配置)のパターンにある。
+  - ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)
+- 3 つのエントリーポイントの HTML は、読み込みの初めに `@fukuemon/ui/ios-viewport` の `limitIosInputZoom` を呼ぶ。この関数は、iOS と iPadOS のときだけ、viewport の指定に `maximum-scale=1` を足す。13px のエディタと入力欄にフォーカスしたときの拡大を止めるためである。
+  - ADR-0071: [触る端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める](../../docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md)
 
 ビルドは、`vp build` で行う。  
 React Compiler を、`apps/playground` のビルドにだけ入れる。`apps/playground` のコードに、`memo`、`useMemo`、`useCallback` を書かない。書くのは、計測して遅いと分かったときだけにする。  
@@ -81,6 +86,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
     go/                   Go を動かすツールのページ。ファイル、実行中かどうか、出力、実行とテストの関数を持つ React の外のモジュール
     sql-console/          SQL の入力欄、結果の表、実行計画のツリー
+    layout/               3 つのツールのページが共有する配置の判定（useLayoutMode）、狭い配置のフォーカスの移り先（usePaneFocus）、タブとドロワーのボタンの印
     code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
@@ -100,6 +106,7 @@ packages/
   - キャンバスのディレクトリ（`drawio/`、`excalidraw/`、`documents/`、`figures/`）の間と、`@fukuemon/figures` への import の向きは、[キャンバスの Design Doc](../../docs/design/features/canvas/DesignDoc.md#ディレクトリ) にある。Oxlint は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。
   - スライドのエディタのディレクトリ（`slides/`）と、`@fukuemon/slides` への import の向きは、[スライドの Design Doc](../../docs/design/features/slides/DesignDoc.md#ディレクトリと依存) にある。Oxlint は、`slides/` も、ツールのページの間の import を止める対象にする。
 - `code-editor/` は、Node の実行環境のページ（`src/node/`）、スライドのエディタのページ（`src/slides/`）、Go を動かすツールのページ（`src/go/`）、`sql-console/` が共有する。`code-editor/` は、ツールのページのディレクトリと、`documents/` を import しない。
+- `layout/` は、3 つのツールのページのディレクトリと `sql-console/` が共有する。`layout/` は、React のほかに何も import しない。
 - 実行環境の処理は、実行環境ごとの 3 つの package に置く。package は、型、store、関数だけを持つ。React のコンポーネントと、store を React で読む処理は、`apps/playground` に置く。
   - `@fukuemon/sql-runtime`（`packages/sql-runtime`）: PGlite で SQL を実行する処理。
   - `@fukuemon/node-runtime`（`packages/node-runtime`）: Node の実行環境の処理。`@fukuemon/sql-runtime` に依存する。
@@ -127,6 +134,7 @@ flowchart TB
   go["src/go"]
   console["sql-console"]
   codeeditor["code-editor"]
+  layout["layout"]
   runtime["@fukuemon/node-runtime"]
   database["@fukuemon/sql-runtime"]
   runner["@fukuemon/go-runtime"]
@@ -144,6 +152,7 @@ flowchart TB
   node --> database
   node --> ui
   node --> ai
+  node --> layout
   ai --> ui
   sql --> console
   sql --> database
@@ -151,15 +160,18 @@ flowchart TB
   sql --> workspace
   sql --> ui
   sql --> ai
+  sql --> layout
   go --> runner
   go --> codeeditor
   go --> project
   go --> workspace
   go --> ui
   go --> ai
+  go --> layout
   console --> database
   console --> codeeditor
   console --> ui
+  console --> layout
   runtime --> database
   workspace --> project
   project --> pp
@@ -465,12 +477,14 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - 今の値と同じ値の変更の通知は、保存しない。エディタは、戻した直後に初期の SQL を変更として通知する。この通知を保存すると、消したレコードが作り直されるためである。
   - 保存した SQL を消せないときは、入力欄を変えずに、戻せなかったことを出す。
   - 保存した SQL があるかは、`SqlSession` の store が持つ。保存に成功したときに true に、消したときに false にする。IndexedDB を読めないときは、書き込まないので false のままである。
-- 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、画面の右下に `PageLoading` で出す。SQL の実行の間は、結果の欄に `Loading` で出す。
+- 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、`PageLoading` で画面を覆って出す。SQL の実行の間は、結果の欄に `Loading` で出す。
+- `wide` の配置では、地の上の、サイトのページと同じ幅（`max-w-page`）の列に、入力欄、実行の行、結果の欄を縦に並べる。結果の欄は、出すものがあるときだけ紙の面に置く。`narrow` と `short` の配置では、入力と結果を `PaneTabs` のタブで 1 つずつ出す。実行すると結果のタブに替え、隠れた入力欄にあったフォーカスを選んだタブへ移す。
 
 Node の実行環境のページは、次のとおり組む。
 
-- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
-- `NodePage` は、プロジェクトと保存したファイルをまとめた Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。プロジェクトと保存したファイルを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、画面の右下に `PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
+- `wide` の配置では、ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- `narrow` と `short` の配置では、エディタ、端末、プレビュー、通信（HTTP の流れ）を `PaneTabs` のタブで 1 つずつ出す。通信のタブは、一覧と詳細を、`narrow` では上下に、`short` では左右に並べる。ファイルのツリーは、タブの帯の先頭の「ファイル」のボタンで `FileDrawer` に開き、ファイルを選ぶと、ドロワーを閉じてエディタのタブに替え、エディタにフォーカスを移す。選んでいないタブのペインも隠して残し、タブを切り替えても、端末の出力とプレビューのページの状態を消さない。
+- `NodePage` は、プロジェクトと保存したファイルをまとめた Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。プロジェクトと保存したファイルを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` で画面を覆う。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
 - ファイルのツリーは、シンボリックリンクをファイルとして出す。リンクの先を開けるかは、一覧の時点で分けられないためである。
@@ -640,8 +654,8 @@ sequenceDiagram
 - 実行のボタンは、起動と `npm install` の終了を待ってから、起動のコマンドを実行する。前に実行した起動のコマンドが動いていれば、止めてから実行する。止めるときは、ポートが空くよう、プロセスの終了を 2 秒まで待つ。
 - `src/node/` は、自動で実行する起動のコマンドと、実行のボタンで実行する起動のコマンドを、1 つのキューに並べて順に実行する。`npm install` の途中に押しても、動いている起動のコマンドは 1 組である。
 - 起動のコマンドを起動できないときは、ペインの上に、実行できなかったことと、起動し直す操作を出す。
-- 実行のボタンと、「起動し直す」と「初期の状態に戻す」のボタンは、Go を動かすツールと同じく、ページのヘッダに並べる。ボタンの大きさと並びは Go と違い、XS のボタンを右に寄せ、実行のボタンを右端に固定する。ヘッダが折り返したときも右に寄せる。「初期の状態に戻す」は、保存したファイルがあるときに左に出す。「初期の状態に戻す」が出たときに、ほかのボタンの位置がずれないようにするためである。起動し直している間は、ボタンを押せず、「起動し直す」に待ちの印を出す。
-- ボタンは、`Button` の `size="XS"`（28px）にする。埋め込みのときは、ヘッダに見出しを出さず、ボタンだけを出す。
+- 実行のボタンと、「起動し直す」と「初期の状態に戻す」のボタンは、Go を動かすツールと同じく、ページのヘッダに並べる。ボタンは右に寄せ、実行のボタンを右端に固定する。ヘッダが折り返したときも右に寄せる。「初期の状態に戻す」は、保存したファイルがあるときに左に出す。「初期の状態に戻す」が出たときに、ほかのボタンの位置がずれないようにするためである。起動し直している間は、ボタンを押せず、「起動し直す」に待ちの印を出す。
+- ボタンは、Go を動かすツールと同じく `Button` の `size="S"` にする。ページのヘッダの要素は 2px の角のままにする（ADR-0073）。埋め込みのときは、ヘッダに見出しを出さず、ボタンだけを出す。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
 - DB のプロセスが終了したとき以外で、起動の後に実行環境が動かなくなったときは、訪問者が、「実行環境を起動し直す」の操作で起動し直す。画面は、実行環境の全体の状態を表示しない。
 
@@ -777,7 +791,8 @@ WASM のビルドと配信は、次のとおり。
   - ファイルの一覧、読み込み、書き込み、ディレクトリの作成、名前の変更、削除の関数。
   - 実行とテストの関数。時間の上限を受け取り、実行を始めたときのファイルのコピーを `GoRunner` に渡す。実行中に呼んだときは、実行せずに、実行中であることを返す。
 - 出力の store は、1,000,000 文字を上限にし、上限に達した後の出力を捨てる。
-- 画面は、左にファイルの一覧（`FileTree`）、右上にエディタ（`EditorFrame`）、右下に出力（`TerminalFrame`）を置く。`SplitPane` で、幅と高さを変えられる。ヘッダに、実行のボタン、テストのボタン、停止のボタンを置く。
+- `wide` の配置では、画面は、左にファイルの一覧（`FileTree`）、右上にエディタ（`EditorFrame`）、右下に出力（`TerminalFrame`）を置く。`SplitPane` で、幅と高さを変えられる。ヘッダに、実行のボタン、テストのボタン、停止のボタンを置く。
+- `narrow` と `short` の配置では、エディタと出力を `PaneTabs` のタブで 1 つずつ出す。ファイルの一覧は、タブの帯の先頭の「ファイル」のボタンで `FileDrawer` に開き、ファイルを選ぶと、ドロワーを閉じてエディタのタブに替え、エディタにフォーカスを移す。実行するかテストすると、出力のタブに替え、隠れたエディタにあったフォーカスを選んだタブへ移す。
 - エディタのファイルごとの `EditorState` は、ページが持つ。タブを切り替えても、元に戻す履歴とカーソルの位置を残すためである。
 - 出力は、`--- PASS` と `ok` の行、`--- FAIL` と `FAIL` の行、コンパイルのエラーと panic の行を、色で分ける。
 - 出力の欄の下に、Yaegi で動かしていることと、`iter` と一部のジェネリックな関数を使えないことを、常に出す。

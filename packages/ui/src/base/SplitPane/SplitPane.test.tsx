@@ -51,25 +51,25 @@ describe("SplitPane", () => {
     expect(separator).toHaveAttribute("aria-valuenow", "65");
   });
 
-  it("仕切りは 44 px の幅で押せ、マウスで引くと動く", async () => {
+  it("マウスで押す端末では、仕切りは 8 px の幅で押せ、マウスで引くと動く", async () => {
     render(<Horizontal />);
     const separator = screen.getByRole("separator");
-    expect(separator.getBoundingClientRect().width).toBeGreaterThanOrEqual(44);
+    expect(separator.getBoundingClientRect().width).toBe(8);
     await userEvent.dragAndDrop(separator, screen.getByText("エディタ"));
     expect(Number(separator.getAttribute("aria-valuenow"))).toBeLessThan(50);
   });
 
-  it("仕切りは両側の領域に重ならず、両側の領域の端の点は領域が受ける", () => {
+  it("仕切りは両側の領域の余白に 4 px ずつ重なり、重なりの外の端の点は領域が受ける", () => {
     render(<Scroll />);
     const separator = screen.getByRole("separator").getBoundingClientRect();
     const primary = screen.getByRole("list", { name: "エディタ" }).parentElement!;
     const secondary = screen.getByRole("list", { name: "プレビュー" }).parentElement!;
     const p = primary.getBoundingClientRect();
     const s = secondary.getBoundingClientRect();
-    expect(p.right).toBeLessThanOrEqual(separator.left);
-    expect(s.left).toBeGreaterThanOrEqual(separator.right);
+    expect(separator.left).toBe(p.right - 4);
+    expect(separator.right).toBe(s.left + 4);
     const y = p.top + p.height / 2;
-    expect(primary.contains(document.elementFromPoint(p.right - 2, y))).toBe(true);
-    expect(secondary.contains(document.elementFromPoint(s.left + 2, y))).toBe(true);
+    expect(primary.contains(document.elementFromPoint(p.right - 6, y))).toBe(true);
+    expect(secondary.contains(document.elementFromPoint(s.left + 6, y))).toBe(true);
   });
 });

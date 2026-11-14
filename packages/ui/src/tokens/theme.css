@@ -1,7 +1,7 @@
 /*
  * fukuemon.dev のテーマ変数。Tailwind CSS のユーティリティの名前を、セマンティックトークンとプリミティブトークンに結ぶ。
  * Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消し、ここに置いた名前だけをユーティリティにする（docs/adr/0024-tokens-of-fukuemon-dev.md）。
- * 角丸と影は 1 つずつだけ置く（docs/adr/0028-radius-shadow-and-brush-motion.md）。
+ * 影は 1 つだけ置く（docs/adr/0028-radius-shadow-and-brush-motion.md）。角丸は rounded-control のほかに、コードを動かす画面だけで使う 3 つを置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  * 余白と動きの時間と緩急は、Tailwind のデフォルトの段をそのまま使う。デフォルトで組めない動きだけを、ここに animation として足す。
  */
 
@@ -25,6 +25,9 @@
   --color-surface-subtle: var(--fd-color-surface-subtle);
   --color-surface-disabled: var(--fd-color-surface-disabled);
   --color-surface-raised: var(--fd-color-surface-raised);
+  --color-surface-ground: var(--fd-color-surface-ground);
+  --color-surface-pane: var(--fd-color-surface-pane);
+  --color-surface-pane-subtle: var(--fd-color-surface-pane-subtle);
   --color-overlay: var(--fd-color-overlay);
 
   --color-text: var(--fd-color-text);
@@ -140,6 +143,10 @@
 
   /* 操作できる要素と、重なる面の角 */
   --radius-control: 2px;
+  /* コードを動かす画面だけで使う。ペインの面、下のタブの帯とドロワー、density が compact の操作できる要素（docs/adr/0073-layered-panes-and-radius-in-playground.md） */
+  --radius-pane: 10px;
+  --radius-sheet: 14px;
+  --radius-control-compact: 6px;
   /* 重なる面の影。ぼかさずに右下へずらし、ライトとダークの両方で見えるようにする */
   --shadow-raised: 4px 4px 0 color-mix(in srgb, var(--fd-color-text) 24%, transparent);
 
@@ -150,6 +157,9 @@
   /* 重なる面が、濃度を上げて出る */
   --animate-fade-in: fd-fade-in 150ms ease-out;
 }
+
+/* 高さが 500px 未満の画面。コードを動かす画面の配置にだけ、md と並べて使う（docs/adr/0072-short-landscape-layout-in-playground.md） */
+@custom-variant short (@media (max-height: 499.98px));
 
 @keyframes fd-fade-in {
   from {
@@ -519,6 +529,11 @@
 
 @utility scroll-fade-code {
   --fd-scroll-fade-bg: var(--fd-color-code-surface);
+}
+
+/* コードを動かす画面のペインの紙の面（surface-pane）の上で、scroll-fade-end の薄い色を面の色にする。中の枠に継がせるため、ペインの側に付ける（docs/adr/0073-layered-panes-and-radius-in-playground.md） */
+@utility scroll-fade-pane {
+  --fd-scroll-fade-bg: var(--fd-color-surface-pane);
 }
 
 /*
