@@ -194,3 +194,8 @@ secret を Terraform の state に載せない。
 - secret、認証情報、トークンの実値
 - 個人の PC の絶対パス。`$(ghq root)` のように動的に解決する。
 - Cloudflare の account ID と zone ID の実値。`vars.tf` の変数として渡す。
+
+アカウントの workers.dev のサブドメインは、秘密として扱わない。  
+`wrangler deploy` は、workers.dev で公開する Worker の URL を Actions のログに出す。ログで伏せず、secret にも登録しない。  
+サブドメインは認証に使う値ではなく、プレビューの Worker は誰でも開ける（ADR-0031）。  
+文書とコミットでは、URL を `<プレビューの URL>` のように書き、サブドメインの実値を書かない。
