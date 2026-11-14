@@ -9,7 +9,8 @@ import { bootFailureMessage } from "./messages";
 const NO_RECORDS: readonly HttpRecord[] = [];
 const noRecords = { subscribe: () => () => undefined, getSnapshot: () => NO_RECORDS };
 
-function useRecords() {
+/** HTTP の記録と、起動に失敗したときに一覧に出す状態。 */
+export function useHttpRecords() {
   const { runtime, reason } = useRuntime();
   const store = runtime?.httpExchanges ?? noRecords;
   const records = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -26,7 +27,7 @@ function useRecords() {
 
 /** 実行環境の中のサーバーが受けた HTTP のリクエストとレスポンスを、受けた順に並べるペイン。 */
 export function HttpListPane() {
-  const { state, records } = useRecords();
+  const { state, records } = useHttpRecords();
   const { selection, dispatch } = useSelection();
   return (
     <HttpExchangeList
@@ -41,7 +42,7 @@ export function HttpListPane() {
 
 /** HTTP の一覧で選んだ通信の、ヘッダ、Cookie、本文を出すペイン。 */
 export function HttpDetailPane() {
-  const { records } = useRecords();
+  const { records } = useHttpRecords();
   const { selection } = useSelection();
   const record = records.find((item) => item.id === selection.exchange);
   return <HttpExchangeDetail actors={actorsOf(records)} exchange={record && toExchange(record)} />;

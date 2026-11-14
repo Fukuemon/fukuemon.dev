@@ -110,7 +110,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
             }
             secondary={
               <SplitPane
-                defaultSize={70}
+                defaultSize={58}
                 label="端末の高さ"
                 orientation="vertical"
                 primary={
