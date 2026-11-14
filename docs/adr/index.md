@@ -59,7 +59,7 @@
 | [ADR-0067](0067-compact-text-tokens-in-dense-panes.md)       | コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う                                                                 |
 | [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md)     | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                                         |
 | [ADR-0074](0074-inset-focus-ring-on-tree-name-field.md)      | 詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない                                                                                                   |
-| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | （提案）指で押す端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める                                         |
+| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | （提案）触る端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める                                             |
 | [ADR-0072](0072-short-landscape-layout-in-playground.md)     | （提案）コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える                          |
 | [ADR-0073](0073-layered-panes-and-radius-in-playground.md)   | （提案）コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める                                                                    |
 
