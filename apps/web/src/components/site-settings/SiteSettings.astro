@@ -44,10 +44,12 @@ import { SettingsButton } from "./SettingsButton";
 </div>
 
 <style>
-  /* 面は、ヘッダーの右端の下に出す。popover は top layer に出るので、庭とヘッダーの重なりの順に依らない */
+  /* 面は、ヘッダーの右端の下に出す。popover は top layer に出るので、庭とヘッダーの重なりの順に依らない。背の低い画面では、面の中を縦に送る */
   .site-settings:popover-open {
     position: fixed;
     inset: 4.5rem 1rem auto auto;
+    max-block-size: calc(100dvh - 5.5rem);
+    overflow-y: auto;
   }
 </style>
 

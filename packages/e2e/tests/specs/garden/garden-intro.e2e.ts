@@ -133,7 +133,9 @@ test("同じ端末で 2 回目に開くと、イントロを出さず、カメ�
   expect(await marks(page)).not.toHaveProperty("garden-enter");
 });
 
-test("動きを減らす設定で開くと、イントロも庭も出さず、ふつうのページを出す", async ({ page }) => {
+test("動きを減らす設定で、歯車の設定を保存せずに開くと、イントロも庭も出さず、ふつうのページを出す", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(html(page)).not.toHaveClass(/stage-on|intro/);
@@ -430,7 +432,7 @@ test.describe("場面の準備が遅いとき", () => {
 test.describe("イントロの途中でふつうのページに戻る", () => {
   const INTRO_CLASSES = /\b(stage-on|intro|enter|scene-ready|garden-ready|no-anim)\b/;
 
-  test("文が出てからカメラが止まるまでに「文だけで読む」を押すと、ふつうのページに戻り、イントロの class が後から付かない", async ({
+  test("文が出てからカメラが止まるまでに歯車の設定で庭の表示をオフにすると、ふつうのページに戻り、イントロの class が後から付かない", async ({
     page,
   }) => {
     await recordClasses(page);
@@ -440,11 +442,11 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
         const root = document.documentElement;
         if (!root.classList.contains("garden-ready") || !root.classList.contains("intro")) return;
         observer.disconnect();
-        document.querySelector<HTMLButtonElement>("[data-garden-plain]")?.click();
+        document.querySelector<HTMLButtonElement>('[data-setting="garden"]')?.click();
       }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
     });
     await page.goto("/");
-    await expect(heading(page)).toBeFocused();
+    await expect(html(page)).toHaveAttribute("data-garden", "off");
     // 押した時点で、まだイントロの途中だった
     const states = await page.evaluate(() => (window as unknown as ClassLog).__classes);
     const left = states.findIndex((s) => !s.split(" ").includes("stage-on"));
