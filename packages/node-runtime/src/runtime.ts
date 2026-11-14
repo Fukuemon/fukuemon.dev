@@ -1,4 +1,5 @@
 import type { BackendInstance, RuntimeBackend } from "./backend";
+import { startDatabase } from "./database";
 import { createFiles } from "./files";
 import { createProcesses } from "./processes";
 import { createStore } from "./store";
@@ -20,7 +21,12 @@ function isPreviewUrl(url: string) {
   return parsed.protocol === "https:" && parsed.origin !== pageOrigin;
 }
 
-async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime> {
+async function createNodeRuntime(
+  instance: BackendInstance,
+  options: BootOptions,
+): Promise<NodeRuntime> {
+  // DB のプロセスは、訪問者のプロセスより先に起動する。訪問者のコードが、起動のコマンドで接続するためである
+  const db = options.database ? await startDatabase(instance, options.initialSql) : undefined;
   const files = await createFiles(instance.files);
   const processes = createProcesses(instance);
   const ports = createStore<readonly OpenPort[]>([]);
@@ -34,9 +40,11 @@ async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime
     ports,
     httpExchanges: createStore<readonly never[]>([]),
     consoleEntries: createStore<readonly never[]>([]),
+    ...(db && { database: db.database }),
     dispose: () => {
       disposed ??= (async () => {
         unsubscribePorts();
+        db?.dispose();
         files.dispose();
         processes.dispose();
         await instance.teardown();
@@ -57,9 +65,12 @@ export async function bootWithBackend(
 ): Promise<NodeRuntime> {
   if (!backend.isSupported()) throw new BootError("not-isolated");
   const booting = (async () => {
-    const instance = await backend.boot({ files: options.files });
+    const instance = await backend.boot({
+      files: options.files,
+      database: options.database === true,
+    });
     try {
-      return await createNodeRuntime(instance);
+      return await createNodeRuntime(instance, options);
     } catch (cause) {
       await instance.teardown().catch(ignore);
       throw cause;

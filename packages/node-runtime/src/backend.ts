@@ -1,6 +1,12 @@
 import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
-type BackendBootOptions = Pick<BootOptions, "files">;
+type BackendBootOptions = Pick<BootOptions, "files"> & {
+  /** true のときに、DB のプロセスのスクリプトと依存の package.json を guestDirectory に置き、訪問者のプロセスに接続先と preload を渡す。 */
+  database: boolean;
+};
+
+/** 実行環境が自分で起動するプロセス（internal）には、preload と接続先を渡さず、端末も付けない。 */
+export type SpawnOptions = { terminal?: TerminalSize; internal?: boolean };
 
 export type DirectoryItem = { name: string; kind: "file" | "directory" };
 
@@ -29,11 +35,13 @@ export type BackendInstance = {
   spawn: (
     command: string,
     args: readonly string[],
-    options?: { terminal?: TerminalSize },
+    options?: SpawnOptions,
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   /** 待ち受けているポートの全体を、変わるたびに知らせる。 */
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
+  /** DB のプロセスのスクリプトと、依存の package.json を置いたディレクトリの、絶対パス。 */
+  guestDirectory: string;
   teardown: () => Promise<void>;
 };
 

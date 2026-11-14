@@ -1,4 +1,4 @@
-import type { Store } from "@fukuemon/sql-runtime";
+import type { SqlDatabase, Store } from "@fukuemon/sql-runtime";
 
 export type { Store };
 
@@ -6,6 +6,10 @@ export type TerminalSize = { cols: number; rows: number };
 
 export type BootOptions = {
   files: Readonly<Record<string, string>>;
+  /** true のときに、DB のプロセスを起動し、NodeRuntime の database で SQL を受ける。 */
+  database?: boolean;
+  /** DB のプロセスを起動した後に実行する、初期データの SQL。失敗したときは、起動が失敗する。 */
+  initialSql?: string;
 };
 
 /** 作業ディレクトリのファイルかディレクトリ。path は作業ディレクトリからの相対パスで、区切りは `/` である。 */
@@ -67,6 +71,8 @@ export type NodeRuntime = {
   httpExchanges: Store<readonly never[]>;
   /** コンソールの記録。記録を取るスクリプトを足すまでは、空のままである。 */
   consoleEntries: Store<readonly never[]>;
+  /** DB を使うプロジェクトのときだけある。DB のプロセスの状態は、database の status で持つ。 */
+  database?: SqlDatabase;
   dispose: () => Promise<void>;
 };
 
