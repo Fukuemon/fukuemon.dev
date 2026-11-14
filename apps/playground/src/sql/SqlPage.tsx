@@ -1,6 +1,7 @@
 import { Link, Notice, PageLoading } from "@fukuemon/ui";
 import { Suspense, use, useRef, useSyncExternalStore } from "react";
 
+import { useLayoutMode } from "../layout/useLayoutMode";
 import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
@@ -10,7 +11,7 @@ import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
 
-function SqlTool({ search }: { search: string }) {
+function SqlTool({ search, embedded }: { search: string; embedded: boolean }) {
   const load = use(openSession(search));
   if (load.kind === "failed") {
     return (
@@ -23,10 +24,10 @@ function SqlTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  return <SqlSessionView session={load.session} />;
+  return <SqlSessionView embedded={embedded} session={load.session} />;
 }
 
-function SqlSessionView({ session }: { session: SqlSession }) {
+function SqlSessionView({ session, embedded }: { session: SqlSession; embedded: boolean }) {
   const runRef = useRef<HTMLButtonElement>(null);
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
@@ -51,6 +52,7 @@ function SqlSessionView({ session }: { session: SqlSession }) {
       )}
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
+        embedded={embedded}
         actions={
           <SqlResetControl
             disabled={running}
@@ -74,14 +76,31 @@ function SqlSessionView({ session }: { session: SqlSession }) {
 
 /** SQL だけを動かすツールのページ。埋め込みのときは、ページのヘッダを出さない。 */
 export function SqlPage({ search, embedded }: { search: string; embedded: boolean }) {
+  const mode = useLayoutMode();
   return (
-    <main className="mx-auto flex max-w-page min-w-0 flex-col gap-4 p-4">
-      {!embedded && (
-        <h1 className="font-heading text-heading-md font-semibold text-text">SQL の実行環境</h1>
-      )}
-      <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
-        <SqlTool search={search} />
-      </Suspense>
+    <main
+      className={
+        mode === "wide"
+          ? "min-h-dvh min-w-0 bg-surface-ground p-1.5"
+          : // 記事に埋め込んだ狭い配置では、地を出さず、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+            embedded
+            ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
+            : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
+      }
+    >
+      {/* PC の配置では、地の上に、記事と同じ幅の列を置く */}
+      <div
+        className={mode === "wide" ? "mx-auto flex max-w-page min-w-0 flex-col gap-4" : "contents"}
+      >
+        {!embedded && (
+          <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
+            SQL の実行環境
+          </h1>
+        )}
+        <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
+          <SqlTool embedded={embedded} search={search} />
+        </Suspense>
+      </div>
     </main>
   );
 }

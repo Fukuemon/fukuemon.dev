@@ -251,7 +251,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
     - `pre` の `role="region"`。`section` に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる。
     - `SplitPane` の `role="separator"`。`hr` は子を持てず、押せる領域の中に線を描けない。
     - `SearchBox` の `combobox`、`listbox`、`option`。APG の Combobox の形で、候補は遷移するリンクである。
-  - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
+  - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリックと、`FileDrawer` の外の面のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
 - 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
   - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。

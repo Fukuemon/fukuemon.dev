@@ -35,12 +35,13 @@ const COLOR: Record<FileKind, string> = {
   other: "text-text-secondary",
 };
 
-const PAGE = "M3.5 1.5h6l3 3v10h-9zM9.5 1.5v3h3";
+// 紙を 11 の幅にし、中の印と紙の線の間を 1.5 以上空ける。データの {} は、曲線だと線の太さで潰れるので、角の折れ線にする
+const PAGE = "M2.5 1.5h7l4 4v9h-11zM9.5 1.5v4h4";
 
 const MARK: Record<FileKind, string | undefined> = {
-  code: "M6.5 8l-2 2.5 2 2.5M9.5 8l2 2.5-2 2.5",
-  document: "M5.5 8.5h5M5.5 10.5h5M5.5 12.5h3",
-  data: "M7 8.5c-1 0-1 .5-1 1.5s0 1.5-1 1.5c1 0 1 .5 1 1.5s0 1.5 1 1.5M9 8.5c1 0 1 .5 1 1.5s0 1.5 1 1.5c-1 0-1 .5-1 1.5s0 1.5-1 1.5",
+  code: "M6.5 8L5 10l1.5 2M9.5 8l1.5 2-1.5 2",
+  document: "M5 8.5h6M5 10.5h6M5 12.5h3.5",
+  data: "M7 7.5H6v2L5 10l1 .5v2h1M9 7.5h1v2l1 .5-1 .5v2H9",
   other: undefined,
 };
 

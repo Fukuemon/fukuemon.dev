@@ -9,12 +9,12 @@ export type IconButtonProps = Omit<
   label: string;
   /** ボタンに描く印。`aria-hidden` の SVG を渡す。 */
   icon: React.ReactNode;
-  /** compact は押せる領域を 28×28px にする。コードを動かす画面の帯に置くボタンに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact は押せる領域を 28×28px にし、触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。 コードを動かす画面の帯に置くボタンに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
   density?: "default" | "compact";
 };
 
 /**
- * 印だけのボタン。押せる領域は 44×44px にする。density が compact のときは 28×28px にする。
+ * 印だけのボタン。押せる領域は 44×44px にする。density が compact のときは 28×28px にし、触る端末では 44×44px にする。
  * 名前は label を `aria-label` に渡し、印には名前を持たせない。
  */
 export function IconButton({
@@ -29,8 +29,10 @@ export function IconButton({
       {...props}
       aria-label={label}
       className={clsx(
-        "inline-grid cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
-        density === "compact" ? "size-7" : "size-11",
+        "inline-grid cursor-pointer place-items-center text-text focus-visible:focus-ring",
+        density === "compact"
+          ? "size-7 rounded-control-compact hover:bg-surface-pane-subtle pointer-coarse:size-11"
+          : "size-11 rounded-control hover:bg-surface-subtle",
       )}
       type={type}
     >

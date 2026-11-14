@@ -31,20 +31,21 @@ export type ToolPaneProps = {
   children?: ReactNode;
 };
 
-const JoinedContext = createContext(false);
+const TabPanelContext = createContext<{ isFlush: boolean } | undefined>(undefined);
 
 /**
- * 中に置いた ToolPane を、隙間なく並べる前提で描かせる。中の ToolPane は四方に 1px の罫を引き、左と上へ 1px ずらして隣の罫に重ねる。
- * 隣の領域と高さや幅がそろわない並びでも、領域の間の罫は 1px になる。並べ方（flex、grid）は呼ぶ側が書き、領域の間の隙間を空けない。
+ * 中に置いた ToolPane を、PaneTabs のタブで 1 つずつ出すペインとして描かせる。PaneTabs が使う。
+ * 題は読み上げだけに残す。タブのラベルが同じ名前を出すためである。
+ * flush のときは、面の角を丸めない。記事の埋め込みで、面を枠いっぱいに置くためである（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  */
-export function ToolPaneGroup({ children }: { children: ReactNode }) {
-  return <JoinedContext value>{children}</JoinedContext>;
+export function ToolPaneTabPanel({ flush, children }: { flush: boolean; children: ReactNode }) {
+  return <TabPanelContext value={{ isFlush: flush }}>{children}</TabPanelContext>;
 }
 
 /**
- * コードを動かす画面の 1 つの領域。題の帯、操作、中身を、罫で区切って縦に積む。
+ * コードを動かす画面の 1 つの領域。題の帯、操作、中身を、地の上に重ねた角の丸い紙の面に縦に積む（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
  * 中身の空、読み込み中、エラーの状態を、どの領域でも同じ形で出す。
- * 文字と帯は、コードを動かす画面の密度にする（題の帯 32px、題 13px、下の帯 24px と 12px。docs/adr/0062-dense-text-and-targets-in-playground.md）。
+ * 文字と帯は、コードを動かす画面の密度にする（題の帯 28px、題 12px、下の帯 24px と 12px。docs/adr/0062-dense-text-and-targets-in-playground.md）。
  * ToolPane は高さを指定しない。中身だけをスクロールさせるときは、親を高さの決まった縦方向の flex か grid にする。
  * スクロールさせる要素は、中身として渡す側が `min-h-0 flex-1 overflow-y-auto` を付けて用意する。
  * フォーカスできるスクロールさせる要素は、`focus-ring-frame` を付けた要素の直下に 1 つだけ置く（docs/adr/0066-inset-focus-ring-in-dense-panes.md）。
@@ -59,23 +60,37 @@ export function ToolPane({
   children,
 }: ToolPaneProps) {
   const titleId = useId();
-  const isJoined = use(JoinedContext);
+  const tabPanel = use(TabPanelContext);
+  const isTitleHidden = tabPanel !== undefined;
+  // 条件で出す操作は false か null で渡るので、描くものが無いときは帯を操作の無い形にする
+  const hasActions =
+    actions !== undefined && actions !== null && actions !== false && state.kind !== "pending";
   return (
     <section
       aria-labelledby={titleId}
       className={clsx(
-        "flex min-h-0 min-w-0 flex-col border-border bg-surface text-text",
-        "border",
-        isJoined && "-mt-px -ml-px",
+        "flex min-h-0 min-w-0 flex-col overflow-hidden bg-surface-pane text-text scroll-fade-pane",
+        !tabPanel?.isFlush && "rounded-pane",
+        // 面の塗りが消えるハイコントラストのときだけ、枠でペインを区切る（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+        "forced-colors:border",
       )}
     >
-      <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-2 border-b border-border pr-1 pl-3">
-        <h2 className="text-label-compact whitespace-nowrap text-text" id={titleId}>
+      <div
+        className={clsx(
+          "flex flex-wrap items-center justify-between gap-x-2 pr-1 pl-3",
+          isTitleHidden && !hasActions ? "sr-only" : "min-h-7 pointer-coarse:min-h-11",
+        )}
+      >
+        <h2
+          className={clsx(
+            "text-compact whitespace-nowrap text-text-secondary",
+            isTitleHidden && "sr-only",
+          )}
+          id={titleId}
+        >
           {title}
         </h2>
-        {actions !== undefined && state.kind !== "pending" && (
-          <div className="flex items-center">{actions}</div>
-        )}
+        {hasActions && <div className="ml-auto flex items-center">{actions}</div>}
       </div>
       {state.kind !== "pending" && toolbar}
       <div
@@ -83,7 +98,7 @@ export function ToolPane({
           "flex min-h-0 min-w-0 flex-1 flex-col",
           surface === "code" && state.kind === "ready"
             ? "bg-code-surface font-mono text-code-compact text-code-text"
-            : "bg-surface",
+            : "bg-surface-pane",
         )}
       >
         {state.kind === "ready" && children}
@@ -104,7 +119,7 @@ export function ToolPane({
         )}
       </div>
       {state.kind === "ready" && footer !== undefined && (
-        <div className="flex min-h-6 items-center justify-between gap-4 border-t border-border px-3 text-compact text-text-secondary">
+        <div className="flex min-h-6 items-center justify-between gap-4 px-3 text-compact text-text-secondary">
           {footer}
         </div>
       )}

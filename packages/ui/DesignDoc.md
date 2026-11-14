@@ -144,7 +144,11 @@ DADS の 150% では、行は 19.5px になる。
 - `Link` は、文中に置くかで左右の余白を分ける。
   - 文中のリンクは、左右を 6px 空ける。フォーカスの表示が外へ 4px 広がり、前後の文字に重なるためである。
   - 記事の一覧の題のように文中に置かないリンクは、`isStandalone` を付けて左右を空けない。見出しや帯と左端をそろえるためである。
-- 操作できる要素と重なる面の角は、2px で丸める。テーマ変数に置く角丸の名前は、`rounded-control` の 1 つだけにする。
+- 操作できる要素と重なる面の角は、2px（`rounded-control`）で丸める。
+  - コードを動かす画面だけ、角を 3 つの段で丸める。紙の面の重なりを、角の丸めで見分けるためである（ADR-0073）。
+    - ペインの紙の面は 10px（`rounded-pane`）、`PaneTabs` の帯とファイルのドロワーは 14px（`rounded-sheet`）にする。
+    - `density="compact"` と `size="XS"` の操作できる要素は 6px（`rounded-control-compact`）にする。
+  - コードを動かす画面の外では、角丸の名前を `rounded-control` の 1 つだけ使う。
   - 丸めるのは、`Button`、`IconButton`、`boxed` の `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。
   - `Switch` のトラックとつまみ、`Checkbox` の枠も丸める。
   - `ConsoleEntryList` のログレベルのボタンも丸める。
@@ -153,7 +157,12 @@ DADS の 150% では、行は 19.5px になる。
   - 影は、ぼかさずに右下へ 4px ずらす。ぼかした影は、ダークの面の上でほぼ見えないためである。
   - 影は、重なる面だけに付ける。ボタンと入力欄には付けない。影が、重なりだけを表すためである。テーマ変数に置く影の名前は、`shadow-raised` の 1 つだけにする。
 - ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+- ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
+  - コードを動かす画面の配置だけ、高さが 500px 未満の画面を custom variant の `short` で分ける（ADR-0072）。
+  - 触る端末は、Tailwind の `pointer-coarse:` の variant で分ける。コードを動かす画面のコンポーネントが、押せる領域を 44px にするのに使う（ADR-0071）。
+- ADR-0071: [触る端末では、コードを動かす画面の押せる領域を 44px にし、iOS と iPadOS の入力時の拡大を viewport の指定で止める](../../docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md)
+- ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)
 - 文字の列（記事の本文、シリーズの説明、トップの Profile）の幅は、全角 40 字ぶんにする。測度の値は、テーマ変数の `--container-body` に置く。本文の字が 1rem なので、値も rem で決め、ブラウザの字の大きさの設定を変えても 40 字ぶんを保つ。
 - ヘッダーと本文の外枠は、旧サイトの一覧の幅の 68rem にそろえ、テーマ変数の `--container-page` に置く。記事の一覧は、題と日付の列を青海波の帯と同じ外枠の幅に広げ、日付を右端に寄せる。文字の列だけを、`--container-body` に抑える。ヘッダーのロゴの左端と本文の左端は、余白を外枠の外側に置いてそろえる。
 
@@ -388,18 +397,21 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `HttpExchangeDetail` | 1 つの行き来のヘッダ、Cookie、本文                                                      |
 | `ConsoleEntryList`   | `console.*` の出力の一覧。ログレベルで絞り、値を `TreeView` で開いて見せる              |
 | `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む |
+| `PaneTabs`           | 狭い配置で、ペインを 1 つずつ切り替えるタブの帯。下、左、上に置く                       |
+| `FileDrawer`         | 狭い配置で、ファイルの木を画面の左から重ねて出すドロワー                                |
 
-コードを動かす画面の Case は、どれも `ToolPane` の領域として描き、次の形にそろえる。
+コードを動かす画面の Case のうち、`PaneTabs`、`FileDrawer`、`ConfirmDialog` を除くものは、`ToolPane` の領域として描き、次の形にそろえる。
 
-- 領域は、VS Code と DevTools のように隙間なく並べ、1px の `border` の罫で仕切る。
-  - 並べる側は `ToolPaneGroup` で囲み、領域の間を空けない。
-  - 中の `ToolPane` は、四方の罫を左と上へ 1px ずらして隣の罫に重ねる。高さのそろわない並びでも、罫は 2 重にならない。
-- 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
+- 領域は、地（`surface-ground`）の上に重ねた紙の面（`surface-pane`）にし、10px（`rounded-pane`）で丸める。四方の枠を引かず、面と地の濃さの差で区切る（ADR-0073）。
+  - ハイコントラストのときだけ、面に 1px の枠を引く。
+  - `PaneTabs` のタブの中に置いた領域は、題を読み上げだけに残す。`flush` の `PaneTabs` の中では、面の角を丸めない。
+- 題の帯は 28px（触る端末では 44px）で、題は `text-compact` の薄い墨にする。下の状態の帯は 24px で、`text-compact` にする。ペインの中の罫は、タブの帯の下だけに引く。
 - 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
-  - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
+  - 全ての領域が同じ処理を待つ間は、領域の `state` を `pending` にして題だけを出し、`PageLoading` で画面を覆って、中央に待ちの印を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
     - `pending` の領域は、操作と、題の下の帯（ファイルのタブ、URL の欄）も出さない。待ちの間にこれらへフォーカスすると、待ちが終わって領域が描き直されたときに、フォーカスが失われるためである。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
+  - 触る端末（`pointer: coarse`）では、上の押せる要素と木の行を 44px にする。コンポーネントが `pointer-coarse:` の variant で自分で替える（ADR-0071）。
 
 ### カタログ
 
@@ -449,17 +461,18 @@ DADS から外れる点と理由は次のとおり。
 
 置くファイルは次のとおり。
 
-| パス                                                  | 持つもの                                                                                                        |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `packages/ui/DESIGN.md`                               | 画面を作るときの原則と手順、アクセシビリティ                                                                    |
-| `packages/ui/design/tokens.md`                        | トークンの使う場面                                                                                              |
-| `packages/ui/design/components.md`                    | コンポーネントの選び方と、コンポーネントごとの規則                                                              |
-| `packages/ui/design/catalog.md`                       | カタログのページと title の規則                                                                                 |
-| `packages/ui/src/tokens/`                             | 3 つの層の CSS、書体の読み込み、生成したコードのテーマ                                                          |
-| `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト。`src/patterns/` は、パターンを置くときに作る                                   |
-| `packages/ui/.storybook/`                             | Storybook の設定と、カタログが返すレスポンスヘッダ（`public/_headers`）                                         |
-| `packages/ui/wrangler.jsonc`                          | カタログを `design.fukuemon.dev` へ配信する Worker の設定                                                       |
-| `scripts/`                                            | トークンの CSS の生成、コントラストのチェック、色の値のチェック、ユーティリティのチェック、コードのテーマの生成 |
+| パス                                                  | 持つもの                                                                                                                                           |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/ui/DESIGN.md`                               | 画面を作るときの原則と手順、アクセシビリティ                                                                                                       |
+| `packages/ui/design/tokens.md`                        | トークンの使う場面                                                                                                                                 |
+| `packages/ui/design/components.md`                    | コンポーネントの選び方と、コンポーネントごとの規則                                                                                                 |
+| `packages/ui/design/catalog.md`                       | カタログのページと title の規則                                                                                                                    |
+| `packages/ui/src/tokens/`                             | 3 つの層の CSS、書体の読み込み、生成したコードのテーマ                                                                                             |
+| `packages/ui/src/base/`、`src/case/`、`src/patterns/` | コンポーネントと story とテスト。`src/patterns/` は、パターンを置くときに作る                                                                      |
+| `packages/ui/src/platform/`                           | React に依存しない、ブラウザの判定と設定の関数。サブパスの export（`@fukuemon/ui/ios-viewport`）で配り、ページの読み込みの初めのスクリプトから呼ぶ |
+| `packages/ui/.storybook/`                             | Storybook の設定と、カタログが返すレスポンスヘッダ（`public/_headers`）                                                                            |
+| `packages/ui/wrangler.jsonc`                          | カタログを `design.fukuemon.dev` へ配信する Worker の設定                                                                                          |
+| `scripts/`                                            | トークンの CSS の生成、コントラストのチェック、色の値のチェック、ユーティリティのチェック、コードのテーマの生成                                    |
 
 チェックは、パッケージ design-system の手順で入れ、CI で流す。
 

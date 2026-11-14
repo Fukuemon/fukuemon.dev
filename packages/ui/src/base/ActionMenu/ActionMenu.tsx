@@ -13,7 +13,7 @@ export type ActionMenuProps = {
   /** 開くボタンの読み上げる名前。 */
   label: string;
   items: readonly ActionMenuItem[];
-  /** compact はボタンと項目を 28px の高さ、項目の文字を 13px にする。コードを動かす画面の帯に置くメニューに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
+  /** compact はボタンと項目を 28px の高さ、項目の文字を 13px にする。ボタンと項目は、触る端末（pointer: coarse）では 44px にする（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）。コードを動かす画面の帯に置くメニューに使う（docs/adr/0062-dense-text-and-targets-in-playground.md）。 */
   density?: "default" | "compact";
 };
 
@@ -75,8 +75,10 @@ export function ActionMenu({ label, items, density = "default" }: ActionMenuProp
         aria-haspopup="menu"
         aria-label={label}
         className={clsx(
-          "inline-grid cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
-          isCompact ? "size-7" : "size-11",
+          "inline-grid cursor-pointer place-items-center text-text focus-visible:focus-ring",
+          isCompact
+            ? "size-7 rounded-control-compact hover:bg-surface-pane-subtle pointer-coarse:size-11"
+            : "size-11 rounded-control hover:bg-surface-subtle",
         )}
         onClick={() => setOpen(!isOpen)}
         ref={buttonRef}
@@ -101,7 +103,9 @@ export function ActionMenu({ label, items, density = "default" }: ActionMenuProp
             <button
               className={clsx(
                 "cursor-pointer text-left hover:bg-surface-subtle focus-visible:focus-ring",
-                isCompact ? "min-h-7 px-3 text-body-compact" : "min-h-11 px-4 text-body-dense",
+                isCompact
+                  ? "min-h-7 px-3 text-body-compact pointer-coarse:min-h-11"
+                  : "min-h-11 px-4 text-body-dense",
                 item.isDanger ? "text-danger" : "text-text",
                 item.isDanger && index > 0 && "border-t border-border",
               )}

@@ -19,7 +19,7 @@ export const overLimitMessage = (hasSaved: boolean) =>
   `作業ディレクトリのファイルが ${SAVE_LIMIT.files} 個か ${SAVE_LIMIT.bytes / BYTES_PER_MB} MB を超えました。${hasSaved ? "ページを閉じると、前に保存したときのファイルに戻ります。" : "ページを閉じると、変えたファイルが消えます。"}ファイルを減らすと、また保存します。`;
 
 // 2 つの待ちは続けて起きるので、文を替えない。替えると、スクリーンリーダーが 2 回読み上げる（packages/ui/design/components.md の PageLoading）
-/** プロジェクトの読み込みと起動の、画面の右下の待ちの文。 */
+/** プロジェクトの読み込みと起動の、画面を覆う待ちの文。 */
 export const BOOT_LABEL = "実行環境を起動しています";
 
 export const PREVIEW_TIMEOUT_MS = 30_000;

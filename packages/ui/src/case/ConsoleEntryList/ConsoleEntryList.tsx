@@ -214,7 +214,7 @@ export function ConsoleEntryList({
           <button
             aria-pressed={isOn}
             className={clsx(
-              "flex min-h-7 cursor-pointer items-center gap-1.5 rounded-control px-2 text-label-compact ink-press transition-colors hover:bg-surface-subtle focus-visible:z-10 focus-visible:focus-ring",
+              "flex min-h-7 cursor-pointer items-center gap-1.5 rounded-control pointer-coarse:min-h-11 px-2 text-label-compact ink-press transition-colors hover:bg-surface-subtle focus-visible:z-10 focus-visible:focus-ring",
               isOn ? "text-text" : "text-text-secondary",
             )}
             key={level}

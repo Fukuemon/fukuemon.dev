@@ -3,11 +3,14 @@ import {
   Button,
   ConfirmDialog,
   EditorFrame,
+  FileDrawer,
   FileTree,
   type FileTreeResult,
+  IconButton,
   Link,
   Loading,
   Notice,
+  PaneTabs,
   SplitPane,
   StatusBadge,
   TerminalFrame,
@@ -22,6 +25,9 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { EDITOR_ICON, FOLDER_ICON, OUTPUT_ICON } from "../layout/icons";
+import { useLayoutMode } from "../layout/useLayoutMode";
+import { usePaneFocus } from "../layout/usePaneFocus";
 import { goDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { GoEditor } from "./GoEditor";
@@ -99,7 +105,7 @@ function OutputPane({ session }: { session: GoSession }) {
       {() => (
         <div
           aria-label="出力"
-          className="min-h-0 flex-1 overflow-auto p-3 focus-visible:focus-ring"
+          className="min-h-0 flex-1 overflow-auto p-3 focus-visible:focus-ring-inset"
           onScroll={(event) => {
             const log = event.currentTarget;
             atBottom.current = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
@@ -109,9 +115,9 @@ function OutputPane({ session }: { session: GoSession }) {
           // 長い出力をキーボードで送れるよう、スクロールする領域をフォーカスできるようにする
           tabIndex={0}
         >
-          {progress !== undefined && <Loading label={progress} />}
+          {progress !== undefined && <Loading density="compact" label={progress} />}
           {groups.length === 0 && progress === undefined && output.exit === undefined && (
-            <p className="font-sans text-body-dense text-code-comment">
+            <p className="font-sans text-body-compact text-code-comment">
               実行するか、テストすると、標準出力と標準エラーがここに出ます。
             </p>
           )}
@@ -149,6 +155,10 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   const [deleting, setDeleting] = useState<string>();
   const [problem, setProblem] = useState<string>();
   const [created, setCreated] = useState<string>();
+  const mode = useLayoutMode();
+  const [pane, setPane] = useState<"editor" | "output">("editor");
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const { rootRef, focusEditor, focusSelectedTab } = usePaneFocus();
   const saveFailed = useSyncExternalStore(
     session.saveFailed.subscribe,
     session.saveFailed.getSnapshot,
@@ -170,7 +180,12 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 
   const select = (path: string) => {
     setSelected(path);
-    if (kindOf(fileSet, path) === "file") openFile(path);
+    if (kindOf(fileSet, path) === "file") {
+      openFile(path);
+      setDrawerOpen(false);
+      setPane("editor");
+      focusEditor();
+    }
   };
 
   // 名前の欄の操作で断った理由は、FileTree が欄の下に出す
@@ -228,8 +243,16 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
     if (path === shown) setActive(rest[Math.min(index, rest.length - 1)]);
   };
 
-  const run = () => void session.run();
-  const test = () => void session.test();
+  const run = () => {
+    setPane("output");
+    focusSelectedTab();
+    void session.run();
+  };
+  const test = () => {
+    setPane("output");
+    focusSelectedTab();
+    void session.test();
+  };
   const onShortcut = useEffectEvent((event: KeyboardEvent) => {
     const shortcut = shortcutOf(event);
     if (shortcut === undefined) return;
@@ -251,12 +274,97 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
   }, []);
   const deletingKind = deleting === undefined ? undefined : kindOf(fileSet, deleting);
 
+  const filesPanel = (
+    <div className="flex h-full min-h-0 flex-col gap-2 p-1">
+      {problem !== undefined && (
+        <Notice isAlert title="操作できませんでした" tone="danger">
+          {problem}
+        </Notice>
+      )}
+      <div className="grid min-h-0 flex-1 grid-rows-1">
+        <FileTree
+          defaultExpandedIds={[...new Set(Object.keys(fileSet.files).map(parentOf))].filter(
+            (p): p is string => p !== undefined,
+          )}
+          items={toTree(fileSet)}
+          onCreate={create}
+          onCreateDirectory={createDirectory}
+          onDelete={setDeleting}
+          onRename={renameEntry}
+          onSelect={select}
+          selectedId={selected}
+        />
+      </div>
+    </div>
+  );
+  const editorPanel = (
+    <div
+      className={
+        mode === "wide" ? "grid h-full min-h-0 grid-rows-1 p-1" : "grid h-full min-h-0 grid-rows-1"
+      }
+    >
+      <EditorFrame
+        files={openTabs.map((path) => ({ id: path, label: tabLabel(path, openTabs) }))}
+        onClose={closeTab}
+        onSelect={setActive}
+        selectedId={shown}
+        status={
+          <>
+            <span>{shown}</span>
+            <span className="flex gap-4">
+              <span>
+                行 {cursor.line}、列 {cursor.column}
+              </span>
+              <span>Go</span>
+            </span>
+          </>
+        }
+      >
+        {(_, file) => (
+          <GoEditor
+            focusOnOpen={file.id === created}
+            key={file.id}
+            onChange={(path, value) => {
+              if (session.read(path) !== value) session.write(path, value);
+            }}
+            onCursor={(line, column) => setCursor({ line, column })}
+            onRun={run}
+            path={file.id}
+            states={states.current}
+            value={fileSet.files[file.id] ?? ""}
+          />
+        )}
+      </EditorFrame>
+    </div>
+  );
+  const outputPanel = (
+    <div
+      className={
+        mode === "wide"
+          ? "flex h-full min-h-0 flex-col gap-2 p-1"
+          : "flex h-full min-h-0 flex-col gap-2"
+      }
+    >
+      <div className="grid min-h-0 flex-1 grid-rows-1">
+        <OutputPane session={session} />
+      </div>
+      <p className="px-4 text-caption text-text-secondary">
+        Yaegi のインタプリタで動かしています。<code>iter</code>{" "}
+        のパッケージと、型の推論に失敗する一部のジェネリックな関数は使えません。
+      </p>
+    </div>
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <title>{`${session.embedId ?? TITLE} | fukuemon.dev プレイグラウンド`}</title>
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-2 border-text bg-surface px-4 py-2">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1.5 py-1">
         <div className="flex min-w-0 items-baseline gap-3">
-          {!embedded && <h1 className="font-heading text-heading-sm text-text">{TITLE}</h1>}
+          {!embedded && (
+            <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
+              {TITLE}
+            </h1>
+          )}
           {session.embedId !== undefined && (
             <span className="truncate font-mono text-caption text-text-secondary">
               {session.embedId}
@@ -311,89 +419,51 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
           </Notice>
         </div>
       )}
-      <div className="flex min-h-0 flex-1">
-        <SplitPane
-          defaultSize={22}
-          label="ファイルの一覧とエディタの仕切り"
-          primary={
-            <div className="flex h-full min-h-0 flex-col gap-2">
-              {problem !== undefined && (
-                <Notice isAlert title="操作できませんでした" tone="danger">
-                  {problem}
-                </Notice>
-              )}
-              <div className="grid min-h-0 flex-1 grid-rows-1">
-                <FileTree
-                  defaultExpandedIds={[...new Set(Object.keys(fileSet.files).map(parentOf))].filter(
-                    (p): p is string => p !== undefined,
-                  )}
-                  items={toTree(fileSet)}
-                  onCreate={create}
-                  onCreateDirectory={createDirectory}
-                  onDelete={setDeleting}
-                  onRename={renameEntry}
-                  onSelect={select}
-                  selectedId={selected}
-                />
-              </div>
-            </div>
-          }
-          secondary={
-            <SplitPane
-              defaultSize={62}
-              label="エディタと出力の仕切り"
-              orientation="vertical"
-              primary={
-                <div className="grid h-full min-h-0 grid-rows-1">
-                  <EditorFrame
-                    files={openTabs.map((path) => ({ id: path, label: tabLabel(path, openTabs) }))}
-                    onClose={closeTab}
-                    onSelect={setActive}
-                    selectedId={shown}
-                    status={
-                      <>
-                        <span>{shown}</span>
-                        <span className="flex gap-4">
-                          <span>
-                            行 {cursor.line}、列 {cursor.column}
-                          </span>
-                          <span>Go</span>
-                        </span>
-                      </>
-                    }
-                  >
-                    {(_, file) => (
-                      <GoEditor
-                        focusOnOpen={file.id === created}
-                        key={file.id}
-                        onChange={(path, value) => {
-                          if (session.read(path) !== value) session.write(path, value);
-                        }}
-                        onCursor={(line, column) => setCursor({ line, column })}
-                        onRun={run}
-                        path={file.id}
-                        states={states.current}
-                        value={fileSet.files[file.id] ?? ""}
-                      />
-                    )}
-                  </EditorFrame>
-                </div>
-              }
-              secondary={
-                <div className="flex h-full min-h-0 flex-col gap-2">
-                  <div className="grid min-h-0 flex-1 grid-rows-1">
-                    <OutputPane session={session} />
-                  </div>
-                  <p className="px-4 text-caption text-text-secondary">
-                    Yaegi のインタプリタで動かしています。<code>iter</code>{" "}
-                    のパッケージと、型の推論に失敗する一部のジェネリックな関数は使えません。
-                  </p>
-                </div>
-              }
-            />
-          }
-        />
-      </div>
+      {mode === "wide" ? (
+        // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+        <div className="-m-1 flex min-h-0 flex-1">
+          <SplitPane
+            defaultSize={22}
+            label="ファイルの一覧とエディタの仕切り"
+            primary={filesPanel}
+            secondary={
+              <SplitPane
+                defaultSize={62}
+                label="エディタと出力の仕切り"
+                orientation="vertical"
+                primary={editorPanel}
+                secondary={outputPanel}
+              />
+            }
+          />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1" ref={rootRef}>
+          <PaneTabs
+            items={[
+              { id: "editor", label: "エディタ", icon: EDITOR_ICON, content: editorPanel },
+              { id: "output", label: "出力", icon: OUTPUT_ICON, content: outputPanel },
+            ]}
+            label="ペイン"
+            leading={
+              <IconButton icon={FOLDER_ICON} label="ファイル" onClick={() => setDrawerOpen(true)} />
+            }
+            onSelect={(id) => setPane(id === "output" ? "output" : "editor")}
+            flush={embedded}
+            placement={mode === "short" ? "start" : embedded ? "top" : "bottom"}
+            selectedId={pane}
+          />
+          <FileDrawer
+            description="ファイルを選ぶと、エディタで開きます"
+            initialFocus='[role="treeitem"][tabindex="0"]'
+            isOpen={isDrawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            title={TITLE}
+          >
+            {filesPanel}
+          </FileDrawer>
+        </div>
+      )}
       <ConfirmDialog
         confirmLabel="削除する"
         isOpen={deleting !== undefined}
@@ -411,8 +481,16 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
 
 /** Go を動かすツールのページ。埋め込みのときは、ページの題を出さない。 */
 export function GoPage({ search, embedded }: { search: string; embedded: boolean }) {
+  const mode = useLayoutMode();
   return (
-    <main className="flex h-dvh min-w-0 flex-col bg-surface">
+    <main
+      className={
+        // 記事に埋め込んだ狭い配置では、地を出さず、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+        embedded && mode !== "wide"
+          ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
+          : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
+      }
+    >
       <Suspense
         fallback={
           <p className="p-4 text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>
