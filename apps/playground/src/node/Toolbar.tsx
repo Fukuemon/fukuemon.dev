@@ -25,7 +25,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
     startRunning(() => session.run().catch(() => undefined));
   };
 
-  // 戻し終えるまで確認の窓を開いておき、閉じた後は「起動し直す」にフォーカスを移す。戻すと「初期の状態に戻す」のボタンが消えるためである
+  // 戻し終えるまで確認のダイアログを閉じず、閉じた後は「起動し直す」にフォーカスを移す。戻すと「初期の状態に戻す」のボタンが消えるためである
   const reset = () => {
     setResetting(true);
     setResetFailed(false);
