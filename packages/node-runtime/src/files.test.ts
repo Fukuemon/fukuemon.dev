@@ -377,6 +377,19 @@ describe("files.readAll", () => {
     await expect(runtime.files.readAll(options)).rejects.toBe(error);
   });
 
+  it("ファイルでもディレクトリでもない項目を読めないときは、どの理由でも飛ばして返す", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("loop", "");
+    const readFile = created.files.api.readFile;
+    vi.spyOn(created.files.api, "readFile").mockImplementation((path) =>
+      path === "loop"
+        ? Promise.reject(new Error("ELOOP: too many symbolic links encountered"))
+        : readFile(path),
+    );
+    const paths = (await runtime.files.readAll(options)).map((file) => file.path);
+    expect(paths).toStrictEqual(["index.js", "package.json", "src/app.js"]);
+  });
+
   it("親の一覧を読んだ後に消えたディレクトリは、飛ばして返す", async () => {
     const { runtime, created } = await bootFake();
     const list = created.files.api.list;

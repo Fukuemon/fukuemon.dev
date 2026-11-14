@@ -219,14 +219,17 @@ export function createNodeSession({
     if (pendingRewrite) queue({ ...pendingRewrite, savedAt: now() });
   };
   rewrite();
+  // 新しい保存がキューにあるか成功したときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る
+  const rewriteIfUnsaved = () => {
+    if (lastSaved === undefined) rewrite();
+  };
 
   // 上限を超えたときは、前に保存したレコードを残す。保存しないパスを落としたレコードだけは書き直す (ADR-0070)
   const persist = (read: SaveRead) => {
     const saving = read.kind === "over-limit" ? read : filesToSave(read.entries);
     overLimit.set(saving.kind === "over-limit");
     if (saving.kind === "over-limit") {
-      // 新しい保存が待っているか通ったときは、古いレコードで置き換えない。失敗すれば lastSaved が undefined に戻る
-      if (lastSaved === undefined) rewrite();
+      rewriteIfUnsaved();
       return;
     }
     const { files } = saving;
@@ -279,6 +282,8 @@ export function createNodeSession({
             // 起動し直すときに読めなかったら、この結果で起動する。保存しないディレクトリは読んでいないので、入らない
             if (read.kind === "read") lastRead = filesForRestart(read.entries);
             persist(read);
+          } else if (!stopped) {
+            rewriteIfUnsaved();
           }
         } while (again && !stopped);
       } finally {
@@ -286,7 +291,11 @@ export function createNodeSession({
       }
     };
     const unsubscribe = runtime.files.changes.subscribe((paths) => {
-      if (!instance.touched || paths.every(isExcludedFromSave)) return;
+      if (!instance.touched) return;
+      if (paths.every(isExcludedFromSave)) {
+        rewriteIfUnsaved();
+        return;
+      }
       // 書き込みが続いても、最初の通知から SAVE_MAX_DELAY_MS のうちに保存する
       const at = Date.now();
       firstChange ??= at;
@@ -469,6 +478,7 @@ export function createNodeSession({
     } catch (error) {
       console.error("起動し直す前に作業ディレクトリを読めない", error);
       restartReadFailed.set(true);
+      rewriteIfUnsaved();
       return { files: lastRead ?? bootFiles, touched: old.touched };
     }
   };

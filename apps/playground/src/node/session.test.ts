@@ -585,6 +585,47 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "b" }], overLimit: true });
   });
 
+  it("書き直しが失敗した後に、保存のための読み込みが失敗しても、除いた後のレコードを書く", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    latest().readAll.mockRejectedValueOnce(new Error("ELOOP"));
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "b" }]);
+  });
+
+  it("書き直しが失敗した後に、起動し直す前の読み込みが失敗しても、除いた後のレコードを書く", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    latest().readAll.mockRejectedValueOnce(new Error("ELOOP"));
+    await session.restart();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "b" }]);
+  });
+
+  it("書き直しが失敗した後に、保存しないパスだけの通知が来ても、除いた後のレコードを書く", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    latest().change("node_modules/ms/index.js", "x");
+    await vi.advanceTimersByTimeAsync(0);
+    expect({
+      saves: saves.map((record) => record.files),
+      reads: latest().readAll.mock.calls.length,
+    }).toStrictEqual({ saves: [{ "index.js": "b" }], reads: 0 });
+  });
+
   it("書き直しが失敗した後の保存が終わる前に上限を超えても、古いレコードで置き換えない", async () => {
     const { session, workspace, saves, latest } = setup({
       kind: "saved",

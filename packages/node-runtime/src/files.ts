@@ -1,4 +1,4 @@
-import { type BackendFiles, PathNotFoundError } from "./backend";
+import { type BackendFiles, type DirectoryItem, PathNotFoundError } from "./backend";
 import { createStore } from "./store";
 import {
   type FileContents,
@@ -95,15 +95,18 @@ function readAllFiles(
       release();
     }
   };
-  // 一覧を読んだ後に消えたものだけを飛ばす。ほかの失敗で飛ばすと、読めなかった作業ディレクトリを読めた扱いにする (ADR-0069)
+  // ファイルとディレクトリは、一覧を読んだ後に消えたものだけを飛ばす。ほかの失敗で飛ばすと、読めなかった作業ディレクトリを読めた扱いにする (ADR-0069)
   const skipMissing =
     <T>(fallback: T) =>
     (error: unknown): T => {
       if (error instanceof PathNotFoundError) return fallback;
       throw error;
     };
-  const readFile = (path: string) =>
-    limited(() => files.readFile(path).catch(skipMissing(undefined)));
+  // ファイルでもディレクトリでもない項目（シンボリックリンク）は、保存にも起動し直しにも使わないので、どのエラーでもスキップする。互いを指すリンクは ELOOP で失敗し続けるためである (ADR-0069)
+  const readFile = (path: string, kind: DirectoryItem["kind"]) =>
+    limited(() =>
+      files.readFile(path).catch(kind === "other" ? () => undefined : skipMissing(undefined)),
+    );
   const read = async (directory: string): Promise<FileContents[]> => {
     // 作業ディレクトリそのものは、一覧を読んだ後に消えたものではないので、無ければ失敗させる
     const listing = () =>
@@ -117,8 +120,7 @@ function readAllFiles(
       items.map(async (item): Promise<FileContents[]> => {
         const path = join(directory, item.name);
         if (item.kind === "directory") return read(path);
-        // 指す先の無いリンクも、パスが無い失敗になるので飛ばす
-        const bytes = await readFile(path);
+        const bytes = await readFile(path, item.kind);
         if (!bytes) return [];
         count.files += 1;
         count.bytes += bytes.byteLength;
