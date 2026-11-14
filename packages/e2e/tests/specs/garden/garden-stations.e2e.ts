@@ -21,7 +21,7 @@ import { presetSettings } from "../../widgets/actions/preset-settings";
 test.beforeEach(() => test.slow());
 
 /**
- * 庭を開く。`paused` が true のときは、ヘッダーの歯車の設定でアニメーションをオフにして開く。
+ * 庭を開く。`paused` が true のときは、表示の設定でアニメーションをオフにして開く。
  * カメラは、オフにすると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると、`expectAt` の 1 回の待ちの上限（config の expect の時間）を超える。
  * 移動の動き自体を確かめるテスト以外は、止めてから移る。
  */
@@ -85,7 +85,7 @@ test.describe("トップの庭", () => {
       await expect(page.getByTestId("garden-station-1")).toBeFocused();
     });
 
-    test("歯車の設定で庭の表示をオフにした場合、ふつうのページが出て、フォーカスが設定に残り、セクションにインラインのスタイルが残らないこと", async ({
+    test("表示の設定で庭の表示をオフにした場合、ふつうのページが出て、フォーカスが設定に残り、セクションにインラインのスタイルが残らないこと", async ({
       page,
     }) => {
       await openGarden(page);

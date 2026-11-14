@@ -14,7 +14,7 @@ test.use({ viewport: { width: 480, height: 270 }, colorScheme: "light" });
 /** 場面のバンドル */
 const BUNDLE = "**/_astro/garden-entry-*.js";
 
-test.describe("ヘッダーの歯車の設定とトップの庭", () => {
+test.describe("表示の設定とトップの庭", () => {
   test("イントロを見た後に、イントロをもう一度見るボタンを押した場合、初めての訪問と同じイントロがもう一度流れること", async ({
     page,
   }) => {

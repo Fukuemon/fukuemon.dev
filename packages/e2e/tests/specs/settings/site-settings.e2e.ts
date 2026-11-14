@@ -15,7 +15,7 @@ const brushDuration = (page: Page) =>
 
 test.use({ viewport: { width: 1280, height: 800 }, colorScheme: "light" });
 
-test.describe("ヘッダーの歯車の設定", () => {
+test.describe("表示の設定", () => {
   test("歯車を押した場合、設定の面が開き、2 つのスイッチが保存した値で出て、イントロをもう一度見るボタンが出ること", async ({
     page,
   }) => {

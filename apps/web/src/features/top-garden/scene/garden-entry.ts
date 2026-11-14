@@ -140,7 +140,7 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
 }
 
 /**
- * ヘッダーの歯車の設定に合わせる。アニメーションがオフの間は、カメラを動かさずに切り替え、ポインタに合わせて揺らさない。
+ * 表示の設定に合わせる。アニメーションがオフの間は、カメラを動かさずに切り替え、ポインタに合わせて揺らさない。
  * 庭の表示をオフにしたら、ふつうのページに戻す。フォーカスは設定の面に残す。
  */
 function follow(garden: Garden, cards: readonly HTMLElement[]): void {
@@ -168,7 +168,7 @@ function follow(garden: Garden, cards: readonly HTMLElement[]): void {
 
 function boot(): void {
   if (!root.classList.contains("stage-on")) return;
-  // バンドルを読み込む間に、歯車の設定で庭の表示をオフにしていたら、庭を立ち上げずにふつうのページに戻す。
+  // バンドルを読み込む間に、表示の設定で庭の表示をオフにしていたら、庭を立ち上げずにふつうのページに戻す。
   if (root.dataset.garden === "off") {
     leave([]);
     return;

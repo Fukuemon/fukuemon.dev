@@ -133,7 +133,7 @@ test("同じ端末で 2 回目に開くと、イントロを出さず、カメ�
   expect(await marks(page)).not.toHaveProperty("garden-enter");
 });
 
-test("動きを減らす設定で、歯車の設定を保存せずに開くと、イントロも庭も出さず、ふつうのページを出す", async ({
+test("動きを減らす設定で、表示の設定を保存せずに開くと、イントロも庭も出さず、ふつうのページを出す", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -432,7 +432,7 @@ test.describe("場面の準備が遅いとき", () => {
 test.describe("イントロの途中でふつうのページに戻る", () => {
   const INTRO_CLASSES = /\b(stage-on|intro|enter|scene-ready|garden-ready|no-anim)\b/;
 
-  test("文が出てからカメラが止まるまでに歯車の設定で庭の表示をオフにすると、ふつうのページに戻り、イントロの class が後から付かない", async ({
+  test("文が出てからカメラが止まるまでに表示の設定で庭の表示をオフにすると、ふつうのページに戻り、イントロの class が後から付かない", async ({
     page,
   }) => {
     await recordClasses(page);

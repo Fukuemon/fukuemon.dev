@@ -75,7 +75,7 @@ export function readOverride(search: string): StageOverride {
  * `dev` が true のときだけ、URL の引数を読む処理を入れる。`bundle` を渡さないときは、庭を出さない。
  * バンドルは module の script で読み込む。開発のサーバーはバンドルを ES モジュールのまま配り、本番のビルドの IIFE は module としても動くためである。
  * URL の引数 `intro` は、読んだ後に URL から消す。読み込み直したときに、イントロをまた流さないためである。
- * 庭を出していないトップで、歯車の設定の庭の表示をオンにしたときは、読み込み直して庭を出す。庭を出すかは、描く前のこのスクリプトが決めるためである。
+ * 庭を出していないトップで、表示の設定で庭の表示をオンにしたときは、読み込み直して庭を出す。庭を出すかは、描く前のこのスクリプトが決めるためである。
  */
 export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";

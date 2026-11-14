@@ -265,7 +265,7 @@ describe("stageScript", () => {
     expect(b.replaced).toStrictEqual(["https://fukuemon.dev/?season=winter"]);
   });
 
-  it("庭を出しているときは、歯車の設定で庭の表示をオンにしても読み込み直さない", () => {
+  it("庭を出しているときは、表示の設定で庭の表示をオンにしても読み込み直さない", () => {
     const b = browser();
     let reloads = 0;
     runInNewContext(stageScript({ dev: false }), {
@@ -288,7 +288,7 @@ describe("stageScript", () => {
     }).toStrictEqual({ season: "autumn", time: "night", classes: [], seen: "1" });
   });
 
-  it("庭を出していないときに、歯車の設定で庭の表示をオンにすると読み込み直し、ほかの変更では読み込み直さない", () => {
+  it("庭を出していないときに、表示の設定で庭の表示をオンにすると読み込み直し、ほかの変更では読み込み直さない", () => {
     const b = browser();
     let reloads = 0;
     runInNewContext(stageScript({ dev: false }), {
