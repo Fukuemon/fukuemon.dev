@@ -1,14 +1,15 @@
-import type { BootFailureReason, NodeRuntime } from "@fukuemon/node-runtime";
-import { type ActionDispatch, createContext, use } from "react";
+import type { BootFailureReason, NodeRuntime, Store } from "@fukuemon/node-runtime";
+import { type ActionDispatch, createContext, use, useSyncExternalStore } from "react";
 
 import type { Selection, SelectionAction } from "./selection";
 import type { NodeProject, RuntimeResult } from "./session";
 
-/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作。値が変わるのは、実行環境を起動し直すときだけである。 */
+/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作と、起動し直している間かどうか。値が変わるのは、実行環境を起動し直すときだけである。 */
 export type RuntimeValue = {
   project: NodeProject;
   runtime: Promise<RuntimeResult>;
   restart: () => Promise<void>;
+  busy: Store<boolean>;
 };
 
 export const RuntimeContext = createContext<RuntimeValue | null>(null);
@@ -32,11 +33,16 @@ export function useRuntime():
     : { project: value.project, reason: result.reason };
 }
 
-/** 実行環境を起動し直す操作。ヘッダの「起動し直す」と同じ操作である。 */
-export function useRestart(): () => Promise<void> {
+/** 実行環境を起動し直す操作と、起動し直している間かどうか。ヘッダの「起動し直す」と同じ操作である。 */
+export function useRestart(): { restart: () => Promise<void>; restarting: boolean } {
   const value = use(RuntimeContext);
   if (!value) throw new Error("RuntimeContext の provider が無い");
-  return value.restart;
+  const restarting = useSyncExternalStore(
+    value.busy.subscribe,
+    value.busy.getSnapshot,
+    value.busy.getSnapshot,
+  );
+  return { restart: value.restart, restarting };
 }
 
 export function useSelection(): SelectionValue {

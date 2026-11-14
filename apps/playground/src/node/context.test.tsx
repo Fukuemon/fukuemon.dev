@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { nodeDefaultProject } from "../project/defaults";
 import { RuntimeContext, SelectionContext, useRestart, useRuntime, useSelection } from "./context";
 import { initialSelection } from "./selection";
+import { createStore } from "./store";
 import type { RuntimeResult } from "./session";
 
 // React の use は、status が fulfilled の Promise を、待たずに読む
@@ -27,6 +28,7 @@ const renderRuntime = (result: RuntimeResult) =>
         project: nodeDefaultProject,
         runtime: settled(result),
         restart: async () => undefined,
+        busy: createStore(false),
       }}
     >
       <RuntimeProbe />
@@ -50,17 +52,29 @@ describe("useRuntime", () => {
 describe("useRestart", () => {
   const restart = async () => undefined;
   function RestartProbe() {
-    return <p>{useRestart() === restart ? "same" : "other"}</p>;
+    const value = useRestart();
+    return (
+      <p>
+        {value.restart === restart ? "same" : "other"} {String(value.restarting)}
+      </p>
+    );
   }
 
-  it("provider の値の restart を返す", () => {
+  it.each([false, true])("provider の restart と、busy の値 %s を返す", (busy) => {
     const result: RuntimeResult = { kind: "unavailable", reason: "timeout" };
     const html = renderToStaticMarkup(
-      <RuntimeContext value={{ project: nodeDefaultProject, runtime: settled(result), restart }}>
+      <RuntimeContext
+        value={{
+          project: nodeDefaultProject,
+          runtime: settled(result),
+          restart,
+          busy: createStore(busy),
+        }}
+      >
         <RestartProbe />
       </RuntimeContext>,
     );
-    expect(html).toBe("<p>same</p>");
+    expect(html).toBe(`<p>same ${busy}</p>`);
   });
 
   it("provider の外では、誤りにする", () => {

@@ -415,7 +415,7 @@ flowchart TB
 ```
 
 - Context は 2 つで、`src/node/` に定義する。
-  - 実行環境のインスタンスを、起動の Promise で渡す Context。開いたプロジェクトも一緒に渡す。ペインは、Promise を `use` で読み、ペインごとの `Suspense` で起動を待つ。値が変わるのは、実行環境を起動し直すときだけである。
+  - 実行環境のインスタンスを、起動の Promise で渡す Context。開いたプロジェクトと、「実行環境を起動し直す」の関数と、起動し直している間かどうかの値（`busy` の store）も一緒に渡す。ペインは、Promise を `use` で読み、ペインごとの `Suspense` で起動を待つ。値が変わるのは、実行環境を起動し直すときだけである。
   - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ端末のタブ、選んだプレビューのポート、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` がプロジェクトを読んだ後に描く `NodeLayout` が、`useReducer` で持つ。
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
@@ -429,7 +429,7 @@ flowchart TB
   - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
-  - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
+  - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数と、起動し直している間かどうかを、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `pending` を渡したものにする。待ちの印は、ペインの外の `Suspense` が `PageLoading` で出す。プロジェクトの読み込みと起動の待ちは続けて起きるので、境界が別の 2 つの `Suspense` にも、`PageLoading` に同じ文を渡す。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が持つ。`src/node/` と `src/sql/` のモジュールは、プロジェクトの JSON と、`workspace/` から読んだ、保存してあるファイルを、1 つにまとめた Promise を持つ。ページは、まとめた Promise を `use` で読む。起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
@@ -626,7 +626,7 @@ sequenceDiagram
 - 図の `NodePage` の手順のうち、`bootNodeRuntime` の呼び出し、`npm install`、起動のコマンドの実行は、起動の Promise を持つ `src/node/` のモジュールが進める。React のコンポーネントは、Effect の中でプロセスを起動しない。
 - `bootNodeRuntime` は、DB を使うプロジェクトのときに、DB のプロセスの依存を入れ、DB のプロセスを起動し、初期データの SQL を実行してから、Promise を解決する。30 秒は、`bootNodeRuntime` を呼んでから、Promise が解決するまでの時間で判定する。
 - 30 秒で終わらないときは、`bootNodeRuntime` が、作りかけのインスタンスを破棄してから、Promise を失敗させる。
-- DB の依存の `npm install` が失敗したときは、Promise を失敗させる。`BootError` の `cause` の Error の `cause` に、`npm install` の出力から端末の制御の文字（`\r` と CSI）とスピナーの文字を除き、末尾の 4096 文字を入れる。画面の文は、ほかの起動の失敗と同じにする。原因は、ブラウザのコンソールで読む。
+- DB の依存の `npm install` が失敗したときは、Promise を失敗させる。`BootError` の `cause` の Error の `cause` に、`npm install` の出力から端末の制御の文字（`\r`、CSI、OSC、ほかの C0 の制御の文字）とスピナーの文字を除き、末尾の 4096 文字を入れる。画面の文は、ほかの起動の失敗と同じにする。原因は、ブラウザのコンソールで読む。
 - 起動が失敗したときは、端末とプレビューのペインに、動かせない理由と、対応するブラウザを出す。
 - `npm install` が 0 でない終了コードで終了したときは、起動のコマンドを実行しない。端末に、`npm install` の出力が残る。
 - 起動のコマンドが複数あるときは、`start` の順に起動する。前のコマンドの終了を待たない。
@@ -720,7 +720,8 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
 - `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。`database` の `status` は変えず、その後に DB のプロセスが終了しても `stopped` にしない。訪問者が起動し直すときに、SQL のペインに DB が止まったことを出さないためである。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
-- `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
+- `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。起動し直している間は、ヘッダの「起動し直す」と同じく、待ちの表示にして押せなくする。端末と、Node のコードのプロセスは、動かし続ける。
+- 実行環境を起動し直すと、DB のプロセスも作り直し、初期データの SQL から DB を作り直す。SQL で変えた行は残らない。「初期の状態に戻す」も同じである。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。
 - Web Worker で動かす実装は、`SqlDatabase` に加えて、読み込みの段階の store（`idle`、`loading`、`seeding`、`ready`、`failed`）と、読み込みを始める関数を持つ。Web Worker は、最初に読み込みを始める関数か `run` を呼んだときに作る。
 - PGlite を読み込めないとき、初期データの SQL が失敗したとき、Web Worker を作れないときは、`run` が `error` を持つ値を返し、Web Worker を終了する。次の `run` で、Web Worker を作り直す。

@@ -18,6 +18,10 @@ export type SqlConsoleProps = {
   stoppedHint?: string;
   /** 渡すと、DB が止まったときに、エラーの隣に「起動し直す」のボタンを出し、押すと呼ぶ。 */
   onRestart?: () => void;
+  /** true のときは、「起動し直す」のボタンを待ちの表示にし、押せなくする。 */
+  restarting?: boolean;
+  /** 実行のボタンの文。ほかの「実行する」のボタンと同じページに置くときに替える。 */
+  runLabel?: string;
   /** 入力欄のタブに出すファイルの名前。 */
   fileName: string;
   /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
@@ -35,6 +39,8 @@ export function SqlConsole({
   status,
   stoppedHint,
   onRestart,
+  restarting = false,
+  runLabel = "実行する",
   fileName,
   progress,
   dense = false,
@@ -72,7 +78,7 @@ export function SqlConsole({
         </div>
         <div className={`flex shrink-0 flex-wrap items-center ${gap}`}>
           <Button isLoading={running} onClick={() => void run()} size={dense ? "XS" : "S"}>
-            実行する
+            {runLabel}
           </Button>
           <span
             className={`${dense ? "text-compact" : "text-caption"} text-text-secondary`}
@@ -92,7 +98,13 @@ export function SqlConsole({
               {database.reason}。{stoppedHint}
               {onRestart && (
                 <span className="mt-2 block">
-                  <Button onClick={onRestart} size={dense ? "XS" : "S"} variant="secondary">
+                  <Button
+                    disabled={restarting}
+                    isLoading={restarting}
+                    onClick={onRestart}
+                    size={dense ? "XS" : "S"}
+                    variant="secondary"
+                  >
                     起動し直す
                   </Button>
                 </span>

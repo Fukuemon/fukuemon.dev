@@ -39,6 +39,9 @@ export function shellName(processes: readonly ProcessInfo[]): string {
 /** SQL のペインの入力欄の、最初の SQL。 */
 export const SQL_PANE_QUERY = "-- Node のコードと同じ DB に、SQL を実行します\nselect now();\n";
 
+/** SQL のペインの実行のボタンの文。ヘッダの起動のコマンドの「実行する」と区別する。 */
+export const SQL_PANE_RUN_LABEL = "SQL を実行する";
+
 /** DB が止まったときに、SQL のペインに出す復帰の案内。 */
 export const SQL_STOPPED_HINT =
   "「起動し直す」を押すと、実行環境を起動し直し、DB を初期の状態から作り直します。";

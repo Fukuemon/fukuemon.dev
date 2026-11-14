@@ -4,7 +4,12 @@ import { useState, useTransition } from "react";
 
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { useRestart, useRuntime } from "./context";
-import { SQL_PANE_QUERY, SQL_STOPPED_HINT, bootFailureMessage } from "./messages";
+import {
+  SQL_PANE_QUERY,
+  SQL_PANE_RUN_LABEL,
+  SQL_STOPPED_HINT,
+  bootFailureMessage,
+} from "./messages";
 
 /**
  * DB を使うプロジェクトの、SQL のペイン。Node のコードと同じ DB（実行環境の中の PGlite）に、DB のプロセスの標準入出力で SQL を送る。
@@ -36,7 +41,7 @@ export function SqlPane() {
 function SqlPaneConsole({ database }: { database: SqlDatabase }) {
   const [query, setQuery] = useState(SQL_PANE_QUERY);
   const [running, startRunning] = useTransition();
-  const restart = useRestart();
+  const { restart, restarting } = useRestart();
 
   const run = (sql: string) =>
     new Promise<SqlResponse>((resolve) => {
@@ -51,6 +56,8 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
       fileName="query.sql"
       onChange={setQuery}
       onRestart={() => void restart()}
+      restarting={restarting}
+      runLabel={SQL_PANE_RUN_LABEL}
       onRun={run}
       running={running}
       status={database.status}

@@ -163,7 +163,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   return (
-    <RuntimeContext value={{ project, runtime, restart: session.restart }}>
+    <RuntimeContext value={{ project, runtime, restart: session.restart, busy: session.busy }}>
       <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
