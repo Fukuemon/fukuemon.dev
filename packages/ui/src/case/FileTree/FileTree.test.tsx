@@ -610,4 +610,13 @@ describe("FileTree", () => {
     );
     expect(screen.getByText("ファイルがありません。")).toBeInTheDocument();
   });
+
+  it("ファイルが無い木で作った項目を待つ間に、作成を始め直して Esc のキーでやめると、空の文を出す", async () => {
+    render(<FileTree items={[]} onCreate={(name) => ({ id: name })} onSelect={() => undefined} />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("index.js{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("{Escape}");
+    expect(await screen.findByText("ファイルがありません。")).toBeInTheDocument();
+  });
 });
