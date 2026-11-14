@@ -29,8 +29,10 @@ export function IconButton({
       {...props}
       aria-label={label}
       className={clsx(
-        "inline-grid cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
-        density === "compact" ? "size-7" : "size-11",
+        "inline-grid cursor-pointer place-items-center text-text focus-visible:focus-ring",
+        density === "compact"
+          ? "size-7 rounded-control-compact hover:bg-surface-pane-subtle"
+          : "size-11 rounded-control hover:bg-surface-subtle",
       )}
       type={type}
     >

@@ -75,8 +75,10 @@ export function ActionMenu({ label, items, density = "default" }: ActionMenuProp
         aria-haspopup="menu"
         aria-label={label}
         className={clsx(
-          "inline-grid cursor-pointer place-items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
-          isCompact ? "size-7" : "size-11",
+          "inline-grid cursor-pointer place-items-center text-text focus-visible:focus-ring",
+          isCompact
+            ? "size-7 rounded-control-compact hover:bg-surface-pane-subtle"
+            : "size-11 rounded-control hover:bg-surface-subtle",
         )}
         onClick={() => setOpen(!isOpen)}
         ref={buttonRef}

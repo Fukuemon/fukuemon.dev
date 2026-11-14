@@ -33,7 +33,8 @@ const sizeClassName: Record<ButtonSize, string> = {
  */
 export const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
   clsx(
-    "relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-control ink-press",
+    "relative inline-flex cursor-pointer items-center justify-center gap-2 ink-press",
+    size === "XS" ? "rounded-control-compact" : "rounded-control",
     "not-aria-disabled:not-aria-busy:active:brightness-90",
     "focus-visible:focus-ring",
     "forced-frame aria-disabled:forced-off-disabled",

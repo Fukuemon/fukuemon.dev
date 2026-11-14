@@ -531,6 +531,11 @@
   --fd-scroll-fade-bg: var(--fd-color-code-surface);
 }
 
+/* コードを動かす画面のペインの紙の面（surface-pane）の上で、scroll-fade-end の薄い色を面の色にする。中の枠に継がせるため、ペインの側に付ける（docs/adr/0073-layered-panes-and-radius-in-playground.md） */
+@utility scroll-fade-pane {
+  --fd-scroll-fade-bg: var(--fd-color-surface-pane);
+}
+
 /*
  * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
  * scroll-fade-end の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。

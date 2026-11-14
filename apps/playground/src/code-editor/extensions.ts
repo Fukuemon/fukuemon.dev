@@ -48,7 +48,6 @@ const theme = EditorView.theme({
     backgroundColor: "var(--color-code-surface)",
     color: "var(--color-code-comment)",
     border: "none",
-    borderRight: "1px solid var(--color-border)",
   },
   ".cm-lineNumbers .cm-gutterElement": { padding: "0 8px 0 12px" },
   "&.cm-focused": { outline: "none" },

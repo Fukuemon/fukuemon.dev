@@ -25,10 +25,10 @@ export function Disclosure({
     <details className="group border-y border-border" open={defaultOpen}>
       <summary
         className={clsx(
-          "flex cursor-pointer list-none items-center rounded-control text-text hover:bg-surface-subtle focus-visible:focus-ring",
+          "flex cursor-pointer list-none items-center text-text focus-visible:focus-ring",
           isCompact
-            ? "min-h-6 gap-1 px-1 py-0.5 text-label-compact"
-            : "min-h-11 gap-2 px-2 py-2 text-body-dense font-bold",
+            ? "rounded-control-compact hover:bg-surface-pane-subtle min-h-6 gap-1 px-1 py-0.5 text-label-compact"
+            : "min-h-11 gap-2 rounded-control px-2 py-2 text-body-dense font-bold hover:bg-surface-subtle",
         )}
       >
         <svg

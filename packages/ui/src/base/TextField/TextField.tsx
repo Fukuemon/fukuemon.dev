@@ -89,8 +89,10 @@ export function TextField({
           <span
             aria-hidden
             className={clsx(
-              "absolute inset-x-0 rounded-control border-b border-border-field bg-surface-subtle",
-              isCompact ? "inset-y-0" : "inset-y-0.5",
+              "absolute inset-x-0 border-b border-border-field",
+              isCompact
+                ? "inset-y-0 rounded-control-compact bg-surface-pane-subtle"
+                : "inset-y-0.5 rounded-control bg-surface-subtle",
               "peer-focus-visible:focus-ring peer-aria-invalid:border-b-2 peer-aria-invalid:border-danger",
               "peer-disabled:border-border peer-disabled:bg-surface-disabled",
               "peer-disabled:peer-aria-invalid:border-b peer-disabled:peer-aria-invalid:border-border",

@@ -80,7 +80,10 @@ export function Tabs({
     <div className={clsx("flex flex-col", panel === "flush" && "min-h-0 flex-1")}>
       <div
         aria-label={label}
-        className="flex overflow-x-auto border-b border-border"
+        className={clsx(
+          "flex overflow-x-auto border-b",
+          isCompact ? "border-border/60" : "border-border",
+        )}
         role="tablist"
       >
         {items.map((item, index) => {
@@ -134,9 +137,9 @@ export function Tabs({
                   aria-hidden="true"
                   aria-label={`${item.label} を閉じる`}
                   className={clsx(
-                    "inline-grid cursor-pointer place-items-center rounded-control text-text-secondary transition-colors hover:text-text",
+                    "inline-grid cursor-pointer place-items-center text-text-secondary transition-colors hover:text-text",
                     isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
-                    isCompact ? "size-7" : "size-11",
+                    isCompact ? "size-7 rounded-control-compact" : "size-11 rounded-control",
                   )}
                   onClick={() => onClose?.(item.id)}
                   tabIndex={-1}

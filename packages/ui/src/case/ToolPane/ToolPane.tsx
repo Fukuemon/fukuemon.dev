@@ -64,7 +64,7 @@ export function ToolPane({
     <section
       aria-labelledby={titleId}
       className={clsx(
-        "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-pane bg-surface-pane text-text",
+        "flex min-h-0 min-w-0 flex-col overflow-hidden rounded-pane bg-surface-pane text-text scroll-fade-pane",
         // 面の塗りが消えるハイコントラストのときだけ、枠でペインを区切る（docs/adr/0073-layered-panes-and-radius-in-playground.md）
         "forced-colors:border",
         isJoined && "-mt-px -ml-px",
