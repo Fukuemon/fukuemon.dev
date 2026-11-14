@@ -237,6 +237,29 @@ describe("入力欄の SQL の保存", () => {
     });
   });
 
+  it("消している間の setQuery は、保存しない", async () => {
+    const { workspace, saves } = storage();
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: workspace,
+    });
+    const resetting = session.reset();
+    session.setQuery("select 2;");
+    await resetting;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saves).toStrictEqual([]);
+  });
+
+  it("reset を重ねて呼んでも、消す操作は 1 回にする", async () => {
+    const clear = vi.fn(async () => undefined);
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: { ...storage().workspace, clear },
+    });
+    await Promise.all([session.reset(), session.reset()]);
+    expect(clear).toHaveBeenCalledTimes(1);
+  });
+
   const failingClear = () => ({
     ...storage().workspace,
     clear: async () => {

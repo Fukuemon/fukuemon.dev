@@ -1,5 +1,5 @@
 import { Button, ConfirmDialog, Notice } from "@fukuemon/ui";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 
 import type { SqlSession } from "./session";
 
@@ -23,11 +23,12 @@ export function SqlResetControl({
   const moveFocus = useRef(false);
 
   // <dialog> が閉じた後の描画で移す。開いている間は、ページの外が inert でフォーカスを受けない
+  const focusPage = useEffectEvent(onReset);
   useEffect(() => {
     if (!moveFocus.current || confirming) return;
     moveFocus.current = false;
-    onReset();
-  }, [confirming, onReset]);
+    focusPage();
+  }, [confirming]);
 
   // 戻し終えるまで確認のダイアログを閉じない。戻せなかったときは、<dialog> がフォーカスをボタンへ戻す
   const reset = () => {

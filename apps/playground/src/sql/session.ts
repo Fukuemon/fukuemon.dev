@@ -53,7 +53,7 @@ export type SqlSession = {
   saveFailed: Store<boolean>;
   /** IndexedDB に保存した SQL があるか。保存が通ると true に、消すと false になる。 */
   hasSaved: Store<boolean>;
-  /** 待っている保存を捨て、保存した SQL を消し、入力欄を初期の SQL に戻す。消せないときは失敗し、入力欄を変えない。消している間は、setQuery を呼ばない。 */
+  /** 待っている保存を捨て、保存した SQL を消し、入力欄を初期の SQL に戻す。消せないときは失敗し、入力欄を変えない。消している間の setQuery は無視し、reset を重ねて呼んだときは、同じ Promise を返す。 */
   reset: () => Promise<void>;
 };
 
@@ -103,6 +103,8 @@ export function createSqlSession(
     save: (next) => storage.save(next).then(() => hasSaved.set(canSave)),
   });
   const running = createStore(false);
+  // 消している間は、setQuery の保存を捨て、reset を重ねて呼んでも消す操作を 1 つにする
+  let resetting: Promise<void> | undefined;
   return {
     status: database.status,
     phase: database.phase,
@@ -111,7 +113,7 @@ export function createSqlSession(
     running,
     setQuery: (sql) => {
       // エディタは、外から入力欄の値を置き換えたときも変更として通知する。同じ値を保存し直すと、戻した直後に保存が作り直される
-      if (sql === query.getSnapshot()) return;
+      if (resetting || sql === query.getSnapshot()) return;
       query.set(sql);
       saver.save({ sql, version, savedAt: now() });
     },
@@ -128,11 +130,18 @@ export function createSqlSession(
     canSave,
     saveFailed: saver.failed,
     hasSaved,
-    reset: async () => {
-      await saver.clear();
-      version = project.version;
-      hasSaved.set(false);
-      query.set(initialQuery);
+    reset: () => {
+      resetting ??= saver
+        .clear()
+        .then(() => {
+          version = project.version;
+          hasSaved.set(false);
+          query.set(initialQuery);
+        })
+        .finally(() => {
+          resetting = undefined;
+        });
+      return resetting;
     },
   };
 }
