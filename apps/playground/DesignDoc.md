@@ -287,7 +287,7 @@ type BackendInstance = {
   spawn: (
     command: string,
     args: readonly string[],
-    options?: { terminal?: TerminalSize; internal?: boolean; cwd?: string },
+    options?: { terminal?: TerminalSize; cwd?: string },
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
@@ -311,8 +311,8 @@ type BackendProcess = {
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
   - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
-  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
-  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
+  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`spawn` で起動する全てのプロセスに、同じ環境変数を渡す。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
+  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
@@ -573,7 +573,7 @@ sequenceDiagram
 
 - 実行環境は、preload、DB のプロセスのスクリプトと依存、待ち受けたポートの URL を書くファイルを、`/tmp` の下の、実行環境のディレクトリに置く。
 - ファイルを置く処理と、環境変数の組み立ては、`webcontainer/` が持つ。
-- `webcontainer/` は、`start` で起動するプロセスと、シェルの環境変数に、次の値を渡す。実行環境が自分で起動するプロセス（`internal` が `true`）には、preload を追加しない。
+- `webcontainer/` は、`start` で起動するプロセスと、シェルの環境変数に、次の値を渡す。実行環境の外にファイルを書くために `webcontainer/` が `spawn` を通さずに起動する `node` には、これらの値を渡さない。
   - `NODE_OPTIONS`: preload ごとの `--require <絶対パス>`。HTTP の流れとコンソールを記録する preload は、どのプロジェクトでも追加する。Unix ドメインソケットに接続している間はプロセスを終了させない preload は、DB を使うプロジェクトのときだけ追加する。
   - `PLAYGROUND_PORTS_FILE`: 待ち受けたポートの URL を書くファイルのパス。
   - DB を使うプロジェクトのときは、`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`。
