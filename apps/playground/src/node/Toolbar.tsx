@@ -25,15 +25,15 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetFailed, setResetFailed] = useState(false);
-  const [focusRestart, setFocusRestart] = useState(false);
+  const focusRestart = useRef(false);
   const restartRef = useRef<HTMLButtonElement>(null);
 
   // 戻すと「初期の状態に戻す」が消え、閉じた <dialog> はフォーカスを body に落とす。<dialog> が閉じた後の描画で移す
   useEffect(() => {
-    if (!focusRestart || confirming) return;
+    if (!focusRestart.current || confirming) return;
+    focusRestart.current = false;
     restartRef.current?.focus();
-    setFocusRestart(false);
-  }, [focusRestart, confirming]);
+  }, [confirming]);
 
   const run = () => {
     // 失敗は、session の commandFailed で出す
@@ -46,7 +46,9 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
     setResetFailed(false);
     session
       .reset()
-      .then(() => setFocusRestart(true))
+      .then(() => {
+        focusRestart.current = true;
+      })
       .catch((error: unknown) => {
         console.error("初期の状態に戻せない", error);
         setResetFailed(true);
