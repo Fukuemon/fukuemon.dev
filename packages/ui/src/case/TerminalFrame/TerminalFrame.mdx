@@ -29,6 +29,12 @@ import * as Stories from "./TerminalFrame.stories";
 
 <Canvas of={Stories.Empty} />
 
+### 起動を待つ空
+
+画面の全ての領域が同じ起動を待つ間は、中身を空にする。待ちの印は `PageLoading` が画面の右下に出す。
+
+<Canvas of={Stories.Pending} />
+
 ### 読み込み中
 
 <Canvas of={Stories.Loading} />
