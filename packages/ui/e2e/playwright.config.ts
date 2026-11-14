@@ -21,6 +21,8 @@ export default defineConfig({
         command: `pnpm run build-storybook --quiet && pnpm exec vite preview --outDir storybook-static --port ${PORT} --strictPort`,
         url: `http://localhost:${PORT}`,
         timeout: 300_000,
+        stdout: "pipe",
+        stderr: "pipe",
         reuseExistingServer: false,
       },
 });
