@@ -10,7 +10,7 @@ test.use({ viewport: { width: 480, height: 270 }, colorScheme: "light" });
 
 /**
  * 開いてから色を差すまでの下限（ms）。apps/web の intro-timing.ts の INK_END（5600）から、
- * mark の時刻を ms に丸める分の 10ms を引いた値である
+ * タイマーの誤差と、mark の時刻を ms に丸める誤差を見込んだ 10ms を引いた値である
  */
 const INK_FLOOR = 5590;
 
@@ -450,7 +450,10 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
     expect(states[left - 1]!.split(" ")).toContain("intro");
     await expect(page.locator("[data-garden-stage]")).toBeHidden();
     // イントロを終える時刻（色を差してから 4.5 秒）を過ぎても、class を書き戻さない
-    await page.waitForFunction(() => performance.now() > 12_000);
+    await page.waitForFunction(() => {
+      const enter = performance.getEntriesByName("garden-enter")[0];
+      return enter !== undefined && performance.now() > enter.startTime + 5_000;
+    });
     await expect(html(page)).not.toHaveClass(INTRO_CLASSES);
   });
 

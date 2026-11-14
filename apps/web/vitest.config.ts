@@ -12,6 +12,7 @@ export default defineConfig({
         "src/features/top-garden/ink/brush.ts",
         "src/features/top-garden/ink/ink-art.ts",
         "src/features/top-garden/ink/ink-svg.ts",
+        "src/features/top-garden/ink/ink-trees.ts",
         "src/features/top-garden/layout.ts",
         "src/features/top-garden/rng.ts",
         "src/features/top-garden/scene/scene-colors.ts",

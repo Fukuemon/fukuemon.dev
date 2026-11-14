@@ -1,4 +1,4 @@
-import { sample, type Brush } from "./brush";
+import { catmullRom, sample, type Brush } from "./brush";
 import {
   GATE,
   GATE_Z,
@@ -28,28 +28,20 @@ interface InkTree {
 /** 点の列の上の位置 u（0〜1）の点。点の間は Catmull-Rom の曲線でつなぐ */
 function along(pts: readonly Vec3[], u: number): Vec3 {
   const n = pts.length - 1;
-  const f = Math.min(n - 1e-9, Math.max(0, u * n));
-  const i = Math.floor(f),
-    t = f - i;
+  const pos = Math.min(n - 1e-9, Math.max(0, u * n));
+  const i = Math.floor(pos),
+    t = pos - i;
   const at = (k: number) => pts[Math.min(n, Math.max(0, k))]!;
   const [a, b, c, d] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
-  const t2 = t * t,
-    t3 = t2 * t;
-  return [0, 1, 2].map(
-    (j) =>
-      0.5 *
-      (2 * b[j]! +
-        (c[j]! - a[j]!) * t +
-        (2 * a[j]! - 5 * b[j]! + 4 * c[j]! - d[j]!) * t2 +
-        (3 * b[j]! - a[j]! - 3 * c[j]! + d[j]!) * t3),
-  ) as unknown as Vec3;
+  const axis = (j: 0 | 1 | 2) => catmullRom(a[j], b[j], c[j], d[j], t);
+  return [axis(0), axis(1), axis(2)];
 }
 
 /**
  * 最初のカメラで、塀、門の梁、屋根に隠れない画面の点か。
  * 木は塀より奥にあるので、塀の上か、門の柱の間の梁より下だけが見える。
  */
-function visible([x, y]: Vec2): boolean {
+export function visible([x, y]: Vec2): boolean {
   const P = (wx: number, wy: number, wz: number) => project([wx, wy, wz]);
   const wallTop = P(0, WALL.roofY, GATE_Z)[1];
   const post = GATE.posts[1]!;
@@ -80,7 +72,7 @@ function visibleRuns(pts: readonly Vec2[]): Vec2[][] {
   return runs.filter((r) => r.length >= 4);
 }
 
-const DRY = { dry: 0.55, tin: 0.04, tout: 0.25 } as const;
+const TREE_STROKE = { dry: 0.55, tin: 0.04, tout: 0.25 } as const;
 
 /** 枝の先の葉を描く。松は扇の形、紅葉は丸い弧を重ねた形にする */
 function leaves(B: Brush, R: () => number, c: Vec3, r: number, pine: boolean, t0: number): void {
@@ -115,16 +107,27 @@ function drawTree(B: Brush, R: () => number, tree: InkTree, start: number): void
   };
   const px = screen(local[0]!)[2];
   for (const run of visibleRuns(local.map(xy)))
-    B.add("mid", run, { w: Math.max(3, 0.22 * px * tree.s), a: 0.8, ...DRY, t0: start, dur: 320 });
+    B.add("mid", run, {
+      w: Math.max(3, 0.22 * px * tree.s),
+      a: 0.8,
+      ...TREE_STROKE,
+      t0: start,
+      dur: 320,
+    });
   TREE_PADS.forEach(([u, dx, oz, size], k) => {
     const a = along(local, u);
     const tip: Vec3 = [a[0] + dx * tree.dir, a[1] + 0.15, a[2] + oz];
     const mid: Vec3 = [(a[0] + tip[0]) / 2, a[1] + 0.25, (a[2] + tip[2]) / 2];
     const bt = start + 220 + k * 70;
     for (const run of visibleRuns([a, mid, tip].map(xy)))
-      B.add("mid", run, { w: Math.max(2, 0.08 * px * tree.s), a: 0.7, ...DRY, t0: bt, dur: 180 });
+      B.add("mid", run, {
+        w: Math.max(2, 0.08 * px * tree.s),
+        a: 0.7,
+        ...TREE_STROKE,
+        t0: bt,
+        dur: 180,
+      });
     const c = screen(tip);
-    // 立体の葉は、枝の先から葉の広がりの半径に散らばる
     leaves(B, R, c, size * tree.s * c[2] * 0.9, tree.pine, bt + 160);
   });
 }
