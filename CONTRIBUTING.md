@@ -114,6 +114,7 @@ gitGraph
 ディレクトリの中のコードを直す手順と、そのディレクトリのものを配信する手順は、ディレクトリの `README.md` にある。
 
 - [infra/README.md](infra/README.md): Terraform で Cloudflare の基盤を作る手順と、apply の手順
+- [apps/docs-site/README.md](apps/docs-site/README.md): ドキュメントサイトのビルドと、初めて公開する手順
 - [packages/ui/README.md](packages/ui/README.md): Storybook の起動、デザインシステムのチェック、トークンの生成、カタログの配信
 - [docs/design/prototypes/top/README.md](docs/design/prototypes/top/README.md): トップの試作を開く手順と、録画と測定を作り直す手順
 
