@@ -89,7 +89,7 @@ const row = "border-t border-border py-2";
     color: inherit;
   }
 
-  :global(html.stage-on) [data-garden-card] :is(p:last-child, li:last-child p) {
+  :global(html.stage-on) [data-garden-card] p:last-child {
     margin-block-end: 0;
   }
 
@@ -122,9 +122,4 @@ const row = "border-t border-border py-2";
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    :global(html.stage-on) [data-garden-card] {
-      transition: none;
-    }
-  }
 </style>

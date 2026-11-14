@@ -11,15 +11,15 @@ import { STATIONS } from "../layout";
   <div class="stops">
     {
       STATIONS.map(({ label }, i) => (
-        <button type="button" data-station={i} aria-current={i === 0 ? "true" : "false"}>
+        <button type="button" class="focus-visible:focus-ring" data-station={i} aria-current={i === 0 ? "true" : "false"}>
           {label}
         </button>
       ))
     }
   </div>
   <div class="tools">
-    <button type="button" data-garden-pause aria-pressed="false">動きを止める</button>
-    <button type="button" data-garden-plain>文だけで読む</button>
+    <button type="button" class="focus-visible:focus-ring" data-garden-pause aria-pressed="false">動きを止める</button>
+    <button type="button" class="focus-visible:focus-ring" data-garden-plain>文だけで読む</button>
   </div>
 </nav>
 <p class="sr-only" data-garden-live aria-live="polite"></p>
@@ -92,11 +92,6 @@ import { STATIONS } from "../layout";
     color: var(--fd-color-text);
     font-size: 0.875rem;
     cursor: pointer;
-  }
-
-  button:focus-visible {
-    outline: 2px solid var(--fd-color-focus);
-    outline-offset: 2px;
   }
 
   .stops button + button {
