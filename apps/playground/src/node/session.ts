@@ -116,7 +116,7 @@ export type NodeSession = {
   runtime: Store<Promise<RuntimeResult>>;
   /** IndexedDB を読めず、ファイルを保存できないときは false である。 */
   canSave: boolean;
-  /** 保存が失敗したときは true である。書き直しが通っても戻さず、訪問者の変更の保存が通るか、初期の状態に戻すと false に戻る。 */
+  /** 保存が失敗したときは true である。訪問者の変更の保存が通るか、初期の状態に戻すと false に戻る。書き直しの失敗だけで立ったときは、書き直しが通っても false に戻る。 */
   saveFailed: Store<boolean>;
   /** 最後に読んだ作業ディレクトリが、保存の上限を超えたときは true である。上限を下回って読めたときと、初期の状態に戻したときに false に戻る。 */
   overLimit: Store<boolean>;
@@ -214,7 +214,7 @@ export function createNodeSession({
         },
       ),
   });
-  // 書き直しは訪問者の変更の保存ではないので、通っても「ファイルを保存できませんでした」を消さない
+  // 書き直しは訪問者の変更の保存ではないので、通っても、訪問者の変更の保存の失敗で出た案内は消さない
   const queue = (next: NodeRecord, { isRewrite = false }: { isRewrite?: boolean } = {}) => {
     lastQueued = next;
     rewriting = isRewrite ? next : undefined;

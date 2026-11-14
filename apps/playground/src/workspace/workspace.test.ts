@@ -160,6 +160,33 @@ describe("createSaver", () => {
     });
   });
 
+  it("keepFailure の保存の失敗だけで立った failed は、keepFailure の保存が通ると戻す", async () => {
+    const { workspace, settle } = manualWorkspace();
+    const saver = createSaver(workspace);
+    saver.save(1, { keepFailure: true });
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(2, { keepFailure: true });
+    await tick();
+    await settle();
+    expect(saver.failed.getSnapshot()).toBe(false);
+  });
+
+  it("通常の保存の後に keepFailure の保存も失敗すると、keepFailure の保存が通っても failed を戻さない", async () => {
+    const { workspace, settle } = manualWorkspace();
+    const saver = createSaver(workspace);
+    saver.save(1);
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(2, { keepFailure: true });
+    await tick();
+    await settle(new Error("QuotaExceededError"));
+    saver.save(3, { keepFailure: true });
+    await tick();
+    await settle();
+    expect(saver.failed.getSnapshot()).toBe(true);
+  });
+
   it("keepFailure の保存が失敗すると、failed を true にする", async () => {
     const { workspace, settle } = manualWorkspace();
     const saver = createSaver(workspace);

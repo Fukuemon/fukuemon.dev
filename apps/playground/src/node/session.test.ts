@@ -712,6 +712,23 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "b" }], failed: true });
   });
 
+  it("書き直しの失敗だけで出た保存の失敗の案内は、書き直しが通ると消す", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    const before = session.saveFailed.getSnapshot();
+    latest().change("node_modules/ms/index.js", "x");
+    await vi.advanceTimersByTimeAsync(0);
+    expect({
+      before,
+      saves: saves.map((record) => record.files),
+      failed: session.saveFailed.getSnapshot(),
+    }).toStrictEqual({ before: true, saves: [{ "index.js": "b" }], failed: false });
+  });
+
   it("起動に失敗した実行環境を起動し直すときも、書き直しが失敗していれば、除いた後のレコードを書く", async () => {
     const { workspace, saves } = fakeWorkspace();
     workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
