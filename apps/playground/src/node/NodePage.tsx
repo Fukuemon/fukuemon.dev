@@ -1,23 +1,28 @@
 import {
   EditorFrame,
+  FileDrawer,
   FileTree,
+  IconButton,
   Link,
   Notice,
   PageLoading,
+  PaneTabs,
   PreviewFrame,
   SplitPane,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { type ReactNode, Suspense, use, useReducer } from "react";
+import { type ReactNode, Suspense, use, useReducer, useState } from "react";
+
+import { type LayoutMode, useLayoutMode } from "../layout/useLayoutMode";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
-import { RuntimeContext, SelectionContext, useRuntime } from "./context";
+import { RuntimeContext, SelectionContext, useRuntime, useSelection } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
 import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
-import { initialSelection, selectionReducer } from "./selection";
+import { type SelectionAction, initialSelection, selectionReducer } from "./selection";
 import { type NodeProject, createRuntimeStarter } from "./session";
 import { TerminalPane } from "./TerminalPane";
 
@@ -57,73 +62,167 @@ function Pane({
   );
 }
 
-function NodeLayout({ project }: { project: NodeProject }) {
+const filesFallback = <FileTree items={[]} onSelect={() => undefined} state={pendingState} />;
+const editorFallback = (
+  <EditorFrame files={[]} onSelect={() => undefined} state={pendingState}>
+    {() => null}
+  </EditorFrame>
+);
+const previewFallback = (
+  <PreviewFrame state={pendingState} url="">
+    {null}
+  </PreviewFrame>
+);
+const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</TerminalFrame>;
+
+/** PC の配置。ファイルの木、エディタ、プレビュー、端末を並べ、仕切りで幅と高さを変える。 */
+function WidePanes() {
+  return (
+    <div className="min-h-0 flex-1">
+      <SplitPane
+        defaultSize={20}
+        label="ファイルのツリーの幅"
+        primary={
+          <Pane fallback={filesFallback}>
+            <FilesPane />
+          </Pane>
+        }
+        secondary={
+          <SplitPane
+            defaultSize={70}
+            label="端末の高さ"
+            orientation="vertical"
+            primary={
+              <SplitPane
+                label="エディタとプレビューの幅"
+                primary={
+                  <Pane editorFocusRing fallback={editorFallback}>
+                    <EditorPane />
+                  </Pane>
+                }
+                secondary={
+                  <Pane fallback={previewFallback}>
+                    <PreviewPane />
+                  </Pane>
+                }
+              />
+            }
+            secondary={
+              <Pane fallback={terminalFallback}>
+                <TerminalPane />
+              </Pane>
+            }
+          />
+        }
+      />
+    </div>
+  );
+}
+
+const NARROW_PANES = ["editor", "terminal", "preview"] as const;
+type NarrowPane = (typeof NARROW_PANES)[number];
+
+const icon = (d: string) => (
+  <svg aria-hidden="true" fill="none" height="20" viewBox="0 0 20 20" width="20">
+    <path d={d} stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+const EDITOR_ICON = icon("M7.5 6L3.5 10l4 4M12.5 6l4 4-4 4");
+const TERMINAL_ICON = icon("M3.5 6l4 4-4 4M9.5 14.5h7");
+const PREVIEW_ICON = icon("M2.75 3.75h14.5v12.5H2.75zM2.75 7.25h14.5");
+const FOLDER_ICON = icon("M2.75 4.75h5l1.5 1.5h8v9h-14.5z");
+
+/**
+ * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビューをタブで 1 つずつ出す。
+ * ドロワーでファイルを選ぶと、ドロワーを閉じてエディタのタブに替える。フォルダの行は開閉だけをし、ドロワーを閉じない。
+ */
+function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; embedded: boolean }) {
+  const { selection, dispatch } = useSelection();
+  const [pane, setPane] = useState<NarrowPane>("editor");
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const dispatchInDrawer = (action: SelectionAction) => {
+    dispatch(action);
+    if (action.type === "select-item" && action.isFile) {
+      setDrawerOpen(false);
+      setPane("editor");
+    }
+  };
+  return (
+    <div className="min-h-0 flex-1">
+      <PaneTabs
+        items={[
+          {
+            id: "editor",
+            label: "エディタ",
+            icon: EDITOR_ICON,
+            content: (
+              <Pane editorFocusRing fallback={editorFallback}>
+                <EditorPane />
+              </Pane>
+            ),
+          },
+          {
+            id: "terminal",
+            label: "端末",
+            icon: TERMINAL_ICON,
+            content: (
+              <Pane fallback={terminalFallback}>
+                <TerminalPane />
+              </Pane>
+            ),
+          },
+          {
+            id: "preview",
+            label: "プレビュー",
+            icon: PREVIEW_ICON,
+            content: (
+              <Pane fallback={previewFallback}>
+                <PreviewPane />
+              </Pane>
+            ),
+          },
+        ]}
+        label="ペイン"
+        leading={
+          <IconButton icon={FOLDER_ICON} label="ファイル" onClick={() => setDrawerOpen(true)} />
+        }
+        onSelect={(id) => setPane(NARROW_PANES.find((name) => name === id) ?? "editor")}
+        placement={mode === "short" ? "start" : embedded ? "top" : "bottom"}
+        selectedId={pane}
+      />
+      <FileDrawer
+        description="ファイルを選ぶと、エディタで開きます"
+        initialFocus='[role="treeitem"][tabindex="0"]'
+        isOpen={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Node の実行環境"
+      >
+        <SelectionContext value={{ selection, dispatch: dispatchInDrawer }}>
+          <Pane fallback={filesFallback}>
+            <FilesPane />
+          </Pane>
+        </SelectionContext>
+      </FileDrawer>
+    </div>
+  );
+}
+
+function NodeLayout({ project, embedded }: { project: NodeProject; embedded: boolean }) {
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
+  const mode = useLayoutMode();
   return (
     <RuntimeContext value={{ project, runtime: startRuntime(project) }}>
       <SelectionContext value={{ selection, dispatch }}>
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
           <BootWait />
         </Suspense>
-        <div className="min-h-0 flex-1">
-          <SplitPane
-            defaultSize={20}
-            label="ファイルのツリーの幅"
-            primary={
-              <Pane
-                fallback={<FileTree items={[]} onSelect={() => undefined} state={pendingState} />}
-              >
-                <FilesPane />
-              </Pane>
-            }
-            secondary={
-              <SplitPane
-                defaultSize={70}
-                label="端末の高さ"
-                orientation="vertical"
-                primary={
-                  <SplitPane
-                    label="エディタとプレビューの幅"
-                    primary={
-                      <Pane
-                        editorFocusRing
-                        fallback={
-                          <EditorFrame files={[]} onSelect={() => undefined} state={pendingState}>
-                            {() => null}
-                          </EditorFrame>
-                        }
-                      >
-                        <EditorPane />
-                      </Pane>
-                    }
-                    secondary={
-                      <Pane
-                        fallback={
-                          <PreviewFrame state={pendingState} url="">
-                            {null}
-                          </PreviewFrame>
-                        }
-                      >
-                        <PreviewPane />
-                      </Pane>
-                    }
-                  />
-                }
-                secondary={
-                  <Pane fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}>
-                    <TerminalPane />
-                  </Pane>
-                }
-              />
-            }
-          />
-        </div>
+        {mode === "wide" ? <WidePanes /> : <NarrowPanes embedded={embedded} mode={mode} />}
       </SelectionContext>
     </RuntimeContext>
   );
 }
 
-function NodeTool({ search }: { search: string }) {
+function NodeTool({ search, embedded }: { search: string; embedded: boolean }) {
   const load = use(loadProject(search));
   if (load.kind === "failed") {
     return (
@@ -136,18 +235,20 @@ function NodeTool({ search }: { search: string }) {
       </Notice>
     );
   }
-  return <NodeLayout project={load.project} />;
+  return <NodeLayout embedded={embedded} project={load.project} />;
 }
 
-/** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。 */
+/** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。高さの低い画面では、題を出さない。 */
 export function NodePage({ search, embedded }: { search: string; embedded: boolean }) {
   return (
-    <main className="flex h-dvh min-w-0 flex-col gap-2 p-2">
+    <main className="flex h-dvh min-w-0 flex-col gap-2 p-2 short:gap-0 short:p-0">
       {!embedded && (
-        <h1 className="font-heading text-heading-md font-semibold text-text">Node の実行環境</h1>
+        <h1 className="font-heading text-heading-md font-semibold text-text short:sr-only">
+          Node の実行環境
+        </h1>
       )}
       <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
-        <NodeTool search={search} />
+        <NodeTool embedded={embedded} search={search} />
       </Suspense>
     </main>
   );
