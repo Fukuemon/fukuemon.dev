@@ -10,8 +10,8 @@ export type PreviewFrameProps = {
   url: string;
   /** 渡すと、再読み込みのボタンを出す。 */
   onReload?: () => void;
-  /** 渡すと、iframe の代わりに読み込み中かエラーを出す。 */
-  state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
+  /** 渡すと、iframe の代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
+  state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
   /** プレビューの iframe。`title` を付けて渡す。 */
   children: ReactNode;
 };

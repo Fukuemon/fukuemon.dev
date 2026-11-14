@@ -18,6 +18,8 @@ export { Loading } from "./base/Loading/Loading";
 export type { LoadingProps } from "./base/Loading/Loading";
 export { Notice } from "./base/Notice/Notice";
 export type { NoticeProps, NoticeTone } from "./base/Notice/Notice";
+export { PageLoading } from "./base/PageLoading/PageLoading";
+export type { PageLoadingProps } from "./base/PageLoading/PageLoading";
 export { SplitPane } from "./base/SplitPane/SplitPane";
 export type { SplitPaneOrientation, SplitPaneProps } from "./base/SplitPane/SplitPane";
 export { StatusBadge } from "./base/StatusBadge/StatusBadge";

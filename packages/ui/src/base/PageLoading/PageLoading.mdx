@@ -1,0 +1,30 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { PageLoading } from "./PageLoading";
+import * as Stories from "./PageLoading.stories";
+
+<Meta of={Stories} />
+
+# PageLoading
+
+画面全体が使えるようになるまでの待ちを、画面の右下に 1 つだけ出す印。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「PageLoading」
+
+## 状態
+
+### デフォルト
+
+<Canvas of={Stories.Default} />
+
+### DB の読み込み
+
+<Canvas of={Stories.Database} />
+
+## props
+
+<ArgTypes of={PageLoading} />
