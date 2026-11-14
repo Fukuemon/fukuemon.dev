@@ -8,6 +8,35 @@ export type BootOptions = {
   files: Readonly<Record<string, string>>;
 };
 
+/**
+ * files.readAll で読まないパスと、中身を読まないファイルの大きさ。exclude は、パスの区切りの 1 つと一致する名前である。
+ * limit を渡すと、読めたファイルの数か、読んだ大きさの合計が超えた時点で、読むのをやめて ReadLimitError で失敗する。
+ */
+export type ReadAllOptions = {
+  exclude: readonly string[];
+  maxBytes: number;
+  limit?: { files: number; bytes: number };
+};
+
+/**
+ * 作業ディレクトリの 1 つのファイル。maxBytes を超えるファイルと、テキストとして読めないファイルは、text が null である。
+ * kind が other のものは、ファイルでもディレクトリでもないもの（シンボリックリンクなど）で、text は指す先の中身である。
+ */
+export type FileContents = {
+  path: string;
+  kind: "file" | "other";
+  size: number;
+  text: string | null;
+};
+
+/** files.readAll が、limit の数か大きさを超えたときの失敗。 */
+export class ReadLimitError extends Error {
+  constructor() {
+    super("作業ディレクトリのファイルが、読む上限を超えた");
+    this.name = "ReadLimitError";
+  }
+}
+
 /** 作業ディレクトリのファイルかディレクトリ。path は作業ディレクトリからの相対パスで、区切りは `/` である。 */
 export type FileEntry = { path: string; kind: "file" | "directory" };
 
@@ -40,6 +69,32 @@ export type StartOptions = { name?: string; terminal?: TerminalSize };
 /** 待ち受けたポート。sandbox と allow は、プレビューの iframe に付ける属性の値である。 */
 export type OpenPort = { port: number; url: string; sandbox: string; allow: string };
 
+/** 記録した本文。上限を超えた分は記録せず、truncated を立てる。テキストとして読めないものは、text が null である。 */
+export type HttpBody = { text: string | null; size: number; truncated: boolean };
+
+/** 記録したリクエストかレスポンスの、ヘッダと本文。omittedHeaders は、上限を超えて捨てたヘッダの数である。 */
+type HttpMessageRecord = {
+  headers: readonly { name: string; value: string }[];
+  omittedHeaders?: number;
+  body?: HttpBody;
+};
+
+/** 実行環境の中のサーバーが受けた、1 つのリクエストとレスポンス。response が無いものは、レスポンスを返す前に切れた。 */
+export type HttpRecord = {
+  id: string;
+  /** 送った側と受けた側。id は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `process`、訪問者が送信元のヘッダに付けた値が `header:<値>` である。 */
+  from: { id: string; name: string };
+  to: { id: string; name: string };
+  method: string;
+  url: string;
+  /** 記録の行の URL が上限を超え、先頭だけを持つ。 */
+  urlTruncated?: boolean;
+  startedAt: number;
+  durationMs: number;
+  request: HttpMessageRecord;
+  response?: HttpMessageRecord & { status: number };
+};
+
 export type NodeRuntime = {
   files: {
     tree: Store<readonly FileEntry[]>;
@@ -47,6 +102,8 @@ export type NodeRuntime = {
     /** 同じパスのファイルかディレクトリが、実行環境にあるか。ツリーに出さない node_modules のパッケージの中身も確かめる。親のディレクトリが無いときは、失敗する。 */
     exists: (path: string) => Promise<boolean>;
     read: (path: string) => Promise<string>;
+    /** 作業ディレクトリのファイルを、パスの順に全て読む。exclude に当たるパスは読まない。 */
+    readAll: (options: ReadAllOptions) => Promise<readonly FileContents[]>;
     write: (path: string, contents: string) => Promise<void>;
     createDirectory: (path: string) => Promise<void>;
     rename: (from: string, to: string) => Promise<void>;
@@ -63,8 +120,8 @@ export type NodeRuntime = {
     startShell: (options?: StartOptions) => Promise<ProcessHandle>;
   };
   ports: Store<readonly OpenPort[]>;
-  /** HTTP の記録。記録を取る preload を足すまでは、空のままである。 */
-  httpExchanges: Store<readonly never[]>;
+  /** HTTP の記録。リクエストを受けた順に並べ、古いものから捨てる。 */
+  httpExchanges: Store<readonly HttpRecord[]>;
   /** コンソールの記録。記録を取るスクリプトを足すまでは、空のままである。 */
   consoleEntries: Store<readonly never[]>;
   dispose: () => Promise<void>;

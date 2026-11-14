@@ -1,18 +1,21 @@
 import { WebContainer, type WebContainerProcess } from "@webcontainer/api";
 
-import type {
-  BackendFiles,
-  BackendInstance,
-  BackendProcess,
-  DirectoryItem,
-  RuntimeBackend,
+import {
+  type BackendFiles,
+  type BackendInstance,
+  type BackendProcess,
+  type DirectoryItem,
+  type RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
+import httpTraceSource from "../guest/http-trace.cjs?raw";
+import { toBackendError } from "./errors";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
+const HTTP_TRACE_FILE = `${RUNTIME_DIRECTORY}/http-trace.cjs`;
 
 // プレビューは WebContainers が割り当てる別の origin で開くので、同じ origin の権限を渡しても、このページには届かない
 const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms allow-modals allow-popups";
@@ -20,7 +23,8 @@ const PREVIEW_ALLOW = "cross-origin-isolated";
 
 const DEFAULT_TERMINAL: TerminalSize = { cols: 80, rows: 24 };
 
-const env = { PLAYGROUND_PORTS_FILE: PORTS_FILE };
+// 実行環境が自分で起動するプロセス（writeOutside の node）には渡さない
+const env = { PLAYGROUND_PORTS_FILE: PORTS_FILE, NODE_OPTIONS: `--require ${HTTP_TRACE_FILE}` };
 
 function toBackendProcess(process: WebContainerProcess): BackendProcess {
   const listeners = new Set<(chunk: string) => void>();
@@ -53,19 +57,26 @@ function toBackendProcess(process: WebContainerProcess): BackendProcess {
   };
 }
 
+const rethrow = (error: unknown) => {
+  throw toBackendError(error);
+};
+
 function createBackendFiles(container: WebContainer): BackendFiles {
   const fs = container.fs;
   return {
     list: async (directory) => {
-      const items = await fs.readdir(directory === "" ? "." : directory, { withFileTypes: true });
+      const items = await fs
+        .readdir(directory === "" ? "." : directory, { withFileTypes: true })
+        .catch(rethrow);
       return items.map(
         (item): DirectoryItem => ({
           name: item.name,
-          kind: item.isDirectory() ? "directory" : "file",
+          // WebContainers の Dirent には isSymbolicLink が無く、リンクは isFile も isDirectory も false を返す
+          kind: item.isDirectory() ? "directory" : item.isFile() ? "file" : "other",
         }),
       );
     },
-    readFile: (path) => fs.readFile(path),
+    readFile: (path) => fs.readFile(path).catch(rethrow),
     writeFile: (path, contents) => fs.writeFile(path, contents),
     mkdir: async (path) => {
       await fs.mkdir(path, { recursive: true });
@@ -84,15 +95,19 @@ function createBackendFiles(container: WebContainer): BackendFiles {
 /**
  * 作業ディレクトリの外に、ファイルを書く。
  * ADR-0052 の試作と同じく、実行環境の中の Node で書く。WebContainers のファイルの API で作業ディレクトリの外に書けるかは、確かめていない。
- * 値は環境変数で渡す。WebContainers は、改行を含む環境変数の値を、最初の行で切るので、値は 1 行にする。
+ * 値は環境変数で渡す。WebContainers は、改行を含む環境変数の値を、最初の行で切るので、中身は base64 の 1 行にする。
  */
 async function writeOutside(container: WebContainer, path: string, contents: string) {
   const script =
     "const fs=require('fs'),p=require('path');" +
     "fs.mkdirSync(p.dirname(process.env.TARGET),{recursive:true});" +
-    "fs.writeFileSync(process.env.TARGET,process.env.CONTENTS)";
+    "fs.writeFileSync(process.env.TARGET,Buffer.from(process.env.CONTENTS,'base64'))";
+  const bytes = new TextEncoder().encode(contents);
   const process = await container.spawn("node", ["-e", script], {
-    env: { TARGET: path, CONTENTS: contents },
+    env: {
+      TARGET: path,
+      CONTENTS: btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join("")),
+    },
     output: false,
   });
   const code = await process.exit;
@@ -143,6 +158,7 @@ export const webContainerBackend: RuntimeBackend = {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
+      await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
       const ports = createPorts(container);
       await ports.ready();
       return {

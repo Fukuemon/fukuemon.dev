@@ -2,17 +2,23 @@ import { bootWithBackend } from "./runtime";
 import type { BootOptions, NodeRuntime } from "./types";
 import { webContainerBackend } from "./webcontainer";
 
-export { BootError } from "./types";
+export { isExcludedPath } from "./files";
+export { BROWSER_PEER_ID } from "./http-records";
+export { BootError, ReadLimitError } from "./types";
 export type {
   BootFailureReason,
   BootOptions,
+  FileContents,
   FileEntry,
+  HttpBody,
+  HttpRecord,
   NodeRuntime,
   OpenPort,
   OutputLog,
   ProcessHandle,
   ProcessInfo,
   ProcessStatus,
+  ReadAllOptions,
   StartOptions,
   Store,
   TerminalSize,

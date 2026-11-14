@@ -2,10 +2,12 @@ import {
   type PlaygroundProject,
   type PlaygroundTool,
   isEmbedId,
+  isSafeFilePath,
   playgroundProjectSchema,
 } from "@fukuemon/playground-project";
 
 export type { PlaygroundTool };
+export { isSafeFilePath };
 
 /**
  * プロジェクトの JSON と一覧を置く fukuemon.dev の origin。

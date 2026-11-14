@@ -3,7 +3,13 @@ import type { WorkerSqlDatabase } from "@fukuemon/sql-runtime/worker";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ProjectLoad } from "../project/project";
-import { createSessionOpener, createSqlSession } from "./session";
+import type { Workspace } from "../workspace/workspace";
+import {
+  type SqlPersistence,
+  type SqlRecord,
+  createSessionOpener,
+  createSqlSession,
+} from "./session";
 
 const response: SqlResponse = { results: [], ms: 1 };
 
@@ -82,7 +88,239 @@ describe("createSqlSession", () => {
   });
 });
 
+describe("入力欄の SQL の保存", () => {
+  const storage = () => {
+    const saves: SqlRecord[] = [];
+    const workspace: Workspace<SqlRecord> = {
+      load: async () => ({ kind: "empty" }),
+      save: async (record) => {
+        saves.push(record);
+      },
+      clear: async () => undefined,
+    };
+    return { workspace, saves };
+  };
+
+  it("保存した SQL があるときは、入力欄の初期値にする", () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "saved", record: { sql: "select 9;", version: "v1", savedAt: 1 } },
+      storage: storage().workspace,
+    });
+    expect(session.query.getSnapshot()).toBe("select 9;");
+  });
+
+  it.each([
+    ["文字列でない SQL", { sql: 1, version: "v1" }],
+    ["文字列でない version", { sql: "select 9;", version: 1 }],
+    ["オブジェクトでない値", "x"],
+  ])("保存したレコードが %s を持つときは、open のファイルの中身を初期値にする", (_, record) => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "saved", record: record as unknown as SqlRecord },
+      storage: storage().workspace,
+    });
+    expect(session.query.getSnapshot()).toBe("select 1;");
+  });
+
+  it("入力欄の SQL を変えると、保存してあったバージョンで保存する", async () => {
+    const { workspace, saves } = storage();
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "saved", record: { sql: "select 9;", version: "v0", savedAt: 1 } },
+      storage: workspace,
+      now: () => 5,
+    });
+    session.setQuery("select 2;");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saves).toStrictEqual([{ sql: "select 2;", version: "v0", savedAt: 5 }]);
+  });
+
+  const savedRecord = {
+    kind: "saved",
+    record: { sql: "select 9;", version: "v0", savedAt: 1 },
+  } as const;
+
+  it("保存した SQL があるときは hasSaved を true に、無いときは false にする", () => {
+    const withSaved = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: storage().workspace,
+    });
+    const without = createSqlSession(project, () => fakeDatabase());
+    expect([withSaved.hasSaved.getSnapshot(), without.hasSaved.getSnapshot()]).toStrictEqual([
+      true,
+      false,
+    ]);
+  });
+
+  it("保存が通ると hasSaved を true にし、IndexedDB を読めないときは false のままにする", async () => {
+    const available = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "empty" },
+      storage: storage().workspace,
+    });
+    const unavailable = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "unavailable" },
+      storage: storage().workspace,
+    });
+    available.setQuery("select 2;");
+    unavailable.setQuery("select 2;");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect([available.hasSaved.getSnapshot(), unavailable.hasSaved.getSnapshot()]).toStrictEqual([
+      true,
+      false,
+    ]);
+  });
+
+  it("保存が失敗したときは hasSaved を true にしない", async () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "empty" },
+      storage: {
+        ...storage().workspace,
+        save: async () => {
+          throw new Error("容量");
+        },
+      },
+    });
+    session.setQuery("select 2;");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(session.hasSaved.getSnapshot()).toBe(false);
+  });
+
+  it("reset は、保存した SQL を消し、入力欄を初期の SQL に戻し、hasSaved を false にする", async () => {
+    const clear = vi.fn(async () => undefined);
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: { ...storage().workspace, clear },
+    });
+    await session.reset();
+    expect({
+      clears: clear.mock.calls.length,
+      query: session.query.getSnapshot(),
+      hasSaved: session.hasSaved.getSnapshot(),
+    }).toStrictEqual({ clears: 1, query: "select 1;", hasSaved: false });
+  });
+
+  it("reset の後に入力欄を変えると、プロジェクトのバージョンで保存する", async () => {
+    const { workspace, saves } = storage();
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: workspace,
+      now: () => 7,
+    });
+    await session.reset();
+    session.setQuery("select 2;");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saves).toStrictEqual([{ sql: "select 2;", version: "v1", savedAt: 7 }]);
+  });
+
+  it("reset は、待っている保存を捨てる", async () => {
+    const { workspace, saves } = storage();
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: workspace,
+    });
+    session.setQuery("select 2;");
+    await session.reset();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saves).toStrictEqual([]);
+  });
+
+  it("reset の後に、エディタが初期の SQL を変更として通知しても、保存しない", async () => {
+    const { workspace, saves } = storage();
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: workspace,
+    });
+    await session.reset();
+    session.setQuery("select 1;");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect({ saves, hasSaved: session.hasSaved.getSnapshot() }).toStrictEqual({
+      saves: [],
+      hasSaved: false,
+    });
+  });
+
+  it("消している間の setQuery は、保存しない", async () => {
+    const { workspace, saves } = storage();
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: workspace,
+    });
+    const resetting = session.reset();
+    session.setQuery("select 2;");
+    await resetting;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saves).toStrictEqual([]);
+  });
+
+  it("reset を重ねて呼んでも、消す操作は 1 回にする", async () => {
+    const clear = vi.fn(async () => undefined);
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: { ...storage().workspace, clear },
+    });
+    await Promise.all([session.reset(), session.reset()]);
+    expect(clear).toHaveBeenCalledTimes(1);
+  });
+
+  const failingClear = () => ({
+    ...storage().workspace,
+    clear: async () => {
+      throw new Error("消せない");
+    },
+  });
+
+  it("消せなかったときは、reset が失敗する", async () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: failingClear(),
+    });
+    await expect(session.reset()).rejects.toThrow("消せない");
+  });
+
+  it("消せなかったときは、入力欄と hasSaved を変えない", async () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: savedRecord,
+      storage: failingClear(),
+    });
+    await session.reset().catch(() => undefined);
+    expect({
+      query: session.query.getSnapshot(),
+      hasSaved: session.hasSaved.getSnapshot(),
+    }).toStrictEqual({ query: "select 9;", hasSaved: true });
+  });
+
+  it("IndexedDB を読めないときは、canSave を false にする", () => {
+    const session = createSqlSession(project, () => fakeDatabase(), {
+      saved: { kind: "unavailable" },
+      storage: storage().workspace,
+    });
+    expect(session.canSave).toBe(false);
+  });
+});
+
 describe("createSessionOpener", () => {
+  it("埋め込みの ID の保存先から読んだレコードを、SqlSession に渡す", async () => {
+    const saved = { kind: "saved", record: { sql: "x", version: "v1", savedAt: 1 } } as const;
+    const openWorkspace = vi.fn(
+      (): Workspace<SqlRecord> => ({
+        load: async () => saved,
+        save: async () => undefined,
+        clear: async () => undefined,
+      }),
+    );
+    const create = vi.fn((_: unknown, persistence: SqlPersistence) =>
+      createSqlSession(project, () => fakeDatabase(), persistence),
+    );
+    const open = createSessionOpener(
+      () => Promise.resolve({ kind: "opened", project, embedId: "a/b" }),
+      create,
+      openWorkspace,
+    );
+    await open("?project=a/b");
+    expect({
+      embedId: openWorkspace.mock.calls,
+      saved: create.mock.calls[0]?.[1].saved,
+    }).toStrictEqual({ embedId: [["a/b"]], saved });
+  });
+
   const opened: ProjectLoad<"sql"> = { kind: "opened", project, embedId: "a/b" };
 
   it("同じプロジェクトの読み込みには、同じ Promise を返す", () => {
