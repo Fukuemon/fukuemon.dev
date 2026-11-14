@@ -28,7 +28,7 @@
   - PageSpeed Insights と Lighthouse の CLI のデフォルトは simulate である。
     - 出典: [Lighthouse の Network Throttling](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md)
 - スクリプトは、観測した LCP と FCP の時刻（レポートの `observedLargestContentfulPaint` と `observedFirstContentfulPaint`）が同じ回を `lcpIsFcp` で示す。
-  - スクリプトの中央値は、`lcpIsFcp` の回も含めて全ての回から取る。
+  - スクリプトの `median` は、`lcpIsFcp` の回も含めて全ての回から取る。
   - 庭を出すトップの simulate では、`lcpIsFcp` の回は、庭の最初のフレームがページの最初の描画に入ったと推定された回である。この回は、LCP と Performance が実際より良く出る。
   - 庭を出さないトップでは、本文の描画が LCP になるので、どの回も `lcpIsFcp` になる。
 
@@ -37,7 +37,7 @@
 トップの合否を、次の条件で `pnpm run measure:top` で測った値で判定する。  
 庭を出すトップは引数を付けずに、庭を出さないトップは `--visit reduced-motion` だけを付けて測る。  
 GPU、スロットリング、訪問、回数は、スクリプトの引数の今のデフォルトと同じである。  
-集計は、スクリプトと違い、庭を出すトップで `lcpIsFcp` の回を除いてから中央値を取る。
+集計は、スクリプトの `median` と違い、庭を出すトップで `lcpIsFcp` の回を除いてから中央値を取る。スクリプトは、この中央値を `judged` に出す。
 
 | 項目             | 条件                                                                                                |
 | ---------------- | --------------------------------------------------------------------------------------------------- |
@@ -124,4 +124,3 @@ develop の 4286172 をビルドし、`pnpm run measure:top` で測った。
 - macOS の無い環境では、合否を判定できない。
 - GPU の無い端末と、GPU を使えないブラウザの訪問者の遅さは、合否に入らない。SwiftShader では、M2 の CPU でも庭の最初の描画に数秒かかる。PRD の性能の要求を満たすために、庭の描画を軽くする作業は行わない。
 - simulate の推定が、実際の読み込みより速く出ることがある。devtools の値を参考に添えないと、気づきにくい。
-- 承認の後にスクリプトを直すまで、`lcpIsFcp` の回を除いた中央値は、判定する人が結果の JSON の `rows` から計算する。
