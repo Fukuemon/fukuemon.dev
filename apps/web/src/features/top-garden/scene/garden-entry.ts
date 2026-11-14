@@ -2,6 +2,7 @@
 // 庭を描けないときは、バンドルの読み込みに失敗したときと同じく、ふつうのページに戻す。
 // 描く途中で例外が出たときも、ページが canvas に覆われたままにならないよう、ふつうのページに戻す。
 import { startGarden, type Garden } from "./garden";
+import { INK_END } from "../intro-timing";
 import { STATIONS } from "../layout";
 import type { Season, TimeOfDay } from "../stage/season";
 
@@ -144,10 +145,11 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
     },
     introOn,
   );
-  // 墨の線と署名の遷移は、最初にスタイルが付いた時点から動くので、HTML が遅く届くとその分だけ後ろにずれる。開いてからの時刻で待たず、遷移が終わるのを待つ。
+  // 墨の線と署名の遷移は、最初にスタイルが付いた時点から動くので、HTML が遅く届くとその分だけ後ろにずれる。遷移が終わるのを待つ。遷移を取れない場合に備え、開いてからの時刻（INK_END）も下限として待つ。
   const drawing =
     document.querySelector("[data-garden-stage] .ink-gate")?.getAnimations({ subtree: true }) ?? [];
-  void Promise.allSettled(drawing.map((a) => a.finished)).then(() => {
+  const floor = new Promise((r) => setTimeout(r, Math.max(0, INK_END - performance.now())));
+  void Promise.allSettled([floor, ...drawing.map((a) => a.finished)]).then(() => {
     if (introWiring.signal.aborted) return;
     root.classList.add("enter");
     performance.mark("garden-enter");
