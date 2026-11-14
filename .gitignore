@@ -91,3 +91,4 @@ apm_modules/
 /.claude/skills/setup-e2e-lint/
 /.claude/skills/write-e2e-test/
 /.claude/skills/write-verification-spec/
+packages/go-runtime/wasm/

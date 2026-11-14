@@ -1,5 +1,5 @@
 // 使い方: node docs/design/prototypes/top/build-i.mjs（リポジトリの直下で流す）
-// 門をくぐって立体の庭のプロフィールへ入る形の試作 i-mon.html と、場面の束 vendor/i-scene.bundle.js を書く。
+// 門をくぐって立体の庭のプロフィールへ入る形の試作 i-mon.html と、場面のバンドル vendor/i-scene.bundle.js を書く。
 // 試作では URL の引数で上書きできる。
 //   ?visit=first|garden|html（最初の訪問、2 回目に庭を出す形、2 回目にふつうの HTML を出す形）
 // 署名は src/sign.svg を読む。自筆の署名に替えるときは、このファイルを、同じ形（viewBox と、輪郭を塗った path を 1 本）の SVG に差し替える。線（stroke）で描いた SVG は出ない。
@@ -94,7 +94,7 @@ const bundle = execFileSync(esbuild, [
 ], { maxBuffer: 1 << 26 }).toString();
 writeFileSync(join(here, "vendor", "i-scene.bundle.js"), bundle);
 
-// 配る形のスクリプト。季節と時間帯を決め、庭を出すときだけ場面の束を読み込む。
+// 配る形のスクリプト。季節と時間帯を決め、庭を出すときだけ場面のバンドルを読み込む。
 const prod = `(function(){var h=document.documentElement,d=new Date,t=d.getHours(),q=new URLSearchParams(location.search),v=q.get("visit"),seen=false;window.__born=performance.now();h.dataset.season=q.get("season")||["winter","spring","summer","autumn"][Math.floor((d.getMonth()+1)%12/3)];h.dataset.time=q.get("time")||(t<5?"night":t<10?"morning":t<16?"day":t<19?"evening":"night");try{seen=!!localStorage.getItem("fd-top-seen");localStorage.setItem("fd-top-seen","1")}catch(e){}if(v)seen=v!=="first";if(matchMedia("(prefers-reduced-motion: reduce)").matches||v==="html")return;h.classList.add("stage-on");if(!seen)h.classList.add("intro");if(q.get("sign")!=="0")h.classList.add("sign-on");var s=document.createElement("script");s.src="vendor/i-scene.bundle.js";s.defer=true;s.onerror=function(){h.classList.remove("stage-on","intro")};document.head.appendChild(s)})()`;
 
 const css = `${tokens}

@@ -51,9 +51,9 @@
   .prose :where(thead th) {
     @apply border-text;
   }
-  /* rehype-scroll-box が表と図を包む枠。縮めずに横に送る */
+  /* rehype-scroll-box が表と図を包む枠。縮めずに横に送り、右に続きがある間は右端を薄くする */
   .prose :where(.scroll-box) {
-    @apply overflow-x-auto focus-visible:focus-ring;
+    @apply scroll-fade-end overflow-x-auto focus-visible:focus-ring;
   }
   /* w-full のままだと、表は送られずに列を潰して収まる */
   .prose :where(.scroll-box > table) {

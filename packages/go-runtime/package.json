@@ -1,0 +1,22 @@
+{
+  "name": "@fukuemon/go-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker/index.ts"
+  },
+  "scripts": {
+    "build": "node scripts/build-wasm.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run && go -C go test ./...",
+    "test:cov": "vitest run --coverage && go -C go test ./..."
+  },
+  "devDependencies": {
+    "@fukuemon/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.1.11",
+    "typescript": "6.0.2",
+    "vitest": "^4.1.11"
+  }
+}

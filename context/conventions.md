@@ -100,6 +100,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 - 記事の本文の要素のスタイリングは、`site.css` の `.prose` に置く。Markdown から出る要素には class が付かないので、要素のセレクタで指定する。
 - 本文の表と図は、`apps/web/src/lib/rehype-scroll-box.ts` が、横に送れるフォーカスできる枠で包む。縮めて本文の幅に収めると、表の列が潰れ、図の文字が 14px より小さくなるためである。
   - Markdown の表には `caption` を書けないので、記事の表は、`packages/ui` の `Table` と違い、題を持たない。
+  - 枠には、右に続きがある間だけ右端を背景の色で薄くする、`packages/ui` のユーティリティ `scroll-fade-end` を付ける。動きは `site.css` に書かず、`packages/ui` の `theme.css` に置く（`MOTION-TOKEN`）。
 - `site.css` は、Pele の CSS 変数（`--pele-fg` など）にトークンを割り当てて、Pele が描いた図の色を決める。
   - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)
 - `@theme static` を書かない。トークンの値は、`packages/ui` の `primitive.css` と `semantic.css` が、`:root` のカスタムプロパティとして出力する。
@@ -199,7 +200,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 除外を足すときは、理由をこの節に書く。  
 設定ファイルのコメントだけに残さない。
 
-- knip は、`terraform` と `similarity-ts` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
+- knip は、`terraform`、`similarity-ts`、`go` を未知のコマンドとして扱わない（`ignoreBinaries`）。pnpm の依存ではなく、pnpm の外で入れるコマンドであるため。
 - knip は、ルートの `playwright` を未使用の依存として扱わない（`ignoreDependencies`）。トップの試作の録画のスクリプトが使い、試作は knip の対象の外にあるため。
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
@@ -210,7 +211,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - `docs/design/prototypes/` の試作は、knip（`ignore`）と Oxfmt（`ignorePatterns`）の対象から外す。
   - 試作は、設計の判断の基準として写したまま残すソースで、サイトのコードから import されない。
   - 試作のビルドのスクリプトは、CSS を文字列の位置で切る。整形すると、エラーを出さずに違う HTML を書く。
-- oxlint は、`docs/design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three の束で、Git で追跡しないため。
+- oxlint は、`docs/design/prototypes/` の下の `vendor/` を見ない（`ignorePatterns`）。試作の README の手順で作る three のバンドルで、Git で追跡しないため。
 - react-doctor は、`check` で基点のブランチとの差分だけを見る（`--scope changed`）。既存の指摘は残っているので、新しく増えた指摘だけを止める。
 - Oxlint は、`packages/ui/.storybook/` の `react/rules-of-hooks` と `react/exhaustive-deps` を見ない。
   - decorator の中の `useEffect` は、`storybook/preview-api` の hook で、React の hook ではない。
@@ -221,6 +222,14 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - `packages/ui/src/case/ConsoleEntryList/ConsoleEntryList.tsx` の 1 行の値の並び。`console.*` に同じ値の引数を渡すことがあり、値だけでは key が重なる。
   - どの一覧も、描いた後に並びが変わらない。
 - Oxlint の `jsx-a11y` の規則の警告は、`packages/ui` に残っている。警告では `pnpm run lint` は失敗しない。
+- 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
+  - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
+  - テストは、色を混ぜる式を、色の値で確認する。
+- 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
+  - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
+- Oxlint の `import/default` は、`?worker&url` の import の 1 行だけで抑制する。
+  - 対象は `apps/web/src/features/top-garden/stage/TopStageScript.astro` である。
+  - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 

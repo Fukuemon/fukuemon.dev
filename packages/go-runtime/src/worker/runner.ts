@@ -1,0 +1,185 @@
+import {
+  type GoExecution,
+  type GoExit,
+  type GoFiles,
+  type GoRunner,
+  type LoadPhase,
+  type Store,
+  moduleName,
+  testPackages,
+} from "../index";
+
+/** ページから Web Worker に送る値。WASM はコンパイル済みの Module で渡し、Web Worker ではコンパイルしない。 */
+export type ToWorker = {
+  module: WebAssembly.Module;
+  input: { files: GoFiles; module: string; mode: "run" | "test"; package: string };
+};
+
+/** Web Worker からページに送る値。crashed は、WASM を動かせなかったことを表す。 */
+export type FromWorker =
+  | { type: "output"; chunk: string }
+  | { type: "exit"; code: number }
+  | { type: "crashed"; message: string };
+
+/** createGoRunner が使う Web Worker の操作。テストでは、同じ形の偽物を渡す。 */
+export type WorkerLike = {
+  postMessage: (message: ToWorker) => void;
+  terminate: () => void;
+  onmessage: ((event: MessageEvent<FromWorker>) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
+};
+
+export type GoRunnerOptions = {
+  /** Yaegi の WASM を取得し、コンパイルする。 */
+  compile: () => Promise<WebAssembly.Module>;
+  createWorker: () => WorkerLike;
+};
+
+const CRASHED = "Go の Web Worker が止まりました";
+
+function createStore<T>(initial: T): Store<T> & { set: (value: T) => void } {
+  let value = initial;
+  const listeners = new Set<() => void>();
+  return {
+    subscribe: (onChange) => {
+      listeners.add(onChange);
+      return () => listeners.delete(onChange);
+    },
+    getSnapshot: () => value,
+    set: (next) => {
+      value = next;
+      for (const listener of listeners) listener();
+    },
+  };
+}
+
+const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+/** Web Worker を 1 つ作り、WASM を渡して、終了か失敗の結果を返す。`setRunning` には、止めるために結果を決める関数を、実行中だけ渡す */
+function runInWorker(
+  createWorker: () => WorkerLike,
+  module: WebAssembly.Module,
+  input: ToWorker["input"],
+  onOutput: (chunk: string) => void,
+  setRunning: (running: { resolve: (exit: GoExit) => void } | undefined) => void,
+): Promise<GoExit> {
+  return new Promise<GoExit>((resolve) => {
+    let worker: WorkerLike;
+    try {
+      worker = createWorker();
+    } catch (error) {
+      resolve({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
+      return;
+    }
+    const finish = (exit: GoExit) => {
+      worker.terminate();
+      setRunning(undefined);
+      resolve(exit);
+    };
+    setRunning({ resolve: finish });
+    worker.onmessage = ({ data }) => {
+      if (data.type === "output") onOutput(data.chunk);
+      else if (data.type === "exit") finish({ kind: "exited", exitCode: data.code });
+      else finish({ kind: "failed", message: `${CRASHED}: ${data.message}` });
+    };
+    worker.onerror = ({ message }) => {
+      finish({ kind: "failed", message: message ? `${CRASHED}: ${message}` : CRASHED });
+    };
+    try {
+      worker.postMessage({ module, input });
+    } catch (error) {
+      finish({ kind: "failed", message: `${CRASHED}: ${messageOf(error)}` });
+    }
+  });
+}
+
+/**
+ * Yaegi を Web Worker で動かす GoRunner。WASM は、最初の load か実行で取得してコンパイルし、失敗したときは次の呼び出しで取得し直す。
+ * 実行のたびに Web Worker と WASM のインスタンスを作り直す。testing.Main が os.Exit で終わり、インスタンスを使い回せないためである (ADR-0037)。
+ */
+export function createGoRunner({ compile, createWorker }: GoRunnerOptions): GoRunner {
+  const phase = createStore<LoadPhase>({ kind: "idle" });
+  let compiled: Promise<WebAssembly.Module> | undefined;
+
+  const loadModule = (): Promise<WebAssembly.Module> => {
+    if (compiled) return compiled;
+    phase.set({ kind: "loading" });
+    const loading = compile().then(
+      (module) => {
+        phase.set({ kind: "ready" });
+        return module;
+      },
+      (error: unknown) => {
+        compiled = undefined;
+        phase.set({ kind: "failed", message: messageOf(error) });
+        throw error;
+      },
+    );
+    compiled = loading;
+    return loading;
+  };
+
+  const execute = (
+    run: (start: (input: ToWorker["input"]) => Promise<GoExit>) => Promise<GoExit>,
+    onOutput: (chunk: string) => void,
+  ): GoExecution => {
+    let current: { resolve: (exit: GoExit) => void } | undefined;
+    let stopped = false;
+    let resolveStop: (exit: GoExit) => void = () => {};
+    // 読み込み中に止めたときも、読み込みを待たずに終える
+    const stoppedEarly = new Promise<GoExit>((resolve) => {
+      resolveStop = resolve;
+    });
+
+    const start = async (input: ToWorker["input"]): Promise<GoExit> => {
+      let module: WebAssembly.Module;
+      try {
+        module = await loadModule();
+      } catch (error) {
+        return { kind: "failed", message: `Yaegi を読み込めませんでした: ${messageOf(error)}` };
+      }
+      if (stopped) return { kind: "stopped" };
+      return runInWorker(createWorker, module, input, onOutput, (running) => {
+        current = running;
+      });
+    };
+
+    return {
+      done: Promise.race([run(start), stoppedEarly]),
+      stop: () => {
+        stopped = true;
+        current?.resolve({ kind: "stopped" });
+        resolveStop({ kind: "stopped" });
+      },
+    };
+  };
+
+  return {
+    phase,
+    load: async () => {
+      await loadModule().catch(() => undefined);
+    },
+    run: (files, onOutput) => {
+      const module = moduleName(files);
+      return execute((start) => start({ files, module, mode: "run", package: module }), onOutput);
+    },
+    test: (files, onOutput) => {
+      const module = moduleName(files);
+      const packages = testPackages(files, module);
+      return execute(async (start) => {
+        if (packages.length === 0) {
+          onOutput("テストのファイル（_test.go）がありません\n");
+          return { kind: "exited", exitCode: 0 };
+        }
+        let failed = false;
+        for (const name of packages) {
+          const exit = await start({ files, module, mode: "test", package: name });
+          if (exit.kind !== "exited") return exit;
+          failed ||= exit.exitCode !== 0;
+          onOutput(`${exit.exitCode === 0 ? "ok  " : "FAIL"}\t${name}\n`);
+        }
+        return { kind: "exited", exitCode: failed ? 1 : 0 };
+      }, onOutput);
+    },
+  };
+}

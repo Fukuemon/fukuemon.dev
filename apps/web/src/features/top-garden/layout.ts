@@ -17,6 +17,10 @@ export const GATE_Z = 3;
 export interface Gate {
   readonly posts: readonly Box[];
   readonly beams: readonly Box[];
+  /** 柱の上から前後に張り出す腕木 */
+  readonly arms: readonly Box[];
+  /** 屋根の棟 */
+  readonly ridge: Box;
   readonly roof: {
     readonly halfW: number;
     readonly ridgeY: number;
@@ -32,11 +36,17 @@ export const GATE: Gate = {
     [1.25, 1.25, GATE_Z, 0.26, 2.5, 0.26],
   ],
   beams: [[0, 2.3, GATE_Z, 2.24, 0.2, 0.2]],
+  arms: [
+    [-1.25, 2.56, GATE_Z, 0.18, 0.14, 2.0],
+    [1.25, 2.56, GATE_Z, 0.18, 0.14, 2.0],
+  ],
+  ridge: [0, 3.4, GATE_Z, 4.7, 0.14, 0.2],
   roof: { halfW: 2.3, ridgeY: 3.36, eaveY: 2.62, depth: 1.15 },
   door: { x: 1.1, h: 2.1, len: 1.05 },
 };
 
-export const WALL = { x0: 1.38, x1: 16, roofY: 1.82 } as const;
+/** 門の左右の塀。x0 から x1 までの左右対称で、h は高さ、t は厚さ（m） */
+export const WALL = { x0: 1.38, x1: 16, h: 1.7, roofY: 1.82, t: 0.3 } as const;
 /** 飛び石の中心の [x, z] */
 export const STEPS: readonly Vec2[] = [
   [0.16, 8.3],
@@ -89,6 +99,70 @@ export const MOUNTAINS: readonly Mountain[] = [
     n: 8,
     alpha: 0.06,
     t0: 260,
+  },
+];
+/** 遠景の山並みを描く板の z（m） */
+export const FAR_Z = -60;
+
+/** 山並みの稜線の、設計の画面での y（px） */
+export function ridgeY(m: Pick<Mountain, "peaks" | "base">, x: number): number {
+  return m.base - m.peaks.reduce((s, p) => s + p[1] * Math.exp(-(((x - p[0]) / p[2]) ** 2)), 0);
+}
+
+/** 3D の場面の 1 m に当たる、和紙の文の px */
+export const PX = 260;
+/** 和紙の、文の外の余白の合計（m）。左右に 0.18 m、上下に 0.2 m */
+export const PAPER_PAD = { w: 0.36, h: 0.4 } as const;
+
+/** 池。中心の x と z、楕円の半径、y 軸の回りの回転（ラジアン） */
+export const POND = { x: 4.9, z: -6.3, rx: 2.7, rz: 1.8, rot: -0.4 } as const;
+
+export interface Station {
+  /** トップのプロフィールのセクションの id */
+  readonly id: string;
+  readonly label: string;
+  /** 和紙の中心 */
+  readonly pos: Vec3;
+  /** 和紙の向き。y 軸の回り（ラジアン） */
+  readonly rot: number;
+  /** 和紙を掛ける木。根元の [x, z]、大きさ、幹の傾く向き、葉の種類 */
+  readonly tree: {
+    readonly at: Vec2;
+    readonly s: number;
+    readonly dir: 1 | -1;
+    readonly leaf: "pine" | "season";
+  };
+}
+
+/** 和紙を掛ける 4 つの場所。プロフィールのセクションの順に並ぶ */
+export const STATIONS: readonly Station[] = [
+  {
+    id: "profile",
+    label: "プロフィール",
+    pos: [-1.3, 1.5, -2.4],
+    rot: 0.25,
+    tree: { at: [-3.3, -3.2], s: 1.3, dir: 1, leaf: "pine" },
+  },
+  {
+    id: "career",
+    label: "経歴",
+    pos: [-4.3, 1.5, -7.0],
+    rot: 0.5,
+    tree: { at: [-6.4, -7.9], s: 1.4, dir: 1, leaf: "season" },
+  },
+  {
+    id: "stack",
+    label: "技術スタック",
+    pos: [3.5, 1.5, -4.7],
+    rot: -0.45,
+    tree: { at: [5.9, -4.2], s: 1.25, dir: -1, leaf: "pine" },
+  },
+  {
+    id: "articles",
+    label: "記事",
+    pos: [0.4, 1.45, -10.6],
+    rot: -0.1,
+    tree: { at: [2.6, -11.3], s: 1.5, dir: -1, leaf: "season" },
   },
 ];
 /**

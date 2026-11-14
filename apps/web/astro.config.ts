@@ -13,6 +13,7 @@ pluginFramesTexts.overrideTexts(undefined, {
   copyButtonTooltip: "クリップボードにコピーします",
   copyButtonCopied: "コピーしました",
 });
+import { subsetFonts } from "./src/lib/subset-fonts";
 
 export default defineConfig({
   site: "https://fukuemon.dev",
@@ -28,6 +29,7 @@ export default defineConfig({
     processor: unified({ rehypePlugins: [rehypeMermaid, rehypeScrollBox, rehypeJaLinebreak] }),
   },
   integrations: [
+    subsetFonts("Zen Old Mincho"),
     react(),
     expressiveCode({
       themes: [
