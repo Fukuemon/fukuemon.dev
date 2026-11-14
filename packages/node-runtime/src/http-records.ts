@@ -15,6 +15,11 @@ const MAX_RECORDS = 500;
 const MAX_BODY_TEXT = 64 * 1024;
 const MAX_HEADERS = 100;
 const MAX_URL = 8 * 1024;
+/** ヘッダの名前と値の文字数の上限。超えた分は切り、末尾に「…」を付ける。 */
+const MAX_HEADER_TEXT = 8 * 1024;
+/** メソッドと送信元のヘッダの値の文字数の上限。超えた行は、記録の行ではないとみなして捨てる。 */
+const MAX_METHOD = 32;
+const MAX_FROM = 256;
 /** 名前を覚えるサーバーの数の上限。超えた後に待ち受けたサーバーは、ポートの番号で呼ぶ。 */
 const MAX_NAMES = 100;
 
@@ -23,6 +28,22 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 const isPort = (value: unknown): value is number =>
   Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 65535;
+
+const isCount = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0;
+
+const isStatus = (value: unknown): value is number =>
+  Number.isInteger(value) && (value as number) >= 100 && (value as number) <= 999;
+
+/** 文字列を max 文字までにする。サロゲートペアの途中では切らない。 */
+const cut = (text: string, max: number) => {
+  if (text.length <= max) return text;
+  const end = /[\uD800-\uDBFF]/.test(text.charAt(max - 1)) ? max - 1 : max;
+  return text.slice(0, end);
+};
+
+const cutHeader = (text: string) =>
+  text.length > MAX_HEADER_TEXT ? `${cut(text, MAX_HEADER_TEXT)}…` : text;
 
 type HeaderList = { headers: HttpHeaderLine[]; omittedHeaders?: number };
 
@@ -34,7 +55,8 @@ const toHeaders = (value: unknown): HeaderList | undefined => {
     if (!isObject(item) || typeof item.name !== "string" || typeof item.value !== "string") {
       return undefined;
     }
-    if (headers.length < MAX_HEADERS) headers.push({ name: item.name, value: item.value });
+    if (headers.length < MAX_HEADERS)
+      headers.push({ name: cutHeader(item.name), value: cutHeader(item.value) });
   }
   const omitted = value.length - headers.length;
   return omitted > 0 ? { headers, omittedHeaders: omitted } : { headers };
@@ -46,14 +68,14 @@ const toBody = (value: unknown): HttpBody | undefined | false => {
   if (
     !isObject(value) ||
     !(typeof value.text === "string" || value.text === null) ||
-    typeof value.size !== "number" ||
+    !isCount(value.size) ||
     typeof value.truncated !== "boolean"
   ) {
     return false;
   }
   if (value.text !== null && value.text.length > MAX_BODY_TEXT) {
     return {
-      text: value.text.slice(0, MAX_BODY_TEXT),
+      text: cut(value.text, MAX_BODY_TEXT),
       size: Math.max(value.size, value.text.length),
       truncated: true,
     };
@@ -63,7 +85,7 @@ const toBody = (value: unknown): HttpBody | undefined | false => {
 
 /** URL を読む。上限を超えた分は切り、urlTruncated を立てる。 */
 const toUrl = (url: string) =>
-  url.length > MAX_URL ? { url: url.slice(0, MAX_URL), urlTruncated: true } : { url };
+  url.length > MAX_URL ? { url: cut(url, MAX_URL), urlTruncated: true } : { url };
 
 type ParsedLine =
   | { type: "listen"; port: number }
@@ -91,12 +113,13 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
   const requestHeaders = toHeaders(request.headers);
   const requestBody = toBody(request.body);
   if (
-    !(typeof from === "string" || from === null) ||
+    !((typeof from === "string" && from.length <= MAX_FROM) || from === null) ||
     !isPort(to) ||
     typeof method !== "string" ||
+    method.length > MAX_METHOD ||
     typeof url !== "string" ||
-    typeof startedAt !== "number" ||
-    typeof durationMs !== "number" ||
+    !isCount(startedAt) ||
+    !isCount(durationMs) ||
     requestHeaders === undefined ||
     requestBody === false
   ) {
@@ -108,7 +131,7 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
     const responseBody = isObject(response) ? toBody(response.body) : false;
     if (
       !isObject(response) ||
-      !Number.isInteger(response.status) ||
+      !isStatus(response.status) ||
       responseHeaders === undefined ||
       responseBody === false
     ) {

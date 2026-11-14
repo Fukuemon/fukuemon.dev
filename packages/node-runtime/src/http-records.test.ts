@@ -33,6 +33,14 @@ describe("parseHttpLine", () => {
     ["状態コードが無い", exchange({ response: { headers: [] } })],
     ["レスポンスがオブジェクトでない", exchange({ response: "x" })],
     ["送信元が数", exchange({ from: 3000 })],
+    [
+      "本文の大きさが負",
+      exchange({ request: { headers: [], body: { text: "", size: -1, truncated: false } } }),
+    ],
+    ["状態コードが 100 より小さい", exchange({ response: { status: 42, headers: [] } })],
+    ["時刻が有限でない", exchange().replace('"startedAt":100', '"startedAt":1e999')],
+    ["メソッドが 32 文字を超える", exchange({ method: "G".repeat(33) })],
+    ["送信元のヘッダの値が 256 文字を超える", exchange({ from: "a".repeat(257) })],
   ])("%s行は捨てる", (_, line) => {
     expect(parseHttpLine(line)).toBeUndefined();
   });
@@ -201,5 +209,54 @@ describe("偽の記録の行の上限", () => {
     records.accept(listen(3000), client);
     records.accept(exchange(), client);
     expect(records.store.getSnapshot()[0]?.to.name).toBe("3000 番のサーバー");
+  });
+});
+
+describe("偽の記録の行の上限の境界", () => {
+  const parsedRecord = (overrides: Record<string, unknown>) => {
+    const parsed = parseHttpLine(exchange(overrides));
+    return parsed?.type === "exchange" ? parsed.record : undefined;
+  };
+
+  it("ちょうど上限の本文、ヘッダの数、URL は切らない", () => {
+    const text = "a".repeat(64 * 1024);
+    const headers = Array.from({ length: 100 }, (_, i) => ({ name: `h${i}`, value: "v" }));
+    const record = parsedRecord({
+      url: "/".repeat(8 * 1024),
+      request: { headers, body: { text, size: text.length, truncated: false } },
+    });
+    expect([
+      record?.request.body?.truncated,
+      record?.request.omittedHeaders,
+      record?.urlTruncated,
+    ]).toStrictEqual([false, undefined, undefined]);
+  });
+
+  it("レスポンスのヘッダと本文にも、同じ上限を当てる", () => {
+    const headers = Array.from({ length: 101 }, (_, i) => ({ name: `h${i}`, value: "v" }));
+    const text = "a".repeat(64 * 1024 + 1);
+    const response = parsedRecord({
+      response: { status: 200, headers, body: { text, size: 1, truncated: false } },
+    })?.response;
+    expect([response?.omittedHeaders, response?.body?.truncated]).toStrictEqual([1, true]);
+  });
+
+  it("8 KB の文字を超えたヘッダの値は切り、末尾に「…」を付ける", () => {
+    const value = parsedRecord({ request: { headers: [{ name: "a", value: "v".repeat(9000) }] } })
+      ?.request.headers[0]?.value;
+    expect(value).toBe(`${"v".repeat(8 * 1024)}…`);
+  });
+
+  it("サロゲートペアの途中では切らない", () => {
+    const url = parsedRecord({ url: `${"a".repeat(8 * 1024 - 1)}😀` })?.url;
+    expect(url).toBe("a".repeat(8 * 1024 - 1));
+  });
+
+  it("名前が 100 個に達した後も、覚えたサーバーの名前は直せる", () => {
+    const records = createHttpRecords();
+    for (let port = 1; port <= 100; port += 1) records.accept(listen(port), auth);
+    records.accept(exchange({ to: 1 }), client);
+    records.accept(listen(1), client);
+    expect(records.store.getSnapshot()[0]?.to.name).toBe("クライアント");
   });
 });

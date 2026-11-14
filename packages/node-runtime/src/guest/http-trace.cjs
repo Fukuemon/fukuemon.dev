@@ -186,38 +186,71 @@ const BODY_HEADERS = [
 ];
 // origin が変わるリダイレクトで消すヘッダ。Node の fetch と同じ
 const CROSS_ORIGIN_HEADERS = ["authorization", "proxy-authorization", "cookie", "host"];
+// 送り直すリクエストに写す、メソッド、ヘッダ、本文、signal のほかの値
+const COPIED = [
+  "referrer",
+  "referrerPolicy",
+  "mode",
+  "credentials",
+  "cache",
+  "integrity",
+  "keepalive",
+];
+
+const fetchFailed = (message) => new TypeError("fetch failed", { cause: new Error(message) });
+
+const discard = (request) => request.body?.cancel().catch(() => undefined);
 
 /**
  * 送信元を示すヘッダを足した request を、リダイレクトを 1 つずつ追って送る。
  * Node の fetch は、origin が変わるリダイレクトでも足したヘッダを送り直すので、origin が変わる時点で足したヘッダを外し、その先は元の fetch に任せる。
+ * 307 と 308 で送り直す本文は、元の本文を読み切ったバイト列にする。Node の fetch と違い、ストリームの本文も送り直す。
+ * dispatcher は、訪問者が init に渡した undici の dispatcher で、Request に入らないので別に渡す。
  */
-async function follow(request, count) {
+async function follow(request, count, dispatcher) {
   const spare = request.clone();
-  const response = await originalFetch(request, { redirect: "manual" });
+  const response = await originalFetch(request, { redirect: "manual", dispatcher });
   const location = response.headers.get("location");
-  if (!REDIRECT_STATUSES.has(response.status) || location === null) return response;
-  if (count >= MAX_REDIRECTS) {
-    throw new TypeError("fetch failed", { cause: new Error("redirect count exceeded") });
+  if (!REDIRECT_STATUSES.has(response.status) || location === null) {
+    discard(spare);
+    return response;
   }
   await response.body?.cancel();
   const next = new URL(location, request.url);
+  if (count >= MAX_REDIRECTS || (next.protocol !== "http:" && next.protocol !== "https:")) {
+    discard(spare);
+    throw fetchFailed(
+      count >= MAX_REDIRECTS ? "redirect count exceeded" : "URL scheme must be a HTTP(S) scheme",
+    );
+  }
   const headers = new Headers(spare.headers);
-  let { method, body } = spare;
+  let method = spare.method;
+  let body = null;
   if (
     ((response.status === 301 || response.status === 302) && method === "POST") ||
     (response.status === 303 && method !== "GET" && method !== "HEAD")
   ) {
     method = "GET";
-    body = null;
     for (const name of BODY_HEADERS) headers.delete(name);
+    discard(spare);
+  } else if (spare.body) {
+    body = await spare.arrayBuffer();
   }
   const crossOrigin = next.origin !== new URL(request.url).origin;
   if (crossOrigin) for (const name of [FROM_HEADER, ...CROSS_ORIGIN_HEADERS]) headers.delete(name);
-  const init = { method, headers, body, signal: spare.signal, ...(body && { duplex: "half" }) };
+  const init = {
+    ...Object.fromEntries(COPIED.map((key) => [key, spare[key]])),
+    method,
+    headers,
+    body,
+    signal: spare.signal,
+    dispatcher,
+  };
   if (crossOrigin) return markRedirected(await originalFetch(next, init));
-  return markRedirected(await follow(new Request(next, init), count + 1));
+  return markRedirected(await follow(new Request(next, init), count + 1, dispatcher));
 }
 
+// Response の redirected は、送った Response にだけ立つ。clone した Response には付かない
 const markRedirected = (response) => {
   quietly(() => Object.defineProperty(response, "redirected", { value: true }));
   return response;
@@ -228,16 +261,19 @@ const originalFetch = globalThis.fetch;
 if (typeof originalFetch === "function") {
   globalThis.fetch = function (input, init) {
     if (!isLoopback(input)) return originalFetch.call(this, input, init);
+    const dispatcher = init?.dispatcher;
     let request;
     try {
       request = new Request(input, init);
-      if (request.headers.has(FROM_HEADER)) return originalFetch.call(this, request);
+      // 訪問者が付けた送信元のヘッダは、書き換えず、Node の fetch と同じく origin が変わる先にも送る
+      if (request.headers.has(FROM_HEADER))
+        return originalFetch.call(this, request, { dispatcher });
       request.headers.set(FROM_HEADER, senderId());
     } catch {
       // ヘッダや本文を組めないときは、元の fetch に任せ、同じ失敗を返させる
       return originalFetch.call(this, input, init);
     }
-    if (request.redirect !== "follow") return originalFetch.call(this, request);
-    return follow(request, 0);
+    if (request.redirect !== "follow") return originalFetch.call(this, request, { dispatcher });
+    return follow(request, 0, dispatcher);
   };
 }

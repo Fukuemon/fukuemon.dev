@@ -109,3 +109,14 @@ describe("toExchange の上限の注記", () => {
     ]);
   });
 });
+
+describe("toExchange のレスポンスの注記", () => {
+  it("レスポンスで捨てたヘッダの数も、末尾の行で示す", () => {
+    const exchange = toExchange(
+      record({ response: { status: 200, headers: [], omittedHeaders: 2 } }),
+    );
+    expect(exchange.response?.headers).toStrictEqual([
+      { name: "…", value: "ほかに 2 個のヘッダを省きました" },
+    ]);
+  });
+});
