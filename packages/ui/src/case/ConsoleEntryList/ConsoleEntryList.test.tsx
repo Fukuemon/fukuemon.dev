@@ -337,4 +337,29 @@ describe("preview", () => {
   it.each(cases)("%j を、入れ子の中か %s で 1 行の文字にする", (value, isNested, expected) => {
     expect(preview(value, isNested)).toBe(expected);
   });
+
+  it("行の領域のフォーカスの輪は、領域の内側に引く（ADR-0066）", () => {
+    render(<Default />);
+    const rows = screen.getByRole("region", { name: "ログの行" });
+    const frame = rows.parentElement as HTMLElement;
+    const before = getComputedStyle(frame, "::after").outlineStyle;
+    rows.focus();
+    const ring = getComputedStyle(frame, "::after");
+    expect({
+      before,
+      ring: [ring.outlineStyle, ring.outlineOffset],
+      own: getComputedStyle(rows).outlineStyle,
+    }).toStrictEqual({ before: "none", ring: ["solid", "-2px"], own: "none" });
+  });
+
+  it("値の木の項目にフォーカスを置くと、行の領域の外側の輪は出ず、項目の輪が内側に引かれる（ADR-0066）", () => {
+    render(<Default />);
+    const frame = screen.getByRole("region", { name: "ログの行" }).parentElement as HTMLElement;
+    const item = screen.getAllByRole("treeitem")[0] as HTMLElement;
+    item.focus();
+    expect({
+      frame: getComputedStyle(frame, "::after").outlineStyle,
+      item: [getComputedStyle(item).outlineStyle, getComputedStyle(item).outlineOffset],
+    }).toStrictEqual({ frame: "none", item: ["solid", "-2px"] });
+  });
 });

@@ -33,3 +33,4 @@ export const Open: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "記録の操作" }));
   },
 };
+export const Compact: Story = { name: "compact", args: { density: "compact" } };

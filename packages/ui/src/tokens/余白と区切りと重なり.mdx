@@ -71,7 +71,19 @@ Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全�
       フォーカスの表示
     </span>
     <p className="font-mono text-code-dense text-text-secondary">
-      focus-visible:focus-ring: 全ての操作できる要素のフォーカスの表示（FOCUS-ONE）
+      focus-visible:focus-ring: 操作できる要素のフォーカスの表示（FOCUS-ONE）
+    </p>
+    <span className="focus-ring-inset w-64 bg-primary-surface px-2 py-0.5 text-body-compact">
+      詰めたペインの行
+    </span>
+    <p className="font-mono text-code-dense text-text-secondary">
+      focus-visible:focus-ring-inset: コードを動かす画面の詰めたペインの中の行（FOCUS-ONE
+      の例外、ADR-0066）
+    </p>
+    <p className="font-mono text-code-dense text-text-secondary">
+      focus-ring-frame:
+      ペインの全体を占める、フォーカスできるスクロールする領域を直下に置く要素。内側の輪を外側の
+      ::after に引く（FOCUS-ONE の例外、ADR-0066）
     </p>
   </div>
 </Unstyled>

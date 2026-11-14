@@ -54,6 +54,18 @@ function TextTokens() {
         </code>
         <p className="text-label-compact">error 1</p>
       </section>
+      <section className="flex flex-col gap-2">
+        <code className="font-mono text-code-dense text-text-secondary">
+          body-compact（コードを動かす画面だけ）
+        </code>
+        <p className="font-sans text-body-compact">server.js</p>
+      </section>
+      <section className="flex flex-col gap-2">
+        <code className="font-mono text-code-dense text-text-secondary">
+          code-compact（等幅、コードを動かす画面だけ）
+        </code>
+        <p className="font-mono text-code-compact">const 値 = fetch("/api");</p>
+      </section>
     </div>
   );
 }

@@ -29,11 +29,13 @@ function TreeViewExample({
   defaultExpandedIds,
   initialSelectedId,
   density,
+  textSize,
 }: {
   items: TreeNode[];
   defaultExpandedIds?: string[];
   initialSelectedId?: string;
   density?: "default" | "compact";
+  textSize?: "compact" | "body-compact";
 }) {
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   return (
@@ -44,6 +46,7 @@ function TreeViewExample({
       label="ファイル"
       onSelect={setSelectedId}
       selectedId={selectedId}
+      textSize={textSize}
     />
   );
 }
@@ -98,5 +101,14 @@ export const WithContent: Story = {
       },
       { id: "name", label: "name", content: <span>名前の項目</span> },
     ],
+  },
+};
+export const CompactBody: Story = {
+  name: "13px の詰めた項目",
+  args: {
+    density: "compact",
+    textSize: "body-compact",
+    defaultExpandedIds: ["src"],
+    initialSelectedId: "src/index.ts",
   },
 };

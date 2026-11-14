@@ -4,7 +4,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import * as stories from "./Loading.stories";
 
-const { Default } = composeStories(stories);
+const { Compact, Default } = composeStories(stories);
 
 describe("Loading", () => {
   it("待っていることを status の文で示し、罫の印は読み上げない", () => {
@@ -29,5 +29,10 @@ describe("Loading", () => {
       getComputedStyle(screen.getByTestId("primary")).backgroundColor,
     );
     expect(mark.getBoundingClientRect().height).toBe(2);
+  });
+
+  it("density を compact にすると、文を 13 px にする（ADR-0062）", () => {
+    render(<Compact />);
+    expect(getComputedStyle(screen.getByRole("status")).fontSize).toBe("13px");
   });
 });

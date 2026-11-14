@@ -23,3 +23,7 @@ export const Danger: Story = {
   name: "エラー",
   args: { tone: "danger", label: "500 Internal Server Error" },
 };
+export const Compact: Story = {
+  name: "compact",
+  args: { tone: "success", label: "200", density: "compact" },
+};
