@@ -54,6 +54,12 @@ export function articleHref(id: string): string {
 pnpm --filter @fukuemon/web build
 ```
 
+横に長い行は、コードブロックの中で横に送る。
+
+```sh title="long-line.sh"
+pnpm --filter @fukuemon/web exec astro build --site https://fukuemon.dev --outDir ./dist-check --root ./apps/web --verbose --devOutput
+```
+
 ## 図
 
 次の図は、原稿が記事のページになるまでを示す。

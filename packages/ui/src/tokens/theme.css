@@ -324,7 +324,8 @@
  * 横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする。薄い色は、右端まで送る手前から消え始め、送りきったときに消えきる。
  * 中身と ::after を grid の同じセルに重ねる。枠に mask を当てると、外へ広がるフォーカスの輪も切れるためである。
  * あふれない枠ではスクロールの timeline が働かず、opacity: 0 のままになる。
- * 要素の子を 1 つだけ持ち、surface の背景の上にある枠に付ける。枠の display は grid になる。
+ * 要素の子を 1 つだけ持つ枠に付ける。枠の display は grid になる。
+ * 薄い色は surface の色で、枠が別の面の上にあるときは、--fd-scroll-fade-bg にその面の色を渡す。
  */
 @utility scroll-fade-end {
   display: grid;
@@ -341,7 +342,11 @@
       position: sticky;
       inset-inline-end: 0;
       width: calc(var(--spacing) * 12);
-      background-image: linear-gradient(to right, transparent, var(--fd-color-surface));
+      background-image: linear-gradient(
+        to right,
+        transparent,
+        var(--fd-scroll-fade-bg, var(--fd-color-surface))
+      );
       opacity: 0;
       pointer-events: none;
       /* shorthand で書くと、ビルドが animation-timeline まで shorthand にまとめ、ブラウザが宣言ごと捨てる */

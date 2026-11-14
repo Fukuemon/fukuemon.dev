@@ -32,4 +32,22 @@ describe("Table", () => {
     await userEvent.keyboard("{ArrowRight}");
     await expect.poll(() => region.scrollLeft).toBeGreaterThan(0);
   });
+
+  describe("右端のぼかし", () => {
+    const fadeOpacity = (el: HTMLElement) => Number(getComputedStyle(el, "::after").opacity);
+
+    it("幅に収まる表には出さない", async () => {
+      render(<Default />);
+      const region = screen.getByRole("region", { name: "レスポンスのヘッダ" });
+      await expect.poll(() => fadeOpacity(region)).toBe(0);
+    });
+
+    it("幅に収まらない表には、送る前に出し、右端まで送ると消す", async () => {
+      render(<Wide />);
+      const region = screen.getByRole("region", { name: "SQL の結果" });
+      await expect.poll(() => fadeOpacity(region)).toBe(1);
+      region.scrollLeft = region.scrollWidth - region.clientWidth;
+      await expect.poll(() => fadeOpacity(region)).toBe(0);
+    });
+  });
 });

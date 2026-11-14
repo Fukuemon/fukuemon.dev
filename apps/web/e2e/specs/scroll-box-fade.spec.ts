@@ -26,6 +26,10 @@ const wideTable = (page: Page) =>
     .getByRole("region", { name: "表" })
     .filter({ has: page.getByRole("columnheader", { name: "列 6" }) });
 const figure = (page: Page) => page.getByRole("region", { name: "図" });
+const shortCode = (page: Page) =>
+  page.locator(".expressive-code pre").filter({ hasText: "web build" });
+const longCode = (page: Page) =>
+  page.locator(".expressive-code pre").filter({ hasText: "--devOutput" });
 
 test.use({ viewport: { width: 1280, height: 900 } });
 
@@ -37,9 +41,14 @@ test("本文の列に収まる表には、右端のぼかしを出さない", as
   await expect.poll(() => fadeOpacity(smallTable(page))).toBe(0);
 });
 
+test("本文の列に収まるコードブロックには、右端のぼかしを出さない", async ({ page }) => {
+  await expect.poll(() => fadeOpacity(shortCode(page))).toBe(0);
+});
+
 for (const [name, box] of [
   ["列の多い表", wideTable],
   ["横に長い図", figure],
+  ["横に長いコードブロック", longCode],
 ] as const) {
   test(`${name}は、送る前に右端のぼかしを出す`, async ({ page }) => {
     await expect.poll(() => fadeOpacity(box(page))).toBe(1);

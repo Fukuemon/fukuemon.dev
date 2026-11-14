@@ -83,6 +83,11 @@
  * 吹き出しは下から上へ動かして出すので、位置を動かさず、濃さだけで出す (docs/design/DesignDoc.md の「動き」)。
  * Expressive Code の CSS は層の外にあり、後から読まれるので、層の外に置き、.prose で詳細度を上げる。
  */
+/* 横に送るコードブロックの右端。pre の背景は code-surface なので、薄い色もその色にする */
+.prose .expressive-code pre {
+  @apply scroll-fade-end;
+  --fd-scroll-fade-bg: var(--fd-color-code-surface);
+}
 .prose .expressive-code .copy .feedback {
   @apply rounded-control duration-150;
   transform: none;
