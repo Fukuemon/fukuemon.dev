@@ -568,6 +568,49 @@ describe("保存しないファイル", () => {
     }).toStrictEqual({ saves: [{ "index.js": "d" }], overLimit: false });
   });
 
+  it("書き直しが失敗した後に上限を超えても、除いた後のレコードを書く", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    fillOverLimit(latest());
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect({
+      saves: saves.map((record) => record.files),
+      overLimit: session.overLimit.getSnapshot(),
+    }).toStrictEqual({ saves: [{ "index.js": "b" }], overLimit: true });
+  });
+
+  it("書き直しが通った後は、上限を超えても書き直さない", async () => {
+    const { session, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    await settle(session);
+    fillOverLimit(latest());
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves.map((record) => record.files)).toStrictEqual([{ "index.js": "b" }]);
+  });
+
+  it("書き直しが失敗した後に初期の状態に戻すと、上限を超えても書き直さない", async () => {
+    const { session, workspace, saves, latest } = setup({
+      kind: "saved",
+      record: { ...savedRecord, files: { "index.js": "b", ".env": "x" } },
+    });
+    workspace.save.mockRejectedValueOnce(new Error("容量の超過"));
+    await settle(session);
+    await session.reset();
+    await settle(session);
+    fillOverLimit(latest());
+    latest().change("index.js", "c");
+    await vi.advanceTimersByTimeAsync(SAVE_DELAY_MS);
+    expect(saves).toStrictEqual([]);
+  });
+
   it("初期の状態に戻すと、overLimit を戻す", async () => {
     const { session, latest } = setup({ kind: "saved", record: savedRecord });
     await settle(session);
@@ -656,6 +699,20 @@ describe("restart", () => {
       booted: booted.at(-1),
       readFailed: session.restartReadFailed.getSnapshot(),
     }).toStrictEqual({ booted: savedRecord.files, readFailed: true });
+  });
+
+  it("続けて読めなかったときは、restartReadFailed を false に戻してから、もう 1 度立てる", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    const values: boolean[] = [];
+    session.restartReadFailed.subscribe(() => values.push(session.restartReadFailed.getSnapshot()));
+    for (let i = 0; i < 2; i++) {
+      latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+      const restarted = session.restart();
+      await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+      await restarted;
+    }
+    expect(values).toStrictEqual([true, false, true]);
   });
 
   it("作業ディレクトリを読めて起動し直すと、restartReadFailed を false に戻す", async () => {

@@ -186,28 +186,41 @@ export function createNodeSession({
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
   let lastRead: Record<string, string> | undefined;
   let lastSaved = record?.files;
+  // 保存しないパスを落としたレコードのうち、まだ書けていないもの。書けるまで、上限を超えていても書き直す (ADR-0070)
+  let pendingRewrite =
+    loaded && record && Object.keys(record.files).length !== Object.keys(loaded.files).length
+      ? record
+      : undefined;
   // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
   const saver = createSaver<NodeRecord>({
     ...storage,
     save: (next) =>
       storage.save(next).then(
-        () => hasSaved.set(canSave),
+        () => {
+          // 保存するレコードは、どれも保存しないパスを持たないので、どれが通っても書き直しは済む
+          pendingRewrite = undefined;
+          hasSaved.set(canSave);
+        },
         (error: unknown) => {
           lastSaved = undefined;
           throw error;
         },
       ),
   });
-  // 保存しないパスを落としたレコードは、上限を超えていても書き直す。シークレットのファイルを IndexedDB に残さないためである (ADR-0070)
-  if (loaded && record && Object.keys(record.files).length !== Object.keys(loaded.files).length) {
-    saver.save({ ...record, savedAt: now() });
-  }
+  // シークレットのファイルを IndexedDB に残さないため、開いたときに書き直す
+  const rewrite = () => {
+    if (pendingRewrite) saver.save({ ...pendingRewrite, savedAt: now() });
+  };
+  rewrite();
 
-  // 上限を超えたときは、前に保存したレコードを残す (ADR-0070)
+  // 上限を超えたときは、前に保存したレコードを残す。保存しないパスを落としたレコードだけは書き直す (ADR-0070)
   const persist = (read: SaveRead) => {
     const saving = read.kind === "over-limit" ? read : filesToSave(read.entries);
     overLimit.set(saving.kind === "over-limit");
-    if (saving.kind === "over-limit") return;
+    if (saving.kind === "over-limit") {
+      rewrite();
+      return;
+    }
     const { files } = saving;
     if (sameFiles(files, lastSaved)) return;
     lastSaved = files;
@@ -437,11 +450,12 @@ export function createNodeSession({
   // 起動し直す直前の変更も残すため、読んだファイルを保存してから起動し直す
   const readWorkdir = async (old: Instance) => {
     if (!old.runtime) return { files: bootFiles, touched: old.touched };
+    // 続けて読めなかったときも、案内を出し直す
+    restartReadFailed.set(false);
     try {
       const entries = await withTimeout(old.runtime.files.readAll(RESTART_READ), READ_TIMEOUT_MS);
       const files = filesForRestart(entries);
       lastRead = files;
-      restartReadFailed.set(false);
       if (old.touched) persist({ kind: "read", entries });
       return { files, touched: old.touched };
     } catch (error) {
@@ -454,6 +468,7 @@ export function createNodeSession({
   const clearSaved = async (old: Instance) => {
     try {
       await saver.clear();
+      pendingRewrite = undefined;
     } catch (error) {
       // 消せなかったときは、前の実行環境で保存を続ける。待っていた保存は捨てたので、今の中身を書き直す
       lastSaved = undefined;
