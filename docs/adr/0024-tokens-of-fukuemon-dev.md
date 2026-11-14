@@ -11,7 +11,7 @@ fukuemon.dev のデザインシステムのトークンの持ち方と、値の�
 - 記事の画面とコードを動かす画面を、同じトークンで組む。
 - 訪問者は、ライトとダークのどちらのテーマでも、本文、コード、HTTP の流れの表示を読める。
 - スタイリングの基盤は Tailwind CSS にする。
-  - ADR-0010: [Tailwind CSS の採用](0010-tailwind-as-styling-base.md)
+  - ADR-0055: [Tailwind CSS v4 を CSS スタイリングの基盤にし、サイトの共通の CSS で preflight を読み、トークンを packages/ui のテーマ変数から使う](0055-tailwind-preflight-and-theme-from-ui.md)
 - 運営者は、今のデザインの和の感じを残すと決めた。今のデザインの個性は、版画風の挿絵、明朝の書体、緑と青と錆の差し色、角丸と影を使わない版面である。
   - ADR-0075: [本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする](0075-system-font-for-body-text.md)
 - DADS の値をそのまま使うと、地は白、中立の色は冷たい灰になり、和の感じが出なかった。DADS 2.1.0 の中立の色は、白、黒、`solid-gray`、`opacity-gray` だけである。
