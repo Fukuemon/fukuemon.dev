@@ -41,6 +41,11 @@ export type SqlConsoleProps = {
   embedded?: boolean;
   /** 実行のボタンへの ref。呼ぶ側が、操作の後にフォーカスをボタンへ移すために使う。 */
   runButtonRef?: Ref<HTMLButtonElement>;
+  /**
+   * 入力欄の元に戻す履歴とカーソルを保つ入れ物。呼ぶ側の配置が替わってこのコンポーネントを作り直しても、履歴を残すときに渡す。
+   * 渡さないときは、このコンポーネントが持ち、作り直すと履歴が消える。結果の表は、どちらでも作り直すと消える。
+   */
+  editorStates?: EditorStates;
   /** 実行のボタンの行の右端に置くもの。出入りしても、入力欄の位置が動かないようにするため、行は常にある。 */
   actions?: ReactNode;
 };
@@ -62,6 +67,7 @@ export function SqlConsole({
   dense = false,
   embedded = false,
   runButtonRef,
+  editorStates: givenStates,
   actions,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
@@ -72,7 +78,8 @@ export function SqlConsole({
   const [pane, setPane] = useState<"input" | "result">("input");
   const { rootRef, focusSelectedTab } = usePaneFocus();
   // 配置が替わって入力欄を作り直しても、元に戻す履歴とカーソルを残す
-  const [editorStates] = useState<EditorStates>(() => new Map());
+  const [ownStates] = useState<EditorStates>(() => new Map());
+  const editorStates = givenStates ?? ownStates;
 
   const run = async () => {
     if (running) return;
@@ -155,11 +162,18 @@ export function SqlConsole({
   if (dense) {
     return (
       <DenseContext value>
-        {/* 入力欄と操作を上に置いたまま、結果の領域だけを送る。面はペインの紙の面にする（docs/adr/0073-layered-panes-and-radius-in-playground.md） */}
-        <div className="flex h-full min-h-0 min-w-0 flex-col gap-2 rounded-pane bg-surface-pane p-2">
-          <div className="grid h-40 min-h-0 shrink-0 has-[.cm-focused]:focus-ring">{editor}</div>
-          {runRow}
-          {results}
+        {/*
+          入力欄と操作を上に置いたまま、結果の領域だけを送る。面はペインの紙の面にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
+          入力欄は面の縁まで広げ、紙の面の中に入力欄の面を重ねない。余白は実行の行と結果にだけ取る。高さの低い画面では、結果の領域を残すため入力欄を低くする。
+        */}
+        <div className="flex h-full min-h-0 min-w-0 flex-col rounded-pane bg-surface-pane">
+          <div className="grid h-40 min-h-0 shrink-0 short:h-32 has-[.cm-focused]:focus-ring-inset">
+            {editor}
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+            {runRow}
+            {results}
+          </div>
         </div>
       </DenseContext>
     );

@@ -1,10 +1,11 @@
 import type { BootFailureReason, NodeRuntime, Store } from "@fukuemon/node-runtime";
 import { type ActionDispatch, createContext, use, useSyncExternalStore } from "react";
 
+import type { EditorStates } from "../code-editor/editor-states";
 import type { Selection, SelectionAction } from "./selection";
 import type { NodeProject, RuntimeResult } from "./session";
 
-/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作と、起動し直している間かどうか、SQL のペインの入力欄の SQL。値が変わるのは、実行環境を起動し直すときだけである。 */
+/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作と、起動し直している間かどうか、SQL のペインの入力欄の SQL と、その元に戻す履歴の入れ物。値が変わるのは、実行環境を起動し直すときだけである。 */
 export type RuntimeValue = {
   project: NodeProject;
   runtime: Promise<RuntimeResult>;
@@ -12,6 +13,8 @@ export type RuntimeValue = {
   busy: Store<boolean>;
   sqlQuery: Store<string>;
   setSqlQuery: (sql: string) => void;
+  /** 配置が替わって SQL のペインを作り直しても、入力欄の元に戻す履歴とカーソルを残すための入れ物。 */
+  sqlEditorStates: EditorStates;
 };
 
 export const RuntimeContext = createContext<RuntimeValue | null>(null);
@@ -45,6 +48,13 @@ export function useRestart(): { restart: () => Promise<void>; restarting: boolea
     value.busy.getSnapshot,
   );
   return { restart: value.restart, restarting };
+}
+
+/** SQL のペインの入力欄の元に戻す履歴の入れ物。 */
+export function useSqlEditorStates(): EditorStates {
+  const value = use(RuntimeContext);
+  if (!value) throw new Error("RuntimeContext の provider が無い");
+  return value.sqlEditorStates;
 }
 
 /** SQL のペインの入力欄の SQL と、替える関数。値は src/node/ のモジュールが持ち、保存する。 */

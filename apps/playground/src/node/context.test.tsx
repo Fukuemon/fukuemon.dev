@@ -9,6 +9,7 @@ import {
   useRestart,
   useRuntime,
   useSelection,
+  useSqlEditorStates,
   useSqlQuery,
 } from "./context";
 import { initialSelection } from "./selection";
@@ -38,6 +39,7 @@ const renderRuntime = (result: RuntimeResult) =>
         busy: createStore(false),
         sqlQuery: createStore(""),
         setSqlQuery: () => undefined,
+        sqlEditorStates: new Map(),
       }}
     >
       <RuntimeProbe />
@@ -80,6 +82,7 @@ describe("useRestart", () => {
           busy: createStore(busy),
           sqlQuery: createStore(""),
           setSqlQuery: () => undefined,
+          sqlEditorStates: new Map(),
         }}
       >
         <RestartProbe />
@@ -115,6 +118,7 @@ describe("useSqlQuery", () => {
           busy: createStore(false),
           sqlQuery: createStore("select 1;"),
           setSqlQuery,
+          sqlEditorStates: new Map(),
         }}
       >
         <QueryProbe />
@@ -125,6 +129,33 @@ describe("useSqlQuery", () => {
 
   it("provider の外では、誤りにする", () => {
     expect(() => renderToStaticMarkup(<QueryProbe />)).toThrow("RuntimeContext");
+  });
+});
+
+describe("useSqlEditorStates", () => {
+  it("provider の SQL の入力欄の履歴の入れ物を返す", () => {
+    const states = new Map();
+    let got: unknown;
+    function StatesProbe() {
+      got = useSqlEditorStates();
+      return null;
+    }
+    renderToStaticMarkup(
+      <RuntimeContext
+        value={{
+          project: nodeDefaultProject,
+          runtime: settled({ kind: "unavailable", reason: "timeout" }),
+          restart: async () => undefined,
+          busy: createStore(false),
+          sqlQuery: createStore(""),
+          setSqlQuery: () => undefined,
+          sqlEditorStates: states,
+        }}
+      >
+        <StatesProbe />
+      </RuntimeContext>,
+    );
+    expect(got).toBe(states);
   });
 });
 

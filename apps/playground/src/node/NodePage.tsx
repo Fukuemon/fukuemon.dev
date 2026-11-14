@@ -364,6 +364,8 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   // 配置が替わってエディタを作り直しても、ファイルごとの元に戻す履歴とカーソルを残す
   const [editorStates] = useState<EditorStates>(() => new Map());
+  // SQL のペインの入力欄の履歴は、ファイルのパスと混ざらないよう別の入れ物に保つ。結果の表は残さない
+  const [sqlEditorStates] = useState<EditorStates>(() => new Map());
   const mode = useLayoutMode();
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
   const database = project.database === true;
@@ -376,6 +378,7 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
         busy: session.busy,
         sqlQuery: session.sqlQuery,
         setSqlQuery: session.setSqlQuery,
+        sqlEditorStates,
       }}
     >
       <Toolbar session={session} title={!embedded && title} />
