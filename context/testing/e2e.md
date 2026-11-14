@@ -19,6 +19,9 @@ E2E は Playwright（`@playwright/test`）で書く。
 testid は、アプリのコンポーネント（`apps/web/src/features/articles/ArticleRow.astro`、`apps/web/src/pages/articles/[...slug].astro`）に付ける。
 `@fukuemon/ui` の `Link` は、渡された `data-testid` を `<a>` に付ける。
 
+プレイグラウンドの一覧のツールのリンクは `playground-tool-link` で、`apps/web/src/pages/playground/index.astro` に付ける。  
+ヘッダーのリンクは `SITE_NAV` から並べるので testid を付けず、`selectors/site-header.ts` で名前で指す。
+
 トップの庭の testid は次のとおり。
 
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
