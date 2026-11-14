@@ -101,19 +101,20 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 
 モジュールごとの責務は次のとおり。
 
-| モジュール                     | 責務                                                                                                                                   | 持たないもの                                         |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `apps/web`                     | トップ、記事の一覧、記事、シリーズのページ。原稿の読み込みと、`ContentRef` への正規化                                                  | トークンとコンポーネントの定義                       |
-| `apps/playground`              | プレイグラウンドのツールのページ（Node の実行環境、SQL、Go）。画面、画面の状態、訪問者のファイルの保存、プロジェクトの JSON の読み込み | 実行環境の処理と、`@webcontainer/api` への直接の依存 |
-| `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                         |
-| `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                       |
-| `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                  |
-| `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                               |
-| `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                               |
-| `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                               |
-| `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                 |
-| `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                               |
-| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                    |
+| モジュール                     | 責務                                                                                                                                   | 持たないもの                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `apps/web`                     | トップ、記事の一覧、記事、シリーズ、プレイグラウンドの一覧のページ。原稿の読み込みと、`ContentRef` への正規化                          | トークンとコンポーネントの定義                            |
+| `apps/playground`              | プレイグラウンドのツールのページ（Node の実行環境、SQL、Go）。画面、画面の状態、訪問者のファイルの保存、プロジェクトの JSON の読み込み | 実行環境の処理と、`@webcontainer/api` への直接の依存      |
+| `apps/docs-site`               | `docs/` をビルドしたドキュメントサイトの Worker の設定、レスポンスヘッダ、ビルドと配信の script                                        | 文書の原本と、Zensical の設定（ルートの `zensical.toml`） |
+| `@fukuemon/ui`                 | トークン、Base と Case のコンポーネント、挿絵、コードの配色、カタログ                                                                  | ページと原稿                                              |
+| `@fukuemon/content-model`      | 記事とシリーズの schema、`ContentRef`、関係グラフの構築と検証、シリーズの読む順の検証                                                  | Astro への依存                                            |
+| `@fukuemon/playground-project` | 記事に埋め込む実行環境のプロジェクトの JSON と、設定のファイルの型と schema                                                            | JSON を出力する処理と、読み込む処理                       |
+| `@fukuemon/sql-runtime`        | PGlite で SQL を実行して結果の形にする関数、`SqlDatabase` の型、PGlite を Web Worker で動かす `SqlDatabase` の実装                     | 画面と、React への依存                                    |
+| `@fukuemon/node-runtime`       | Node の実行環境。WebContainers の起動、記録の store、ファイルとプロセスの操作                                                          | 画面と、React への依存                                    |
+| `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                                    |
+| `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                      |
+| `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                                    |
+| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                         |
 
 次の図は、package の間の依存の向きを示す。
 
@@ -155,6 +156,15 @@ ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-work
 cross-origin isolation のヘッダは、Node の実行環境のパス（`/node/*`）にだけ返す。  
 ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../adr/0034-playground-origin-and-embedding.md)  
 ツールのパスは、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#アプリとパス) にある。
+
+`/playground` の一覧から `play.fukuemon.dev` のツールへのリンクは、サイトの中のリンクとして扱い、同じタブで開いて内部のリンクの色にする。  
+ホスト名を分けるのは、アプリごとに配信、ヘッダ、訪問者のデータの置き場を分けるためで、訪問者にとっては同じ運営者の 1 つのサイトだからである。  
+ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-workers.md)
+
+`/playground` の一覧は、題の下に、ツールの名前（Node、SQL、Go）のリンクだけを罫線の行に並べ、説明の文を置かない。  
+リンクは、ツールのパスに `project` のクエリを付けずに指す。  
+ツールは、デフォルトのプロジェクトを開き、訪問者のブラウザに保存した内容があれば、保存した内容で開く。  
+保存の形は、[プレイグラウンドの Design Doc の「保存」](../../apps/playground/DesignDoc.md#保存) にある。
 
 | ホスト名              | 置くもの                                       | アクセスできる人                           |
 | --------------------- | ---------------------------------------------- | ------------------------------------------ |

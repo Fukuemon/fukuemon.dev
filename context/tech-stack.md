@@ -50,6 +50,8 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - ADR-0037: [Go のコードを、Yaegi のインタプリタの WASM で動かす](../docs/adr/0037-go-with-yaegi.md)
 - CodeMirror 6 は、プレイグラウンドのツールのエディタに使う。色は、`packages/ui` のテーマ変数を読む。
 - xterm.js は、プレイグラウンドで、Node の実行環境の端末を表示するのに使う。
+- Zensical は、`docs/` をビルドするドキュメントサイト（`apps/docs-site`）に使う。Python と依存は uv が用意する。
+  - ADR-0032: [ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する](../docs/adr/0032-docs-site-behind-access.md)
 - Expressive Code（`astro-expressive-code`）は、記事のコードブロックの描画に使う。
 - Pele は、記事の mermaid の図を、ビルドのときに SVG にするのに使う。
   - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)
@@ -74,7 +76,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - 庭を出すときだけ読み込み、ほかのページには配らない。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
 - Terraform と `cloudflare/cloudflare` provider は、Cloudflare の基盤の管理に使う。
-- Wrangler は、サイトの Worker（`apps/web`）、カタログの Worker（`packages/ui`）、プレイグラウンドの Worker（`apps/playground`）の deploy に使う。
+- Wrangler は、Worker の deploy に使う。対象は、サイト（`apps/web`）、カタログ（`packages/ui`）、プレイグラウンド（`apps/playground`）、ドキュメントサイト（`apps/docs-site`）である。
 - 品質のチェックには、react-doctor、knip、similarity-ts、Lefthook を使う。
   - 各ツールをチェックのどこで実行するかは [conventions.md](conventions.md#shared-configuration) にある。
   - ADR-0007: [品質のチェックの採否](../docs/adr/0007-quality-gates.md)

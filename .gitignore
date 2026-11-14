@@ -16,7 +16,8 @@ playwright-report/
 *.tfstate.*
 *.tfvars
 
-# Python (hooks)
+# Python (hooks、ドキュメントサイトの Zensical)
+.venv/
 __pycache__/
 *.pyc
 
