@@ -1,0 +1,14 @@
+{
+  "name": "@fukuemon/docs-site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "uv run --frozen zensical build --clean -f ../../zensical.toml && cp public/_headers dist/_headers",
+    "dev": "uv run --frozen zensical serve -f ../../zensical.toml",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.127.1"
+  }
+}

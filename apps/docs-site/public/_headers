@@ -1,0 +1,6 @@
+# 値はカタログと同じにする。noindex は、Access の外へ文書のサイトが漏れたときに、検索の結果に載せないため
+/*
+  X-Robots-Tag: noindex
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains

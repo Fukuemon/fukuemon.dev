@@ -1,0 +1,59 @@
+# ドキュメントサイトの設定 (ADR-0032)。文書の置き場は context/project.yml の docs とそろえる
+[project]
+site_name = "fukuemon.dev の設計の文書"
+docs_dir = "docs"
+site_dir = "apps/docs-site/dist"
+# docs/design/ のシンボリックリンクの先を、プレビューでたどって再読み込みする
+watch = [
+  "infra/DesignDoc.md",
+  "apps/playground/DesignDoc.md",
+  "packages/content-model/DesignDoc.md",
+  "packages/ui/DesignDoc.md",
+  "packages/ui/src/art/DesignDoc.md",
+]
+# ADR のテンプレートとトップの試作は文書ではないので、サイトに載せない
+exclude_docs = """
+adr/template.md
+design/prototypes/
+"""
+# ADR は adr/index.md から辿る。nav に ADR のファイルを並べると、ADR を足すか消すたびに nav を直すことになる
+nav = [
+  { "トップ" = "index.md" },
+  { "PRD" = "PRD.md" },
+  { "Design Doc" = [
+    { "全体" = "design/DesignDoc.md" },
+    { "基盤" = "design/infra.md" },
+    { "プレイグラウンド" = "design/apps/playground.md" },
+    { "Content Model" = "design/packages/content-model.md" },
+    { "キャンバス" = "design/features/canvas/DesignDoc.md" },
+    { "スライド" = "design/features/slides/DesignDoc.md" },
+    { "AI からの操作" = "design/features/ai-operations/DesignDoc.md" },
+    { "トップの水墨の門と立体の庭" = "design/features/top-garden/DesignDoc.md" },
+  ] },
+  { "デザインシステム" = [
+    { "packages/ui" = "design/packages/ui.md" },
+    { "挿絵" = "design/packages/ui-art.md" },
+    { "カタログ" = "https://design.fukuemon.dev/" },
+  ] },
+  { "ADR" = "adr/index.md" },
+]
+
+[project.theme]
+language = "ja"
+
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+
+# 見出しのアンカーを、GitHub の Markdown の表示と同じく日本語のまま残す。どちらで読んでもリンクが切れない
+[project.markdown_extensions.toc]
+permalink = true
+slugify.object = "pymdownx.slugs.slugify"
+slugify.kwds.case = "lower"
+
+[project.markdown_extensions.tables]
+
+# 2 文字の字下げの入れ子の箇条書きを、入れ子として読む。Python-Markdown は入れ子に 4 文字を求めるが、文書は 2 文字で書く
+[project.markdown_extensions.mdx_truly_sane_lists]
+nested_indent = 2

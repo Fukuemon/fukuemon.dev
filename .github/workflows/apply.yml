@@ -58,6 +58,8 @@ jobs:
           TF_VAR_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_zone_name: ${{ vars.ZONE_NAME }}
+          # メールアドレスの一覧。値は ["a@example.com"] の形の HCL のリストで登録する
+          TF_VAR_docs_allowed_emails: ${{ secrets.DOCS_ALLOWED_EMAILS }}
 
       # 変数は plan file が持つため TF_VAR を渡さない
       - name: apply

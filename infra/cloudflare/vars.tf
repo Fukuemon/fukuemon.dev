@@ -33,3 +33,21 @@ variable "playground_worker_name" {
   type        = string
   default     = "fukuemon-dev-play"
 }
+
+variable "docs_worker_name" {
+  description = "ドキュメントサイトを配信する Worker の名前 (apps/docs-site/wrangler.jsonc の name と一致させる)"
+  type        = string
+  default     = "fukuemon-dev-docs"
+}
+
+# メールアドレスはリポジトリと公開の Actions のログに書かない (ADR-0032)。apply の workflow は infra environment の secret から渡す
+variable "docs_allowed_emails" {
+  description = "ドキュメントサイトを開けるメールアドレスの一覧"
+  type        = list(string)
+  sensitive   = true
+
+  validation {
+    condition     = length(var.docs_allowed_emails) > 0
+    error_message = "docs_allowed_emails に 1 つ以上のメールアドレスを渡す。"
+  }
+}
