@@ -3,10 +3,13 @@ import { join } from "node:path";
 
 const NOINDEX = "/*\n  X-Robots-Tag: noindex\n";
 
-/** `_headers` の末尾に、全てのパスへ noindex を返す規則を足す (ADR-0031) */
+/**
+ * `_headers` の先頭に、全てのパスへ noindex を返す規則を足す (ADR-0031)。
+ * _headers の規則の数には上限があるので、ビルドが末尾に足す規則より前に置く
+ */
 export function withNoindex(headers: string): string {
-  const current = headers.trimEnd();
-  return current === "" ? NOINDEX : `${current}\n\n${NOINDEX}`;
+  const current = headers.trim();
+  return current === "" ? NOINDEX : `${NOINDEX}\n${current}\n`;
 }
 
 /** ビルドの出力を複製し、複製の `_headers` に noindex を足す。ビルドの出力は変えない */

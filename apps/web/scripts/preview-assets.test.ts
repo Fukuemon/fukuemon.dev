@@ -8,8 +8,8 @@ const HANDWRITTEN = "/*\n  X-Content-Type-Options: nosniff\n";
 const NOINDEX = "/*\n  X-Robots-Tag: noindex\n";
 
 describe("withNoindex", () => {
-  it("全てのパスへ noindex を返す規則を末尾に足す", () => {
-    expect(withNoindex(HANDWRITTEN)).toBe(`${HANDWRITTEN}\n${NOINDEX}`);
+  it("全てのパスへ noindex を返す規則を先頭に足す", () => {
+    expect(withNoindex(HANDWRITTEN)).toBe(`${NOINDEX}\n${HANDWRITTEN}`);
   });
 
   it("空の _headers には規則だけを書く", () => {
@@ -26,10 +26,10 @@ describe("buildPreviewAssets", () => {
     return { dir, out: join(root, "dist-preview") };
   }
 
-  it("複製の _headers の末尾に noindex を足す", () => {
+  it("複製の _headers の先頭に noindex を足す", () => {
     const { dir, out } = dist({ "index.html": "<p>top</p>", _headers: HANDWRITTEN });
     buildPreviewAssets(dir, out);
-    expect(readFileSync(join(out, "_headers"), "utf8")).toBe(`${HANDWRITTEN}\n${NOINDEX}`);
+    expect(readFileSync(join(out, "_headers"), "utf8")).toBe(`${NOINDEX}\n${HANDWRITTEN}`);
   });
 
   it("_headers 以外のファイルをそのまま複製する", () => {

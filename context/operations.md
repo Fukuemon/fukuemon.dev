@@ -86,7 +86,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 プレビューの Worker は、`fukuemon.dev` と同じヘッダに加え、すべてのパスに `X-Robots-Tag: noindex` を返す。
 
-- `apps/web` の `build:preview` が、ビルドの出力の `dist/` を `dist-preview/` に複製し、複製の `_headers` の末尾に noindex の規則を足す。プレビューの Worker は `dist-preview/` を配る。
+- `apps/web` の `build:preview` が、ビルドの出力の `dist/` を `dist-preview/` に複製し、複製の `_headers` の先頭に noindex の規則を足す。プレビューの Worker は `dist-preview/` を配る。
 - `dist/` と `apps/web/public/_headers` には noindex を書かない。本番の Worker へ `dist/` を配ったときに、noindex が入らないようにするためである。
 - 本番を切り替えるときに、プレビューの Worker と deploy-preview workflow を消す。
   - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。noindex を足した配信物を Worker に出すのは、deploy-preview workflow が呼ぶ `deploy:preview` だけである。
