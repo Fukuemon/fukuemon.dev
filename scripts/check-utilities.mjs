@@ -70,6 +70,12 @@ const RULES = [
     // transition-[...] は、遷移の対象を選ぶ書き方で、止め方が transition-property を透明度に絞るので見ない。
     test: (variants, utility) => /^(?:animate|ease)-[[(]/.test(utility),
   },
+  {
+    id: "PROSE-WIDTH",
+    label: "書体の「0」の幅で変わる文字の列の幅（max-w-prose）",
+    // Tailwind の max-w-prose はテーマ変数を読まず、65ch に固定されている
+    test: (variants, utility) => utility === "max-w-prose",
+  },
 ];
 
 const excluded = EXCLUDES.map((p) => resolve(p));

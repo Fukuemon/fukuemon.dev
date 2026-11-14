@@ -9,7 +9,7 @@ const meta = {
   args: { entries: ENTRIES },
   decorators: [
     (Story) => (
-      <div className="max-w-prose p-4">
+      <div className="max-w-body p-4">
         <Story />
       </div>
     ),
