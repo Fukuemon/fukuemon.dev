@@ -1,7 +1,13 @@
 import type { FileContents } from "@fukuemon/node-runtime";
 import { describe, expect, it } from "vitest";
 
-import { SAVE_LIMIT, isExcludedFromSave, filesForRestart, filesToSave } from "./save-rules";
+import {
+  SAVE_LIMIT,
+  isExcludedFromSave,
+  filesForRestart,
+  filesToSave,
+  withoutUnsaved,
+} from "./save-rules";
 
 const file = (path: string, text: string | null = "x", size = 1): FileContents => ({
   path,
@@ -24,20 +30,28 @@ describe("isExcludedFromSave", () => {
     "server/.env",
     ".npmrc",
     "a/.netrc",
+    "a/.envrc",
+    ".yarnrc",
+    ".yarnrc.yml",
+    ".git-credentials",
   ])("%s は保存しない", (path) => {
     expect(isExcludedFromSave(path)).toBe(true);
   });
 
-  it.each(["index.js", "build/index.js", "src/env.ts", ".environment", "a/.envrc", "distance.js"])(
-    "%s は保存する",
-    (path) => {
-      expect(isExcludedFromSave(path)).toBe(false);
-    },
-  );
+  it.each([
+    "index.js",
+    "build/index.js",
+    "src/env.ts",
+    ".environment",
+    ".yarnrc.yaml",
+    "distance.js",
+  ])("%s は保存する", (path) => {
+    expect(isExcludedFromSave(path)).toBe(false);
+  });
 });
 
 describe("filesForRestart", () => {
-  it("テキストとして読めないファイルと、規則に合わないパスを除き、保存しないファイルとリンクは残す", () => {
+  it("テキストとして読めないファイル、規則に合わないパス、リンクを除き、保存しないファイルは残す", () => {
     expect(
       filesForRestart([
         file("a.js", "a"),
@@ -46,7 +60,15 @@ describe("filesForRestart", () => {
         file(".env", "TOKEN=x"),
         { path: "link", kind: "other", size: 1, text: "l" },
       ]),
-    ).toStrictEqual({ "a.js": "a", ".env": "TOKEN=x", link: "l" });
+    ).toStrictEqual({ "a.js": "a", ".env": "TOKEN=x" });
+  });
+});
+
+describe("withoutUnsaved", () => {
+  it("保存しないパスを落とす", () => {
+    expect(
+      withoutUnsaved({ "a.js": "a", ".env": "x", "b/.yarnrc.yml": "y", "dist/a.js": "d" }),
+    ).toStrictEqual({ "a.js": "a" });
   });
 });
 

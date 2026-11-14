@@ -151,7 +151,14 @@ function setup(
     return fake.runtime;
   });
   const { workspace, saves } = fakeWorkspace();
-  const session = createNodeSession({ project, saved, storage: workspace, boot, now: () => 9 });
+  const session = createNodeSession({
+    project,
+    saved,
+    storage: workspace,
+    embedId: "oauth/demo",
+    boot,
+    now: () => 9,
+  });
   const visitor = async () => {
     const result = await session.runtime.getSnapshot();
     if (result.kind !== "running") throw new Error("起動していない");
@@ -269,6 +276,37 @@ describe("起動", () => {
     const { session } = setup({ kind: "saved", record: { ...savedRecord, version: "v0" } });
     await settle(session);
     expect(session.versionChanged.getSnapshot()).toBe(true);
+  });
+
+  it("記事から開いていないプロジェクトでは、保存したバージョンが違っても versionChanged を true にしない", async () => {
+    const { workspace } = fakeWorkspace();
+    const session = createNodeSession({
+      project,
+      saved: { kind: "saved", record: { ...savedRecord, version: "v0" } },
+      storage: workspace,
+      boot: async ({ files }) => fakeRuntime(files, 0).runtime,
+    });
+    await settle(session);
+    expect(session.versionChanged.getSnapshot()).toBe(false);
+  });
+
+  it("保存したレコードに保存しないパスがあるときは、落としたファイルで起動し、落としたレコードを書き直す", async () => {
+    const record = {
+      ...savedRecord,
+      files: { "index.js": "b", ".env": "TOKEN=x", "dist/a.js": "d" },
+    };
+    const { session, booted, saves } = setup({ kind: "saved", record });
+    await settle(session);
+    expect({ booted, saved: saves.map((saved) => saved.files) }).toStrictEqual({
+      booted: [{ "index.js": "b" }],
+      saved: [{ "index.js": "b" }],
+    });
+  });
+
+  it("保存したレコードに保存しないパスが無いときは、起動のときに書き直さない", async () => {
+    const { session, saves } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    expect(saves).toStrictEqual([]);
   });
 
   it("起動できないときは、理由を返す", async () => {
@@ -438,7 +476,7 @@ describe("保存しないファイル", () => {
     fake.links.add("link.txt");
   };
 
-  it("`.env`、`dist/`、`.git`、リンクは保存せず、起動し直した後の作業ディレクトリには残す", async () => {
+  it("`.env`、`dist/`、`.git`、リンクは保存しない。起動し直した後の作業ディレクトリには、リンクのほかを残す", async () => {
     const { session, saves, booted, latest } = setup({ kind: "saved", record: savedRecord });
     await settle(session);
     putUnsaved(latest());
@@ -451,7 +489,6 @@ describe("保存しないファイル", () => {
         ".env": "TOKEN=x",
         "dist/a.js": "d",
         ".git/HEAD": "ref",
-        "link.txt": "outside",
       },
     });
   });
@@ -583,7 +620,32 @@ describe("restart", () => {
     const restarted = session.restart();
     await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
     await restarted;
-    expect(booted.at(-1)).toStrictEqual(savedRecord.files);
+    expect({
+      booted: booted.at(-1),
+      readFailed: session.restartReadFailed.getSnapshot(),
+    }).toStrictEqual({ booted: savedRecord.files, readFailed: true });
+  });
+
+  it("作業ディレクトリを読めて起動し直すと、restartReadFailed を false に戻す", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await restarted;
+    await session.restart();
+    expect(session.restartReadFailed.getSnapshot()).toBe(false);
+  });
+
+  it("初期の状態に戻すと、restartReadFailed を false に戻す", async () => {
+    const { session, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().readAll.mockReturnValueOnce(new Promise(() => undefined));
+    const restarted = session.restart();
+    await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await restarted;
+    await session.reset();
+    expect(session.restartReadFailed.getSnapshot()).toBe(false);
   });
 
   it("作業ディレクトリを読めずに起動し直した後の保存は、保存したファイルを初期ファイルで上書きしない", async () => {
@@ -902,5 +964,16 @@ describe("createNodeSessionOpener", () => {
     );
     await open("");
     expect(create.mock.calls[0]?.[0].saved).toStrictEqual(saved);
+  });
+
+  it("プロジェクトの埋め込みの ID を NodeSession に渡す", async () => {
+    const create = vi.fn<(options: NodeSessionOptions) => NodeSession>(() => ({}) as NodeSession);
+    const open = createNodeSessionOpener(
+      () => opened("c/e"),
+      () => fakeWorkspace().workspace,
+      create,
+    );
+    await open("?project=c/e");
+    expect(create.mock.calls[0]?.[0].embedId).toBe("c/e");
   });
 });

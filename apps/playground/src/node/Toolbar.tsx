@@ -23,6 +23,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
   const saveFailed = useStore(session.saveFailed);
   const overLimit = useStore(session.overLimit);
   const commandFailed = useStore(session.commandFailed);
+  const restartReadFailed = useStore(session.restartReadFailed);
   const [running, startRunning] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -111,6 +112,16 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
         {!session.canSave && (
           <Notice density="compact" title="ファイルを保存できません" tone="warning">
             このブラウザでは IndexedDB を使えないので、ページを閉じると変えたファイルが消えます。
+          </Notice>
+        )}
+        {restartReadFailed && (
+          <Notice
+            density="compact"
+            isAlert
+            title="作業ディレクトリを読めずに起動し直しました"
+            tone="warning"
+          >
+            前に読んだときのファイルで起動しています。その後に変えたファイルは、この実行環境にありません。
           </Notice>
         )}
         {commandFailed && (

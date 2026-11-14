@@ -24,6 +24,7 @@ import {
   isExcludedFromSave,
   filesForRestart,
   filesToSave,
+  withoutUnsaved,
 } from "./save-rules";
 
 export type NodeProject = Extract<ProjectLoad<"node">, { kind: "opened" }>["project"];
@@ -119,6 +120,8 @@ export type NodeSession = {
   saveFailed: Store<boolean>;
   /** 最後に読んだ作業ディレクトリが、保存の上限を超えたときは true である。上限を下回って読めたときと、初期の状態に戻したときに false に戻る。 */
   overLimit: Store<boolean>;
+  /** 最後に起動し直したときに作業ディレクトリを読めず、前に読んだときのファイルで起動したときは true である。読めて起動し直したときと、初期の状態に戻したときに false に戻る。 */
+  restartReadFailed: Store<boolean>;
   /** IndexedDB に保存したファイルがあるか。 */
   hasSaved: Store<boolean>;
   /** 保存したファイルの初期ファイルのバージョンが、プロジェクトのものと違うか。 */
@@ -139,6 +142,8 @@ export type NodeSessionOptions = {
   project: NodeProject;
   saved: WorkspaceLoad<NodeRecord>;
   storage: Workspace<NodeRecord>;
+  /** 記事の埋め込みの ID。デフォルトのプロジェクト（記事から開いていないページ）では無い。 */
+  embedId?: string;
   boot?: (options: BootOptions) => Promise<NodeRuntime>;
   now?: () => number;
 };
@@ -160,16 +165,22 @@ export function createNodeSession({
   project,
   saved,
   storage,
+  embedId,
   boot = bootNodeRuntime,
   now = Date.now,
 }: NodeSessionOptions): NodeSession {
-  const record = saved.kind === "saved" && isNodeRecord(saved.record) ? saved.record : undefined;
+  const loaded = saved.kind === "saved" && isNodeRecord(saved.record) ? saved.record : undefined;
+  const record = loaded && { ...loaded, files: withoutUnsaved(loaded.files) };
   const canSave = saved.kind !== "unavailable";
   const hasSaved = createStore(record !== undefined);
-  const versionChanged = createStore(record !== undefined && record.version !== project.version);
+  // 記事から開いていないページ（デフォルトのプロジェクト）では、記事の初期ファイルが変わったとは出さない
+  const versionChanged = createStore(
+    record !== undefined && embedId !== undefined && record.version !== project.version,
+  );
   const busy = createStore(false);
   const commandFailed = createStore(false);
   const overLimit = createStore(false);
+  const restartReadFailed = createStore(false);
   // 保存してあったバージョンを引き継ぐ。初期ファイルのバージョンと違ったことを、保存しても消さない
   let version = record?.version ?? project.version;
   let bootFiles: Readonly<Record<string, string>> = record?.files ?? project.files;
@@ -187,6 +198,10 @@ export function createNodeSession({
         },
       ),
   });
+  // 保存しないパスを落としたレコードは、上限を超えていても書き直す。シークレットのファイルを IndexedDB に残さないためである (ADR-0070)
+  if (loaded && record && Object.keys(record.files).length !== Object.keys(loaded.files).length) {
+    saver.save({ ...record, savedAt: now() });
+  }
 
   // 上限を超えたときは、前に保存したレコードを残す (ADR-0070)
   const persist = (read: SaveRead) => {
@@ -423,10 +438,12 @@ export function createNodeSession({
       const entries = await withTimeout(old.runtime.files.readAll(RESTART_READ), READ_TIMEOUT_MS);
       const files = filesForRestart(entries);
       lastRead = files;
+      restartReadFailed.set(false);
       if (old.touched) persist({ kind: "read", entries });
       return { files, touched: old.touched };
     } catch (error) {
       console.error("起動し直す前に作業ディレクトリを読めない", error);
+      restartReadFailed.set(true);
       return { files: lastRead ?? bootFiles, touched: old.touched };
     }
   };
@@ -450,6 +467,7 @@ export function createNodeSession({
     hasSaved.set(false);
     versionChanged.set(false);
     overLimit.set(false);
+    restartReadFailed.set(false);
     return { files: project.files, touched: false };
   };
 
@@ -459,6 +477,7 @@ export function createNodeSession({
     canSave,
     saveFailed: saver.failed,
     overLimit,
+    restartReadFailed,
     hasSaved,
     versionChanged,
     busy,
@@ -514,6 +533,7 @@ export function createNodeSessionOpener(
         project: result.project,
         saved: await early.saved,
         storage: early.storage,
+        embedId: result.embedId,
       }),
     };
   };

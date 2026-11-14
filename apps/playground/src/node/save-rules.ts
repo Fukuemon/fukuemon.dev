@@ -26,24 +26,42 @@ export const SAVE_READ: ReadAllOptions = {
   limit: SAVE_LIMIT,
 };
 
-/** シークレットを置くことの多いファイルか（`.env`、`.env.*`、`.npmrc`、`.netrc`）。どの階層でも当てはまる。 */
+/** シークレットを置くことの多いファイルの名前。`.env.` で始まる名前も当てはまる。 */
+const SECRET_FILES = new Set([
+  ".env",
+  ".envrc",
+  ".npmrc",
+  ".netrc",
+  ".yarnrc",
+  ".yarnrc.yml",
+  ".git-credentials",
+]);
+
+/** シークレットを置くことの多いファイルか。どの階層でも当てはまる。 */
 const isSecretFile = (path: string) => {
   const name = path.slice(path.lastIndexOf("/") + 1);
-  return name === ".env" || name.startsWith(".env.") || name === ".npmrc" || name === ".netrc";
+  return SECRET_FILES.has(name) || name.startsWith(".env.");
 };
 
 /** そのパスのファイルを保存しないか。変更の通知が、保存しないパスだけのときは、保存を予約しない。 */
 export const isExcludedFromSave = (path: string) =>
   isExcludedPath(path, EXCLUDED_DIRECTORIES) || isSecretFile(path);
 
-/** files.readAll の結果のうち、起動し直すときに渡すファイル。テキストとして読めないものと、規則に合わないパスは除く。 */
+/**
+ * files.readAll の結果のうち、起動し直すときに渡すファイル。テキストとして読めないもの、規則に合わないパス、
+ * ファイルでもディレクトリでもないもの（リンク）を除く。リンクを渡すと、指す先の中身を持つ通常のファイルになり、保存されるためである (ADR-0070)。
+ */
 export function filesForRestart(entries: readonly FileContents[]): Record<string, string> {
   const files: Record<string, string> = {};
-  for (const { path, text } of entries) {
-    if (text !== null && isSafeFilePath(path)) files[path] = text;
+  for (const { path, kind, text } of entries) {
+    if (kind === "file" && text !== null && isSafeFilePath(path)) files[path] = text;
   }
   return files;
 }
+
+/** 保存したレコードのファイルから、保存しないパスを落とす。規則を足す前に保存したレコードに、シークレットのファイルが残るためである。 */
+export const withoutUnsaved = (files: Readonly<Record<string, string>>): Record<string, string> =>
+  Object.fromEntries(Object.entries(files).filter(([path]) => !isExcludedFromSave(path)));
 
 type SaveFiles = { kind: "within"; files: Record<string, string> } | { kind: "over-limit" };
 
@@ -58,6 +76,6 @@ export function filesToSave(entries: readonly FileContents[]): SaveFiles {
   if (read.length > SAVE_LIMIT.files || bytes > SAVE_LIMIT.bytes) return { kind: "over-limit" };
   return {
     kind: "within",
-    files: filesForRestart(read.filter(({ path, kind }) => kind === "file" && !isSecretFile(path))),
+    files: filesForRestart(read.filter(({ path }) => !isSecretFile(path))),
   };
 }
