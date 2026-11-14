@@ -56,9 +56,9 @@
   --fd-color-categorical-1: var(--fd-primitive-color-plum-700);
   --fd-color-categorical-2: var(--fd-primitive-color-teal-700);
   --fd-color-categorical-3: var(--fd-primitive-color-ochre-700);
-  --fd-color-categorical-4: var(--fd-primitive-color-purple-700);
+  --fd-color-categorical-4: var(--fd-primitive-color-blue-700);
   --fd-color-categorical-5: var(--fd-primitive-color-olive-700);
-  --fd-color-categorical-6: var(--fd-primitive-color-blue-700);
+  --fd-color-categorical-6: var(--fd-primitive-color-purple-700);
 
   /* トップの庭の霞と、霞の上のヘッダーと庭の中のボタン。場面の色は時間帯で決まりテーマに依らないので、
      ダークでも同じ値にする。庭を出している間だけ、surface、text、border-field、focus をこの値に差し替える */
