@@ -2,9 +2,11 @@
 
 設計の文書（PRD、Design Doc、ADR）を Zensical でビルドし、`docs.fukuemon.dev` の Worker（`fukuemon-dev-docs`）から配信する。
 Cloudflare Access が、許可したメールアドレスの人だけを通す。
-決めたことと理由は ADR-0032 にある。
+Access は、運営者がダッシュボードで設定する。
+決めたことと理由は ADR-0032 と ADR-0081 にある。
 
 - ADR-0032: [ドキュメントサイトを Zensical でビルドし、Cloudflare Access を Terraform で設定する](../../docs/adr/0032-docs-site-behind-access.md)
+- ADR-0081: [ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する](../../docs/adr/0081-docs-site-access-on-dashboard.md)
 
 ## 構成
 
@@ -15,7 +17,6 @@ Cloudflare Access が、許可したメールアドレスの人だけを通す�
 | `apps/docs-site/wrangler.jsonc`               | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false`                                                                                                               |
 | `apps/docs-site/scripts/check-closed-urls.sh` | `workers_dev` と `preview_urls` が `false` であること、`route` と `routes` が無いこと、ほかに wrangler の設定ファイルが無いこと、`deploy` が `wrangler deploy` だけであること、noindex の確認 |
 | `apps/docs-site/public/_headers`              | レスポンスヘッダ。ビルドの後に `dist/` へコピーする                                                                                                                                           |
-| `infra/cloudflare/access.tf`                  | Access のアプリケーションとポリシー                                                                                                                                                           |
 | `infra/cloudflare/workers_domain.tf`          | custom domain の `docs.<zone>`                                                                                                                                                                |
 | `.github/workflows/deploy-docs.yml`           | develop で check が通ったときの配信                                                                                                                                                           |
 
@@ -40,74 +41,70 @@ pnpm --filter @fukuemon/docs-site run build
 
 ## 初めて公開する
 
-運用者が、次の順で行う。
-custom domain の apply は、Worker があることを前提にする。
+運営者が、次の順で行う。
+Access のアプリケーションが無いまま custom domain を作ると、ドキュメントサイトを誰でも開ける。
+このため、ダッシュボードで Access を作ってから、Terraform で custom domain を作る。
 apply workflow の起動と `infra` environment の承認は、[infra/README.md](../../infra/README.md#ci-から-apply-する) の「CI から apply する」の手順で行う。
+
+- ADR-0081: [ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する](../../docs/adr/0081-docs-site-access-on-dashboard.md)
 
 ### 1. Zero Trust を有効にする
 
 Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
-provider には組織のリソース（`cloudflare_zero_trust_organization`）があるが、組織を新しく作れるかは未確認である。
 
-1. Cloudflare のダッシュボードで Zero Trust を開き、team の名前を決める。
-2. プランは Free を選ぶ。
-3. 「Settings → Authentication」の Login methods に One-time PIN があることを確認する。無ければ足す。
+1. Cloudflare のダッシュボードで「Zero Trust」を開き、team の名前を決める。
+2. プランは Free を選ぶ。Free でも、支払いの情報の入力を求められる。
+3. One-time PIN でログインできるようにする。設定の画面の場所は未確認である。
 
-画面の名前とプランを選ぶ画面が出るかは、未確認である。
+- 出典: [Get started](https://developers.cloudflare.com/cloudflare-one/setup/)
 
-### 2. apply 用の token に権限を足す
+### 2. Access のアプリケーションとポリシーを作る
 
-`TF_CLOUDFLARE_API_TOKEN` に、`Account / Access: Apps and Policies / Edit` を足す。
-権限の名前の出所は [context/operations.md](../../context/operations.md#secrets) にある。
-deploy 用の `CLOUDFLARE_API_TOKEN` には足さない。
+1. 「Zero Trust → Access controls → Applications → Create new application」で「Self-hosted and private」を選ぶ。
+2. 「Add public hostname」で、Domain に `docs.fukuemon.dev` を入れる。
+3. 「Access policies」で、ポリシーを新しく作る。Action は「Allow」、Include の Selector は「Emails」にし、許可するメールアドレスを入れる。
+4. 保存する。
 
-### 3. 許可するメールアドレスを登録する
+- custom domain がまだ無いホスト名で、アプリケーションを作れるかは未確認である。作れないときは、ここで止まり、手順 3 の前に Access を作る方法を決め直す。
+- メールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、issue、pull request、GitHub の secret に書かない。
+- Selector に「Everyone」や、Login Methods の One-time PIN を使わない。誰でも通すポリシーになる。
+- 出典: [Publish a self-hosted application to the Internet](https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/self-hosted-public-app/)
+- 出典: [Access policies](https://developers.cloudflare.com/cloudflare-one/policies/access/)
 
-GitHub の `infra` environment の secret に `DOCS_ALLOWED_EMAILS` を登録する。
-値には、`["a@example.com", "b@example.com"]` の形のリストを 1 行で書く。
-この形は HCL のリストとしても JSON としても読める。
-apply workflow は、値を JSON として読み、メールアドレスを 1 件ずつログでマスクする。
-メールアドレスは、リポジトリ、issue、pull request に書かない。
+### 3. Worker を作る
 
-手元で plan するときは、`infra/cloudflare/terraform.tfvars` に `docs_allowed_emails` を書く。
-
-### 4. Worker を作る
-
-deploy-docs workflow を `workflow_dispatch` で `develop` から起動する。
+deploy-docs workflow は、develop で check が通るたびに Worker を配信する。
+Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` で `develop` から起動する。
 `workers_dev` と `preview_urls` が `false` なので、この時点では誰も開けない。
 
-### 5. Access と custom domain を作る
+### 4. custom domain を作る
 
-apply workflow を `mode=plan` で起動し、plan が次の 3 つの追加だけを表示することを確認する。
+手順 2 で Access のアプリケーションを作ってから行う。
 
-- `cloudflare_zero_trust_access_policy.docs`
-- `cloudflare_zero_trust_access_application.docs`
-- `cloudflare_workers_custom_domain.docs`
+1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
+2. 確認したら、`mode=apply` で起動し直す。
 
-確認したら、`mode=apply` で起動し直す。
-custom domain は Access のアプリケーションに `depends_on` を持つので、Access の後に作られる。
-
-`depends_on` が守るのは、作る順と消す順だけである。
-後の apply で、plan が `cloudflare_zero_trust_access_application.docs` を `must be replaced` と表示したら、apply しない。
-置き換えは Access を消してから作るので、custom domain が認証なしで開ける時間ができる。
-
-### 6. 公開の範囲を確認する
-
-Access が掛からない URL（workers.dev とバージョンごとの URL）で、ドキュメントサイトが開けないことを確認する。
-
-- ADR-0032: [承認の条件](../../docs/adr/0032-docs-site-behind-access.md#承認の条件)
+### 5. 公開の範囲を確認する
 
 1. 認証していないブラウザで `https://docs.fukuemon.dev` を開き、Access の認証の画面が出ることを確認する。
 2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
 3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
 4. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
-5. apply workflow を `mode=plan` でもう一度起動し、plan が `No changes.` を表示することを確認する。job のログのすべての step で、メールアドレスが `***` か `(sensitive value)` にマスクされていることも確認する。
+
+- ADR-0032: [承認の条件](../../docs/adr/0032-docs-site-behind-access.md#承認の条件)
+
+## Access をオンとオフに切り替える
+
+Access は、ダッシュボードで切り替える。
+apply は要らない。
+
+- オフにするときは、手順 2 で作ったアプリケーションを消す。
+- オンにするときは、手順 2 をもう一度行う。
+- **オフの間は、`https://docs.fukuemon.dev` を誰でも開ける。** noindex は返すが、検索の結果に載らないことは保証しない。
+
+アプリケーションを消さずに無効にする設定があるかは、未確認である。
 
 ## 許可するメールアドレスを変える
 
-1. `infra` environment の secret `DOCS_ALLOWED_EMAILS` を書き換える。
-2. apply workflow を `mode=plan`、`mode=apply` の順で起動する。
-
-Access のポリシーは Terraform が管理するので、メールアドレスを変えるたびに apply が要る。
-
-- ADR-0032: [Negative](../../docs/adr/0032-docs-site-behind-access.md#negative)
+ダッシュボードで、手順 2 で作ったポリシーの Include のメールアドレスを書き換える。
+apply は要らない。

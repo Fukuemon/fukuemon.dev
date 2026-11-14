@@ -82,7 +82,7 @@ flowchart TD
     web -->|"切り替えの後"| site
     sb -->|"wrangler deploy"| catalog
     ds -->|"wrangler deploy"| docsw
-    infra -->|"terraform apply"| cfbase["Zone / custom domain / Access"]
+    infra -->|"terraform apply"| cfbase["Zone / custom domain"]
     cfbase -.-> site
     cfbase -.-> catalog
     cfbase -.-> docsw
@@ -114,7 +114,7 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 | `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                                    |
 | `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                      |
 | `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                                    |
-| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                         |
+| `infra/`                       | Zone、Workers の custom domain、Terraform の state を置く R2 のバケット                                                                | Worker の script と静的なアセット                         |
 
 次の図は、package の間の依存の向きを示す。
 
@@ -166,7 +166,8 @@ ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返す
 | workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない |
 
 ドキュメントサイトのビルドの方法と、アクセスの認証は、次の ADR にある。  
-ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)
+ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)  
+ADR-0081: [Access をダッシュボードで設定する](../adr/0081-docs-site-access-on-dashboard.md)
 
 ### URL の構成
 
