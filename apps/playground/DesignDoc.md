@@ -81,7 +81,7 @@ apps/playground/
     sql/                  SQL だけを動かすツールのページ。入力欄の SQL、実行中かどうか、読み込みと実行の関数を持つ React の外のモジュール
     go/                   Go を動かすツールのページ。ファイル、実行中かどうか、出力、実行とテストの関数を持つ React の外のモジュール
     sql-console/          SQL の入力欄、結果の表、実行計画のツリー
-    code-editor/          EditorFrame に渡すエディタのエンジン（CodeMirror 6）と、拡張の組み立て
+    code-editor/          CodeMirror 6 の拡張の組み立てと、その拡張で作るエディタのコンポーネント
     project/              埋め込みの ID、プロジェクトの JSON の読み込み、デフォルトのプロジェクト
     workspace/            訪問者のファイルの保存
     ai-operations/        AI のエージェントからの操作の許可のスイッチ、登録、確認、記録
@@ -158,9 +158,8 @@ flowchart TB
   go --> ui
   go --> ai
   console --> database
-  console --> editor
+  console --> codeeditor
   console --> ui
-  codeeditor --> ui
   runtime --> database
   workspace --> project
   project --> pp
@@ -396,7 +395,7 @@ SQL だけを動かすツールのページは、次のとおり組む。
 - 同じモジュールが、ページの URL のクエリからプロジェクトを読み、埋め込みの ID の `SqlSession` を返す関数を持つ。ページは、この関数の Promise を `use` で読む。
 - ページは、このモジュールの値を `useSyncExternalStore` で読み、`sql-console/` のコンポーネントに渡す。
 - 入力欄のエディタは、CodeMirror 6 にする。Ctrl か ⌘ と Enter で実行する。
-- CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境、Go を動かすツール、スライドのエディタも、同じ組み立てを使い、言語の拡張だけを足す。
+- CodeMirror 6 の拡張の組み立ては、`src/code-editor/` の 1 か所に置く。Node の実行環境、Go を動かすツール、スライドのエディタも、同じ組み立てを使い、言語の拡張と、ページに固有の keymap を足す。Node の実行環境は、Ctrl か ⌘ と S のキーで何もしない keymap を足す。入力のたびに書き込むので、ブラウザがページを保存するのを止めるためである。
   - 行番号、アクティブ行のハイライト、インデントガイド、対応する括弧のハイライトを出す。折りたたみのガターは出さない。
   - Tab キーでインデントする。補完の一覧が開いているときは、Tab キーで補完を確定する。
   - Esc の後 2 秒の間の Tab キーで、エディタの外へ移る。このことを、実行のボタンの横に書く。
