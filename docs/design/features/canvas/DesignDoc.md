@@ -17,7 +17,7 @@ status: draft
 方式は、次の ADR が決めている。
 
 - ADR-0039: [キャンバスは、構成図を draw.io の Embed Mode で、手描きの図を Excalidraw で、別のパスのツールとして提供する](../../../adr/0039-canvas-drawio-and-excalidraw.md)
-- ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](../../../adr/0040-canvas-figures-in-articles.md)
+- ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
 - ADR-0043: [キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する](../../../adr/0043-multiple-named-documents-per-tool.md)
 
 ## Scope
@@ -85,7 +85,7 @@ packages/
 
 図の名前の規則と、ファイルの名前と URL のパスの形は、`packages/figures`（`@fukuemon/figures`）に置く。  
 `apps/web` のビルドと、`apps/playground` の `figures/` が、この package を使う。  
-ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
 
 次の図は、キャンバスのディレクトリと package の間で許す import の向きを示す。矢印の無い組は、import しない。
 
@@ -131,7 +131,7 @@ flowchart TB
 - `documents/` と `figures/` は、`project/` と、実行環境の package を import しない。`Store` の型は、`documents/` が、`@fukuemon/sql-runtime` の `Store` と同じ形で定義する。形を変えるときは、両方を直す。
 - `documents/` のコンポーネントは、画面に出す語（「図」か「スライド」）と、新しく作るものの名前の付け方を、props で受ける。
 - `@excalidraw/excalidraw` を import するのは、`src/excalidraw/` だけである。
-- Oxlint の `no-restricted-imports` は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。`src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import も止める。
+- `src/drawio/` と `src/excalidraw/` は、ツールのページのディレクトリである。ツールのページの間の import の規則は、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 
 ### ページの構成
 
@@ -156,7 +156,6 @@ flowchart TB
   - 図の名前のボタンの読み上げの名前は、「名前を変える: <図の名前>」にする。
   - 一覧のダイアログの中で名前を変えている間の Esc は、名前の変更だけを取り消し、ダイアログを閉じない。
 - 「ファイル」のメニューは、ActionMenu で作る。開くボタンには、「ファイル」の文字を出す。
-  - 開くボタンに文字を出す props は、今の ActionMenu に無い。キャンバスを実装するときに、`@fukuemon/ui` に足す。
 - 「ファイル」のメニューは、ファイルを開く、ファイルに保存、SVG を書き出す、の 3 つを持つ。
 - 保存の状態は、最後に保存した時刻を、文で出す。時刻が変わっても、読み上げない。
 - 保存できないときは、ヘッダの下に、Notice（`danger`、`isAlert`）で、保存できないことと理由を出す。保存の容量が足りないときは、図を消すと容量が空くことを、文に入れる。
@@ -201,7 +200,7 @@ type DocumentContent = {
 - `source` は、記事の図から作った図だけが持つ。
 - 時刻は、エポックからのミリ秒の数値である。
 
-`documents/` は、次の型でデータベースを公開する。名前は、実装のときに変えてよい。  
+`documents/` は、次の型でデータベースを公開する。  
 `Store` は、プレイグラウンドの [NodeRuntime](../../../../apps/playground/DesignDoc.md#noderuntime) の `Store` と同じ形である。
 
 ```ts
@@ -254,12 +253,9 @@ type DocumentStore = {
 
 - 一覧は、そのツールの図だけを出す。
 - 一覧は、Dialog の中に、Table で作る。「新しい図」は、Dialog の `footer` に置く。
-  - 行ごとの操作を持つ一覧は、今の Table を使う場面に無い。キャンバスを実装するときに、その場面を足す。
-    - [components.md](../../../../packages/ui/design/components.md)
 - 行の名前を押すと、その図を開き、ダイアログを閉じる。
   - 行の名前は、`?doc=<id>` を `href` に持つ Link にする。ページは、押したときに、ページを読み込み直さずに図を切り替える。新しいタブで開く操作は、ブラウザに任せる。
 - 行の「⋯」のボタンの読み上げの名前は、`<図の名前> の操作` にする。「消す」は、ActionMenu の `isDanger` の項目にする。
-- Dialog の中に置いた ActionMenu が、最後の行で切れないことと、メニューの Esc がダイアログを閉じないことを、実装のタスクで確認する。
 - 「新しい図」を押すと、まだ保存していない空の図を開き、ダイアログを閉じる。前に開いていた図は変えない。名前は、`無題の図` に、ツールごとの連番を付ける（`無題の図 2`）。
   - 連番は、そのツールの図の名前のうち、`無題の図 <数>` の形のものの、最も大きい数に 1 を足した数にする。その形の名前が無いときは、1 にする。
 - 「消す」は、ConfirmDialog で確認を出し、訪問者が通したら消す。消した図は戻せない。
@@ -307,12 +303,11 @@ sequenceDiagram
 ```
 
 - draw.io のツールは、iframe の初期化のメッセージを受けてから、`load` で図の XML を渡す。編集のたびに届く `autosave` のイベントの XML を保存する。
-- Excalidraw のツールは、`onChange` を受けてから 300 ミリ秒のあいだ次の `onChange` が無いときに、`.excalidraw` の JSON を保存する。300 ミリ秒は、実装のタスクで測って変えてよい。
+- Excalidraw のツールは、`onChange` を受けてから 300 ミリ秒のあいだ次の `onChange` が無いときに、`.excalidraw` の JSON を保存する。
 - ページは、`embed.diagrams.net` の origin のメッセージだけを受ける。
 - ページは、図の中身が変わったときだけ保存する。選択、スクロール、拡大と縮小、エディタが読み込みの直後に出す通知では、保存しない。
   - draw.io のツールは、届いた XML を、最後にエディタに渡したか保存した XML と比べる。
   - Excalidraw のツールは、要素と、貼った画像が変わったかを比べる。
-  - 比べる手段と、draw.io が `load` の直後に `autosave` を出すかは、実装のタスクで確認する。
 - 図を切り替えるときは、エディタを読み込み直さずに、次の図の中身を渡す。
 - 図を切り替える前と、ページを閉じるとき（`pagehide`）に、まだ IndexedDB に書いていない中身を、先に書く。エディタから届いた中身は、編集したときに開いていた図の `id` に保存する。
 - エディタの外から図の中身を変えたとき（AI のエージェントからの操作）は、ページが、訪問者の編集と同じ流れで保存する。
@@ -336,7 +331,7 @@ sequenceDiagram
 ### 記事の図
 
 運営者は、キャンバスから書き出した SVG を `apps/web/src/content/figures/` に置き、記事の Markdown から、画像の記法で指す。  
-ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
 
 ```text
 apps/web/src/content/figures/
@@ -364,7 +359,7 @@ apps/web/src/content/figures/
   - 枠のキーボードの操作は、`@fukuemon/ui` の Table の、幅に収まらない表の枠と同じにする。Tab のキーで枠にフォーカスし、左右の矢印のキーで横にスクロールする。
 - Excalidraw の図で、運営者が選んだ色は、ダークでもライトの色のままである。運営者は、図を置くときに、ライトとダークの両方で読めることを確認する。
 - インラインにする SVG は、色の値を、トークンの CSS 変数に置き換える。
-  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](../../../adr/0040-canvas-figures-in-articles.md)
+  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](../../../adr/0040-canvas-figures-in-articles.md)
   - draw.io の SVG は、ルートの `color-scheme` の指定を外し、背景と線の色の変数の値を、トークンの CSS 変数にする。
   - Excalidraw の SVG は、線と文字のデフォルトの色を、トークンに置き換える。
 - インラインにする SVG からは、元データ（draw.io の `content` の属性、Excalidraw の scene）を外す。元データは、図の URL で配る SVG が持つ。
@@ -373,7 +368,7 @@ apps/web/src/content/figures/
   - 指したファイルが無い。
   - ファイルの名前が、規則に合わない。
   - SVG の中の元データが、拡張子のツールと合わない。
-- 1 つの記事に複数の図を入れたときに、SVG の中の `id` が重ならないことを、実装のタスクで確認する。重なるときは、ビルドが、図ごとに `id` を付け替える。
+- 1 つの記事に複数の図を入れて、SVG の中の `id` が重なるときは、ビルドが、図ごとに `id` を付け替える。
 
 ビルドは、置いた SVG を、変えずに `https://fukuemon.dev/figures/<名前>.<ツール>.svg` に出力する。  
 `fukuemon.dev` は、`/figures/*` に、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。ヘッダは、`apps/web/public/_headers` に書く。
@@ -416,7 +411,7 @@ sequenceDiagram
 - URL は、`<fukuemon.dev の origin>/figures/<名前>.<ツール>.svg` である。パスは `@fukuemon/figures` が組み立て、origin は `figures/` が足す。ツールは、ページのパスで決まる。fukuemon.dev の origin は、[プレイグラウンドのプロジェクト](../../../../apps/playground/DesignDoc.md#プロジェクト) と同じ、ビルドのときの環境変数から読む。
 - `fetch` は、リダイレクトを辿らない。
 - 開いただけでは、IndexedDB に保存しない。最初に編集したときに、新しい図として保存する。同じリンクを開くたびに、一覧に図が増えないようにするためである。
-  - ADR-0056: [記事の図を `content/figures/` に置いて画像の記法で指し、`/figures/` で配り、キャンバスには図の名前を渡す](../../../adr/0056-article-figures-directory-and-name.md)
+  - ADR-0043: [キャンバスとスライドのエディタは、ツールごとに、名前を付けた複数の図とスライドを IndexedDB に保存する](../../../adr/0043-multiple-named-documents-per-tool.md)
 - 新しい図の名前は、記事の図の名前にする。レコードの `source` に、記事の図の名前を持つ。
 - 保存してあった図は変えない。同じ記事の図から作った図が保存してあっても、リンクは、記事の図を開く。
 - エラーのときは、保存してある図を開かない。リンクの先は、`https://fukuemon.dev/playground` である。
@@ -441,8 +436,7 @@ sequenceDiagram
 
 ### 動くチェック
 
-- Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。
-  - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` である。
+- ツールのページのディレクトリの間の import を止めるチェックは、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground` の中の、`src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、`documents/` と `figures/` の間の import を止める。

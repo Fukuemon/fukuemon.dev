@@ -64,13 +64,11 @@ flowchart TD
 ```
 
 Worker のコードの変更は、通常の pull request に含まれる。  
-サイトを作り直す間は、merge で deploy せず、運用者が deploy workflow を `develop` から手で起動する。apply の workflow と違い、environment の承認は挟まない。  
+deploy と apply を起動する条件と、apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md#deployment-conditions) にある。  
+deploy の workflow は、apply の workflow と違い、environment の承認を挟まない。  
 変更を止める手段は、pull request のレビューと自動のテストに頼る。  
 `develop` には branch protection を掛けていないので、pull request を通すのは慣行であり、仕組みでは強制しない。  
 deploy 用の token は Workers Scripts の権限を持つので、custom domain の apex のレコードにも届きうる。deploy の workflow がそれを触らないのは、`wrangler deploy` の振る舞いによる。  
-apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md) にある。  
-develop の check workflow が通るたびに、deploy-catalog、deploy-playground、deploy-preview の workflow が、それぞれの Worker へ deploy する。  
-初回と出し直しは、運用者が `develop` から手で起動する。  
 どの Worker もハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
 
 Wrangler の設定ファイルは `wrangler.jsonc` にする。  

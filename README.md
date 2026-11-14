@@ -14,12 +14,12 @@ https://fukuemon.dev
 
 ## Running
 
-| コマンド               | 用途                                                        |
-| ---------------------- | ----------------------------------------------------------- |
-| `pnpm run dev`         | 開発サーバー                                                |
-| `pnpm run build`       | ビルド (Astro + Pagefind の索引。`vp run` でキャッシュする) |
-| `pnpm run check`       | 品質のチェック一式                                          |
-| `pnpm run infra:check` | Terraform の書式と構文 (要 Terraform)                       |
+| コマンド               | 用途                                      |
+| ---------------------- | ----------------------------------------- |
+| `pnpm run dev`         | 開発サーバー                              |
+| `pnpm run build`       | ビルド (Astro。`vp run` でキャッシュする) |
+| `pnpm run check`       | 品質のチェック一式                        |
+| `pnpm run infra:check` | Terraform の書式と構文 (要 Terraform)     |
 
 `check` が通すチェックと順序は、ルートの `package.json` の `check` にある。
 `infra:check` は Terraform を必要とするため `pnpm run check` には含めない。
@@ -35,7 +35,7 @@ CI の Check workflow では別の step として先に回す。
 ## Documentation
 
 pnpm workspace の monorepo。  
-ディレクトリの構成は [docs/design/DesignDoc.md](docs/design/DesignDoc.md#repository-layout) に、使うツールと役割とバージョンの所在は [context/tech-stack.md](context/tech-stack.md) に、採否の理由は [docs/adr/](docs/adr) にある。
+package とディレクトリの境界は [context/codebase.md](context/codebase.md#module-boundaries) に、使うツールと役割とバージョンの所在は [context/tech-stack.md](context/tech-stack.md) に、採否の理由は [docs/adr/](docs/adr) にある。
 
 | 知りたいこと                     | 読む場所                                                                       |
 | -------------------------------- | ------------------------------------------------------------------------------ |
