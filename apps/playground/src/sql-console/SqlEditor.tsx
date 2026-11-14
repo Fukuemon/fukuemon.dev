@@ -1,4 +1,5 @@
 import { sql } from "@codemirror/lang-sql";
+import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { useEffect, useRef } from "react";
 
@@ -18,7 +19,10 @@ export type SqlEditorProps = {
   states?: EditorStates;
 };
 
-/** SQL の入力欄。CodeMirror 6 を描く。value は、外から変わったときだけ入力欄に写す。 */
+/**
+ * SQL の入力欄。CodeMirror 6 を描く。value は、外から変わったときだけ入力欄に写す。
+ * 外から変わるのは、初期の状態に戻すときである。写すときは元に戻す履歴も消し、戻す前の SQL を元に戻す操作で出さない。
+ */
 export function SqlEditor({ value, onChange, onRun, describedBy, states }: SqlEditorProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView>(null);
@@ -27,6 +31,7 @@ export function SqlEditor({ value, onChange, onRun, describedBy, states }: SqlEd
   const initialValue = useRef(value);
   const initialDescribedBy = useRef(describedBy);
   const initialStates = useRef(states);
+  const extensionsRef = useRef<Extension[]>([]);
 
   useEffect(() => {
     handlers.current = { onChange, onRun };
@@ -45,6 +50,7 @@ export function SqlEditor({ value, onChange, onRun, describedBy, states }: SqlEd
       }),
       keepState(initialStates.current, STATE_KEY),
     ];
+    extensionsRef.current = extensions;
     const view = new EditorView({
       parent: parentRef.current ?? undefined,
       state: restoreState(initialStates.current, STATE_KEY, initialValue.current, extensions),
@@ -56,7 +62,8 @@ export function SqlEditor({ value, onChange, onRun, describedBy, states }: SqlEd
   useEffect(() => {
     const view = viewRef.current;
     if (!view || view.state.doc.toString() === value) return;
-    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
+    view.setState(EditorState.create({ doc: value, extensions: extensionsRef.current }));
+    initialStates.current?.set(STATE_KEY, view.state);
   }, [value]);
 
   return <div className="min-h-0 flex-1 overflow-hidden" ref={parentRef} />;
