@@ -118,10 +118,10 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
           <Notice
             density="compact"
             isAlert
-            title="作業ディレクトリを読めずに起動し直しました"
+            title="作業ディレクトリを読めませんでした"
             tone="warning"
           >
-            前に読めたときか、前に起動したときのファイルで起動しています。それより後に変えたファイルは、この実行環境にありません。
+            直前に変えたファイルは、起動し直した実行環境に無いことがあります。ファイルを確かめてから、続けてください。
           </Notice>
         )}
         {commandFailed && (
@@ -148,7 +148,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
         onConfirm={reset}
         title="保存したファイルを消して、初期の状態に戻す"
       >
-        保存したファイルを消し、記事の初期ファイルで実行環境を起動し直します。消したファイルは戻せません。
+        保存したファイルを消し、初期ファイルで実行環境を起動し直します。消したファイルは戻せません。
       </ConfirmDialog>
     </div>
   );
