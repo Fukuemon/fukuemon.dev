@@ -35,7 +35,7 @@ CI の Check workflow では別の step として先に回す。
 ## Documentation
 
 pnpm workspace の monorepo。  
-ディレクトリの構成は [docs/design/DesignDoc.md](docs/design/DesignDoc.md#repository-layout) に、使うツールと役割とバージョンの所在は [context/tech-stack.md](context/tech-stack.md) に、採否の理由は [docs/adr/](docs/adr) にある。
+package とディレクトリの境界は [context/codebase.md](context/codebase.md#module-boundaries) に、使うツールと役割とバージョンの所在は [context/tech-stack.md](context/tech-stack.md) に、採否の理由は [docs/adr/](docs/adr) にある。
 
 | 知りたいこと                     | 読む場所                                                                       |
 | -------------------------------- | ------------------------------------------------------------------------------ |
