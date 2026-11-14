@@ -17,14 +17,20 @@ afterAll(async () => {
   await Promise.all(dirs.map((dir) => rm(dir, { recursive: true, force: true })));
 });
 
-/** preload を読み込んだ Node で script を動かし、記録の行を読んだものと、ほかの出力を返す。 */
-async function run(script: string) {
+const STDOUT_TTY = fileURLToPath(new URL("./test/stdout-tty.cjs", import.meta.url));
+
+/**
+ * preload を読み込んだ Node で script を動かし、記録の行を読んだものと、ほかの出力を返す。
+ * 標準出力はパイプで受けるので、tty が true のときは、preload より先に、標準出力を端末に見せる preload を読む。
+ */
+async function run(script: string, { tty = true } = {}) {
   const dir = await mkdtemp(join(tmpdir(), "console-trace-"));
   dirs.push(dir);
   const file = join(dir, "main.cjs");
   await writeFile(file, script);
+  const preloads = tty ? [STDOUT_TTY, PRELOAD] : [PRELOAD];
   const { stdout, stderr } = await promisify(execFile)(process.execPath, [file], {
-    env: { ...process.env, NODE_OPTIONS: `--require ${PRELOAD}` },
+    env: { ...process.env, NODE_OPTIONS: preloads.map((path) => `--require ${path}`).join(" ") },
     timeout: 10_000,
   });
   const lines = stdout.split("\n").filter(Boolean);
@@ -63,6 +69,28 @@ describe("console-trace.cjs", () => {
     expect({ stdout, stderr }).toStrictEqual({
       stdout: ["debug!", "log!", "info!"],
       stderr: ["warn!", "error!"],
+    });
+  });
+
+  it("標準出力が端末でないときは記録の行を書かず、元の出力だけを残す", async () => {
+    const { records, stdout, stderr } = await run(`console.log("a"); console.error("b");`, {
+      tty: false,
+    });
+    expect({ records, stdout, stderr }).toStrictEqual({
+      records: [],
+      stdout: ["a"],
+      stderr: ["b"],
+    });
+  });
+
+  it("ワーカーのスレッドの console は、親の標準出力が端末でなくても記録する", async () => {
+    const { records, stdout } = await run(
+      `new (require("node:worker_threads").Worker)('console.log("w")', { eval: true });`,
+      { tty: false },
+    );
+    expect({ args: records.map((record) => record?.args), stdout }).toStrictEqual({
+      args: [[{ kind: "string", value: "w" }]],
+      stdout: ["w"],
     });
   });
 
