@@ -64,6 +64,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
   - `packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）
   - トップの庭の見た目の回帰と、記事のページの表と図の枠の E2E（`packages/e2e/visual/`）
   - トップの試作の録画
+  - トップの Lighthouse の計測（Chromium のパスの取得と、測る前のプロファイルの作成。`scripts/measure-top-lighthouse.mjs`）
 - three は、トップの立体の庭を描く場面のバンドルにだけ使う。
   - 庭を出すときだけ読み込み、ほかのページには配らない。
 - textlint は文書の文章のチェックに、commitlint はコミットのメッセージの形式のチェックに使う。
@@ -78,6 +79,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Terraform の CLI は、CI では `.github/workflows/check.yml` と `.github/workflows/apply.yml` の `terraform_version` に固定する。
   - provider のバージョンは `infra/*/.terraform.lock.hcl` にある。
 - react-doctor は依存に入れず、`npx` で実行する。`check` から呼ぶときは、ルートの `package.json` の `check:doctor` にバージョンを書く。
+- Lighthouse は、ルートの `package.json` の `devDependencies` にバージョンを固定して入れる。`scripts/measure-top-lighthouse.mjs` が、入れた依存を実行する。
 - similarity-ts は、GitHub のリリースにある prebuilt のバイナリを、mise の `github` backend で入れる。npm にも mise の registry にもないため。
 
 Bun と Biome は使わない。  
