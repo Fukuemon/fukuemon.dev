@@ -11,7 +11,10 @@
 // テキストのファイル（HTML、CSS、JavaScript、JSON、XML、SVG）は gzip で送る。本番の配信が圧縮して返すためである。
 // 配信は TLS の無い HTTP/1.1 である。本番の配信の HTTP/2 と Brotli とは、通信の値が違う。
 // 庭の最初の 1 枚が、ページの最初の描画に入った回は、LCP が FCP と同じ値になる。その回は lcpIsFcp を true にする。
-// median は全ての回の中央値で、judged は合否の判定に使う回の中央値である。判定の規則は docs/adr/0078-top-lighthouse-gpu-and-throttling.md にある。
+// summary の median は全ての回の中央値で、judged は lcpIsFcp の回を除いた中央値である（apps/web/scripts/lighthouse-judge.ts）。
+// judged を合否に使うのは、docs/adr/0078-top-lighthouse-gpu-and-throttling.md の条件で測ったときだけである。
+//
+// 終了コードは、全ての回を測れたら 0、途中の回が失敗したら 1、引数と前提が不正なら 2 である。
 import { execFile } from "node:child_process";
 import {
   existsSync,
@@ -29,6 +32,7 @@ import { extname, join, resolve, sep } from "node:path";
 import { parseArgs, promisify } from "node:util";
 import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
+import { judge, medians } from "../apps/web/scripts/lighthouse-judge.ts";
 
 const require = createRequire(import.meta.url);
 let LIGHTHOUSE_CLI;
@@ -176,6 +180,9 @@ function readRow(r) {
   const observed = a.metrics?.details?.items?.[0] ?? {};
   const fcp = observed.observedFirstContentfulPaint;
   const lcp = observed.observedLargestContentfulPaint;
+  // lcpIsFcp を決められない回を、除かない回として合否の中央値に入れない。
+  if (!Number.isFinite(fcp) || !Number.isFinite(lcp))
+    throw new Error("観測した FCP か LCP の値が無い");
   const ms = (k) => Math.round(a[k].numericValue);
   return {
     score: Math.round(score * 100),
@@ -187,7 +194,7 @@ function readRow(r) {
     observedFcp: fcp,
     observedLcp: lcp,
     observedLoad: observed.observedLoad,
-    lcpIsFcp: Number.isFinite(fcp) && Number.isFinite(lcp) && fcp === lcp,
+    lcpIsFcp: fcp === lcp,
     lcpElement: a["lcp-breakdown-insight"]?.details?.items?.find((d) => d.type === "node")
       ?.selector,
     benchmarkIndex: r.environment.benchmarkIndex,
@@ -198,26 +205,6 @@ mkdirSync(opt.out, { recursive: true });
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const label = [opt.visit, opt.gpu, opt.throttling].join("-");
 const rows = [];
-const MEDIAN_KEYS = ["score", "fcp", "lcp", "tbt", "si", "cls"];
-/** 指標ごとの中央値。回が無いときは null */
-const medians = (list) => {
-  if (list.length === 0) return null;
-  return Object.fromEntries(
-    MEDIAN_KEYS.map((k) => {
-      const v = list.map((r) => r[k]).sort((x, y) => x - y);
-      const m = Math.floor(v.length / 2);
-      return [k, v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2];
-    }),
-  );
-};
-/**
- * 合否の判定に使う回と中央値（ADR-0078）。庭を出すトップでは lcpIsFcp の回を除く。
- * 庭を出さないトップは、本文の描画が LCP になり、どの回も lcpIsFcp になるので除かない。
- */
-const judged = () => {
-  const kept = opt.visit === "reduced-motion" ? rows : rows.filter((r) => !r.lcpIsFcp);
-  return { excludedRuns: rows.length - kept.length, runs: kept.length, median: medians(kept) };
-};
 /** 結果を書く。途中の回が失敗したときは、それまでの回と失敗を書き、中央値は書かない */
 const writeSummary = (error) => {
   const summary = {
@@ -231,7 +218,7 @@ const writeSummary = (error) => {
       : {
           lcpIsFcpRuns: rows.filter((r) => r.lcpIsFcp).length,
           median: medians(rows),
-          judged: judged(),
+          judged: judge(rows, opt.visit),
         }),
     rows,
   };
@@ -294,6 +281,8 @@ if (!process.exitCode) {
   const summary = writeSummary();
   console.log(JSON.stringify({ lcpIsFcpRuns: summary.lcpIsFcpRuns, ...summary.median }));
   console.log(JSON.stringify({ judged: summary.judged }));
-  if (summary.judged.excludedRuns >= 3)
-    console.error("lcpIsFcp の回を 3 回以上除いた。5 回を 1 度だけ測り直す（ADR-0078）");
+  const adrConditions =
+    opt.visit === "second" && opt.gpu === "metal" && opt.throttling === "simulate" && runs === 5;
+  if (adrConditions && summary.judged.excludedRuns >= 3)
+    console.error("lcpIsFcp の回を 3 回以上除いた。ADR-0078 の規則で、5 回を 1 度だけ測り直す");
 }
