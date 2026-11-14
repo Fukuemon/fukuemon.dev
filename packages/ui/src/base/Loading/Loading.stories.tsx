@@ -5,7 +5,7 @@ import { Loading } from "./Loading";
 const meta = {
   title: "コンポーネント/Base/Loading",
   component: Loading,
-  args: { label: "実行環境を起動しています" },
+  args: { label: "サーバーが待ち受けるのを待っています" },
 } satisfies Meta<typeof Loading>;
 
 export default meta;

@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./FileTree.stories";
 
-const { Default, NoSelection, ReadOnly, Empty } = composeStories(stories);
+const { Default, NoSelection, ReadOnly, Empty, Pending } = composeStories(stories);
 
 const labels = () => screen.getAllByRole("treeitem").map((item) => item.textContent);
 
@@ -198,5 +198,16 @@ describe("FileTree", () => {
     render(<Empty />);
     expect(screen.getByText("ファイルがありません。")).toBeInTheDocument();
     expect(screen.queryByRole("tree")).toBeNull();
+  });
+
+  it("起動を待つ pending のときは、木も、空の文も、待ちの文も、操作のボタンも出さない", () => {
+    render(<Pending />);
+    expect({
+      region: screen.getByRole("region", { name: "ファイル" }) !== null,
+      tree: screen.queryByRole("tree"),
+      status: screen.queryByRole("status"),
+      empty: screen.queryByText("ファイルがありません。"),
+      button: screen.queryByRole("button"),
+    }).toStrictEqual({ region: true, tree: null, status: null, empty: null, button: null });
   });
 });

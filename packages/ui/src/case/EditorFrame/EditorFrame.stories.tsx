@@ -63,6 +63,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = { name: "ファイルを開いている" };
 export const Closable: Story = { name: "閉じられるタブ", args: { isClosable: true } };
 export const Empty: Story = { name: "空", args: { files: [] } };
+export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",
   args: { state: { kind: "loading", label: "エディタを読み込んでいます" } },

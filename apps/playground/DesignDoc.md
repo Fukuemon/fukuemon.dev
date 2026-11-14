@@ -377,7 +377,7 @@ flowchart TB
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
-- `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
+- `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `pending` を渡したものにする。待ちの印は、ペインの外の `Suspense` が `PageLoading` で出す。プロジェクトの読み込みと起動の待ちは続けて起きるので、境界が別の 2 つの `Suspense` にも、`PageLoading` に同じ文を渡す。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
 - 端末のペインの中のプロセスのタブは、選んだプロセスの端末だけを描く。プロセスのタブを替えたときは、端末を作り直し、プロセスの出力の記録を端末に書き込み直す。xterm.js の端末は、`Activity` で隠すと Effect のクリーンアップで破棄されるためである。
@@ -408,12 +408,12 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - CodeMirror は、ビルドで `code-editor` のチャンクに分け、エディタを持つページの間で共有する。
   - 色は、`packages/ui` のテーマ変数を読む。CodeMirror のデフォルトの色は、ダークのテーマで読めないので残さない。
   - フォーカスの表示は、エディタを囲む要素に付ける。CodeMirror が作る要素には `focus-ring` のユーティリティを付けられないので、検索パネルの入力欄とボタンには、同じ値を書く。
-- 実行のボタンを押してから結果が出るまで、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つの段階を `Loading` で出す。
+- 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、画面の右下に `PageLoading` で出す。SQL の実行の間は、結果の欄に `Loading` で出す。
 
 Node の実行環境のページは、次のとおり組む。
 
 - ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末を置く。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
-- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case の読み込み中を出す。
+- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。ペインの外の `Suspense` が、画面の右下に `PageLoading` を出す。プロジェクトを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
 - ファイルとディレクトリを消す前に、`ConfirmDialog` で確認する。
