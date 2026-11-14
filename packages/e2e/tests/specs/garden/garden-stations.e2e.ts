@@ -178,7 +178,7 @@ test.describe("トップの庭", () => {
   test.describe("幅 320px", () => {
     test.use({ viewport: { width: 320, height: 640 }, colorScheme: "light" });
 
-    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 2 段以内に並び、ヘッダーが 1 段に収まること", async ({
+    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 2 行以内に並び、ヘッダーが 1 段に収まること", async ({
       page,
     }) => {
       await openGarden(page);
