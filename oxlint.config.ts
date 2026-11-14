@@ -5,7 +5,13 @@ import { defineConfig, type OxlintOverride } from "oxlint";
 const FEATURES_DIR = "apps/web/src/features";
 const ISLAND_EXT = ["tsx", "jsx"];
 
-type Restriction = { name?: string; group?: string[]; regex?: string; message: string };
+type Restriction = {
+  name?: string;
+  group?: string[];
+  regex?: string;
+  allowTypeImports?: boolean;
+  message: string;
+};
 
 const RULE_1 = "コンテンツの参照は lib/content/ の公開関数を通す (context/codebase.md 規約 1)";
 const RULE_3 =
@@ -73,6 +79,51 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+const TOP_GARDEN_README = "apps/web/src/features/top-garden/README.md";
+
+// stage/ の関数は文字列にして head の inline script に埋め込むので、scene/ のコードを import できない。
+// 例外は、TopStageScript.astro が読む場面のバンドルの URL (?worker&url) だけ
+const topGardenSubdirs: { name: string; patterns: Restriction[] }[] = [
+  {
+    name: "ink",
+    patterns: [
+      {
+        regex: "^\\.\\./scene(/|$)",
+        message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_README})`,
+      },
+    ],
+  },
+  {
+    name: "scene",
+    patterns: [
+      {
+        regex: "^\\.\\./ink(/|$)",
+        message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_README})`,
+      },
+      {
+        regex: "^\\.\\./stage(/|$)",
+        allowTypeImports: true,
+        message: `scene/ から stage/ へは型だけを import する (${TOP_GARDEN_README})`,
+      },
+    ],
+  },
+  {
+    name: "stage",
+    patterns: [
+      {
+        // 先読みが無いので、接尾辞の無い import と、?worker&url 以外の接尾辞を止める
+        regex:
+          "^\\.\\./scene/[^?]*$|^\\.\\./scene/.*\\?(?:[^w]|w[^o]|wo[^r]|wor[^k]|work[^e]|worke[^r]|worker[^&]|worker&[^u]|worker&u[^r]|worker&ur[^l]|worker&url.)",
+        message: `stage/ から scene/ へは場面のバンドルの URL (?worker&url) だけを import する (${TOP_GARDEN_README})`,
+      },
+    ],
+  },
+];
+
+const subdirs: Record<string, { name: string; patterns: Restriction[] }[]> = {
+  "top-garden": topGardenSubdirs,
+};
+
 function islandFiles(dir: string): string[] {
   return ISLAND_EXT.map((ext) => `${dir}/**/*.${ext}`);
 }
@@ -100,19 +151,30 @@ function featureOverrides(): OxlintOverride[] {
         "feature どうしは参照しない。2 つ以上の feature が使うものは components/ へ移す (context/codebase.md 規約 5)",
     }));
     const dir = `${FEATURES_DIR}/${feature}`;
-    return [
+    const base = [...noPagesLayouts, ...otherFeatures];
+    const island = [...noAstroFileInIsland, ...base];
+    const dirOverrides: OxlintOverride[] = [
       {
         files: [`${dir}/**`],
-        rules: restrict(noAstroContent, [...noPagesLayouts, ...otherFeatures]),
+        rules: restrict(noAstroContent, base),
       },
       {
         files: islandFiles(dir),
-        rules: restrict(
-          [...noAstroContent, ...noAstroInIsland],
-          [...noAstroFileInIsland, ...noPagesLayouts, ...otherFeatures],
-        ),
+        rules: restrict([...noAstroContent, ...noAstroInIsland], island),
       },
     ];
+    // サブディレクトリの override は、同じ規則を置き換えるので、親の禁止も全て書く
+    const subOverrides = (subdirs[feature] ?? []).flatMap(({ name, patterns }) => [
+      {
+        files: [`${dir}/${name}/**`],
+        rules: restrict(noAstroContent, [...base, ...patterns]),
+      },
+      {
+        files: islandFiles(`${dir}/${name}`),
+        rules: restrict([...noAstroContent, ...noAstroInIsland], [...island, ...patterns]),
+      },
+    ]);
+    return [...dirOverrides, ...subOverrides];
   });
 }
 

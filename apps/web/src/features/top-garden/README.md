@@ -21,6 +21,10 @@ Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/REA
 `Profile.astro` は、3 つのどれにも当たらないので、直下に置く。
 ディレクトリの間の import は、`scene/` から `stage/` へは型だけ、`stage/` から `scene/` へは場面のバンドルの URL（`?worker&url`）だけにする。
 `ink/` と `scene/` は、互いを import しない。
+この 3 つの向きは、`oxlint.config.ts` の `no-restricted-imports` が止める。
+`pnpm run lint` が、向きに反する import で失敗する。
+`stage/` から `scene/` へは、`?worker&url` 以外の接尾辞と、接尾辞の無い import を止める。
+`scene/` から `stage/` へは、`import type` だけを通す。
 
 | ディレクトリ | 動く場所                                           | 制約                                                                                               |
 | ------------ | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
