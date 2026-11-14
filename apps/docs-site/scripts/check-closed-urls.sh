@@ -4,21 +4,21 @@
 # env の中に同じキーを書いても見逃さないよう、false の行があることに加えて、true の行が無いことを確かめる
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel)"
-WRANGLER="apps/docs-site/wrangler.jsonc"
-HEADERS="apps/docs-site/public/_headers"
+APP="$(cd "$(dirname "$0")/.." && pwd)"
+WRANGLER="wrangler.jsonc"
+HEADERS="public/_headers"
 status=0
 
 for key in workers_dev preview_urls; do
-  if ! grep -qE "\"$key\"[[:space:]]*:[[:space:]]*false" "$ROOT/$WRANGLER" ||
-    grep -qE "\"$key\"[[:space:]]*:[[:space:]]*true" "$ROOT/$WRANGLER"; then
+  if ! grep -qE "\"$key\"[[:space:]]*:[[:space:]]*false" "$APP/$WRANGLER" ||
+    grep -qE "\"$key\"[[:space:]]*:[[:space:]]*true" "$APP/$WRANGLER"; then
     echo "$WRANGLER の $key が false ではありません。" >&2
     status=1
   fi
 done
 
 # Access の外へ漏れたときに、検索の結果に載せない
-if ! grep -qE '^[[:space:]]+X-Robots-Tag:[[:space:]]*noindex' "$ROOT/$HEADERS"; then
+if ! grep -qE '^[[:space:]]+X-Robots-Tag:[[:space:]]*noindex' "$APP/$HEADERS"; then
   echo "$HEADERS に X-Robots-Tag: noindex がありません。" >&2
   status=1
 fi

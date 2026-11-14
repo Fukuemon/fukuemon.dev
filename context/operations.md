@@ -39,19 +39,20 @@ ADR-0031: [切り替えまでのプレビュー](../docs/adr/0031-subdomains-and
 ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-workers-terraform-wrangler-boundary.md)  
 管轄はこの表で決め、リソースが増減したら表を直す。
 
-| リソース                                                    | 管轄                            | 使うか   |
-| ----------------------------------------------------------- | ------------------------------- | -------- |
-| Zone、DNS レコード、TLS                                     | Terraform                       | 使う     |
-| Workers custom domain（`cloudflare_workers_custom_domain`） | Terraform                       | 使う     |
-| Access のアプリケーションとポリシー                         | Terraform                       | 使う     |
-| Zero Trust の組織                                           | ダッシュボード（最初の 1 回）   | 使う     |
-| Terraform の state 用の R2 バケット                         | Terraform（`infra/bootstrap/`） | 使う     |
-| Worker script と静的アセット                                | Wrangler                        | 使う     |
-| deployment                                                  | Wrangler                        | 使う     |
-| レスポンスヘッダ（`_headers`）                              | Wrangler（配信物の一部）        | 使う     |
-| runtime secret                                              | Wrangler                        | 該当なし |
-| binding（D1、KV、R2）                                       | Wrangler（`wrangler.jsonc`）    | 該当なし |
-| D1、KV、R2 のデータ本体                                     | Terraform                       | 該当なし |
+| リソース                                                                   | 管轄                                                                              | 使うか   |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------- |
+| Zone、DNS レコード、TLS                                                    | Terraform                                                                         | 使う     |
+| Workers custom domain（`cloudflare_workers_custom_domain`）                | Terraform                                                                         | 使う     |
+| Access のアプリケーションとポリシー                                        | Terraform                                                                         | 使う     |
+| Zero Trust の組織                                                          | ダッシュボード（最初の 1 回）                                                     | 使う     |
+| Terraform の state 用の R2 バケット                                        | Terraform（`infra/bootstrap/`）                                                   | 使う     |
+| workers.dev とバージョンごとの URL の公開（`workers_dev`、`preview_urls`） | Wrangler（`wrangler.jsonc`）。ドキュメントサイトは `check:closed-urls` が確認する | 使う     |
+| Worker script と静的アセット                                               | Wrangler                                                                          | 使う     |
+| deployment                                                                 | Wrangler                                                                          | 使う     |
+| レスポンスヘッダ（`_headers`）                                             | Wrangler（配信物の一部）                                                          | 使う     |
+| runtime secret                                                             | Wrangler                                                                          | 該当なし |
+| binding（D1、KV、R2）                                                      | Wrangler（`wrangler.jsonc`）                                                      | 該当なし |
+| D1、KV、R2 のデータ本体                                                    | Terraform                                                                         | 該当なし |
 
 管轄が決まらない新しいリソースは、次の順に判定する。
 

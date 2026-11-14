@@ -8,17 +8,20 @@ Cloudflare Access が、許可したメールアドレスの人だけを通す�
 
 ## 構成
 
-| ファイル                                | 持つもの                                                                        |
-| --------------------------------------- | ------------------------------------------------------------------------------- |
-| `zensical.toml`（リポジトリのルート）   | サイトの名前、`docs/` の読み方、ナビゲーション、Markdown の拡張                 |
-| `pyproject.toml` と `uv.lock`（ルート） | Zensical のバージョン                                                           |
-| `apps/docs-site/wrangler.jsonc`         | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false` |
-| `apps/docs-site/public/_headers`        | レスポンスヘッダ。ビルドの後に `dist/` へ写す                                   |
-| `infra/cloudflare/access.tf`            | Access のアプリケーションとポリシー                                             |
-| `infra/cloudflare/workers_domain.tf`    | custom domain の `docs.<zone>`                                                  |
-| `.github/workflows/deploy-docs.yml`     | develop で check が通ったときの配信                                             |
+| ファイル                                      | 持つもの                                                                        |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| `zensical.toml`（リポジトリのルート）         | サイトの名前、`docs/` の読み方、ナビゲーション、Markdown の拡張                 |
+| `pyproject.toml` と `uv.lock`（ルート）       | Zensical のバージョン                                                           |
+| `apps/docs-site/wrangler.jsonc`               | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false` |
+| `apps/docs-site/scripts/check-closed-urls.sh` | `workers_dev` と `preview_urls` が `false` であることと、noindex の確認         |
+| `apps/docs-site/public/_headers`              | レスポンスヘッダ。ビルドの後に `dist/` へ写す                                   |
+| `infra/cloudflare/access.tf`                  | Access のアプリケーションとポリシー                                             |
+| `infra/cloudflare/workers_domain.tf`          | custom domain の `docs.<zone>`                                                  |
+| `.github/workflows/deploy-docs.yml`           | develop で check が通ったときの配信                                             |
 
 - `zensical.toml` はリポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs_dir` を読まない。
+- `pyproject.toml` と `uv.lock` もルートに置く。`zensical.toml` と同じ場所で uv が依存を解決し、buddy と配置がそろう。
+- Design Doc を足すときは、`docs/design/` のシンボリックリンク、`zensical.toml` の `nav` と `watch` の 3 か所を直す。
 - サイトに載せる文書は、`docs/` の下と、`docs/design/` のシンボリックリンクが指す Design Doc である。`context/` とカタログは載せない。
 - ADR は、ナビゲーションに 1 本ずつ並べず、`docs/adr/index.md` から辿る。
 
