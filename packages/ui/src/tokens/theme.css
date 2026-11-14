@@ -387,6 +387,10 @@
   }
 }
 
+@utility scroll-fade-code {
+  --fd-scroll-fade-bg: var(--fd-color-code-surface);
+}
+
 /*
  * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
  * scroll-fade-end の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。

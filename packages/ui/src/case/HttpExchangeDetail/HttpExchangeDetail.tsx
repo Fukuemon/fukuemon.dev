@@ -59,12 +59,12 @@ function MessageBody({ label, body }: { label: string; body: string }) {
       </p>
       <pre
         aria-labelledby={labelId}
-        className="overflow-x-auto bg-code-surface p-2 font-mono text-code-compact text-code-text focus-visible:focus-ring"
+        className="scroll-fade-end scroll-fade-code overflow-x-auto bg-code-surface p-2 font-mono text-code-compact text-code-text focus-visible:focus-ring"
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- pre は section に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる
         role="region"
         tabIndex={0}
       >
-        {body}
+        <code>{body}</code>
       </pre>
     </div>
   );

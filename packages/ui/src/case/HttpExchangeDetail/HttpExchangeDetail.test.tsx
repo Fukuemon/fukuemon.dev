@@ -70,6 +70,20 @@ describe("HttpExchangeDetail", () => {
     );
   });
 
+  it("本文が横に続くあいだは右端を code-surface の色で薄くし、右端まで送ると消す", async () => {
+    await page.viewport(360, 800);
+    render(<LongUrlAndHeaders />);
+    const body = screen.getByRole("region", { name: "レスポンスの本文" });
+    const codeSurface = getComputedStyle(body).backgroundColor;
+    const fadeBg = getComputedStyle(body).getPropertyValue("--fd-scroll-fade-bg");
+    document.body.style.color = fadeBg;
+    expect(getComputedStyle(document.body).color).toBe(codeSurface);
+    document.body.style.color = "";
+    await expect.poll(() => getComputedStyle(body, "::after").opacity).toBe("1");
+    body.scrollLeft = body.scrollWidth;
+    await expect.poll(() => getComputedStyle(body, "::after").opacity).toBe("0");
+  });
+
   it("開閉の要約は 24 px の高さで押せ、表のセルの上下の余白は 2px、文字は 13 px にする（ADR-0062）", () => {
     render(<Default />);
     for (const summary of document.querySelectorAll("summary")) {
