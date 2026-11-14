@@ -139,6 +139,7 @@ Turborepo は `outputs` / `inputs` を明示宣言する方式のため、入力
 
 - Context と Verification の事実は、vite-plus 1.3.0 で確認したものである。`pnpm-workspace.yaml` の catalog は 1.4.0 で、1.4.0 では確認し直していない。
 - Decision 4 と Decision 6 は、比べた案の記録が無い。
+- Decision 9 の外す手順は、`apps/web` の分だけである。`apps/playground` と `packages/ui` から Vite+ を外す手順は、決めていない。
 - Considered Options の Turborepo の行と「Vite+ を採用しない」の行は、比べたときの文のまま残した。
   - 弱みのうち、Node.js のバージョンの固定、package manager の管理、lint と format の同梱は、Decision 5、Decision 7、ADR-0011 で使わないと決めたものである。
 
