@@ -37,6 +37,17 @@ describe("プロジェクトの JSON のページ", () => {
     expect(() => planProjectPages(articles, read)).toThrow("2 本の記事が埋め込んでいる");
   });
 
+  it("別のディレクトリの記事は、同じ名前を埋め込める", () => {
+    const articles = [
+      { id: "a", filePath: "articles/a.md", contentId: "a", body: fence("x") },
+      { id: "s/b", filePath: "articles/s/b.md", contentId: "b", body: fence("x") },
+    ];
+    expect(planProjectPages(articles, read).map((p) => p.props.project.version)).toStrictEqual([
+      "articles/playground/x",
+      "articles/s/playground/x",
+    ]);
+  });
+
   it("記事のパスが分からないときは失敗する", () => {
     expect(() => planProjectPages([{ id: "a", contentId: "a", body: fence("x") }], read)).toThrow(
       "記事のパスが分からない",

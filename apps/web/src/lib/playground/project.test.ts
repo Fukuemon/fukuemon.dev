@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { embedUrl, isEmbedName, projectDir, readProject } from "./project";
 
-function projectFiles(files: Record<string, string>): string {
+function projectFiles(files: Record<string, string | Uint8Array>): string {
   const dir = mkdtempSync(join(tmpdir(), "playground-project-"));
   for (const [path, body] of Object.entries(files)) {
     mkdirSync(join(dir, path, ".."), { recursive: true });
@@ -13,58 +13,86 @@ function projectFiles(files: Record<string, string>): string {
   return dir;
 }
 
-const NODE_CONFIG = JSON.stringify({
-  tool: "node",
-  open: "index.js",
-  start: [{ command: "node", args: ["index.js"], name: "サーバー" }],
-});
+const START = [{ command: "node", args: ["index.js"], name: "サーバー" }];
+const NODE_CONFIG = JSON.stringify({ tool: "node", open: "index.js", start: START });
+const HASH = expect.stringMatching(/^[0-9a-f]{64}$/);
+const config = (value: object) => JSON.stringify(value);
 
 describe("プロジェクトのディレクトリを読む", () => {
-  it("設定のファイルを除いたファイルを files にし、設定の値を残す", () => {
+  it("設定のファイルを除いたファイルを files にし、設定の値と version を持つ", () => {
     const dir = projectFiles({
       "playground.json": NODE_CONFIG,
       "index.js": "console.log(1);",
       "src/lib/a.js": "export {};",
     });
-    const project = readProject(dir);
-    expect(project.files).toStrictEqual({
-      "index.js": "console.log(1);",
-      "src/lib/a.js": "export {};",
+    expect(readProject(dir)).toStrictEqual({
+      tool: "node",
+      open: "index.js",
+      start: START,
+      files: { "index.js": "console.log(1);", "src/lib/a.js": "export {};" },
+      version: HASH,
     });
-    expect(project).toMatchObject({ tool: "node", open: "index.js" });
-    expect(project.version).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it("initialSql を、指したファイルの中身に置き換える", () => {
     const dir = projectFiles({
-      "playground.json": JSON.stringify({ tool: "sql", open: "q.sql", initialSql: "seed.sql" }),
+      "playground.json": config({ tool: "sql", open: "q.sql", initialSql: "seed.sql" }),
       "q.sql": "select 1;",
       "seed.sql": "create table t (id int);",
     });
-    expect(readProject(dir)).toMatchObject({ initialSql: "create table t (id int);" });
-  });
-
-  it("初期ファイルを変えると version が変わり、変えなければ同じになる", () => {
-    const files = { "playground.json": NODE_CONFIG, "index.js": "a" };
-    const before = readProject(projectFiles(files)).version;
-    expect(readProject(projectFiles(files)).version).toBe(before);
-    expect(readProject(projectFiles({ ...files, "index.js": "b" })).version).not.toBe(before);
-  });
-
-  it("設定のファイルが無いときは失敗する", () => {
-    expect(() => readProject(projectFiles({ "index.js": "" }))).toThrow("playground.json が無い");
-  });
-
-  it("設定が schema に合わないときは失敗する", () => {
-    const dir = projectFiles({ "playground.json": JSON.stringify({ tool: "ruby", open: "a" }) });
-    expect(() => readProject(dir)).toThrow();
-  });
-
-  it("open が無いファイルを指すときは失敗する", () => {
-    const dir = projectFiles({
-      "playground.json": JSON.stringify({ tool: "go", open: "main.go" }),
+    expect(readProject(dir)).toStrictEqual({
+      tool: "sql",
+      open: "q.sql",
+      initialSql: "create table t (id int);",
+      files: { "q.sql": "select 1;", "seed.sql": "create table t (id int);" },
+      version: HASH,
     });
-    expect(() => readProject(dir)).toThrow("schema に合わない");
+  });
+
+  it("同じ初期ファイルからは、同じ version を求める", () => {
+    const files = { "playground.json": NODE_CONFIG, "index.js": "a" };
+    expect(readProject(projectFiles(files)).version).toBe(readProject(projectFiles(files)).version);
+  });
+
+  it("初期ファイルを変えると、version が変わる", () => {
+    const files = { "playground.json": NODE_CONFIG, "index.js": "a" };
+    expect(readProject(projectFiles({ ...files, "index.js": "b" })).version).not.toBe(
+      readProject(projectFiles(files)).version,
+    );
+  });
+
+  it.each([
+    ["設定のファイルが無い", { "index.js": "" }, "playground.json が無い"],
+    ["設定が JSON でない", { "playground.json": "{" }, "playground.json を読めない"],
+    [
+      "設定が schema に合わない",
+      { "playground.json": config({ tool: "ruby", open: "a" }) },
+      "playground.json を読めない",
+    ],
+    [
+      "open が無いファイルを指す",
+      { "playground.json": config({ tool: "go", open: "main.go" }) },
+      "schema に合わない",
+    ],
+    [
+      "initialSql が指すファイルが無い",
+      {
+        "playground.json": config({ tool: "sql", open: "q.sql", initialSql: "x.sql" }),
+        "q.sql": "",
+      },
+      "x.sql を UTF-8 の文字列として読めない",
+    ],
+    [
+      "UTF-8 として読めないファイルがある",
+      {
+        "playground.json": config({ tool: "go", open: "main.go" }),
+        "main.go": "",
+        "a.png": new Uint8Array([0xff, 0xfe]),
+      },
+      "a.png を UTF-8 の文字列として読めない",
+    ],
+  ])("%s ときは失敗する", (_, files, message) => {
+    expect(() => readProject(projectFiles(files))).toThrow(message);
   });
 });
 

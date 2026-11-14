@@ -2,7 +2,7 @@ import type { PlaygroundProject } from "@fukuemon/playground-project";
 import { findEmbedNames } from "./embeds";
 import { projectDir, readProject } from "./project";
 
-export type EmbeddingArticle = { id: string; filePath?: string; contentId: string; body?: string };
+type EmbeddingArticle = { id: string; filePath?: string; contentId: string; body?: string };
 
 /**
  * 記事が埋め込むプロジェクトの JSON のページを並べる。

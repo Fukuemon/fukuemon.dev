@@ -4,7 +4,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import type { Element, Root } from "hast";
 import type { PlaygroundProject, PlaygroundTool } from "@fukuemon/playground-project";
-import { rehypePlayground } from "./rehype-playground";
+import { isNodeEmbed, rehypePlayground } from "./rehype-playground";
 
 const ORIGIN = "https://play.example";
 const ARTICLE = "/site/articles/series-a/intro.md";
@@ -14,7 +14,9 @@ function project(tool: PlaygroundTool): PlaygroundProject {
   return tool === "node" ? { tool, ...common, start: [] } : { tool, ...common };
 }
 
-function run(md: string, tools: Record<string, PlaygroundTool>, contentId: unknown = "intro") {
+type Run = { contentId?: unknown; path?: string };
+
+function run(md: string, tools: Record<string, PlaygroundTool>, opts: Run = {}) {
   const dirs: string[] = [];
   const tree = unified()
     .use(remarkParse)
@@ -26,8 +28,10 @@ function run(md: string, tools: Record<string, PlaygroundTool>, contentId: unkno
     if (tool === undefined) throw new Error(`無い: ${dir}`);
     return project(tool);
   };
+  const contentId = "contentId" in opts ? opts.contentId : "intro";
+  const path = "path" in opts ? opts.path : ARTICLE;
   rehypePlayground({ origin: ORIGIN, readProject: read })(tree, {
-    path: ARTICLE,
+    path,
     data: { astro: { frontmatter: { contentId } } },
   });
   return { tree, dirs };
@@ -36,16 +40,33 @@ function run(md: string, tools: Record<string, PlaygroundTool>, contentId: unkno
 const fence = (name: string) => `\`\`\`playground\n${name}\n\`\`\``;
 const first = (tree: Root) => tree.children.find((n): n is Element => n.type === "element");
 
+const embed = (tool: PlaygroundTool, title: string, name: string): Element => ({
+  type: "element",
+  tagName: "div",
+  properties: {
+    className: ["playground-embed"],
+    dataPlaygroundEmbed: "",
+    dataPlaygroundTool: tool,
+    dataPlaygroundSrc: `${ORIGIN}/${tool}/?project=intro/${name}`,
+    dataPlaygroundTitle: title,
+  },
+  children: [
+    {
+      type: "element",
+      tagName: "button",
+      properties: { type: "button", className: ["playground-embed-open"] },
+      children: [{ type: "text", value: `${title}を開きます` }],
+    },
+  ],
+});
+
 describe("実行環境の埋め込みの置き換え", () => {
-  it("フェンスを、iframe の URL を持つ要素とボタンに置き換える", () => {
-    const embed = first(run(fence("server"), { server: "node" }).tree) as Element;
-    expect(embed.tagName).toBe("div");
-    expect(embed.properties.dataPlaygroundTool).toBe("node");
-    expect(embed.properties.dataPlaygroundSrc).toBe(`${ORIGIN}/node/?project=intro/server`);
-    const button = embed.children[0] as Element;
-    expect(button.tagName).toBe("button");
-    expect(button.children).toStrictEqual([{ type: "text", value: "Node の実行環境を開く" }]);
-    expect(embed.properties.dataPlaygroundTitle).toBe("Node の実行環境");
+  it.each([
+    ["node", "Node の実行環境"],
+    ["sql", "SQL のツール"],
+    ["go", "Go のツール"],
+  ] as const)("%s のフェンスを、iframe の URL を持つ要素とボタンに置き換える", (tool, title) => {
+    expect(first(run(fence("x"), { x: tool }).tree)).toStrictEqual(embed(tool, title, "x"));
   });
 
   it("プロジェクトを、記事の Markdown があるディレクトリの playground/<名前>/ から読む", () => {
@@ -54,33 +75,18 @@ describe("実行環境の埋め込みの置き換え", () => {
     ]);
   });
 
-  it.each([
-    ["sql", "SQL のツールを開く"],
-    ["go", "Go のツールを開く"],
-  ] as const)("%s のツールのパスとボタンの文言にする", (tool, label) => {
-    const embed = first(run(fence("x"), { x: tool }).tree) as Element;
-    expect(embed.properties.dataPlaygroundSrc).toBe(`${ORIGIN}/${tool}/?project=intro/x`);
-    expect(JSON.stringify(embed)).toContain(label);
-  });
-
   it("ほかの言語のフェンスは変えない", () => {
     expect(first(run("```js\nserver\n```", {}).tree)?.tagName).toBe("pre");
   });
 
-  it("名前の形が違うときは失敗する", () => {
-    expect(() => run(fence("Bad_Name"), {})).toThrow("埋め込みの名前の形が違う");
-  });
-
-  it("同じ名前を 2 回埋め込むと失敗する", () => {
-    expect(() => run(`${fence("x")}\n\n${fence("x")}`, { x: "sql" })).toThrow("重なっている");
-  });
-
-  it("プロジェクトのディレクトリが無いときは失敗する", () => {
-    expect(() => run(fence("missing"), {})).toThrow("無い");
-  });
-
-  it("contentId が無いときは失敗する", () => {
-    expect(() => run(fence("x"), { x: "sql" }, null)).toThrow("contentId が無い");
+  it.each([
+    ["名前の形が違う", fence("Bad_Name"), {}, "埋め込みの名前の形が違う"],
+    ["同じ名前を 2 回埋め込む", `${fence("x")}\n\n${fence("x")}`, {}, "重なっている"],
+    ["プロジェクトのディレクトリが無い", fence("missing"), {}, "無い"],
+    ["contentId が無い", fence("x"), { contentId: null }, "contentId が無い"],
+    ["記事のパスが分からない", fence("x"), { path: undefined }, "記事のパスが分からない"],
+  ] as const)("%s ときは失敗する", (_, md, opts: Run, message) => {
+    expect(() => run(md, { x: "sql" }, opts)).toThrow(message);
   });
 
   it("SQL のツールだけの記事には、別の origin の画像を置ける", () => {
@@ -91,24 +97,56 @@ describe("実行環境の埋め込みの置き換え", () => {
 });
 
 describe("Node の実行環境を埋め込む記事のチェック", () => {
-  it("別の origin の画像があると失敗する", () => {
-    expect(() => run(`![a](https://cdn.example/a.png)\n\n${fence("x")}`, { x: "node" })).toThrow(
-      "https://cdn.example/a.png",
-    );
-  });
-
-  it("Markdown に直に書いた、別の origin の iframe があると失敗する", () => {
-    const md = `<iframe src="https://embed.example/x"></iframe>\n\n${fence("x")}`;
-    expect(() => run(md, { x: "node" })).toThrow("https://embed.example/x");
+  it.each([
+    ["Markdown の画像", "![a](https://cdn.example/a.png)", "https://cdn.example/a.png"],
+    [
+      "直に書いた iframe",
+      '<iframe src="https://embed.example/x"></iframe>',
+      "https://embed.example/x",
+    ],
+    ["プロトコルを省いた src", '<img src="//cdn.example/b.png">', "//cdn.example/b.png"],
+    [
+      "srcset の 2 つ目の候補",
+      '<img src="/a.png" srcset="/a.png 1x, https://cdn.example/a2.png 2x">',
+      "https://cdn.example/a2.png",
+    ],
+    [
+      "video の poster",
+      '<video poster="https://cdn.example/p.png"></video>',
+      "https://cdn.example/p.png",
+    ],
+  ])("%s が別の origin を指すと失敗する", (_, html, url) => {
+    expect(() => run(`${html}\n\n${fence("x")}`, { x: "node" })).toThrow(url);
   });
 
   it("同じ origin の画像は置ける", () => {
-    expect(() => run(`![a](/figures/a.svg)\n\n${fence("x")}`, { x: "node" })).not.toThrow();
+    expect(() =>
+      run(`![a](/figures/a.svg)\n\n<img srcset="/a.png 1x, /b.png 2x">\n\n${fence("x")}`, {
+        x: "node",
+      }),
+    ).not.toThrow();
   });
 
   it("SQL か Go のツールを一緒に埋め込むと失敗する", () => {
     expect(() => run(`${fence("x")}\n\n${fence("y")}`, { x: "node", y: "go" })).toThrow(
       "SQL か Go のツールを、同じ記事に埋め込めない",
     );
+  });
+});
+
+describe("Node の実行環境を埋め込む要素の判定", () => {
+  const paragraph: Element = {
+    type: "element",
+    tagName: "p",
+    properties: { dataPlaygroundTool: "node" },
+    children: [],
+  };
+
+  it.each([
+    ["Node の埋め込み", embed("node", "Node の実行環境", "x"), true],
+    ["SQL の埋め込み", embed("sql", "SQL のツール", "x"), false],
+    ["埋め込みの印の無い要素", paragraph, false],
+  ] as const)("%s を %s にする", (_, el, expected) => {
+    expect(isNodeEmbed(el)).toBe(expected);
   });
 });

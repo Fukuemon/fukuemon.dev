@@ -66,6 +66,12 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
 - 和文の間の改行を消す `rehype-ja-linebreak.ts`
 - 表と図を横に送れる枠で包む `rehype-scroll-box.ts`
+- 指定した言語のコードフェンスを要素に置き換える `rehype-fence.ts`
+- `playground` のフェンスを実行環境のボタンにし、Node の実行環境を埋め込む記事の外部の画像と埋め込みを止める `playground/rehype-playground.ts`
+- プロジェクトのディレクトリを JSON の形にする `playground/project.ts`
+- 原稿から埋め込みの名前を集める `playground/embeds.ts`
+- プロジェクトの JSON のページを並べ、2 本の記事が同じプロジェクトを指すと止める `playground/project-pages.ts`
+- Node の実行環境を埋め込むページに、cross-origin isolation のヘッダを返す規則を出力の `_headers` に足す `playground/isolation-headers.ts`
 
 `apps/playground`、`packages/sql-runtime`、`packages/go-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には、100% を求める。  

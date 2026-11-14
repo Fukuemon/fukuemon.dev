@@ -1,5 +1,6 @@
 import type { Element, ElementContent, Root, RootContent } from "hast";
 import type { PlaygroundProject, PlaygroundTool } from "@fukuemon/playground-project";
+import { fromHtml } from "hast-util-from-html";
 import {
   PLAYGROUND_LANG,
   PLAYGROUND_ORIGIN,
@@ -65,13 +66,13 @@ function resolveEmbed(
   embeds: readonly Embed[],
   read: (dir: string) => PlaygroundProject,
 ): Embed {
+  if (file.path === undefined) throw new Error("記事のパスが分からない");
   const contentId = file.data.astro?.frontmatter?.contentId;
   if (typeof contentId !== "string") throw new Error(`${file.path}: contentId が無い`);
   if (!isEmbedName(name)) throw new Error(`${file.path}: 埋め込みの名前の形が違う: ${name}`);
   if (embeds.some((e) => e.name === name)) {
     throw new Error(`${file.path}: 埋め込みの名前が重なっている: ${name}`);
   }
-  if (file.path === undefined) throw new Error("記事のパスが分からない");
   const { tool } = read(projectDir(file.path, name));
   return { name, tool, id: embedId(contentId, name) };
 }
@@ -93,7 +94,7 @@ function embedElement(tool: PlaygroundTool, src: string): Element {
         type: "element",
         tagName: "button",
         properties: { type: "button", className: ["playground-embed-open"] },
-        children: [{ type: "text", value: `${title}を開く` }],
+        children: [{ type: "text", value: `${title}を開きます` }],
       },
     ],
   };
@@ -114,18 +115,32 @@ function assertIsolatable(tree: Root, embeds: readonly Embed[], path: string | u
   }
 }
 
-const SRC_ATTR = /\s(?:src|srcset|data|poster)\s*=\s*["']?\s*((?:https?:)?\/\/[^"'\s>]+)/gi;
+const isCrossOrigin = (url: string) => /^(?:https?:)?\/\//.test(url);
 
-/** 別の origin を指す `src` などの値。Markdown に直に書いた HTML（raw）の中も見る */
+/** `srcset` は、カンマで区切った「URL と幅か倍率」の並び。hast は、文字列か文字列の配列で持つ */
+const srcsetUrls = (value: unknown): string[] =>
+  (Array.isArray(value) ? value.join(",") : typeof value === "string" ? value : "")
+    .split(",")
+    .map((candidate) => candidate.trim().split(/\s+/)[0] ?? "")
+    .filter((url) => url !== "");
+
+function subresourceUrls(el: Element): string[] {
+  const { src, data, poster, srcSet } = el.properties;
+  return [src, data, poster]
+    .filter((v): v is string => typeof v === "string")
+    .concat(srcsetUrls(srcSet));
+}
+
+/**
+ * 別の origin を指す `src`、`srcset`、`data`、`poster` の値。
+ * Astro は rehype-raw をユーザーのプラグインの後に動かすので、Markdown に直に書いた HTML（raw）は要素にしてから見る
+ */
 function crossOriginSources(node: Root | RootContent | ElementContent): string[] {
-  if (node.type === "raw") return [...node.value.matchAll(SRC_ATTR)].map((m) => m[1] as string);
-  if (node.type === "element" && SUBRESOURCE_TAGS.has(node.tagName)) {
-    const values = ["src", "srcSet", "data", "poster"]
-      .map((key) => node.properties[key])
-      .filter((v): v is string => typeof v === "string" && /^(?:https?:)?\/\//.test(v));
-    return [...values, ...node.children.flatMap(crossOriginSources)];
-  }
-  if (node.type === "root" || node.type === "element")
-    return node.children.flatMap(crossOriginSources);
-  return [];
+  if (node.type === "raw") return crossOriginSources(fromHtml(node.value, { fragment: true }));
+  if (node.type !== "root" && node.type !== "element") return [];
+  const own =
+    node.type === "element" && SUBRESOURCE_TAGS.has(node.tagName)
+      ? subresourceUrls(node).filter(isCrossOrigin)
+      : [];
+  return [...own, ...node.children.flatMap(crossOriginSources)];
 }

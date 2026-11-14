@@ -27,7 +27,7 @@ export default defineConfig({
   },
   markdown: {
     // デフォルトの Sätteri は rehype のプラグインを動かさないので、unified の処理に替える。
-    // rehypeMermaid は Expressive Code より前に動き、素の <pre><code> のまま図を拾う
+    // rehypePlayground と rehypeMermaid は Expressive Code より前に動き、素の <pre><code> のままフェンスを拾う
     processor: unified({
       rehypePlugins: [rehypePlayground, rehypeMermaid, rehypeScrollBox, rehypeJaLinebreak],
     }),

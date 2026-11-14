@@ -1,6 +1,6 @@
 ---
 import { SeriesPager } from "@fukuemon/ui";
-import PlaygroundEmbeds from "../../features/articles/PlaygroundEmbeds.astro";
+import PlaygroundEmbedScript from "../../features/articles/PlaygroundEmbedScript.astro";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { getArticlePaths, renderArticle, type ArticlePageProps } from "../../lib/content/articles";
 
@@ -32,7 +32,7 @@ const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
       <div class="prose">
         <Content />
       </div>
-      <PlaygroundEmbeds />
+      <PlaygroundEmbedScript />
       {
         series && (
           <SeriesPager

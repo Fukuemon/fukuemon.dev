@@ -2,12 +2,12 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
-import type { Element, Root, RootContent } from "hast";
+import type { Root, RootContent } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import { isNodeEmbed } from "./rehype-playground";
 
 function hasNodeEmbed(node: Root | RootContent): boolean {
-  if (node.type === "element" && isNodeEmbed(node as Element)) return true;
+  if (node.type === "element" && isNodeEmbed(node)) return true;
   return "children" in node && node.children.some(hasNodeEmbed);
 }
 

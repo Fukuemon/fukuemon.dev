@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import {
+  type PlaygroundConfig,
   type PlaygroundProject,
   type PlaygroundTool,
   playgroundConfigSchema,
@@ -37,19 +38,43 @@ function listFiles(dir: string): string[] {
     .sort();
 }
 
+const utf8 = new TextDecoder("utf-8", { fatal: true });
+
+/** 初期ファイルは JSON の文字列で渡すので、UTF-8 として読めないファイル（画像など）はビルドを失敗させる */
+function readText(path: string): string {
+  try {
+    return utf8.decode(readFileSync(path));
+  } catch (error) {
+    throw new Error(`${path} を UTF-8 の文字列として読めない`, { cause: error });
+  }
+}
+
+function readConfig(path: string): PlaygroundConfig {
+  try {
+    return playgroundConfigSchema.parse(JSON.parse(readText(path)));
+  } catch (error) {
+    throw new Error(
+      `${path} を読めない: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        cause: error,
+      },
+    );
+  }
+}
+
 /** プロジェクトのディレクトリを読み、ツールのページが読む JSON の形にする。設定と JSON が schema に合わないときは失敗する。 */
 export function readProject(dir: string): PlaygroundProject {
   const configPath = join(dir, CONFIG_FILE);
   if (!existsSync(configPath)) throw new Error(`${configPath} が無い`);
-  const config = playgroundConfigSchema.parse(JSON.parse(readFileSync(configPath, "utf8")));
+  const config = readConfig(configPath);
   const files = Object.fromEntries(
     listFiles(dir)
       .filter((path) => path !== CONFIG_FILE)
-      .map((path) => [path, readFileSync(join(dir, path), "utf8")]),
+      .map((path) => [path, readText(join(dir, path))]),
   );
   const initialSql =
     "initialSql" in config && config.initialSql !== undefined
-      ? readFileSync(join(dir, config.initialSql), "utf8")
+      ? readText(join(dir, config.initialSql))
       : undefined;
   const body = { ...config, files, ...(initialSql === undefined ? {} : { initialSql }) };
   const version = createHash("sha256").update(JSON.stringify(body)).digest("hex");
