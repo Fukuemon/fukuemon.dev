@@ -7,7 +7,9 @@ import * as Stories from "./Motion.stories";
 # 動き
 
 画面のコードが動きを付けるときのユーティリティを、見本と使う場面で並べる。
-見本の動きは、hover するか、ページを開くと見える。処理中の印だけは繰り返す。
+見本の動きは、hover、押す操作、横に送る操作をするか、ページを開くと見える。
+処理中の印だけは繰り返す。
+ページを開いたときに 1 回だけ動く見本は、ページを読み込み直すと、もう一度動く。
 
 - 使う場面と規則: `packages/ui/design/tokens.md` の「レイアウト、区切り、重なり、動き」
 - 動きを付ける操作、長さ、付けない所: `packages/ui/DesignDoc.md` の「動き」
@@ -20,7 +22,7 @@ import * as Stories from "./Motion.stories";
   <div className="fd-sample group flex flex-col gap-3 border border-border bg-surface p-6 text-text">
     <button
       type="button"
-      className="w-fit border border-border px-4 py-2 text-label transition-colors hover:bg-primary-surface"
+      className="w-fit border border-border px-4 py-2 text-label transition-colors hover:bg-primary-surface focus-visible:focus-ring"
     >
       hover で色が替わる
     </button>
@@ -54,32 +56,39 @@ import * as Stories from "./Motion.stories";
       stroke-brush: animate-stroke で引く罫を、筆の線の形にする。animate-loading
       と重ねて、PageLoading の筆の線にも使う
     </p>
-    <a href="#" className="w-fit">
+    <a href="#" className="focus-visible:focus-ring w-fit">
       <span className="link-rule">hover で罫が引かれるリンク</span>
     </a>
     <p className="font-mono text-code-dense text-text-secondary">
       link-rule: Link、目次の見出し、前後の記事の題の hover で、2px の罫を左から 1 回引く
     </p>
-    <a href="#" className="link-rule link-rule-below-underline w-fit underline underline-offset-4">
+    <a
+      href="#"
+      className="link-rule link-rule-below-underline focus-visible:focus-ring w-fit underline underline-offset-4"
+    >
       罫が下線の下に引かれるリンク
     </a>
     <p className="font-mono text-code-dense text-text-secondary">
       link-rule-below-underline: Link で、link-rule の罫を 4px 下げ、下線の下に置く
     </p>
-    <a href="#" className="brush-hover w-fit pb-1">
+    <a href="#" className="brush-hover focus-visible:focus-ring w-fit pb-1">
       hover で筆の線が引かれるリンク
     </a>
     <p className="font-mono text-code-dense text-text-secondary">
       brush-hover: パンくずリストのリンクとサイトのヘッダーのナビの hover
       で、リンクの箱の下に筆の線を左から 1 回引く
     </p>
-    <a href="#" aria-current="page" className="brush-hover brush-current w-fit pb-1">
+    <a
+      href="#"
+      aria-current="page"
+      className="brush-hover brush-current focus-visible:focus-ring w-fit pb-1"
+    >
       今いるページのリンク
     </a>
     <p className="font-mono text-code-dense text-text-secondary">
       brush-current:
-      サイトのヘッダーのナビで、今いるページとその下のページのリンクの箱の下に錆の筆の線を出す。brush-hover
-      と重ねて使う
+      サイトのヘッダーのナビで、今いるページとその下のページのリンクの箱の下に錆の筆の線を出し、ページを開いたときに左から
+      1 回引く。brush-hover と重ねて使う
     </p>
   </div>
 </Unstyled>
@@ -90,7 +99,7 @@ import * as Stories from "./Motion.stories";
   <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
     <button
       type="button"
-      className="ink-press w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
+      className="ink-press focus-visible:focus-ring w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
     >
       押して離す
     </button>
@@ -119,7 +128,7 @@ import * as Stories from "./Motion.stories";
   <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
     <span
       aria-hidden="true"
-      className="relative h-0.5 w-24 overflow-hidden bg-border after:absolute after:inset-0 after:animate-loading after:bg-primary"
+      className="relative h-0.5 w-24 overflow-hidden bg-border forced-fill after:absolute after:inset-0 after:animate-loading after:bg-primary after:forced-fill-on"
     />
     <p className="font-mono text-code-dense text-text-secondary">
       animate-loading: Loading の読み込み中の印の罫と、PageLoading の筆の線
@@ -140,12 +149,12 @@ import * as Stories from "./Motion.stories";
 <Unstyled>
   <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
     <div
-      className="scroll-fade-end w-64 overflow-x-auto"
+      className="scroll-fade-end focus-visible:focus-ring w-64 overflow-x-auto"
       tabIndex={0}
       role="region"
       aria-label="横に送る枠の見本"
     >
-      <p className="w-[32rem] whitespace-nowrap py-2 text-body-dense">
+      <p className="w-lg whitespace-nowrap py-2 text-body-dense">
         右に続きがある間だけ、右端が薄くなる。右端まで送ると、薄い色が消える。
       </p>
     </div>
@@ -155,11 +164,12 @@ import * as Stories from "./Motion.stories";
       の実行計画を横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする
     </p>
     <p className="font-mono text-code-dense text-text-secondary">
-      scroll-fade-code: scroll-fade-end と並べて付け、薄い色を code-surface の色にする
+      scroll-fade-code: scroll-fade-end と並べて付け、薄い色を code-surface の色にする。code-surface
+      の面の上にある枠で使う
     </p>
     <p className="font-mono text-code-dense text-text-secondary">
       scroll-fade-pane: scroll-fade-end と並べて付け、薄い色を surface-pane
-      の色にする。コードを動かす画面のペインの面の上で横に続く枠に使う
+      の色にする。コードを動かす画面のペインの面の上で横に続く枠に使う（ADR-0073）
     </p>
   </div>
 </Unstyled>
