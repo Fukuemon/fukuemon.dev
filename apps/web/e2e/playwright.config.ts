@@ -5,7 +5,7 @@ async function findFreePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
     server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
+    server.listen(0, () => {
       const address = server.address();
       server.close(() => {
         if (address && typeof address === "object") resolve(address.port);
@@ -16,9 +16,19 @@ async function findFreePort(): Promise<number> {
 }
 
 // 空きポートは最初の 1 回だけ決める。worker は config を読み直すので、決めた値を環境変数に残して同じポートを使わせる
-// PREVIEW_PORT を渡したときは、そのポートを使う
-const PORT = Number(process.env.PREVIEW_PORT ?? (await findFreePort()));
-process.env.PREVIEW_PORT = String(PORT);
+function resolvePort(): number {
+  const port = Number(process.env.PREVIEW_PORT);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`PREVIEW_PORT が不正: ${process.env.PREVIEW_PORT}`);
+  }
+  return port;
+}
+
+// BASE_URL を渡したときは配信を立てないので、ポートを決めない
+if (!process.env.BASE_URL && process.env.PREVIEW_PORT === undefined) {
+  process.env.PREVIEW_PORT = String(await findFreePort());
+}
+const PORT = process.env.BASE_URL ? 0 : resolvePort();
 
 // トップの庭の見た目の回帰の config。ビルドした dist/ を astro preview で配信して流す（context/testing.md）
 // 庭は WebGL で描くので、GPU に依らず同じ絵になる SwiftShader で描かせる。基準の画像は Linux で作る（context/testing/e2e.md）

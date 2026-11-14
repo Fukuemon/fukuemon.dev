@@ -87,7 +87,7 @@ spec は、`packages/e2e` ができるまで `apps/web/e2e/` に置く。
   - 例外は、`apps/playground/src/code-editor/search-panel.ts` のテストである。CodeMirror のパネルは DOM を組むので、jsdom の上で動かす。
 - E2E を足すときは、ビルド済みの `dist/` を静的に配信して実行し、dev server を対象にしない。
   - Astro の dev と build で出力が違う場合があり、本番に近い側をチェックする。
-- 実行に要る環境変数、ポート、外部のサービスは、未定。
+- 見た目の回帰の配信のポートと環境変数は、[E2E のテスト](testing/e2e.md) にある。外部のサービスは、未定。
 
 ## Mocking and Test Data
 
