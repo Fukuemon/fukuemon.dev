@@ -96,14 +96,12 @@ package が依存してよい先は次のとおり。
 - `@fukuemon/content-model` は、`zod` だけに依存する。
 - `@fukuemon/ui` は、workspace のどの package にも依存しない。
 - `@fukuemon/playground-project` は、workspace のどの package にも依存しない。
-- `@fukuemon/figures` は、workspace のどの package にも依存せず、React にも依存しない。
-- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project`、`@fukuemon/figures`、`@fukuemon/slides` に依存してよい。
+- `apps/web` は、`@fukuemon/ui`、`@fukuemon/content-model`、`@fukuemon/playground-project` に依存してよい。
   - tsconfig は、`@fukuemon/config` ではなく `astro/tsconfigs/strict` を `extends` する。
 - `@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
 - `@fukuemon/node-runtime` は、workspace の package では、`@fukuemon/sql-runtime` だけに依存する。`@webcontainer/api` に依存するのは、この package だけである。
 - `@fukuemon/sql-runtime`、`@fukuemon/node-runtime`、`@fukuemon/go-runtime` は、React に依存しない。
-- `@fukuemon/slides` は、workspace のどの package にも依存せず、React にも依存しない。`@marp-team/marp-core` に依存するのは、この package だけである。
-- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project`、`@fukuemon/figures`、`@fukuemon/slides` に依存する。実行環境の 3 つの package にも依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
+- `apps/playground` は、`@fukuemon/ui`、`@fukuemon/playground-project` に依存する。実行環境の 3 つの package にも依存する。`apps/web` と、`@fukuemon/content-model` には依存しない。`@webcontainer/api` には、直接は依存しない。
   - `apps/playground/src/` のディレクトリと、その間の import の向きは、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#ディレクトリ) にある。
 - `infra/` は、どこにも依存しない。
 
@@ -163,7 +161,7 @@ package を切り出すのは、次のどちらかが成り立つときである
 - デザインシステムの文書は、`packages/ui/DESIGN.md` と、`packages/ui/design/` の `tokens.md`、`components.md`、`catalog.md` の 4 つに置く。
 - トークンの 3 つの層は、`packages/ui/src/tokens/` の `primitive.css`、`semantic.css` と `semantic-dark.css`、`theme.css` に置く。
 - 使う側の Tailwind CSS に、コンポーネントのクラスを走査させる `@source` は、`packages/ui/src/sources.css` に置く。
-- コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に、パターンを `packages/ui/src/patterns/` に置く。
+- コンポーネントは、Base を `packages/ui/src/base/<名前>/` に、Case を `packages/ui/src/case/<名前>/` に置く。
   - story とテストは、コンポーネントと同じディレクトリに置く。
   - Domain のコンポーネントは `packages/ui` に置かず、`apps/web/src/features/<機能>/` の関心ごとのディレクトリに置く。
   - `apps/playground` の Domain のコンポーネントは、`apps/playground/src/` の、関心ごとのディレクトリに置く。

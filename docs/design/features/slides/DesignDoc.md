@@ -107,7 +107,7 @@ flowchart TB
 
 - `@marp-team/marp-core` に依存するのは、`@fukuemon/slides` だけである。`apps/playground` と `apps/web` の `package.json` には、`@marp-team/marp-core` を依存として書かない。
 - `@fukuemon/slides` は、React、`@fukuemon/ui`、workspace のほかの package に依存しない。
-- `src/slides/` は、`apps/playground/src/` のほかのツールのページのディレクトリ（`node/`、`sql/`、`go/` と、キャンバスのツール）を import しない。Oxlint の `no-restricted-imports` の対象に、`slides/` を足す。
+- `src/slides/` は、ツールのページのディレクトリである。ツールのページの間の import の規則は、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 - `documents/` は、`@fukuemon/slides` を import しない。スライドの中身は、文字列として受け取る。
 - `documents/` は、ツールの種類に依らない処理を、React の外のモジュールとして持つ。持つ処理の一覧は、[キャンバスの Design Doc の「ディレクトリ」](../canvas/DesignDoc.md#ディレクトリ) にある。
 - `src/slides/` は、エディタとのやり取り、中身が変わったかの比較、ファイルの形式の処理を持つ。`documents/` に Markdown を渡す時点（500 ミリ秒の待ち）も、`src/slides/` が持つ。開いているスライド、書き込み、書き込みの結果は、持たない。
@@ -547,7 +547,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 
 ### 動くチェック
 
-- Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。対象に `slides/` を足す。
+- ツールのページのディレクトリの間の import を止めるチェックは、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 - package の依存の宣言と knip: 次の 2 つを確認する。
   - `@fukuemon/slides` が、React、`@fukuemon/ui`、workspace のほかの package に依存しないこと
   - `apps/playground` と `apps/web` が、`@marp-team/marp-core` を直接は import しないこと

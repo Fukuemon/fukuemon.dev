@@ -131,7 +131,7 @@ flowchart TB
 - `documents/` と `figures/` は、`project/` と、実行環境の package を import しない。`Store` の型は、`documents/` が、`@fukuemon/sql-runtime` の `Store` と同じ形で定義する。形を変えるときは、両方を直す。
 - `documents/` のコンポーネントは、画面に出す語（「図」か「スライド」）と、新しく作るものの名前の付け方を、props で受ける。
 - `@excalidraw/excalidraw` を import するのは、`src/excalidraw/` だけである。
-- Oxlint の `no-restricted-imports` は、`drawio/` と `excalidraw/` も、ツールのページの間の import を止める対象にする。`src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import も止める。
+- `src/drawio/` と `src/excalidraw/` は、ツールのページのディレクトリである。ツールのページの間の import の規則は、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 
 ### ページの構成
 
@@ -436,8 +436,7 @@ sequenceDiagram
 
 ### 動くチェック
 
-- Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。
-  - 対象は、`node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` である。
+- ツールのページのディレクトリの間の import を止めるチェックは、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/excalidraw/` のほかからの、`@excalidraw/excalidraw` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground` の中の、`src/figures/` のほかからの、`@fukuemon/figures` の import を止める。
 - Oxlint の `no-restricted-imports`: `apps/playground/src/` の、`documents/` と `figures/` の間の import を止める。
