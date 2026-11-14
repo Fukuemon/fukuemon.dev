@@ -2,7 +2,8 @@ import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
 type BackendBootOptions = Pick<BootOptions, "files">;
 
-export type DirectoryItem = { name: string; kind: "file" | "directory" };
+/** other は、ファイルでもディレクトリでもないもの（シンボリックリンクなど）である。 */
+export type DirectoryItem = { name: string; kind: "file" | "directory" | "other" };
 
 /** 作業ディレクトリのファイルの操作。パスは作業ディレクトリからの相対パスで、`""` は作業ディレクトリそのものである。 */
 export type BackendFiles = {

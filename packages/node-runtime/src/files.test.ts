@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { bootFake, flush, treePaths } from "./test/fake-backend";
+import { ReadLimitError } from "./types";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -189,9 +190,9 @@ describe("files.readAll", () => {
   it("作業ディレクトリのファイルを、パスと大きさと中身で、パスの順に返す", async () => {
     const { runtime } = await bootFake();
     expect(await runtime.files.readAll({ ...options, maxBytes: 100 })).toStrictEqual([
-      { path: "index.js", size: 14, text: "console.log(1)" },
-      { path: "package.json", size: 2, text: "{}" },
-      { path: "src/app.js", size: 0, text: "" },
+      { path: "index.js", kind: "file", size: 14, text: "console.log(1)" },
+      { path: "package.json", kind: "file", size: 2, text: "{}" },
+      { path: "src/app.js", kind: "file", size: 0, text: "" },
     ]);
   });
 
@@ -212,6 +213,48 @@ describe("files.readAll", () => {
     created.files.putFromCommand(path, contents);
     const file = (await runtime.files.readAll(options)).find((entry) => entry.path === path);
     expect(file?.text).toBeNull();
+  });
+
+  it("ファイルでもディレクトリでもないもの（リンク）は、kind を other にして、指す先の中身を返す。ツリーには、ファイルとして出す", async () => {
+    const { runtime, created } = await bootFake();
+    created.files.putLink("link.txt", "ab");
+    await flush();
+    const file = (await runtime.files.readAll(options)).find((entry) => entry.path === "link.txt");
+    expect({
+      file,
+      tree: runtime.files.tree.getSnapshot().find((entry) => entry.path === "link.txt"),
+    }).toStrictEqual({
+      file: { path: "link.txt", kind: "other", size: 2, text: "ab" },
+      tree: { path: "link.txt", kind: "file" },
+    });
+  });
+
+  it.each([
+    ["ファイルの数", { files: 2, bytes: 100 }],
+    ["読んだ大きさの合計", { files: 100, bytes: 10 }],
+  ])("%s が limit を超えると、ReadLimitError で失敗する", async (_, limit) => {
+    const { runtime } = await bootFake();
+    await expect(runtime.files.readAll({ ...options, limit })).rejects.toBeInstanceOf(
+      ReadLimitError,
+    );
+  });
+
+  it("limit を超えたら、残りのディレクトリの一覧を読まない", async () => {
+    const { runtime, created } = await bootFake();
+    for (const name of ["a", "b", "c"]) created.files.putFromCommand(`${name}/x/y.txt`, "");
+    await flush();
+    const calls = created.files.api.listCalls;
+    await expect(
+      runtime.files.readAll({ ...options, limit: { files: 1, bytes: 100 } }),
+    ).rejects.toBeInstanceOf(ReadLimitError);
+    // ルートの一覧で数を超えるので、子のディレクトリを読まない
+    expect(created.files.api.listCalls - calls).toBe(1);
+  });
+
+  it("limit の数と大きさちょうどなら、読み終える", async () => {
+    const { runtime } = await bootFake();
+    const files = await runtime.files.readAll({ ...options, limit: { files: 3, bytes: 16 } });
+    expect(files).toHaveLength(3);
   });
 
   it("一覧を読んだ後に消えたファイルは、飛ばして返す", async () => {

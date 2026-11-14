@@ -61,7 +61,8 @@ function createBackendFiles(container: WebContainer): BackendFiles {
       return items.map(
         (item): DirectoryItem => ({
           name: item.name,
-          kind: item.isDirectory() ? "directory" : "file",
+          // WebContainers の Dirent には isSymbolicLink が無く、リンクは isFile も isDirectory も false を返す
+          kind: item.isDirectory() ? "directory" : item.isFile() ? "file" : "other",
         }),
       );
     },

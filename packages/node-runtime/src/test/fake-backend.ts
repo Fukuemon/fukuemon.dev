@@ -61,6 +61,8 @@ function createFakeProcess(
 function createFakeFiles(initial: Readonly<Record<string, string>>) {
   const files = new Map<string, Uint8Array>();
   const directories = new Set<string>();
+  /** ファイルでもディレクトリでもないもの（リンク）のパス。中身は files に持つ。 */
+  const others = new Set<string>();
   const listeners = new Set<(paths: readonly string[]) => void>();
   const encoder = new TextEncoder();
 
@@ -96,7 +98,10 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
       }
       for (const path of files.keys()) {
         if (path.startsWith(prefix) && !path.slice(prefix.length).includes("/")) {
-          children.set(path, { name: path.slice(prefix.length), kind: "file" });
+          children.set(path, {
+            name: path.slice(prefix.length),
+            kind: others.has(path) ? "other" : "file",
+          });
         }
       }
       return [...children.values()];
@@ -147,6 +152,12 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
     /** 実行環境の中のコマンドがファイルを作ったときと同じく、操作の関数を通さずに書いて、通知を出す。 */
     putFromCommand: (path: string, contents: string | Uint8Array) => {
       putFile(path, contents);
+      notify([path]);
+    },
+    /** シェルでシンボリックリンクを作ったときと同じく、一覧で other になる項目を作って、通知を出す。contents は指す先の中身である。 */
+    putLink: (path: string, contents: string) => {
+      putFile(path, contents);
+      others.add(path);
       notify([path]);
     },
     watchers: () => listeners.size,

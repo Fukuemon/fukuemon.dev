@@ -8,11 +8,34 @@ export type BootOptions = {
   files: Readonly<Record<string, string>>;
 };
 
-/** files.readAll で読まないパスと、中身を読まないファイルの大きさ。exclude は、パスの区切りの 1 つと一致する名前である。 */
-export type ReadAllOptions = { exclude: readonly string[]; maxBytes: number };
+/**
+ * files.readAll で読まないパスと、中身を読まないファイルの大きさ。exclude は、パスの区切りの 1 つと一致する名前である。
+ * limit を渡すと、読むファイルの数か、読んだ大きさの合計が超えた時点で、読むのをやめて ReadLimitError で失敗する。
+ */
+export type ReadAllOptions = {
+  exclude: readonly string[];
+  maxBytes: number;
+  limit?: { files: number; bytes: number };
+};
 
-/** 作業ディレクトリの 1 つのファイル。maxBytes を超えるファイルと、テキストとして読めないファイルは、text が null である。 */
-export type FileContents = { path: string; size: number; text: string | null };
+/**
+ * 作業ディレクトリの 1 つのファイル。maxBytes を超えるファイルと、テキストとして読めないファイルは、text が null である。
+ * kind が other のものは、ファイルでもディレクトリでもないもの（シンボリックリンクなど）で、text は指す先の中身である。
+ */
+export type FileContents = {
+  path: string;
+  kind: "file" | "other";
+  size: number;
+  text: string | null;
+};
+
+/** files.readAll が、limit の数か大きさを超えたときの失敗。 */
+export class ReadLimitError extends Error {
+  constructor() {
+    super("作業ディレクトリのファイルが、読む上限を超えた");
+    this.name = "ReadLimitError";
+  }
+}
 
 /** 作業ディレクトリのファイルかディレクトリ。path は作業ディレクトリからの相対パスで、区切りは `/` である。 */
 export type FileEntry = { path: string; kind: "file" | "directory" };

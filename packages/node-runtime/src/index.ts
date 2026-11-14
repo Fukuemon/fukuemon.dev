@@ -3,7 +3,7 @@ import type { BootOptions, NodeRuntime } from "./types";
 import { webContainerBackend } from "./webcontainer";
 
 export { isExcludedPath } from "./files";
-export { BootError } from "./types";
+export { BootError, ReadLimitError } from "./types";
 export type {
   BootFailureReason,
   BootOptions,
