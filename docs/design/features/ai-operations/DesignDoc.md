@@ -129,37 +129,36 @@ type ErrorCode =
 relay を通すと、開いている全てのタブの操作が、MCP のクライアントの 1 つの一覧に並ぶ。  
 名前だけで、どのツールの操作かを読み取れるようにするためである。
 
-| ツール       | 名前                        | 行うこと                                 | 注釈                           | 確認 |
-| ------------ | --------------------------- | ---------------------------------------- | ------------------------------ | ---- |
-| `slides`     | `slides_read`               | Markdown の全文、テーマ、枚数を返す      | 読み取りだけ、信頼できない内容 | 無い |
-| `slides`     | `slides_write`              | Markdown の全文を置き換える              | 無い                           | 出す |
-| `slides`     | `slides_set_theme`          | テーマを変える                           | 無い                           | 無い |
-| `excalidraw` | `excalidraw_read`           | 要素の一覧を返す                         | 読み取りだけ、信頼できない内容 | 無い |
-| `excalidraw` | `excalidraw_add_elements`   | 図形、文字、図形をつなぐ矢印を足す       | 無い                           | 無い |
-| `excalidraw` | `excalidraw_update_element` | 指定した要素の位置、大きさ、色を変える   | 無い                           | 無い |
-| `excalidraw` | `excalidraw_clear`          | 全ての要素を消す                         | 重大な操作                     | 出す |
-| `drawio`     | `drawio_read`               | 図の XML を返す                          | 読み取りだけ、信頼できない内容 | 無い |
-| `drawio`     | `drawio_add_cells`          | 図に `mxCell` を足す                     | 無い                           | 無い |
-| `drawio`     | `drawio_write`              | 図の全体を、渡した XML に置き換える      | 重大な操作                     | 出す |
-| `node`       | `node_list_files`           | ファイルの一覧を返す                     | 読み取りだけ                   | 無い |
-| `node`       | `node_read_file`            | ファイルの中身を返す                     | 読み取りだけ、信頼できない内容 | 無い |
-| `node`       | `node_write_file`           | ファイルを書く                           | 無い                           | 無い |
-| `node`       | `node_delete_file`          | ファイルを消す                           | 重大な操作                     | 出す |
-| `node`       | `node_run_command`          | コマンドを実行し、終了コードと出力を返す | 重大な操作、信頼できない内容   | 無い |
-| `sql`        | `sql_read_query`            | 入力欄の SQL を返す                      | 読み取りだけ、信頼できない内容 | 無い |
-| `sql`        | `sql_run_query`             | 渡した SQL を実行し、結果を返す          | 重大な操作、信頼できない内容   | 無い |
-| `go`         | `go_list_files`             | ファイルの一覧を返す                     | 読み取りだけ                   | 無い |
-| `go`         | `go_read_file`              | ファイルの中身を返す                     | 読み取りだけ、信頼できない内容 | 無い |
-| `go`         | `go_write_file`             | ファイルを書く                           | 無い                           | 無い |
-| `go`         | `go_delete_file`            | ファイルを消す                           | 重大な操作                     | 出す |
-| `go`         | `go_run`                    | ファイルを実行し、終了コードと出力を返す | 重大な操作、信頼できない内容   | 無い |
-| `go`         | `go_test`                   | テストを実行し、終了コードと出力を返す   | 重大な操作、信頼できない内容   | 無い |
+| ツール       | 名前                        | 行うこと                                 |
+| ------------ | --------------------------- | ---------------------------------------- |
+| `slides`     | `slides_read`               | Markdown の全文、テーマ、枚数を返す      |
+| `slides`     | `slides_write`              | Markdown の全文を置き換える              |
+| `slides`     | `slides_set_theme`          | テーマを変える                           |
+| `excalidraw` | `excalidraw_read`           | 要素の一覧を返す                         |
+| `excalidraw` | `excalidraw_add_elements`   | 図形、文字、図形をつなぐ矢印を足す       |
+| `excalidraw` | `excalidraw_update_element` | 指定した要素の位置、大きさ、色を変える   |
+| `excalidraw` | `excalidraw_clear`          | 全ての要素を消す                         |
+| `drawio`     | `drawio_read`               | 図の XML を返す                          |
+| `drawio`     | `drawio_add_cells`          | 図に `mxCell` を足す                     |
+| `drawio`     | `drawio_write`              | 図の全体を、渡した XML に置き換える      |
+| `node`       | `node_list_files`           | ファイルの一覧を返す                     |
+| `node`       | `node_read_file`            | ファイルの中身を返す                     |
+| `node`       | `node_write_file`           | ファイルを書く                           |
+| `node`       | `node_delete_file`          | ファイルを消す                           |
+| `node`       | `node_run_command`          | コマンドを実行し、終了コードと出力を返す |
+| `sql`        | `sql_read_query`            | 入力欄の SQL を返す                      |
+| `sql`        | `sql_run_query`             | 渡した SQL を実行し、結果を返す          |
+| `go`         | `go_list_files`             | ファイルの一覧を返す                     |
+| `go`         | `go_read_file`              | ファイルの中身を返す                     |
+| `go`         | `go_write_file`             | ファイルを書く                           |
+| `go`         | `go_delete_file`            | ファイルを消す                           |
+| `go`         | `go_run`                    | ファイルを実行し、終了コードと出力を返す |
+| `go`         | `go_test`                   | テストを実行し、終了コードと出力を返す   |
 
 - 名前は、英小文字、数字、`_` だけで書く。
   - polyfill（`@mcp-b/global` 6.2.0）は、`[A-Za-z0-9_.-]` の 1〜128 文字でない名前の登録を拒否する。
   - relay（`@mcp-b/webmcp-local-relay` 6.2.0）は、名前を `[a-zA-Z0-9_]` に直して、MCP のクライアントに見せる。
-- 注釈の語は、ADR-0044 の Decision 4 と同じである。
-- `sql` と `go` の操作の注釈は、ADR-0044 の Decision 4 にある。
+- 操作の注釈は、ADR-0044 の Decision 4 にある。ページが確認を出す操作は、ADR-0045 の Decision 4 にある。
 
 ### 結果の形
 
