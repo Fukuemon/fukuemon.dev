@@ -16,7 +16,10 @@ const MAX_BODY_TEXT = 64 * 1024;
 const MAX_HEADERS = 100;
 const MAX_URL = 8 * 1024;
 /** ヘッダの名前と値の文字数の上限。超えた分は切り、末尾に「…」を付ける。 */
-const MAX_HEADER_TEXT = 8 * 1024;
+const MAX_HEADER_NAME = 256;
+const MAX_HEADER_VALUE = 8 * 1024;
+/** 所要時間の上限と、受けた時刻が今より先でよい幅。 */
+const DAY_MS = 24 * 60 * 60 * 1000;
 /** メソッドと送信元のヘッダの値の文字数の上限。超えた行は、記録の行ではないとみなして捨てる。 */
 const MAX_METHOD = 32;
 const MAX_FROM = 256;
@@ -29,8 +32,13 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isPort = (value: unknown): value is number =>
   Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 65535;
 
-const isCount = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value) && value >= 0;
+const isSize = (value: unknown): value is number =>
+  Number.isSafeInteger(value) && (value as number) >= 0;
+
+const isTime = (value: unknown): value is number => isSize(value) && value <= Date.now() + DAY_MS;
+
+const isDuration = (value: unknown): value is number =>
+  typeof value === "number" && value >= 0 && value <= DAY_MS;
 
 const isStatus = (value: unknown): value is number =>
   Number.isInteger(value) && (value as number) >= 100 && (value as number) <= 999;
@@ -42,8 +50,7 @@ const cut = (text: string, max: number) => {
   return text.slice(0, end);
 };
 
-const cutHeader = (text: string) =>
-  text.length > MAX_HEADER_TEXT ? `${cut(text, MAX_HEADER_TEXT)}…` : text;
+const cutHeader = (text: string, max: number) => (text.length > max ? `${cut(text, max)}…` : text);
 
 type HeaderList = { headers: HttpHeaderLine[]; omittedHeaders?: number };
 
@@ -56,7 +63,10 @@ const toHeaders = (value: unknown): HeaderList | undefined => {
       return undefined;
     }
     if (headers.length < MAX_HEADERS)
-      headers.push({ name: cutHeader(item.name), value: cutHeader(item.value) });
+      headers.push({
+        name: cutHeader(item.name, MAX_HEADER_NAME),
+        value: cutHeader(item.value, MAX_HEADER_VALUE),
+      });
   }
   const omitted = value.length - headers.length;
   return omitted > 0 ? { headers, omittedHeaders: omitted } : { headers };
@@ -68,7 +78,7 @@ const toBody = (value: unknown): HttpBody | undefined | false => {
   if (
     !isObject(value) ||
     !(typeof value.text === "string" || value.text === null) ||
-    !isCount(value.size) ||
+    !isSize(value.size) ||
     typeof value.truncated !== "boolean"
   ) {
     return false;
@@ -118,8 +128,8 @@ export function parseHttpLine(line: string): ParsedLine | undefined {
     typeof method !== "string" ||
     method.length > MAX_METHOD ||
     typeof url !== "string" ||
-    !isCount(startedAt) ||
-    !isCount(durationMs) ||
+    !isTime(startedAt) ||
+    !isDuration(durationMs) ||
     requestHeaders === undefined ||
     requestBody === false
   ) {
@@ -172,8 +182,8 @@ const portName = (port: number) => `${port} 番のサーバー`;
  */
 function peerOf(from: string | null, names: ReadonlyMap<number, string>): HttpPeer {
   if (from === null) return BROWSER;
-  if (/^\d+$/.test(from)) {
-    const port = Number(from);
+  const port = Number(from);
+  if (/^\d+$/.test(from) && isPort(port)) {
     return { id: `port:${port}`, name: names.get(port) ?? portName(port) };
   }
   if (/^pid-\d+$/.test(from)) return { id: "process", name: "Node のプロセス" };

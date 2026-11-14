@@ -40,6 +40,13 @@ describe("parseHttpLine", () => {
     ["状態コードが 100 より小さい", exchange({ response: { status: 42, headers: [] } })],
     ["時刻が有限でない", exchange().replace('"startedAt":100', '"startedAt":1e999')],
     ["メソッドが 32 文字を超える", exchange({ method: "G".repeat(33) })],
+    ["状態コードが 999 を超える", exchange({ response: { status: 1000, headers: [] } })],
+    ["所要時間が 1 日を超える", exchange({ durationMs: 86_400_001 })],
+    ["受けた時刻が 1 日より先", exchange({ startedAt: Date.now() + 2 * 86_400_000 })],
+    [
+      "本文の大きさが整数でない",
+      exchange({ request: { headers: [], body: { text: "", size: 1.5, truncated: false } } }),
+    ],
     ["送信元のヘッダの値が 256 文字を超える", exchange({ from: "a".repeat(257) })],
   ])("%s行は捨てる", (_, line) => {
     expect(parseHttpLine(line)).toBeUndefined();
@@ -111,8 +118,8 @@ describe("createHttpRecords", () => {
 
   it("後から届いた記録も、リクエストを受けた時刻の順に並べ、同じ時刻は届いた順にする", () => {
     const records = accepted(
-      [exchange({ url: "/token", startedAt: 150.5 }), auth],
-      [exchange({ url: "/callback", startedAt: 150.25 }), client],
+      [exchange({ url: "/token", startedAt: 151 }), auth],
+      [exchange({ url: "/callback", startedAt: 150 }), client],
       [exchange({ url: "/", startedAt: 200 }), client],
       [exchange({ url: "/same", startedAt: 200 }), client],
     );
@@ -258,5 +265,26 @@ describe("偽の記録の行の上限の境界", () => {
     records.accept(exchange({ to: 1 }), client);
     records.accept(listen(1), client);
     expect(records.store.getSnapshot()[0]?.to.name).toBe("クライアント");
+  });
+});
+
+describe("偽の記録の行の、文字数の境界と送信元", () => {
+  it("ちょうど 32 文字のメソッドと 256 文字の送信元の行は捨てない", () => {
+    expect(
+      parseHttpLine(exchange({ method: "G".repeat(32), from: "a".repeat(256) })),
+    ).toBeDefined();
+  });
+
+  it("256 文字を超えたヘッダの名前は切り、末尾に「…」を付ける", () => {
+    const parsed = parseHttpLine(
+      exchange({ request: { headers: [{ name: "n".repeat(300), value: "v" }] } }),
+    );
+    const name = parsed?.type === "exchange" ? parsed.record.request.headers[0]?.name : undefined;
+    expect(name).toBe(`${"n".repeat(256)}…`);
+  });
+
+  it("ポートの範囲の外の数字の送信元は、ヘッダの値の側にする", () => {
+    const [record] = accepted([exchange({ from: "70000" }), client]);
+    expect(record?.from).toStrictEqual({ id: "header:70000", name: "70000" });
   });
 });
