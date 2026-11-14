@@ -205,14 +205,14 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
 - `Button` は、押している間は面を濃くし、離すと文字の色の墨がにじんで消える（`ink-press`、480ms 以下）。
 - ダイアログ、メニュー、検索の候補の一覧と候補が無いときの文は、濃度を上げて出る（`animate-fade-in`、150ms）。ダイアログは、上端に墨の筆の線を 1 回引く。
 - 横に送る枠で右に続きがある間は、右端を背景の色で薄くする（`scroll-fade-end`）。薄い色は、右端まで送る手前から消え始める。JavaScript を使わない。`Table` の枠と、記事の本文の表と図の枠で使う。薄い色は `surface` の色で、枠が別の面の上にあるときは、`--fd-scroll-fade-bg` にその面の色を渡す。
-- `Button` の読み込み中は、3 つの点が左から順に薄くなる（`loading-dots`、1 周 1200ms）。`Loading` は、薄い罫の上を主の色の罫が伸びて抜ける（`animate-loading`、1 周 1600ms）。
+- `Button` の読み込み中は、3 つの点が左から順に薄くなる（`loading-dots`、1 周 1200ms）。`Loading` は、薄い罫の上を主の色の罫が伸びて抜ける（`animate-loading`、1 周 1600ms）。`PageLoading` は、同じ動きで、主の色の筆の線が伸びて抜ける（`animate-loading` と `stroke-brush`）。
 
 #### 動きの長さ
 
 - 操作に応える動き（色、濃度、山形の回転）は、150ms 以下にする。
 - 罫と筆の線を引く動きは、320ms 以下で 1 回にする。
 - 墨のにじみは、480ms 以下で消す。押した結果を待たせない飾りなので、操作に応える動きの長さの外に置く。
-- 繰り返す動きは、処理中の印（`Button` の読み込み中と `Loading`）だけにする。
+- 繰り返す動きは、処理中の印（`Button` の読み込み中、`Loading`、`PageLoading`）だけにする。
 - スクロールに合わせた動き（`scroll-fade-end`）は、スクロールの位置で濃さが決まる。時間は持たない。
 
 #### 動きを付けない所
@@ -345,7 +345,8 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 | `StatusBadge`          | HTTP の状態コード、記事の種別                    | DADS のラベル                                   |
 | `Notice`               | 記事の注意書き、実行のエラー                     | DADS のノティフィケーションバナー               |
 | `Disclosure`           | 記事の補足、リクエストとレスポンスの詳細         | DADS のアコーディオン                           |
-| `Loading`              | 実行環境の起動、パッケージのインストール         | DADS のプログレスインジケーター                 |
+| `Loading`              | 領域の中の待ち、パッケージのインストール         | DADS のプログレスインジケーター                 |
+| `PageLoading`          | 画面全体が使えるようになるまでの待ち             | 自前（`Loading` の動きと筆の線）                |
 | `Breadcrumb`           | 記事とシリーズの位置                             | DADS のパンくずリスト                           |
 | `TreeView`             | `FileTree` と `ConsoleEntryList` が組む木の表示  | APG の Tree View                                |
 | `SplitPane`            | エディタ、端末、プレビューの間の境界             | APG の Window Splitter                          |
@@ -379,6 +380,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
   - 中の `ToolPane` は、四方の罫を左と上へ 1px ずらして隣の罫に重ねる。高さのそろわない並びでも、罫は 2 重にならない。
 - 題の帯は 32px で、題は `text-label-compact` にする。下の状態の帯は 24px で、`text-compact` にする。
 - 中に置く Base は、`density="compact"`（`Button` は `size="XS"`）で詰める（ADR-0062）。領域の読み込み中とエラーも、`Loading` と `Notice` の compact で出す。
+  - 全ての領域が同じ起動を待つ間は、領域の `state` を `pending` にして中身を空にし、画面の右下に `PageLoading` を 1 つだけ出す。同じ待ちの文が領域の数だけ並ぶと、何を待っているかが分かりにくくなるためである。
   - `IconButton`、`ActionMenu`、`TextField`、`Button` は 28px、`Tabs` は 32px にする。
   - `TreeView` の行と `Disclosure` の要約は 24px、`Table` のセルは上下 2px の余白にする。
 
