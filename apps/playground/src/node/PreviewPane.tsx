@@ -4,6 +4,7 @@ import { Activity, useEffect, useEffectEvent, useRef, useState, useSyncExternalS
 
 import { useRuntime, useSelection } from "./context";
 import { PREVIEW_TIMEOUT_MESSAGE, PREVIEW_TIMEOUT_MS, bootFailureMessage } from "./messages";
+import { watchPreviewLoad } from "./preview-timeout";
 
 const NO_PORTS: readonly OpenPort[] = [];
 const noPorts = { subscribe: () => () => undefined, getSnapshot: () => NO_PORTS };
@@ -20,15 +21,13 @@ type PortFrameProps = {
 };
 
 function PortFrame({ port, generation, onTimeout }: PortFrameProps) {
-  // Activity で隠すと Effect が止まり、見せると動き直す。読み込んだ世代を持ち、見せ直したときに上限を数え直さない
+  // Activity で隠すと Effect が止まり、見せると動き直す
   const loaded = useRef<number>(undefined);
-  const timeout = useEffectEvent(() => {
-    if (loaded.current !== generation) onTimeout(port);
-  });
-  useEffect(() => {
-    const timer = setTimeout(timeout, PREVIEW_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [port.port, generation]);
+  const timeout = useEffectEvent(() => onTimeout(port));
+  useEffect(
+    () => watchPreviewLoad(generation, () => loaded.current, timeout, PREVIEW_TIMEOUT_MS),
+    [port.port, generation],
+  );
   return (
     <iframe
       allow={port.allow}
