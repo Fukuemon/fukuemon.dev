@@ -204,4 +204,4 @@ ADR-0030: [種別、形式、シリーズ](../docs/adr/0030-articles-format-and-
   - ADR-0034: [プレイグラウンドのサブドメインと、ヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
 - `/playground-projects/*` は、記事に埋め込む実行環境のプロジェクトの JSON に使う。
 - `/figures/*` は、記事の図の、元データ入りの SVG に使う。
-  - ADR-0056: [記事の図の置き場と URL](../docs/adr/0056-article-figures-directory-and-name.md)
+  - ADR-0040: [記事の図の置き場と URL](../docs/adr/0040-canvas-figures-in-articles.md)
