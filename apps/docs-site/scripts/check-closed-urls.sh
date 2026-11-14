@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Access を custom domain にだけ掛ける Worker は、workers.dev とバージョンごとの URL を閉じておく (ADR-0032)。
 # 値を true にした変更が develop に入ると、deploy の workflow が apply を通らずに Access の外の URL を開く。
-# JSONC を解釈せずに 1 行ずつ照合するので、コメントの行を除き、トップレベル（半角スペース 2 つのインデント）に false の行があることを確認する。
+# JSONC を解釈せずに 1 行ずつ正規表現で比べるので、コメントの行を除き、トップレベル（半角スペース 2 つのインデント）に false の行があることを確認する。
 # env の中に同じキーを書いても見逃さないよう、どの深さにも true の行が無いことも確認する
 set -euo pipefail
 
