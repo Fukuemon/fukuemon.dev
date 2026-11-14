@@ -1,7 +1,5 @@
 import type { Store } from "@fukuemon/sql-runtime";
 
-import type { ConsoleRecord } from "./console-records";
-
 export type { Store };
 
 export type TerminalSize = { cols: number; rows: number };
@@ -66,6 +64,48 @@ export type HttpRecord = {
   durationMs: number;
   request: HttpMessageRecord;
   response?: HttpMessageRecord & { status: number };
+};
+
+export type ConsoleLevel = "debug" | "log" | "info" | "warn" | "error";
+
+/**
+ * 記録した 1 つの値。呼んだ時点の値を写した木で、関数、DOM の要素のように写せない値は、名前か文字で持つ。
+ * `text` は、ほかの種類に当たらない値と、上限で切った部分の印である。循環した参照は `circular` で持つ。
+ */
+export type ConsoleRecordValue =
+  | { kind: "string"; value: string }
+  | { kind: "number"; value: number }
+  | { kind: "bigint"; value: string }
+  | { kind: "boolean"; value: boolean }
+  | { kind: "null" }
+  | { kind: "undefined" }
+  | { kind: "symbol"; description: string }
+  | { kind: "function"; name: string }
+  | { kind: "text"; value: string }
+  | { kind: "circular" }
+  | { kind: "array"; items: readonly ConsoleRecordValue[] }
+  | {
+      kind: "object";
+      className?: string;
+      entries: readonly { key: string; value: ConsoleRecordValue }[];
+    }
+  | {
+      kind: "map";
+      entries: readonly { key: ConsoleRecordValue; value: ConsoleRecordValue }[];
+    }
+  | { kind: "set"; items: readonly ConsoleRecordValue[] }
+  | { kind: "error"; name: string; message: string; stack?: readonly string[] };
+
+/** 記録を出した側。Node のプロセスは、`start` の `name` を持つ。プレビューは、ページを返したサーバーのポートを持つ。 */
+export type ConsoleSource = { kind: "process"; name: string } | { kind: "preview"; port: number };
+
+/** `console.*` の 1 回の呼び出しの記録。time は `Date.now()` のミリ秒である。 */
+export type ConsoleRecord = {
+  id: string;
+  level: ConsoleLevel;
+  source: ConsoleSource;
+  time: number;
+  args: readonly ConsoleRecordValue[];
 };
 
 export type NodeRuntime = {

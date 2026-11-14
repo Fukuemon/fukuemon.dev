@@ -90,7 +90,7 @@ packages/
   sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
   node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
     webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
-    guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
+    guest/                実行環境の中の Node とプレビューのページが動かすファイル（preload、プレビューに入れるスクリプト、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
   go-runtime/src/         GoRunner の型、import のパスと、テストを持つ package を求める関数
     worker/               Yaegi を Web Worker で動かす GoRunner の実装、Web Worker の fetch を差し替える処理
   go-runtime/go/          WASM にする Go のコード。Yaegi で訪問者のファイルを実行する処理
@@ -111,7 +111,10 @@ packages/
   - 型と、PGlite で SQL を実行して結果の形にする関数。このエントリーポイントは、PGlite から型だけを import する。関数はブラウザと Node の両方で動くので、このエントリーポイントは DOM と Worker の API を使わない。`Store` の型も、このエントリーポイントに置く。
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
-- `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
+- `guest/` のファイルは、ツールのページではなく、実行環境の中の Node か、プレビューのページで動く。tsconfig と lint の対象を、ツールのページのコードと分ける。
+  - 実行環境の中の Node で動くファイルは、`webcontainer/` が中身を文字列として読み込み、実行環境に書く。
+  - プレビューに入れるスクリプト（`guest/preview-console.cjs`）は、`node-runtime/` の直下が中身を文字列として読み込み、`previewScript` で `webcontainer/` に渡す。
+  - 値の木に写す処理（`guest/console-value.cjs`）は、preload とプレビューに入れるスクリプトが共有する。
 - `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
@@ -319,7 +322,7 @@ type BackendProcess = {
   - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
-  - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。待ち受けているポートの URL と同じ origin から届いたメッセージだけを、そのポートと一緒に渡す。ほかの iframe とウィンドウからのメッセージは渡さない。
+  - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。待ち受けているポートの URL と同じ origin から届いたメッセージだけを、そのポートと一緒に渡す。ほかの iframe とウィンドウからのメッセージは渡さない。`node-runtime/` の直下は、`ports` の store にあるポートのメッセージだけを、コンソールの記録にする。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
 - `node-runtime/` の直下は、`webcontainer/` が知らせたポートのうち、URL が `https:` で、ツールのページと別の origin のものだけを、`ports` の store に入れる。
   合わないポートは、プレビューのタブに出さない。

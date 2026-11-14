@@ -122,10 +122,19 @@ describe("records", () => {
     vi.useFakeTimers();
     try {
       const { runtime, created } = await bootFake();
-      created.emitPreviewMessage(
-        { type: PREVIEW_CONSOLE_MESSAGE, level: "info", time: 5, args: [{ kind: "null" }] },
-        3000,
-      );
+      created.emitPorts([
+        { port: 3000, url: "https://3000.example.test", sandbox: "", allow: "" },
+        { port: 3001, url: "http://3001.example.test", sandbox: "", allow: "" },
+      ]);
+      const message = {
+        type: PREVIEW_CONSOLE_MESSAGE,
+        level: "info",
+        time: 5,
+        args: [{ kind: "null" }],
+      };
+      // プレビューのタブに出さないポート（https: でない）のページからの記録は入れない
+      created.emitPreviewMessage(message, 3001);
+      created.emitPreviewMessage(message, 3000);
       vi.advanceTimersByTime(20);
       expect(runtime.consoleEntries.getSnapshot()).toStrictEqual([
         {

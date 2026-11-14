@@ -4,6 +4,7 @@ import { createFiles } from "./files";
 import { previewConsoleScript } from "./preview-console";
 import { createHttpRecords } from "./http-records";
 import { createProcesses } from "./processes";
+import type { RecordKind, RecordSource } from "./record-lines";
 import { createStore } from "./store";
 import { BootError, type BootOptions, type NodeRuntime, type OpenPort } from "./types";
 
@@ -29,16 +30,23 @@ async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime
   const files = await createFiles(instance.files);
   const http = createHttpRecords();
   const consoleRecords = createConsoleRecords();
+  const acceptLine: Record<RecordKind, (line: string, source: RecordSource) => void> = {
+    http: http.accept,
+    console: consoleRecords.acceptLine,
+  };
   const processes = createProcesses(instance, (line, source, kind) =>
-    kind === "http" ? http.accept(line, source) : consoleRecords.acceptLine(line, source),
+    acceptLine[kind](line, source),
   );
   const ports = createStore<readonly OpenPort[]>([]);
   const unsubscribePorts = instance.ports.subscribe((open) =>
     ports.set(open.filter((port) => isPreviewUrl(port.url))),
   );
-  const unsubscribePreview = instance.previewMessages.subscribe(
-    consoleRecords.acceptPreviewMessage,
-  );
+  // 直下の確認でプレビューのタブから除いたポートのページは、コンソールにも出さない
+  const unsubscribePreview = instance.previewMessages.subscribe((message, port) => {
+    if (ports.getSnapshot().some((open) => open.port === port)) {
+      consoleRecords.acceptPreviewMessage(message, port);
+    }
+  });
   let disposed: Promise<void> | undefined;
   return {
     files: files.api,
