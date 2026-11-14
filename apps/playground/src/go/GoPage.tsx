@@ -4,6 +4,7 @@ import {
   ConfirmDialog,
   EditorFrame,
   FileTree,
+  type FileTreeResult,
   Link,
   Loading,
   Notice,
@@ -172,23 +173,29 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
     if (kindOf(fileSet, path) === "file") openFile(path);
   };
 
-  const create = (name: string, parent: string | undefined) => {
+  // 名前の欄の操作で断った理由は、FileTree が欄の下に出す
+  const create = (name: string, parent: string | undefined): FileTreeResult => {
     const change = session.createFile(joinPath(parent, name));
-    if (report(change)) {
-      setCreated(change.path);
-      setSelected(change.path);
-      openFile(change.path);
-    }
+    if (!change.ok) return { error: change.reason };
+    setProblem(undefined);
+    setCreated(change.path);
+    setSelected(change.path);
+    openFile(change.path);
+    return { id: change.path };
   };
 
-  const createDirectory = (name: string, parent: string | undefined) => {
+  const createDirectory = (name: string, parent: string | undefined): FileTreeResult => {
     const change = session.createDirectory(joinPath(parent, name));
-    if (report(change)) setSelected(change.path);
+    if (!change.ok) return { error: change.reason };
+    setProblem(undefined);
+    setSelected(change.path);
+    return { id: change.path };
   };
 
-  const renameEntry = (id: string, name: string) => {
+  const renameEntry = (id: string, name: string): FileTreeResult => {
     const change = session.rename(id, joinPath(parentOf(id), name));
-    if (!report(change)) return;
+    if (!change.ok) return { error: change.reason };
+    setProblem(undefined);
     const { from = id, path: to } = change;
     const move = (path: string) => movePath(path, from, to);
     for (const [path, state] of Array.from(states.current)) {
@@ -199,6 +206,7 @@ function GoWorkbench({ session, embedded }: { session: GoSession; embedded: bool
     setTabs((current) => current.map(move));
     setActive((current) => current && move(current));
     setSelected(to);
+    return { id: to };
   };
 
   const confirmDelete = () => {

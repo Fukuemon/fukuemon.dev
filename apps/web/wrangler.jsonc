@@ -8,4 +8,17 @@
     // 書かないと、無い URL に本文の無い 404 を返し、404.html を出さない
     "not_found_handling": "404-page",
   },
+  "env": {
+    // 本番の切り替えまで、開発中のサイトを workers.dev の URL で開く (ADR-0031)
+    "preview": {
+      "name": "fukuemon-dev-preview",
+      // dist に noindex を足した複製を配る。dist に直接足すと、手で本番へ出したときに noindex が混ざる
+      "assets": {
+        "directory": "./dist-preview",
+        "not_found_handling": "404-page",
+      },
+      "workers_dev": true,
+      "preview_urls": false,
+    },
+  },
 }

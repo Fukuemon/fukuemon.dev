@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-preview/
 # git-wt が作る worktree の置き場 (~/.gitconfig の wt.basedir)
 .wt/
 .astro/
@@ -93,3 +94,6 @@ apm_modules/
 /.claude/skills/write-verification-spec/
 packages/go-runtime/wasm/
 packages/e2e/tests/evidence/
+
+# scripts/measure-top-lighthouse.mjs の結果
+lighthouse-results/

@@ -1,0 +1,313 @@
+// 実行環境の中の Node が --require で読む preload。HTTP のサーバーが受けたリクエストとレスポンスを、1 件を 1 行の JSON にして標準出力に書く。
+// 行の形は src/http-records.ts が読む。訪問者のプログラムを止めないよう、記録の処理の失敗は握りつぶす (docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
+"use strict";
+
+const http = require("node:http");
+const { AsyncLocalStorage } = require("node:async_hooks");
+
+const PREFIX = "@@fd:http ";
+const FROM_HEADER = "x-playground-from";
+const BODY_LIMIT = 64 * 1024;
+// URL の hostname は、IPv6 のアドレスを [] で囲んで返す
+const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]", "0.0.0.0"]);
+
+let listening;
+// 処理中のリクエストを受けたサーバーのポート。1 つのプロセスが複数のサーバーを持つときも、fetch した側を区別する
+const handling = new AsyncLocalStorage();
+const traced = new WeakSet();
+
+const quietly = (run) => {
+  try {
+    run();
+  } catch {
+    // 記録できなくても、訪問者のプログラムは動かす
+  }
+};
+
+const write = (record) =>
+  quietly(() => process.stdout.write(PREFIX + JSON.stringify(record) + "\n"));
+
+// 記録はプロセスをまたいで時刻の順に並べ直すので、プロセスの間でそろう時計を使う。WebContainers では、performance.timeOrigin がプロセスごとにずれる
+const now = () => Date.now();
+
+const portOf = (server) => {
+  const address = server.address();
+  return address && typeof address === "object" ? address.port : undefined;
+};
+
+/** このプロセスを、送信先から区別する値。待ち受けているときはポート、待ち受けていないときはプロセスの ID である。 */
+const senderId = () =>
+  handling.getStore() ?? (listening === undefined ? `pid-${process.pid}` : String(listening));
+
+function createBody() {
+  const chunks = [];
+  let size = 0;
+  let kept = 0;
+  return {
+    add(chunk, encoding) {
+      if (chunk === undefined || chunk === null || typeof chunk === "function") return;
+      const textEncoding = typeof encoding === "string" ? encoding : "utf8";
+      // 上限まで写した後は、大きさだけを数え、本文を写さない
+      if (kept >= BODY_LIMIT && typeof chunk === "string") {
+        size += Buffer.byteLength(chunk, textEncoding);
+        return;
+      }
+      const buffer = Buffer.isBuffer(chunk)
+        ? chunk
+        : typeof chunk === "string"
+          ? Buffer.from(chunk, textEncoding)
+          : Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+      size += buffer.length;
+      if (kept < BODY_LIMIT) {
+        const part = buffer.subarray(0, BODY_LIMIT - kept);
+        chunks.push(Buffer.from(part));
+        kept += part.length;
+      }
+    },
+    toJSON() {
+      if (size === 0) return undefined;
+      const bytes = Buffer.concat(chunks);
+      const truncated = size > bytes.length;
+      let text = null;
+      if (!bytes.includes(0)) {
+        try {
+          // 上限で切った末尾の、途中で切れた文字は、stream で読み捨てる
+          text = new TextDecoder("utf-8", { fatal: true }).decode(bytes, { stream: truncated });
+        } catch {
+          text = null;
+        }
+      }
+      return { text, size, truncated };
+    },
+  };
+}
+
+const pairs = (raw) => {
+  const headers = [];
+  for (let i = 0; i + 1 < raw.length; i += 2) headers.push({ name: raw[i], value: raw[i + 1] });
+  return headers;
+};
+
+/** 送った通りのレスポンスのヘッダ。writeHead に渡したヘッダは getHeaders に入らないことがあるので、送った頭の文字列から読む。 */
+const responseHeaders = (res) =>
+  String(res._header ?? "")
+    .split("\r\n")
+    .slice(1)
+    .filter((line) => line.includes(":"))
+    .map((line) => {
+      const at = line.indexOf(":");
+      return { name: line.slice(0, at), value: line.slice(at + 1).trim() };
+    });
+
+function trace(port, req, res) {
+  const startedAt = now();
+  const requestBody = createBody();
+  const responseBody = createBody();
+
+  // data の購読を足すと、流れ出すので、訪問者の処理より先に本文を読んでしまう。emit を包んで、読まれた分だけを写す
+  const emit = req.emit;
+  req.emit = function (event, chunk) {
+    if (event === "data") quietly(() => requestBody.add(chunk));
+    return emit.apply(this, arguments);
+  };
+  const resWrite = res.write;
+  res.write = function (chunk, encoding) {
+    quietly(() => responseBody.add(chunk, encoding));
+    return resWrite.apply(this, arguments);
+  };
+  const resEnd = res.end;
+  res.end = function (chunk, encoding) {
+    quietly(() => responseBody.add(chunk, encoding));
+    return resEnd.apply(this, arguments);
+  };
+
+  let done = false;
+  const finish = (sent) => {
+    if (done) return;
+    done = true;
+    write({
+      type: "exchange",
+      from: typeof req.headers[FROM_HEADER] === "string" ? req.headers[FROM_HEADER] : null,
+      to: port,
+      startedAt,
+      durationMs: now() - startedAt,
+      method: req.method,
+      url: req.url,
+      request: { headers: pairs(req.rawHeaders), body: requestBody.toJSON() },
+      response: sent
+        ? { status: res.statusCode, headers: responseHeaders(res), body: responseBody.toJSON() }
+        : null,
+    });
+  };
+  res.on("finish", () => quietly(() => finish(true)));
+  res.on("close", () => quietly(() => finish(res.writableFinished)));
+}
+
+// oxlint-disable-next-line typescript/unbound-method -- 包んだ emit から、サーバーを this にして呼ぶ
+const serverEmit = http.Server.prototype.emit;
+http.Server.prototype.emit = function (event, ...args) {
+  let port;
+  quietly(() => {
+    if (event === "listening" || event === "request") port = portOf(this);
+    if (event === "listening" && port !== undefined) {
+      listening ??= port;
+      write({ type: "listen", port });
+    }
+    // 訪問者のコードが同じリクエストで request を出し直したときは、2 回記録しない
+    if (event === "request" && port !== undefined && !traced.has(args[1])) {
+      traced.add(args[1]);
+      trace(port, args[0], args[1]);
+    }
+  });
+  if (event === "request" && port !== undefined) {
+    return handling.run(String(port), () => serverEmit.call(this, event, ...args));
+  }
+  return serverEmit.call(this, event, ...args);
+};
+
+const isLoopback = (input) => {
+  try {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    return LOOPBACK.has(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 20;
+// メソッドを GET に替えて送り直すときに消す、本文のヘッダ。Node の fetch と同じ
+const BODY_HEADERS = [
+  "content-encoding",
+  "content-language",
+  "content-location",
+  "content-type",
+  "content-length",
+];
+// origin が変わるリダイレクトで消すヘッダ。Node の fetch と同じ
+const CROSS_ORIGIN_HEADERS = ["authorization", "proxy-authorization", "cookie", "host"];
+// 送り直すリクエストに写す、メソッド、ヘッダ、本文、signal のほかの値
+const COPIED = [
+  "referrer",
+  "referrerPolicy",
+  "mode",
+  "credentials",
+  "cache",
+  "integrity",
+  "keepalive",
+];
+
+const fetchFailed = (message) => new TypeError("fetch failed", { cause: new Error(message) });
+
+const discard = (request) => request.body?.cancel().catch(() => undefined);
+
+/** 本文を読み切る。signal が中断されたら、読むのをやめて中断の理由で失敗する。 */
+function readAll(request) {
+  const { signal } = request;
+  if (signal.aborted) return Promise.reject(signal.reason);
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      discard(request);
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    request
+      .arrayBuffer()
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener("abort", onAbort));
+  });
+}
+
+/**
+ * 送信元を示すヘッダを足した request を、リダイレクトを 1 つずつ追って送る。
+ * Node の fetch は、origin が変わるリダイレクトでも足したヘッダを送り直すので、origin が変わる時点で足したヘッダを外し、その先は元の fetch に任せる。
+ * メソッドを変えずに送り直す本文は、元の本文を読み切ったバイト列にする。訪問者が init に ReadableStream か非同期の反復を渡したときは、Node の fetch と同じく送り直さずに失敗する。
+ * dispatcher は、訪問者が init に渡した undici の dispatcher で、Request に入らないので別に渡す。
+ */
+async function follow(request, count, options) {
+  const spare = request.clone();
+  try {
+    return await followOnce(request, spare, count, options);
+  } catch (error) {
+    discard(spare);
+    throw error;
+  }
+}
+
+async function followOnce(request, spare, count, { dispatcher, streamed }) {
+  const response = await originalFetch(request, { redirect: "manual", dispatcher });
+  const location = response.headers.get("location");
+  if (!REDIRECT_STATUSES.has(response.status) || location === null) {
+    discard(spare);
+    return response;
+  }
+  await response.body?.cancel();
+  let next;
+  try {
+    next = new URL(location, request.url);
+  } catch {
+    throw fetchFailed("invalid location");
+  }
+  if (count >= MAX_REDIRECTS) throw fetchFailed("redirect count exceeded");
+  if (next.protocol !== "http:" && next.protocol !== "https:") {
+    throw fetchFailed("URL scheme must be a HTTP(S) scheme");
+  }
+  const headers = new Headers(spare.headers);
+  let method = spare.method;
+  let body = null;
+  if (
+    ((response.status === 301 || response.status === 302) && method === "POST") ||
+    (response.status === 303 && method !== "GET" && method !== "HEAD")
+  ) {
+    method = "GET";
+    for (const name of BODY_HEADERS) headers.delete(name);
+    discard(spare);
+  } else if (spare.body) {
+    if (streamed) throw fetchFailed("cannot replay a stream body");
+    body = await readAll(spare);
+  }
+  const crossOrigin = next.origin !== new URL(request.url).origin;
+  if (crossOrigin) for (const name of [FROM_HEADER, ...CROSS_ORIGIN_HEADERS]) headers.delete(name);
+  const init = {
+    ...Object.fromEntries(COPIED.map((key) => [key, spare[key]])),
+    method,
+    headers,
+    body,
+    signal: spare.signal,
+    dispatcher,
+  };
+  if (crossOrigin) return markRedirected(await originalFetch(next, init));
+  return markRedirected(await follow(new Request(next, init), count + 1, { dispatcher, streamed }));
+}
+
+// Response の redirected は、送った Response にだけ立つ。clone した Response には付かない
+const markRedirected = (response) => {
+  quietly(() => Object.defineProperty(response, "redirected", { value: true }));
+  return response;
+};
+
+const isStream = (body) =>
+  body instanceof ReadableStream ||
+  (typeof body === "object" && body !== null && typeof body[Symbol.asyncIterator] === "function");
+
+// 実行環境の中のサーバーへの fetch にだけ、送信元を示すヘッダを足す。外のサーバーには送らない
+const originalFetch = globalThis.fetch;
+if (typeof originalFetch === "function") {
+  globalThis.fetch = function (input, init) {
+    if (!isLoopback(input)) return originalFetch.call(this, input, init);
+    const dispatcher = init?.dispatcher;
+    let request;
+    try {
+      request = new Request(input, init);
+      // 訪問者が付けた送信元のヘッダは、書き換えず、Node の fetch と同じく origin が変わる先にも送る
+      if (request.headers.has(FROM_HEADER))
+        return originalFetch.call(this, request, { dispatcher });
+      request.headers.set(FROM_HEADER, senderId());
+    } catch {
+      // ヘッダや本文を組めないときは、元の fetch に任せ、同じ失敗を返させる
+      return originalFetch.call(this, input, init);
+    }
+    if (request.redirect !== "follow") return originalFetch.call(this, request, { dispatcher });
+    return follow(request, 0, { dispatcher, streamed: isStream(init?.body) });
+  };
+}

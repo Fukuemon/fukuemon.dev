@@ -19,8 +19,8 @@ export type EditorFrameProps = {
   status?: ReactNode;
   /** エンジンに渡すコードの色のテーマ。どちらにするかは呼ぶ側が決める。 */
   themeName?: CodeThemeName;
-  /** 渡すと、エンジンの代わりに読み込み中かエラーを出す。 */
-  state?: Extract<ToolPaneState, { kind: "loading" | "error" }>;
+  /** 渡すと、エンジンの代わりに、待っている間の空の中身、読み込み中、エラーのどれかを出す。 */
+  state?: Extract<ToolPaneState, { kind: "pending" | "loading" | "error" }>;
   /** 選んだファイルを開くエンジン。themeName から作った VS Code の形式のテーマを受け取る。 */
   children: (theme: VsCodeTheme, file: EditorFile) => ReactNode;
 };

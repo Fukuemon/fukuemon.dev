@@ -199,6 +199,7 @@ type NodeRuntime = {
     tree: Store<readonly FileEntry[]>;
     changes: { subscribe: (onChange: (paths: readonly string[]) => void) => () => void };
     readAll: (options: ReadAllOptions) => Promise<readonly FileSnapshot[]>;
+    exists: (path: string) => Promise<boolean>;
     read: (path: string) => Promise<string>;
     write: (path: string, contents: string) => Promise<void>;
     createDirectory: (path: string) => Promise<void>;
@@ -252,6 +253,8 @@ type OutputLog = {
 - `start` を呼ばないコンポーネントは、`processes.get` で、プロセスの出力を読む。
 - `files.changes` は、ファイルの中身が変わったことの通知である。保存と、エディタで開いているファイルの更新に使う。
 - ツリーを変えるファイルの操作（新しいファイルへの `files.write`、`files.createDirectory`、`files.rename`、`files.remove`）は、操作の後にツリーを読み直してから終わる。読み直しが失敗したときは、ログに出し、操作は成功として終える。操作の成否は、操作そのものの成否で決める。
+- `files.exists` は、同じパスのファイルかディレクトリが実行環境にあるかを、親のディレクトリの一覧で確認する。ツリーに出さない `node_modules` のパッケージの中身も確認できる。
+- ファイルのツリーで項目を作るときと名前を変えるときは、ツリーの一覧で同じパスを確認した後、`files.exists` で実行環境も確認する。同じパスがあるときと、確認できないときは、確定せず、`FileTree` の欄を開いたまま理由を出す。確認する間、欄は確定を重ねて受けない。
 - `files.readAll` は、作業ディレクトリのファイルを、パス、サイズ、テキストの中身で返す。`exclude` に当たるパスは読まない。`maxBytes` を超えるファイルと、テキストとして読めないファイルは、`text` が `null` になる。`exclude` に当たるかの判定、`maxBytes` を超えるかの判定、テキストかどうかの判定は、`node-runtime/` の直下が持つ。
 - `FileEntry` は、パスを持つ。画面は、パスを、`FileTree` の項目の `id` に使う。
 - `ProcessInfo` は、ID、種別、名前、状態を持つ。種別は、`processes.startShell` で起動したプロセスが `shell`、`processes.start` で起動したプロセスが `command` である。画面は、種別でシェルの数を数え、2 つ目からのシェルの名前に番号を付ける。
@@ -287,7 +290,7 @@ type BackendInstance = {
   spawn: (
     command: string,
     args: readonly string[],
-    options?: { terminal?: TerminalSize; internal?: boolean; cwd?: string },
+    options?: { terminal?: TerminalSize; cwd?: string },
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
@@ -307,12 +310,12 @@ type BackendProcess = {
 
 名前は、実装のときに変えてよい。
 
-- `BackendFiles` は、ファイルかディレクトリかを持つ一覧、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store と `files.readAll` は、`node-runtime/` の直下が、この操作から組み立てる。
+- `BackendFiles` は、ファイルかディレクトリかを持つ一覧、バイト列での読み込み、書き込み、ディレクトリの作成、名前の変更、削除、変更の通知を持つ。store は持たない。`files.tree` の store、`files.readAll`、`files.exists` は、`node-runtime/` の直下が、この操作から組み立てる。
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
   - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
-  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload を追加しない。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
-  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
+  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`spawn` で起動する全てのプロセスに、同じ環境変数を渡す。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
+  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
@@ -331,7 +334,32 @@ type BackendProcess = {
 - コンソールの記録の、出力したプロセスの名前は、行を抜き出す処理が付ける。名前は、行を出力したプロセスの、`start` の `name` である。シェルで起動したプロセスの行には、シェルの名前が付く。
 - プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
   - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](../../docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
-- store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。値は、実装のタスクで測って変えてよい。
+- 出力のチャンクは、記録の行の途中で切れて届くことがある。行を抜き出す処理（`record-lines.ts`）は、プレフィックスから改行までがそろうまで、その部分を端末に渡さない。チャンクの末尾がプレフィックスの先頭の数文字で終わるときは、続きを 50 ms 待ち、続きが来なければ端末に渡す。端末で打った `@` のような文字が、次の入力まで出なくならないようにするためである。プレフィックスから 4 MB を超えても改行が来ないときは、記録の行でないとみなして端末に渡す。プロセスが終わったときは、手元の出力を端末に渡す。プロセスの終わりが、最後の出力より先に届くかは確認していない。
+- HTTP の記録を取る preload（`guest/http-trace.cjs`）は、次のことを行う。
+  - `http.Server` の `emit` を包み、`request` のたびに、メソッド、URL（パスとクエリ）、リクエストとレスポンスのヘッダ、本文、ステータスコード、受けた時刻、所要時間を 1 行に書く。時刻は `Date.now()` で取る。WebContainers では、`performance.timeOrigin` がプロセスごとにずれ、プロセスをまたいで比べられないためである。同じミリ秒に受けた記録は、届いた順に並ぶ。訪問者のコードが同じリクエストで `request` を出し直したときは、2 回記録しない。`listening` のときは、待ち受けたポートを 1 行に書く。
+  - リクエストの本文は、`data` の購読を足さずに、`emit` を包んで、訪問者の処理が読んだ分を写す。購読を足すと、訪問者の処理より先に本文が流れ出るためである。
+  - レスポンスのヘッダは、送った頭の文字列から読む。`writeHead` に渡したヘッダは、`getHeaders` に入らないことがあるためである。
+  - 本文は、リクエストとレスポンスのそれぞれで、先頭の 64 KB だけを記録する。NUL を含むものと、UTF-8 として読めないものは、テキストとして記録しない。
+  - 実行環境の中のサーバー（`localhost`、`127.0.0.1`、`[::1]`、`0.0.0.0`）への `fetch` に、送信元を示すヘッダ `x-playground-from` を足す。
+    - 値は、リクエストを処理している間はそのリクエストを受けたサーバーのポート、ほかのときは待ち受けた最初のポートで、待ち受けていないプロセスは `pid-<プロセスの ID>` である。
+    - 訪問者が同じ名前のヘッダを付けたときは、書き換えない。この `fetch` は Node の `fetch` に任せるので、origin が変わるリダイレクトの先にもそのヘッダが届く。
+    - 外のサーバーへの `fetch` には足さない。
+    - リダイレクトを追う `fetch` は、preload がリダイレクトを 1 つずつ追う。Node の `fetch` は、origin が変わるリダイレクトでも、足したヘッダを送り直すためである。origin が変わる時点で、足したヘッダを外し、その先を元の `fetch` に任せる。そのとき、Node の `fetch` が origin の変わるリダイレクトで外すヘッダ（`authorization`、`proxy-authorization`、`cookie`、`host`）も外す。
+    - メソッドを変えずに送り直す本文（307 と 308、POST でない 301 と 302）は、元の本文を読み切ったバイト列にする。`init` に `ReadableStream` か async iterable を渡した `fetch` は、Node の `fetch` と同じく、送り直さずに失敗にする。
+    - 解釈できない `Location`、http と https のほかへのリダイレクト、20 回を超えたリダイレクトは、失敗にする。
+    - リダイレクトを追ったレスポンスの `redirected` は、`clone` したレスポンスには付かない。
+  - `http.request` で送った通信には、ヘッダを足さない。送信元は、ブラウザになる。
+- `node-runtime/` の直下は、記録の行を `HttpRecord` にして、`httpExchanges` の store に入れる。
+  - `HttpRecord` は、送った側と受けた側（`id` と名前）、メソッド、URL、受けた時刻、所要時間、リクエスト、レスポンスを持つ。レスポンスを返す前に切れた通信は、レスポンスを持たない。本文は、テキスト（読めないものは `null`）、大きさ、64 KB で切ったかを持つ。
+  - 送った側と受けた側の `id` は、ブラウザが `browser`、サーバーが `port:<番号>`、待ち受けていないプロセスが `process` である。待ち受けていないプロセスは、区別の色が足りなくならないよう、まとめて 1 つの側にする。訪問者が送信元のヘッダに数字でも `pid-` でもない値を付けたときは、`header:<値>` とし、値を名前にする。送信元を示すヘッダが無い通信は、ブラウザからの通信とする。
+  - サーバーの名前は、待ち受けたポートの行を出したプロセスの、`start` の `name` である。シェルで起動したサーバーと、待ち受けたポートの行がまだ届いていないサーバーは、`<番号> 番のサーバー` と呼ぶ。行が後から届いたときは、記録の名前を直す。
+  - 訪問者のプログラムも記録の行を出せるので、1 行の大きさに上限を置き、超えた分を切る。
+    - 本文は 65,536 文字（preload が記録する 64 KB を UTF-8 で読んだ文字数を超えない値）、ヘッダはリクエストとレスポンスのそれぞれ 100 個、URL は 8,192 文字までにする。ヘッダの名前は 256 文字、値は 8,192 文字までにする。
+    - メソッドが 32 文字、送信元のヘッダの値が 256 文字を超える行は捨てる。大きさと時刻が 0 以上の安全な整数でない行、時刻が今より 1 日を超えて先の行、所要時間が 0 から 1 日でない行、ステータスコードが 100 から 999 でない行も捨てる。
+    - 切ったヘッダの名前と値は、末尾に「…」を付ける。切った本文は `truncated`、捨てたヘッダの数は `omittedHeaders`、切った URL は `urlTruncated` で示し、画面はそのことを文で添える。
+    - 名前を保持するサーバーは 100 個までにし、超えた後に待ち受けたサーバーは、ポートの番号で呼ぶ。
+  - 記録は、受けた時刻の順に並べる。記録の行はプロセスごとの出力から届くので、届いた順は、受けた順と違うことがある。認可コードフローでは、クライアントが `/callback` の処理の中で送った `/token` の記録が、`/callback` の記録より先に届く。
+- store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。HTTP の記録は、1 件が本文を最大 64 KB ずつ 2 つ持つので、500 件で最大 64 MB 前後の文字を持つ。この値は見積もりで、測っていない。訪問者のプログラムが出す偽の記録の行は、ヘッダの名前に 256 文字、値に 8,192 文字を、100 個ずつ持てるので、1 件が最大 2 MB 前後の文字になる。偽の行で上限まで埋めたときに重くなるのは、訪問者自身のタブだけである。値は、実装のタスクで測って変えてよい。
 
 ### React のツリーと状態
 
@@ -346,7 +374,7 @@ flowchart TB
   editor["EditorPane"]
   terminal["TerminalPane"]
   preview["PreviewPane"]
-  http["HttpPane"]
+  http["HttpListPane と HttpDetailPane"]
   cons["ConsolePane"]
   sqlp["SqlPane<br/>DB を使うプロジェクトのときだけ"]
   ui["@fukuemon/ui の Case"]
@@ -368,7 +396,7 @@ flowchart TB
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
 - ペインのコンポーネント（`FilesPane` など）が、実行環境を読み、`@fukuemon/ui` の Case に、素の値の props を渡す。Case と、`sql-console/` のコンポーネントは、`NodeRuntime` の型を import しない。
-  - `HttpPane` は、`httpExchanges` の送信元と送信先と、`ports` から、`HttpExchangeList` の `actors` を組み立てる。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
+  - `HttpListPane` と `HttpDetailPane` は、`httpExchanges` の記録の、送った側と受けた側から、`HttpExchangeList` と `HttpExchangeDetail` の `actors` を組み立てる。並びは、ブラウザを先にし、記録に初めて出た順にする。`processes.list` は使わない。シェルで起動したサーバーは、`processes.list` に入らないためである。
   - `PreviewPane` は、`ports` の URL と属性から、iframe を作る。
   - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値、入力欄のファイルの名前、DB が止まったときに出す案内の文を、props で受ける。`status` は、`useSyncExternalStore` で読む。
   - DB が止まった後の戻り方は `SqlDatabase` の実装ごとに違うので、案内の文は呼ぶ側が渡す。
@@ -377,7 +405,7 @@ flowchart TB
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
   - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
-- `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `loading` を渡したものにする。
+- `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `pending` を渡したものにする。待ちの印は、ペインの外の `Suspense` が `PageLoading` で出す。プロジェクトの読み込みと起動の待ちは続けて起きるので、境界が別の 2 つの `Suspense` にも、`PageLoading` に同じ文を渡す。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が、保存したファイルの Promise は `workspace/` が、起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
 - 端末のペインの中のプロセスのタブは、選んだプロセスの端末だけを描く。プロセスのタブを替えたときは、端末を作り直し、プロセスの出力の記録を端末に書き込み直す。xterm.js の端末は、`Activity` で隠すと Effect のクリーンアップで破棄されるためである。
@@ -408,12 +436,12 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - CodeMirror は、ビルドで `code-editor` のチャンクに分け、エディタを持つページの間で共有する。
   - 色は、`packages/ui` のテーマ変数を読む。CodeMirror のデフォルトの色は、ダークのテーマで読めないので残さない。
   - フォーカスの表示は、エディタを囲む要素に付ける。CodeMirror が作る要素には `focus-ring` のユーティリティを付けられないので、検索パネルの入力欄とボタンには、同じ値を書く。
-- 実行のボタンを押してから結果が出るまで、PGlite の読み込み、初期データの SQL の実行、SQL の実行の 3 つの段階を `Loading` で出す。
+- 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、画面の右下に `PageLoading` で出す。SQL の実行の間は、結果の欄に `Loading` で出す。
 
 Node の実行環境のページは、次のとおり組む。
 
-- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末を置く。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
-- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case の読み込み中を出す。
+- ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- `NodePage` は、プロジェクトの Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。ペインの外の `Suspense` が、画面の右下に `PageLoading` を出す。プロジェクトを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` を出す。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
 - ファイルとディレクトリを消す前に、`ConfirmDialog` で確認する。
@@ -422,7 +450,7 @@ Node の実行環境のページは、次のとおり組む。
 - 端末のエンジンは、xterm.js（`@xterm/xterm` と `@xterm/addon-fit`）にする。色は、`packages/ui` の `toVsCodeTheme` の値を写して渡す。xterm.js は CSS の変数を読まないためである。ライトとダークは、OS の設定で決める。
 - 端末は、`processes.list` のプロセスをタブで並べる。終了したプロセスは、タブの文に終了コードを添える。端末の題の右の「新しい端末」のボタンで、シェルを足す。2 つ目からのシェルの名前には、番号を付ける。
 - プレビューは、待ち受けたポートをタブで並べる。選んでいないポートの iframe も `Activity` で隠して残し、タブを切り替えても、ページの状態を消さない。再読み込みのボタンは、選んだポートの iframe を作り直す。
-- 実行環境を起動できなかったときは、ファイルのツリーとエディタに初期ファイルを読み取り専用で出す。端末とプレビューのペインには、理由と、対応するブラウザ（デスクトップの Chrome か Edge の最新版）を出す。
+- 実行環境を起動できなかったときは、ファイルのツリーとエディタに初期ファイルを読み取り専用で出す。端末とプレビューのペインと、HTTP の一覧には、理由と、対応するブラウザ（デスクトップの Chrome か Edge の最新版）を出す。HTTP の詳細は、通信を選ぶ案内のままにする。同じ文が左右に 2 つ並ばないようにするためである。
 - `project` を付けずに開いたときのプロジェクトは、`package.json` と、3000 番で待ち受ける `index.js` の 2 つのファイルを持つ。起動のコマンドは、`node index.js` の 1 つである。
 
 ### プロジェクト
@@ -548,7 +576,7 @@ sequenceDiagram
 
 - 実行環境は、preload、DB のプロセスのスクリプトと依存、待ち受けたポートの URL を書くファイルを、`/tmp` の下の、実行環境のディレクトリに置く。
 - ファイルを置く処理と、環境変数の組み立ては、`webcontainer/` が持つ。
-- `webcontainer/` は、`start` で起動するプロセスと、シェルの環境変数に、次の値を渡す。実行環境が自分で起動するプロセス（`internal` が `true`）には、preload を追加しない。
+- `webcontainer/` は、`start` で起動するプロセスと、シェルの環境変数に、次の値を渡す。実行環境の外にファイルを書くために `webcontainer/` が `spawn` を通さずに起動する `node` には、これらの値を渡さない。
   - `NODE_OPTIONS`: preload ごとの `--require <絶対パス>`。HTTP の流れとコンソールを記録する preload は、どのプロジェクトでも追加する。Unix ドメインソケットに接続している間はプロセスを終了させない preload は、DB を使うプロジェクトのときだけ追加する。
   - `PLAYGROUND_PORTS_FILE`: 待ち受けたポートの URL を書くファイルのパス。
   - DB を使うプロジェクトのときは、`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`。

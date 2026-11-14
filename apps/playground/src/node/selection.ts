@@ -9,7 +9,13 @@ export type Selection = {
   activeFile?: string;
   terminal?: string;
   preview?: number;
+  /** HTTP の一覧で選んだ記録の id。 */
+  exchange?: string;
+  /** 下のペインで選んだタブ。選んでいないときは端末を出す。 */
+  bottom?: BottomTab;
 };
+
+export type BottomTab = "terminal" | "http";
 
 export type SelectionAction =
   | { type: "select-item"; path: string; isFile: boolean }
@@ -18,7 +24,9 @@ export type SelectionAction =
   | { type: "renamed"; from: string; to: string }
   | { type: "removed"; path: string }
   | { type: "select-terminal"; id: string }
-  | { type: "select-preview"; port: number };
+  | { type: "select-preview"; port: number }
+  | { type: "select-exchange"; id: string }
+  | { type: "select-bottom"; tab: BottomTab };
 
 export const initialSelection = (open: string): Selection => ({
   treeItem: open,
@@ -55,7 +63,8 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
     case "renamed":
       return {
         ...state,
-        treeItem: state.treeItem && move(state.treeItem, action.from, action.to),
+        // 名前を変えた項目を選ぶ。タブには開かない
+        treeItem: action.to,
         openFiles: state.openFiles.map((path) => move(path, action.from, action.to)),
         activeFile: state.activeFile && move(state.activeFile, action.from, action.to),
       };
@@ -75,6 +84,10 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
       return { ...state, terminal: action.id };
     case "select-preview":
       return { ...state, preview: action.port };
+    case "select-exchange":
+      return { ...state, exchange: action.id };
+    case "select-bottom":
+      return { ...state, bottom: action.tab };
   }
 }
 

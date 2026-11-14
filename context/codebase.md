@@ -36,6 +36,8 @@ verified_commit: ab2da87
   ビルドの後に出力を加工する Astro の integration も、`lib/` に置く（`subset-fonts.ts`）。
 - `styles/` は、サイト全体に掛かるスタイリングが何かに答える。
 
+サイトのコードから import せず、deploy と deploy の dry-run のときだけ実行する処理は、`src/` の外の `apps/web/scripts/` に置く（`preview-assets.ts`）。
+
 `features/` の中も、同じ軸で分ける。
 
 - feature の中は、関心ごとのディレクトリで分ける。
@@ -121,6 +123,7 @@ hydrate するページはその framework のランタイムを配るので、2
 - プレイグラウンドは、AI からの操作の許可のスイッチの状態と、「このページでは今後尋ねない」の状態を、ツールごとに `localStorage` に置く。キーと値の形は、[AI からの操作の Design Doc](../docs/design/features/ai-operations/DesignDoc.md#スイッチと確認の状態の保存) にある。
 - トップ（`/`）は、端末でトップを開いたことを、`localStorage` の `fd-top-seen` に記録する。
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
+  - 例外は、Lighthouse の計測のスクリプト（`scripts/measure-top-lighthouse.mjs`）である。2 回目以降の訪問の状態を作るために、測る前のプロファイルに書く。
   - `fd-top-seen` の意味と、`head` の inline script が `html` に書く属性と class は、[トップの水墨の門と立体の庭の Design Doc](../docs/design/features/top-garden/DesignDoc.md#ページが持つ状態) にある。
 - 訪問済みの表示は、CSS の `:visited` に任せる。
 - 一覧の分類の絞り込みは URL パラメータで表す。

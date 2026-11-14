@@ -58,6 +58,7 @@
 | [ADR-0066](0066-inset-focus-ring-in-dense-panes.md)      | コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く                                                                                                 |
 | [ADR-0067](0067-compact-text-tokens-in-dense-panes.md)   | コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う                                                                 |
 | [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md) | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                                         |
+| [ADR-0074](0074-inset-focus-ring-on-tree-name-field.md)  | 詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない                                                                                                   |
 
 ADR-0010 の Decision の「preflight を読み込まない」と「トークンは `@theme static` に置く」は、ADR-0055 に置換した。
 
@@ -160,6 +161,7 @@ flowchart TB
     A0066["ADR-0066"]
     A0067["ADR-0067"]
     A0068["ADR-0068"]
+    A0074["ADR-0074"]
     A0024["ADR-0024"]
     A0028["ADR-0028"]
     A0061["ADR-0061"]
@@ -332,6 +334,8 @@ flowchart TB
   A0067 --> A0062
   A0067 --> A0024
   A0068 --> A0028
+  A0074 --> A0066
+  A0074 --> A0061
   A0063 --> A0031
   A0063 --> A0037
   A0063 --> A0044
