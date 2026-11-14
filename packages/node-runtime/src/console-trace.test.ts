@@ -180,6 +180,13 @@ describe("console-trace.cjs", () => {
     ]);
   });
 
+  it("組み込みの Error が自身に setter だけの stack を持つときは、stack を写さずに記録する", async () => {
+    const args = await argsOf(
+      `Object.defineProperty(new Error("s"), "stack", { get: undefined, set() {} })`,
+    );
+    expect(args).toStrictEqual([{ kind: "error", name: "Error", message: "s" }]);
+  });
+
   it("循環した参照は circular にし、同じ値を 2 か所に持つだけのものは両方を写す", async () => {
     const { records } = await run(
       `const shared = { v: 1 }; const a = { shared, again: shared }; a.self = a; console.log(a);`,
