@@ -361,16 +361,16 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide の�
 
 コードを動かす画面の Case は次のとおり。
 
-| コンポーネント       | 担うこと                                                                                           |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| `FileTree`           | ファイルとディレクトリの一覧、作成、名前の変更、削除。`TreeView`、`ActionMenu`、`TextField` を組む |
-| `EditorFrame`        | ファイルのタブと、エディタのエンジンと、下の状態の帯を置く枠                                       |
-| `TerminalFrame`      | 端末の題と、端末のエンジンを置く枠                                                                 |
-| `PreviewFrame`       | プレビューの URL の欄と、iframe を置く枠                                                           |
-| `HttpExchangeList`   | 行き来したリクエストとレスポンスを順に並べた一覧。者、メソッド、URL、状態コードを出す              |
-| `HttpExchangeDetail` | 1 つの行き来のヘッダ、Cookie、本文                                                                 |
-| `ConsoleEntryList`   | `console.*` の出力の一覧。ログレベルで絞り、値を `TreeView` で開いて見せる                         |
-| `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む            |
+| コンポーネント       | 担うこと                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------- |
+| `FileTree`           | ファイルとディレクトリの一覧、作成、名前の変更、削除。`TreeView` と `ActionMenu` を組む |
+| `EditorFrame`        | ファイルのタブと、エディタのエンジンと、下の状態の帯を置く枠                            |
+| `TerminalFrame`      | 端末の題と、端末のエンジンを置く枠                                                      |
+| `PreviewFrame`       | プレビューの URL の欄と、iframe を置く枠                                                |
+| `HttpExchangeList`   | 行き来したリクエストとレスポンスを順に並べた一覧。者、メソッド、URL、状態コードを出す   |
+| `HttpExchangeDetail` | 1 つの行き来のヘッダ、Cookie、本文                                                      |
+| `ConsoleEntryList`   | `console.*` の出力の一覧。ログレベルで絞り、値を `TreeView` で開いて見せる              |
+| `ConfirmDialog`      | ファイルの削除のような、データを失う操作を確定する前の確認。`Dialog` と `Button` を組む |
 
 コードを動かす画面の Case は、どれも `ToolPane` の領域として描き、次の形にそろえる。
 
