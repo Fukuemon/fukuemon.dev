@@ -17,7 +17,7 @@ afterEach(() => {
 describe("SearchBox", () => {
   it("静的に描いた HTML は、GET で語を送る search の form で、欄に名前と見出しがある", () => {
     const html = renderToStaticMarkup(<Empty />);
-    expect(html).toContain('role="search"');
+    expect(html).toContain("<search>");
     expect(html).toContain('action="#search"');
     expect(html).toContain('method="get"');
     expect(html).toContain('name="q"');
@@ -39,7 +39,7 @@ describe("SearchBox", () => {
   it("欄にフォーカスして Enter のキーを押すと form を送る", async () => {
     render(<Empty />);
     const submitted = vi.fn((event: SubmitEvent) => event.preventDefault());
-    screen.getByRole("search").addEventListener("submit", submitted);
+    screen.getByRole("combobox").closest("form")?.addEventListener("submit", submitted);
     await userEvent.type(screen.getByRole("combobox"), "oauth{Enter}");
     expect(submitted).toHaveBeenCalledOnce();
   });
@@ -110,7 +110,7 @@ describe("SearchBox", () => {
   it("候補を選んでいないときの Enter のキーは、form を送る", async () => {
     render(<WithSuggestions />);
     const submitted = vi.fn((event: SubmitEvent) => event.preventDefault());
-    const form = screen.getByRole("search");
+    const form = screen.getByRole("combobox").closest("form")!;
     form.addEventListener("submit", submitted);
     await userEvent.click(screen.getByRole("combobox"));
     await userEvent.keyboard("{Enter}");
