@@ -110,12 +110,12 @@ describe("applyStage", () => {
 
   it("6 秒の後に場面の準備ができていないと、2 つの class を外し、記録は残す", () => {
     const r = run();
-    expect(r.timers.map((t) => t.ms)).toStrictEqual([6000]);
     r.timers[0]!.fn();
-    expect({ classes: [...r.root.classes], seen: r.store.items.get("fd-top-seen") }).toStrictEqual({
-      classes: [],
-      seen: "1",
-    });
+    expect({
+      ms: r.timers.map((t) => t.ms),
+      classes: [...r.root.classes],
+      seen: r.store.items.get("fd-top-seen"),
+    }).toStrictEqual({ ms: [6000], classes: [], seen: "1" });
   });
 
   it("6 秒の後に場面の準備ができていれば、庭を出したままにする", () => {
@@ -271,9 +271,11 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
       setTimeout: (fn: () => void, ms: number) => void timers.push({ fn, ms }),
     };
     runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
-    expect(timers.map((t) => t.ms)).toStrictEqual([6000]);
     timers[0]!.fn();
-    expect([...b.root.classes]).toStrictEqual([]);
+    expect({ ms: timers.map((t) => t.ms), classes: [...b.root.classes] }).toStrictEqual({
+      ms: [6000],
+      classes: [],
+    });
   });
 });
 

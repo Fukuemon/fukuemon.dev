@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { meanDiff } from "../support/mean-diff";
-import { seenBefore, settledCenterX } from "../support/visit";
+import { settledCenterX } from "../support/camera";
+import { seenBefore } from "../support/visit";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
 const AUTUMN_NOON = new Date(2026, 10, 13, 12);

@@ -29,17 +29,17 @@ export interface Garden {
   pointer(x: number, y: number): void;
   /**
    * 最初の訪問のイントロで、墨だけの絵から色を差し、カメラが門をくぐって 1 つ目の和紙の前で止まる。
-   * @param on.cards 文とヘッダーと庭の中のボタンを出す時刻に、1 回呼ぶ
-   * @param on.done カメラが止まった時刻に、1 回呼ぶ
+   * @param handlers.cards 文とヘッダーと庭の中のボタンを出す時刻に、1 回呼ぶ
+   * @param handlers.done カメラが止まった時刻に、1 回呼ぶ
    */
-  enter(on: { cards(): void; done(): void }): void;
+  enter(handlers: { cards(): void; done(): void }): void;
   /** イントロを、動かさずに最後の状態にする。呼んだ後は、`enter` に渡した関数を呼ばない */
   skip(): void;
   /** 描くのをやめ、セクションを元の場所に戻し、和紙に置いたときに書いた属性と変数を消す */
   stop(): void;
 }
 
-/** イントロの、色を差し始めてからの各段の時刻（ms）。top-garden の Design Doc の「イントロの各段の時間」 */
+/** イントロの、色を差し始めてからの各段の時刻と長さ（ms）。tint0 と move0 は始める時刻、tint と move はその長さ、cards と done は時刻。top-garden の Design Doc の「イントロの各段の時間」 */
 const INTRO = { tint0: 300, tint: 1200, move0: 1300, move: 2800, cards: 3700, done: 4500 } as const;
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
@@ -340,17 +340,17 @@ export function startGarden(
         state.py = y;
         if (!state.paused && !portrait()) kick();
       },
-      enter(on) {
+      enter(handlers) {
         if (phase !== "wait") return;
         phase = "enter";
         enteredAt = performance.now();
         // 文を出す時刻と終える時刻は、フレームでなく時刻で決める。描くのが遅い端末でも、決めた長さで終える。
         timers.push(
-          setTimeout(() => on.cards(), INTRO.cards),
+          setTimeout(() => handlers.cards(), INTRO.cards),
           setTimeout(() => {
             toGarden();
             kick();
-            on.done();
+            handlers.done();
           }, INTRO.done),
         );
         kick();

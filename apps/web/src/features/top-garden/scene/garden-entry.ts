@@ -112,9 +112,9 @@ function reveal(garden: Garden, cards: readonly HTMLElement[]): void {
  * Tab は既定の動きを止めず、最後の状態でそのまま次の要素へフォーカスを移す。
  */
 function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
-  const intro = new AbortController();
-  const off = { signal: intro.signal };
-  wiring.signal.addEventListener("abort", () => intro.abort(), off);
+  const introWiring = new AbortController();
+  const introOn = { signal: introWiring.signal };
+  wiring.signal.addEventListener("abort", () => introWiring.abort(), introOn);
   let shown = false;
   const show = () => {
     if (shown) return;
@@ -122,7 +122,7 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
     reveal(garden, cards);
   };
   const finish = () => {
-    intro.abort();
+    introWiring.abort();
     root.classList.remove("intro", "enter");
     performance.mark("garden-intro-done");
   };
@@ -130,22 +130,26 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
     // 文とヘッダーの不透明度の遷移も止め、最後の状態を 1 度に出す。値が落ち着いた後に外す。
     root.classList.add("no-anim");
     garden.skip();
+    // 最後の状態を描く途中で描けなくなると、leave がふつうのページに戻している。class を付け直さない。
+    if (wiring.signal.aborted) return;
     show();
     finish();
     if (focusHeading) cards[0]?.querySelector<HTMLElement>("h1")?.focus();
     requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("no-anim")));
   };
-  document.querySelector("[data-garden-skip]")?.addEventListener("click", () => jump(true), off);
+  document
+    .querySelector("[data-garden-skip]")
+    ?.addEventListener("click", () => jump(true), introOn);
   addEventListener(
     "keydown",
     (e) => {
       if (e.key === "Escape" || e.key === "Tab") jump(false);
     },
-    off,
+    introOn,
   );
   setTimeout(
     () => {
-      if (intro.signal.aborted) return;
+      if (introWiring.signal.aborted) return;
       root.classList.add("enter");
       performance.mark("garden-enter");
       garden.enter({ cards: show, done: finish });
