@@ -208,7 +208,7 @@ const bootDatabase = async (fake = databaseBackend()) => {
 };
 
 describe("bootWithBackend の DB", () => {
-  it("DB を使うときは、依存を入れてから、DB のプロセスを、端末も preload も付けずに起動する", async () => {
+  it("DB を使うときは、依存を入れてから、DB のプロセスを、internal を指定して起動する", async () => {
     const { created } = await bootDatabase();
     expect(created?.processes.map((p) => [p.command, p.args, p.options, p.terminal])).toStrictEqual(
       [

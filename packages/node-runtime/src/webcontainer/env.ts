@@ -1,4 +1,6 @@
+import type { SpawnOptions } from "../backend";
 import { DB_SOCKET_PATH } from "../guest/db-protocol";
+import type { TerminalSize } from "../types";
 
 const socketDirectory = DB_SOCKET_PATH.slice(0, DB_SOCKET_PATH.lastIndexOf("/"));
 
@@ -25,4 +27,13 @@ export function visitorEnv(options: {
     PGDATABASE: "postgres",
     DATABASE_URL: `postgres://postgres@${encodeURIComponent(socketDirectory)}/postgres`,
   };
+}
+
+/** container.spawn に渡すオプション。実行環境が自分で起動するプロセス（internal）には、環境変数も端末も渡さない。 */
+export function spawnOptions(
+  options: SpawnOptions,
+  env: Record<string, string>,
+  defaultTerminal: TerminalSize,
+): { env?: Record<string, string>; terminal?: TerminalSize } {
+  return options.internal ? {} : { env, terminal: options.terminal ?? defaultTerminal };
 }

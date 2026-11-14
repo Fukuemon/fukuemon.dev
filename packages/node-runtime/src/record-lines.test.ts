@@ -123,14 +123,16 @@ describe("createPrefixedLineReader", () => {
     expect(read("@@", "p a", "b\r\n")).toStrictEqual(["ab"]);
   });
 
+  it("CRLF の \\r と \\n が別の chunk で届いても、\\r を外す", () => {
+    expect(read("@@p a\r", "\n")).toStrictEqual(["a"]);
+  });
+
   it("createRecordLineFilter の上限の 4 MB を超える行も、細かく切れて届いたら 1 行にする", () => {
     const body = "x".repeat(5 * 1024 * 1024);
     const chunks = ["@@p "];
     for (let at = 0; at < body.length; at += 64 * 1024) chunks.push(body.slice(at, at + 64 * 1024));
     chunks.push("\n");
-    const lines = read(...chunks);
-    expect(lines).toHaveLength(1);
-    expect(lines[0]).toHaveLength(body.length);
+    expect(read(...chunks).map((line) => line.length)).toStrictEqual([body.length]);
   });
 });
 

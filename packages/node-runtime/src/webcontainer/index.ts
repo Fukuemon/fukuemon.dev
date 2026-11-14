@@ -16,7 +16,7 @@ import dbServerSource from "../guest/db-server.ts?bundle";
 import httpTraceSource from "../guest/http-trace.cjs?raw";
 import keepAliveSource from "../guest/keep-alive.cjs?raw";
 import type { OpenPort, TerminalSize } from "../types";
-import { visitorEnv } from "./env";
+import { spawnOptions, visitorEnv } from "./env";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
@@ -178,18 +178,11 @@ export const webContainerBackend: RuntimeBackend = {
         files: createBackendFiles(container),
         spawn: async (command, args, options = {}) =>
           toBackendProcess(
-            await container.spawn(
-              command,
-              [...args],
-              options.internal ? {} : { env, terminal: options.terminal ?? DEFAULT_TERMINAL },
-            ),
+            await container.spawn(command, [...args], spawnOptions(options, env, DEFAULT_TERMINAL)),
           ),
         spawnShell: async (options = {}) =>
           toBackendProcess(
-            await container.spawn("jsh", [], {
-              env,
-              terminal: options.terminal ?? DEFAULT_TERMINAL,
-            }),
+            await container.spawn("jsh", [], spawnOptions(options, env, DEFAULT_TERMINAL)),
           ),
         ports: ports.ports,
         guestDirectory: DB_DIRECTORY,

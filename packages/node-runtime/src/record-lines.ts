@@ -101,8 +101,9 @@ export function createPrefixedLineReader(prefix: string, onLine: (line: string) 
     let start = 0;
     for (let end = chunk.indexOf("\n"); end !== -1; end = chunk.indexOf("\n", start)) {
       held.push(chunk.slice(start, end));
-      emit(held.join(""));
+      const line = held.join("");
       held = [];
+      emit(line);
       start = end + 1;
     }
     if (start < chunk.length) held.push(chunk.slice(start));

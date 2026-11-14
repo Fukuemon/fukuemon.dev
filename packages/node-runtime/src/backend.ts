@@ -1,7 +1,7 @@
 import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
 type BackendBootOptions = Pick<BootOptions, "files"> & {
-  /** true のときに、DB のプロセスのスクリプトと依存の package.json を guestDirectory に置き、訪問者のプロセスに接続先と preload を渡す。 */
+  /** true のときに、DB のプロセスのスクリプトと依存の package.json を guestDirectory に置き、訪問者のプロセスに接続先と、終了させない preload を渡す。 */
   database: boolean;
 };
 

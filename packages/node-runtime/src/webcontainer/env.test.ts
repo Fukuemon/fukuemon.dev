@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { visitorEnv } from "./env";
+import { spawnOptions, visitorEnv } from "./env";
 
 const files = {
   portsFile: "/tmp/r/ports.json",
@@ -25,5 +25,22 @@ describe("visitorEnv", () => {
       PGDATABASE: "postgres",
       DATABASE_URL: "postgres://postgres@%2Ftmp/postgres",
     });
+  });
+});
+
+describe("spawnOptions", () => {
+  const env = { NODE_OPTIONS: "--require /tmp/r/http-trace.cjs" };
+  const terminal = { cols: 80, rows: 24 };
+
+  it.each([
+    ["internal のプロセスには、環境変数も端末も渡さない", { internal: true }, {}],
+    ["訪問者のプロセスには、環境変数とデフォルトの端末の大きさを渡す", {}, { env, terminal }],
+    [
+      "訪問者のプロセスに端末の大きさを指定したときは、その大きさを渡す",
+      { terminal: { cols: 120, rows: 40 } },
+      { env, terminal: { cols: 120, rows: 40 } },
+    ],
+  ])("%s", (_name, options, expected) => {
+    expect(spawnOptions(options, env, terminal)).toStrictEqual(expected);
   });
 });
