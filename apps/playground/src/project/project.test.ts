@@ -1,7 +1,7 @@
 import { type PlaygroundProject, playgroundProjectSchema } from "@fukuemon/playground-project";
 import { describe, expect, it, vi } from "vitest";
 
-import { nodeDefaultProject, sqlDefaultProject } from "./defaults";
+import { goDefaultProject, nodeDefaultProject, sqlDefaultProject } from "./defaults";
 import { createProjectLoader, fetchProject, isEmbedId, projectUrl } from "./project";
 
 const sqlProject = {
@@ -18,6 +18,7 @@ describe("デフォルトのプロジェクト", () => {
   it.each([
     ["SQL", sqlDefaultProject],
     ["Node", nodeDefaultProject],
+    ["Go", goDefaultProject],
   ])("%s のツールのものは、プロジェクトの schema に合う", (_, project) => {
     expect(playgroundProjectSchema.safeParse(project).success).toBe(true);
   });
