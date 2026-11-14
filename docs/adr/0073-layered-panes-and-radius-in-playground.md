@@ -42,24 +42,29 @@
 
 - 面と地
   - セマンティックトークンに、地の `surface-ground` と、ペインの紙の面の `surface-pane` を足す。ライトは地を `sumi-100`、面を `sumi-0` にする。ダークは地を `sumi-950`、面を `sumi-800` にする。エディタと端末の背景（`code-surface`）は変えない。
-  - ペインの中で `surface` を直に塗っている所（`ToolPane` の面、SQL の結果の欄、`scroll-fade-end` の薄い色の既定）は、`surface-pane` に張り替える。
+  - 地は、ツールのページの `main` に塗る。ページのヘッダは地の上に置き、面を塗らない。PC の配置では、画面の縁とペインの間を 6px 空ける。狭い配置でも、ツールのページでは地を出す。利用者が承認した W2 の画像のとおりである。
+  - ペインの中で `surface` を直に塗っている面（`ToolPane` の面、SQL の結果の欄）は、`surface-pane` に張り替える。入力欄（`TextField`、ファイルの木の名前の欄）の `surface` は残し、面より沈んだ欄にする。
+  - ペインの中で `scroll-fade-end` を使う枠には、`--fd-scroll-fade-bg` に `surface-pane` を渡すユーティリティを並べて付ける。`scroll-fade-code` と同じ形である。`scroll-fade-end` のデフォルトの色は、記事の表と `Table` が使うので変えない。
   - ペインの四方の枠と、ペインの間の仕切りの罫を引かない。面と地の濃さの差で区切る。
   - ハイコントラストのとき（`forced-colors: active`）だけ、ペインの面に 1px の枠を引く。面の塗りが消え、ペインの区切りが見えなくなるためである。
   - ペインの中の罫は、タブの帯の下の罫だけにする。見出しの帯の下、行番号の縦、エディタの下の案内の帯、プレビューの URL の帯の下の罫を引かない。
   - 面の上の hover と選んだ行の面に、セマンティックトークン `surface-pane-subtle` を足す。ライトは `sumi-50`、ダークは `sumi-750` にする。ダークの `surface-subtle` は面と同じ `sumi-800` で、面の上の hover が見えないためである。`surface-subtle` の値は、画面の外に影響するので変えない。
+    - `packages/ui` のコンポーネントは、`density="compact"` か `size="XS"` のときに、`surface-subtle` の代わりに `surface-pane-subtle` を使う。対象は、hover の面、選んだ行の面、`boxed` の入力欄の面、Switch と Checkbox の hover、`neutral` のラベルの面である。
+    - ダークの `sumi-750` は `surface-disabled` と同じ値なので、無効の面は、色のほかに文字の色（`text-disabled`）で見分ける。
 - 角
   - ペインの面を 10px、ペインの中の操作できる要素を 6px、下のタブの帯、左の縦のタブの帯、ファイルのドロワーを 14px で丸める。紙の面の重なりを、角の丸めで見分けるためである。
   - テーマ変数に、`rounded-pane`（10px）、`rounded-sheet`（14px）、`rounded-control-compact`（6px）を足す。`rounded-control`（2px）の値は変えない。
-  - `rounded-control-compact` は、`packages/ui` のコンポーネントが `density="compact"` のときに、`rounded-control` の代わりに使う。対象は、Button、IconButton、枠のある TextField、TreeView の行、Disclosure の要約、タブの閉じるボタンである。ADR-0062 と ADR-0067 と同じく、別の名前と `density` で分けると、使う所をコードで追えるためである。
-  - Dialog、ActionMenu、エディタの補完の一覧、ページのヘッダの要素は `density` を持たないので、2px のままにする。
+  - `rounded-control-compact` は、`packages/ui` のコンポーネントが `density="compact"` のとき（Button は `size="XS"` のとき）に、`rounded-control` の代わりに使う。対象は、Button、IconButton、枠のある TextField、TreeView の行、Disclosure の要約、タブの閉じるボタン、ActionMenu の開くボタン、Switch、Checkbox である。ADR-0062 と ADR-0067 と同じく、別の名前と、`density` と `size` の今の軸で分けると、使う所をコードで追えるためである。
+  - Dialog、ActionMenu のメニューの面、エディタの補完の一覧は、重なる面なので 2px のままにする。ページのヘッダの要素も 2px のままにする。
   - ADR-0028 が丸めないと決めた要素（Tabs のタブ、下罫だけの検索の欄、メニューの項目、Notice、StatusBadge、Table、コードブロック）は、今のとおり丸めない。
   - フォーカスの輪は、要素の角の丸めに沿わせる。
 - 重なる面
   - 下のタブの帯と左の縦のタブの帯は、ペインと同じ `surface-pane` の面にし、枠と影を付けない。ペインの横に並ぶ面で、ADR-0028 の重なる面に当たらないためである。
-  - ファイルのドロワーは、ペインに重なる面として、`surface-raised` の面と、右の縁の 1px の枠（`border-field`）で示し、影を付けない。利用者が承認した W2 の画像のとおりである。ダークでは `surface-raised` が `surface-pane` と同じ `sumi-800` になるので、ドロワーの外を覆う薄い墨の面と右の縁の枠で、ペインと見分ける。
+  - ファイルのドロワーは、ペインに重なる面として、`surface-raised` の面と、右の縁の 1px の枠（`border-field`）で示し、影を付けない。利用者が承認した W2 の画像のとおりである。ライトとダークのどちらでも `surface-raised` は `surface-pane` と同じ色なので、ドロワーの外を覆う薄い墨の面と右の縁の枠で、ペインと見分ける。
   - 画面の中の Dialog、ActionMenu、エディタの補完の一覧は、ADR-0028 の重なる面の組（`surface-raised`、1px の枠、影）のままにする。
 - 使う範囲
-  - `surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact` は、コードを動かす画面の外で使わない。`check:utilities` が、画面の外での使用を止める。
+  - `surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact` は、コードを動かす画面の外で使わない。
+  - `check:utilities` は、`apps/web/src` の全体と、`packages/ui/src` のうちコードを動かす画面のコンポーネントの外で、これらのユーティリティを止める。許すディレクトリは、チェックのスクリプトに列挙する。原則の ID を `packages/ui/DESIGN.md` に足す。
 - 間隔
   - マウスで押す端末の PC の配置では、ペインの間を 8px にする。面の間に地が見えないと、紙を重ねたように見えないためである。
   - 分割の幅を変える `SplitPane` の仕切りは、押せる幅を 8px にし、ペインの間の余白に置く。
@@ -72,9 +77,11 @@
   - 触る端末（`pointer: coarse`）で PC の配置になるとき（横に向けたタブレット）は、仕切りの押せる幅とペインの間を 44px にする。ADR-0071 の押せる領域の大きさにそろえるためである。
 - 記事の埋め込み
   - 記事の枠の中で、ペインを 1 つずつ出す配置では、地を出さず、ペインの面を枠いっぱいに置き、角を丸めない。記事の枠と面の縁が、二重の線に見えないようにするためである。枠の上のタブは、ペインの面の上に置き、タブの帯の下の罫だけを引く。
+  - 高さが 500px 未満の iframe で左の縦のタブにするときは、縦のタブの帯の右に罫を 1 本引き、ペインと分ける。地を出さないので、帯とペインが同じ面になるためである。
   - 記事の枠の中でペインを並べる配置の、地と角の出し方は、記事に埋め込む iframe の大きさが決まるまで決めない。記事の段の幅（640px）では、ペインを並べる配置にならない。
 
 ADR-0028 の Decision の「罫で区切る版面を保ったまま」と「角丸」のうち、コードを動かす画面の中の分と、重なる面を影と組にする決定のうちファイルのドロワーの分を、この ADR が置き換える。  
+ADR-0028 の Decision の、テーマ変数に角丸の名前を 1 つだけ置く決定を、この ADR が置き換える。  
 ADR-0062 の Decision の「色、罫、墨と生成りの面、角丸、筆の線の動きは変えない」のうち、罫、面、角丸の分を、この ADR が置き換える。  
 ADR-0062 の Decision の押せる領域を 24×24 CSS px 以上にする決定のうち、マウスで押す端末の仕切りの分を、この ADR が置き換える。  
 ADR-0066 の内側の輪を使う所を限る決定と、ADR-0061 の輪を要素から 2px 離して引く決定のうち、仕切りの分を、この ADR が置き換える。  
@@ -85,7 +92,8 @@ ADR-0066 の内側の輪を使う所を限る決定と、ADR-0061 の輪を要�
 - ADR-0071 と ADR-0072 を先に承認していること。
 - 実装した画面を、ライトとダーク、PC と 375px で撮る。面の縁、hover の面、エディタの背景と `surface-ground` の境が見えることを、利用者が画像で確認する。撮る組には、ダークのドロワー、記事の埋め込み、触る端末の PC の配置（ペインの間 44px）を含める。
 - 仕切りの hover の 2px の線と、8px の幅の中の内側の輪を撮って確認する。
-- ペインの中に、`bg-surface` を直に塗る所が残っていないこと。
+- ペインの中に、入力欄のほかに `bg-surface` を直に塗る所が残っていないこと。
+- ダークで、hover の面と無効の面を撮り、見分けられることを確認する。
 - コントラストのチェックに、`surface-ground`、`surface-pane`、`surface-pane-subtle` の上の文字、`border-field`、フォーカスの輪の組を足す。文字は 4.5:1 以上、枠と輪は 3:1 以上であること。
 - フォーカスの輪が、6px と 10px の角に沿って引かれることを、Chrome、Firefox、WebKit で撮って確認する。
 - ハイコントラストのとき、ペインの区切りの 1px の枠が出ることを確認する。
