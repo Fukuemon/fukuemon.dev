@@ -65,10 +65,13 @@ const reject = (): never => {
   throw new Rejected();
 };
 
-type Budget = { nodes: number; chars: number };
+/**
+ * 1 件の記録で読める値の数と文字数の残りと、値の数のほかに重さに数える項目の数。
+ * Error のスタックの行は、値の数の上限に数えない。写す側が、文字数を使い切った後も Error ごとに「…」の行を出すためである。重さには、値と同じく数える。
+ */
+type Budget = { nodes: number; chars: number; weighedItems: number };
 
-/** 1 件の記録で読める値の数と文字数の残り。 */
-const createBudget = (): Budget => ({ nodes: MAX_NODES, chars: MAX_CHARS });
+const createBudget = (): Budget => ({ nodes: MAX_NODES, chars: MAX_CHARS, weighedItems: 0 });
 
 /**
  * 配列の要素を、先頭から順に読む。長さを先に確かめ、穴は undefined として読む。
@@ -148,6 +151,7 @@ function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValu
           : Array.isArray(raw.stack) && raw.stack.length <= MAX_STACK
             ? each(raw.stack, text)
             : reject();
+      budget.weighedItems += stack?.length ?? 0;
       return {
         kind: "error",
         name: text(raw.name),
@@ -171,7 +175,8 @@ function parseWithWeight(value: unknown): Parsed | undefined {
     const args = each(value.args, (arg) => toValue(arg, 0, budget));
     return {
       record: { level, time, args },
-      weight: MAX_CHARS - budget.chars + (MAX_NODES - budget.nodes) * VALUE_WEIGHT,
+      weight:
+        MAX_CHARS - budget.chars + (MAX_NODES - budget.nodes + budget.weighedItems) * VALUE_WEIGHT,
     };
   } catch (error) {
     if (error instanceof Rejected) return undefined;

@@ -259,6 +259,16 @@ describe("createConsoleRecords", () => {
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2"]);
   });
 
+  it("Error のスタックの行も、値と同じ重さに数える", () => {
+    const frames = manualFrames();
+    const records = createConsoleRecords({ maxWeight: 30, schedule: frames.schedule });
+    const error = { kind: "error", name: "", message: "", stack: ["", ""] };
+    records.acceptLine(JSON.stringify(record([error])), { name: "p" });
+    records.acceptLine(line("a"), { name: "p" });
+    frames.run();
+    expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2"]);
+  });
+
   it("1 件で重さの合計の上限を超えても、最新の 1 件は残す", () => {
     const frames = manualFrames();
     const records = createConsoleRecords({ maxWeight: 3, schedule: frames.schedule });

@@ -1,5 +1,5 @@
 // console.* の引数を、JSON にできる値の木に写す。Node の preload（console-trace.cjs）と、プレビューに入れるスクリプト（src/preview-console.ts）が共有する。
-// 木の形は src/console-records.ts が読む。呼んだ時点の値を写し、getter、toJSON、Proxy の罠を動かさない (docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
+// 木の形は src/console-records.ts が読む。呼んだ時点の値を写し、getter、toJSON、Proxy の罠を動かさない。例外は、Node のプロセスで、組み込みの Error が自身に持つ stack の getter である (docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
 "use strict";
 
 /** 値の木の深さ。超えた入れ子は、中身を写さずに文字にする。 */

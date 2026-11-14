@@ -154,6 +154,23 @@ describe("toConsoleValues", () => {
       ]);
     });
 
+    it("組み込みの Error が自身に持つ name と message の getter は呼ばない", () => {
+      const touched: string[] = [];
+      const error = new Error("m");
+      // V8 の stack の getter は、初めて読むときに name と message を読んで文を組むので、先に組ませておく
+      expect(error.stack).toContain("Error: m");
+      for (const key of ["name", "message"]) {
+        Object.defineProperty(error, key, {
+          get() {
+            touched.push(key);
+            return "x";
+          },
+        });
+      }
+      copyInNode(error);
+      expect(touched).toStrictEqual([]);
+    });
+
     it("組み込みの Error でない値の自身の getter、継承した getter、例外を投げる getter からは stack を写さない", () => {
       const touched: string[] = [];
       const fake = ownStack(Object.create(Error.prototype) as object, () => {
