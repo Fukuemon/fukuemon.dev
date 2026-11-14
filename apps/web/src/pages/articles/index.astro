@@ -14,7 +14,7 @@ const items = await getArticleList();
       <ArtBand layout="band" motif="seigaiha" />
       {
         items.length === 0 ? (
-          <p class="text-body">公開した記事は、まだありません。</p>
+          <p class="text-body">記事は準備中です。公開したら、ここに並べます。</p>
         ) : (
           <ul class="flex flex-col">
             {items.map(({ ref, series }) => (

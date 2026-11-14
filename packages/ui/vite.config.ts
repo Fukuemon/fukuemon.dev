@@ -5,9 +5,9 @@ import { defineConfig } from "vite-plus";
 import { playwright } from "vite-plus/test/browser-playwright";
 
 // Vitest が project ごとに設定を書き換えるので、project ごとに新しく作る
-const browser = () => ({
+const browser = (contextOptions?: { hasTouch: boolean }) => ({
   enabled: true,
-  provider: playwright(),
+  provider: playwright({ contextOptions }),
   headless: true,
   instances: [{ browser: "chromium" as const }],
 });
@@ -23,9 +23,20 @@ export default defineConfig({
         extends: true,
         test: {
           name: "component",
-          include: ["src/**/*.test.tsx"],
+          include: ["src/**/*.test.tsx", "src/**/*.test.ts"],
+          exclude: ["src/**/*.coarse.test.{ts,tsx}"],
           setupFiles: ["src/test/setup.ts"],
           browser: browser(),
+        },
+      },
+      {
+        // 触る端末の押せる領域は、Chromium のタッチのエミュレーションで pointer: coarse にして確かめる（docs/adr/0071-touch-targets-and-ios-zoom-in-playground.md）
+        extends: true,
+        test: {
+          name: "component-coarse",
+          include: ["src/**/*.coarse.test.{ts,tsx}"],
+          setupFiles: ["src/test/setup.ts"],
+          browser: browser({ hasTouch: true }),
         },
       },
       {

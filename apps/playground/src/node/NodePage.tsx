@@ -1,11 +1,14 @@
 import {
   EditorFrame,
+  FileDrawer,
   FileTree,
   HttpExchangeDetail,
   HttpExchangeList,
+  IconButton,
   Link,
   Notice,
   PageLoading,
+  PaneTabs,
   PreviewFrame,
   SplitPane,
   Tabs,
@@ -21,16 +24,28 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import {
+  DATABASE_ICON,
+  EDITOR_ICON,
+  FOLDER_ICON,
+  NETWORK_ICON,
+  PREVIEW_ICON,
+  TERMINAL_ICON,
+} from "../layout/icons";
+import { usePaneFocus } from "../layout/usePaneFocus";
+import { type LayoutMode, useLayoutMode } from "../layout/useLayoutMode";
+
+import { type EditorStates, EditorStatesContext } from "../code-editor/editor-states";
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { BottomTabs } from "./BottomTabs";
-import { RuntimeContext, SelectionContext, useRuntime } from "./context";
+import { RuntimeContext, SelectionContext, useRuntime, useSelection } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
 import { HttpDetailPane, HttpListPane } from "./HttpPane";
 import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
-import { initialSelection, selectionReducer } from "./selection";
+import { type SelectionAction, initialSelection, selectionReducer } from "./selection";
 import { type NodeSession, createNodeSessionOpener } from "./session";
 import { SqlPane } from "./SqlPane";
 import { TerminalPane } from "./TerminalPane";
@@ -40,7 +55,7 @@ const openSession = createNodeSessionOpener(createProjectLoader("node", nodeDefa
 
 const pendingState = { kind: "pending" } as const;
 
-/** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面の右下の PageLoading を出させる。 */
+/** 起動の Promise を読むだけで何も描かず、外の Suspense に、画面を覆う PageLoading を出させる。 */
 function BootWait() {
   useRuntime();
   return null;
@@ -53,17 +68,30 @@ function BootWait() {
 function Pane({
   fallback,
   editorFocusRing = false,
+  flush = false,
+  inTab = false,
   children,
 }: {
   fallback: ReactNode;
   /** 中の CodeMirror にフォーカスがあるときに、ペインを輪で囲む。 */
   editorFocusRing?: boolean;
+  /** 記事の枠の中で 1 つずつ出すときに、余白と角の丸めを外し、ペインの面を枠いっぱいに置く（docs/adr/0073-layered-panes-and-radius-in-playground.md）。 */
+  flush?: boolean;
+  /** 狭い配置のタブで 1 つずつ出すときに、仕切りのための 4px の余白を外し、ペインの縁をタブの帯の縁にそろえる。 */
+  inTab?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="size-full p-1">
+    <div className={flush || inTab ? "size-full" : "size-full p-1"}>
       <div
-        className={`flex size-full flex-col [&>section]:flex-1 ${editorFocusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
+        className={[
+          "flex size-full flex-col [&>section]:flex-1",
+          !flush && "rounded-pane",
+          editorFocusRing &&
+            (flush ? "has-[.cm-focused]:focus-ring-inset" : "has-[.cm-focused]:focus-ring"),
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         <Suspense fallback={fallback}>{children}</Suspense>
       </div>
@@ -71,70 +99,40 @@ function Pane({
   );
 }
 
-/** 右の列のタブ。選んでいないタブのペインは Activity で隠し、SQL の入力欄と結果を残す。 */
-type RightTab = "preview" | "sql";
-
-/**
- * 右の列。DB を使うプロジェクトでは、プレビューと SQL のペインをタブで切り替える。
- * どちらのペインも列の高さを全て使い、SQL の入力欄と結果を同時に見られるようにする。
- */
-function PreviewColumn({ database }: { database: boolean }) {
-  const [tab, setTab] = useState<RightTab>("preview");
-  const preview = (
-    <Pane
-      fallback={
-        <PreviewFrame state={pendingState} url="">
-          {null}
-        </PreviewFrame>
-      }
-    >
-      <PreviewPane />
-    </Pane>
-  );
-  if (!database) return preview;
-  // Tabs は選んだタブの中身だけを描くので、どのタブにも同じ中身を渡し、中で Activity で切り替える
-  const content = (
-    <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
-      <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
-      <Activity mode={tab === "sql" ? "visible" : "hidden"}>
-        <Pane
-          fallback={
-            <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
-              {() => null}
-            </EditorFrame>
-          }
-        >
-          <SqlPane />
-        </Pane>
-      </Activity>
-    </div>
-  );
-  return (
-    <div className="flex size-full min-h-0 flex-col">
-      <Tabs
-        density="compact"
-        items={[
-          { id: "preview", label: "プレビュー", content },
-          { id: "sql", label: "SQL", content },
-        ]}
-        label="プレビューと SQL"
-        onSelect={(id) => setTab(id as RightTab)}
-        panel="flush"
-        selectedId={tab}
-      />
-    </div>
-  );
-}
-
-const title = (
-  <h1 className="font-heading font-semibold text-heading-sm text-text">Node の実行環境</h1>
+const filesFallback = <FileTree items={[]} onSelect={() => undefined} state={pendingState} />;
+const editorFallback = (
+  <EditorFrame files={[]} onSelect={() => undefined} state={pendingState}>
+    {() => null}
+  </EditorFrame>
+);
+const previewFallback = (
+  <PreviewFrame state={pendingState} url="">
+    {null}
+  </PreviewFrame>
+);
+const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</TerminalFrame>;
+const sqlFallback = (
+  <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
+    {() => null}
+  </EditorFrame>
 );
 
-/** 下のペインの HTTP のタブ。一覧と、選んだ通信の詳細を、左右に並べる。 */
-function HttpPanes() {
+// 高さの低い画面では、題を読み上げだけに残す（docs/adr/0072-short-landscape-layout-in-playground.md）
+const title = (
+  <h1 className="font-heading text-heading-sm font-semibold text-text short:sr-only">
+    Node の実行環境
+  </h1>
+);
+
+/**
+ * HTTP の流れのペイン。一覧と、選んだ通信の詳細を、仕切りで分けて並べる。
+ * PC の配置の下のタブと横の狭い配置では左右に、縦の狭い配置では上下に並べる。
+ */
+function HttpPanes({ orientation = "horizontal" }: { orientation?: "horizontal" | "vertical" }) {
   return (
     <SplitPane
-      label="HTTP の一覧の幅"
+      label={orientation === "horizontal" ? "HTTP の一覧の幅" : "HTTP の一覧の高さ"}
+      orientation={orientation}
       primary={
         <Pane
           fallback={
@@ -158,10 +156,217 @@ function HttpPanes() {
   );
 }
 
+/** 右の列のタブ。選んでいないタブのペインは Activity で隠し、SQL の入力欄と結果を残す。 */
+type RightTab = "preview" | "sql";
+
+/**
+ * PC の配置の右の列。DB を使うプロジェクトでは、プレビューと SQL のペインをタブで切り替える。
+ * どちらのペインも列の高さを全て使い、SQL の入力欄と結果を同時に見られるようにする。
+ */
+function PreviewColumn({ database }: { database: boolean }) {
+  const [tab, setTab] = useState<RightTab>("preview");
+  const preview = (
+    <Pane fallback={previewFallback}>
+      <PreviewPane />
+    </Pane>
+  );
+  if (!database) return preview;
+  // Tabs は選んだタブの中身だけを描くので、どのタブにも同じ中身を渡し、中で Activity で切り替える
+  const content = (
+    <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
+      <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
+      <Activity mode={tab === "sql" ? "visible" : "hidden"}>
+        <Pane fallback={sqlFallback}>
+          <SqlPane />
+        </Pane>
+      </Activity>
+    </div>
+  );
+  return (
+    <div className="flex size-full min-h-0 flex-col [&>div>[role=tablist]]:mx-1">
+      <Tabs
+        density="compact"
+        items={[
+          { id: "preview", label: "プレビュー", content },
+          { id: "sql", label: "SQL", content },
+        ]}
+        label="プレビューと SQL"
+        onSelect={(id) => setTab(id as RightTab)}
+        panel="flush"
+        selectedId={tab}
+      />
+    </div>
+  );
+}
+
+/** PC の配置。ファイルの木、エディタ、プレビュー、下のタブ（端末と HTTP の流れ）を並べ、仕切りで幅と高さを変える。 */
+function WidePanes({ database }: { database: boolean }) {
+  return (
+    // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
+    <div className="-m-1 min-h-0 flex-1">
+      <SplitPane
+        defaultSize={20}
+        label="ファイルのツリーの幅"
+        primary={
+          <Pane fallback={filesFallback}>
+            <FilesPane />
+          </Pane>
+        }
+        secondary={
+          <SplitPane
+            defaultSize={58}
+            label="端末の高さ"
+            orientation="vertical"
+            primary={
+              <SplitPane
+                label="エディタとプレビューの幅"
+                primary={
+                  <Pane editorFocusRing fallback={editorFallback}>
+                    <EditorPane />
+                  </Pane>
+                }
+                secondary={<PreviewColumn database={database} />}
+              />
+            }
+            secondary={
+              <BottomTabs
+                http={<HttpPanes />}
+                terminal={
+                  <Pane fallback={terminalFallback}>
+                    <TerminalPane />
+                  </Pane>
+                }
+              />
+            }
+          />
+        }
+      />
+    </div>
+  );
+}
+
+const NARROW_PANES = ["editor", "terminal", "preview", "sql", "http"] as const;
+type NarrowPane = (typeof NARROW_PANES)[number];
+
+/**
+ * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビュー、通信をタブで 1 つずつ出す。DB を使うプロジェクトでは、プレビューの後に SQL のタブを足す。
+ * ドロワーでファイルを選ぶと、ドロワーを閉じてエディタのタブに替える。フォルダの行は開閉だけをし、ドロワーを閉じない。
+ */
+function NarrowPanes({
+  mode,
+  embedded,
+  database,
+}: {
+  mode: Exclude<LayoutMode, "wide">;
+  embedded: boolean;
+  database: boolean;
+}) {
+  const { selection, dispatch } = useSelection();
+  const [pane, setPane] = useState<NarrowPane>("editor");
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const { rootRef, focusEditor } = usePaneFocus();
+  const dispatchInDrawer = (action: SelectionAction) => {
+    dispatch(action);
+    if (action.type === "select-item" && action.isFile) {
+      setDrawerOpen(false);
+      setPane("editor");
+      focusEditor();
+    }
+  };
+  return (
+    <div className="min-h-0 flex-1" ref={rootRef}>
+      <PaneTabs
+        items={[
+          {
+            id: "editor",
+            label: "エディタ",
+            icon: EDITOR_ICON,
+            content: (
+              <Pane editorFocusRing fallback={editorFallback} flush={embedded} inTab>
+                <EditorPane />
+              </Pane>
+            ),
+          },
+          {
+            id: "terminal",
+            label: "端末",
+            icon: TERMINAL_ICON,
+            content: (
+              <Pane fallback={terminalFallback} flush={embedded} inTab>
+                <TerminalPane />
+              </Pane>
+            ),
+          },
+          {
+            id: "preview",
+            label: "プレビュー",
+            icon: PREVIEW_ICON,
+            content: (
+              <Pane fallback={previewFallback} flush={embedded} inTab>
+                <PreviewPane />
+              </Pane>
+            ),
+          },
+          ...(database
+            ? [
+                {
+                  id: "sql",
+                  label: "SQL",
+                  icon: DATABASE_ICON,
+                  content: (
+                    <Pane fallback={sqlFallback} flush={embedded} inTab>
+                      <SqlPane />
+                    </Pane>
+                  ),
+                },
+              ]
+            : []),
+          {
+            id: "http",
+            label: "通信",
+            icon: NETWORK_ICON,
+            content: (
+              // 一覧と詳細の包みの 4px の余白を外へ出し、ペインの縁をほかのタブのペインにそろえる
+              <div className="-m-1 flex min-h-0 flex-1 flex-col">
+                <HttpPanes orientation={mode === "narrow" ? "vertical" : "horizontal"} />
+              </div>
+            ),
+          },
+        ]}
+        label="ペイン"
+        leading={
+          <IconButton icon={FOLDER_ICON} label="ファイル" onClick={() => setDrawerOpen(true)} />
+        }
+        onSelect={(id) => setPane(NARROW_PANES.find((name) => name === id) ?? "editor")}
+        flush={embedded}
+        placement={mode === "short" ? "start" : embedded ? "top" : "bottom"}
+        selectedId={pane}
+      />
+      <FileDrawer
+        description="ファイルを選ぶと、エディタで開きます"
+        initialFocus='[role="treeitem"][tabindex="0"]'
+        isOpen={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Node の実行環境"
+      >
+        <SelectionContext value={{ selection, dispatch: dispatchInDrawer }}>
+          <Pane fallback={filesFallback}>
+            <FilesPane />
+          </Pane>
+        </SelectionContext>
+      </FileDrawer>
+    </div>
+  );
+}
+
 function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boolean }) {
   const { project } = session;
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
+  // 配置が替わってエディタを作り直しても、ファイルごとの元に戻す履歴とカーソルを残す
+  const [editorStates] = useState<EditorStates>(() => new Map());
+  const mode = useLayoutMode();
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
+  const database = project.database === true;
   return (
     <RuntimeContext
       value={{
@@ -178,56 +383,13 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
           <BootWait />
         </Suspense>
-        <div className="min-h-0 flex-1">
-          <SplitPane
-            defaultSize={20}
-            label="ファイルのツリーの幅"
-            primary={
-              <Pane
-                fallback={<FileTree items={[]} onSelect={() => undefined} state={pendingState} />}
-              >
-                <FilesPane />
-              </Pane>
-            }
-            secondary={
-              <SplitPane
-                defaultSize={58}
-                label="端末の高さ"
-                orientation="vertical"
-                primary={
-                  <SplitPane
-                    label="エディタとプレビューの幅"
-                    primary={
-                      <Pane
-                        editorFocusRing
-                        fallback={
-                          <EditorFrame files={[]} onSelect={() => undefined} state={pendingState}>
-                            {() => null}
-                          </EditorFrame>
-                        }
-                      >
-                        <EditorPane />
-                      </Pane>
-                    }
-                    secondary={<PreviewColumn database={project.database === true} />}
-                  />
-                }
-                secondary={
-                  <BottomTabs
-                    http={<HttpPanes />}
-                    terminal={
-                      <Pane
-                        fallback={<TerminalFrame state={pendingState}>{() => null}</TerminalFrame>}
-                      >
-                        <TerminalPane />
-                      </Pane>
-                    }
-                  />
-                }
-              />
-            }
-          />
-        </div>
+        <EditorStatesContext value={editorStates}>
+          {mode === "wide" ? (
+            <WidePanes database={database} />
+          ) : (
+            <NarrowPanes database={database} embedded={embedded} mode={mode} />
+          )}
+        </EditorStatesContext>
       </SelectionContext>
     </RuntimeContext>
   );
@@ -252,10 +414,17 @@ function NodeTool({ search, embedded }: { search: string; embedded: boolean }) {
   return <NodeLayout embedded={embedded} session={load.session} />;
 }
 
-/** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。 */
+/** Node の実行環境のページ。埋め込みのときは、ページのヘッダを出さない。高さの低い画面では、題を出さない。 */
 export function NodePage({ search, embedded }: { search: string; embedded: boolean }) {
+  const mode = useLayoutMode();
   return (
-    <main className="flex h-dvh min-w-0 flex-col gap-2 p-2">
+    <main
+      className={
+        embedded && mode !== "wide"
+          ? "flex h-dvh min-w-0 flex-col bg-surface-pane"
+          : "flex h-dvh min-w-0 flex-col gap-1.5 bg-surface-ground p-1.5"
+      }
+    >
       <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
         <NodeTool embedded={embedded} search={search} />
       </Suspense>

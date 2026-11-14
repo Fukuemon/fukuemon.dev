@@ -19,6 +19,7 @@ const article = (
       status,
       publishedAt: new Date("2026-11-01"),
       format: "page",
+      verificationOnly: false,
       related,
     },
     ...rest,

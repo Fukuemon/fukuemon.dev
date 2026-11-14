@@ -5,7 +5,7 @@ import type { SeriesPagerLink } from "@fukuemon/ui";
 export type ArticleSource = {
   /** Astro の id。`articles/` からの相対パスから拡張子を外したもの */
   id: string;
-  data: Pick<ArticleData, "title" | "status" | "order">;
+  data: Pick<ArticleData, "title" | "status" | "order" | "verificationOnly">;
 };
 
 /** シリーズの中の記事のページが、シリーズについて描く値 */
@@ -17,9 +17,32 @@ export type ArticleSeries = {
   next?: SeriesPagerLink;
 };
 
-/** dev server ではすべてを、build では公開した記事だけを書き出す */
-export function isPublic(status: ArticleData["status"], isDev: boolean): boolean {
-  return isDev || status === "published";
+/**
+ * 書き出す範囲を決める実行の種類。
+ * - dev: dev server。すべてを書き出す
+ * - internal: SITE_ENV を指定しない build。プレビューの Worker、E2E、手元の build で、公開した記事と検証用の記事を書き出す
+ * - production: SITE_ENV=production の build。検証用でない公開した記事だけを書き出す
+ */
+export type SiteMode = "dev" | "internal" | "production";
+
+/**
+ * dev server かどうかと環境変数 SITE_ENV の値から、実行の種類を決める。
+ * 未設定は internal、`production` は production にする。打ち間違いが本番に出ないよう、ほかの値は throw する
+ */
+export function siteModeOf(dev: boolean, siteEnv: string | undefined): SiteMode {
+  if (dev) return "dev";
+  if (siteEnv === undefined || siteEnv === "") return "internal";
+  if (siteEnv === "production") return "production";
+  throw new Error(`SITE_ENV の値が誤っている: ${siteEnv}。production か、未設定にする`);
+}
+
+export function isPublic(
+  data: Pick<ArticleData, "status" | "verificationOnly">,
+  mode: SiteMode,
+): boolean {
+  if (mode === "dev") return true;
+  if (data.status !== "published") return false;
+  return mode === "internal" || !data.verificationOnly;
 }
 
 export function articleHref(id: string): string {
@@ -54,9 +77,9 @@ function toLink(a: ArticleSource | undefined): SeriesPagerLink | undefined {
 export function planArticlePages<T extends ArticleSource>(
   articles: readonly T[],
   seriesTitles: ReadonlyMap<string, string>,
-  isDev: boolean,
+  mode: SiteMode,
 ): { article: T; series?: ArticleSeries }[] {
-  const shown = articles.filter((a) => isPublic(a.data.status, isDev));
+  const shown = articles.filter((a) => isPublic(a.data, mode));
   const seriesOf = new Map<T, ArticleSeries>();
   for (const [dir, list] of Map.groupBy(shown, (a) => seriesDir(a.id))) {
     if (dir === undefined) continue;

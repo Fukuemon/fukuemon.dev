@@ -64,7 +64,8 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
 
   return (
     <div className="flex flex-col gap-2">
-      <header className="-mx-2 -mt-2 flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-2 border-text bg-surface px-3 py-1.5">
+      {/* ページのヘッダは地の上に置き、面と罫を付けない（docs/adr/0073-layered-panes-and-radius-in-playground.md） */}
+      <header className="flex min-h-11 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1.5">
         <div className="min-w-0">{title}</div>
         {/* 主のボタンを右端に固定する。保存した後に出るボタンを左に足し、押そうとしたボタンが動かないようにする */}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -72,7 +73,7 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             <Button
               disabled={busy || running}
               onClick={() => setConfirming(true)}
-              size="XS"
+              size="S"
               variant="secondary"
             >
               初期の状態に戻す
@@ -83,12 +84,12 @@ export function Toolbar({ session, title }: { session: NodeSession; title?: Reac
             isLoading={busy}
             onClick={() => void session.restart()}
             ref={restartRef}
-            size="XS"
+            size="S"
             variant="secondary"
           >
             起動し直す
           </Button>
-          <Button disabled={busy} isLoading={running} onClick={run} size="XS">
+          <Button disabled={busy} isLoading={running} onClick={run} size="S">
             実行する
           </Button>
         </div>

@@ -11,7 +11,7 @@ const meta = {
   args: { series: "OAuth を手で追う", position: 3, total: 5, prev: PREV, next: NEXT },
   decorators: [
     (Story) => (
-      <div className="max-w-prose p-4">
+      <div className="max-w-body p-4">
         <Story />
       </div>
     ),

@@ -23,7 +23,7 @@ export const resetConfirmMessage = (database: boolean) =>
   `保存したファイルを消し、初期ファイルで実行環境を起動し直します。${database ? "SQL のタブの入力欄も、最初の SQL に戻ります。消したファイルと、入力欄の SQL は戻せません。" : "消したファイルは戻せません。"}`;
 
 // 2 つの待ちは続けて起きるので、文を替えない。替えると、スクリーンリーダーが 2 回読み上げる（packages/ui/design/components.md の PageLoading）
-/** プロジェクトの読み込みと起動の、画面の右下の待ちの文。 */
+/** プロジェクトの読み込みと起動の、画面を覆う待ちの文。 */
 export const BOOT_LABEL = "実行環境を起動しています";
 
 export const PREVIEW_TIMEOUT_MS = 30_000;
