@@ -24,7 +24,7 @@ export function Checkbox({ label, ...props }: CheckboxProps) {
         />
         <svg
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 hidden text-text-inverse peer-checked:block forced-colors:text-(--fd-forced-on-text) forced-colors:peer-disabled:text-[Canvas]"
+          className="pointer-events-none absolute inset-0 hidden text-text-inverse peer-checked:block forced-mark peer-disabled:forced-mark-disabled"
           height="20"
           viewBox="0 0 20 20"
           width="20"

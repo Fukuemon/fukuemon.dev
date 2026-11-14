@@ -17,8 +17,13 @@ const { Off, On, OnDisabled } = composeStories(switchStories);
 const { Closable } = composeStories(tabsStories);
 const { CompactBody } = composeStories(treeViewStories);
 
+// cdp() の型に send() が付くのはプロバイダの型を読み込んだときだけで、このプロジェクトの tsc では付かない
+type CdpSend = { send: (method: string, params: object) => Promise<unknown> };
+
 const setForcedColors = (value: "active" | "none") =>
-  cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+  (cdp() as unknown as CdpSend).send("Emulation.setEmulatedMedia", {
+    features: [{ name: "forced-colors", value }],
+  });
 
 const style = (element: Element) => getComputedStyle(element);
 

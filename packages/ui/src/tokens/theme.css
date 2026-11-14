@@ -293,6 +293,24 @@
   }
 }
 
+@utility forced-edge-hidden {
+  @media (forced-colors: active) {
+    border-color: Canvas;
+  }
+}
+
+@utility forced-mark {
+  @media (forced-colors: active) {
+    color: var(--fd-forced-on-text) !important;
+  }
+}
+
+@utility forced-mark-disabled {
+  @media (forced-colors: active) {
+    color: Canvas !important;
+  }
+}
+
 @utility forced-thumb-off {
   @media (forced-colors: active) {
     background-color: CanvasText !important;
