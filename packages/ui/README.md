@@ -46,7 +46,7 @@ pnpm run build:tokens
 プリミティブトークンの値は fukuemon.dev が決める。
 値を足すときは、`packages/ui/src/tokens/primitive.css` の冒頭の規則の名前で足し、`pnpm run check:contrast` で組み合わせを確認する。
 
-- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色で、角丸と影を使わない版面にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
+- ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 
 ## Deployment
 

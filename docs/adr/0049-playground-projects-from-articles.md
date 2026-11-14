@@ -19,7 +19,7 @@
 - 記事に埋め込むページと、トップレベルで開くページは、同じ URL である。
   - ADR-0046: [プレイグラウンドを Vite の React のアプリにし、ツールごとに HTML のエントリーポイントとパスを分ける](0046-playground-as-vite-react-app.md)
 - `fukuemon.dev` は、キャンバスの図のパスに、`play.fukuemon.dev` を許す `Access-Control-Allow-Origin` を返す。
-  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG をリポジトリに置き、ビルドのときにインラインにする](0040-canvas-figures-in-articles.md)
+  - ADR-0040: [記事に埋め込むキャンバスの図は、元データ入りの SVG を `content/figures/` に置いて画像の記法で指し、ビルドのときにインラインにし、キャンバスには図の名前を渡す](0040-canvas-figures-in-articles.md)
 - package を切り出すのは、2 つ以上の消費者が実在するか、消費する側と別の理由で変わるときである。`apps/playground` は、`apps/web` と `@fukuemon/content-model` に依存しない。
   - [context/codebase.md](../../context/codebase.md#packages)
 
@@ -32,10 +32,12 @@
 
 ### 2. 運営者が書くファイル
 
-運営者は、プロジェクトを、記事のディレクトリの下に置く。
+運営者は、プロジェクトを、記事の Markdown があるディレクトリの下の `playground/<埋め込みの名前>/` に置く。  
+シリーズの記事は `articles/<series>/playground/`、シリーズに入れない記事は `articles/playground/` である。
 
 ```text
-apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/
+apps/web/src/content/articles/playground/<埋め込みの名前>/
+apps/web/src/content/articles/<series>/playground/<埋め込みの名前>/
   playground.json     プロジェクトの設定
   ...                 初期ファイル
 ```
@@ -53,7 +55,6 @@ apps/web/src/content/articles/<記事>/playground/<埋め込みの名前>/
 - `start` は、コマンド、引数の一覧、プロセスの名前を持つ値の配列で書く。ツールのページが、コマンドの文字列を引数に分ける処理を持たないためである。
 - 設定のファイルは、訪問者のファイルのツリーに出さない。
 - `playground/` のディレクトリは、シリーズとして扱わず、ディレクトリの入れ子の数に数えない。
-- `<記事>` のディレクトリを、記事の Markdown とどう対応させるかは、記事の形式の設計で決める。
 
 ### 3. 渡す方法
 
@@ -76,10 +77,6 @@ JSON と、設定のファイルの型と schema は、新しい package（`pack
 - package は、workspace のほかの package に依存しない。
 
 package にする理由は、JSON を書く側（`apps/web`）と、読む側（`apps/playground`）の 2 つが、同じ形を使うためである。
-
-## 承認の条件
-
-- 記事の形式の設計が、`articles/<記事>/playground/<埋め込みの名前>/` の置き場を、記事のディレクトリの形と合わせて決めている。ADR-0030 の「ディレクトリの入れ子は 1 階層まで」と「シリーズに入れない記事は、`articles/` の直下に置く」を変えるときは、ADR-0030 を置換する ADR を書く。
 
 ## Considered Options
 

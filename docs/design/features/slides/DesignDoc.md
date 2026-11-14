@@ -107,7 +107,7 @@ flowchart TB
 
 - `@marp-team/marp-core` に依存するのは、`@fukuemon/slides` だけである。`apps/playground` と `apps/web` の `package.json` には、`@marp-team/marp-core` を依存として書かない。
 - `@fukuemon/slides` は、React、`@fukuemon/ui`、workspace のほかの package に依存しない。
-- `src/slides/` は、`apps/playground/src/` のほかのツールのページのディレクトリ（`node/`、`sql/`、`go/` と、キャンバスのツール）を import しない。Oxlint の `no-restricted-imports` の対象に、`slides/` を足す。
+- `src/slides/` は、ツールのページのディレクトリである。ツールのページの間の import の規則は、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 - `documents/` は、`@fukuemon/slides` を import しない。スライドの中身は、文字列として受け取る。
 - `documents/` は、ツールの種類に依らない処理を、React の外のモジュールとして持つ。持つ処理の一覧は、[キャンバスの Design Doc の「ディレクトリ」](../canvas/DesignDoc.md#ディレクトリ) にある。
 - `src/slides/` は、エディタとのやり取り、中身が変わったかの比較、ファイルの形式の処理を持つ。`documents/` に Markdown を渡す時点（500 ミリ秒の待ち）も、`src/slides/` が持つ。開いているスライド、書き込み、書き込みの結果は、持たない。
@@ -155,8 +155,6 @@ type BuiltPage = { html: string; count: number; title: string };
 // `@fukuemon/slides/vite` のサブパスが export する
 declare function slidesAssets(): VitePlugin;
 ```
-
-名前は、実装のときに変えてよい。
 
 - Marp のインスタンスは、package の中の 1 つの関数が作る。渡す設定は、次のとおり。
   - 数式の記法を無効にする。
@@ -255,7 +253,7 @@ flowchart TB
 - `md:` より狭い画面では、ヘッダを 2 行にする。1 行目に、ツールの名前と、スライドの名前を置く。2 行目に、操作と保存の状態を置く。
 - レイアウトは、`SplitPane` で、左に `MarkdownPane`、右に `PreviewPane` を並べる。`md:` より狭い画面では、`Tabs` で 2 つを切り替える。
 - `MarkdownPane` は、`code-editor/` のコンポーネントで、`EditorFrame` に、Node の実行環境と同じエディタのエンジンを渡す。タブは、スライドの名前の 1 つだけを出す。閉じる操作は渡さない。
-  - 狭い画面では、`Tabs` の中に `EditorFrame` のタブが入り、タブの並びが 2 段になる。2 段のままにするか、`EditorFrame` のタブを出さないかは、実装のタスクで決める。
+  - 狭い画面では、`Tabs` の中に `EditorFrame` のタブが入り、タブの並びが 2 段になる。
 - `PreviewPane` は、全てのスライドを縦に並べ、幅に合わせて縮める。スライドの左上に、何枚目かを出す。
   - スクロールする領域に、「プレビュー」の名前を付け、キーボードでフォーカスできるようにする。訪問者は、フォーカスした後に、上下の矢印のキーでスクロールできる。
   - プレビューは、Shadow DOM に入れる。Marp の CSS を、ページに適用させないためである。
@@ -288,7 +286,7 @@ ADR-0057: [図とスライドは、一覧に出す値と中身を 2 つの objec
 
 - ツールの種類は、`slides` である。
 - 中身（`DocumentContent` の `data`）は、Markdown の全文である。テーマは、Markdown の `theme:` に入っている。`DocumentContent` に、スライドだけの値を足さない。
-- `src/slides/` は、入力が 500 ミリ秒止まったときに、Markdown を `documents/` に渡す。500 ミリ秒は、測っていない値で、実装のタスクで測って変えてよい。
+- `src/slides/` は、入力が 500 ミリ秒止まったときに、Markdown を `documents/` に渡す。
 - `src/slides/` は、まだ渡していない Markdown を返す関数を、`documents/` に登録する。`documents/` は、スライドを切り替える前と、ページを閉じるとき（`pagehide`）に、この関数を呼び、返った Markdown を先に書く。
   - `documents/` は、受け取った Markdown を、編集したときに開いていたスライドの識別子に保存する。まだ保存していないスライドのときは、新しいスライドとして保存する。
 - ひな形を開いただけでは、保存しない。「新しいスライド」を押したときも同じである。最初に編集したときか、名前を変えたときに、`documents/` が、新しいスライドとして保存する。
@@ -434,7 +432,6 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
   - 入力がタッチで、指が 1 本で、横の移動が 48px 以上で、縦の移動の 2 倍以上の動きだけを、指を離したときにスワイプと判定する。
   - `pointercancel` が来た動き、ページを拡大している間（`visualViewport.scale` が 1 でない間）の動き、文字を選んでいる間の動きは、スワイプと判定しない。
   - 指の動きに合わせて、スライドを動かさない。
-- 48px と 2 倍は、測っていない値で、実装のタスクで実機で測って変えてよい。
 
 ### 記事への埋め込み
 
@@ -486,7 +483,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 | `--fd-ease-out`            | `ease-out`                     | 濃度の変化と、墨のにじみの緩急                          |
 
 - フォーカスの輪の色は、今ある `--fd-color-focus-outline` を使う。色の変数は足さない。
-- フォーカスの輪の太さと色は、全てのコンポーネントのフォーカスの表示を、墨の 2px の 1 重の輪にした後の値である（#141）。
+- フォーカスの輪の太さと色は、全てのコンポーネントのフォーカスの表示と同じ、墨の 2px の 1 重の輪である。
 - 時間の値は、`theme.css` が今持つ値と同じである。
 
 #### スライド用のセマンティックトークン
@@ -517,12 +514,6 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
   - 選んでいる項目には、項目の左に印を出す。色だけで示さない。印は、読み上げから外す。
   - 項目を選ぶと、メニューを閉じる。キーボードの操作は、今の `ActionMenu` と同じである。
   - ラジオの項目のメニューは、項目が 2 つのときも使う。
-
-#### `packages/ui` の文書とチェック
-
-- コンポーネントの文書の `ActionMenu` に、ラジオの項目のメニューの変種、選んでいる状態、使う場面の「テーマを選ぶ」、項目が 2 つでも使う例外を足す。
-- トークンの文書の、色の表と、色でない値の例外の一覧に、足した名前を書く。
-- デザインシステムの文書の `MOTION-REDUCE` に、静的なページの例外を書く。静的なページは `theme.css` を読めないので、ページの CSS に、動きを止める規則を 1 か所書く。
 
 ## Interface
 
@@ -556,7 +547,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 
 ### 動くチェック
 
-- Oxlint の `no-restricted-imports`: `apps/playground/src/` の、ツールのページのディレクトリの間の import を止める。対象に `slides/` を足す。
+- ツールのページのディレクトリの間の import を止めるチェックは、[context/codebase.md](../../../../context/codebase.md#appsplayground) にある。
 - package の依存の宣言と knip: 次の 2 つを確認する。
   - `@fukuemon/slides` が、React、`@fukuemon/ui`、workspace のほかの package に依存しないこと
   - `apps/playground` と `apps/web` が、`@marp-team/marp-core` を直接は import しないこと
@@ -575,7 +566,7 @@ JavaScript が有効なときは、ページの 1 つの `<script>` が、次の
 実機のブラウザは未確認である。
 
 - HTML のタグを出さない設定（`html: false`）で、`<!-- _class: title -->` を書いたスライドの `<section>` に、`title` のクラスが付いた。`<b>` のタグは、文字として出た。
-- `apps/web/src/pages/slides/` のエンドポイントのファイルにどの名前を付けると、`/slides/<slug>` が HTML の Content-Type で配られるかは、未確認である。実装のタスクで確認する。
+- `apps/web/src/pages/slides/` のエンドポイントのファイルにどの名前を付けると、`/slides/<slug>` が HTML の Content-Type で配られるかは、未確認である。
 - `fd-plain` と `fd-accent` の 2 つのテーマで、表紙、目次、コードの 3 つのクラスを描いた。色は、ライトとダークの両方で、トークンの値と一致した。
 - 下の帯の中央に「前へ」、番号、「次へ」を並べた形で、JavaScript を無効にして、前後に送れた（3 つのブラウザ）。
 - 章の扉と結びのクラスは、描いていない。

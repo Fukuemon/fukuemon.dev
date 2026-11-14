@@ -22,8 +22,8 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 トップの庭の testid は次のとおり。
 
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
-- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。「動きを止める」は `garden-pause`、「文だけで読む」は `garden-plain`、読み上げの通知は `garden-live` である。
-- 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-stack`、`garden-card-articles` である。プロフィールの見出しは `garden-title`、記事の一覧へのリンクは `garden-articles-link` である。
+- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。「動きを止める」は `garden-pause`、「文だけで読む」は `garden-plain`、イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
+- 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-stack`、`garden-card-portfolio` である。プロフィールの見出しは `garden-title` である。
 - testid は、次のファイルに付ける。
   - `apps/web/src/features/top-garden/Profile.astro`
   - `apps/web/src/features/top-garden/scene/GardenStage.astro`
@@ -37,7 +37,8 @@ testid を付けられない要素は、`packages/e2e/tests/selectors/` にま�
 
 規則は `packages/e2e/eslint/e2e-authoring-rule.mjs` にある。スキル setup-e2e-lint の規則を写したものである。
 ESLint の設定は `packages/e2e/eslint.config.mjs` で、`packages/e2e/tests/**/*.ts` だけに当てる。
-渡す値は、`testsDir: "tests"` と `fixedWaitAllowedFiles: ["tests/fixtures/caption.ts"]` の 2 つである。
+渡す値は、`testsDir` と `fixedWaitAllowedFiles` の 2 つである。
+`testsDir` は `"tests"`、`fixedWaitAllowedFiles` は `["tests/fixtures/caption.ts", "tests/fixtures/delay-response.ts"]` である。
 規則は spec を `*.e2e.ts` の名前で見分けるので、spec はこの名前にする。
 
 ```sh
@@ -96,7 +97,7 @@ pnpm run test:garden
   - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
 - 庭は WebGL で描くので、GPU に依らないよう、project `garden` が chromium に SwiftShader で描かせる。
   - SwiftShader は 1 フレームを描くのが遅く、ほかの spec と並べると、最初の絵が画面に出るまでに数秒かかる。
-  - `garden-appearance.e2e.ts` と `garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
+  - `garden-appearance.e2e.ts`、`garden-intro.e2e.ts`、`garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
   - project `garden` は、`expect` の待ちを 45 秒にする。カメラが行き先に着くまでの待ちが、デフォルトの 5 秒を超えるためである。
   - `page.clock` を使うと、ページの `requestAnimationFrame` は 16ms のタイマーに替わり、画面にフレームが出るのを待たない。本物の `requestAnimationFrame` を待つときは、`tests/widgets/waits/presented-frames.ts` の `waitForPresentedFrames` を使う。
   - カメラの移動の動きを確認しない庭の spec は、「動きを止める」を押してから移る。止めたカメラは 1 フレームで行き先に着く。

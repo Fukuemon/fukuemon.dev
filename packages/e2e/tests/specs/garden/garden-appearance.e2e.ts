@@ -4,6 +4,7 @@ import { waitForGardenCanvasWidth } from "../../widgets/waits/canvas-width";
 import { waitForPresentedFrames } from "../../widgets/waits/presented-frames";
 
 import { AUTUMN_NOON } from "./garden-time";
+import { seenBefore } from "../../widgets/actions/seen-before";
 
 test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
 
@@ -15,6 +16,7 @@ test.describe("トップの庭", () => {
     test("秋の昼のトップを開いた場合、止めた庭の絵が基準の画像と同じであること", async ({
       page,
     }) => {
+      await seenBefore(page);
       await page.clock.setFixedTime(AUTUMN_NOON);
       await page.goto("/");
       await waitForGardenCanvasWidth(page, 1440);
