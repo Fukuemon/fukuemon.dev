@@ -79,6 +79,15 @@ describe("createRuntimeStarter", () => {
     expect(boot.mock.calls).toStrictEqual([[{ files: project.files }]]);
   });
 
+  it("DB を使うプロジェクトでは、DB のプロセスと初期データの SQL を起動に渡す", async () => {
+    const boot = vi.fn(async () => runtime);
+    const withDatabase = { ...project, database: true, initialSql: "create table t ();" };
+    await createRuntimeStarter(boot, async () => undefined)(withDatabase);
+    expect(boot.mock.calls).toStrictEqual([
+      [{ files: project.files, database: true, initialSql: "create table t ();" }],
+    ]);
+  });
+
   it("起動した実行環境で、プロジェクトのプロセスを起動する", async () => {
     const start = vi.fn(async () => undefined);
     await createRuntimeStarter(async () => runtime, start)(project);

@@ -29,3 +29,9 @@ export function shellName(processes: readonly ProcessInfo[]): string {
   const shells = processes.filter((info) => info.kind === "shell").length;
   return shells === 0 ? "シェル" : `シェル ${shells + 1}`;
 }
+
+/** SQL のペインの入力欄の、最初の SQL。 */
+export const SQL_PANE_QUERY = "-- Node のコードと同じ DB に、SQL を実行します\nselect now();\n";
+
+/** DB が止まったときに、SQL のペインに出す復帰の案内。 */
+export const SQL_STOPPED_HINT = "ページを読み込み直すと、実行環境を起動し直します。";

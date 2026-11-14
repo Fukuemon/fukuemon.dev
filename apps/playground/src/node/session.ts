@@ -29,6 +29,16 @@ export async function startProject(runtime: NodeRuntime, project: NodeProject): 
   }
 }
 
+/** DB を使うプロジェクトのときだけ、DB のプロセスと初期データの SQL を渡す。 */
+const bootOptions = (project: NodeProject): BootOptions =>
+  project.database === true
+    ? {
+        files: project.files,
+        database: true,
+        ...(project.initialSql !== undefined && { initialSql: project.initialSql }),
+      }
+    : { files: project.files };
+
 /**
  * プロジェクトの初期ファイルで実行環境を起動し、startProject を進める。プロジェクトごとに、1 つの実行環境を起動する。
  * React の use に渡すので、同じプロジェクトには、同じ Promise を返す。プロジェクトのオブジェクトは、project/ が埋め込みの ID ごとに 1 つ返す。プロセスの起動は待たずに解決する。
@@ -40,7 +50,7 @@ export function createRuntimeStarter(
   const started = new WeakMap<NodeProject, Promise<RuntimeResult>>();
   const run = async (project: NodeProject): Promise<RuntimeResult> => {
     try {
-      const runtime = await boot({ files: project.files });
+      const runtime = await boot(bootOptions(project));
       void start(runtime, project).catch((error: unknown) => {
         console.error("プロセスを起動できない", error);
       });

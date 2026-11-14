@@ -19,6 +19,7 @@ import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
 import { type NodeProject, createRuntimeStarter } from "./session";
+import { SqlPane } from "./SqlPane";
 import { TerminalPane } from "./TerminalPane";
 
 const loadProject = createProjectLoader("node", nodeDefaultProject);
@@ -54,6 +55,36 @@ function Pane({
         <Suspense fallback={fallback}>{children}</Suspense>
       </div>
     </div>
+  );
+}
+
+/**
+ * 右の列。DB を使うプロジェクトでは、プレビューの下に SQL のペインを置き、Node のコードの結果と DB の中身を並べて見られるようにする。
+ */
+function PreviewColumn({ database }: { database: boolean }) {
+  const preview = (
+    <Pane
+      fallback={
+        <PreviewFrame state={pendingState} url="">
+          {null}
+        </PreviewFrame>
+      }
+    >
+      <PreviewPane />
+    </Pane>
+  );
+  if (!database) return preview;
+  return (
+    <SplitPane
+      label="プレビューと SQL の高さ"
+      orientation="vertical"
+      primary={preview}
+      secondary={
+        <Pane fallback={null}>
+          <SqlPane />
+        </Pane>
+      }
+    />
   );
 }
 
@@ -96,17 +127,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
                         <EditorPane />
                       </Pane>
                     }
-                    secondary={
-                      <Pane
-                        fallback={
-                          <PreviewFrame state={pendingState} url="">
-                            {null}
-                          </PreviewFrame>
-                        }
-                      >
-                        <PreviewPane />
-                      </Pane>
-                    }
+                    secondary={<PreviewColumn database={project.database === true} />}
                   />
                 }
                 secondary={
