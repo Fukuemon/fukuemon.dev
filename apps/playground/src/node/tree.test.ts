@@ -96,6 +96,7 @@ describe("nameError", () => {
 
   it.each([
     ["新しい名前", "a.js", "a.js", undefined],
+    ["空白だけの名前", "  ", "dir/  ", "名前を入れてください。"],
     [
       "同じパスの項目がある名前",
       "index.js",

@@ -62,6 +62,7 @@ export function nameError(
   path: string,
   existing: ReadonlySet<string>,
 ): string | undefined {
+  if (name.trim() === "") return "名前を入れてください。";
   if (name.includes("/") || name === "." || name === "..") {
     return "名前に / を含めることと、. と .. だけの名前にすることはできません。";
   }
