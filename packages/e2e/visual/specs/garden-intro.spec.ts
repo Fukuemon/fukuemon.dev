@@ -217,7 +217,7 @@ test.describe("場面の準備が遅いとき", () => {
   });
 
   test("準備が墨の絵を描き終えるより遅いと、準備の直後に色を差し始める", async ({ page }) => {
-    await delayBundle(page, 2000);
+    await delayBundle(page, 3500);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 60_000 });
     const m = await marks(page);
