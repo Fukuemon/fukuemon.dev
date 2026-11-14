@@ -43,17 +43,17 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", testIgnore: "**/garden/**", use: { ...devices["Desktop Chrome"] } },
     {
-      // トップの庭の見た目の回帰と、記事のページの表と図の枠と、コードブロックのコピーの吹き出し。tests/ の外に置くので、E2E の lint の規則は掛からない
-      // 庭は WebGL で描くので、GPU に依らず同じ絵になる SwiftShader で描かせる。基準の画像は Linux で作る（context/testing/e2e.md）
-      name: "visual",
-      testDir: "./visual/specs",
-      testMatch: "**/*.spec.ts",
-      // 庭の spec は、同じファイルの中のテストを直列で流す。SwiftShader の描画が重いため
+      // トップの庭の spec（tests/specs/garden/）。庭は WebGL で描くので、GPU に依らず同じ絵になる SwiftShader で描かせる。基準の画像は Linux で作る（context/testing/e2e.md）
+      name: "garden",
+      testMatch: "garden/**/*.e2e.ts",
+      // 同じファイルの中のテストを直列で流す。SwiftShader の描画が重いため
       fullyParallel: false,
+      // SwiftShader は 1 フレームを描くのが遅く、カメラが行き先に着くまでの待ちが既定の 5 秒を超える
+      expect: { timeout: 45_000 },
       // 基準の画像は Linux の 1 枚だけを持つ。名前に OS を入れない
-      snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}{ext}",
+      snapshotPathTemplate: "{testDir}/{testFileDir}/__screenshots__/{testFileName}/{arg}{ext}",
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
