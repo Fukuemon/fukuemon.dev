@@ -33,6 +33,29 @@ describe("Table", () => {
     await expect.poll(() => region.scrollLeft).toBeGreaterThan(0);
   });
 
+  describe("右端のぼかし", () => {
+    const fadeOpacity = (el: HTMLElement) => Number(getComputedStyle(el, "::after").opacity);
+
+    it("幅に収まる表には出さない", async () => {
+      render(<Default />);
+      const region = screen.getByRole("region", { name: "レスポンスのヘッダ" });
+      await expect.poll(() => fadeOpacity(region)).toBe(0);
+    });
+
+    it("幅に収まらない表には、送る前に出す", async () => {
+      render(<Wide />);
+      const region = screen.getByRole("region", { name: "SQL の結果" });
+      await expect.poll(() => fadeOpacity(region)).toBe(1);
+    });
+
+    it("幅に収まらない表は、右端まで送ると消す", async () => {
+      render(<Wide />);
+      const region = screen.getByRole("region", { name: "SQL の結果" });
+      region.scrollLeft = region.scrollWidth - region.clientWidth;
+      await expect.poll(() => fadeOpacity(region)).toBe(0);
+    });
+  });
+
   it("density を compact にすると、セルの余白は上下 2px と左右 8px、文字は 13 px になる（ADR-0062）", () => {
     render(<Compact />);
     for (const cell of document.querySelectorAll("th, td")) {

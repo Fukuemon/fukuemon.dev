@@ -27,7 +27,7 @@ verified_commit: ab2da87
 | unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                              |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                                                           |
 | E2E          | 記事の一覧から記事を開く（`packages/e2e/tests/specs/`）                            | Playwright               | 一覧の 1 本目の記事の題を押すと、その記事のページが開き、見出しが一覧の題と同じになる                                                                                        |
-| E2E          | 記事のページの表と図の枠（`apps/web/e2e/specs/`）                                  | Playwright               | 本文の列からあふれた表と図の枠にだけ、右に続きがある間、右端を背景の色で薄くする。動きを減らす設定では、右端まで送ったときに一度に消す                                       |
+| E2E          | 記事のページの表、図、コードブロックの枠（`apps/web/e2e/specs/`）                  | Playwright               | 本文の列からあふれた表、図、コードブロックの枠にだけ、右に続きがある間、右端を背景の色で薄くする。動きを減らす設定では、右端まで送ったときに一度に消す                       |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                                                 |
 | 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                 |
 
@@ -101,7 +101,7 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 `packages/e2e` は、ビルドした `apps/web/dist/` を配信して実行する。実行の方法は [E2E のテスト](testing/e2e.md#running-tests) にある。  
 `apps/web` の E2E の spec は、`apps/web/e2e/` に置いたままである。
 
-記事のページの表と図の枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
+記事のページの表、図、コードブロックの枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
 あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  
 `scroll-box-fade.spec.ts` と `packages/e2e` の一覧から記事を開く spec は、検証用の原稿に依存するので、原稿を消すときに、spec が開く記事を差し替える。
 
