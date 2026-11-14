@@ -176,7 +176,7 @@ DADS は、要素に接する黄色の輪と、その外の黒の枠の 2 重の
 VS Code と DevTools も、一覧の行のフォーカスを、行の内側の枠で示す。
 
 - ADR-0066: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
-- ADR-0069（提案）: [詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない](../../docs/adr/0069-inset-focus-ring-on-tree-name-field.md)
+- ADR-0074（提案）: [詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない](../../docs/adr/0074-inset-focus-ring-on-tree-name-field.md)
 
 検索の欄（`TextField` の `appearance="underline"`）も例外で、標準の輪を出さず、フォーカスすると緑（`primary`）の筆の線を左から 1 回引く。  
 例外にする理由は、墨の下罫だけで組んだ欄を輪で囲むと、罫の版面が崩れるためである。  
