@@ -129,7 +129,7 @@ export const Editing: Story = {
       content: (
         <input
           aria-label="新しいファイルの名前"
-          className="-ml-1 h-5 w-full min-w-0 rounded-control border border-border-field bg-surface px-1 text-body-compact text-text outline-none"
+          className="-ml-1 h-5 w-full min-w-0 rounded-control border border-border-field bg-surface px-1 text-body-compact text-text focus-visible:focus-ring-inset"
           defaultValue="client.ts"
         />
       ),

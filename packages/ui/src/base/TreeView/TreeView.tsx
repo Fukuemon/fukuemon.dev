@@ -30,6 +30,7 @@ export type TreeNode = {
  * insert の行の印は icon で渡す。行は開かないので、印は閉じた形を渡す。
  * 欄のある行までの枝は開く。欄を外した後、フォーカスがどこにも無ければ、木の項目へ戻す。
  * 欄を外すまでに selectedId が変わり、その項目が見えていればその項目へ、変わらなければ前にいた項目へ戻す。
+ * 欄を開いている間は、行にフォーカスの輪を引かない。content に渡す欄が、自分のフォーカスの表示を持つ。
  */
 export type TreeEditor =
   | { kind: "rename"; id: string; content: ReactNode }
@@ -63,10 +64,11 @@ export type TreeViewProps = {
   /** 渡すと、木の行の中に名前の欄を描く。欄の中のキーとクリックは、木の操作に使わない。 */
   editor?: TreeEditor;
   /**
-   * 最後に editor を外した理由。commit を渡したときだけ、欄を閉じて木の項目へ戻した後に selectedId が変わると、その項目へフォーカスを移す。
-   * 呼ぶ側が保存を待ってから、作った項目や名前を変えた項目を選ぶためである。取り消したときに外から選ぶ項目が変わっても、フォーカスを動かさない。
+   * 欄を閉じた後に、フォーカスを移す項目の id。欄で作った項目か、名前を変えた項目を渡す。取り消したときは渡さない。
+   * 欄を閉じて木の項目へ戻した後、この項目が見えるようになったら、その項目へフォーカスを移す。呼ぶ側が保存を待ってから木を書き換えることがあるためである。
+   * 移る前に木を操作するか、フォーカスがほかの要素へ移ったら、移さない。
    */
-  editorClosedBy?: "commit" | "cancel";
+  focusAfterEdit?: string;
 };
 
 /** 文字を続けて打つ間の区切り。この間が空くと、打った文字を忘れる。 */
@@ -130,7 +132,7 @@ export function TreeView({
   density = "default",
   textSize = "compact",
   editor,
-  editorClosedBy,
+  focusAfterEdit,
 }: TreeViewProps) {
   const isCompact = density === "compact";
   const isBodyCompact = isCompact && textSize === "body-compact";
@@ -178,25 +180,10 @@ export function TreeView({
   };
 
   const isEditing = editor !== undefined;
-  const follow = useRef<{ from: string; selectedId: string | undefined } | undefined>(undefined);
+  const follow = useRef<{ from: string; id: string } | undefined>(undefined);
   const readSelectedId = useEffectEvent(() => selectedId);
-  // 欄を外すまでに選んだ項目が変わったらその項目へ、変わらなければ前にいた項目へ戻す。
-  // フォーカスがほかの要素にあるときは、欄の外を押して確定したときなので、動かさない
-  const restoreFocus = useEffectEvent((selectedAtStart: string | undefined) => {
-    const active = document.activeElement;
-    if (active !== null && active !== document.body) return;
-    const isNewSelection =
-      selectedId !== selectedAtStart && visible.some((v) => v.node.id === selectedId);
-    const target = isNewSelection ? selectedId : tabStopId;
-    focus(target);
-    // 呼ぶ側が、保存を待ってから作った項目を選ぶことがある。選ぶ項目が後から変わったら、その項目へ移る
-    if (!isNewSelection && target !== undefined && editorClosedBy === "commit") {
-      follow.current = { from: target, selectedId: selectedAtStart };
-    }
-  });
-
-  // フォーカスがまだ戻した項目にあり、選ぶ項目が変わって見えるようになったら、その項目へ移る。フォーカスが動いたらやめる
-  const followSelection = useEffectEvent(() => {
+  // フォーカスがまだ戻した項目にあり、作った項目か名前を変えた項目が見えるようになったら、その項目へ移る。フォーカスが動いたらやめる
+  const followEdited = useEffectEvent(() => {
     const pending = follow.current;
     if (pending === undefined) return;
     const active = document.activeElement;
@@ -207,11 +194,28 @@ export function TreeView({
       follow.current = undefined;
       return;
     }
-    if (selectedId === pending.selectedId || !visible.some((v) => v.node.id === selectedId)) return;
+    if (!visible.some((v) => v.node.id === pending.id)) return;
     follow.current = undefined;
-    focus(selectedId);
+    focus(pending.id);
   });
-  useEffect(() => followSelection());
+
+  // 欄を外すまでに選んだ項目が変わったらその項目へ、変わらなければ前にいた項目へ戻す。
+  // フォーカスがほかの要素にあるときは、欄の外を押して確定したときなので、動かさない
+  const restoreFocus = useEffectEvent((selectedAtStart: string | undefined) => {
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    const isNewSelection =
+      selectedId !== selectedAtStart && visible.some((v) => v.node.id === selectedId);
+    const target = isNewSelection ? selectedId : tabStopId;
+    focus(target);
+    // 呼ぶ側が、保存を待ってから作った項目を木に足すことがある。その項目が見えるようになったら移る
+    if (target !== undefined && focusAfterEdit !== undefined && focusAfterEdit !== target) {
+      follow.current = { from: target, id: focusAfterEdit };
+      followEdited();
+    }
+  });
+
+  useEffect(() => followEdited());
 
   useEffect(() => {
     if (!isEditing) return;
@@ -291,8 +295,6 @@ export function TreeView({
     paddingInlineStart: `${(level - 1) * 1.5 + (isCompact ? 0 : 0.5)}rem`,
   });
   const markClassName = clsx("flex shrink-0 items-center", isCompact ? "h-4" : "h-5");
-  // 欄にフォーカスがある間は、欄のある行に、ほかの行と同じフォーカスの輪を引く
-  const editorRowFocus = isCompact ? "focus-within:focus-ring-inset" : "focus-within:focus-ring";
   const chevron = (isBranch: boolean, isOpen: boolean) => (
     <span className={markClassName}>
       <svg
@@ -330,7 +332,6 @@ export function TreeView({
           "aria-selected:bg-primary-surface",
           isBodyCompact ? "aria-selected:border-primary" : "aria-selected:font-bold",
           (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
-          isRenaming && editorRowFocus,
         )}
         key={node.id}
         onClick={(event) => {
@@ -370,7 +371,7 @@ export function TreeView({
         // 欄の行は、木の項目と同じ字下げと印で描く。項目ではないので、選択とキーの操作を持たない
         <li
           aria-level={parent ? parent.level + 1 : 1}
-          className={clsx(rowClassName, editorRowFocus)}
+          className={rowClassName}
           // 項目の id と重ならない key にする
           key={"\0editor"}
           role="treeitem"

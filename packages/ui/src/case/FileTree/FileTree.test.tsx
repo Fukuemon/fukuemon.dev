@@ -25,12 +25,14 @@ function DelayedSelectTree() {
           setItems((current) => [...current, { id: name, label: name }]);
           setSelectedId(name);
         }, 50);
+        return { id: name };
       }}
       onRename={(id, name) => {
         window.setTimeout(() => {
           setItems((current) => current.map((n) => (n.id === id ? { id: name, label: name } : n)));
           setSelectedId(name);
         }, 50);
+        return { id: name };
       }}
       onSelect={setSelectedId}
       selectedId={selectedId}
@@ -39,6 +41,45 @@ function DelayedSelectTree() {
 }
 
 const labels = () => screen.getAllByRole("treeitem").map((item) => item.textContent);
+
+/** \ を含む名前を断る呼び出し側（Go のツールと同じ規則）。受け入れた名前は木に足さない。 */
+function RefusingTree() {
+  return (
+    <FileTree
+      items={[{ id: "index.js", label: "index.js" }]}
+      onCreate={(name) =>
+        name.includes("\\") ? { error: "名前に \\ は使えません。" } : { id: name }
+      }
+      onSelect={() => undefined}
+      selectedId="index.js"
+    />
+  );
+}
+
+/** 名前を変えた項目を、保存を待ってから木に足し、選ぶ項目は変えない呼び出し側。fail のときは保存に失敗して木を変えない。 */
+function RenameWithoutSelectTree({ fail = false }: { fail?: boolean }) {
+  const [items, setItems] = useState<TreeNode[]>([
+    { id: "index.js", label: "index.js" },
+    { id: "package.json", label: "package.json" },
+  ]);
+  return (
+    <FileTree
+      items={items}
+      onRename={(id, name) => {
+        if (!fail) {
+          window.setTimeout(() => {
+            setItems((current) =>
+              current.map((n) => (n.id === id ? { id: name, label: name } : n)),
+            );
+          }, 50);
+        }
+        return { id: name };
+      }}
+      onSelect={() => undefined}
+      selectedId="index.js"
+    />
+  );
+}
 
 describe("FileTree", () => {
   // story の args の spy はテストの間で共有されるので、呼ばれた回数をテストごとに消す
@@ -423,5 +464,76 @@ describe("FileTree", () => {
     render(<Empty />);
     expect(screen.getByText("ファイルがありません。")).toBeInTheDocument();
     expect(screen.queryByRole("tree")).toBeNull();
+  });
+
+  it("呼ぶ側が名前を断ると、欄を開いたまま、欄の下に呼ぶ側の理由を出す", async () => {
+    render(<RefusingTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a\\b.go{Enter}");
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    expect(field).toHaveFocus();
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(field).toHaveAccessibleDescription("名前に \\ は使えません。");
+    await userEvent.clear(field);
+    await userEvent.keyboard("ab.go{Enter}");
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("呼ぶ側が断る名前のまま欄からフォーカスが外れると、やめる", async () => {
+    render(<RefusingTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a\\b.go");
+    await userEvent.click(document.body);
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(labels()).toStrictEqual(["index.js"]);
+  });
+
+  it("選んでいない項目の名前を変え、呼ぶ側が選ぶ項目を変えなくても、新しい行が出たらその行へフォーカスが移る", async () => {
+    render(<RenameWithoutSelectTree />);
+    screen.getByRole("treeitem", { name: "package.json" }).focus();
+    await userEvent.keyboard("{F2}pkg{Enter}");
+    const item = await screen.findByRole("treeitem", { name: "pkg.json" });
+    await expect.poll(() => document.activeElement).toBe(item);
+    expect(screen.getByRole("treeitem", { name: "index.js" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("呼ぶ側が返した項目が木に出ないときは、フォーカスを前の項目に置いたままにする", async () => {
+    render(<RenameWithoutSelectTree fail />);
+    const item = screen.getByRole("treeitem", { name: "package.json" });
+    item.focus();
+    await userEvent.keyboard("{F2}pkg{Enter}");
+    await expect.poll(() => document.activeElement).toBe(item);
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    expect(item).toHaveFocus();
+  });
+
+  it.each([
+    ["新しいファイル", "新しいファイルの名前"],
+    ["新しいディレクトリ", "新しいディレクトリの名前"],
+  ])(
+    "ファイルが無いときに「%s」の欄を Esc のキーでやめると、そのボタンへフォーカスを戻す",
+    async (button, field) => {
+      render(<Empty />);
+      await userEvent.click(screen.getByRole("button", { name: button }));
+      expect(screen.getByRole("textbox", { name: field })).toHaveFocus();
+      await userEvent.keyboard("{Escape}");
+      await expect
+        .poll(() => document.activeElement)
+        .toBe(screen.getByRole("button", { name: button }));
+    },
+  );
+
+  it("名前の欄は、フォーカスの輪を自分の枠に重ねて引き、欄の行には輪を引かない", async () => {
+    render(<Default />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    const field = screen.getByRole("textbox", { name: "新しいファイルの名前" });
+    const fieldStyle = getComputedStyle(field);
+    expect(fieldStyle.outlineStyle).toBe("solid");
+    expect(fieldStyle.outlineWidth).toBe("2px");
+    expect(fieldStyle.outlineOffset).toBe("-2px");
+    expect(getComputedStyle(field.closest("li")!).outlineStyle).toBe("none");
   });
 });

@@ -81,6 +81,17 @@ describe("selectionReducer", () => {
     });
   });
 
+  it("選んでいない項目の名前を変えると、その項目を選ぶ。開いたファイルは変えない", () => {
+    const opened = state({ treeItem: "index.js", openFiles: ["index.js"], activeFile: "index.js" });
+    expect(
+      selectionReducer(opened, { type: "renamed", from: "package.json", to: "pkg.json" }),
+    ).toStrictEqual({
+      treeItem: "pkg.json",
+      openFiles: ["index.js"],
+      activeFile: "index.js",
+    });
+  });
+
   it("削除すると、その下のファイルのタブを閉じ、選んだ項目を外す", () => {
     const opened = state({
       treeItem: "src",

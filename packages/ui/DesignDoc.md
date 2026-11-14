@@ -165,13 +165,15 @@ DADS は、要素に接する黄色の輪と、その外の黒の枠の 2 重の
 - ADR-0061: [フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする](../../docs/adr/0061-sumi-focus-ring.md)
 
 コードを動かす画面の詰めたペインの中の行と、ペインの全体を占めるスクロールする領域は例外で、同じ墨の 2px の輪を、要素の内側に 2px 入れて引く。行は `focus-ring-inset`、スクロールする領域は `focus-ring-frame` で引く。  
-`focus-ring-inset` を使うのは、`density="compact"` の `TreeView` の項目と `Tabs` のタブと閉じるボタン、`HttpExchangeList` の行である。  
+`focus-ring-inset` を使うのは、`density="compact"` の `TreeView` の項目と `Tabs` のタブと閉じるボタン、`HttpExchangeList` の行、`FileTree` の名前の欄である。  
+`FileTree` の名前の欄は、欄の枠に重ねて輪を引き、欄を描く `TreeView` の行には輪を引かない。行の輪と欄の枠が接して、二重の枠に見えるためである（ADR-0069、提案）。  
 `focus-ring-frame` を使うのは、ペインの全体を占めるスクロールする領域で、コンソールの行の領域と、カタログの見本のエンジンが当たる。  
 スクロールする領域は、領域自身の輪が中の行や帯の背景に隠れて欠けるので、領域を 1 つだけ直下に置く外側の要素に `focus-ring-frame` を付け、その `::after` に同じ輪を重ねて引く。領域自身の輪は、この要素が消す。  
 隙間なく並べた 24px の行とスクロールする領域では、外へ広がる輪が隣の行に掛かるか、領域の端で切れるためである。  
 VS Code と DevTools も、一覧の行のフォーカスを、行の内側の枠で示す。
 
 - ADR-0066: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](../../docs/adr/0066-inset-focus-ring-in-dense-panes.md)
+- ADR-0069（提案）: [詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない](../../docs/adr/0069-inset-focus-ring-on-tree-name-field.md)
 
 検索の欄（`TextField` の `appearance="underline"`）も例外で、標準の輪を出さず、フォーカスすると緑（`primary`）の筆の線を左から 1 回引く。  
 例外にする理由は、墨の下罫だけで組んだ欄を輪で囲むと、罫の版面が崩れるためである。  

@@ -71,6 +71,7 @@ function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
             props.onCreate?.(name, parentId);
             setItems(insert(items, parentId, { id: childId(parentId, name), label: name }));
             setSelectedId(childId(parentId, name));
+            return { id: childId(parentId, name) };
           })
         }
         onCreateDirectory={
@@ -81,6 +82,7 @@ function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
               insert(items, parentId, { id: childId(parentId, name), label: name, children: [] }),
             );
             setSelectedId(childId(parentId, name));
+            return { id: childId(parentId, name) };
           })
         }
         onDelete={props.onDelete && ((id) => setPendingDeleteId(id))}
@@ -89,6 +91,8 @@ function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
           ((id, name) => {
             props.onRename?.(id, name);
             setItems(update(items, id, (node) => ({ ...node, label: name })));
+            setSelectedId(id);
+            return { id };
           })
         }
         onSelect={setSelectedId}

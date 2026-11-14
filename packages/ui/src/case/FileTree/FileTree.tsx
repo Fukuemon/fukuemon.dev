@@ -7,6 +7,13 @@ import { IconButton } from "../../base/IconButton/IconButton";
 import { type TreeEditor, type TreeNode, TreeView } from "../../base/TreeView/TreeView";
 import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
 
+/**
+ * 作成と名前の変更の結果。受け入れたときは、作った項目か名前を変えた項目の id を返す。
+ * 呼ぶ側の規則で名前を断るときは、理由の文を返す。FileTree は欄を開いたまま、欄の下に理由を出す。
+ * 保存を待つときも、id は先に返す。FileTree は、その項目が木に出たらフォーカスを移す。保存の失敗は、呼ぶ側が出す。
+ */
+export type FileTreeResult = { id: string } | { error: string };
+
 export type FileTreeProps = {
   title?: string;
   /** ファイルとディレクトリの木。children を持つ項目がディレクトリである。項目の名前は label で描き、content を使わない。 */
@@ -15,11 +22,11 @@ export type FileTreeProps = {
   onSelect: (id: string) => void;
   defaultExpandedIds?: readonly string[];
   /** 渡すと、新しいファイルのボタンを出す。parentId は、選んだディレクトリか、選んだファイルのディレクトリである。 */
-  onCreate?: (name: string, parentId: string | undefined) => void;
+  onCreate?: (name: string, parentId: string | undefined) => FileTreeResult;
   /** 渡すと、新しいディレクトリのボタンを出す。parentId は onCreate と同じ決め方である。 */
-  onCreateDirectory?: (name: string, parentId: string | undefined) => void;
+  onCreateDirectory?: (name: string, parentId: string | undefined) => FileTreeResult;
   /** 渡すと、選んだ項目の操作のメニューに、名前の変更を足す。名前を変えずに確定したときは呼ばない。 */
-  onRename?: (id: string, name: string) => void;
+  onRename?: (id: string, name: string) => FileTreeResult;
   /** 渡すと、選んだ項目の操作のメニューに、削除を足し、木の項目の Delete のキーでも呼ぶ。確認は呼ぶ側が行う。 */
   onDelete?: (id: string) => void;
   /** 渡すと、木の代わりに読み込み中かエラーを出す。 */
@@ -74,14 +81,15 @@ type NameFieldProps = {
   /** 開いたときに選ぶ範囲の終わり。始まりは 0 である。 */
   selectionEnd: number;
   siblings: readonly string[];
-  onCommit: (name: string) => void;
+  /** 確定した名前を渡す。呼ぶ側が名前を断ったときは、理由の文を返す。 */
+  onCommit: (name: string) => string | undefined;
   onCancel: () => void;
 };
 
 /**
  * 木の行の中の名前の欄。開くとフォーカスを移し、selectionEnd までを選ぶ。
- * Enter のキーで確定し、名前に誤りがあれば欄を開いたまま、欄の下に理由を出す。Esc のキーでやめる。
- * 欄からフォーカスが外れたときは、誤りの無い名前なら確定し、空か誤りがあればやめる。
+ * Enter のキーで確定し、名前に誤りがあるか、呼ぶ側が名前を断ったときは、欄を開いたまま、欄の下に理由を出す。Esc のキーでやめる。
+ * 欄からフォーカスが外れたときは、誤りの無い名前なら確定し、空か誤りがあるか、呼ぶ側が断ったときはやめる。
  * 名前を変えずに確定したときは、やめたときと同じにする。
  */
 function NameField({
@@ -104,19 +112,22 @@ function NameField({
     inputRef.current?.setSelectionRange(0, selectionEnd);
   }, [selectionEnd]);
 
-  const finish = (name: string | undefined) => {
+  const cancel = () => {
     if (isDone.current) return;
     isDone.current = true;
-    if (name === undefined) onCancel();
-    else onCommit(name);
+    onCancel();
   };
 
   const submit = (isBlur: boolean) => {
+    if (isDone.current) return;
     const name = value.trim();
-    if (name !== "" && name === initialValue) return finish(undefined);
-    const problem = problemOf(name, siblings);
-    if (problem === undefined) return finish(name);
-    if (isBlur) return finish(undefined);
+    if (name !== "" && name === initialValue) return cancel();
+    const problem = problemOf(name, siblings) ?? onCommit(name);
+    if (problem === undefined) {
+      isDone.current = true;
+      return;
+    }
+    if (isBlur) return cancel();
     setError(problem);
   };
 
@@ -128,7 +139,7 @@ function NameField({
       submit(false);
     } else if (event.key === "Escape") {
       event.preventDefault();
-      finish(undefined);
+      cancel();
     }
   };
 
@@ -141,7 +152,8 @@ function NameField({
         aria-label={label}
         autoComplete="off"
         className={clsx(
-          "h-5 w-full min-w-0 rounded-control border bg-surface px-1 text-body-compact text-text outline-none",
+          // 欄の行には輪を引かないので、欄が自分の輪を持つ。輪は枠に重ねて内側に引き、枠と二重にしない
+          "h-5 w-full min-w-0 rounded-control border bg-surface px-1 text-body-compact text-text focus-visible:focus-ring-inset",
           error === undefined ? "border-border-field" : "border-danger",
         )}
         onBlur={() => {
@@ -189,18 +201,22 @@ export function FileTree({
   onDelete,
   state,
 }: FileTreeProps) {
-  const [editing, setEditing] = useState<Editing | undefined>(undefined);
-  const [closedBy, setClosedBy] = useState<"commit" | "cancel" | undefined>(undefined);
+  // 欄を閉じる更新と、フォーカスを移す項目を渡す更新を、1 つの state でそろえる
+  const [{ editing, focusAfterEdit }, setEdit] = useState<{
+    editing?: Editing;
+    focusAfterEdit?: string;
+  }>({});
+  const createButtons = useRef(new Map<"file" | "directory", HTMLButtonElement>());
   const editingTargetId = editing?.kind === "rename" ? editing.id : editing?.parentId;
   const editingTarget = editingTargetId === undefined ? undefined : find(items, editingTargetId);
   // 欄を開いている間に、名前を変える項目か作る場所が木から消えたら、欄を閉じる
-  if (editingTargetId !== undefined && editingTarget === undefined) setEditing(undefined);
+  if (editingTargetId !== undefined && editingTarget === undefined) setEdit({});
   const selected = selectedId === undefined ? undefined : find(items, selectedId);
 
-  const startRename = (id: string) => setEditing({ kind: "rename", id });
+  const startRename = (id: string) => setEdit({ editing: { kind: "rename", id } });
   const startCreate = (kind: "file" | "directory") => {
     const parent = selected?.node.children ? selected.node : selected?.parent;
-    setEditing({ kind, parentId: parent?.id });
+    setEdit({ editing: { kind, parentId: parent?.id } });
   };
 
   const menuItems: ActionMenuItem[] = [];
@@ -220,12 +236,29 @@ export function FileTree({
     });
   }
 
-  const commit = (name: string) => {
-    setEditing(undefined);
-    setClosedBy("commit");
-    if (editing?.kind === "file") onCreate?.(name, editing.parentId);
-    else if (editing?.kind === "directory") onCreateDirectory?.(name, editing.parentId);
-    else if (editing?.kind === "rename") onRename?.(editing.id, name);
+  const commit = (name: string): string | undefined => {
+    const result =
+      editing?.kind === "file"
+        ? onCreate?.(name, editing.parentId)
+        : editing?.kind === "directory"
+          ? onCreateDirectory?.(name, editing.parentId)
+          : editing?.kind === "rename"
+            ? onRename?.(editing.id, name)
+            : undefined;
+    if (result !== undefined && "error" in result) return result.error;
+    setEdit({ focusAfterEdit: result?.id });
+    return undefined;
+  };
+
+  const cancel = () => {
+    const kind = editing?.kind;
+    setEdit({});
+    // 空の木で作成をやめると木が外れ、フォーカスの戻り先が無くなるので、作成を始めたボタンへ戻す
+    if (items.length > 0 || kind === undefined || kind === "rename") return;
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (active === null || active === document.body) createButtons.current.get(kind)?.focus();
+    }, 0);
   };
 
   const editor = ((): TreeEditor | undefined => {
@@ -243,10 +276,7 @@ export function FileTree({
         // 名前を変える項目と、新しく作る種類が変わったら、欄を作り直して値と誤りを消す
         key={isRename ? `rename:${editing.id}` : `${editing.kind}:${editing.parentId ?? ""}`}
         label={FIELD_LABEL[editing.kind]}
-        onCancel={() => {
-          setEditing(undefined);
-          setClosedBy("cancel");
-        }}
+        onCancel={cancel}
         onCommit={commit}
         selectionEnd={
           renamed && !renamed.children && extension > 0 ? extension : initialValue.length
@@ -286,6 +316,10 @@ export function FileTree({
               density="compact"
               label="新しいファイル"
               onClick={() => startCreate("file")}
+              ref={(element) => {
+                if (element) createButtons.current.set("file", element);
+                else createButtons.current.delete("file");
+              }}
             />
           )}
           {onCreateDirectory !== undefined && (
@@ -303,6 +337,10 @@ export function FileTree({
               density="compact"
               label="新しいディレクトリ"
               onClick={() => startCreate("directory")}
+              ref={(element) => {
+                if (element) createButtons.current.set("directory", element);
+                else createButtons.current.delete("directory");
+              }}
             />
           )}
           {menuItems.length > 0 && selected && (
@@ -322,7 +360,7 @@ export function FileTree({
           defaultExpandedIds={defaultExpandedIds}
           density="compact"
           editor={editor}
-          editorClosedBy={closedBy}
+          focusAfterEdit={focusAfterEdit}
           items={withIcons(items)}
           label={title}
           onRequestDelete={onDelete}
