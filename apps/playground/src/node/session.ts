@@ -193,7 +193,7 @@ export function createNodeSession({
       : undefined;
   // 最後に保存を頼んだレコード。中身が同じ保存が後から待ちに入っても、失敗した保存と見分ける
   let lastQueued: NodeRecord | undefined;
-  // キューにあるか書いている書き直し。終わるまで、通知のたびに書き直しを重ねない
+  // キューにあるか書いている書き直しのうち、後の通常の保存に置き換えられていないもの。終わるまで、通知のたびに書き直しを重ねない
   let rewriting: NodeRecord | undefined;
   // 保存が通ったときだけ、保存したファイルがある扱いにする。失敗したときは、次の変更で同じ中身も書き直す
   const saver = createSaver<NodeRecord>({
