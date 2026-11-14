@@ -86,7 +86,12 @@ apply の前に、plan が出す zone の差分を [context/operations.md](../co
 account_id = "<Cloudflare の account ID>"
 zone_id    = "<zone ID>"
 zone_name  = "fukuemon.dev"
+
+docs_allowed_emails = ["<ドキュメントサイトを開けるメールアドレス>"]
 ```
+
+`docs_allowed_emails` は、ドキュメントサイトの Access のポリシーに渡す。
+ドキュメントサイトを初めて公開する順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 
 ## CI から apply する
 
