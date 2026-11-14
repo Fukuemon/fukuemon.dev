@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { meanDiff } from "../support/mean-diff";
 
 // 秋の昼。季節と時間帯は、端末の日付と時刻で決まる
 const AUTUMN_NOON = new Date(2026, 10, 13, 12);
@@ -130,8 +131,8 @@ test.describe("幅 390px", () => {
 test.describe("画面の幅の変更", () => {
   test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
 
-  // 和紙を測り直さないと、カメラが横長のときの和紙の幅で距離を決め、和紙が画面の幅より小さく見える
-  test("幅 1440px で開いた庭を幅 390px にすると、和紙を測り直し、和紙が画面の幅の 8 割以上で収まる", async ({
+  // 和紙の大きさを測り直さないと、カメラが前の幅の和紙の大きさで距離を決め、和紙が画面の幅より小さく見える
+  test("幅 1440px で開いた庭を幅 390px にすると、和紙が画面の幅に収まり、幅の 8 割以上になる", async ({
     page,
   }) => {
     await openGarden(page);
@@ -143,6 +144,29 @@ test.describe("画面の幅の変更", () => {
       inside: paper.x >= 0 && paper.x + paper.width <= 390,
       wide: paper.width >= 390 * 0.8,
     }).toStrictEqual({ inside: true, wide: true });
+  });
+
+  // 和紙と枝を掛け直さないと、広げた後も軸木と枝が狭い幅の文の大きさのまま残る。
+  // 影と画素比が開いたときの縦横で決まるので、どちらも横長の幅で比べ、軸木と枝が出る和紙の上端の帯だけを比べる
+  test("幅 700px で開いた庭を幅 1000px に広げると、和紙の上端の軸木と枝が、幅 1000px で開いたときと同じに描かれる", async ({
+    page,
+    browser,
+  }) => {
+    await page.setViewportSize({ width: 700, height: 600 });
+    await openGarden(page);
+    await expectAt(page, "profile");
+    await page.setViewportSize({ width: 1000, height: 700 });
+    await expectAt(page, "profile");
+    const box = (await card(page, "profile").boundingBox())!;
+    const clip = { x: box.x - 120, y: box.y - 90, width: box.width + 240, height: 140 };
+    const widened = await page.screenshot({ clip });
+    const fresh = await browser.newPage({
+      viewport: { width: 1000, height: 700 },
+      colorScheme: "light",
+    });
+    await openGarden(fresh);
+    await expectAt(fresh, "profile");
+    expect(await meanDiff(page, widened, await fresh.screenshot({ clip }))).toBeLessThan(3);
   });
 });
 
