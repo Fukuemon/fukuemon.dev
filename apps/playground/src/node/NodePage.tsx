@@ -31,18 +31,18 @@ const booting = { kind: "loading", label: "実行環境を起動しています"
  */
 function Pane({
   fallback,
-  focusRing = false,
+  editorFocusRing = false,
   children,
 }: {
   fallback: ReactNode;
   /** 中の CodeMirror にフォーカスがあるときに、ペインを輪で囲む。 */
-  focusRing?: boolean;
+  editorFocusRing?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="size-full p-1">
       <div
-        className={`flex size-full min-h-0 flex-col [&>section]:flex-1 ${focusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
+        className={`flex size-full flex-col [&>section]:flex-1 ${editorFocusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
       >
         <Suspense fallback={fallback}>{children}</Suspense>
       </div>
@@ -74,7 +74,7 @@ function NodeLayout({ project }: { project: NodeProject }) {
                     label="エディタとプレビューの幅"
                     primary={
                       <Pane
-                        focusRing
+                        editorFocusRing
                         fallback={
                           <EditorFrame files={[]} onSelect={() => undefined} state={booting}>
                             {() => null}
