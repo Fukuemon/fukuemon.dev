@@ -23,9 +23,10 @@ status: draft
 
 <!-- 流すコマンド、テストのプロジェクトの分け方（準備と E2E）と CI で流す範囲、向ける環境と URL、worker の数とその理由、lint と型のチェックのコマンド。backend を差し替えて流す spec と本物の backend につなぐ spec の見分け方（ファイル名かプロジェクト）。エビデンスを撮る撮影の設定があれば、その置き場 -->
 
-### トップの庭の見た目の回帰
+### apps/web の E2E と見た目の回帰
 
 `apps/web/e2e/` の spec は、ビルドした `apps/web/dist/` を `astro preview` で配信して実行する。
+記事のページの表と図の枠の E2E も、同じ config（`apps/web/e2e/playwright.config.ts`）とコマンドで実行する。
 CI では、`pnpm run check` がビルドの後に実行する。
 ローカル環境では、ビルドしてから次を実行する。
 
