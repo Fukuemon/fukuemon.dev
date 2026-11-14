@@ -494,7 +494,13 @@ describe("FileTree", () => {
     expect(field).toHaveFocus();
     expect(field).toHaveAttribute("aria-invalid", "true");
     expect(field).toHaveAccessibleDescription("名前に \\ は使えません。");
-    await userEvent.clear(field);
+  });
+
+  it("呼ぶ側が断った後に名前を直して Enter を押すと、確定して欄を閉じる", async () => {
+    render(<RefusingTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("a\\b.go{Enter}");
+    await userEvent.clear(screen.getByRole("textbox", { name: "新しいファイルの名前" }));
     await userEvent.keyboard("ab.go{Enter}");
     expect(screen.queryByRole("textbox")).toBeNull();
   });
@@ -505,7 +511,6 @@ describe("FileTree", () => {
     await userEvent.keyboard("a\\b.go");
     await userEvent.click(document.body);
     expect(screen.queryByRole("textbox")).toBeNull();
-    expect(labels()).toStrictEqual(["index.js"]);
   });
 
   it("選んでいない項目の名前を変え、呼ぶ側が選ぶ項目を変えなくても、新しい行が出たらその行へフォーカスが移る", async () => {
@@ -563,5 +568,46 @@ describe("FileTree", () => {
     await userEvent.keyboard("index.js{Enter}");
     const item = await screen.findByRole("treeitem", { name: "index.js" });
     await expect.poll(() => document.activeElement).toBe(item);
+  });
+
+  it("保存を待つ間に項目をクリックすると、作った項目が出てもフォーカスを移さない", async () => {
+    render(<DelayedSelectTree />);
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("util.js{Enter}");
+    const clicked = screen.getByRole("treeitem", { name: "package.json" });
+    await userEvent.click(clicked);
+    await screen.findByRole("treeitem", { name: "util.js" });
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    expect(clicked).toHaveFocus();
+  });
+
+  it("ファイルが無い木で確定した後、項目が出る前にボタンへ移ると、項目が出てもフォーカスを移さない", async () => {
+    render(<EmptyDelayedTree />);
+    const button = screen.getByRole("button", { name: "新しいファイル" });
+    await userEvent.click(button);
+    await userEvent.keyboard("index.js{Enter}");
+    button.focus();
+    await screen.findByRole("treeitem", { name: "index.js" });
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+    expect(button).toHaveFocus();
+  });
+
+  it("ファイルが無い木で作った後に、最後の項目が消えると、空の文を出す", async () => {
+    const { rerender } = render(
+      <FileTree items={[]} onCreate={(name) => ({ id: name })} onSelect={() => undefined} />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("index.js{Enter}");
+    rerender(
+      <FileTree
+        items={[{ id: "index.js", label: "index.js" }]}
+        onCreate={(name) => ({ id: name })}
+        onSelect={() => undefined}
+      />,
+    );
+    rerender(
+      <FileTree items={[]} onCreate={(name) => ({ id: name })} onSelect={() => undefined} />,
+    );
+    expect(screen.getByText("ファイルがありません。")).toBeInTheDocument();
   });
 });

@@ -55,7 +55,7 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
     case "renamed":
       return {
         ...state,
-        // 名前を変えた項目を選ぶ。開いたファイルは変えない
+        // 名前を変えた項目を選ぶ。タブには開かない
         treeItem: action.to,
         openFiles: state.openFiles.map((path) => move(path, action.from, action.to)),
         activeFile: state.activeFile && move(state.activeFile, action.from, action.to),

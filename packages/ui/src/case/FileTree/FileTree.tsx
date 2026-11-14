@@ -206,6 +206,9 @@ export function FileTree({
     editing?: Editing;
     focusAfterEdit?: string;
   }>({});
+  // 空の木で作成を確定した後、最初の項目が木に出るまでの間。木を外さずに描き、出た項目へフォーカスを移せるようにする
+  const [isAwaitingFirst, setAwaitingFirst] = useState(false);
+  if (isAwaitingFirst && items.length > 0) setAwaitingFirst(false);
   const createButtons = useRef(new Map<"file" | "directory", HTMLButtonElement>());
   const editingTargetId = editing?.kind === "rename" ? editing.id : editing?.parentId;
   const editingTarget = editingTargetId === undefined ? undefined : find(items, editingTargetId);
@@ -216,6 +219,7 @@ export function FileTree({
   const startRename = (id: string) => setEdit({ editing: { kind: "rename", id } });
   const startCreate = (kind: "file" | "directory") => {
     const parent = selected?.node.children ? selected.node : selected?.parent;
+    setAwaitingFirst(false);
     setEdit({ editing: { kind, parentId: parent?.id } });
   };
 
@@ -247,6 +251,7 @@ export function FileTree({
             : undefined;
     if (result !== undefined && "error" in result) return result.error;
     setEdit({ focusAfterEdit: result?.id });
+    if (items.length === 0 && result !== undefined) setAwaitingFirst(true);
     return undefined;
   };
 
@@ -295,11 +300,10 @@ export function FileTree({
     };
   })();
 
-  // 空の木でも、最初の項目を作る欄を出すために、作っている間は木を描く。
-  // 確定の後も、返った項目が木に出るまでは木を描き、出た項目へフォーカスを移せるようにする
+  // 空の木でも、最初の項目を作る欄を出すために、作っている間と、作った項目を待つ間は木を描く
   const paneState: ToolPaneState =
     state ??
-    (items.length === 0 && editing === undefined && focusAfterEdit === undefined
+    (items.length === 0 && editing === undefined && !isAwaitingFirst
       ? { kind: "empty", message: "ファイルがありません。" }
       : { kind: "ready" });
 
