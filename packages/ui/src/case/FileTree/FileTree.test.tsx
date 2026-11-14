@@ -67,6 +67,7 @@ describe("FileTree", () => {
     await userEvent.click(screen.getByRole("menuitem", { name: "名前を変える" }));
     const field = screen.getByRole("textbox", { name: "新しい名前" });
     expect(field).toHaveValue("server.js");
+    expect(field).toHaveFocus();
     await userEvent.clear(field);
     await userEvent.type(field, "app.js");
     await userEvent.click(screen.getByRole("button", { name: "変える" }));

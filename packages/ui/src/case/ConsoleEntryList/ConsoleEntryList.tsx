@@ -206,7 +206,7 @@ export function ConsoleEntryList({
   const toolbar = (
     <fieldset
       aria-label="表示するログレベル"
-      className="flex flex-wrap border-b border-border px-2 py-1"
+      className="flex min-w-0 flex-wrap border-b border-border px-2 py-1"
     >
       {LEVELS.map((level) => {
         const isOn = levels.has(level);
