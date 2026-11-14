@@ -28,7 +28,8 @@ function readSeriesIndexNames(articlesDir: string): Set<string> {
 export function articlesLoader(): Loader {
   const inner = glob({
     base: `./${ARTICLES_DIR}`,
-    pattern: ["**/*.{md,mdx}", "!*/index.{md,mdx}"],
+    // playground/ の下は、記事に埋め込む実行環境の初期ファイルで、記事ではない
+    pattern: ["**/*.{md,mdx}", "!*/index.{md,mdx}", "!**/playground/**"],
   });
   return {
     name: "articles-with-series-check",

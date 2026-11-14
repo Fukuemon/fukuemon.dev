@@ -1,0 +1,90 @@
+import { createHash } from "node:crypto";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative, sep } from "node:path";
+import {
+  type PlaygroundConfig,
+  type PlaygroundProject,
+  type PlaygroundTool,
+  playgroundConfigSchema,
+  playgroundProjectSchema,
+} from "@fukuemon/playground-project";
+
+const CONFIG_FILE = "playground.json";
+
+/** 記事の contentId と埋め込みの名前から、埋め込みの ID（`<contentId>/<埋め込みの名前>`）を組み立てる */
+export const embedId = (contentId: string, name: string) => `${contentId}/${name}`;
+
+/** 記事の Markdown があるディレクトリの下の、プロジェクトのディレクトリ */
+export const projectDir = (articlePath: string, name: string) =>
+  join(dirname(articlePath), "playground", name);
+
+/** 実行環境を埋め込むコードフェンスの言語 */
+export const PLAYGROUND_LANG = "playground";
+
+/** 記事の iframe の URL。クエリには埋め込みの ID だけを書く (ADR-0049) */
+export const embedUrl = (origin: string, tool: PlaygroundTool, id: string) =>
+  `${origin}/${tool}/?project=${id}`;
+
+/**
+ * プロジェクトのファイルのパスを並べる。全てのファイルを公開の JSON に入れるので、
+ * ドットで始まる区切りを含むファイル（`.env` など）があると失敗する。黙って除くと、置いたつもりのファイルが消える
+ */
+function listFiles(dir: string): string[] {
+  const paths = readdirSync(dir, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => relative(dir, join(entry.parentPath, entry.name)).split(sep).join("/"))
+    .sort();
+  const hidden = paths.filter((path) => path.split("/").some((segment) => segment.startsWith(".")));
+  if (hidden.length > 0) {
+    throw new Error(`${dir} に、ドットで始まるファイルかディレクトリがある: ${hidden.join(", ")}`);
+  }
+  return paths;
+}
+
+const utf8 = new TextDecoder("utf-8", { fatal: true });
+
+/** 初期ファイルは JSON の文字列で渡すので、UTF-8 として読めないファイル（画像など）はビルドを失敗させる */
+function readText(path: string): string {
+  try {
+    return utf8.decode(readFileSync(path));
+  } catch (error) {
+    throw new Error(`${path} を UTF-8 の文字列として読めない`, { cause: error });
+  }
+}
+
+function readConfig(path: string): PlaygroundConfig {
+  try {
+    return playgroundConfigSchema.parse(JSON.parse(readText(path)));
+  } catch (error) {
+    throw new Error(
+      `${path} を読めない: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        cause: error,
+      },
+    );
+  }
+}
+
+/** プロジェクトのディレクトリを読み、ツールのページが読む JSON の形にする。設定と JSON が schema に合わないときは失敗する。 */
+export function readProject(dir: string): PlaygroundProject {
+  const configPath = join(dir, CONFIG_FILE);
+  if (!existsSync(configPath)) throw new Error(`${configPath} が無い`);
+  const config = readConfig(configPath);
+  const files = Object.fromEntries(
+    listFiles(dir)
+      .filter((path) => path !== CONFIG_FILE)
+      .map((path) => [path, readText(join(dir, path))]),
+  );
+  const sqlPath = "initialSql" in config ? config.initialSql : undefined;
+  // files に無いパスを許すと、打ち間違いでプロジェクトの外のファイルを公開の JSON に入れてしまう
+  if (sqlPath !== undefined && !Object.hasOwn(files, sqlPath)) {
+    throw new Error(`${configPath} の initialSql は、プロジェクトのファイルを指す: ${sqlPath}`);
+  }
+  const initialSql = sqlPath === undefined ? undefined : files[sqlPath];
+  const body = { ...config, files, ...(initialSql === undefined ? {} : { initialSql }) };
+  const version = createHash("sha256").update(JSON.stringify(body)).digest("hex");
+  const parsed = playgroundProjectSchema.safeParse({ ...body, version });
+  if (!parsed.success)
+    throw new Error(`${dir} のプロジェクトが schema に合わない: ${parsed.error.message}`);
+  return parsed.data;
+}

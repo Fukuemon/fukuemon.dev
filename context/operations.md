@@ -70,9 +70,12 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 - cross-origin isolation のヘッダは、isolation を求める実行環境を埋め込む記事の URL にだけ返す。`fukuemon.dev` の全体には返さない。
   - 全体に返すと、CORP を返さない第三者のリソースが一律にブロックされる。
-  - ヘッダは、該当する記事が実在してから書く。
+  - `apps/web` のビルドが、出力の HTML から Node の実行環境を埋め込むページを集め、`COOP: same-origin` と `COEP: require-corp` の規則を、出力の `_headers` の末尾に足す。`apps/web/public/_headers` には書かない。
+  - ビルドは、規則を、末尾のスラッシュがある URL と無い URL の両方に足す。
   - ADR-0031: [サブドメインに分ける規則](../docs/adr/0031-subdomains-and-workers.md#5-cross-origin-isolation)
   - ADR-0034: [cross-origin isolation のヘッダを返すパス](../docs/adr/0034-playground-origin-and-embedding.md)
+- `/playground-projects/*` には、`Access-Control-Allow-Origin: https://play.fukuemon.dev` を返す。`play.fukuemon.dev` のツールのページが、プロジェクトの JSON を読むためである。
+  - ADR-0049: [プロジェクトを渡す方法](../docs/adr/0049-playground-projects-from-articles.md#3-渡す方法)
 - HTML に `Cache-Control` を書かない。Workers Static Assets のデフォルト値に任せる。
 - `/_astro/*` には `immutable` を書く。ファイル名にハッシュが入るため。
 - HSTS に `includeSubDomains` を付ける。HTTP で公開するサブドメインが要るときは外す。
@@ -87,8 +90,13 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
   - 切り替えの作業は [#91](https://github.com/Fukuemon/fukuemon.dev/issues/91) で行う。
 - すべてのパスに、カタログと同じ `X-Content-Type-Options`、`Referrer-Policy`、`Strict-Transport-Security` を返す。
   - `Strict-Transport-Security` は、`play.fukuemon.dev` を直接開いた訪問者にも届くように返す。apex の `includeSubDomains` は、先に `fukuemon.dev` を開いた訪問者にしか届かない。
-- 埋め込める親のページを `frame-ancestors` で絞るかは、記事の埋め込みの [#101](https://github.com/Fukuemon/fukuemon.dev/issues/101) で決める。
-  - `fukuemon.dev` と同じ `frame-ancestors 'self'` を返すと、記事の iframe の埋め込みが動かない。
+- すべてのパスに、`Content-Security-Policy: frame-ancestors 'self' https://fukuemon.dev` を返す。ほかのサイトが、ツールのページを iframe で埋め込めないようにするためである。
+  - `fukuemon.dev` と同じ `frame-ancestors 'self'` だけにすると、記事の iframe の埋め込みが動かない。
+  - 手元とプレビューの記事からは、本番の `play.fukuemon.dev` を埋め込めない。
+- ツールのページは、プロジェクトの JSON を `https://fukuemon.dev/playground-projects/` から読む。
+  - 記事から開く流れを手元で確認するときは、2 つのアプリを `wrangler dev` で配信する。
+    Playwright の `context.route` で、`https://fukuemon.dev` と `https://play.fukuemon.dev` を手元に転送する。CORS と `frame-ancestors` が、本番と同じ origin で働く。
+  - JSON を読む origin は、`apps/playground` の開発サーバー（`vp dev`）でだけ、環境変数 `VITE_SITE_ORIGIN` で替えられる。本番のビルドは読まない。
 - `/` は、`apps/playground/public/_redirects` で `https://fukuemon.dev/playground` へリダイレクトする。
 
 ## Deployment Conditions

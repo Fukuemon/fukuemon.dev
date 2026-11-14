@@ -345,7 +345,7 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
 - 使わない場面と、代わりに使うもの: 行き来の一覧は `HttpExchangeList`。
 - 変種: なし。
 - 状態: 中身あり、行き来を選んでいない空、読み込み中、エラー。届かなかったリクエストは、レスポンスの節を出さない。Cookie の節は、Cookie があるときだけ出す。
-- 内容の制約: 長い URL とヘッダの値は折り返し、本文はその枠の中だけで横に送る。
+- 内容の制約: 長い URL とヘッダの値は折り返し、本文はその枠の中だけで横に送る。本文が横に続く間は、枠の右端を `code-surface` の色で薄くする（`scroll-fade-end`、`scroll-fade-code`）。
 - キーボード: 開閉の要約は `Disclosure` のとおり。本文の枠は Tab のキーでフォーカスし、矢印のキーで送る。
 
 ### ConsoleEntryList

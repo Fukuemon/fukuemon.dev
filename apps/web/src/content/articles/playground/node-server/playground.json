@@ -1,0 +1,5 @@
+{
+  "tool": "node",
+  "open": "index.js",
+  "start": [{ "command": "node", "args": ["index.js"], "name": "サーバー" }]
+}
