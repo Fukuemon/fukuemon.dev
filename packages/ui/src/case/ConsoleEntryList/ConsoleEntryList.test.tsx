@@ -260,6 +260,45 @@ describe("ConsoleEntryList", () => {
     ]).toStrictEqual(["map", "set", "map", 5, 6]);
   });
 
+  it("開けない引数を挟んで木が並ぶ行でも、木の端の上下の矢印のキーで、隣の木と行へ移る", async () => {
+    const text = (value: string): ConsoleValue => ({ kind: "string", value });
+    render(
+      <ConsoleEntryList
+        entries={[
+          {
+            id: "a",
+            level: "log",
+            source: "server.js",
+            args: [
+              text("前"),
+              { kind: "map", entries: [{ key: text("k"), value: text("v") }] },
+              text("間"),
+              { kind: "set", items: [text("s")] },
+            ],
+          },
+        ]}
+      />,
+    );
+    row(0).focus();
+    const map = treeItem(/^Map\(1\)/);
+    const set = treeItem(/^Set\(1\)/);
+    const at = async (keys: string) => {
+      await userEvent.keyboard(keys);
+      const active = document.activeElement;
+      return active === map
+        ? "map"
+        : active === set
+          ? "set"
+          : rows().indexOf(active as HTMLElement);
+    };
+    expect([
+      await at("{ArrowRight}"),
+      await at("{ArrowDown}"),
+      await at("{ArrowUp}"),
+      await at("{ArrowUp}"),
+    ]).toStrictEqual(["map", "set", "map", 0]);
+  });
+
   it("後の木の最初の項目で上の矢印のキーを押すと、開いた前の木の最後の項目へ移る", async () => {
     render(<Default />);
     row(5).focus();
