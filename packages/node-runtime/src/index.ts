@@ -8,11 +8,14 @@ export type {
   ConsoleRecordValue,
   ConsoleSource,
 } from "./console-records";
+export { BROWSER_PEER_ID } from "./http-records";
 export { BootError } from "./types";
 export type {
   BootFailureReason,
   BootOptions,
   FileEntry,
+  HttpBody,
+  HttpRecord,
   NodeRuntime,
   OpenPort,
   OutputLog,
