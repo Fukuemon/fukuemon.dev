@@ -76,8 +76,18 @@ function isNodeRecord(value: unknown): value is NodeRecord {
     files !== null &&
     Object.entries(files).every(
       ([path, contents]) => isSafeFilePath(path) && typeof contents === "string",
-    )
+    ) &&
+    !hasFileAsDirectory(Object.keys(files))
   );
+}
+
+/** あるファイルのパスが、別のファイルのパスの途中のディレクトリになっているか（`a` と `a/b`）。そのファイルの一式は、作業ディレクトリに書けない。 */
+function hasFileAsDirectory(paths: readonly string[]): boolean {
+  const files = new Set(paths);
+  return paths.some((path) => {
+    const parts = path.split("/");
+    return parts.slice(1).some((_, i) => files.has(parts.slice(0, i + 1).join("/")));
+  });
 }
 
 /** files.readAll の結果のうち、保存するファイルのパスと中身。テキストとして読めないものと、規則に合わないパスは除く。 */
