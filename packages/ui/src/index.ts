@@ -52,7 +52,7 @@ export type {
 export { EditorFrame } from "./case/EditorFrame/EditorFrame";
 export type { EditorFile, EditorFrameProps } from "./case/EditorFrame/EditorFrame";
 export { FileTree } from "./case/FileTree/FileTree";
-export type { FileTreeProps, FileTreeResult } from "./case/FileTree/FileTree";
+export type { FileTreeOutcome, FileTreeProps, FileTreeResult } from "./case/FileTree/FileTree";
 export { HttpExchangeDetail } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export type { HttpExchangeDetailProps } from "./case/HttpExchangeDetail/HttpExchangeDetail";
 export { HttpExchangeList } from "./case/HttpExchangeList/HttpExchangeList";

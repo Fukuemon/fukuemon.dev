@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   childPath,
   isWithin,
   nameError,
+  nameErrorInRuntime,
   nameOf,
   projectEntries,
   renamedPath,
@@ -95,6 +96,7 @@ describe("nameError", () => {
 
   it.each([
     ["新しい名前", "a.js", "a.js", undefined],
+    ["空白だけの名前", "  ", "dir/  ", "名前を入れてください。"],
     [
       "同じパスの項目がある名前",
       "index.js",
@@ -121,5 +123,40 @@ describe("nameError", () => {
     ],
   ])("%s", (_, name, path, expected) => {
     expect(nameError(name, path, existing)).toBe(expected);
+  });
+});
+
+describe("nameErrorInRuntime", () => {
+  const existing = new Set(["index.js"]);
+  const paths = new Set(["node_modules/cookie/index.js"]);
+  const exists = async (path: string) => paths.has(path);
+
+  it("ツリーの一覧にある項目は、実行環境に問い合わせずに断る", async () => {
+    const ask = vi.fn(exists);
+    expect(await nameErrorInRuntime("index.js", "index.js", existing, ask)).toBe(
+      "index.js は既にあります。別の名前にしてください。",
+    );
+    expect(ask).not.toHaveBeenCalled();
+  });
+
+  it("ツリーに出さない node_modules の下の項目は、実行環境で確かめて断る", async () => {
+    expect(
+      await nameErrorInRuntime("index.js", "node_modules/cookie/index.js", existing, exists),
+    ).toBe("node_modules/cookie/index.js は既にあります。別の名前にしてください。");
+  });
+
+  it("同じパスが無いときは、断らない", async () => {
+    expect(
+      await nameErrorInRuntime("new.js", "node_modules/cookie/new.js", existing, exists),
+    ).toBeUndefined();
+  });
+
+  it("実行環境に問い合わせられないときは、確定せずに理由を返す", async () => {
+    const failing = async () => {
+      throw new Error("ENOENT");
+    };
+    expect(await nameErrorInRuntime("a.js", "a.js", existing, failing)).toBe(
+      "a.js が既にあるかを確認できませんでした。もう一度試してください。",
+    );
   });
 });
