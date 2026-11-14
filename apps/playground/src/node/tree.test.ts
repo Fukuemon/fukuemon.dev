@@ -155,7 +155,7 @@ describe("nameErrorInRuntime", () => {
       throw new Error("ENOENT");
     };
     expect(await nameErrorInRuntime("a.js", "a.js", existing, failing)).toBe(
-      "a.js が既にあるかを確かめられませんでした。もう一度試してください。",
+      "a.js が既にあるかを確認できませんでした。もう一度試してください。",
     );
   });
 });

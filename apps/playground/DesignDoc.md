@@ -199,6 +199,7 @@ type NodeRuntime = {
     tree: Store<readonly FileEntry[]>;
     changes: { subscribe: (onChange: (paths: readonly string[]) => void) => () => void };
     readAll: (options: ReadAllOptions) => Promise<readonly FileSnapshot[]>;
+    exists: (path: string) => Promise<boolean>;
     read: (path: string) => Promise<string>;
     write: (path: string, contents: string) => Promise<void>;
     createDirectory: (path: string) => Promise<void>;
@@ -252,6 +253,8 @@ type OutputLog = {
 - `start` を呼ばないコンポーネントは、`processes.get` で、プロセスの出力を読む。
 - `files.changes` は、ファイルの中身が変わったことの通知である。保存と、エディタで開いているファイルの更新に使う。
 - ツリーを変えるファイルの操作（新しいファイルへの `files.write`、`files.createDirectory`、`files.rename`、`files.remove`）は、操作の後にツリーを読み直してから終わる。読み直しが失敗したときは、ログに出し、操作は成功として終える。操作の成否は、操作そのものの成否で決める。
+- `files.exists` は、同じパスのファイルかディレクトリが実行環境にあるかを、親のディレクトリの一覧で確認する。ツリーに出さない `node_modules` のパッケージの中身も確認できる。
+- ファイルのツリーで項目を作るときと名前を変えるときは、ツリーの一覧で同じパスを確認した後、`files.exists` で実行環境も確認する。同じパスがあるときと、確認できないときは、確定せず、`FileTree` の欄を開いたまま理由を出す。確認する間、欄は確定を重ねて受けない。
 - `files.readAll` は、作業ディレクトリのファイルを、パス、サイズ、テキストの中身で返す。`exclude` に当たるパスは読まない。`maxBytes` を超えるファイルと、テキストとして読めないファイルは、`text` が `null` になる。`exclude` に当たるかの判定、`maxBytes` を超えるかの判定、テキストかどうかの判定は、`node-runtime/` の直下が持つ。
 - `FileEntry` は、パスを持つ。画面は、パスを、`FileTree` の項目の `id` に使う。
 - `ProcessInfo` は、ID、種別、名前、状態を持つ。種別は、`processes.startShell` で起動したプロセスが `shell`、`processes.start` で起動したプロセスが `command` である。画面は、種別でシェルの数を数え、2 つ目からのシェルの名前に番号を付ける。

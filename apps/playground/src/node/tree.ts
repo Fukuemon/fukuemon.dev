@@ -82,7 +82,7 @@ export async function nameErrorInRuntime(
   try {
     if (await exists(path)) return `${path} は既にあります。別の名前にしてください。`;
   } catch {
-    return `${path} が既にあるかを確かめられませんでした。もう一度試してください。`;
+    return `${path} が既にあるかを確認できませんでした。もう一度試してください。`;
   }
   return undefined;
 }
