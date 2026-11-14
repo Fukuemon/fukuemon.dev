@@ -263,11 +263,12 @@ describe("起動", () => {
   ])(
     "保存したレコードが %s を持つときは、保存したファイルが無いときと同じに扱う",
     async (_, record) => {
-      const { session, booted } = setup({ kind: "saved", record: record as NodeRecord });
+      const { session, booted, saves } = setup({ kind: "saved", record: record as NodeRecord });
       await settle(session);
-      expect({ booted, hasSaved: session.hasSaved.getSnapshot() }).toStrictEqual({
+      expect({ booted, hasSaved: session.hasSaved.getSnapshot(), saves }).toStrictEqual({
         booted: [project.files],
         hasSaved: false,
+        saves: [],
       });
     },
   );
@@ -756,6 +757,17 @@ describe("restart", () => {
     const restarted = session.restart();
     await vi.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
     await restarted;
+    expect({
+      booted: booted.at(-1),
+      readFailed: session.restartReadFailed.getSnapshot(),
+    }).toStrictEqual({ booted: savedRecord.files, readFailed: true });
+  });
+
+  it("作業ディレクトリの読み込みが失敗したときは、前に起動したときのファイルで起動し直し、restartReadFailed を立てる", async () => {
+    const { session, booted, latest } = setup({ kind: "saved", record: savedRecord });
+    await settle(session);
+    latest().readAll.mockRejectedValueOnce(new Error("EIO"));
+    await session.restart();
     expect({
       booted: booted.at(-1),
       readFailed: session.restartReadFailed.getSnapshot(),
