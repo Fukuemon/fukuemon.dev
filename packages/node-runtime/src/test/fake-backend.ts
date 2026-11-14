@@ -86,6 +86,9 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
     listCalls: 0,
     list: async (directory) => {
       api.listCalls++;
+      if (directory !== "" && !directories.has(directory)) {
+        throw new PathNotFoundError(`ENOENT: ${directory}`);
+      }
       const prefix = directory === "" ? "" : `${directory}/`;
       const children = new Map<string, DirectoryItem>();
       for (const path of directories) {

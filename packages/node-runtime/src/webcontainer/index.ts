@@ -5,10 +5,10 @@ import {
   type BackendInstance,
   type BackendProcess,
   type DirectoryItem,
-  PathNotFoundError,
   type RuntimeBackend,
 } from "../backend";
 import type { OpenPort, TerminalSize } from "../types";
+import { toBackendError } from "./errors";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
@@ -54,11 +54,8 @@ function toBackendProcess(process: WebContainerProcess): BackendProcess {
   };
 }
 
-// WebContainers の fs の失敗には code が無く、パスが無いことは message の先頭の ENOENT でしか分けられない
-const toNotFound = (error: unknown) => {
-  throw error instanceof Error && error.message.startsWith("ENOENT")
-    ? new PathNotFoundError(error.message, { cause: error })
-    : error;
+const rethrow = (error: unknown) => {
+  throw toBackendError(error);
 };
 
 function createBackendFiles(container: WebContainer): BackendFiles {
@@ -67,7 +64,7 @@ function createBackendFiles(container: WebContainer): BackendFiles {
     list: async (directory) => {
       const items = await fs
         .readdir(directory === "" ? "." : directory, { withFileTypes: true })
-        .catch(toNotFound);
+        .catch(rethrow);
       return items.map(
         (item): DirectoryItem => ({
           name: item.name,
@@ -76,7 +73,7 @@ function createBackendFiles(container: WebContainer): BackendFiles {
         }),
       );
     },
-    readFile: (path) => fs.readFile(path).catch(toNotFound),
+    readFile: (path) => fs.readFile(path).catch(rethrow),
     writeFile: (path, contents) => fs.writeFile(path, contents),
     mkdir: async (path) => {
       await fs.mkdir(path, { recursive: true });

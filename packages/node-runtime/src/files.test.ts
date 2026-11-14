@@ -363,7 +363,7 @@ describe("files.readAll", () => {
     await expect(runtime.files.readAll(options)).rejects.toBe(error);
   });
 
-  it("一覧の前に消えたディレクトリは、飛ばして返す", async () => {
+  it("親の一覧を読んだ後に消えたディレクトリは、飛ばして返す", async () => {
     const { runtime, created } = await bootFake();
     const list = created.files.api.list;
     vi.spyOn(created.files.api, "list").mockImplementation((directory) =>
@@ -371,6 +371,13 @@ describe("files.readAll", () => {
     );
     const paths = (await runtime.files.readAll(options)).map((file) => file.path);
     expect(paths).toStrictEqual(["index.js", "package.json"]);
+  });
+
+  it("作業ディレクトリそのものが無いときは、失敗する", async () => {
+    const { runtime, created } = await bootFake();
+    const error = new PathNotFoundError("ENOENT");
+    vi.spyOn(created.files.api, "list").mockRejectedValue(error);
+    await expect(runtime.files.readAll(options)).rejects.toBe(error);
   });
 
   it("消えた以外の理由でディレクトリの一覧を読めないときは、失敗する", async () => {
