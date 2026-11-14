@@ -212,8 +212,8 @@ export function startGarden(
       cssRenderer.render(cssScene, camera);
     };
 
-    /** 門をくぐる間のカメラと淡彩を、色を差し始めてからの時刻で決める */
-    const drawEnter = (now: number): void => {
+    /** 門をくぐる間のカメラと淡彩を、色を差し始めてからの時刻で決める。@returns カメラの縦の画角 */
+    const drawEnter = (now: number): number => {
       const t = now - enteredAt;
       const m = easeInOut(clamp01((t - INTRO.move0) / INTRO.move));
       const start = cam0();
@@ -221,7 +221,7 @@ export function startGarden(
       pass.setTint(clamp01((t - INTRO.tint0) / INTRO.tint));
       cur.pos.copy(start.pos.lerp(end.pos, m));
       cur.look.copy(start.look.lerp(end.look, m));
-      camera.fov = fov0() + (fov() - fov0()) * m;
+      return fov0() + (fov() - fov0()) * m;
     };
     /** イントロを終え、和紙の間を移る動きに切り替える。フレームが遅れても、カメラはそこから 1 つ目の和紙へ寄る */
     const toGarden = (): void => {
@@ -234,8 +234,7 @@ export function startGarden(
       const dt = state.last ? Math.min(100, now - state.last) : 16;
       state.last = now;
       if (phase !== "garden") {
-        if (phase === "enter") drawEnter(now);
-        else camera.fov = fov0();
+        camera.fov = phase === "enter" ? drawEnter(now) : fov0();
         camera.position.copy(cur.pos);
         camera.lookAt(cur.look);
         camera.updateProjectionMatrix();
