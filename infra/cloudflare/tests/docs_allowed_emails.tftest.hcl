@@ -1,5 +1,5 @@
-# docs_allowed_emails の validation が、空のリストとメールアドレスの形でない値で plan を止めることを確かめる。
-# provider を mock にするので、credential と state なしで流せる
+# docs_allowed_emails の validation が、空のリストとメールアドレスの形式でない値で plan を止めることを確認する。
+# provider を mock にするので、credential と state なしで実行できる
 mock_provider "cloudflare" {}
 
 # mock の provider は import を受け付けないので、zone.tf が import する zone を置き換える

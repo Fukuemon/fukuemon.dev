@@ -48,10 +48,10 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
-      # GitHub は secret の値の全体だけを伏せる。リストの 1 件だけがログに出たときも伏せるよう、1 件ずつ登録する
-      # 値が文字列の JSON のリストでないときに、伏せないまま plan へ進まないよう止める
-      # jq のエラーの文は値の先頭を含み、まだ伏せていないので捨てる
-      - name: メールアドレスを伏せる
+      # GitHub は secret の値の全体だけをマスクする。リストの 1 件だけがログに出たときもマスクするよう、1 件ずつ登録する
+      # 値が、文字列だけを要素に持つ 1 件以上の JSON の配列でないときに、マスクしないまま plan へ進まないよう止める
+      # jq のエラーメッセージは値の先頭を含み、まだマスクしていないので捨てる
+      - name: メールアドレスをマスクする
         shell: bash
         run: |
           set -euo pipefail
@@ -59,7 +59,7 @@ jobs:
             echo "::error::DOCS_ALLOWED_EMAILS が、1 件以上の文字列を持つ JSON のリストではありません。"
             exit 1
           fi
-          # API が小文字にして返した値も伏せる
+          # API が小文字にして返した値もマスクする
           while IFS= read -r email; do
             echo "::add-mask::$email"
             echo "::add-mask::$(tr '[:upper:]' '[:lower:]' <<< "$email")"

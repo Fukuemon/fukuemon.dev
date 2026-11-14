@@ -42,8 +42,8 @@ jobs:
 
       - run: pnpm --filter @fukuemon/docs-site run build
 
-      # workflow_dispatch は check の成否を見ないので、Access の外の URL が閉じていることを配信の前にも確かめる
-      - name: Access の外の URL が閉じていることを確かめる
+      # workflow_dispatch で起動したときは check workflow の結果を条件にしないので、配信の前にも確認する
+      - name: Access の外の URL が閉じていることを確認する
         run: pnpm --filter @fukuemon/docs-site run check:closed-urls dist/_headers
 
       - name: Cloudflare へ配信する

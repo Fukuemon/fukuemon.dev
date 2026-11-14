@@ -8,16 +8,16 @@ Cloudflare Access が、許可したメールアドレスの人だけを通す�
 
 ## 構成
 
-| ファイル                                      | 持つもの                                                                                              |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `zensical.toml`（リポジトリのルート）         | サイトの名前、`docs/` の読み方、ナビゲーション、Markdown の拡張                                       |
-| `pyproject.toml` と `uv.lock`（ルート）       | Zensical と Markdown の拡張のバージョン                                                               |
-| `apps/docs-site/wrangler.jsonc`               | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false`                       |
-| `apps/docs-site/scripts/check-closed-urls.sh` | `workers_dev` と `preview_urls` が `false` であること、ほかの設定のファイルが無いこと、noindex の確認 |
-| `apps/docs-site/public/_headers`              | レスポンスヘッダ。ビルドの後に `dist/` へコピーする                                                   |
-| `infra/cloudflare/access.tf`                  | Access のアプリケーションとポリシー                                                                   |
-| `infra/cloudflare/workers_domain.tf`          | custom domain の `docs.<zone>`                                                                        |
-| `.github/workflows/deploy-docs.yml`           | develop で check が通ったときの配信                                                                   |
+| ファイル                                      | 持つもの                                                                                                        |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `zensical.toml`（リポジトリのルート）         | サイトの名前、`docs/` の読み方、ナビゲーション、Markdown の拡張                                                 |
+| `pyproject.toml` と `uv.lock`（ルート）       | Zensical と Markdown の拡張のバージョン                                                                         |
+| `apps/docs-site/wrangler.jsonc`               | Worker の名前と静的アセットの置き場。`workers_dev` と `preview_urls` は `false`                                 |
+| `apps/docs-site/scripts/check-closed-urls.sh` | `workers_dev` と `preview_urls` が `false` であること、ほかに wrangler の設定ファイルが無いこと、noindex の確認 |
+| `apps/docs-site/public/_headers`              | レスポンスヘッダ。ビルドの後に `dist/` へコピーする                                                             |
+| `infra/cloudflare/access.tf`                  | Access のアプリケーションとポリシー                                                                             |
+| `infra/cloudflare/workers_domain.tf`          | custom domain の `docs.<zone>`                                                                                  |
+| `.github/workflows/deploy-docs.yml`           | develop で check が通ったときの配信                                                                             |
 
 - `zensical.toml` はリポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs_dir` を読まない。
 - `pyproject.toml` と `uv.lock` もルートに置く。uv は、`zensical.toml` と同じディレクトリで依存を解決する。
@@ -101,7 +101,7 @@ Access が掛からない URL（workers.dev とバージョンごとの URL）�
 2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
 3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
 4. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
-5. apply workflow を `mode=plan` でもう一度起動し、plan が `No changes.` を表示することを確認する。job のログの全ての step で、メールアドレスが `***` か `(sensitive value)` で伏せてあることも確認する。
+5. apply workflow を `mode=plan` でもう一度起動し、plan が `No changes.` を表示することを確認する。job のログのすべての step で、メールアドレスが `***` か `(sensitive value)` にマスクされていることも確認する。
 
 ## 許可するメールアドレスを変える
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Access を custom domain にだけ掛ける Worker は、workers.dev とバージョンごとの URL を閉じておく (ADR-0032)。
 # 値を true にした変更が develop に入ると、deploy の workflow が apply を通らずに Access の外の URL を開く。
-# JSONC を解釈せずに行で見るので、コメントの行を除き、トップレベル（インデント 2 つ）の false の行を求める。
-# env の中に同じキーを書いても見逃さないよう、どの深さにも true の行が無いことも確かめる
+# JSONC を解釈せずに 1 行ずつ照合するので、コメントの行を除き、トップレベル（半角スペース 2 つのインデント）に false の行があることを確認する。
+# env の中に同じキーを書いても見逃さないよう、どの深さにも true の行が無いことも確認する
 set -euo pipefail
 
 APP="$(cd "$(dirname "$0")/.." && pwd)"
 WRANGLER="$APP/wrangler.jsonc"
-# 引数で dist/_headers を渡すと、配信する出力を確かめる
+# 引数で dist/_headers を渡すと、配信する出力を確認する
 HEADERS="${1:-$APP/public/_headers}"
 status=0
 
@@ -21,7 +21,7 @@ done
 # wrangler は wrangler.json を wrangler.jsonc より先に読み、.wrangler/deploy/config.json で設定を差し替える
 for other in wrangler.json .wrangler/deploy/config.json; do
   if [ -e "$APP/$other" ]; then
-    echo "$other があります。wrangler.jsonc のほかの設定のファイルを置かない。" >&2
+    echo "$other があります。wrangler.jsonc のほかに wrangler の設定ファイルを置かない。" >&2
     status=1
   fi
 done
@@ -38,7 +38,7 @@ for key in workers_dev preview_urls; do
   fi
 done
 
-# Access の外へ漏れたときに、検索の結果に載せない。全てのパスに掛かるよう、ただ 1 つの /* のブロックの中に求める。
+# Access の外へ漏れたときに、検索の結果に載せない。すべてのパスに掛かるよう、noindex がただ 1 つの /* のブロックの中にあることを確認する。
 # /* が 2 つあると後のブロックのヘッダだけが返り、! X-Robots-Tag はそのパスの noindex を外す
 if ! awk '
   /^[^[:space:]#]/ { in_all = ($0 == "/*"); if (in_all) blocks++ }
@@ -51,6 +51,6 @@ if ! awk '
 fi
 
 if [ "$status" -eq 0 ]; then
-  echo "Access の外の URL は閉じていて、全てのパスに noindex があります"
+  echo "Access の外の URL は閉じていて、すべてのパスに noindex があります"
 fi
 exit "$status"

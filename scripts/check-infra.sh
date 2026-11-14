@@ -12,5 +12,5 @@ for d in infra/bootstrap infra/cloudflare; do
   terraform -chdir="$d" validate
 done
 
-# provider を mock にした test で、変数の validation を確かめる
+# provider を mock にした test で、変数の validation を確認する
 terraform -chdir=infra/cloudflare test
