@@ -19,6 +19,8 @@ export type SqlConsoleProps = {
   fileName: string;
   /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
   progress?: string;
+  /** 渡すと、入力欄を低くし、間隔を詰める。ほかのペインと並べて置くときに使う。 */
+  dense?: boolean;
 };
 
 /** SQL の入力欄、実行のボタン、結果の表と実行計画。 */
@@ -31,6 +33,7 @@ export function SqlConsole({
   stoppedHint,
   fileName,
   progress,
+  dense = false,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
   const database = useSyncExternalStore(status.subscribe, status.getSnapshot);
@@ -44,8 +47,8 @@ export function SqlConsole({
   };
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="grid h-96 min-h-0 has-[.cm-focused]:focus-ring">
+    <div className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}>
+      <div className={`grid min-h-0 has-[.cm-focused]:focus-ring ${dense ? "h-72" : "h-96"}`}>
         <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
           {() => (
             <SqlEditor
@@ -66,7 +69,10 @@ export function SqlConsole({
           でエディタの外へ移ります
         </span>
       </div>
-      <section aria-label="実行の結果" className="flex min-w-0 flex-col gap-4">
+      <section
+        aria-label="実行の結果"
+        className={`flex min-w-0 flex-col ${dense ? "gap-2" : "gap-4"}`}
+      >
         {progress !== undefined && <Loading label={progress} />}
         {database.kind === "stopped" && (
           <Notice isAlert title="DB が止まりました" tone="danger">

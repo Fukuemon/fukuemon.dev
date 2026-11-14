@@ -6,9 +6,10 @@ import {
   PageLoading,
   PreviewFrame,
   SplitPane,
+  Tabs,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { type ReactNode, Suspense, use, useReducer } from "react";
+import { Activity, type ReactNode, Suspense, use, useReducer, useState } from "react";
 
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
@@ -58,10 +59,15 @@ function Pane({
   );
 }
 
+/** 右の列のタブ。選んでいないタブのペインは Activity で隠し、SQL の入力欄と結果を残す。 */
+type RightTab = "preview" | "sql";
+
 /**
- * 右の列。DB を使うプロジェクトでは、プレビューの下に SQL のペインを置き、Node のコードの結果と DB の中身を並べて見られるようにする。
+ * 右の列。DB を使うプロジェクトでは、プレビューと SQL のペインをタブで切り替える。
+ * どちらのペインも列の高さを全て使い、SQL の入力欄と結果を同時に見られるようにする。
  */
 function PreviewColumn({ database }: { database: boolean }) {
+  const [tab, setTab] = useState<RightTab>("preview");
   const preview = (
     <Pane
       fallback={
@@ -74,17 +80,31 @@ function PreviewColumn({ database }: { database: boolean }) {
     </Pane>
   );
   if (!database) return preview;
-  return (
-    <SplitPane
-      label="プレビューと SQL の高さ"
-      orientation="vertical"
-      primary={preview}
-      secondary={
+  // Tabs は選んだタブの中身だけを描くので、どのタブにも同じ中身を渡し、中で Activity で切り替える
+  const content = (
+    <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
+      <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
+      <Activity mode={tab === "sql" ? "visible" : "hidden"}>
         <Pane fallback={null}>
           <SqlPane />
         </Pane>
-      }
-    />
+      </Activity>
+    </div>
+  );
+  return (
+    <div className="flex size-full min-h-0 flex-col [&>div>[role=tablist]]:mx-1">
+      <Tabs
+        density="compact"
+        items={[
+          { id: "preview", label: "プレビュー", content },
+          { id: "sql", label: "SQL", content },
+        ]}
+        label="プレビューと SQL"
+        onSelect={(id) => setTab(id as RightTab)}
+        panel="flush"
+        selectedId={tab}
+      />
+    </div>
   );
 }
 

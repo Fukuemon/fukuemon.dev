@@ -38,6 +38,7 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
   return (
     <div className="size-full overflow-auto p-1">
       <SqlConsole
+        dense
         fileName="query.sql"
         onChange={setQuery}
         onRun={run}

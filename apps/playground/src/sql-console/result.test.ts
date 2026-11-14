@@ -94,7 +94,9 @@ describe("formatCell と toJsonResponse", () => {
       results: [{ fields: [], rows: [cells], affectedRows: 0, totalRows: 1, truncated: false }],
       ms: 0,
     });
-    const sent = JSON.parse(JSON.stringify(response)) as { results: { rows: unknown[][] }[] };
+    // DB のプロセスは標準出力に書き、ページはその行を読む
+    const line = JSON.stringify(response);
+    const sent = JSON.parse(line) as { results: { rows: unknown[][] }[] };
     expect(sent.results[0]?.rows[0]?.map(formatCell)).toStrictEqual(cells.map(formatCell));
   });
 });
