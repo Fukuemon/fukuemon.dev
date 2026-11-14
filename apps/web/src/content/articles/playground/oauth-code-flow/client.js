@@ -8,7 +8,7 @@ const AUTH_PORT = 4000;
 const sessions = new Map();
 const random = () => randomBytes(8).toString("hex");
 
-const server = createServer(async (request, response) => {
+async function handle(request, response) {
   const url = new URL(request.url, "http://localhost");
   const cookies = readCookies(request);
 
@@ -70,6 +70,14 @@ const server = createServer(async (request, response) => {
   }
 
   response.writeHead(404).end();
+}
+
+const server = createServer((request, response) => {
+  handle(request, response).catch((error) => {
+    console.error(error);
+    if (!response.headersSent) response.writeHead(500);
+    response.end();
+  });
 });
 
 server.listen(PORT, () => console.log(`クライアントが ${PORT} 番で待ち受けています`));

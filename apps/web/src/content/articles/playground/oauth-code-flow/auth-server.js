@@ -7,7 +7,7 @@ const PORT = 4000;
 const codes = new Map();
 const random = () => randomBytes(8).toString("hex");
 
-const server = createServer(async (request, response) => {
+async function handle(request, response) {
   const url = new URL(request.url, "http://localhost");
 
   if (url.pathname === "/") {
@@ -35,6 +35,11 @@ const server = createServer(async (request, response) => {
 
   if (url.pathname === "/authorize" && request.method === "POST") {
     const form = await readForm(request);
+    if (!URL.canParse(form.get("redirect_uri"))) {
+      response.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+      response.end("<h1>redirect_uri がありません</h1>");
+      return;
+    }
     const code = random();
     codes.set(code, form.get("client_id"));
     const back = new URL(form.get("redirect_uri"));
@@ -59,6 +64,14 @@ const server = createServer(async (request, response) => {
   }
 
   response.writeHead(404).end();
+}
+
+const server = createServer((request, response) => {
+  handle(request, response).catch((error) => {
+    console.error(error);
+    if (!response.headersSent) response.writeHead(500);
+    response.end();
+  });
 });
 
 server.listen(PORT, () => console.log(`認可サーバーが ${PORT} 番で待ち受けています`));
