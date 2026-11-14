@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { playgroundConfigSchema, playgroundProjectSchema } from "./index";
+import { isEmbedId, isEmbedName, playgroundConfigSchema, playgroundProjectSchema } from "./index";
 
 const sqlProject = {
   tool: "sql",
@@ -97,5 +97,28 @@ describe("playgroundConfigSchema", () => {
   it("初期データの SQL をファイルのパスで受け付ける", () => {
     const config = { tool: "sql", open: "query.sql", initialSql: "seed.sql" };
     expect(playgroundConfigSchema.parse(config)).toStrictEqual(config);
+  });
+});
+
+describe("埋め込みの名前と ID", () => {
+  it.each([
+    ["server", true],
+    ["node-2", true],
+    ["Server", false],
+    ["-a", false],
+    ["a/b", false],
+    ["", false],
+  ])("%s を名前として %s にする", (name, ok) => {
+    expect(isEmbedName(name)).toBe(ok);
+  });
+
+  it.each([
+    ["intro/server", true],
+    ["intro", false],
+    ["intro/../x", false],
+    ["a/b/c", false],
+    ["a/b?x=1", false],
+  ])("%s を埋め込みの ID として %s にする", (id, ok) => {
+    expect(isEmbedId(id)).toBe(ok);
   });
 });

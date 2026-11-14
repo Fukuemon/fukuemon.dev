@@ -60,6 +60,17 @@
     @apply w-max min-w-full;
   }
 
+  /* rehype-playground が書く実行環境の埋め込み。押す前はボタンだけを罫の枠に置き、押した後は枠を iframe で埋める */
+  .prose :where(.playground-embed) {
+    @apply flex items-center justify-center border border-border p-4 md:p-6;
+  }
+  .prose :where(.playground-embed:has(> iframe)) {
+    @apply block p-0;
+  }
+  .prose :where(.playground-embed-frame) {
+    @apply block h-160 w-full;
+  }
+
   /* Pele の SVG の色を、Pele の変数からトークンへ対応させる。1 枚の SVG のままライトとダークを切り替える (ADR-0016) */
   .prose svg.pele {
     --pele-bg: var(--color-surface);

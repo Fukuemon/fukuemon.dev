@@ -63,7 +63,7 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
 
 記事の本文は `apps/web/src/content/articles/` に置く。  
 コンテンツの用語と、frontmatter の項目が守る条件は [domain.md](domain.md) と [domain/content.md](domain/content.md) にある。  
-1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。新しいシリーズを作るときだけ、`index.md` を足す。
+1 本を足すときに触るファイルは、Markdown の 1 枚だけにする。新しいシリーズを作るときだけ、`index.md` を足す。実行環境を埋め込むときだけ、プロジェクトのディレクトリを足す。
 
 - 原稿の本文は、`である` 調で書く。frontmatter の `description` も同じである。
   - 箇条書きと表のセルは、体言止めか終止形で書く。
@@ -71,8 +71,24 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - リポジトリの文書（context、PRD、Design Doc、ADR など）も、`である` 調で書く。
 - サイトの UI の文言（ボタン、状態の表示、空の状態の案内）は、`ですます` 調で書く。
 - シリーズに入れる記事は `articles/<series>/` に置き、シリーズに入れない記事は `articles/` の直下に置く。ディレクトリは 1 階層までにする。
+  - 実行環境のプロジェクトを置く `playground/` は、シリーズとして扱わず、階層に数えない。
 - シリーズの中の記事は frontmatter の `order` を書き、シリーズに入れない記事は `order` を書かない。
 - frontmatter に `format` を書くときは、`page` だけを書く。
+- 実行環境は、言語を `playground` にしたコードフェンスを置き、中に埋め込みの名前を 1 行で書く。
+
+  ````md
+  ```playground
+  node-server
+  ```
+  ````
+
+  - プロジェクトは、記事の Markdown があるディレクトリの `playground/<埋め込みの名前>/` に置く。`playground.json` と初期ファイルを置く。形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#プロジェクト) にある。
+  - プロジェクトのディレクトリの全てのファイルが、公開の JSON に入る。ドットで始まるファイルとディレクトリ（`.env` など）を置くと、ビルドが失敗する。初期ファイルは、UTF-8 の文字列にする。
+  - 埋め込みの名前は、英小文字、数字、ハイフンで書き、1 本の記事の中で重複させない。
+  - Node の実行環境を埋め込む記事には、別の origin の画像と埋め込み（`img`、`iframe`、`video` など）を置かない。SQL と Go のツールも置かない。
+    記事には `COEP: require-corp` を返すので、ブラウザがそれらを読み込まないためである。置くと、ビルドが失敗する。
+  - ADR-0034: [記事への埋め込み](../docs/adr/0034-playground-origin-and-embedding.md#3-記事への埋め込み)
+
 - 図は `mermaid` のコードフェンスで書き、色を指定しない。
   - `style` や `classDef` で色を書くと、暗い地で読めなくなる。
   - 図は、ビルドのときに Pele で SVG になる。Pele が対応しない記法を書くと、ビルドが失敗する。
@@ -207,6 +223,7 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - Oxfmt は、apm が配置するファイル（`.agents/`、`.claude/`、`.codex/`、`apm.lock.yaml`）を整形しない（`ignorePatterns`）。整形すると、次の `apm install` で差分が出るため。
 - knip は、textlint の規則のパッケージを未使用の依存として扱わない（`ignoreDependencies`）。`.textlintrc.json` が規則の名前で読み込み、import されないため。
 - `packages/e2e` の tsconfig は、`noUncheckedIndexedAccess` を外す。スキルの写しの `caption.ts` が、添字で読んだ値をそのまま使うため。
+- knip は、記事に埋め込む実行環境の初期ファイル（`apps/web/src/content/articles/**/playground/**`）を見ない（`ignore`）。訪問者の実行環境で動くファイルで、サイトのコードから import されないため。
 - 文書の textlint は、ai-words-ja の `門` を指摘しない（`allows`）。
   - トップの庭へ入るところに建つ建物（腕木門）を指す語で、比喩ではない。
   - 承認した ADR-0026 の題と、PRD の性能の要求の行にあり、言い換えると承認した文が変わる。

@@ -63,7 +63,8 @@
   "packageManager": "pnpm@10.27.0",
   "knip": {
     "ignore": [
-      "docs/design/prototypes/**"
+      "docs/design/prototypes/**",
+      "apps/web/src/content/articles/**/playground/**"
     ],
     "workspaces": {
       ".": {

@@ -75,10 +75,11 @@ describe("_headers", () => {
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
     "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "content-security-policy": "frame-ancestors 'self' https://fukuemon.dev",
   };
 
   it.each(["/", "/node/", "/sql/", "/go/", "/assets/node-abc.js"])(
-    "%s に noindex、nosniff、Referrer-Policy、HSTS を返す",
+    "%s に noindex、nosniff、Referrer-Policy、HSTS、frame-ancestors を返す",
     (path) => {
       const headers = headersFor(path);
       expect(
