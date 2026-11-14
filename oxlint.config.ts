@@ -81,7 +81,7 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const TOP_GARDEN_README = `${FEATURES_DIR}/top-garden/README.md`;
+const TOP_GARDEN_DESIGN_DOC = `${FEATURES_DIR}/top-garden/DesignDoc.md`;
 // alias、../ の連続、./../ の形で書いた top-garden 内の兄弟ディレクトリを当てる
 const GARDEN_PREFIX =
   "^(~/features/top-garden/|(\\.\\./)+(features/)?(top-garden/)?|\\./(\\.\\./)+)";
@@ -94,7 +94,7 @@ const topGardenSubdirs: SubdirRestriction[] = [
     patterns: [
       {
         regex: `${GARDEN_PREFIX}scene(/|$)`,
-        message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_README})`,
+        message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_DESIGN_DOC})`,
       },
     ],
   },
@@ -103,12 +103,12 @@ const topGardenSubdirs: SubdirRestriction[] = [
     patterns: [
       {
         regex: `${GARDEN_PREFIX}ink(/|$)`,
-        message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_README})`,
+        message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_DESIGN_DOC})`,
       },
       {
         regex: `${GARDEN_PREFIX}stage(/|$)`,
         allowTypeImports: true,
-        message: `scene/ から stage/ へは型だけを import する (${TOP_GARDEN_README})`,
+        message: `scene/ から stage/ へは型だけを import する (${TOP_GARDEN_DESIGN_DOC})`,
       },
     ],
   },
@@ -118,7 +118,7 @@ const topGardenSubdirs: SubdirRestriction[] = [
       {
         // 先読みが無いので、接尾辞の無い import と、?worker&url 以外の接尾辞を止める
         regex: `${GARDEN_PREFIX}scene(/[^?]*)?$|${GARDEN_PREFIX}scene(/.*)?\\?(?:$|[^w]|w(?:$|[^o])|wo(?:$|[^r])|wor(?:$|[^k])|work(?:$|[^e])|worke(?:$|[^r])|worker(?:$|[^&])|worker&(?:$|[^u])|worker&u(?:$|[^r])|worker&ur(?:$|[^l])|worker&url.)`,
-        message: `stage/ から scene/ へは場面のバンドルの URL (?worker&url) だけを import する (${TOP_GARDEN_README})`,
+        message: `stage/ から scene/ へは場面のバンドルの URL (?worker&url) だけを import する (${TOP_GARDEN_DESIGN_DOC})`,
       },
     ],
   },

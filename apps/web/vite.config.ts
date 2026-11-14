@@ -1,7 +1,7 @@
 import { defineConfig } from "vite-plus";
 
-// vp run のタスクだけを置く。Astro の build を vp build で置き換えない (ADR-0003)。
-// 入口は package.json の build で、vp を外すときはそこへコマンドを戻す (ADR-0017)
+// vp run のタスクだけを置く。Astro の build を vp build で置き換えない (ADR-0017)。
+// 入口は package.json の build で、vp を外すときはそこへコマンドを戻す
 export default defineConfig({
   run: {
     tasks: {

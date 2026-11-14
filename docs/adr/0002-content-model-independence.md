@@ -16,16 +16,15 @@
 - Astro の `reference()` は参照先の collection 名を型で固定する。
   - 将来コンテンツを別の collection や別のデータソースへ移すと、参照の記述をすべて書き換えることになる。
 - 本文の描画レイヤは将来差し替えうる。データソースも Markdown から別の形へ移りうる。
-  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む](0001-starlight-as-docs-renderer.md)
+  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code で組む](0001-starlight-as-docs-renderer.md)
 - 運用者は 1 名でレビューによる職務分離が成立しないため、規約は機械で確認できる形にする必要がある。
 
 ## Decision
 
-### 1. 安定識別子を `contentId` として持ち、URL 用の `path` と分ける
+### 1. 安定識別子を `contentId` として持つ
 
 ```yaml
 contentId: rdbms-query-execution # 発行後は変更しない。全 collection をまたいで一意
-path: hands-on/rdbms-query-execution # URL パス。改名可能
 ```
 
 `contentId` の重複はビルド時に確認し、見つかればビルドを失敗させる。
@@ -56,7 +55,6 @@ Oxlint の `no-restricted-imports` で機械的にチェックする。
 
 | 変更                                | 変更範囲                               |
 | ----------------------------------- | -------------------------------------- |
-| 本文の描画レイヤを差し替え          | `layouts/DocLayout.astro` のみ         |
 | Markdown から別のデータソースへ移行 | `content.config.ts` の loader          |
 | Astro のメジャーアップグレード      | `apps/web/src/lib/content/` のアダプタ |
 

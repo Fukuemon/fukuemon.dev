@@ -92,8 +92,7 @@ ADR-0005: [Cloudflare Workers Static Assets を採用し、基盤を Terraform�
 | ビルド時に解決できない検索が要ると判明したとき | まず静的 embedding 索引 + クライアント検索を試し、それで足りないときのみ |
 
 `/api/*` の URL 予約は維持する。  
-予約のコストはゼロで、条件が成立したときに URL 設計をやり直さずに済む。  
-ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
+予約のコストはゼロで、条件が成立したときに URL 設計をやり直さずに済む。
 
 ## Considered Options
 

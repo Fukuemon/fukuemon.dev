@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// トップの庭の場面のバンドルが、gzip で上限以内かを確認する。上限は docs/design/features/top-garden/DesignDoc.md の「場面のバンドル」にある。
+// トップの庭の場面のバンドルが、gzip で上限以内かを確認する。上限は apps/web/src/features/top-garden/DesignDoc.md の「場面のバンドル」にある。
 // ビルドした apps/web/dist/ を読むので、pnpm run build の後に流す。
 // 終了コード: 0 は上限以内、1 は上限を超えた、2 はバンドルが見つからないか 2 つ以上ある
 import { readdirSync, readFileSync } from "node:fs";

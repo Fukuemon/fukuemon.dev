@@ -22,7 +22,6 @@ fukuemon.dev のドメインの下に、サイトのほかに、複数のアプ�
 - 訪問者のコードが、実行環境のページと同じ origin で動くかは、実行環境の方式で変わる。
 - 実行環境の要求は、訪問者が作ったファイルを URL で共有することを、範囲の外に置いている。
 - cross-origin isolation は、サイト全体に適用せず、`/playground/*` だけに適用すると決めている。
-  - ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
 - `COEP: require-corp` のページでは、CORP を返さないクロスオリジンのリソースがブロックされる。
 - isolation のヘッダは、ページのレスポンスごとに返す。同じ origin の中で、返す URL と返さない URL を分けられる。
 - キャンバスの候補の draw.io の Embed Mode は、draw.io のエディタを、別の origin の iframe で読み込む。そのレスポンスは、COEP と CORP のヘッダを返さない（`curl -I` で確認した）。
@@ -90,6 +89,7 @@ fukuemon.dev の全体には、cross-origin isolation のヘッダを返さな�
 - develop への push で check が通ったときにデプロイする。
 - 誰でも開けるままにし、全てのレスポンスに `X-Robots-Tag: noindex` を返す。E2E と Lighthouse を、認証なしで実行するためである。
 - 本番の Worker（`fukuemon-dev`）への deploy は、運用者が手動で実行したときだけ行う。
+  - 通常の deploy workflow が push で動くとした [ADR-0005 の 5](0005-workers-terraform-wrangler-boundary.md#5-credential-を-2-系統に分ける) の、切り替えまでの例外である。例外は本番の Worker だけで、credential の 2 系統は変えない。
 - 本番を新しいサイトに切り替えるときに、プレビューの Worker を消し、本番の Worker へ develop への push でデプロイする設定に変更する。
 
 ## 承認の条件

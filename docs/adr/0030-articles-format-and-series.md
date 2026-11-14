@@ -17,18 +17,10 @@
 今の決定は、次のとおり。
 
 - サイトを about、blog、playground の 3 つのセクションに分け、記事とハンズオンを別の種別として、別のディレクトリと URL に置く。
-  - ADR-0009: [サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする](0009-site-sections-and-playground-collection.md)
 - playground を collection にし、ディレクトリで分類する。
-  - ADR-0018: [playground を `playgrounds/` の直下のディレクトリで分類し、URL をファイルのパスにする](0018-playground-groups-by-directory.md)
 - 手を動かす場所を、frontmatter の `interactive.level` で 4 つに分ける。
-  - ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
 - DB を使うハンズオンの実行環境、ハンズオンのページの island のつなぎ方、手順をまとめる処理の配置先を決めている。どれも、引き継がないコードの決定である。
-  - ADR-0013: [DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする](0013-pglite-for-planner-output.md)
-  - ADR-0014: [ハンズオンのページは、手順の切り替えを React の外に置き、island どうしを CustomEvent でつなぐ](0014-lab-page-islands.md)
-  - ADR-0015: [ハンズオンの手順の画面へのまとめを、remark ではなく rehype のプラグインに置く](0015-lab-steps-in-rehype.md)
 - 本文の検索を、一覧のページに置く。Pagefind の索引を最初から作る。
-  - ADR-0012: [本文の検索を、一覧の 3 ページに dialog として置く](0012-search-dialog-on-listing.md)
-  - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code + Pagefind で組む](0001-starlight-as-docs-renderer.md)
 - about は、トップが兼ねる。
   - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](0026-sumi-gate-and-garden-on-top.md)
 - 安定した識別子の `contentId` と、片方向の関連を持つ。
@@ -52,7 +44,9 @@
 - schema は、実装した形式の値だけを受け付ける。先に受け付けると、ビルドを通った記事が、表示のときに崩れるためである。最初は、1 ページだけを受け付ける。
 - 埋め込むコンテンツは、種別にも形式にもしない。本文に置く機能として、形式と独立に追加する。
 - 記事の schema は、実行環境の項目を持たない。手を動かす場所の 4 つの分類をやめる。
-- 実行環境の埋め込み方、実行環境の選び方、island のつなぎ方は、実行環境の方式を決める ADR が決め直す。それまで、有効な決定は無い。
+- 実行環境の選び方と埋め込み方は、この ADR では決めない。実行環境の方式を決める ADR が決める。
+  - 選び方は、[ADR-0033](0033-webcontainers-for-node.md)（Node）、[ADR-0037](0037-go-with-yaegi.md)（Go）、[ADR-0053](0053-pglite-database-in-playground.md)（DB）が決める。
+  - 記事への埋め込み方は、[ADR-0034](0034-playground-origin-and-embedding.md) と [ADR-0049](0049-playground-projects-from-articles.md) が決める。記事は実行環境を iframe で埋め込み、island どうしをつながないので、island のつなぎ方は決めない。
 - 手順の形式は、外部の Codelab のツールを使わず、サイトのページとして描く。`h2` を手順にまとめる処理の配置先は、手順の形式を作るときに決め直す。
 - `contentId`、公開の状態（`status`）、片方向の関連は引き継ぐ。
 
