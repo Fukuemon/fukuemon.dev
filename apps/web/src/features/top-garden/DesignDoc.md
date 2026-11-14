@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: トップの水墨の門と立体の庭
-description: トップの庭のコードの構成と import の向き、最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル
+description: コードの構成と import の向き、最初の訪問のイントロの各段の時間、季節と時間帯の決め方、時間帯ごとと季節ごとの場面の色、和紙の文の幅と行間と余白、庭の中のボタンの並び、試作のファイル
 status: draft
 governs:
   - apps/web/src/features/top-garden/
