@@ -60,7 +60,7 @@ pnpm --filter @fukuemon/e2e test
 
 - 配信のポートは、実行のたびに空きポートを選ぶ。`PREVIEW_PORT` で決められる。`BASE_URL` を渡したときは、配信を立てない。
 - project は `chromium` と `garden` である。`pnpm --filter @fukuemon/e2e test` は `chromium` だけを流し、`garden` は `pnpm --filter @fukuemon/e2e test:garden` で流す。
-  - `chromium` は `tests/specs/garden/` 以外の spec を流す。記事のページの表と図とコードブロックの枠の spec（`tests/specs/articles/scroll-box-fade.e2e.ts`）もここで流す。
+  - `chromium` は `tests/specs/garden/` 以外の spec を流す。記事のページの表と図とコードブロックの枠の spec（`scroll-box-fade.e2e.ts`）と、コピーの吹き出しの spec（`code-copy-feedback.e2e.ts`）もここで流す。いずれも `tests/specs/articles/` にある。
 - 型のチェックは `pnpm --filter @fukuemon/e2e typecheck` で流す。
 - ルートの `pnpm run test:e2e` は、サイトの E2E の後に、カタログの Show code の E2E（`pnpm --filter @fukuemon/ui e2e`）を流す。
   - カタログの E2E は、config が Storybook をビルドしてポート 6126 で配信する。そのポートが使用中なら、起動が失敗する。

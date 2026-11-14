@@ -19,3 +19,11 @@ export const shortCode = (page: Page): Locator =>
 
 export const longCode = (page: Page): Locator =>
   page.locator(".expressive-code pre").filter({ hasText: "--devOutput" });
+
+export const codeFrame = (page: Page, marker: string): Locator =>
+  page.locator(".expressive-code").filter({ hasText: marker });
+
+export const copyButton = (frame: Locator): Locator =>
+  frame.getByRole("button", { name: "クリップボードにコピーします" });
+
+export const copyFeedback = (frame: Locator): Locator => frame.locator(".feedback");
