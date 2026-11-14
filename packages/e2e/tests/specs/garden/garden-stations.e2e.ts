@@ -182,7 +182,7 @@ test.describe("トップの庭", () => {
       page,
     }) => {
       await openGarden(page);
-      // 隣のボタンに覆われずに押せるかを、左右の端から 1px 内側で確かめる。当たり判定は座標を整数に丸めるので、端の 0.5px では隣に当たる
+      // 隣のボタンに覆われずに押せるかを、左右の端から 2px 内側で確かめる（枠は隣と 1px 重なる）。当たり判定は座標を整数に丸めるので、端の 0.5px では隣に当たる
       const boxes = await stations(page).evaluateAll((els) =>
         els.map((el) => {
           const b = el.getBoundingClientRect();
@@ -194,7 +194,7 @@ test.describe("トップの庭", () => {
             height: b.height,
             left: b.left,
             right: b.right,
-            edges: own(b.left + 1) && own(b.right - 1),
+            edges: own(b.left + 2) && own(b.right - 2),
           };
         }),
       );
