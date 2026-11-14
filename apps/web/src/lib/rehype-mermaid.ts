@@ -1,6 +1,7 @@
 import type { Element, Root } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import { render } from "pele";
+import { replaceFences } from "./rehype-fence";
 
 /**
  * Pele は Node では書体を測れず、組み込みの Arial の字幅で箱の大きさを決める。
@@ -16,29 +17,8 @@ const FONT = "Arial, Helvetica, sans-serif";
 export function rehypeMermaid() {
   return (tree: Root) => {
     let n = 0;
-    walk(tree, (source) => toSvg(source, `mermaid-${n++}`));
+    replaceFences(tree, "mermaid", (source) => toSvg(source, `mermaid-${n++}`));
   };
-}
-
-function walk(node: Root | Element, draw: (source: string) => Element): void {
-  node.children = node.children.map((child) => {
-    if (child.type !== "element") return child;
-    const source = mermaidSource(child);
-    if (source === undefined) {
-      walk(child, draw);
-      return child;
-    }
-    return draw(source);
-  }) as typeof node.children;
-}
-
-function mermaidSource(pre: Element): string | undefined {
-  if (pre.tagName !== "pre") return undefined;
-  const code = pre.children.find((c): c is Element => c.type === "element");
-  if (code?.tagName !== "code") return undefined;
-  const cls = code.properties.className;
-  if (!Array.isArray(cls) || !cls.includes("language-mermaid")) return undefined;
-  return code.children.map((c) => (c.type === "text" ? c.value : "")).join("");
 }
 
 function toSvg(source: string, idPrefix: string): Element {

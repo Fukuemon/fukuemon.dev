@@ -203,7 +203,10 @@ URL の規約は [context/codebase.md](../../context/codebase.md#url) にある�
 - シリーズに入れない記事は、`articles/` の直下に置く。
 - 図は、`mermaid` のフェンスに書く。
 - キャンバスで描いた図は、書き出した SVG を `apps/web/src/content/figures/` に置き、記事から画像の記法で指す。形は、[キャンバスの Design Doc](features/canvas/DesignDoc.md#記事の図) にある。
-- 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事のディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#プロジェクト) にある。
+- 記事に埋め込む実行環境のプロジェクト（初期ファイルと設定）は、記事の Markdown があるディレクトリの下の `playground/<埋め込みの名前>/` に置く。形は、[プレイグラウンドの Design Doc](../../apps/playground/DesignDoc.md#プロジェクト) にある。
+  - シリーズの記事は `articles/<series>/playground/`、シリーズに入れない記事は `articles/playground/` である。`playground/` は、シリーズとして扱わず、ディレクトリの階層にも数えない。
+  - ビルドは、`playground` のフェンスを、押すと iframe を作るボタンに置き換える。
+  - ビルドは、プロジェクトの JSON を `/playground-projects/<contentId>/<埋め込みの名前>.json` に出力する。Node の実行環境を埋め込むページの URL を出力の HTML から集め、cross-origin isolation のヘッダを返す規則を、出力の `_headers` に足す。
 
 書き方は [context/conventions.md](../../context/conventions.md) にある。
 
@@ -300,6 +303,10 @@ deploy と apply の条件は [context/operations.md](../../context/operations.m
 
 - E2E は、配信した状態のサイトを、ブラウザで操作して確認する。サイトのコードを import しない。
 - E2E は、録画と字幕のエビデンスを撮れる形で書く。
+- 庭の見た目の回帰と、記事のページの表と図の枠の E2E は、`packages/e2e/visual/` に置く。
+  - ADR-0029 の 3 は、E2E を `packages/e2e/tests/` の下に置き、E2E の lint の規則を掛けると決めている。`visual/` はその例外である。
+  - `visual/` の spec は、`getByRole`、CSS のセレクタ、`getAttribute` を使う。規則に合わせるには、spec の書き直しと、サイトのマークアップへの `data-testid` の追加が要るためである。
+  - 規則に合わせて書き直した spec は、`tests/specs/` に移す。
 - テストの種類と保証の範囲は [context/testing.md](../../context/testing.md) にある。
 
 ### 条件つきで追加する機能の形

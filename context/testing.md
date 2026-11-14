@@ -18,7 +18,7 @@ verified_commit: ab2da87
 | 種類         | 対象                                                                               | ツール                   | 保証すること                                                                                                                                                                                                     |
 | ------------ | ---------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | unit         | `packages/content-model` の関係グラフ、シリーズ、目次                              | Vitest                   | 関係グラフの構築と検証、シリーズのチェック、目次の組み立ての分岐をすべて踏む                                                                                                                                     |
-| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS をすべてのパスに返し、`/` だけをリダイレクトする                                                                     |
+| unit         | `apps/playground/public/` の `_headers` と `_redirects`（`apps/playground/test/`） | Vitest                   | cross-origin isolation のヘッダを `/node/*` にだけ、noindex、nosniff、Referrer-Policy、HSTS、frame-ancestors をすべてのパスに返し、`/` だけをリダイレクトする                                                    |
 | ビルドの検証 | `contentId` の重複、解決できない `related`、シリーズの構造と `order`               | ビルドそのもの           | チェックの抜けを本番へ出さない。テストではなくビルドを失敗させる                                                                                                                                                 |
 | unit         | `packages/sql-runtime` の SQL の実行と、Web Worker で動かす DB                     | Vitest                   | 本物の PGlite で、複数の文の取り消し、100,000 行で切る処理、エラーのコードと位置、Web Worker の読み込みの失敗と異常終了からの作り直しを踏む                                                                      |
 | unit         | `packages/go-runtime` の Yaegi で Go を動かす処理（`go/`）                         | `go test`                | `syscall/js`、`syscall`、`unsafe`、`os/exec` の import が失敗すること、ディレクトリの package の import を解決できること、終了コードとテストの関数を集められることを確認する                                     |
@@ -27,10 +27,10 @@ verified_commit: ab2da87
 | unit         | `apps/playground/src/` の React の外のモジュール                                   | Vitest                   | プロジェクトの JSON の検証、入力欄と実行中の状態、実行計画のツリー、結果の表の行とページを組む処理、Go のファイルの操作と保存と出力の分岐を踏む                                                                  |
 | E2E          | `packages/ui` のカタログの Show code（`packages/ui/e2e/specs/`）                   | Playwright               | Docs のページの Show code が、story のソースから作ったコードを出す                                                                                                                                               |
 | E2E          | 記事の一覧から記事を開く（`packages/e2e/tests/specs/`）                            | Playwright               | 一覧の 1 本目の記事の題を押すと、その記事のページが開き、見出しが一覧の題と同じになる                                                                                                                            |
-| E2E          | 記事のページの表、図、コードブロックの枠（`apps/web/e2e/specs/`）                  | Playwright               | 本文の列からあふれた表、図、コードブロックの枠にだけ、右に続きがある間、右端を背景の色で薄くする。動きを減らす設定では、右端まで送ったときに一度に消す                                                           |
-| E2E          | トップの最初の訪問のイントロ（`apps/web/e2e/specs/garden-intro.spec.ts`）          | Playwright               | 最初の訪問だけにイントロが出て、色を差してから 4.5 秒で終わる。飛ばす操作をすると庭の最後の状態になり、場面の準備が 6 秒で終わらないときはふつうのページになる。イントロの間も h1 がアクセシビリティツリーにある |
+| E2E          | 記事のページの表、図、コードブロックの枠（`packages/e2e/visual/specs/`）           | Playwright               | 本文の列からあふれた表、図、コードブロックの枠にだけ、右に続きがある間、右端を背景の色で薄くする。動きを減らす設定では、右端まで送ったときに一度に消す                                                           |
+| E2E          | トップの最初の訪問のイントロ（`packages/e2e/visual/specs/garden-intro.spec.ts`）   | Playwright               | 最初の訪問だけにイントロが出て、色を差してから 4.5 秒で終わる。飛ばす操作をすると庭の最後の状態になり、場面の準備が 6 秒で終わらないときはふつうのページになる。イントロの間も h1 がアクセシビリティツリーにある |
 | 見た目の回帰 | スタイリングに触れる変更                                                           | E2E のエビデンスの静止画 | 変更の前後で画面の見た目が意図せず変わらない                                                                                                                                                                     |
-| 見た目の回帰 | トップの止めた庭の絵（`apps/web/e2e/specs/`）                                      | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                                                     |
+| 見た目の回帰 | トップの止めた庭の絵（`packages/e2e/visual/specs/`）                               | Playwright               | 季節と時間帯を固定した庭の絵が、基準のスナップショットと同じに出る。WebGL を使えないときは、庭を出さずにふつうのページが出る                                                                                     |
 
 UI コンポーネントの単体テストは書かない。  
 Astro のコンポーネントは静的な HTML を出すだけで、分岐は `ContentRef` を作る側にある。
@@ -67,6 +67,12 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `mermaid` のフェンスを SVG にする `rehype-mermaid.ts`
 - 和文の間の改行を消す `rehype-ja-linebreak.ts`
 - 表と図を横に送れる枠で包む `rehype-scroll-box.ts`
+- 指定した言語のコードフェンスを要素に置き換える `rehype-fence.ts`
+- `playground` のフェンスを実行環境のボタンにし、Node の実行環境を埋め込む記事に外部の画像と埋め込みがあると throw する `playground/rehype-playground.ts`
+- プロジェクトのディレクトリを読み、schema で検証して JSON に変換する `playground/project.ts`
+- 原稿から埋め込みの名前を集める `playground/embeds.ts`
+- プロジェクトの JSON のページを並べ、2 本の記事が同じプロジェクトを指すと throw する `playground/project-pages.ts`
+- Node の実行環境を埋め込むページに、cross-origin isolation のヘッダを返す規則を出力の `_headers` に足す `playground/isolation-headers.ts`
 
 `apps/playground`、`packages/sql-runtime`、`packages/go-runtime`、`packages/node-runtime` には、分岐、関数、行、文のカバレッジ 90% を求める。  
 `packages/playground-project` には、100% を求める。  
@@ -94,7 +100,8 @@ Storybook のバージョンを上げる pull request でも、CI が同じ E2E 
 ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-repository-layout-like-buddy.md#3-e2e-の配置先)  
 サイトの E2E の package は `packages/e2e` で、spec は `packages/e2e/tests/specs/` に置く。  
 `packages/e2e` は、ビルドした `apps/web/dist/` を配信して実行する。実行の方法は [E2E のテスト](testing/e2e.md#running-tests) にある。  
-`apps/web` の E2E の spec は、`apps/web/e2e/` に置いたままである。
+トップの庭の見た目の回帰と、記事のページの表と図の枠の spec は、`packages/e2e/visual/specs/` に置く。  
+`tests/` の外なので、E2E の lint の規則は掛からない。
 
 記事のページの表、図、コードブロックの枠の右端の薄い色は、CSS の scroll-driven animation だけで出し分ける。  
 あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  

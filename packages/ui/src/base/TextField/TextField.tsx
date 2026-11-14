@@ -121,11 +121,11 @@ export function TextField({
           />
           <span
             aria-hidden
-            className="absolute inset-x-0 bottom-0 h-px bg-text group-hover:h-0.5 peer-aria-invalid:h-0.5 peer-aria-invalid:bg-danger"
+            className="absolute inset-x-0 bottom-0 h-px bg-text forced-fill group-hover:h-0.5 peer-aria-invalid:h-0.5 peer-aria-invalid:bg-danger"
           />
           <span
             aria-hidden
-            className="pointer-events-none invisible absolute inset-x-0 bottom-0 h-1 bg-primary stroke-brush peer-focus:visible peer-focus:animate-stroke"
+            className="pointer-events-none invisible absolute inset-x-0 bottom-0 h-1 bg-primary forced-fill-on stroke-brush peer-focus:visible peer-focus:animate-stroke"
           />
         </div>
       )}
