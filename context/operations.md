@@ -120,6 +120,8 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
   - `verificationOnly: true` の記事（検証用の記事）は、`SITE_ENV=production` の build では、記事の一覧、RSS、記事のページ、シリーズのページに出ない。
   - プレビュー、E2E、手元の build は `SITE_ENV` を渡さないので、検証用の記事も書き出す。
   - `SITE_ENV` に `production` 以外の値を渡すと、build が失敗する。
+  - deploy workflow は、build の後、配信の前に、`apps/web/scripts/check-production-dist.ts` を流す。
+    - `dist` に、検証用の記事のページ、プロジェクトの JSON、検証用の記事だけのシリーズのページがあれば失敗する。
   - ページを書き出す記事が埋め込むプロジェクトの JSON（`/playground-projects/*`）も、検証用の記事のものは出ない。
   - 本番の記事が 0 本のとき、記事の一覧は準備中の文を出し、RSS は item の無いチャンネルを返す。
   - `SITE_ENV` は `build:site` のキャッシュの鍵に入れてある（`apps/web/vite.config.ts`）。
