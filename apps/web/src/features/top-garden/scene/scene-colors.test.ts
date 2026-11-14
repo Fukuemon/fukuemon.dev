@@ -1,6 +1,15 @@
 import { Color } from "three";
 import { describe, expect, it } from "vitest";
 import { SEASON_LEAVES, TIME_PALETTES, mixHex, scenePalette } from "./scene-colors";
+import type { TimeOfDay } from "../stage/season";
+
+/** WCAG 2.2 の相対輝度。three の Color は、16 進数を sRGB から線形に直して持つ */
+const luminance = (hex: string) => {
+  const c = new Color(hex);
+  return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+};
+const contrast = (a: string, b: string) =>
+  (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
 
 describe("mixHex", () => {
   it.each([
@@ -42,5 +51,15 @@ describe("scenePalette", () => {
 
   it("夜のほかの時間帯は、季節の木の葉の色を変えない", () => {
     expect(scenePalette("evening", "summer").leaf).toStrictEqual(SEASON_LEAVES.summer);
+  });
+});
+
+describe("和紙の字の色", () => {
+  const times: readonly TimeOfDay[] = ["morning", "day", "evening", "night"];
+  const cases = times.flatMap((t) => (["text", "link"] as const).map((k) => [t, k] as const));
+
+  // 和紙の色はテーマに依らないので、4 つの時間帯で、2 つのテーマとの組み合わせの 8 通りを覆う
+  it.each(cases)("%s の和紙の %s の色は、和紙の地に対して 4.5:1 以上である", (t, k) => {
+    expect(contrast(TIME_PALETTES[t][k], TIME_PALETTES[t].paper)).toBeGreaterThanOrEqual(4.5);
   });
 });

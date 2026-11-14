@@ -8,6 +8,9 @@ import { TextField } from "../../base/TextField/TextField";
 import { type TreeNode, TreeView } from "../../base/TreeView/TreeView";
 import { ToolPane, type ToolPaneState } from "../ToolPane/ToolPane";
 
+// 参照を変えない関数にする。インラインの関数だと、描き直すたびにフォーカスを奪う
+const focusOnMount = (node: HTMLInputElement | null) => node?.focus();
+
 export type FileTreeProps = {
   title?: string;
   /** ファイルとディレクトリの木。children を持つ項目がディレクトリである。項目の名前は label で描き、content を使わない。 */
@@ -168,13 +171,13 @@ export function FileTree({
           >
             <div className="min-w-0 flex-1">
               <TextField
-                // 欄は、ボタンかメニューで開いた直後に入力するためのものなので、開いたときにフォーカスを移す
-                autoFocus
                 defaultValue={editing.kind === "rename" ? editing.node.label : ""}
                 density="compact"
                 label={FIELD_LABEL[editing.kind]}
                 name="name"
                 onKeyDown={handleKeyDown}
+                // 欄は、ボタンかメニューで開いた直後に入力するためのものなので、form が出たときにフォーカスを移す
+                ref={focusOnMount}
               />
             </div>
             <Button size="XS" type="submit" variant="secondary">

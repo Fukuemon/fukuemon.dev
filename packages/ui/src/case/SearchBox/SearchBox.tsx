@@ -93,91 +93,97 @@ export function SearchBox({
   };
 
   return (
-    <form action={action} method="get" role="search">
-      <div className="relative min-w-0">
-        <TextField
-          aria-activedescendant={isOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined}
-          aria-autocomplete="list"
-          aria-controls={isOpen ? listboxId : undefined}
-          aria-expanded={isOpen}
-          autoComplete="off"
-          defaultValue={defaultQuery}
-          appearance="underline"
-          enterKeyHint="search"
-          isLabelHidden
-          label={label}
-          leading={
-            <svg
-              fill="none"
-              height="20"
-              stroke="currentColor"
-              strokeLinecap="square"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              width="20"
-            >
-              <circle cx="10" cy="10" r="6" />
-              <path d="M15 15l5 5" />
-            </svg>
-          }
-          name={name}
-          placeholder={label}
-          onBlur={() => {
-            setFocused(false);
-            close();
-          }}
-          onChange={(event) => {
-            setDismissed(false);
-            setActiveIndex(-1);
-            setQuery(event.target.value);
-            onQueryChange?.(event.target.value);
-          }}
-          onFocus={() => {
-            setFocused(true);
-            setDismissed(false);
-          }}
-          onKeyDown={handleKeyDown}
-          role="combobox"
-          type="text"
-        />
-        {isOpen && (
-          <div
-            aria-label={`${label}の候補`}
-            className="absolute inset-x-0 top-full z-10 mt-1 flex animate-fade-in flex-col rounded-control border border-border-field bg-surface-raised py-1 shadow-raised"
-            id={listboxId}
-            // 候補を押す間に欄からフォーカスが外れると、blur で候補が閉じて押せなくなる
-            onMouseDown={(event) => event.preventDefault()}
-            role="listbox"
-          >
-            {suggestions.map((suggestion, index) => (
-              <a
-                aria-selected={index === activeIndex}
-                className={clsx(
-                  "flex min-h-11 items-center px-4 text-body-dense text-text hover:bg-surface-subtle",
-                  "border-l-2 border-transparent aria-selected:border-primary aria-selected:bg-primary-surface aria-selected:font-bold",
-                )}
-                href={suggestion.url}
-                id={optionId(index)}
-                key={suggestion.url}
-                ref={(node) => {
-                  if (node) optionRefs.current[index] = node;
-                }}
-                role="option"
-                tabIndex={-1}
+    <search>
+      <form action={action} method="get">
+        <div className="relative min-w-0">
+          <TextField
+            aria-activedescendant={isOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined}
+            aria-autocomplete="list"
+            aria-controls={isOpen ? listboxId : undefined}
+            aria-expanded={isOpen}
+            autoComplete="off"
+            defaultValue={defaultQuery}
+            appearance="underline"
+            enterKeyHint="search"
+            isLabelHidden
+            label={label}
+            leading={
+              <svg
+                fill="none"
+                height="20"
+                stroke="currentColor"
+                strokeLinecap="square"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                width="20"
               >
-                {suggestion.title}
-              </a>
-            ))}
-          </div>
-        )}
-        {/* 中身を変える前から置いておかないと、読み上げの道具が変化を拾わない */}
-        <p
-          aria-live="polite"
-          className="absolute inset-x-0 top-full z-10 mt-1 animate-fade-in rounded-control border border-border-field bg-surface-raised px-4 py-3 text-body-dense text-text-secondary shadow-raised empty:hidden"
-        >
-          {isEmpty ? emptyMessage : undefined}
-        </p>
-      </div>
-    </form>
+                <circle cx="10" cy="10" r="6" />
+                <path d="M15 15l5 5" />
+              </svg>
+            }
+            name={name}
+            placeholder={label}
+            onBlur={() => {
+              setFocused(false);
+              close();
+            }}
+            onChange={(event) => {
+              setDismissed(false);
+              setActiveIndex(-1);
+              setQuery(event.target.value);
+              onQueryChange?.(event.target.value);
+            }}
+            onFocus={() => {
+              setFocused(true);
+              setDismissed(false);
+            }}
+            onKeyDown={handleKeyDown}
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- TextField が描く input に渡す。input だけでは combobox にならない (APG の Combobox)
+            role="combobox"
+            type="text"
+          />
+          {isOpen && (
+            <div
+              aria-label={`${label}の候補`}
+              className="absolute inset-x-0 top-full z-10 mt-1 flex animate-fade-in flex-col rounded-control border border-border-field bg-surface-raised py-1 shadow-raised"
+              id={listboxId}
+              // 候補を押す間に欄からフォーカスが外れると、blur で候補が閉じて押せなくなる
+              onMouseDown={(event) => event.preventDefault()}
+              // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- 候補は a の列で、datalist と select では描けない (APG の Combobox)
+              role="listbox"
+              tabIndex={-1}
+            >
+              {suggestions.map((suggestion, index) => (
+                <a
+                  aria-selected={index === activeIndex}
+                  className={clsx(
+                    "flex min-h-11 items-center px-4 text-body-dense text-text hover:bg-surface-subtle",
+                    "border-l-2 border-transparent aria-selected:border-primary aria-selected:bg-primary-surface aria-selected:font-bold",
+                  )}
+                  href={suggestion.url}
+                  id={optionId(index)}
+                  key={suggestion.url}
+                  ref={(node) => {
+                    if (node) optionRefs.current[index] = node;
+                  }}
+                  // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- 候補は遷移するリンクで、option では描けない
+                  role="option"
+                  tabIndex={-1}
+                >
+                  {suggestion.title}
+                </a>
+              ))}
+            </div>
+          )}
+          {/* 中身を変える前から置いておかないと、読み上げの道具が変化を拾わない */}
+          <p
+            aria-live="polite"
+            className="absolute inset-x-0 top-full z-10 mt-1 animate-fade-in rounded-control border border-border-field bg-surface-raised px-4 py-3 text-body-dense text-text-secondary shadow-raised empty:hidden"
+          >
+            {isEmpty ? emptyMessage : undefined}
+          </p>
+        </div>
+      </form>
+    </search>
   );
 }
