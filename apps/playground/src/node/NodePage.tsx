@@ -29,7 +29,6 @@ import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
 import { HttpDetailPane, HttpListPane } from "./HttpPane";
 import { BOOT_LABEL } from "./messages";
-import { PaneBox } from "./PaneBox";
 import { PreviewPane } from "./PreviewPane";
 import { initialSelection, selectionReducer } from "./selection";
 import { type NodeSession, createNodeSessionOpener } from "./session";
@@ -47,20 +46,28 @@ function BootWait() {
   return null;
 }
 
-/** PaneBox の中で、起動を待つ間は fallback を出す。 */
+/**
+ * SplitPane の領域を、ペインで埋める。ToolPane は高さを持たないので、縦の flex で広げる。
+ * SplitPane の領域は外にはみ出す描画を切るので、フォーカスの輪が入る 4px の余白を、全てのペインに取る。
+ */
 function Pane({
   fallback,
   editorFocusRing = false,
   children,
 }: {
   fallback: ReactNode;
+  /** 中の CodeMirror にフォーカスがあるときに、ペインを輪で囲む。 */
   editorFocusRing?: boolean;
   children: ReactNode;
 }) {
   return (
-    <PaneBox editorFocusRing={editorFocusRing}>
-      <Suspense fallback={fallback}>{children}</Suspense>
-    </PaneBox>
+    <div className="size-full p-1">
+      <div
+        className={`flex size-full flex-col [&>section]:flex-1 ${editorFocusRing ? "has-[.cm-focused]:focus-ring" : ""}`}
+      >
+        <Suspense fallback={fallback}>{children}</Suspense>
+      </div>
+    </div>
   );
 }
 
@@ -90,17 +97,15 @@ function PreviewColumn({ database }: { database: boolean }) {
     <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
       <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
       <Activity mode={tab === "sql" ? "visible" : "hidden"}>
-        <Suspense
+        <Pane
           fallback={
-            <PaneBox>
-              <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
-                {() => null}
-              </EditorFrame>
-            </PaneBox>
+            <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
+              {() => null}
+            </EditorFrame>
           }
         >
           <SqlPane />
-        </Suspense>
+        </Pane>
       </Activity>
     </div>
   );

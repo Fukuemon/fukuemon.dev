@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { SqlConsole } from "../sql-console/SqlConsole";
 import { useRestart, useRuntime } from "./context";
 import { SQL_PANE_QUERY, SQL_STOPPED_HINT, bootFailureMessage } from "./messages";
-import { PaneBox } from "./PaneBox";
 
 /**
  * DB を使うプロジェクトの、SQL のペイン。Node のコードと同じ DB（実行環境の中の PGlite）に、DB のプロセスの標準入出力で SQL を送る。
@@ -15,20 +14,18 @@ export function SqlPane() {
   const { runtime, reason } = useRuntime();
   if (reason !== undefined) {
     return (
-      <PaneBox>
-        <EditorFrame
-          files={[]}
-          onSelect={() => undefined}
-          state={{
-            kind: "error",
-            title: "SQL を実行できません",
-            message: bootFailureMessage(reason),
-          }}
-          title="SQL"
-        >
-          {() => null}
-        </EditorFrame>
-      </PaneBox>
+      <EditorFrame
+        files={[]}
+        onSelect={() => undefined}
+        state={{
+          kind: "error",
+          title: "SQL を実行できません",
+          message: bootFailureMessage(reason),
+        }}
+        title="SQL"
+      >
+        {() => null}
+      </EditorFrame>
     );
   }
   const database = runtime.database;
@@ -49,18 +46,16 @@ function SqlPaneConsole({ database }: { database: SqlDatabase }) {
     });
 
   return (
-    <PaneBox>
-      <SqlConsole
-        dense
-        fileName="query.sql"
-        onChange={setQuery}
-        onRestart={() => void restart()}
-        onRun={run}
-        running={running}
-        status={database.status}
-        stoppedHint={SQL_STOPPED_HINT}
-        value={query}
-      />
-    </PaneBox>
+    <SqlConsole
+      dense
+      fileName="query.sql"
+      onChange={setQuery}
+      onRestart={() => void restart()}
+      onRun={run}
+      running={running}
+      status={database.status}
+      stoppedHint={SQL_STOPPED_HINT}
+      value={query}
+    />
   );
 }
