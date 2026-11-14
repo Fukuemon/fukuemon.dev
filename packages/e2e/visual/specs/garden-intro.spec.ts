@@ -29,7 +29,7 @@ const recordClasses = (page: Page) =>
     }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
   });
 
-/** 色を差し始めた時刻と、イントロを終えた時刻（ms） */
+/** performance の mark の名前と、その時刻（ms） */
 const marks = (page: Page) =>
   page.evaluate(() =>
     Object.fromEntries(
@@ -98,7 +98,7 @@ test("初めての端末で開くと、墨の絵の後に色を差して門を�
   expect(states.at(-1)!.split(" ")).not.toContain("intro");
   const m = await marks(page);
   // 墨の絵を描き終える 3.8 秒より前には色を差さず、色を差し始めてから 4.5 秒より前には終えない。
-  // CI の SwiftShader はメインスレッドを止めて時刻が後ろへずれるので、時刻の上限は見ない。上限は GPU のある手元で確かめる
+  // CI の SwiftShader はメインスレッドを止めて時刻が後ろへずれるので、時刻の上限は見ない。上限は GPU のあるローカル環境で測る
   expect(m["garden-enter"]).toBeGreaterThanOrEqual(3790);
   expect(m["garden-intro-done"]! - m["garden-enter"]!).toBeGreaterThanOrEqual(4500);
   await expectGardenEnd(page);
@@ -204,47 +204,74 @@ test.describe("イントロの途中", () => {
 });
 
 test.describe("「飛ばす」の色と位置", () => {
-  // ライトのテーマの紙と墨の色は昼の霞の色と同じトークンなので、時間帯に依らず色が替わるダークのテーマで見る
+  // ライトのテーマの紙と墨の色は、昼の霞の色と同じ値なので、時間帯に依らず色が替わるダークのテーマで見る
   test.use({ colorScheme: "dark" });
 
+  interface Colors {
+    bg: string;
+    border: string;
+    text: string;
+  }
   interface SkipLog {
-    __skip?: { ink: string[]; gaps: number[]; enter: string[] };
+    __skip?: { beforeTint?: Colors; paper?: string; gaps?: number[]; enter?: Colors };
   }
 
-  test("墨の絵の間はテーマの色で狭い画面の端から 0.5rem に出し、色を差し始めると庭の中のボタンと同じ時間帯の色にする", async ({
-    page,
-  }) => {
-    await page.addInitScript(() => {
-      const log = { ink: [] as string[], gaps: [] as number[], enter: [] as string[] };
-      (window as unknown as SkipLog).__skip = log;
-      const colors = (s: CSSStyleDeclaration) => [s.backgroundColor, s.borderTopColor, s.color];
-      new MutationObserver((_, observer) => {
-        const root = document.documentElement;
-        const el = document.querySelector<HTMLElement>("[data-garden-skip]");
-        if (!el) return;
-        if (root.classList.contains("scene-ready") && !log.gaps.length) {
-          const r = el.getBoundingClientRect();
-          log.gaps = [Math.round(innerWidth - r.right), Math.round(innerHeight - r.bottom)];
-          log.ink = colors(getComputedStyle(el));
-        }
-        if (!root.classList.contains("enter")) return;
-        observer.disconnect();
-        log.enter = colors(getComputedStyle(el));
-      }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+  for (const [time, hour] of [
+    ["day", 12],
+    ["night", 22],
+  ] as const) {
+    test(`${time} の場面で、色を差す前はテーマの色で狭い画面の端から 0.5rem に出し、色を差し始めると庭の中のボタンと同じ時間帯の色にする`, async ({
+      page,
+    }) => {
+      // 時間帯は Date の時で決まる。イントロの時刻は performance.now で決まるので、時だけを差し替える
+      await page.addInitScript((h) => {
+        Date.prototype.getHours = () => h;
+      }, hour);
+      await page.addInitScript(() => {
+        const log: NonNullable<SkipLog["__skip"]> = {};
+        (window as SkipLog).__skip = log;
+        const colors = (el: Element): Colors => {
+          const s = getComputedStyle(el);
+          return { bg: s.backgroundColor, border: s.borderTopColor, text: s.color };
+        };
+        new MutationObserver((_, observer) => {
+          const root = document.documentElement;
+          const el = document.querySelector("[data-garden-skip]");
+          if (!el) return;
+          if (
+            root.classList.contains("scene-ready") &&
+            !root.classList.contains("enter") &&
+            !log.gaps
+          ) {
+            const r = el.getBoundingClientRect();
+            log.gaps = [Math.round(innerWidth - r.right), Math.round(innerHeight - r.bottom)];
+            log.beforeTint = colors(el);
+            log.paper = getComputedStyle(
+              document.querySelector("[data-garden-stage]")!,
+            ).backgroundColor;
+          }
+          if (!root.classList.contains("enter")) return;
+          observer.disconnect();
+          log.enter = colors(el);
+        }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+      });
+      await page.goto("/");
+      await expect(html(page)).toHaveAttribute("data-time", time);
+      await expect(html(page)).not.toHaveClass(/\bintro\b/, { timeout: 60_000 });
+      await expectGardenEnd(page);
+      const skip = await page.evaluate(() => (window as SkipLog).__skip);
+      // 今いる場所のボタンは色を反転するので、今いない「経歴」と比べる
+      const station = await page.getByRole("button", { name: "経歴" }).evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { bg: s.backgroundColor, border: s.borderTopColor, text: s.color };
+      });
+      expect({
+        gaps: skip?.gaps,
+        beforeTintIsPaper: skip?.beforeTint?.bg === skip?.paper,
+        enter: skip?.enter,
+      }).toStrictEqual({ gaps: [8, 8], beforeTintIsPaper: true, enter: station });
     });
-    await page.goto("/");
-    await expect(html(page)).not.toHaveClass(/\bintro\b/, { timeout: 60_000 });
-    await expectGardenEnd(page);
-    const skip = (await page.evaluate(() => (window as unknown as SkipLog).__skip))!;
-    // 今いる場所のボタンは色を反転するので、今いない「経歴」と比べる
-    const station = await page.getByRole("button", { name: "経歴" }).evaluate((el) => {
-      const s = getComputedStyle(el);
-      return [s.backgroundColor, s.borderTopColor, s.color];
-    });
-    expect(skip.gaps).toStrictEqual([8, 8]);
-    expect(skip.enter).toStrictEqual(station);
-    expect(skip.ink[0]).not.toBe(skip.enter[0]);
-  });
+  }
 });
 
 test.describe("場面の準備が遅いとき", () => {
@@ -301,9 +328,13 @@ test.describe("場面の準備が遅いとき", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 60_000 });
     const m = await marks(page);
-    // 準備の直後に差すかは時刻の上限なので、GPU のあるローカル環境で測る。ここでは順序と下限だけを見る
-    expect(m["garden-enter"]).toBeGreaterThanOrEqual(m["garden-scene-ready"]!);
-    expect(m["garden-enter"]).toBeGreaterThanOrEqual(3790);
+    // 準備の直後に差すかは時刻の上限なので、GPU のあるローカル環境で測る。ここでは、遅れが掛かったことと、順序と下限だけを見る。
+    // 準備が 3.8 秒より前に終わった実行では、最初のテストと同じ確認になる
+    expect({
+      delayed: m["garden-scene-ready"]! >= 2000,
+      afterReady: m["garden-enter"]! >= m["garden-scene-ready"]!,
+      afterInk: m["garden-enter"]! >= 3790,
+    }).toStrictEqual({ delayed: true, afterReady: true, afterInk: true });
   });
 });
 
