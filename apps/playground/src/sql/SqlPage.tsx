@@ -49,13 +49,15 @@ function SqlSessionView({ session }: { session: SqlSession }) {
           このブラウザでは IndexedDB を使えないので、ページを閉じると変えた SQL が消えます。
         </Notice>
       )}
-      <SqlResetControl
-        disabled={running}
-        onReset={() => runRef.current?.focus()}
-        session={session}
-      />
       {bootText !== undefined && <PageLoading label={bootText} />}
       <SqlConsole
+        actions={
+          <SqlResetControl
+            disabled={running}
+            onReset={() => runRef.current?.focus()}
+            session={session}
+          />
+        }
         onChange={session.setQuery}
         onRun={session.execute}
         progress={progressLabel(phase, running)}

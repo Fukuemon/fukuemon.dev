@@ -52,11 +52,11 @@ export function SqlResetControl({
   return (
     <>
       {hasSaved && (
-        <div className="flex justify-end">
+        <div className="ml-auto">
           <Button
             disabled={disabled}
             onClick={() => setConfirming(true)}
-            size="XS"
+            size="S"
             variant="secondary"
           >
             初期の状態に戻す
@@ -64,9 +64,11 @@ export function SqlResetControl({
         </div>
       )}
       {failed && (
-        <Notice isAlert title="初期の状態に戻せませんでした" tone="danger">
-          保存した SQL を消せませんでした。入力欄は前のままです。
-        </Notice>
+        <div className="order-last w-full">
+          <Notice isAlert title="初期の状態に戻せませんでした" tone="danger">
+            保存した SQL を消せませんでした。入力欄は前のままです。
+          </Notice>
+        </div>
       )}
       <ConfirmDialog
         confirmLabel="消して戻す"
