@@ -13,12 +13,15 @@
 - 13px にしてよい文字にコードを含め、等幅の 13px のトークンを `text-code-compact` にすると決めている。
   - ADR-0067: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](0067-compact-text-tokens-in-dense-panes.md)
 - 今のエディタは、`text-code`（16px）で描いている。端末のプロセスのタブとプレビューのポートのタブは、`density="compact"` が無く、44px の高さの 16px の太字になっている。
-- 375px の幅で今の画面を使うと、24px の木の行と 28px のボタンは、指で押し分けにくい。
+- 375px の幅で今の画面を使うと、24px の木の行と 28px のボタンは、指で押し分けにくい見込みである（実機では測っていない）。
 - iOS の Safari は、16px 未満の文字の入力欄にフォーカスすると、ページを拡大する。iOS と iPadOS のほかのブラウザも WebKit で描くので、同じく拡大する見込みである（未確認）。
 - iPadOS の Safari は、標準の設定でデスクトップの Safari と同じ UA を名乗る。
 - viewport の指定に `maximum-scale=1` を足すと、iOS 10 からの Safari は、フォーカスしたときの自動の拡大だけを止め、2 本の指で拡大する操作は止めない。Android の Chrome は、2 本の指の拡大も止める。
   - 出典: [Preventing iOS Textbox Auto Zooming and ViewPort Sizing（Rick Strahl's Weblog）](https://weblog.west-wind.com/posts/2023/Apr/17/Preventing-iOS-Textbox-Auto-Zooming-and-ViewPort-Sizing)
 - iframe の中の viewport の指定は、外のページの拡大を変えない見込みである（未確認）。
+- 記事は、ツールのページを iframe で埋め込み、cross-origin isolation のヘッダを、その記事の URL にも返す。
+  - ADR-0034: [cross-origin isolation のヘッダを、プレイグラウンドの Node の実行環境のパスと、それを埋め込む記事の URL にだけ返す](0034-playground-origin-and-embedding.md)
+- Node の実行環境が対応するブラウザは、デスクトップの Chrome と Edge である（`apps/playground/DesignDoc.md`）。iPhone で Node の端末を使えるかは未確認である。
 
 ## Decision
 
@@ -31,16 +34,17 @@
 - 文字の大きさは、どの端末でも変えない。エディタは `text-code-compact`（13px）にする。指で押す端末で保つのは文字の大きさで、縦に並ぶ行の数は減る。
 - iOS と iPadOS の WebKit のブラウザ（Safari と、ほかのブラウザ）のときだけ、ページの読み込みの初めに、viewport の指定へ `maximum-scale=1` を足す。iPadOS の Safari は、デスクトップの Safari と同じ UA を名乗るので、UA の文字列だけでは見分けない。Android では足さない。2 本の指の拡大を止めると、拡大して読む利用者が読めなくなるためである。
 - 実行環境を埋めた記事のページにも、同じ指定を iOS と iPadOS のときだけ足す。
-- 実機で拡大が止まらなければ、この ADR の拡大の止め方の項目だけを、指で押す端末ではエディタを 16px にする形に書き直す。
+- 実機で拡大が止まらなければ、この ADR の拡大の止め方の項目だけを、指で押す端末ではフォーカスを受ける入力の要素（エディタ、入力欄、端末の入力）を 16px にする形に書き直す。
 
 ADR-0062 の Decision のうち、押せる領域を 24×24 CSS px 以上にする決定を、指で押す端末の分だけ、この ADR が置き換える。
 
 ## 承認の条件
 
-- 実機の iPhone の Safari で、エディタ（CodeMirror）、入力欄、端末の入力にフォーカスしても、ページが拡大しないこと。
-- 同じ端末で、実行環境を埋めた記事のページを開き、iframe の中のエディタ、入力欄、端末の入力にフォーカスしても、記事のページが拡大しないこと。
+- 実機の iPhone の Safari で、SQL と Go のツールのエディタ（CodeMirror）と入力欄にフォーカスしても、ページが拡大しないこと。Node のツールが起動したときは、端末の入力も確認する。
+- 同じ端末で、実行環境を埋めた記事のページを開き、iframe の中のエディタと入力欄にフォーカスしても、記事のページが拡大しないこと。
 - 同じ端末で、ツールのページと記事のページの両方を、2 本の指で拡大できること。
 - 実機の iPad の Safari（デスクトップの UA を名乗る設定）を iPadOS と見分けて指定を足し、同じ 3 つを満たすこと。Mac の Safari には指定を足さないこと。
+- Safari の外の WebKit のブラウザは、iPhone の Chrome で、拡大が止まることを 1 件確認する。
 
 ## Considered Options
 
