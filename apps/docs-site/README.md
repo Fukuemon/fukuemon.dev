@@ -61,7 +61,9 @@ Terraform の provider には組織のリソース（`cloudflare_zero_trust_orga
 ### 3. 許可するメールアドレスを登録する
 
 GitHub の `infra` environment の secret に `DOCS_ALLOWED_EMAILS` を登録する。
-値は `["a@example.com", "b@example.com"]` の形の HCL のリストにする。
+値は `["a@example.com", "b@example.com"]` の形のリストを 1 行で書く。
+この形は HCL のリストとしても JSON としても読める。
+apply workflow は、値を JSON として読み、メールアドレスを 1 件ずつログで伏せる。
 メールアドレスは、リポジトリ、issue、pull request に書かない。
 
 手元で plan するときは、`infra/cloudflare/terraform.tfvars` に `docs_allowed_emails` を書く。
@@ -82,13 +84,18 @@ apply workflow を `mode=plan` で起動し、plan が次の 3 つの追加だ�
 確認したら、`mode=apply` で起動し直す。
 custom domain は Access のアプリケーションに `depends_on` を持つので、Access の後に作られる。
 
+`depends_on` が守るのは、作る順と消す順だけである。
+後の apply で、plan が `cloudflare_zero_trust_access_application.docs` を `must be replaced` と表示したら、apply しない。
+置き換えは Access を消してから作るので、custom domain が認証なしで開ける時間ができる。
+
 ### 6. 開けないことを確認する
 
-ADR-0032 の承認の条件のうち、次の 1 つ目は公開の後にしか確認できない。
+ADR-0032 の承認の条件の 1 つ目（custom domain のほかの URL で開けないこと）は、公開の後にしか確認できない。
 
 1. 認証していないブラウザで `https://docs.fukuemon.dev` を開き、Access の認証の画面が出ることを確認する。
 2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` が、ドキュメントサイトを返さないことを確認する。
-3. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
+3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、同じく `curl -sI` を流す。バージョンの ID は `wrangler deployments list` で出る。
+4. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
 
 ## 許可するメールアドレスを変える
 

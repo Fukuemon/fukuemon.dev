@@ -50,4 +50,10 @@ variable "docs_allowed_emails" {
     condition     = length(var.docs_allowed_emails) > 0
     error_message = "docs_allowed_emails に 1 つ以上のメールアドレスを渡す。"
   }
+
+  # error_message に値を入れない。plan のログにメールアドレスが出る
+  validation {
+    condition     = alltrue([for email in var.docs_allowed_emails : can(regex("^[^@\\s]+@[^@\\s]+$", email))])
+    error_message = "docs_allowed_emails に、メールアドレスの形でない値がある。"
+  }
 }

@@ -48,6 +48,12 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL_S3: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
 
+      # GitHub は secret の値の全体だけを伏せる。リストの 1 件だけがログに出たときも伏せるよう、1 件ずつ登録する
+      - name: メールアドレスを伏せる
+        run: jq -r '.[]' <<< "$DOCS_ALLOWED_EMAILS" | while IFS= read -r email; do echo "::add-mask::$email"; done
+        env:
+          DOCS_ALLOWED_EMAILS: ${{ secrets.DOCS_ALLOWED_EMAILS }}
+
       - name: plan
         run: pnpm run infra:plan -input=false -out=tfplan
         env:
