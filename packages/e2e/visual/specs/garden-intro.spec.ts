@@ -187,6 +187,35 @@ test.describe("場面の準備が遅いとき", () => {
     await expect(page.getByRole("button", { name: "飛ばす" })).toBeVisible({ timeout: 60_000 });
   });
 
+  test("HTML が遅く届いても、墨の線を描き終えてから色を差し始める", async ({ page }) => {
+    // 色を差し始めた時点で、まだ動いている墨の線の遷移の数を記録する。enter で始まる、線を消す遷移は数えない
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        const root = document.documentElement;
+        if (!root.classList.contains("enter")) return;
+        observer.disconnect();
+        const left = document
+          .querySelector(".ink-gate")!
+          .getAnimations({ subtree: true })
+          .filter(
+            (a) =>
+              a.playState === "running" &&
+              (a as CSSTransition).transitionProperty === "stroke-dashoffset",
+          ).length;
+        (window as unknown as { __inkLeft: number }).__inkLeft = left;
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    });
+    await page.route("/", async (route) => {
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.continue();
+    });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 60_000 });
+    expect(await page.evaluate(() => (window as unknown as { __inkLeft: number }).__inkLeft)).toBe(
+      0,
+    );
+  });
+
   test("準備が墨の絵を描き終えるより遅いと、準備の直後に色を差し始める", async ({ page }) => {
     await delayBundle(page, 2000);
     await page.goto("/", { waitUntil: "domcontentloaded" });

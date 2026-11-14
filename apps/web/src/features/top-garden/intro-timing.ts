@@ -4,9 +4,6 @@
 /** 開いてから、墨の線を描き始めるまで（ms）。この間に署名を書き始める */
 export const SIGN_LEAD = 600;
 
-/** 開いてから、署名と墨の絵を描き終えるまで（ms）。墨の線は、`ink/ink-svg.ts` の時刻で 3.2 秒以内に描き終える */
-export const INK_END = SIGN_LEAD + 3200;
-
 /**
  * 色を差し始めてからの各段の時刻と長さ（ms）。
  * tint0 と move0 は始める時刻、tint と move はその長さ、cards は文を出す時刻、done はカメラが止まる時刻である。
