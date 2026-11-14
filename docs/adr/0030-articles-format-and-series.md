@@ -17,17 +17,10 @@
 今の決定は、次のとおり。
 
 - サイトを about、blog、playground の 3 つのセクションに分け、記事とハンズオンを別の種別として、別のディレクトリと URL に置く。
-  - ADR-0009: [サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする](0009-site-sections-and-playground-collection.md)
 - playground を collection にし、ディレクトリで分類する。
-  - ADR-0018: [playground を `playgrounds/` の直下のディレクトリで分類し、URL をファイルのパスにする](0018-playground-groups-by-directory.md)
 - 手を動かす場所を、frontmatter の `interactive.level` で 4 つに分ける。
-  - ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
 - DB を使うハンズオンの実行環境、ハンズオンのページの island のつなぎ方、手順をまとめる処理の配置先を決めている。どれも、引き継がないコードの決定である。
-  - ADR-0013: [DB を使うハンズオンは、Postgres のプランナの出力を見せるために PGlite をデフォルトにする](0013-pglite-for-planner-output.md)
-  - ADR-0014: [ハンズオンのページは、手順の切り替えを React の外に置き、island どうしを CustomEvent でつなぐ](0014-lab-page-islands.md)
-  - ADR-0015: [ハンズオンの手順の画面へのまとめを、remark ではなく rehype のプラグインに置く](0015-lab-steps-in-rehype.md)
 - 本文の検索を、一覧のページに置く。Pagefind の索引を最初から作る。
-  - ADR-0012: [本文の検索を、一覧の 3 ページに dialog として置く](0012-search-dialog-on-listing.md)
   - ADR-0001: [Starlight を採らず、Astro 単体 + Expressive Code で組む](0001-starlight-as-docs-renderer.md)
 - about は、トップが兼ねる。
   - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](0026-sumi-gate-and-garden-on-top.md)

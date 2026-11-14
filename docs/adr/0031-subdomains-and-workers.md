@@ -22,7 +22,6 @@ fukuemon.dev のドメインの下に、サイトのほかに、複数のアプ�
 - 訪問者のコードが、実行環境のページと同じ origin で動くかは、実行環境の方式で変わる。
 - 実行環境の要求は、訪問者が作ったファイルを URL で共有することを、範囲の外に置いている。
 - cross-origin isolation は、サイト全体に適用せず、`/playground/*` だけに適用すると決めている。
-  - ADR-0006: [手を動かす場所を 4 つに分け、cross-origin isolation を `/playground/*` に限定する](0006-interactive-content-levels.md)
 - `COEP: require-corp` のページでは、CORP を返さないクロスオリジンのリソースがブロックされる。
 - isolation のヘッダは、ページのレスポンスごとに返す。同じ origin の中で、返す URL と返さない URL を分けられる。
 - キャンバスの候補の draw.io の Embed Mode は、draw.io のエディタを、別の origin の iframe で読み込む。そのレスポンスは、COEP と CORP のヘッダを返さない（`curl -I` で確認した）。
