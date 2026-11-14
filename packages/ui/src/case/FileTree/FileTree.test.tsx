@@ -14,8 +14,17 @@ const { Default, NoSelection, ReadOnly, Empty, Pending } = composeStories(storie
 const delayed = <T,>(value: T, ms = 50) =>
   new Promise<T>((resolve) => window.setTimeout(() => resolve(value), ms));
 
-/** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。 */
-function DelayedSelectTree() {
+/** 手で解くまで待つ保存。操作の後に保存が終わる順を、実行の速さに依らず作る。 */
+function createGate() {
+  let open = () => {};
+  const opened = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  return { opened, open };
+}
+
+/** 保存を待ってから、作った項目を木に足して選ぶ呼び出し側（Node の実行環境の画面と同じ順）。gate を渡すと、開くまで待つ。 */
+function DelayedSelectTree({ gate }: { gate?: Promise<void> }) {
   const [items, setItems] = useState<TreeNode[]>([
     { id: "index.js", label: "index.js" },
     { id: "package.json", label: "package.json" },
@@ -25,10 +34,12 @@ function DelayedSelectTree() {
     <FileTree
       items={items}
       onCreate={(name) => {
-        window.setTimeout(() => {
+        const save = () => {
           setItems((current) => [...current, { id: name, label: name }]);
           setSelectedId(name);
-        }, 50);
+        };
+        if (gate) void gate.then(save);
+        else window.setTimeout(save, 50);
         return { id: name };
       }}
       onRename={(id, name) => {
@@ -392,24 +403,31 @@ describe("FileTree", () => {
   });
 
   it("保存を待つ間に矢印のキーで別の項目へ移ると、作った項目が出てもフォーカスを移さない", async () => {
-    render(<DelayedSelectTree />);
+    const gate = createGate();
+    render(<DelayedSelectTree gate={gate.opened} />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("util.js{Enter}");
     const index = screen.getByRole("treeitem", { name: "index.js" });
     await expect.poll(() => document.activeElement).toBe(index);
     await userEvent.keyboard("{ArrowDown}");
     const moved = screen.getByRole("treeitem", { name: "package.json" });
+    gate.open();
     await screen.findByRole("treeitem", { name: "util.js" });
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     expect(document.activeElement).toBe(moved);
   });
 
   it("Esc でやめた後に選ぶ項目が変わっても、フォーカスを移さない", async () => {
-    render(<DelayedSelectTree />);
+    const gate = createGate();
+    render(<DelayedSelectTree gate={gate.opened} />);
     await userEvent.click(screen.getByRole("button", { name: "新しいファイル" }));
     await userEvent.keyboard("util.js{Enter}");
     screen.getByRole("treeitem", { name: "index.js" }).focus();
     await userEvent.keyboard("{F2}{Escape}");
+    await expect.poll(() => screen.queryByRole("textbox")).toBeNull();
+    // 欄を外した後のフォーカスの戻しは、0 ミリ秒のタイマーで動く。同じ時間のタイマーは登録の順に動くので、これが動いた後は戻しが済んでいる
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    gate.open();
     await screen.findByRole("treeitem", { name: "util.js" });
     await new Promise((resolve) => window.setTimeout(resolve, 100));
     expect(screen.getByRole("treeitem", { name: "index.js" })).toHaveFocus();
