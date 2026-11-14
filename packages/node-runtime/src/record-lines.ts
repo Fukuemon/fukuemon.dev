@@ -87,6 +87,29 @@ export function createRecordLineFilter(
 }
 
 /**
+ * 端末に出さないプロセスの出力から、prefix の付いた行を抜き出し、頭を除いた中身を onLine に渡す。ほかの行は捨てる。
+ * DB のプロセスの応答の行は 10 MB を超えることがあるので、createRecordLineFilter と違い長さの上限を置かず、
+ * 届いた chunk だけで改行を探して、ためた分を毎回走査し直さない。
+ */
+export function createPrefixedLineReader(prefix: string, onLine: (line: string) => void) {
+  let held: string[] = [];
+  const emit = (raw: string) => {
+    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    if (line.startsWith(prefix)) onLine(line.slice(prefix.length));
+  };
+  return (chunk: string) => {
+    let start = 0;
+    for (let end = chunk.indexOf("\n"); end !== -1; end = chunk.indexOf("\n", start)) {
+      held.push(chunk.slice(start, end));
+      emit(held.join(""));
+      held = [];
+      start = end + 1;
+    }
+    if (start < chunk.length) held.push(chunk.slice(start));
+  };
+}
+
+/**
  * process の出力から記録の行を除き、onLine に渡す。購読ごとに、行を抜き出す処理を 1 つ作るので、購読は 1 つだけにする。
  * プロセスが終わったときは、手元に置いた出力を、記録の行でなかったものとして購読した側に渡す。購読を外したときは捨てる。
  * 購読した側は、exit が解決した後に購読を外す。先に外すと、終わる直前の出力が捨てられる。

@@ -2,6 +2,7 @@ import type { DatabaseStatus, SqlDatabase, SqlResponse } from "@fukuemon/sql-run
 
 import type { BackendInstance, BackendProcess } from "./backend";
 import { DB_SERVER_FILE, SQL_PREFIX } from "./guest/db-protocol";
+import { createPrefixedLineReader } from "./record-lines";
 import { createStore } from "./store";
 
 const INITIAL_SQL_FAILED = "初期データの SQL が失敗しました: ";
@@ -72,25 +73,6 @@ const toLine = (value: unknown) =>
   JSON.stringify(value).replaceAll("\u2028", "\\u2028").replaceAll("\u2029", "\\u2029");
 
 /**
- * 出力を行に分け、onLine に渡す。行の途中で切れた出力は、改行が届くまで配列にためる。
- * 応答の行は 10 MB を超えることがあるので、届いた chunk だけで改行を探し、ためた分を毎回走査し直さない。
- */
-function splitLines(onLine: (line: string) => void) {
-  let held: string[] = [];
-  const emit = (line: string) => onLine(line.endsWith("\r") ? line.slice(0, -1) : line);
-  return (chunk: string) => {
-    let start = 0;
-    for (let end = chunk.indexOf("\n"); end !== -1; end = chunk.indexOf("\n", start)) {
-      held.push(chunk.slice(start, end));
-      emit(held.join(""));
-      held = [];
-      start = end + 1;
-    }
-    if (start < chunk.length) held.push(chunk.slice(start));
-  };
-}
-
-/**
  * DB のプロセスの標準入出力で、SqlDatabase を実装する。リクエストを 1 行の JSON で書き、同じ id の応答の行で結果を返す。
  * 頭の無い行（DB のプロセスのログと、入力のエコー）は捨てる。
  * プロセスが終了したら、status を stopped にし、待っているリクエストと、その後の run に error を持つ値を返す。
@@ -116,9 +98,8 @@ export function createStdioDatabase(process: BackendProcess): {
   const stoppedResponse = (reason: string): SqlResponse => ({ error: { message: reason }, ms: 0 });
 
   const stopOutput = process.output.subscribe(
-    splitLines((line) => {
-      if (!line.startsWith(SQL_PREFIX)) return;
-      const reply = parseReply(line.slice(SQL_PREFIX.length));
+    createPrefixedLineReader(SQL_PREFIX, (line) => {
+      const reply = parseReply(line);
       if (!reply) return;
       if ("ready" in reply) {
         markReady();
