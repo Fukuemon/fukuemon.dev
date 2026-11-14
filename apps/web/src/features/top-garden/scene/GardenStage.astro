@@ -127,6 +127,12 @@ const skip =
     --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
+  /* 庭とヘッダーは画面に固定して重ねるので、フォーカスが当たった「本文へスキップ」は、その上に出す */
+  :global(html.stage-on [data-skip-link]:focus) {
+    position: fixed;
+    z-index: 40;
+  }
+
   /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、間を詰める */
   @media not (min-width: 48rem) {
     :global(html.stage-on [data-site-header] ul),
