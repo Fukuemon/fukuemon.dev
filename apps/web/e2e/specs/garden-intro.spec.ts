@@ -167,7 +167,9 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
     page,
   }) => {
     await page.addInitScript(() => {
-      const draw = WebGL2RenderingContext.prototype.drawElements;
+      const proto = WebGL2RenderingContext.prototype;
+      const draw = Object.getOwnPropertyDescriptor(proto, "drawElements")!
+        .value as typeof proto.drawElements;
       WebGL2RenderingContext.prototype.drawElements = function (...args) {
         if (document.documentElement.classList.contains("enter")) throw new Error("描画の失敗");
         return draw.apply(this, args);
