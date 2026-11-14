@@ -145,21 +145,22 @@ function toConsoleValues(args, describe) {
     };
   };
 
+  const ownEntry = (value, key, depth) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor && "value" in descriptor) {
+      return { key: cut(key), value: walk(descriptor.value, depth + 1) };
+    }
+    // getter は動かさない。DevTools と同じく、読んでいないことを示す。読む側は印も値の 1 つと数える
+    budget.nodes -= 1;
+    return { key: cut(key), value: text("(...)") };
+  };
+
   const ownEntries = (value, depth) => {
     const keys = Object.keys(value);
     let index = 0;
     return take(
       keys.length,
-      () => {
-        const key = keys[index++];
-        const descriptor = Object.getOwnPropertyDescriptor(value, key);
-        if (descriptor && "value" in descriptor) {
-          return { key: cut(key), value: walk(descriptor.value, depth + 1) };
-        }
-        // getter は動かさない。DevTools と同じく、読んでいないことを示す。読む側は印も値の 1 つと数える
-        budget.nodes -= 1;
-        return { key: cut(key), value: text("(...)") };
-      },
+      () => ownEntry(value, keys[index++], depth),
       (count) => ({ key: ELLIPSIS, value: rest(count) }),
     );
   };
