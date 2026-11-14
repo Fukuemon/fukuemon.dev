@@ -48,8 +48,8 @@ const isTime = (value: unknown): value is number =>
   (value as number) <= Date.now() + MAX_FUTURE_MS;
 
 /** 配列の長さ。写した要素の数（残りの件数の印を含む）より短くなく、JavaScript の配列の長さの上限を超えない。 */
-const isArrayLength = (value: unknown, items: number): value is number =>
-  Number.isSafeInteger(value) && (value as number) >= items && (value as number) <= 2 ** 32 - 1;
+const isArrayLength = (value: unknown, itemCount: number): value is number =>
+  Number.isSafeInteger(value) && (value as number) >= itemCount && (value as number) <= 2 ** 32 - 1;
 
 const isText = (value: unknown): value is string =>
   typeof value === "string" && value.length <= MAX_TEXT;

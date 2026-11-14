@@ -209,7 +209,10 @@ function toConsoleValues(args, describe) {
           budget.nodes -= 1;
           return text("(...)");
         };
-        return { kind: "array", length: value.length, items: take(value.length, item, rest) };
+        // プレビューでは Proxy の配列の length が get のトラップを通るので、1 回だけ読み、配列の長さに合わない値は 0 にする
+        const read = value.length;
+        const length = Number.isInteger(read) && read >= 0 && read <= 2 ** 32 - 1 ? read : 0;
+        return { kind: "array", length, items: take(length, item, rest) };
       }
       if (value instanceof Error) return errorOf(value);
       if (value instanceof Map) {

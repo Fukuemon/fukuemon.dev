@@ -136,10 +136,14 @@ describe("parseConsoleRecord", () => {
   });
 
   it("値の数が上限を超えたら、記録を捨てる", () => {
-    const items = Array.from({ length: 2100 }, () => ({ kind: "null" }));
-    expect(
-      parseConsoleRecord(record([{ kind: "array", length: items.length, items }])),
-    ).toBeUndefined();
+    // 1 つの入れ子の要素の上限で捨てないよう、71 個の要素の配列を 30 個並べ、値の数だけで上限を超える
+    const inner = {
+      kind: "array",
+      length: 71,
+      items: Array.from({ length: 71 }, () => ({ kind: "null" })),
+    };
+    const items = Array.from({ length: 30 }, () => inner);
+    expect(parseConsoleRecord(record([{ kind: "array", length: 30, items }]))).toBeUndefined();
   });
 });
 

@@ -201,10 +201,21 @@ describe("toConsoleValues", () => {
   });
 
   it("101 個以上の要素を持つ配列は、100 個と残りの件数の印にし、元の長さを持つ", () => {
-    const [array] = copy(Array.from({ length: 150 }, () => 0));
-    expect(array).toHaveProperty("length", 150);
-    expect(array).toHaveProperty("items.length", 101);
-    expect(array).toHaveProperty(["items", "100"], { kind: "text", value: "…ほか 50 件" });
+    const [array] = copy(Array.from({ length: 150 }, () => 0)) as [
+      { length: number; items: unknown[] },
+    ];
+    expect({
+      length: array.length,
+      count: array.items.length,
+      last: array.items.at(-1),
+    }).toStrictEqual({ length: 150, count: 101, last: { kind: "text", value: "…ほか 50 件" } });
+  });
+
+  it("Proxy の配列の length が配列の長さに合わないときは、長さを 0 にして記録を残す", () => {
+    const proxy = new Proxy([1, 2], {
+      get: (target, key) => (key === "length" ? "2" : Reflect.get(target, key)),
+    });
+    expect(copy(proxy)).toStrictEqual([{ kind: "array", length: 0, items: [] }]);
   });
 
   it("101 個以上の項目を持つ Map は、100 個と残りの件数の印にする", () => {
@@ -232,6 +243,7 @@ describe("写した値を、読む側が捨てない", () => {
   it.each([
     ["100×100 の配列", [wide(100, 2)]],
     ["幅の広い 3 段の入れ子", [wide(30, 3)]],
+    ["長さが上限の配列", [new Array(2 ** 32 - 1)]],
     ["101 個の引数", Array.from({ length: 101 }, () => ({ a: 1 }))],
     ["長い bigint", [10n ** 20_000n]],
     ["深い入れ子", [JSON.parse("[".repeat(20) + "]".repeat(20)) as unknown]],
