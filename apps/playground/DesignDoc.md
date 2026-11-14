@@ -117,8 +117,8 @@ packages/
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型だけである。
   - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
-  - `node-runtime/` の直下と `webcontainer/` が `guest/` から値を import するのは、標準入出力の形式を書く `db-protocol.ts` だけである。このファイルはブラウザと Node の両方で読むので、どちらの API も使わない。
-  - Vite の plugin は、package の直下の `vite.ts` に置く。`guest/` と `vite.ts` は、Node の型を読む `tsconfig.node.json` で型を確認する。
+  - `node-runtime/` の直下と `webcontainer/` が `guest/` からモジュールとして値を import するのは、標準入出力の形式を書く `db-protocol.ts` だけである。このファイルはブラウザと Node の両方で読むので、どちらの API も使わない。`webcontainer/` は、ほかのファイルを文字列（`?raw`、`?bundle`）として import する。
+- Vite の plugin は、package の直下の `vite.ts` に置く。`guest/` と `vite.ts` の型は、Node の型を読む `tsconfig.node.json` で確認する。
 
 次の図は、`apps/playground/src/` のディレクトリと package の、互いの間で許す import の向きを示す。矢印の無い組は、import しない。
 
@@ -318,7 +318,7 @@ type BackendProcess = {
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
   - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
-  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、preload と接続先の環境変数を渡さず、端末も付けない。`node-runtime/` の直下は、DB の依存を `npm install --prefix <guestDirectory>` で入れ、DB のプロセスを `guestDirectory` の下のスクリプトの絶対パスで起動する。
+  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`internal` が `true` のプロセスには、環境変数を渡さず、端末も付けない。`node-runtime/` の直下は、DB の依存を `npm install --prefix <guestDirectory>` で入れ、DB のプロセスを `guestDirectory` の下のスクリプトの絶対パスで起動する。
   - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
@@ -614,9 +614,8 @@ type SqlResult = {
 - SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`@fukuemon/sql-runtime` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
   - `guest/` の DB のプロセスのスクリプトは、この関数を import し、ビルドで 1 つのファイルに束ねる。PGlite と `pglite-socket` は束ねず、実行環境の中で `npm install` する。
   - 束ねる処理は、`@fukuemon/node-runtime/vite` が export する Vite の plugin（`guestBundle`）が持つ。plugin は、`<パス>?bundle` の import を、パスのファイルを 1 つの ES module に束ねた文字列にする。`apps/playground` の `vite.config` と `vitest.config` は、plugin を登録するだけである。束ねた結果は、コミットしない。
-  - plugin は、ブラウザのコードと別のエントリーポイントから export する。`webcontainer/` は、plugin が束ねた結果を、文字列として import する。
+  - `webcontainer/` は、plugin が束ねた結果を、文字列として import する。
   - `@fukuemon/node-runtime` は、npm に公開しない。plugin を使うのは、このリポジトリの中だけである。
-  - 束ねられないときは、関数を `guest/` にコピーし、同じテストの入力で、2 つの実装をテストする。束ねられるかは、実装のタスクで確認する。
 
 DB のプロセスの標準入出力では、次の形式で送る。
 
@@ -626,7 +625,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - `node-runtime/` は、レスポンスの値が `SqlResponse` の形かを確認する。実行環境の中は訪問者が触れるので、DB のプロセスの出力も信頼しない。`id` があり、形に合わない行には、待っているリクエストに `error` を持つ値を返す。
 - リクエストの JSON の U+2028 と U+2029 は、`\u2028` と `\u2029` にエスケープして書く。DB のプロセスの `readline` が、この 2 つを行の区切りとして読むためである。
 - DB のプロセスは、ソケットで待ち受けた後に、プレフィックスを付けた `{"ready": true}` の行を出す。`node-runtime/` は、この行を受けてから、初期データの SQL を送る。
-- DB のプロセスは、結果のセルの bigint、日時、`bytea` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
+- DB のプロセスは、結果のセルの bigint、日時、`bytea`、`NaN`、`Infinity` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
 - DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
 - `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。

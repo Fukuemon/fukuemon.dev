@@ -20,4 +20,4 @@ node-pg
 - `node url.js`: `process.env.DATABASE_URL` を渡した `Pool` で、一覧を読む。
 - `node client.js`: `new Client()` で接続し、3 つのクエリを実行する。
 
-右下の SQL のペインは、Node のコードと同じ DB に SQL を送る。
+プレビューの隣の「SQL」のタブは、Node のコードと同じ DB に SQL を送る。
