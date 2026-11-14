@@ -1,0 +1,5 @@
+{
+  "tool": "sql",
+  "open": "query.sql",
+  "initialSql": "seed.sql"
+}
