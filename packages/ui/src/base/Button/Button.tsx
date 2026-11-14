@@ -24,7 +24,7 @@ const variantClassName: Record<ButtonVariant, string> = {
 
 const sizeClassName: Record<ButtonSize, string> = {
   XS: "h-7 min-w-7 px-3 text-label-compact",
-  S: "h-10 min-w-11 px-4 text-label after:absolute after:inset-x-0 after:-inset-y-0.5",
+  S: "h-10 min-w-11 px-4 text-label after:absolute after:inset-x-0 after:-inset-y-0.5 forced-colors:after:-inset-y-0.75",
   M: "h-12 min-w-11 px-5 text-label",
 };
 
@@ -33,6 +33,7 @@ const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions
     "relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-control ink-press",
     "not-aria-disabled:not-aria-busy:active:brightness-90",
     "focus-visible:focus-ring",
+    "forced-frame aria-disabled:forced-off-disabled",
     "aria-disabled:cursor-not-allowed aria-disabled:bg-surface-disabled aria-disabled:text-text-disabled aria-disabled:ring-0",
     variantClassName[variant],
     sizeClassName[size],

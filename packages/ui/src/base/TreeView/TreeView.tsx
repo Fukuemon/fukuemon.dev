@@ -290,7 +290,7 @@ export function TreeView({
     // 折り返した項目でも、印を 1 行目にそろえ、項目の間を空ける
     "flex items-start gap-1 rounded-control pr-2 transition-colors",
     isBodyCompact ? "min-h-6 py-0.5" : isCompact ? "min-h-6 py-1" : "min-h-11 py-3",
-    isBodyCompact && "border-l-2 border-transparent",
+    isBodyCompact && "border-l-2 border-transparent forced-edge-hidden",
   );
   // 階層の深さは決まった段を持たないので、字下げの幅は style で渡す
   const indent = (level: number) => ({
@@ -331,7 +331,7 @@ export function TreeView({
         className={clsx(
           rowClassName,
           isCompact ? "focus-visible:focus-ring-inset" : "focus-visible:focus-ring",
-          "aria-selected:bg-primary-surface",
+          "aria-selected:bg-primary-surface aria-selected:forced-on-row",
           isBodyCompact ? "aria-selected:border-primary" : "aria-selected:font-bold",
           (isBranch || onSelect) && "cursor-pointer hover:bg-surface-subtle",
         )}

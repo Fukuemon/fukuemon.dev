@@ -38,6 +38,12 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 | 状態       | `info`               | 情報の文と印、コードの系統のファイルの印、コンソールの info の行の印                                                                                                    |
 | 状態       | `<状態>-surface`     | `danger`、`warning`、`success`、`info` の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面                                                        |
 | 区別       | `categorical-1`〜`6` | 意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる                                                                                |
+| 庭         | `garden-mist-day`    | トップの立体の庭の、朝、昼、夕の場面の上端と下端に敷く霞と、庭の中のボタンの面                                                                                          |
+| 庭         | `garden-ink-day`     | `garden-mist-day` の上の字とフォーカスの輪（ヘッダーのロゴとリンク、庭の中のボタン）                                                                                    |
+| 庭         | `garden-edge-day`    | `garden-mist-day` の上の、庭の中のボタンの枠                                                                                                                            |
+| 庭         | `garden-mist-night`  | 夜の場面の霞と、庭の中のボタンの面                                                                                                                                      |
+| 庭         | `garden-ink-night`   | `garden-mist-night` の上の字とフォーカスの輪                                                                                                                            |
+| 庭         | `garden-edge-night`  | `garden-mist-night` の上の、庭の中のボタンの枠                                                                                                                          |
 | コード     | `code-surface` など  | 記事のコードブロック、エディタ、端末の字句。当てる字句の表は [Design Doc の「コードの色」](../DesignDoc.md#コードの色) にある                                           |
 
 - `<状態>-surface` の上の文字は、同じ状態の色か `text` にする。どちらの組も、コントラストのチェックが確認する。
@@ -45,6 +51,8 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
   - 注意は、DADS の黄か橙ではなく錆にする。錆は橙に近い色相で、旧サイトの差し色である（ADR-0024）。
   - 主の色の緑と成功の緑が並ぶ画面では、成功を文と印でも伝える（`STATE-NOT-COLOR-ONLY`）。
 - 訪問済みのリンクは、色で分けない。DADS は訪問済みのリンクの色を分けるが、旧サイトと同じく内部のリンクの色を 1 つに保つ（ADR-0024）。
+- `garden-` で始まる 6 つのトークンは、テーマに依らず同じ値を指す。場面の色は時間帯で決まり、テーマに依らないためである。
+  霞の置き方と、テーマの色の名前への差し替えは [トップの水墨の門と立体の庭の Design Doc の「ヘッダーと霞」](../../../docs/design/features/top-garden/DesignDoc.md#ヘッダーと霞) にある。
 - HTTP の状態コードに当てる状態の色は、[Design Doc の「HTTP の流れの色」](../DesignDoc.md#http-の流れの色)の表にある。新しい色のトークンを作らない。
 - コンソールのログレベルに当てる状態の色は、[Design Doc の「コンソールのログレベルの色」](../DesignDoc.md#コンソールのログレベルの色)の表にある。新しい色のトークンを作らない。
 
@@ -132,7 +140,7 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
   - 出典: [DADS の余白](https://design.digital.go.jp/dads/foundations/spacing/)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
 - 角丸と影のユーティリティは、`rounded-control` と `shadow-raised` の 1 つずつだけを書ける。DADS のコンポーネントは、コンポーネントごとに角丸と影の値を持つが、罫線で区切る版面と合わないためである（ADR-0028）。
-  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックには付けない。
+  - `rounded-control` は、操作できる要素と重なる面だけに付ける。`Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロック、[トップの庭の中の文へ移るボタン](../../../docs/design/features/top-garden/DesignDoc.md#庭の中のボタンの並び)には付けない。
   - `shadow-raised` は、重なる面だけに付ける。ボタンと入力欄には付けない。
 - 動きの時間と緩急は、表のユーティリティだけで書く。テーマ変数で止められない時間の値（`duration-[…]` の任意値）を書かない（`MOTION-TOKEN`）。
 - 動きを付ける操作、長さ、付けない所は、[Design Doc の「動き」](../DesignDoc.md#動き) にある。フォーカスの表示、入力した文字、誤りの文には、動きを付けない。
@@ -140,3 +148,25 @@ ADR-0023: [個性として和の感じを残し、見出しを明朝にし、主
 - 動きを減らす設定での止め方は、テーマ変数のファイル（`src/tokens/theme.css`）の末尾の 1 か所にある（`MOTION-REDUCE`）。罫と筆の線を引く動きは、止めると全長の線が最初から出る。`Button` の読み込み中の印は、濃い 3 つの点で止まる。`scroll-fade-end` の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。
 
 ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+
+## ハイコントラスト
+
+`forced-colors: active` で消える枠と塗りを、システムの色で引くユーティリティである。通常の表示には何も変わらない。
+足す規則は DESIGN.md の「ハイコントラスト」にある。
+
+| ユーティリティ                                                                                 | 描くもの                                                                                                                            |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `forced-frame`                                                                                 | `CanvasText` の 1px の枠。背景の色か `ring` で境界を表す要素（`Button`、`Switch`、`Checkbox`）に付ける                              |
+| `forced-on`                                                                                    | 選択とオンの塗りと、その上の文字と印                                                                                                |
+| `forced-on-row`                                                                                | 文字を持つ行（`TreeView`）の選択。文字は `CanvasText` のまま、塗りと枠を選択の色にする。Chromium が文字の下に Canvas の板を敷くため |
+| `forced-off-disabled`、`forced-on-disabled`                                                    | 無効の要素の枠、文字、塗り（`GrayText`）                                                                                            |
+| `forced-fill`（`CanvasText`）、`forced-fill-on`（選択の色。動く線に使う）                      | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯、`TextField` の下罫、`Loading` の罫）の塗り           |
+| `forced-solid`                                                                                 | 筆の形（`stroke-brush`）の罫を、全幅の帯にする。`Tabs` の選んだタブの下の帯に付ける（ADR-0068）                                     |
+| `forced-mark`、`forced-mark-disabled`                                                          | `Checkbox` のチェックの印の色                                                                                                       |
+| `forced-edge-hidden`                                                                           | 透明の枠（選んでいない項目の左の枠）を、背景の色にして隠す。ハイコントラストでは、透明の枠が見える色になる                          |
+| `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-off-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                                                           |
+
+- 選択とオンの色は、変数 `--fd-forced-on` と `--fd-forced-on-text` が持つ。この 2 つはセマンティックトークンではなく、`:root` に置く `forced-colors: active` 専用の変数である。値は `SelectedItem` と `SelectedItemText` で、使えないブラウザでは `Highlight` と `HighlightText` になる。
+- ブラウザは、システムの色以外の値を置き換える。通常の色の指定（`bg-primary` など）に勝つよう、`forced-*` の宣言は `!important` にしている。
+- `loading-dots` は、ユーティリティの中で点を `CanvasText` で塗る。`forced-*` を足す必要はない。
+- `forced-frame` は 1px の枠を足す。`absolute` の子を持つ要素では、子の位置を 1px 戻す。`Switch` のつまみは `forced-colors:left-px` で戻している。

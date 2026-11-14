@@ -44,6 +44,8 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
   - 時間帯ごとに 20 個を超える色を使い、場面のほかでは使わないので、トークンにしない。
   - 値は `apps/web/src/features/top-garden/scene/scene-colors.ts` だけに書く。
   - 表は [トップの水墨の門と立体の庭の Design Doc](../../docs/design/features/top-garden/DesignDoc.md#時間帯ごとの場面の色) にある。
+  - 例外は、場面の上端と下端に敷く霞、霞の上の字、庭の中のボタンの枠の色である。ヘッダーと庭の中のボタンを霞の上に置くので、`garden-` で始まる 6 つのトークンにし、コントラストのチェックで確認する。
+    トークンの一覧は [トークンの文書](design/tokens.md) にある。
 
 ## Design
 
@@ -58,6 +60,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 | セマンティックトークン | `src/tokens/semantic.css`、`src/tokens/semantic-dark.css` | 役割の名前。プリミティブトークンを参照し、テーマごとに参照先を替える                                           |
 | テーマ変数             | `src/tokens/theme.css`                                    | Tailwind CSS のユーティリティの名前。Tailwind のデフォルトの色、文字の大きさ、角丸、影、ブレークポイントを消す |
 
+- 例外は、ハイコントラスト（`forced-colors: active`）用の `forced-*` のユーティリティである。システムの色（`CanvasText`、`GrayText`、`SelectedItem` など）は、ブラウザが決める値で、テーマごとに変わらない。そのため、プリミティブトークンを通さず `theme.css` に直に書く。
 - 接頭辞は、プリミティブトークンを `--fd-primitive-`、セマンティックトークンを `--fd-color-` にする。
 - テーマ変数にないクラスと、任意の値のクラス（`bg-[#fff]` など）は、lint（oxlint の JS プラグインの eslint-plugin-better-tailwindcss）がエラーにする。Tailwind のデフォルトを消しただけでは、テーマ変数にないクラスは CSS を出さないだけでビルドが通るためである。
 - プリミティブトークンは、セマンティックトークンとテーマ変数が参照する値だけを持つ。
