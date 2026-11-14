@@ -10,6 +10,9 @@ interface SettingsRoot {
 /** 設定を書き換えたときに `html` の要素へ送るイベントの名前。トップの庭の場面が受ける */
 export const SETTINGS_CHANGE = "fd-settings-change";
 
+/** 設定の面の「イントロをもう一度見る」が、トップを開く URL に付ける引数の名前 */
+export const INTRO_PARAM = "intro";
+
 export interface SettingsChange {
   readonly name: SettingName;
   readonly on: boolean;

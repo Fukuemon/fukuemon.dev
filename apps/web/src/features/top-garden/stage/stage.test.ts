@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { seasonOf, timeOfDayOf } from "./season";
 import { applyStage, readOverride, stageScript, type StageEnv } from "./stage";
 import { takeFirstVisit } from "./visit";
+import { SETTINGS_CHANGE, type SettingsChange } from "../../../components/site-settings/settings";
 
 const fns = { seasonOf, timeOfDayOf, takeFirstVisit };
 const NOV_13_20H = new Date(2026, 10, 13, 20);
@@ -18,9 +19,13 @@ function memory(seen = false) {
 
 function fakeRoot() {
   const classes = new Set<string>();
+  const listeners = new Map<string, (e: { detail: unknown }) => void>();
   return {
     dataset: {} as DOMStringMap,
     classes,
+    listeners,
+    addEventListener: (type: string, fn: (e: { detail: unknown }) => void) =>
+      void listeners.set(type, fn),
     classList: {
       add: (...c: string[]) => c.forEach((v) => classes.add(v)),
       remove: (...c: string[]) => c.forEach((v) => classes.delete(v)),
@@ -259,6 +264,21 @@ describe("stageScript", () => {
       classes: [...b.root.classes],
       seen: b.store.items.get("fd-top-seen"),
     }).toStrictEqual({ season: "autumn", time: "night", classes: [], seen: "1" });
+  });
+
+  it("庭を出していないときに、歯車の設定で庭の表示をオンにすると読み込み直し、ほかの変更では読み込み直さない", () => {
+    const b = browser();
+    let reloads = 0;
+    runInNewContext(stageScript({ dev: false }), {
+      ...b.globals,
+      location: { ...b.globals.location, reload: () => void reloads++ },
+    });
+    const fire = (detail: SettingsChange) => b.root.listeners.get(SETTINGS_CHANGE)?.({ detail });
+    fire({ name: "motion", on: true });
+    fire({ name: "garden", on: false });
+    const before = reloads;
+    fire({ name: "garden", on: true });
+    expect([before, reloads]).toStrictEqual([0, 1]);
   });
 
   it("開発の文字列を動かすと、URL の引数で選んだ季節と時間帯を書く", () => {

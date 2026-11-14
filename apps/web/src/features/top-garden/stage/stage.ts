@@ -1,5 +1,6 @@
 import { seasonOf, timeOfDayOf, type Season, type SeasonTime, type TimeOfDay } from "./season";
 import { takeFirstVisit, type SeenStore } from "./visit";
+import { INTRO_PARAM, SETTINGS_CHANGE } from "../../../components/site-settings/settings";
 
 interface StageRoot {
   readonly dataset: DOMStringMap;
@@ -74,6 +75,7 @@ export function readOverride(search: string): StageOverride {
  * `dev` が true のときだけ、URL の引数を読む処理を入れる。`bundle` を渡さないときは、庭を出さない。
  * バンドルは module の script で読み込む。開発のサーバーはバンドルを ES モジュールのまま配り、本番のビルドの IIFE は module としても動くためである。
  * URL の引数 `intro` は、読んだ後に URL から消す。読み込み直したときに、イントロをまた流さないためである。
+ * 庭を出していないトップで、歯車の設定の庭の表示をオンにしたときは、読み込み直して庭を出す。庭を出すかは、描く前のこのスクリプトが決めるためである。
  */
 export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";
@@ -81,10 +83,11 @@ export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }):
     ? `function(e){var s=document.createElement("script");s.type="module";s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
     : "null";
   return (
-    `(function(){var again=new URLSearchParams(location.search).has("intro");` +
+    `(function(){var again=new URLSearchParams(location.search).has(${JSON.stringify(INTRO_PARAM)});` +
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +
     `again:again,storage:function(){return localStorage},load:${load},later:function(f,m){setTimeout(f,m)}},` +
     `{seasonOf:${seasonOf.toString()},timeOfDayOf:${timeOfDayOf.toString()},takeFirstVisit:${takeFirstVisit.toString()}});` +
-    `if(again)history.replaceState(history.state,"",location.pathname+location.hash)})()`
+    `if(again)history.replaceState(history.state,"",location.pathname+location.hash);` +
+    `var root=document.documentElement;root.addEventListener(${JSON.stringify(SETTINGS_CHANGE)},function(e){if(e.detail.name==="garden"&&e.detail.on&&!root.classList.contains("stage-on"))location.reload()})})()`
   );
 }

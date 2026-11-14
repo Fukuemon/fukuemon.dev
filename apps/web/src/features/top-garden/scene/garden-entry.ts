@@ -168,6 +168,11 @@ function follow(garden: Garden, cards: readonly HTMLElement[]): void {
 
 function boot(): void {
   if (!root.classList.contains("stage-on")) return;
+  // バンドルを読み込む間に、歯車の設定で庭の表示をオフにしていたら、庭を立ち上げずにふつうのページに戻す。
+  if (root.dataset.garden === "off") {
+    leave([]);
+    return;
+  }
   const stage = document.querySelector<HTMLElement>("[data-garden-stage]");
   // 和紙を掛ける木は STATIONS の順なので、セクションを文書の順でなく id で引く。
   const cards = STATIONS.map(({ id }) =>

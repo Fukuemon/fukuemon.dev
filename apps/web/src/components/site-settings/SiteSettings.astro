@@ -54,7 +54,7 @@ import { SettingsButton } from "./SettingsButton";
 </style>
 
 <script>
-  import { changeSetting, type SettingName } from "./settings";
+  import { changeSetting, INTRO_PARAM, type SettingName } from "./settings";
 
   const root = document.documentElement;
   const panel = document.querySelector<HTMLElement>("[data-site-settings]");
@@ -75,16 +75,13 @@ import { SettingsButton } from "./SettingsButton";
   for (const b of switches) {
     b.addEventListener("click", () => {
       const name = b.dataset.setting as SettingName;
-      const on = root.dataset[name] === "off";
-      changeSetting(root, () => localStorage, { name, on });
+      changeSetting(root, () => localStorage, { name, on: root.dataset[name] === "off" });
       sync();
-      // 庭を出すかは head の inline script が描く前に決めるので、トップで庭をオンにしたときは読み込み直す。オフはトップの場面の側が受ける。
-      if (name === "garden" && on && document.querySelector("[data-garden-stage]")) location.reload();
     });
   }
   again?.addEventListener("click", () => {
     if (again.getAttribute("aria-disabled") === "true") return;
-    location.assign("/?intro");
+    location.assign(`/?${INTRO_PARAM}`);
   });
   sync();
 </script>

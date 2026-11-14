@@ -13,12 +13,13 @@ const sign = signSvg(signSource, "h-10 w-auto fill-current");
     <a
       class="inline-flex min-h-11 items-center text-text focus-visible:focus-ring"
       href="/"
+      data-site-logo
       aria-label="Fukuemon"
       aria-current={ariaCurrent(pathname, "/")}
     >
       <Fragment set:html={sign} />
     </a>
-    <div class="flex items-center gap-x-2">
+    <div class="flex items-center gap-x-2" data-site-header-tools>
     <nav aria-label="サイトの中の移動">
       <ul class="flex gap-6">
         {
