@@ -91,7 +91,7 @@ export function Tabs({
                 <span
                   aria-hidden="true"
                   className={clsx(
-                    "pointer-events-none absolute inset-x-0 bottom-0 animate-stroke bg-primary stroke-brush forced-fill",
+                    "pointer-events-none absolute inset-x-0 bottom-0 animate-stroke bg-primary stroke-brush forced-fill forced-solid",
                     isCompact ? "h-0.75" : "h-1",
                   )}
                 />

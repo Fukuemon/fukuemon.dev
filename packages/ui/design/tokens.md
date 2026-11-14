@@ -153,6 +153,7 @@ ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重な�
 | `forced-on-row`                                                                                | 文字を持つ行（`TreeView`）の選択。文字は `CanvasText` のまま、塗りと枠を選択の色にする。Chromium が文字の下に Canvas の板を敷くため |
 | `forced-off-disabled`、`forced-on-disabled`                                                    | 無効の要素の枠、文字、塗り（`GrayText`）                                                                                            |
 | `forced-fill`（`CanvasText`）、`forced-fill-on`（選択の色。動く線に使う）                      | 背景の色だけで描いた線と帯（`SplitPane` の区切り、`Tabs` の選んだタブの下の帯、`TextField` の下罫、`Loading` の罫）の塗り           |
+| `forced-solid`                                                                                 | 筆の形（`stroke-brush`）の罫を、全幅の帯にする。`Tabs` の選んだタブの下の帯に付ける（ADR-0068）                                     |
 | `forced-mark`、`forced-mark-disabled`                                                          | `Checkbox` のチェックの印の色                                                                                                       |
 | `forced-edge-hidden`                                                                           | 透明の枠（選んでいない項目の左の枠）を、背景の色にして隠す。ハイコントラストでは、透明の枠が見える色になる                          |
 | `forced-thumb-off`、`forced-thumb-on`、`forced-thumb-off-disabled`、`forced-thumb-on-disabled` | `Switch` のつまみの塗りと、つまみの中の印                                                                                           |

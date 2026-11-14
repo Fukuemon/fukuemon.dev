@@ -296,6 +296,13 @@
   }
 }
 
+/* 筆の形の罫を、全幅の帯にする。ハイコントラストでは先が細ると見えにくい（docs/adr/0068-solid-tab-indicator-in-forced-colors.md） */
+@utility forced-solid {
+  @media (forced-colors: active) {
+    mask: none !important;
+  }
+}
+
 @utility forced-fill-on {
   @media (forced-colors: active) {
     background-color: var(--fd-forced-on) !important;
