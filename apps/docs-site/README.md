@@ -1,7 +1,7 @@
 # apps/docs-site
 
 設計の文書（PRD、Design Doc、ADR）を Zensical でビルドし、`docs.fukuemon.dev` の Worker（`fukuemon-dev-docs`）から配信する。
-Cloudflare Access が、許可したメールアドレスの人だけを通す。
+Cloudflare Access がオンの間は、許可したメールアドレスの人だけを通す。
 Access は、運営者がダッシュボードで設定する。
 決めたことと理由は ADR-0032 と ADR-0081 にある。
 
@@ -54,7 +54,7 @@ Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
 
 1. Cloudflare のダッシュボードで「Zero Trust」を開き、team の名前を決める。
 2. プランは Free を選ぶ。Free でも、支払いの情報の入力を求められる。
-3. One-time PIN でログインできるようにする。設定の画面の場所は未確認である。
+3. ログインの方法に One-time PIN を足す。設定の画面の場所は未確認である。
 
 - 出典: [Get started](https://developers.cloudflare.com/cloudflare-one/setup/)
 
@@ -67,7 +67,11 @@ Zero Trust の組織は、最初の 1 回だけダッシュボードで作る。
 
 - custom domain がまだ無いホスト名で、アプリケーションを作れるかは未確認である。作れないときは、ここで止まり、手順 3 の前に Access を作る方法を決め直す。
 - メールアドレスは、ダッシュボードのポリシーにだけ書く。リポジトリ、issue、pull request、GitHub の secret に書かない。
-- Selector に「Everyone」や、Login Methods の One-time PIN を使わない。誰でも通すポリシーになる。
+- 次の選び方をしない。誰でも通すか、広く通すポリシーになる。
+  - Action の「Bypass」と「Service Auth」
+  - Include の Selector の「Everyone」「Login Methods」「Emails ending in」
+- Include は「Emails」の 1 行だけにする。
+- 画面での Action と Selector の表示の名前は未確認である。
 - 出典: [Publish a self-hosted application to the Internet](https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/self-hosted-public-app/)
 - 出典: [Access policies](https://developers.cloudflare.com/cloudflare-one/policies/access/)
 
@@ -82,11 +86,14 @@ Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` �
 手順 2 で Access のアプリケーションを作ってから行う。
 
 1. apply workflow を `mode=plan` で起動し、plan が `cloudflare_workers_custom_domain.docs` の追加の 1 つだけを表示することを確認する。
+   ほかの差分が出たら、apply しない。
+   とくに、Access のアプリケーションかポリシー（`cloudflare_zero_trust_access_*.docs`）の destroy が出たら、Terraform で Access を作ったことがある。apply すると Access が消える。
 2. 確認したら、`mode=apply` で起動し直す。
 
 ### 5. 公開の範囲を確認する
 
 1. 認証していないブラウザで `https://docs.fukuemon.dev` を開き、Access の認証の画面が出ることを確認する。
+   出なければ、ダッシュボードで、アプリケーションの Domain が `docs.fukuemon.dev` であることと、手順 2 のポリシーを確認する。
 2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
 3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
 4. 許可したメールアドレスで認証し、PRD、Design Doc、ADR のページと Mermaid の図が出ることを確認する。
@@ -99,7 +106,7 @@ Access は、ダッシュボードで切り替える。
 apply は要らない。
 
 - オフにするときは、手順 2 で作ったアプリケーションを消す。
-- オンにするときは、手順 2 をもう一度行う。
+- オンにするときは、手順 2 をもう一度行い、手順 5 の 1 と 4 を確認する。
 - **オフの間は、`https://docs.fukuemon.dev` を誰でも開ける。** noindex は返すが、検索の結果に載らないことは保証しない。
 
 アプリケーションを消さずに無効にする設定があるかは、未確認である。
@@ -107,4 +114,5 @@ apply は要らない。
 ## 許可するメールアドレスを変える
 
 ダッシュボードで、手順 2 で作ったポリシーの Include のメールアドレスを書き換える。
+外したメールアドレスで認証できないことを確認する。
 apply は要らない。

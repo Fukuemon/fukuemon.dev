@@ -88,7 +88,7 @@ Cloudflare は新しいプロジェクトに JSONC を勧めており、一部�
 | `infra/cloudflare/` | zone、Workers の custom domain | R2（`infra/bootstrap/` が作る） | apply の workflow か手元 |
 
 `infra/bootstrap/` を CI から apply しない。state を手元に置く前提が成り立たなくなる。  
-CI は `infra:check` で、fmt の確認、init（backend なし）、validate、provider を mock にした test だけを実行する。
+CI は `infra:check` で、fmt の確認、init（backend なし）、validate だけを実行する。
 
 zone は Terraform で作らない。  
 Cloudflare Registrar がドメインを取得したときに作った zone を、`zone.tf` の `import` ブロックが、state にまだないときに取り込む。  
@@ -155,7 +155,7 @@ CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`T
 
 - `pnpm run infra:init`、`infra:plan`、`infra:apply`: `infra/cloudflare/` を対象にする
 - `pnpm run infra:bootstrap:init`、`infra:bootstrap:apply`: `infra/bootstrap/` を対象にする
-- `pnpm run infra:check`: `terraform fmt -check`、`terraform validate`、`terraform test` を、backend を無効にして実行する。credential は要らない。`terraform test` は provider を mock にし、変数の validation を確認する
+- `pnpm run infra:check`: `terraform fmt -check` と `terraform validate` を、backend を無効にして実行する。credential は要らない
 - `pnpm run check:worker-name`: 4 つの Worker の名前が、`wrangler.jsonc` と `vars.tf` で一致するかを確認する。
   - `apps/web/wrangler.jsonc` の `name` と `worker_name` のデフォルト値を比べる
   - `packages/ui/wrangler.jsonc` の `name` と `catalog_worker_name` のデフォルト値を比べる

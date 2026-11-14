@@ -94,4 +94,5 @@ zone_name  = "fukuemon.dev"
 
 1. Actions の **Terraform Apply** を、`mode` を `plan` にして `workflow_dispatch` で起動する。
 2. `infra` environment の承認を通し、plan の結果を読む。
+   plan に `cloudflare_workers_custom_domain.docs` の追加があれば、apply の前に、ダッシュボードで Access のアプリケーションを作る。Access の無いまま作ると、ドキュメントサイトを誰でも開ける。
 3. 差分が [context/operations.md](../context/operations.md#deployment-conditions) の条件を満たせば、`mode` を `apply` にして起動し直し、もう一度承認を通す。
