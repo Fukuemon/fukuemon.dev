@@ -201,17 +201,25 @@ export function createConsoleRecords({
   schedule = nextFrame,
 }: { max?: number; maxChars?: number; schedule?: Schedule } = {}) {
   const store = createStore<readonly ConsoleRecord[]>([]);
-  // 残す記録は kept の first 番目から後である。捨てるたびに配列を詰めると、届くたびに上限の数を複製するので、first を進めて、捨てた分が残す分を超えたら詰める
+  // 残す記録は kept の first 番目から後である。捨てるたびに配列を詰めると、届くたびに上限の数を複製するので、first を進めて、捨てた件数が残す件数を超えたときか、捨てた文字数が上限を超えたときと、store に入れるときに詰める
   let kept: { record: ConsoleRecord; chars: number }[] = [];
   let first = 0;
   let chars = 0;
+  let dropped = 0;
   let count = 0;
   let cancel: (() => void) | undefined;
   let disposed = false;
 
+  const compact = () => {
+    kept = kept.slice(first);
+    first = 0;
+    dropped = 0;
+  };
+
   const flush = () => {
     cancel = undefined;
-    store.set(kept.slice(first).map((entry) => entry.record));
+    compact();
+    store.set(kept.map((entry) => entry.record));
   };
 
   const add = (parsed: Parsed | undefined, source: ConsoleSource) => {
@@ -220,13 +228,12 @@ export function createConsoleRecords({
     kept.push({ record: { id: String(count), source, ...parsed.record }, chars: parsed.chars });
     chars += parsed.chars;
     while (kept.length - first > 1 && (kept.length - first > max || chars > maxChars)) {
-      chars -= kept[first]?.chars ?? 0;
+      const oldest = kept[first]?.chars ?? 0;
+      chars -= oldest;
+      dropped += oldest;
       first += 1;
     }
-    if (first > kept.length - first) {
-      kept = kept.slice(first);
-      first = 0;
-    }
+    if (first > kept.length - first || dropped > maxChars) compact();
     cancel ??= schedule(flush);
   };
 
@@ -247,6 +254,7 @@ export function createConsoleRecords({
       kept = [];
       first = 0;
       chars = 0;
+      dropped = 0;
     },
   };
 }
