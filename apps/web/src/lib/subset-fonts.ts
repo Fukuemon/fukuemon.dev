@@ -29,21 +29,23 @@ export function subsetFonts(family: string): AstroIntegration {
           logger.warn(`${family}: ${selector} の要素を特定できないので、全ての HTML の字を使う`);
         const used = await usedChars(files, css, rules, family);
         const chars = [...used];
-        const all = await collectFaces(css, family);
-        if (all.length === 0)
+        const faces = await collectFaces(css, family);
+        if (faces.length === 0)
           throw new Error(`${family}: 作り直す @font-face が CSS に見つからない`);
-        const paths = new Map(all.map((face) => [face.url, inside(root, face.url)]));
+        const paths = new Map(faces.map((face) => [face.url, inside(root, face.url)]));
+        for (const face of faces)
+          if (!HASHED.test(face.url))
+            throw new Error(`${face.url}: 名前の hash を差し替えられない`);
         const renames = new Map<string, string>();
         let before = 0;
         let after = 0;
-        for (const face of all) {
+        for (const face of faces) {
           const text = chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
           if (text === "") continue;
           const path = paths.get(face.url)!;
           const src = await readFile(path);
           const subset = await subsetFont(src, text, { targetFormat: "woff2" });
           const url = hashedUrl(face.url, subset);
-          if (url === face.url) throw new Error(`${face.url}: 名前の hash を差し替えられない`);
           await writeFile(inside(root, url), subset);
           await rm(path);
           renames.set(face.url, url);
@@ -69,12 +71,15 @@ interface Face {
   ranges: [number, number][];
 }
 
-const escapeFamily = (family: string): string => family.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Vite の付けた hash を含む woff2 の名前の末尾 */
+const HASHED = /\.[\w-]{8}\.woff2$/;
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** CSS の @font-face から、指定の書体の woff2 と unicode-range を取り出す */
 export function parseFaces(css: string, family: string): Face[] {
   const out: Face[] = [];
-  const named = new RegExp(`font-family:\\s*["']?${escapeFamily(family)}["']?\\s*;`);
+  const named = new RegExp(`font-family:\\s*["']?${escapeRegExp(family)}["']?\\s*;`, "i");
   for (const [, body] of css.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
     if (!named.test(body)) continue;
     const url = /url\(([^)]+\.woff2)\)/.exec(body)?.[1]?.replace(/^["']|["']$/g, "");
@@ -117,8 +122,8 @@ export function parseFontRules(css: string, family: string): FontRules {
   const classes = new Set<string>();
   const unresolved: string[] = [];
   const props = new Set<string>();
-  const mentions = new RegExp(escapeFamily(family));
-  const direct = new RegExp(`font-family:\\s*["']?${escapeFamily(family)}`);
+  const mentions = new RegExp(escapeRegExp(family), "i");
+  const direct = new RegExp(`font-family:\\s*["']?${escapeRegExp(family)}`, "i");
   for (const [, head, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const selectors = head.slice(head.lastIndexOf(";") + 1).trim();
     if (selectors.startsWith("@") || !mentions.test(body)) continue;
@@ -230,8 +235,9 @@ async function usedChars(
   for (const f of css) for (const c of cssContentChars(await readFile(f, "utf8"))) used.add(c);
   for (const f of files) {
     if (f.endsWith(".html")) {
-      const chars = htmlChars(await readFile(f, "utf8"), { classes: rules.classes, family, every });
-      for (const c of chars) used.add(c);
+      const html = await readFile(f, "utf8");
+      for (const c of htmlChars(html, { classes: rules.classes, family, every })) used.add(c);
+      for (const style of styleTexts(html)) for (const c of cssContentChars(style)) used.add(c);
     } else if (f.endsWith(".js")) {
       for (const c of await readFile(f, "utf8")) if (c.codePointAt(0)! >= 0x2000) used.add(c);
     }
@@ -262,13 +268,12 @@ async function collectFaces(css: string[], family: string): Promise<Face[]> {
 }
 
 /** CSS の url() の中で、URL 全体が一致する箇所を探す正規表現 */
-const urlOf = (url: string): RegExp =>
-  new RegExp(`([("'])${url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([)"'])`, "g");
+const urlOf = (url: string): RegExp => new RegExp(`([("'])${escapeRegExp(url)}([)"'])`, "g");
 
 /** Vite の付けた hash を、作り直した中身の hash に差し替える */
 export function hashedUrl(url: string, body: Uint8Array): string {
   const hash = createHash("sha256").update(body).digest("base64url").slice(0, 8);
-  return url.replace(/\.[\w-]{8}\.woff2$/, `.${hash}.woff2`);
+  return url.replace(HASHED, `.${hash}.woff2`);
 }
 
 async function list(dir: string): Promise<string[]> {

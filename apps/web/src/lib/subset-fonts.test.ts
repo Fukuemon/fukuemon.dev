@@ -103,6 +103,11 @@ describe("書体を当てるセレクタの読み取り", () => {
     });
   });
 
+  it("unicode-range のない @font-face は、対象に数えない", () => {
+    const css = "@font-face{font-family:Zen Old Mincho;src:url(/_astro/a.AAAAAAAA.woff2)}";
+    expect(parseFaces(css, FAMILY)).toStrictEqual([]);
+  });
+
   it("@charset の直後の規則も読む", () => {
     expect(parseFontRules(`@charset "UTF-8";${RULE}`, FAMILY).classes).toStrictEqual(
       new Set(["font-heading"]),
@@ -121,11 +126,18 @@ describe("書体を当てるセレクタの読み取り", () => {
     [
       "変数を参照する規則",
       `:root{--font-heading:"Zen Old Mincho",sans-serif}.a{font-family:var(--font-heading)}`,
+      ["var(--font-heading)"],
     ],
-    ["2 番目以降", `.a{font-family:"STIX Two","Zen Old Mincho"}`],
-    ["ショートハンド", `.a{font:600 1rem "Zen Old Mincho"}`],
-  ])("書体を先頭に書かない規則（%s）は、特定できないものとして返す", (_, css) => {
-    expect(parseFontRules(css, FAMILY).unresolved).toHaveLength(1);
+    ["2 番目以降", `.a{font-family:"STIX Two","Zen Old Mincho"}`, [".a"]],
+    ["ショートハンド", `.a{font:600 1rem "Zen Old Mincho"}`, [".a"]],
+  ])("書体を先頭に書かない規則（%s）は、特定できないものとして返す", (_, css, unresolved) => {
+    expect(parseFontRules(css, FAMILY)).toStrictEqual({ classes: new Set(), unresolved });
+  });
+
+  it("書体名の大文字と小文字を区別しない", () => {
+    expect(parseFontRules('.a{font-family:"zen old mincho"}', FAMILY).classes).toStrictEqual(
+      new Set(["a"]),
+    );
   });
 
   it("書体を変数に宣言するだけで、どこからも参照しないときは、規則に数えない", () => {
@@ -173,6 +185,10 @@ describe("書体を当てる要素の字", () => {
   it("template の中身の字を集める", () => {
     const html = `<h1 class="font-heading"><template>あ</template></h1>`;
     expect(sorted(htmlChars(html, options))).toBe("あ");
+  });
+
+  it("書体を当てる要素の外の script も、U+2000 から上の字を集める", () => {
+    expect(sorted(htmlChars(`<script>"あ"</script><p>い</p>`, options))).toBe("あ");
   });
 
   it("script は U+2000 から上の字だけを集める", () => {
@@ -263,6 +279,15 @@ describe("ビルド後の作り直し", () => {
     expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(
       next + face("b", "U+3044") + RULE,
     );
+  });
+
+  it("HTML に埋め込んだ style の content の字も使う", async () => {
+    await build({
+      html: `<style>.x::before{content:"い"}</style>${heading("あ")}`,
+      css: both,
+    });
+
+    expect(texts()).toStrictEqual(["あ", "い"]);
   });
 
   it("末尾が同じだけの別の URL は、書き換えない", async () => {
