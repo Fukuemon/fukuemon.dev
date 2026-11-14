@@ -234,9 +234,10 @@ describe("createConsoleRecords", () => {
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["10", "11"]);
   });
 
-  it("文字数の合計が上限を超えたら、store に入れた記録と溜めた記録を合わせて、古いものから捨てる", () => {
+  // 1 件の重さは、文字数に、値の数の 8 倍を足したものである。line("aa") は 2 字と値 1 個で 10 になる
+  it("重さの合計が上限を超えたら、store に入れた記録と溜めた記録を合わせて、古いものから捨てる", () => {
     const frames = manualFrames();
-    const records = createConsoleRecords({ maxChars: 5, schedule: frames.schedule });
+    const records = createConsoleRecords({ maxWeight: 25, schedule: frames.schedule });
     records.acceptLine(line("aa"), { name: "p" });
     frames.run();
     for (const value of ["bb", "cc"]) records.acceptLine(line(value), { name: "p" });
@@ -244,9 +245,23 @@ describe("createConsoleRecords", () => {
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2", "3"]);
   });
 
-  it("1 件で文字数の合計の上限を超えても、最新の 1 件は残す", () => {
+  it("文字を持たない値も重さに数え、値の多い記録から捨てる", () => {
     const frames = manualFrames();
-    const records = createConsoleRecords({ maxChars: 3, schedule: frames.schedule });
+    const records = createConsoleRecords({ maxWeight: 30, schedule: frames.schedule });
+    records.acceptLine(
+      JSON.stringify(record([{ kind: "null" }, { kind: "null" }, { kind: "null" }])),
+      {
+        name: "p",
+      },
+    );
+    records.acceptLine(line("a"), { name: "p" });
+    frames.run();
+    expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2"]);
+  });
+
+  it("1 件で重さの合計の上限を超えても、最新の 1 件は残す", () => {
+    const frames = manualFrames();
+    const records = createConsoleRecords({ maxWeight: 3, schedule: frames.schedule });
     for (const value of ["a", "long"]) records.acceptLine(line(value), { name: "p" });
     frames.run();
     expect(records.store.getSnapshot().map((item) => item.id)).toStrictEqual(["2"]);
