@@ -94,8 +94,9 @@ pnpm run measure:top
 
 引数は、`pnpm run measure:top --visit first` のように後ろに付ける。
 
-- `--visit first` は最初の訪問を測る。
-  - `--visit reduced-motion` は、動きを減らす設定で庭を出さないトップを測る。
+- `--visit` は、測る訪問の種類を選ぶ。
+  - `first` は最初の訪問を測る。
+  - `reduced-motion` は、動きを減らす設定で庭を出さないトップを測る。
 - `--gpu swiftshader` は、GPU を使わずに CPU で WebGL を描く条件で測る。
   - 付けないときは、macOS の Metal で描く。
 - `--throttling devtools` は、通信と CPU にスロットリングを掛けて読み込んで測る。

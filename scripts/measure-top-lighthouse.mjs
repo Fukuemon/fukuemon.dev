@@ -155,7 +155,7 @@ async function seed(profile, write) {
   }
 }
 
-/** 報告の JSON から 1 回の値を取り出す。指標が欠けていたら、その名前を付けて投げる */
+/** レポートの JSON から 1 回の値を取り出す。指標が欠けていたら、その名前を付けて投げる */
 function readRow(r) {
   const a = r.audits;
   const score = r.categories.performance.score;
