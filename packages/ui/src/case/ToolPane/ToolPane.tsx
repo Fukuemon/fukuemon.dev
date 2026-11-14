@@ -4,9 +4,14 @@ import { type ReactNode, createContext, use, useId } from "react";
 import { Loading } from "../../base/Loading/Loading";
 import { Notice } from "../../base/Notice/Notice";
 
-/** 領域の中身の状態。loading と error の間は、中身の代わりに待ちの印か誤りの知らせを出す。 */
+/**
+ * 領域の中身の状態。loading と error の間は、中身の代わりに待ちの印か誤りの知らせを出す。
+ * pending の間は、題だけを出し、操作、題の下の帯（toolbar）、中身、下の帯（footer）を出さない。待ちの印は画面全体の `PageLoading` に任せる。
+ * 画面の全ての領域が同じ処理を待つときに使う（packages/ui/DesignDoc.md の「画面ごとのコンポーネント」）。
+ */
 export type ToolPaneState =
   | { kind: "ready" }
+  | { kind: "pending" }
   | { kind: "empty"; message: string }
   | { kind: "loading"; label: string }
   | { kind: "error"; title: string; message?: string };
@@ -14,7 +19,7 @@ export type ToolPaneState =
 export type ToolPaneProps = {
   /** 領域の題。画面に出し、領域の読み上げる名前にもする。 */
   title: string;
-  /** 題の右に並べる操作。 */
+  /** 題の右に並べる操作。題と操作が 1 行に収まらない幅では、題を折り返さずに、操作を次の行に送る。 */
   actions?: ReactNode;
   /** 題の下、中身の上に置く帯（ファイルのタブ、URL の欄）。 */
   toolbar?: ReactNode;
@@ -64,13 +69,15 @@ export function ToolPane({
         isJoined && "-mt-px -ml-px",
       )}
     >
-      <div className="flex min-h-8 items-center justify-between gap-2 border-b border-border pr-1 pl-3">
-        <h2 className="text-label-compact text-text" id={titleId}>
+      <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-2 border-b border-border pr-1 pl-3">
+        <h2 className="text-label-compact whitespace-nowrap text-text" id={titleId}>
           {title}
         </h2>
-        {actions !== undefined && <div className="flex items-center">{actions}</div>}
+        {actions !== undefined && state.kind !== "pending" && (
+          <div className="flex items-center">{actions}</div>
+        )}
       </div>
-      {toolbar}
+      {state.kind !== "pending" && toolbar}
       <div
         className={clsx(
           "flex min-h-0 min-w-0 flex-1 flex-col",

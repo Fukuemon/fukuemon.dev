@@ -1,10 +1,10 @@
-import { Link, Notice } from "@fukuemon/ui";
+import { Link, Notice, PageLoading } from "@fukuemon/ui";
 import { Suspense, use, useSyncExternalStore } from "react";
 
 import { sqlDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { SqlConsole } from "../sql-console/SqlConsole";
-import { progressLabel } from "./progress";
+import { bootLabel, progressLabel } from "./progress";
 import { type SqlSession, createSessionOpener } from "./session";
 
 const openSession = createSessionOpener(createProjectLoader("sql", sqlDefaultProject));
@@ -29,17 +29,21 @@ function SqlSessionView({ session }: { session: SqlSession }) {
   const query = useSyncExternalStore(session.query.subscribe, session.query.getSnapshot);
   const running = useSyncExternalStore(session.running.subscribe, session.running.getSnapshot);
   const phase = useSyncExternalStore(session.phase.subscribe, session.phase.getSnapshot);
+  const bootText = bootLabel(phase);
   return (
-    <SqlConsole
-      onChange={session.setQuery}
-      onRun={session.execute}
-      progress={progressLabel(phase, running)}
-      running={running}
-      fileName={session.fileName}
-      status={session.status}
-      stoppedHint="次に実行すると、DB を初期の状態から作り直します。"
-      value={query}
-    />
+    <>
+      {bootText !== undefined && <PageLoading label={bootText} />}
+      <SqlConsole
+        onChange={session.setQuery}
+        onRun={session.execute}
+        progress={progressLabel(phase, running)}
+        running={running}
+        fileName={session.fileName}
+        status={session.status}
+        stoppedHint="次に実行すると、DB を初期の状態から作り直します。"
+        value={query}
+      />
+    </>
   );
 }
 
@@ -50,11 +54,7 @@ export function SqlPage({ search, embedded }: { search: string; embedded: boolea
       {!embedded && (
         <h1 className="font-heading text-heading-md font-semibold text-text">SQL の実行環境</h1>
       )}
-      <Suspense
-        fallback={
-          <p className="text-body-dense text-text-secondary">プロジェクトを読み込んでいます</p>
-        }
-      >
+      <Suspense fallback={<PageLoading label="プロジェクトを読み込んでいます" />}>
         <SqlTool search={search} />
       </Suspense>
     </main>

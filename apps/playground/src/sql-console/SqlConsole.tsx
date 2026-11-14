@@ -17,7 +17,7 @@ export type SqlConsoleProps = {
   stoppedHint?: string;
   /** 入力欄のタブに出すファイルの名前。 */
   fileName: string;
-  /** 渡すと、待っている段階として出す（PGlite の読み込み、初期データ、実行）。 */
+  /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
   progress?: string;
 };
 

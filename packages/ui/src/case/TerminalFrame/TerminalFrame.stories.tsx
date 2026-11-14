@@ -43,6 +43,7 @@ export const Empty: Story = {
   name: "空",
   args: { children: (theme) => <DummyEngine label="端末の出力" lines={[]} theme={theme} /> },
 };
+export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",
   args: { state: { kind: "loading", label: "端末を起動しています" } },

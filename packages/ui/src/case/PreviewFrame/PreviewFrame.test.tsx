@@ -5,7 +5,7 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./PreviewFrame.stories";
 
-const { Default, Empty, Error } = composeStories(stories);
+const { Default, Empty, Error, Pending } = composeStories(stories);
 
 describe("PreviewFrame", () => {
   it("URL を書き換えられない欄に出し、iframe を置く", () => {
@@ -59,5 +59,16 @@ describe("PreviewFrame", () => {
     render(<Error />);
     expect(screen.getByRole("alert")).toHaveTextContent("プレビューを開けませんでした");
     expect(screen.queryByTitle("プレビューの画面")).toBeNull();
+  });
+
+  it("起動を待つ pending のときは、URL の欄も、再読み込みのボタンも、iframe も、待ちの文も出さない", () => {
+    render(<Pending />);
+    expect({
+      region: screen.getByRole("region", { name: "プレビュー" }) !== null,
+      url: screen.queryByRole("textbox"),
+      button: screen.queryByRole("button"),
+      iframe: screen.queryByTitle("プレビューの画面"),
+      status: screen.queryByRole("status"),
+    }).toStrictEqual({ region: true, url: null, button: null, iframe: null, status: null });
   });
 });

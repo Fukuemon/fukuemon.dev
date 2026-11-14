@@ -20,11 +20,11 @@ const FILES: TreeNode[] = [
 
 const insert = (nodes: readonly TreeNode[], parentId: string | undefined, node: TreeNode) =>
   parentId === undefined
-    ? [...nodes, node]
+    ? [node, ...nodes]
     : nodes.map(
         (n): TreeNode =>
           n.id === parentId
-            ? { ...n, children: [...(n.children ?? []), node] }
+            ? { ...n, children: [node, ...(n.children ?? [])] }
             : n.children
               ? { ...n, children: insert(n.children, parentId, node) }
               : n,
@@ -52,7 +52,7 @@ const labelOf = (nodes: readonly TreeNode[], id: string): string | undefined => 
   return undefined;
 };
 
-/** 木と選んだ項目を state で持ち、作成、名前の変更で木を書き換える例。削除は ConfirmDialog で確認してから書き換える。渡した spy も呼ぶ。 */
+/** 木と選んだ項目を state で持ち、作成、名前の変更で木を書き換える例。作った項目を選ぶ。削除は ConfirmDialog で確認してから書き換える。渡した spy も呼ぶ。 */
 function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
   const [items, setItems] = useState(props.items);
   const [selectedId, setSelectedId] = useState(props.selectedId);
@@ -70,6 +70,8 @@ function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
           ((name, parentId) => {
             props.onCreate?.(name, parentId);
             setItems(insert(items, parentId, { id: childId(parentId, name), label: name }));
+            setSelectedId(childId(parentId, name));
+            return { id: childId(parentId, name) };
           })
         }
         onCreateDirectory={
@@ -79,6 +81,8 @@ function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
             setItems(
               insert(items, parentId, { id: childId(parentId, name), label: name, children: [] }),
             );
+            setSelectedId(childId(parentId, name));
+            return { id: childId(parentId, name) };
           })
         }
         onDelete={props.onDelete && ((id) => setPendingDeleteId(id))}
@@ -87,6 +91,8 @@ function FileTreeExample(props: Omit<FileTreeProps, "onSelect">) {
           ((id, name) => {
             props.onRename?.(id, name);
             setItems(update(items, id, (node) => ({ ...node, label: name })));
+            setSelectedId(id);
+            return { id };
           })
         }
         onSelect={setSelectedId}
@@ -144,6 +150,20 @@ export const Creating: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "新しいファイル" }));
   },
 };
+export const Renaming: Story = {
+  name: "名前を変えている",
+  play: async ({ canvas, userEvent }) => {
+    canvas.getByRole("treeitem", { name: "server.js" }).focus();
+    await userEvent.keyboard("{F2}");
+  },
+};
+export const NameError: Story = {
+  name: "名前に誤りがある",
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "新しいファイル" }));
+    await userEvent.keyboard("callback.js{Enter}");
+  },
+};
 export const Menu: Story = {
   name: "操作のメニューを開いている",
   play: async ({ canvas, userEvent }) => {
@@ -160,6 +180,7 @@ export const ReadOnly: Story = {
   },
 };
 export const Empty: Story = { name: "空", args: { items: [], selectedId: undefined } };
+export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",
   args: { state: { kind: "loading", label: "ファイルを読み込んでいます" } },

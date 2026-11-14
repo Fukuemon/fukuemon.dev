@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "playwright test",
-    "capture": "playwright test -c playwright.capture.config.ts --workers=1",
+    "test": "playwright test --project chromium",
+    "test:visual": "playwright test --project visual",
+    "capture": "playwright test -c playwright.capture.config.ts --project chromium --workers=1",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },

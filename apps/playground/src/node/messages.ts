@@ -12,6 +12,10 @@ const REASONS: Record<BootFailureReason, string> = {
 export const bootFailureMessage = (reason: BootFailureReason) =>
   `${REASONS[reason]}${SUPPORTED_BROWSERS}`;
 
+// 2 つの待ちは続けて起きるので、文を替えない。替えると、スクリーンリーダーが 2 回読み上げる（packages/ui/design/components.md の PageLoading）
+/** プロジェクトの読み込みと起動の、画面の右下の待ちの文。 */
+export const BOOT_LABEL = "実行環境を起動しています";
+
 export const PREVIEW_TIMEOUT_MS = 30_000;
 
 export const PREVIEW_TIMEOUT_MESSAGE = `プレビューが 30 秒で読み込まれませんでした。${SUPPORTED_BROWSERS}`;

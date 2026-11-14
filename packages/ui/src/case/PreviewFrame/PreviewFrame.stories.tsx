@@ -30,6 +30,7 @@ export const Empty: Story = {
   name: "空",
   args: { url: "about:blank", onReload: undefined, children: <iframe title="プレビューの画面" /> },
 };
+export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",
   args: { state: { kind: "loading", label: "サーバーの起動を待っています" } },
