@@ -90,7 +90,6 @@ const expectCameraAtEnd = async (page: Page) => {
   await expectGardenEnd(page);
   const settled = await profileAt(page);
   expect(Math.abs(right.x - settled.x) + Math.abs(right.y - settled.y)).toBeLessThanOrEqual(6);
-  return right;
 };
 
 test("初めての端末で開くと、墨の絵の後に色を差して門をくぐり、決めた長さより前には終えずにプロフィールの文の前で止まり、その間も h1 がアクセシビリティツリーにある", async ({
@@ -102,6 +101,8 @@ test("初めての端末で開くと、墨の絵の後に色を差して門を�
   await expect(html(page)).toHaveClass(/\bintro\b/);
   await expect(inkSvg(page)).toBeVisible();
   await expect(profileHeading(page)).toHaveCount(1);
+  // intro は付け直されないので、ここで残っていれば、h1 を数えたのはイントロの間である
+  await expect(html(page)).toHaveClass(/\bintro\b/);
   await expect(html(page)).not.toHaveClass(/\bintro\b/);
   const states = await page.evaluate(() => (window as unknown as ClassLog).__classes);
   const at = (cls: string) => states.findIndex((s) => s.split(" ").includes(cls));
