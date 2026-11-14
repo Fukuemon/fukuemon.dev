@@ -180,6 +180,7 @@ function boot(): void {
     return;
   }
   root.classList.add("scene-ready");
+  performance.mark("garden-scene-ready");
   if (intro) runIntro(garden, cards);
   else reveal(garden, cards);
 }

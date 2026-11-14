@@ -20,10 +20,12 @@ const recordClasses = (page: Page) =>
   page.addInitScript(() => {
     const log: string[] = [];
     (window as unknown as ClassLog).__classes = log;
-    const root = document.documentElement;
-    new MutationObserver(() => {
+    // init script の時点では html の要素がまだ無いので、document の下の全体を見て、html の変化だけを拾う
+    new MutationObserver((records) => {
+      const root = document.documentElement;
+      if (!records.some((r) => r.target === root)) return;
       if (log.at(-1) !== root.className) log.push(root.className);
-    }).observe(root, { attributes: true, attributeFilter: ["class"] });
+    }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
   });
 
 /** 色を差し始めた時刻と、イントロを終えた時刻（ms） */
@@ -141,9 +143,41 @@ test.describe("イントロの途中", () => {
     await expectJumpedToEnd(page);
   });
 
-  test("Esc を押すと、動かずに庭の中の最後の状態になる", async ({ page }) => {
+  test("Esc を押すと、動かずに庭の中の最後の状態になり、フォーカスを動かさない", async ({
+    page,
+  }) => {
     await page.keyboard.press("Escape");
     await expectJumpedToEnd(page);
+    expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  });
+});
+
+test.describe("場面の準備が遅いとき", () => {
+  // バンドルの応答を遅らせ、場面の準備を墨の絵を描き終える 3.8 秒より後にする
+  const delayBundle = (page: Page, ms: number) =>
+    page.route("**/_astro/garden-entry-*.js", async (route) => {
+      await new Promise((r) => setTimeout(r, ms));
+      await route.continue();
+    });
+
+  test("準備ができるまでは、「飛ばす」を出さず、Tab を受けない", async ({ page }) => {
+    await delayBundle(page, 4000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(html(page)).toHaveClass(/\bintro\b/);
+    await expect(page.getByRole("button", { name: "飛ばす" })).toBeHidden();
+    await page.keyboard.press("Tab");
+    await expect(html(page)).toHaveClass(/\bintro\b/);
+    await expect(html(page)).not.toHaveClass(/scene-ready|garden-ready/);
+    await expect(page.getByRole("button", { name: "飛ばす" })).toBeVisible({ timeout: 30_000 });
+  });
+
+  test("準備が墨の絵を描き終えるより遅いと、準備の直後に色を差し始める", async ({ page }) => {
+    await delayBundle(page, 4500);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(html(page)).toHaveClass(/\benter\b/, { timeout: 30_000 });
+    const m = await marks(page);
+    expect(m["garden-scene-ready"]).toBeGreaterThan(3800);
+    expect(m["garden-enter"]! - m["garden-scene-ready"]!).toBeLessThan(500);
   });
 });
 
@@ -153,10 +187,15 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
   test("文が出てからカメラが止まるまでに「文だけで読む」を押すと、ふつうのページに戻り、イントロの class が後から付かない", async ({
     page,
   }) => {
+    await recordClasses(page);
     await page.goto("/");
     await expect(html(page)).toHaveClass(/garden-ready/, { timeout: 60_000 });
     await page.getByRole("button", { name: "文だけで読む" }).click();
     await expect(heading(page)).toBeFocused();
+    // 押した時点で、まだイントロの途中だった
+    const states = await page.evaluate(() => (window as unknown as ClassLog).__classes);
+    const left = states.findIndex((s) => !s.split(" ").includes("stage-on"));
+    expect(states[left - 1]!.split(" ")).toContain("intro");
     await expect(page.locator("[data-garden-stage]")).toBeHidden();
     // イントロを終える時刻（色を差してから 4.5 秒）を過ぎても、class を書き戻さない
     await page.waitForFunction(() => performance.now() > 12_000);
@@ -204,6 +243,17 @@ test.describe("場面のバンドル", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(html(page)).toHaveClass(/stage-on/);
     await expect(html(page)).not.toHaveClass(/stage-on/, { timeout: 8000 });
+    expect(await page.evaluate(() => performance.now())).toBeGreaterThanOrEqual(6000);
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("初めての訪問で場面のバンドルの読み込みに失敗すると、墨の絵を消してふつうのページを出す", async ({
+    page,
+  }) => {
+    await page.route("**/_astro/garden-entry-*.js", (route) => route.abort());
+    await page.goto("/");
+    await expect(html(page)).not.toHaveClass(/stage-on|intro/);
+    await expect(page.locator(".ink-svg")).toBeHidden();
     await expect(heading(page)).toBeVisible();
   });
 });
