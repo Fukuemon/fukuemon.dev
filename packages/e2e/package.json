@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "playwright test --project chromium",
-    "test:visual": "playwright test --project visual",
+    "test:garden": "playwright test --project garden",
     "capture": "playwright test -c playwright.capture.config.ts --project chromium --workers=1",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
