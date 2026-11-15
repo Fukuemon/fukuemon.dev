@@ -32,7 +32,7 @@ interface StageFns {
 
 /**
  * 季節と時間帯を `html` の `data-season` と `data-time` に書き、最初の訪問かを記録する。
- * 季節と時間帯は、URL の引数（開発のビルドだけ）、表示の設定で選んだ値（`data-season-setting` と `data-time-setting`）、端末の日付と時刻の順に先に使う。
+ * 季節と時間帯は、URL の引数（開発のビルドだけ）、表示の設定で選んだ値（`data-season-setting` と `data-time-setting`）、端末の日付と時刻の順に優先する。
  * 庭の表示の設定（`data-garden`）が `off` のときと、場面のバンドルが無いときは、庭を出さない。記録は、庭を出すかに関わらず書く。
  * 庭を出すときは class `stage-on` を付けて、場面のバンドルを読み込む。
  * 最初の訪問か、「イントロをもう一度見る」から開いたときは、アニメーションの設定（`data-motion`）が `off` でなければ class `intro` も付ける。
