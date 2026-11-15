@@ -1,7 +1,7 @@
 ---
-// ヘッダーの歯車（SiteSettingsButton）で開く設定の面。React は配らず、Switch を静的な HTML に描き、下の script で動かす。
+// トップのフッターの歯車（SiteSettingsButton）で開く設定の面。React は配らず、Switch を静的な HTML に描き、下の script で動かす。
 // 面は popover にする。庭とヘッダーより上の層に出し、Esc と面の外のクリックで閉じ、閉じたら歯車にフォーカスを戻すのを、ブラウザに任せる。
-// ヘッダーの外に置く。トップの庭がヘッダーに掛ける霞の色を、面に引き継がないためである。
+// フッターの外に置く。トップの庭がフッターに掛ける霞の色を、面に引き継がないためである。
 import { Switch } from "@fukuemon/ui";
 import { buttonClassName } from "@fukuemon/ui/button-class-name";
 import { PICK_CHOICES, SITE_SETTINGS_ID } from "./settings";
@@ -82,7 +82,7 @@ const picks = [
 </div>
 
 <style>
-  /* 面は、歯車の下に、右端を歯車にそろえて出す。位置と大きさの上限は、開くときに script が歯車から決める。popover は top layer に出るので、庭とヘッダーの重なりの順に依らない。背の低い画面では、面の中を縦に送る */
+  /* 面は、歯車の上に、右端を歯車にそろえて出す。位置と大きさの上限は、開くときに script が歯車から決める。popover は top layer に出るので、庭とフッターの重なりの順に依らない。背の低い画面では、面の中を縦に送る */
   .site-settings:popover-open {
     position: fixed;
     inset: auto;
@@ -116,21 +116,20 @@ const picks = [
   };
 
   const opener = document.querySelector<HTMLElement>(`[popovertarget="${panel?.id}"]`);
-  // 面の位置は、ヘッダーが折り返すかと、歯車の右端の位置に依るので、開くたびと画面の大きさが変わるたびに、歯車から決める。
+  // 面の位置は、スクロールの位置と歯車の位置に依るので、開くたびと画面の大きさが変わるたびに、歯車から決める。
   const place = () => {
     if (!panel || !opener) return;
     const gap = 8;
     const edge = 16;
     const r = opener.getBoundingClientRect();
-    const top = r.bottom + gap;
-    panel.style.top = `${top}px`;
+    panel.style.bottom = `${innerHeight - r.top + gap}px`;
     // 面の幅は w-80（20rem）で、狭い画面では左右に edge を残して縮める。左端が画面の外に出ないよう、右端の位置を抑える。
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const width = Math.min(20 * rem, innerWidth - 2 * edge);
     const right = Math.min(Math.max(edge, innerWidth - r.right), innerWidth - edge - width);
     panel.style.right = `${right}px`;
     panel.style.maxInlineSize = `${innerWidth - 2 * edge}px`;
-    panel.style.maxBlockSize = `${innerHeight - top - edge}px`;
+    panel.style.maxBlockSize = `${r.top - gap - edge}px`;
   };
 
   panel?.addEventListener("beforetoggle", (e) => {

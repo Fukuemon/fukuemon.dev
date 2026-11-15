@@ -14,31 +14,47 @@ const introAgain = (page: Page) => page.getByTestId("intro-again");
 const brushDuration = (page: Page) =>
   articlesNavLink(page).evaluate((el) => getComputedStyle(el, "::after").transitionDuration);
 
+/** 歯車はトップにだけある。庭を描くのを待たないよう、庭の表示をオフにしたトップを開く */
+const openTop = async (page: Page) => {
+  await presetSettings(page, { garden: "off" });
+  await page.goto("/");
+};
+
 test.use({ viewport: { width: 1280, height: 800 }, colorScheme: "light" });
 
 test.describe("表示の設定", () => {
   test("歯車を押した場合、設定の面が開き、2 つのスイッチが保存した値で出て、イントロをもう一度見るボタンが出ること", async ({
     page,
   }) => {
-    await presetSettings(page, { motion: "off", garden: "on" });
-    await page.goto("/articles");
+    await presetSettings(page, { motion: "off" });
+    await openTop(page);
     await openButton(page).click();
     await expect(panel(page)).toBeVisible();
     await expect(motion(page)).toHaveAttribute("aria-checked", "false");
-    await expect(garden(page)).toHaveAttribute("aria-checked", "true");
+    await expect(garden(page)).toHaveAttribute("aria-checked", "false");
     await expect(introAgain(page)).toBeVisible();
     await expect(introAgain(page)).toHaveAttribute("aria-disabled", "true");
     // aria-disabled のボタンは Playwright が押せない要素として待つので、押せることを確かめずに押す
     await introAgain(page).click({ force: true });
-    await expect(page).toHaveURL(/\/articles$/);
+    await expect(page).toHaveURL(/\/$/);
   });
 
-  test("保存していない場合、季節と時間帯は自動で出て、選んだ値はトップを開いたときの季節と時間帯になること", async ({
+  test("記事の一覧とプレイグラウンドの一覧を開いた場合、ヘッダーに歯車が無いこと", async ({
+    page,
+  }) => {
+    for (const path of ["/articles", "/playground"]) {
+      await page.goto(path);
+      await expect(page.getByTestId("site-header")).toBeVisible();
+      await expect(openButton(page)).toHaveCount(0);
+    }
+  });
+
+  test("保存していない場合、季節と時間帯は自動で出て、選んだ値は読み込み直したトップの季節と時間帯になること", async ({
     page,
   }) => {
     // 選んだ値を無視しても、端末の日付と時刻が同じ季節と時間帯なら通ってしまうので、秋の昼に固定し、夏の夕を選ぶ
     await page.clock.setFixedTime(AUTUMN_NOON);
-    await page.goto("/articles");
+    await openTop(page);
     await openButton(page).click();
     await expect(page.getByTestId("setting-season-auto")).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByTestId("setting-time-auto")).toHaveAttribute("aria-pressed", "true");
@@ -46,13 +62,13 @@ test.describe("表示の設定", () => {
     await page.getByTestId("setting-time-evening").click();
     await expect(page.getByTestId("setting-season-summer")).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByTestId("setting-season-auto")).toHaveAttribute("aria-pressed", "false");
-    await page.goto("/");
+    await page.reload();
     await expect(htmlElement(page)).toHaveAttribute("data-season", "summer");
     await expect(htmlElement(page)).toHaveAttribute("data-time", "evening");
   });
 
   test("アニメーションをオフにした場合、ヘッダーの筆の線が動かなくなること", async ({ page }) => {
-    await page.goto("/articles");
+    await openTop(page);
     await expect.poll(() => brushDuration(page)).toBe("0.24s");
     await openButton(page).click();
     await motion(page).click();
@@ -63,13 +79,14 @@ test.describe("表示の設定", () => {
   test("設定を変えてから別のページを開いた場合と読み込み直した場合、変えた設定が残ること", async ({
     page,
   }) => {
-    await page.goto("/articles");
+    await openTop(page);
     await openButton(page).click();
     await motion(page).click();
-    await garden(page).click();
-    await page.goto("/");
+    await page.goto("/articles");
     await expect(htmlElement(page)).toHaveAttribute("data-motion", "off");
     await expect(htmlElement(page)).toHaveAttribute("data-garden", "off");
+    await expect.poll(() => brushDuration(page)).toBe("1e-05s");
+    await page.goto("/");
     await expect(page.getByTestId("garden-stage")).toBeHidden();
     await page.reload();
     await openButton(page).click();
@@ -81,14 +98,14 @@ test.describe("表示の設定", () => {
     test.use({ reducedMotion: "reduce" });
 
     test("初めて開いた場合、アニメーションの初期値がオフになること", async ({ page }) => {
-      await page.goto("/articles");
+      await openTop(page);
       await openButton(page).click();
       await expect(motion(page)).toHaveAttribute("aria-checked", "false");
       await expect.poll(() => brushDuration(page)).toBe("1e-05s");
     });
 
     test("アニメーションをオンにした場合、OS の設定に依らず筆の線が動くこと", async ({ page }) => {
-      await page.goto("/articles");
+      await openTop(page);
       await openButton(page).click();
       await motion(page).click();
       await expect.poll(() => brushDuration(page)).toBe("0.24s");
@@ -102,7 +119,7 @@ test.describe("表示の設定", () => {
       test("季節のボタンを押した場合、押したボタンが選択の色で塗られ、字はふつうの字の色のままであること", async ({
         page,
       }) => {
-        await page.goto("/articles");
+        await openTop(page);
         await openButton(page).click();
         const winter = page.getByTestId("setting-season-winter");
         await winter.click();
@@ -131,7 +148,7 @@ test.describe("表示の設定", () => {
   test("キーボードだけで操作した場合、歯車、設定の面、スイッチ、季節と時間帯のボタンに移れ、Esc で面が閉じて歯車にフォーカスが戻ること", async ({
     page,
   }) => {
-    await page.goto("/articles");
+    await openTop(page);
     await openButton(page).focus();
     await page.keyboard.press("Enter");
     await expect(panel(page)).toBeVisible();

@@ -1,4 +1,6 @@
 ---
+import { SiteSettingsButton } from "../components/site-settings/SiteSettingsButton";
+import SiteSettingsPopover from "../components/site-settings/SiteSettingsPopover.astro";
 import InkGate from "../features/top-garden/ink/InkGate.astro";
 import GardenStage from "../features/top-garden/scene/GardenStage.astro";
 import Profile from "../features/top-garden/Profile.astro";
@@ -12,4 +14,11 @@ import SiteLayout from "../layouts/SiteLayout.astro";
   <GardenStage>
     <InkGate />
   </GardenStage>
+  {/* 庭を出すときは、GardenStage の CSS が歯車を画面の右下に移す */}
+  <footer slot="footer" class="top-footer border-t-2 border-text bg-surface px-4 md:px-6" data-top-footer data-testid="top-footer">
+    <div class="mx-auto flex min-h-16 max-w-page items-center justify-end py-2">
+      <SiteSettingsButton />
+    </div>
+  </footer>
+  <SiteSettingsPopover slot="footer" />
 </SiteLayout>

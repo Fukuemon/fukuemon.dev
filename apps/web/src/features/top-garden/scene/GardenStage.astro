@@ -104,6 +104,7 @@ const skip =
 
   /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない。歯車の hover の面も霞の色にし、テーマの面の色を霞の上に出さない。「スキップ」も、色が差した後は場面と明るさをそろえるよう、同じ色にする */
   :global(html.stage-on.garden-ready [data-site-header]),
+  :global(html.stage-on.garden-ready [data-top-footer]),
   :global(html.stage-on.garden-ready) .garden-nav,
   :global(html.stage-on.garden-ready) .garden-mist,
   :global(html.stage-on.enter) .garden-skip {
@@ -115,6 +116,7 @@ const skip =
   }
 
   :global(html.stage-on.garden-ready[data-time="night"] [data-site-header]),
+  :global(html.stage-on.garden-ready[data-time="night"] [data-top-footer]),
   :global(html.stage-on.garden-ready[data-time="night"]) .garden-nav,
   :global(html.stage-on.garden-ready[data-time="night"]) .garden-mist,
   :global(html.stage-on.enter[data-time="night"]) .garden-skip {
@@ -132,20 +134,14 @@ const skip =
     visibility: hidden;
   }
 
-  /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、ロゴをさらに小さくする。左右の余白と間は、ヘッダーの側で詰めてある */
-  @media not (min-width: 48rem) {
-    :global(html.stage-on [data-site-logo] svg) {
-      block-size: 1.5rem;
-    }
-  }
-
-  /* 3 つの文へ移るボタンは、画面の下端の中央に並べる */
+  /* 3 つの文へ移るボタンは、画面の下端の中央に並べる。狭い画面では、右下の歯車と重ならないよう、歯車の幅と間を右に空ける */
   :global(html.stage-on.garden-ready) .garden-nav {
     position: fixed;
     inset: auto 0.5rem 0.5rem;
     z-index: 30;
     display: flex;
     justify-content: center;
+    padding-inline-end: 3.25rem;
     pointer-events: none;
   }
 
@@ -153,9 +149,55 @@ const skip =
     pointer-events: auto;
   }
 
+  /* トップのフッターは、庭を描くまで隠し、描いた後は歯車だけを画面の右下に出す */
+  :global(html.stage-on [data-top-footer]) {
+    display: none;
+  }
+
+  :global(html.stage-on.garden-ready [data-top-footer]) {
+    position: fixed;
+    inset: auto 0.5rem 0.5rem auto;
+    z-index: 30;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  :global(html.stage-on.garden-ready [data-top-footer] > div) {
+    min-block-size: 0;
+    padding: 0;
+  }
+
+  :global(html.stage-on.garden-ready [data-top-footer] button) {
+    border: 1px solid var(--fd-color-border-field);
+    background: var(--fd-color-surface);
+  }
+
+  /* 幅 360px 未満では、帯と歯車を 1 列に収めるよう、帯のボタンの左右の余白と画面の端との間を詰める */
+  @media not (min-width: 22.5rem) {
+    :global(html.stage-on.garden-ready) .garden-nav {
+      inset-inline: 0.25rem;
+      padding-inline-end: 3rem;
+    }
+
+    .garden-nav button {
+      padding-inline: 0.125rem;
+    }
+
+    :global(html.stage-on.garden-ready [data-top-footer]) {
+      inset-inline-end: 0.25rem;
+    }
+  }
+
   @media (min-width: 48rem) {
     :global(html.stage-on.garden-ready) .garden-nav {
       inset: auto 1.25rem 1.25rem;
+      padding-inline-end: 0;
+    }
+
+    :global(html.stage-on.garden-ready [data-top-footer]) {
+      inset: auto 1.25rem 1.25rem auto;
     }
 
     .garden-mist-bottom {
@@ -201,6 +243,7 @@ const skip =
   }
 
   :global(html.intro.garden-ready [data-site-header]),
+  :global(html.intro.garden-ready [data-top-footer]),
   :global(html.intro.garden-ready) .garden-nav,
   :global(html.intro.garden-ready) .garden-mist {
     animation: garden-appear 600ms ease both;
