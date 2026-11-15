@@ -1,9 +1,13 @@
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { seasonOf, timeOfDayOf } from "./season";
+import { seasonOf, timeOfDayOf, type Season, type TimeOfDay } from "./season";
 import { applyStage, readOverride, stageScript, type StageEnv } from "./stage";
 import { takeFirstVisit } from "./visit";
-import { SETTINGS_CHANGE, type SettingsChange } from "../../../components/site-settings/settings";
+import {
+  PICK_CHOICES,
+  SETTINGS_CHANGE,
+  type SettingsChange,
+} from "../../../components/site-settings/settings";
 
 const fns = { seasonOf, timeOfDayOf, takeFirstVisit };
 const NOV_13_20H = new Date(2026, 10, 13, 20);
@@ -39,11 +43,15 @@ function run(
     seen?: boolean;
     motion?: "on" | "off";
     garden?: "on" | "off";
+    seasonSetting?: string;
+    timeSetting?: string;
   } = {},
 ) {
   const root = fakeRoot();
   root.dataset.motion = o.motion ?? "on";
   root.dataset.garden = o.garden ?? "on";
+  root.dataset.seasonSetting = o.seasonSetting ?? "auto";
+  root.dataset.timeSetting = o.timeSetting ?? "auto";
   const store = memory(o.seen);
   const loads: (() => void)[] = [];
   const timers: { fn: () => void; ms: number }[] = [];
@@ -188,6 +196,25 @@ describe("applyStage", () => {
     ]);
   });
 
+  it("表示の設定で選んだ季節と時間帯を、端末の日付と時刻より先に使う", () => {
+    const { root } = run({ seasonSetting: "spring", timeSetting: "morning" });
+    expect([root.dataset.season, root.dataset.time]).toStrictEqual(["spring", "morning"]);
+  });
+
+  it("表示の設定で季節だけを選ぶと、時間帯は端末の時刻で決める", () => {
+    const { root } = run({ seasonSetting: "winter" });
+    expect([root.dataset.season, root.dataset.time]).toStrictEqual(["winter", "night"]);
+  });
+
+  it("引数で選んだ季節と時間帯を、表示の設定より先に使う", () => {
+    const { root } = run({
+      seasonSetting: "winter",
+      timeSetting: "day",
+      override: { season: "summer", time: "evening" },
+    });
+    expect([root.dataset.season, root.dataset.time]).toStrictEqual(["summer", "evening"]);
+  });
+
   it("引数で選んだ季節と時間帯を、端末の日付と時刻より先に使う", () => {
     const { root } = run({ override: { season: "spring", time: "morning" } });
     expect([root.dataset.season, root.dataset.time]).toStrictEqual(["spring", "morning"]);
@@ -263,6 +290,21 @@ describe("stageScript", () => {
     const b = browser("?intro&season=winter");
     runInNewContext(stageScript({ dev: true }), b.globals);
     expect(b.replaced).toStrictEqual(["https://fukuemon.dev/?season=winter"]);
+  });
+
+  it("庭を出しているときに季節か時間帯を選ぶと読み込み直し、庭を出していないときは読み込み直さない", () => {
+    const b = browser();
+    let reloads = 0;
+    runInNewContext(stageScript({ dev: false }), {
+      ...b.globals,
+      location: { ...b.globals.location, reload: () => void reloads++ },
+    });
+    const fire = (detail: SettingsChange) => b.root.listeners.get(SETTINGS_CHANGE)?.({ detail });
+    fire({ name: "season", value: "winter" });
+    const before = reloads;
+    b.root.classList.add("stage-on");
+    fire({ name: "time", value: "night" });
+    expect([before, reloads]).toStrictEqual([0, 1]);
   });
 
   it("庭を出しているときは、表示の設定で庭の表示をオンにしても読み込み直さない", () => {
@@ -401,5 +443,16 @@ describe("inline script に埋め込む形", () => {
       URLSearchParams,
     }) as typeof readOverride;
     expect({ ...read("?season=summer") }).toStrictEqual({ season: "summer" });
+  });
+});
+
+describe("表示の設定の季節と時間帯の値", () => {
+  it("自動のほかの値は、season.ts の季節と時間帯の区分と同じである", () => {
+    const seasons: readonly Season[] = ["spring", "summer", "autumn", "winter"];
+    const times: readonly TimeOfDay[] = ["morning", "day", "evening", "night"];
+    expect({
+      season: PICK_CHOICES.season.map((c) => c.value).filter((v) => v !== "auto"),
+      time: PICK_CHOICES.time.map((c) => c.value).filter((v) => v !== "auto"),
+    }).toStrictEqual({ season: seasons, time: times });
   });
 });

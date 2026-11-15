@@ -32,6 +32,22 @@ test.describe("表示の設定", () => {
     await expect(page).toHaveURL(/\/articles$/);
   });
 
+  test("保存していない場合、季節と時間帯は自動で出て、選んだ値はトップを開いたときの季節と時間帯になること", async ({
+    page,
+  }) => {
+    await page.goto("/articles");
+    await openButton(page).click();
+    await expect(page.getByTestId("setting-season-auto")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("setting-time-auto")).toHaveAttribute("aria-pressed", "true");
+    await page.getByTestId("setting-season-summer").click();
+    await page.getByTestId("setting-time-evening").click();
+    await expect(page.getByTestId("setting-season-summer")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("setting-season-auto")).toHaveAttribute("aria-pressed", "false");
+    await page.goto("/");
+    await expect(htmlElement(page)).toHaveAttribute("data-season", "summer");
+    await expect(htmlElement(page)).toHaveAttribute("data-time", "evening");
+  });
+
   test("アニメーションをオフにした場合、ヘッダーの筆の線が動かなくなること", async ({ page }) => {
     await page.goto("/articles");
     await expect.poll(() => brushDuration(page)).toBe("0.24s");
@@ -76,7 +92,7 @@ test.describe("表示の設定", () => {
     });
   });
 
-  test("キーボードだけで操作した場合、歯車、設定の面、スイッチに移れ、Esc で面が閉じて歯車にフォーカスが戻ること", async ({
+  test("キーボードだけで操作した場合、歯車、設定の面、スイッチ、季節と時間帯のボタンに移れ、Esc で面が閉じて歯車にフォーカスが戻ること", async ({
     page,
   }) => {
     await page.goto("/articles");
@@ -89,6 +105,23 @@ test.describe("表示の設定", () => {
     await expect(motion(page)).toHaveAttribute("aria-checked", "false");
     await page.keyboard.press("Tab");
     await expect(garden(page)).toBeFocused();
+    for (const id of [
+      "setting-season-auto",
+      "setting-season-spring",
+      "setting-season-summer",
+      "setting-season-autumn",
+      "setting-season-winter",
+      "setting-time-auto",
+      "setting-time-morning",
+      "setting-time-day",
+      "setting-time-evening",
+      "setting-time-night",
+    ]) {
+      await page.keyboard.press("Tab");
+      await expect(page.getByTestId(id)).toBeFocused();
+    }
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("setting-time-night")).toHaveAttribute("aria-pressed", "true");
     await page.keyboard.press("Tab");
     await expect(introAgain(page)).toBeFocused();
     await page.keyboard.press("Escape");

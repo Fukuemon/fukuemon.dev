@@ -14,6 +14,7 @@ function memory(entries: [string, string][] = []) {
     items,
     getItem: (k: string) => items.get(k) ?? null,
     setItem: (k: string, v: string) => void items.set(k, v),
+    removeItem: (k: string) => void items.delete(k),
   };
 }
 
@@ -108,5 +109,65 @@ describe("changeSetting", () => {
       attr: "on",
       events: [{ name: "garden", on: true }],
     });
+  });
+});
+
+describe("季節と時間帯の設定", () => {
+  function picksOf(entries: [string, string][]) {
+    const root = { dataset: {} as DOMStringMap };
+    applySettings(root, () => memory(entries), false);
+    return { season: root.dataset.seasonSetting, time: root.dataset.timeSetting };
+  }
+
+  it("保存していないときは、2 つとも auto にする", () => {
+    expect(picksOf([])).toStrictEqual({ season: "auto", time: "auto" });
+  });
+
+  it("保存した季節と時間帯を書き、決めた値のほかは auto にする", () => {
+    expect(
+      picksOf([
+        ["fd-season", "winter"],
+        ["fd-time", "noon"],
+      ]),
+    ).toStrictEqual({ season: "winter", time: "auto" });
+  });
+
+  function pickTarget() {
+    const events: SettingsChange[] = [];
+    const root = {
+      dataset: {} as DOMStringMap,
+      dispatchEvent: (e: Event) => {
+        events.push((e as CustomEvent<SettingsChange>).detail);
+        return true;
+      },
+    };
+    return { root, events };
+  }
+
+  it("選んだ値を html に書いて保存し、イベントで知らせる", () => {
+    const { root, events } = pickTarget();
+    const store = memory();
+    changeSetting(root, () => store, { name: "time", value: "night" });
+    expect({
+      attr: root.dataset.timeSetting,
+      saved: store.items.get("fd-time"),
+      events,
+    }).toStrictEqual({
+      attr: "night",
+      saved: "night",
+      events: [{ name: "time", value: "night" }],
+    });
+  });
+
+  it("auto に戻すと、保存した値を消す", () => {
+    const { root } = pickTarget();
+    const store = memory([["fd-season", "winter"]]);
+    changeSetting(root, () => store, { name: "season", value: "auto" });
+    expect({ attr: root.dataset.seasonSetting, saved: store.items.has("fd-season") }).toStrictEqual(
+      {
+        attr: "auto",
+        saved: false,
+      },
+    );
   });
 });

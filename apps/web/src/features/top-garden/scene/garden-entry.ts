@@ -148,12 +148,14 @@ function follow(garden: Garden, cards: readonly HTMLElement[]): void {
   root.addEventListener(
     SETTINGS_CHANGE,
     (e) => {
-      const { name, on: enabled } = (e as CustomEvent<SettingsChange>).detail;
-      if (name === "motion") {
-        garden.pause(!enabled);
+      const change = (e as CustomEvent<SettingsChange>).detail;
+      // 季節と時間帯の変更は、head の inline script が読み込み直して当てる。
+      if (!("on" in change)) return;
+      if (change.name === "motion") {
+        garden.pause(!change.on);
         return;
       }
-      if (enabled) return;
+      if (change.on) return;
       try {
         garden.stop();
       } catch (err) {

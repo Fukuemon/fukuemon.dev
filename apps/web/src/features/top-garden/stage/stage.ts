@@ -32,6 +32,7 @@ interface StageFns {
 
 /**
  * 季節と時間帯を `html` の `data-season` と `data-time` に書き、最初の訪問かを記録する。
+ * 季節と時間帯は、URL の引数（開発のビルドだけ）、表示の設定で選んだ値（`data-season-setting` と `data-time-setting`）、端末の日付と時刻の順に先に使う。
  * 庭の表示の設定（`data-garden`）が `off` のときと、場面のバンドルが無いときは、庭を出さない。記録は、庭を出すかに関わらず書く。
  * 庭を出すときは class `stage-on` を付けて、場面のバンドルを読み込む。
  * 最初の訪問か、「イントロをもう一度見る」から開いたときは、アニメーションの設定（`data-motion`）が `off` でなければ class `intro` も付ける。
@@ -43,8 +44,14 @@ interface StageFns {
  */
 export function applyStage(env: StageEnv, fns: StageFns): void {
   const root = env.root;
-  root.dataset.season = env.override.season ?? fns.seasonOf(env.now);
-  root.dataset.time = env.override.time ?? fns.timeOfDayOf(env.now);
+  const pickedSeason = root.dataset.seasonSetting;
+  const pickedTime = root.dataset.timeSetting;
+  root.dataset.season =
+    env.override.season ??
+    (pickedSeason && pickedSeason !== "auto" ? pickedSeason : fns.seasonOf(env.now));
+  root.dataset.time =
+    env.override.time ??
+    (pickedTime && pickedTime !== "auto" ? pickedTime : fns.timeOfDayOf(env.now));
   const first = fns.takeFirstVisit(env.storage);
   if (root.dataset.garden === "off" || !env.load) return;
   root.classList.add("stage-on");
@@ -76,6 +83,7 @@ export function readOverride(search: string): StageOverride {
  * バンドルは module の script で読み込む。開発のサーバーはバンドルを ES モジュールのまま配り、本番のビルドの IIFE は module としても動くためである。
  * URL の引数 `intro` は、読んだ後に URL から消す。読み込み直したときに、イントロをまた流さないためである。
  * 庭を出していないトップで、表示の設定で庭の表示をオンにしたときは、読み込み直して庭を出す。庭を出すかは、描く前のこのスクリプトが決めるためである。
+ * 庭を出しているトップで季節か時間帯を選んだときも、読み込み直す。場面の色と木は、組み立てるときに決めるためである。
  */
 export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";
@@ -88,6 +96,6 @@ export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }):
     `introAgain:introAgain,storage:function(){return localStorage},load:${load},later:function(f,m){setTimeout(f,m)}},` +
     `{seasonOf:${seasonOf.toString()},timeOfDayOf:${timeOfDayOf.toString()},takeFirstVisit:${takeFirstVisit.toString()}});` +
     `if(introAgain){var u=new URL(location.href);u.searchParams.delete(p);history.replaceState(history.state,"",u)}` +
-    `var root=document.documentElement;root.addEventListener(${JSON.stringify(SETTINGS_CHANGE)},function(e){if(e.detail.name==="garden"&&e.detail.on&&!root.classList.contains("stage-on"))location.reload()})})()`
+    `var root=document.documentElement;root.addEventListener(${JSON.stringify(SETTINGS_CHANGE)},function(e){var d=e.detail,on=root.classList.contains("stage-on");if((d.name==="garden"&&d.on&&!on)||((d.name==="season"||d.name==="time")&&on))location.reload()})})()`
   );
 }

@@ -4,6 +4,7 @@ import { delayResponse } from "../../fixtures/delay-response";
 import { htmlElement, inkSvg } from "../../selectors/garden";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
+import { AUTUMN_NOON } from "./garden-time";
 import { settledCenterX } from "../../widgets/waits/settled-center-x";
 import { waitForPresentedFrames } from "../../widgets/waits/presented-frames";
 
@@ -69,5 +70,34 @@ test.describe("表示の設定とトップの庭", () => {
     await page.getByTestId("site-settings-open").click();
     await page.getByTestId("setting-garden").click();
     await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+  });
+
+  test("設定の面で季節を冬、時間帯を夜に選んだ場合、トップの庭が冬の夜の場面になり、読み込み直しても残り、自動に戻すと端末の日付と時刻の場面に戻ること", async ({
+    page,
+  }) => {
+    await seenBefore(page);
+    await page.clock.setFixedTime(AUTUMN_NOON);
+    await page.goto("/");
+    await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+    await page.getByTestId("site-settings-open").click();
+    await page.getByTestId("setting-season-winter").click();
+    await expect(htmlElement(page)).toHaveAttribute("data-season", "winter");
+    await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+    await page.getByTestId("site-settings-open").click();
+    await page.getByTestId("setting-time-night").click();
+    await expect(htmlElement(page)).toHaveAttribute("data-time", "night");
+    await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+    await page.reload();
+    await expect(htmlElement(page)).toHaveAttribute("data-season", "winter");
+    await expect(htmlElement(page)).toHaveAttribute("data-time", "night");
+    await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+    await page.getByTestId("site-settings-open").click();
+    await expect(page.getByTestId("setting-season-winter")).toHaveAttribute("aria-pressed", "true");
+    await page.getByTestId("setting-season-auto").click();
+    await expect(htmlElement(page)).toHaveAttribute("data-season", "autumn");
+    await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+    await page.getByTestId("site-settings-open").click();
+    await page.getByTestId("setting-time-auto").click();
+    await expect(htmlElement(page)).toHaveAttribute("data-time", "day");
   });
 });
