@@ -25,6 +25,7 @@
   --color-surface-subtle: var(--fd-color-surface-subtle);
   --color-surface-disabled: var(--fd-color-surface-disabled);
   --color-surface-raised: var(--fd-color-surface-raised);
+  --color-surface-raised-subtle: var(--fd-color-surface-raised-subtle);
   --color-surface-ground: var(--fd-color-surface-ground);
   --color-surface-pane: var(--fd-color-surface-pane);
   --color-surface-pane-subtle: var(--fd-color-surface-pane-subtle);

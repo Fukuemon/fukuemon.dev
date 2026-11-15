@@ -70,4 +70,33 @@ describe("ActionMenu", () => {
       expect(getComputedStyle(item).fontSize).toBe("13px");
     }
   });
+
+  it.each([
+    ["light", "default"],
+    ["dark", "default"],
+    ["light", "compact"],
+    ["dark", "compact"],
+  ] as const)(
+    "%s の %s で項目に hover すると、背景がメニューの面と違う surface-raised-subtle の色になる",
+    async (theme, density) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        render(
+          <>
+            <span className="bg-surface-raised-subtle" data-testid="expected" />
+            <Closed density={density} />
+          </>,
+        );
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
+        await userEvent.click(screen.getByRole("button", { name: "記録の操作" }));
+        const surface = getComputedStyle(screen.getByRole("menu")).backgroundColor;
+        const item = screen.getAllByRole("menuitem")[1] as HTMLElement;
+        await userEvent.hover(item);
+        await expect.poll(() => getComputedStyle(item).backgroundColor).toBe(expected);
+        expect(expected).not.toBe(surface);
+      } finally {
+        delete document.documentElement.dataset.theme;
+      }
+    },
+  );
 });

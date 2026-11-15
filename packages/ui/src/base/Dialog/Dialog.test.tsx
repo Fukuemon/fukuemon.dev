@@ -49,4 +49,28 @@ describe("Dialog", () => {
       expect(opener).not.toHaveFocus();
     }
   });
+
+  it.each(["light", "dark"])(
+    "%s で閉じるボタンに hover すると、背景がダイアログの面と違う surface-raised-subtle の色になる",
+    async (theme) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        render(
+          <>
+            <span className="bg-surface-raised-subtle" data-testid="expected" />
+            <Closed />
+          </>,
+        );
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
+        await userEvent.click(screen.getByRole("button", { name: "記録を消す" }));
+        const surface = getComputedStyle(screen.getByRole("dialog")).backgroundColor;
+        const close = screen.getByRole("button", { name: "閉じる" });
+        await userEvent.hover(close);
+        await expect.poll(() => getComputedStyle(close).backgroundColor).toBe(expected);
+        expect(expected).not.toBe(surface);
+      } finally {
+        delete document.documentElement.dataset.theme;
+      }
+    },
+  );
 });

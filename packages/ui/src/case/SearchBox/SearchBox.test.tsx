@@ -141,4 +141,28 @@ describe("SearchBox", () => {
     await userEvent.click(option("リフレッシュトークンを回す"));
     expect(location.hash).toBe("#refresh-token");
   });
+
+  it.each(["light", "dark"])(
+    "%s で候補に hover すると、背景が候補の面と違う surface-raised-subtle の色になる",
+    async (theme) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        render(
+          <>
+            <span className="bg-surface-raised-subtle" data-testid="expected" />
+            <WithSuggestions />
+          </>,
+        );
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
+        await userEvent.click(screen.getByRole("combobox"));
+        const surface = getComputedStyle(screen.getByRole("listbox")).backgroundColor;
+        const target = option("PKCE の code_verifier を作る");
+        await userEvent.hover(target);
+        await expect.poll(() => getComputedStyle(target).backgroundColor).toBe(expected);
+        expect(expected).not.toBe(surface);
+      } finally {
+        delete document.documentElement.dataset.theme;
+      }
+    },
+  );
 });
