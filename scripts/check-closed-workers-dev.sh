@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# workers_dev の既定は true で、書かないと *.workers.dev でも開ける。トップレベルに false があり、どの深さにも true が無いことを、行ごとの正規表現で確認する (ADR-0084)
+# workers_dev の既定は true で、書かないと *.workers.dev でも開ける (ADR-0084)
 # ドキュメントサイトは、noindex の確認も持つ apps/docs-site/scripts/check-closed-urls.sh が見る
 set -euo pipefail
 
@@ -11,6 +11,11 @@ for wrangler in apps/web/wrangler.jsonc packages/ui/wrangler.jsonc apps/playgrou
   if [ ! -r "$file" ]; then
     echo "$wrangler を読めません。" >&2
     exit 1
+  fi
+  # ブロックコメントの中の行は、行ごとの確認では除けない
+  if grep -qF '/*' "$file"; then
+    echo "$wrangler にブロックコメントがあります。コメントは // で書く。" >&2
+    status=1
   fi
   code="$(grep -vE '^[[:space:]]*//' "$file")"
   for key in workers_dev preview_urls; do

@@ -22,6 +22,8 @@
 - プレビューの Worker（`fukuemon-dev-preview`）と、deploy-preview workflow、noindex を足したアセットを作るスクリプトを、リポジトリから消す。
   - Cloudflare の Worker は、運用者が `wrangler delete` で消す。Terraform の管理下に無いので、apply は要らない。
 - 開発中のサイトは、手元の `astro preview` と E2E で確認する。
+- 本番の Worker の `workers_dev` と `preview_urls` を閉じ、custom domain の `fukuemon.dev` だけで公開する。
+  - `apps/web/wrangler.jsonc` に `false` を書き、`pnpm run check:closed-workers-dev` で確認する。
 
 ## Considered Options
 
