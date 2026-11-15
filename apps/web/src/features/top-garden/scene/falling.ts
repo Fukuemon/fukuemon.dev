@@ -2,6 +2,7 @@
 // 動きの式と乱数の順は、試作の docs/design/prototypes/top/src/i-scene.js と同じにしてある。
 import {
   AdditiveBlending,
+  DynamicDrawUsage,
   type Camera,
   DoubleSide,
   InstancedMesh,
@@ -47,6 +48,7 @@ export function createFalling(fall: ScenePaletteFall): Falling {
     fall.count,
   );
   mesh.frustumCulled = false;
+  mesh.instanceMatrix.setUsage(DynamicDrawUsage);
   const R = rng(FALL_SEED);
   const seeds = Array.from({ length: fall.count }, () => ({
     x: -8 + R() * 16,
