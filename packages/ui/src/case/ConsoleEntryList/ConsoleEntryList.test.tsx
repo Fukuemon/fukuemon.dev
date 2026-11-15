@@ -100,6 +100,27 @@ describe("ConsoleEntryList", () => {
     expect(rows()).toHaveLength(7);
   });
 
+  it.each(["light", "dark"])(
+    "%s でログレベルのボタンに hover すると、背景がペインの面と違う surface-pane-subtle の色になる",
+    async (theme) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        render(
+          <div className="bg-surface-pane">
+            <span className="bg-surface-pane-subtle" data-testid="expected" />
+            <Default />
+          </div>,
+        );
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
+        const button = levelButton(/^error/i);
+        await userEvent.hover(button);
+        await expect.poll(() => getComputedStyle(button).backgroundColor).toBe(expected);
+      } finally {
+        delete document.documentElement.dataset.theme;
+      }
+    },
+  );
+
   it("error だけを選ぶと、error の行だけを表示する", () => {
     render(<ErrorOnly />);
     expect(rows()).toHaveLength(1);
