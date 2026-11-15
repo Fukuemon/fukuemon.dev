@@ -7,6 +7,8 @@ export { BROWSER_PEER_ID } from "./http-records";
 export { BootError, ReadLimitError } from "./types";
 export type {
   BootFailureReason,
+  ConsoleRecord,
+  ConsoleSource,
   BootOptions,
   FileContents,
   FileEntry,

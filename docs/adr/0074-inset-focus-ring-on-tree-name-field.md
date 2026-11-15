@@ -10,7 +10,7 @@
 欄にフォーカスがあるときの表示を決める必要がある。
 
 - 詰めたペインの行には、墨の 2px の輪を要素の内側に引く（`focus-ring-inset`）。使う所は、`density="compact"` の `TreeView` の項目、`Tabs` のタブと閉じるボタン、`HttpExchangeList` の行に限っている。
-  - ADR-0066: [コードを動かす画面の詰めたペインで、フォーカスの輪を要素の内側に引く](0066-inset-focus-ring-in-dense-panes.md)
+  - ADR-0079: [コードを動かす画面の詰めたペイン、木の行の中の名前の欄、`SplitPane` の仕切りで、フォーカスの輪を要素の内側に引く](0079-inset-focus-ring-in-dense-panes.md)
 - フォーカスの表示は、墨の 2px の 1 重の輪にすると決めている。
   - ADR-0061: [フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする](0061-sumi-focus-ring.md)
 - 木の行は 24px で、上下に 2px の余白がある。名前の欄は 20px の高さで、1px の枠（`border-field`）を持つ。

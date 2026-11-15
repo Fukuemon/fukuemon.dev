@@ -39,6 +39,14 @@ import * as Stories from "./TreeView.stories";
 
 <Canvas of={Stories.Compact} />
 
+### 選ぶ操作の無い木
+
+`onSelect` を渡さない木は、項目を選ばない。  
+Enter と Space のキーで、枝を開閉する。  
+コンソールの値の木に使う。
+
+<Canvas of={Stories.WithoutSelect} />
+
 ### フォーカス
 
 <Canvas of={Stories.Focus} />
