@@ -92,7 +92,7 @@ const picks = [
 </style>
 
 <script>
-  import { changeSetting, INTRO_PARAM, pickValueOf, type PickName, type SettingName, type SettingsChange } from "./settings";
+  import { changeSetting, INTRO_PARAM, pickChangeOf, type PickName, type SettingName } from "./settings";
 
   const root = document.documentElement;
   const panel = document.querySelector<HTMLElement>("[data-site-settings]");
@@ -145,9 +145,9 @@ const picks = [
     const name = g.dataset.pick as PickName;
     for (const b of g.querySelectorAll<HTMLButtonElement>("[data-value]")) {
       b.addEventListener("click", () => {
-        const value = pickValueOf(name, b.dataset.value);
-        if (value === undefined || root.dataset[`${name}Setting`] === value) return;
-        changeSetting(root, () => localStorage, { name, value } as SettingsChange);
+        const change = pickChangeOf(root, name, b.dataset.value);
+        if (change === undefined) return;
+        changeSetting(root, () => localStorage, change);
         sync();
       });
     }

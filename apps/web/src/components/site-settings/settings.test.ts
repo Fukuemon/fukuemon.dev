@@ -4,7 +4,7 @@ import {
   applySettings,
   changeSetting,
   PICK_CHOICES,
-  pickValueOf,
+  pickChangeOf,
   SETTINGS_CHANGE,
   settingsScript,
   type SettingsChange,
@@ -183,13 +183,23 @@ describe("changeSetting", () => {
   });
 });
 
-describe("pickValueOf", () => {
-  it("選べる値はそのまま返し、ほかは undefined を返す", () => {
+describe("pickChangeOf", () => {
+  it("選べる値で、今の値と違うときだけ変更を返す", () => {
+    const root = { dataset: { seasonSetting: "winter", timeSetting: "auto" } as DOMStringMap };
     expect([
-      pickValueOf("season", "winter"),
-      pickValueOf("time", "auto"),
-      pickValueOf("season", "night"),
-      pickValueOf("time", undefined),
-    ]).toStrictEqual(["winter", "auto", undefined, undefined]);
+      pickChangeOf(root, "season", "spring"),
+      pickChangeOf(root, "time", "night"),
+      pickChangeOf(root, "season", "winter"),
+      pickChangeOf(root, "time", "auto"),
+      pickChangeOf(root, "season", "night"),
+      pickChangeOf(root, "time", undefined),
+    ]).toStrictEqual([
+      { name: "season", value: "spring" },
+      { name: "time", value: "night" },
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 });
