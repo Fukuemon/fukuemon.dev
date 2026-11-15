@@ -34,7 +34,9 @@ const sizeClassName: Record<ButtonSize, string> = {
 export const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
   clsx(
     "relative inline-flex cursor-pointer items-center justify-center gap-2 ink-press",
-    size === "XS" ? "rounded-control-compact" : "rounded-control",
+    size === "XS" ? "rounded-control-compact" : "rounded-control stitch",
+    // 背景を塗ったボタンと、押せないボタンのステッチは、文字の色にする
+    size !== "XS" && (variant === "secondary" ? "aria-disabled:stitch-current" : "stitch-current"),
     "not-aria-disabled:not-aria-busy:active:brightness-90",
     "focus-visible:focus-ring",
     "forced-frame aria-disabled:forced-off-disabled",

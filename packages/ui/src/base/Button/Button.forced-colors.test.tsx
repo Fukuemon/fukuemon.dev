@@ -55,6 +55,11 @@ describe("Button の forced-colors: active", () => {
     ]).toStrictEqual([button, button]);
   });
 
+  it("ステッチを描かない", () => {
+    render(<Primary />);
+    expect(style(screen.getByRole("button")).backgroundImage).toBe("none");
+  });
+
   it("Tab のキーでフォーカスを受けると、フォーカスの輪が出る", async () => {
     render(<Primary />);
     expect(await outlineAfterTab(screen.getByRole("button"))).toStrictEqual(FOCUS_RING);

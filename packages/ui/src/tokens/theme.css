@@ -142,7 +142,7 @@
   --container-page: 68rem;
 
   /* 操作できる要素と、重なる面の角 */
-  --radius-control: 2px;
+  --radius-control: 4px;
   /* コードを動かす画面だけで使う。ペインの面、下のタブの帯とドロワー、density が compact の操作できる要素（docs/adr/0073-layered-panes-and-radius-in-playground.md） */
   --radius-pane: 10px;
   --radius-sheet: 14px;
@@ -428,6 +428,87 @@
     background: var(--fd-color-current-page);
     clip-path: inset(0);
     animation: var(--animate-stroke);
+  }
+}
+
+/*
+ * ステッチ。枠線の 3px 内側に、長さ 3px の線と 3px の間隔を繰り返す 1px の破線を引く（docs/adr/0028-radius-shadow-and-brush-motion.md）。
+ * 背景の画像で描く。outline は focus-ring が、::before は ink-press が、::after は Button の S の押せる範囲が使うためである。
+ * 破線は飾りなので、ハイコントラストでは消す。
+ */
+@property --fd-stitch {
+  syntax: "*";
+  inherits: false;
+}
+
+@utility stitch {
+  --fd-stitch-dash: var(--fd-stitch, var(--fd-color-border-field)) 0 3px, transparent 3px 6px;
+  background-image:
+    repeating-linear-gradient(to right, var(--fd-stitch-dash)),
+    repeating-linear-gradient(to right, var(--fd-stitch-dash)),
+    repeating-linear-gradient(to bottom, var(--fd-stitch-dash)),
+    repeating-linear-gradient(to bottom, var(--fd-stitch-dash));
+  background-origin: border-box;
+  background-position:
+    left 3px top 3px,
+    left 3px bottom 3px,
+    left 3px top 3px,
+    right 3px top 3px;
+  background-size:
+    calc(100% - 6px) 1px,
+    calc(100% - 6px) 1px,
+    1px calc(100% - 6px),
+    1px calc(100% - 6px);
+  background-repeat: no-repeat;
+
+  @media (forced-colors: active) {
+    background-image: none;
+  }
+}
+
+/* 背景を塗った要素（主のボタン、選択中のボタン）と押せないボタンのステッチ。破線を文字の色の濃度 70% にし、背景と対比する色で見せる */
+@utility stitch-current {
+  --fd-stitch: color-mix(in srgb, currentColor 70%, transparent);
+}
+
+/*
+ * ボタングループ。子要素のボタンを、境の線を 1 本にしてつなぎ、幅が足りなければ折り返す。最初の子要素の左の 2 つの角と、最後の子要素の右の 2 つの角を、rounded-control と同じ値で丸める。
+ * 折り返したときも、丸めるのはこの 4 つの角だけである。CSS では行の端の子を選べないためである。
+ * 子要素の枠線、面、ステッチと、選択中（aria-current か aria-pressed が true）の子要素の反転も、ここで描く。子要素には大きさ、余白、文字の大きさ、フォーカスの表示だけを付け、margin と、枠線、面、文字の色を付けない。色を付けると、選択していないときだけ上書きされる。
+ * 選択中の子要素は、濃い線を隣の線の上に出し、フォーカスした子要素は、その上に出して輪を隣の面に隠さない。
+ */
+@utility band {
+  display: flex;
+  isolation: isolate;
+  flex-wrap: wrap;
+  padding-inline-start: 1px;
+  padding-block-start: 1px;
+
+  & > * {
+    @apply stitch;
+    margin-inline-start: -1px;
+    margin-block-start: -1px;
+    border: 1px solid var(--fd-color-border-field);
+    background-color: var(--fd-color-surface);
+    color: var(--fd-color-text);
+  }
+  & > :is([aria-current="true"], [aria-pressed="true"]) {
+    @apply stitch-current forced-on-row;
+    z-index: 10;
+    border-color: var(--fd-color-text);
+    background-color: var(--fd-color-text);
+    color: var(--fd-color-surface);
+  }
+  & > :focus-visible {
+    z-index: 20;
+  }
+  & > :first-child {
+    border-start-start-radius: --theme(--radius-control);
+    border-end-start-radius: --theme(--radius-control);
+  }
+  & > :last-child {
+    border-start-end-radius: --theme(--radius-control);
+    border-end-end-radius: --theme(--radius-control);
   }
 }
 

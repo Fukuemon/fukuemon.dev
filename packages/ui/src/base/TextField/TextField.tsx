@@ -94,9 +94,10 @@ export function TextField({
               "absolute inset-x-0 border-b border-border-field",
               isCompact
                 ? "inset-y-0 rounded-control-compact bg-surface-pane-subtle"
-                : "inset-y-0.5 rounded-control bg-surface-subtle",
+                : "inset-y-0.5 rounded-control bg-surface-subtle stitch",
               "peer-focus-visible:focus-ring peer-aria-invalid:border-b-2 peer-aria-invalid:border-danger",
-              "peer-disabled:border-border peer-disabled:bg-surface-disabled",
+              // bg-none は、押せない欄の stitch の破線を消す
+              "peer-disabled:border-border peer-disabled:bg-surface-disabled peer-disabled:bg-none",
               "peer-disabled:peer-aria-invalid:border-b peer-disabled:peer-aria-invalid:border-border",
             )}
           />
