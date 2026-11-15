@@ -14,8 +14,8 @@ afterAll(async () => {
   await pg.close();
 });
 
-const rowsOf = async (sql: string, database = withLosslessJson(pg)) => {
-  const response = await runSql(database, sql);
+const rowsOf = async (sql: string) => {
+  const response = await runSql(withLosslessJson(pg), sql);
   if ("error" in response) throw new Error(response.error.message);
   return response.results.at(-1)?.rows;
 };
@@ -31,7 +31,7 @@ describe("withLosslessJson", () => {
     expect(rows).toStrictEqual([['{"n":   9007199254740993}']]);
   });
 
-  it("json と jsonb の配列は、要素の桁を落とさず、引用符のない 1 つの文字列で返す。NULL の要素は null と書く", async () => {
+  it('json と jsonb の配列は、要素の桁を落とさず、要素の `"` をエスケープしない 1 つの文字列で返す。NULL の要素は null と書く', async () => {
     const rows = await rowsOf(
       `select array['{"n":9007199254740993}'::jsonb, null], array['{"n":9007199254740993}'::json]`,
     );
@@ -41,6 +41,21 @@ describe("withLosslessJson", () => {
   it("多次元の配列も、入れ子の角括弧でつなぐ", async () => {
     const rows = await rowsOf(`select array[array['{"a": 1}'::jsonb], array['[2]'::jsonb]]`);
     expect(rows).toStrictEqual([['[[{"a": 1}], [[2]]]']]);
+  });
+
+  it("SQL の NULL の要素と、JSON の null の要素は、どちらも null と書く", async () => {
+    const rows = await rowsOf(`select array['null'::jsonb, null]`);
+    expect(rows).toStrictEqual([["[null, null]"]]);
+  });
+
+  it("json 以外の配列は、配列のまま返す", async () => {
+    const rows = await rowsOf(`select array['a"b', null]::text[], array[1, 2]`);
+    expect(rows).toStrictEqual([
+      [
+        ['a"b', null],
+        [1, 2],
+      ],
+    ]);
   });
 
   it("空の配列は [] で返す", async () => {
