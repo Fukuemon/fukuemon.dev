@@ -39,7 +39,7 @@ test.use({ viewport: { width: 1280, height: 800 } });
 test.describe("トップの背景の墨の絵", () => {
   test.describe("見た目", () => {
     for (const colorScheme of ["light", "dark"] as const) {
-      test(`庭とアニメーションをオフにして ${colorScheme} で開いた場合、止まった背景の絵が基準の画像と同じであること`, async ({
+      test(`3D 表示（WebGL）とアニメーションをオフにして ${colorScheme} で開いた場合、止まった背景の絵が基準の画像と同じであること`, async ({
         page,
       }) => {
         await page.emulateMedia({ colorScheme });
@@ -100,7 +100,9 @@ test.describe("トップの背景の墨の絵", () => {
   });
 
   test.describe("動き", () => {
-    test("庭をオフにしてアニメーションをオンにした場合、霞が流れること", async ({ page }) => {
+    test("3D 表示（WebGL）をオフにしてアニメーションをオンにした場合、霞が流れること", async ({
+      page,
+    }) => {
       await presetSettings(page, { garden: "off", motion: "on" });
       await page.goto("/");
       await expect(background(page)).toBeVisible();
