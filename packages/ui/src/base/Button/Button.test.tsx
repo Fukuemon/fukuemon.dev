@@ -6,8 +6,16 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading, SecondaryLoading, DangerLoading, Small, ExtraSmall } =
-  composeStories(stories);
+const {
+  Primary,
+  Secondary,
+  PrimaryDisabled,
+  Loading,
+  SecondaryLoading,
+  DangerLoading,
+  Small,
+  ExtraSmall,
+} = composeStories(stories);
 
 describe("Button", () => {
   it("押すと onClick を呼ぶ。Enter と Space でも押せる", async () => {
@@ -117,5 +125,39 @@ describe("Button", () => {
     const button = screen.getByRole("button", { name: "作る" });
     expect(button.getBoundingClientRect().height).toBe(28);
     expect(getComputedStyle(button).fontSize).toBe("13px");
+  });
+
+  it("M と S は、角を 4 px で丸め、ステッチを描く", () => {
+    const shapes = [<Primary key="m" />, <Small key="s" />].map((ui) => {
+      const { unmount } = render(ui);
+      const { borderTopLeftRadius, backgroundImage } = getComputedStyle(screen.getByRole("button"));
+      unmount();
+      return {
+        radius: borderTopLeftRadius,
+        stitched: backgroundImage.includes("repeating-linear-gradient"),
+      };
+    });
+    expect(shapes).toStrictEqual([
+      { radius: "4px", stitched: true },
+      { radius: "4px", stitched: true },
+    ]);
+  });
+
+  it("XS は、ステッチを描かない", () => {
+    render(<ExtraSmall />);
+    expect(getComputedStyle(screen.getByRole("button")).backgroundImage).toBe("none");
+  });
+
+  it("主のボタンと押せない secondary のステッチは、押せる secondary のステッチと違う色になる", () => {
+    const images = [<Secondary key="s" />, <Primary key="p" />, <Secondary disabled key="d" />].map(
+      (ui) => {
+        const { unmount } = render(ui);
+        const image = getComputedStyle(screen.getByRole("button")).backgroundImage;
+        unmount();
+        return image;
+      },
+    );
+    const [secondary, ...others] = images;
+    expect(others.map((image) => image === secondary)).toStrictEqual([false, false]);
   });
 });
