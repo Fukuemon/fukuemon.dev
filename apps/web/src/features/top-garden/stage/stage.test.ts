@@ -193,6 +193,13 @@ describe("applyStage", () => {
     expect([...r.root.classes].sort()).toStrictEqual(["ink-failed", "intro", "stage-on"]);
   });
 
+  it("場面のバンドルの読み込みに失敗した後に、墨の絵と署名のファイルの失敗が届いても、ink-failed を付けない", () => {
+    const r = run();
+    r.loads[0]!();
+    r.inks[0]!();
+    expect([...r.root.classes]).toStrictEqual([]);
+  });
+
   it("6 秒の後に場面の準備ができていて墨の絵が届いていないと、ink-failed を付ける", () => {
     const r = run();
     r.root.classList.add("scene-ready");

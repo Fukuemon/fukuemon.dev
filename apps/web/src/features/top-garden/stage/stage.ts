@@ -40,7 +40,7 @@ interface StageFns {
  * 最初の訪問か、「イントロをもう一度見る」から開いたときは、アニメーションの設定（`data-motion`）が `off` でなければ class `intro` も付け、墨の絵と署名のファイルを読み込む。墨の絵と署名のファイルが無いときは、`intro` を付けない。
  * 設定の属性は、全てのページの `head` の inline script（`components/site-settings/settings.ts`）が先に書いている。
  * 場面のバンドルの読み込みに失敗したときと、6 秒の後に場面の準備（class `scene-ready`）ができていないときは、2 つの class を外し、ふつうのページに戻す。記録は戻さない。
- * 墨の絵と署名のファイルの読み込みに失敗したときと、6 秒の後に場面の準備ができていて墨の絵が届いていない（class `ink-ready` が無い）ときは、class `ink-failed` を付ける。場面のバンドルが、この class を読み、庭を止めて、ふつうのページに戻す。
+ * 墨の絵と署名のファイルの読み込みの失敗が、class `intro` があるうちに届いたときと、6 秒の後に場面の準備ができていて墨の絵が届いていない（class `ink-ready` が無い）ときは、class `ink-failed` を付ける。場面のバンドルが、この class を読み、庭を止めて、ふつうのページに戻す。
  * 通信が応答を返さずに止まると、読み込みの失敗が届かないので、6 秒で打ち切る。
  *
  * `head` の inline script に文字列にして埋め込むので、この関数の外の名前を参照しない。
@@ -64,7 +64,11 @@ export function applyStage(env: StageEnv, fns: StageFns): void {
   if (ink) root.classList.add("intro");
   const plain = () => root.classList.remove("stage-on", "intro");
   env.load(plain);
-  if (ink) ink(() => root.classList.add("ink-failed"));
+  // 場面のバンドルの失敗で先にふつうのページに戻した後は、届いた失敗を伝えない
+  if (ink)
+    ink(() => {
+      if (root.classList.contains("intro")) root.classList.add("ink-failed");
+    });
   env.later(() => {
     if (!root.classList.contains("scene-ready")) plain();
     // 場面が動き出した後のクリーンアップは場面のバンドルが持つので、墨の絵が届いていないことだけを class で伝える
