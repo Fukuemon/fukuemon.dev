@@ -21,7 +21,7 @@ import {
   Vector3,
 } from "three";
 import { TREE_PADS, TRUNK } from "../layout";
-import { SHAPE_FILL, type LeafShape } from "./scene-colors";
+import { GLOW_STOPS, SHAPE_FILL, type FallShape } from "./scene-colors";
 
 /**
  * canvas に描いた絵をテクスチャにする。
@@ -46,14 +46,23 @@ export function canvasTexture(
   return t;
 }
 
-type PartShape = LeafShape | "fan";
+type PartShape = FallShape | "fan";
 
-/** 葉の形の板のテクスチャ。fan は松の針を扇に広げた形、petal は桜の花びら、momiji は紅葉 */
-function shapeTexture(shape: PartShape): CanvasTexture {
+/** 葉と舞う物の形の板のテクスチャ。fan は松の針を扇に広げた形、petal は桜の花びら、momiji は紅葉、glow は蛍の光、flake は雪 */
+export function shapeTexture(shape: PartShape): CanvasTexture {
   return canvasTexture(64, 64, (g, w) => {
     g.translate(w / 2, w / 2);
     g.fillStyle = SHAPE_FILL;
-    if (shape === "fan") {
+    if (shape === "glow") {
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, 30);
+      for (const [at, color] of GLOW_STOPS) gr.addColorStop(at, color);
+      g.fillStyle = gr;
+      g.fillRect(-32, -32, 64, 64);
+    } else if (shape === "flake") {
+      g.beginPath();
+      g.arc(0, 0, 20, 0, Math.PI * 2);
+      g.fill();
+    } else if (shape === "fan") {
       g.strokeStyle = SHAPE_FILL;
       g.lineWidth = 2.2;
       g.lineCap = "round";

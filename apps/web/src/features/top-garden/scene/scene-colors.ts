@@ -156,10 +156,33 @@ export const SEASON_LEAVES: Readonly<
   winter: null,
 };
 
+/** 舞う物の形。glow は蛍の光、flake は雪 */
+export type FallShape = "petal" | "momiji" | "glow" | "flake";
+
+export interface SeasonFall {
+  readonly color: string;
+  readonly shape: FallShape;
+  readonly count: number;
+}
+
+/** 季節ごとの舞う物。値は Design Doc の「季節ごとの葉とパーティクル」の表と同じ */
+export const SEASON_FALLS: Readonly<Record<Season, SeasonFall>> = {
+  spring: { color: "#e9a9bb", shape: "petal", count: 70 },
+  summer: { color: "#e9f58a", shape: "glow", count: 34 },
+  autumn: { color: "#b8482d", shape: "momiji", count: 60 },
+  winter: { color: "#fbfaf6", shape: "flake", count: 110 },
+};
+
 /** canvas に描く、色を持たない形の塗り。テクスチャの色は、材質の色で付ける */
 export const SHAPE_FILL = "#ffffff";
 /** canvas のグラデーションの、透明の端 */
 export const CLEAR = "rgba(0, 0, 0, 0)";
+/** 蛍の光の、中心から外への色の段。色は材質の色で付ける */
+export const GLOW_STOPS: readonly (readonly [number, string])[] = [
+  [0, "rgba(255, 255, 255, 1)"],
+  [0.25, "rgba(255, 255, 255, 0.5)"],
+  [1, "rgba(255, 255, 255, 0)"],
+];
 
 const SNOW = "#ffffff";
 const NIGHT_LEAF = "#10151c";
@@ -196,21 +219,30 @@ export interface ScenePalette extends TimePalette {
   readonly leaf: { readonly colors: readonly string[]; readonly shape: LeafShape } | null;
   /** 苔の暗い所に散らす色。冬は雪の色にする */
   readonly mossSpeck: string;
+  /** 舞う物。夏の朝と昼は null */
+  readonly fall: (SeasonFall & { readonly additive: boolean }) | null;
 }
 
 /**
  * 時間帯と季節から、場面の色を決める。
  * 冬は白砂と苔に雪の色を混ぜ、夜は季節の木の葉を暗くする。
+ * 夏の蛍は夕と夜だけに出し、夜は加算で重ねて光らせる。
  */
 export function scenePalette(time: TimeOfDay, season: Season): ScenePalette {
   const c = TIME_PALETTES[time];
   const leaf = SEASON_LEAVES[season];
   const winter = season === "winter";
+  const fall = SEASON_FALLS[season];
+  const glow = fall.shape === "glow";
   return {
     ...c,
     sand: winter ? mixHex(c.sand, SNOW, 0.55) : c.sand,
     moss: winter ? mixHex(c.moss, SNOW, 0.6) : c.moss,
     mossSpeck: winter ? SNOW : c.mossDark,
+    fall:
+      glow && (time === "morning" || time === "day")
+        ? null
+        : { ...fall, additive: glow && time === "night" },
     leaf: leaf && {
       shape: leaf.shape,
       colors: time === "night" ? leaf.colors.map((x) => mixHex(x, NIGHT_LEAF, 0.3)) : leaf.colors,

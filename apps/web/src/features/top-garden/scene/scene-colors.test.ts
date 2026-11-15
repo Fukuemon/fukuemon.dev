@@ -1,6 +1,6 @@
 import { Color } from "three";
 import { describe, expect, it } from "vitest";
-import { SEASON_LEAVES, TIME_PALETTES, mixHex, scenePalette } from "./scene-colors";
+import { SEASON_FALLS, SEASON_LEAVES, TIME_PALETTES, mixHex, scenePalette } from "./scene-colors";
 import type { TimeOfDay } from "../stage/season";
 
 /** WCAG 2.2 の相対輝度。three の Color は、16 進数を sRGB から線形に直して持つ */
@@ -29,6 +29,7 @@ describe("scenePalette", () => {
       ...TIME_PALETTES.day,
       mossSpeck: TIME_PALETTES.day.mossDark,
       leaf: SEASON_LEAVES.autumn,
+      fall: { ...SEASON_FALLS.autumn, additive: false },
     });
   });
 
@@ -51,6 +52,38 @@ describe("scenePalette", () => {
 
   it("夜のほかの時間帯は、季節の木の葉の色を変えない", () => {
     expect(scenePalette("evening", "summer").leaf).toStrictEqual(SEASON_LEAVES.summer);
+  });
+});
+
+describe("舞う物", () => {
+  it.each([
+    ["spring", "petal", 70],
+    ["autumn", "momiji", 60],
+    ["winter", "flake", 110],
+  ] as const)("%s は、全ての時間帯で %s を %d 個舞わせる", (season, shape, count) => {
+    for (const t of ["morning", "day", "evening", "night"] as const) {
+      expect(scenePalette(t, season).fall).toMatchObject({ shape, count, additive: false });
+    }
+  });
+
+  it.each(["morning", "day"] as const)("夏の %s は、蛍を出さない", (t) => {
+    expect(scenePalette(t, "summer").fall).toBeNull();
+  });
+
+  it("夏の夕は、蛍を 34 個、加算で重ねずに出す", () => {
+    expect(scenePalette("evening", "summer").fall).toMatchObject({
+      shape: "glow",
+      count: 34,
+      additive: false,
+    });
+  });
+
+  it("夏の夜は、蛍を 34 個、加算で重ねて光らせる", () => {
+    expect(scenePalette("night", "summer").fall).toMatchObject({
+      shape: "glow",
+      count: 34,
+      additive: true,
+    });
   });
 });
 
