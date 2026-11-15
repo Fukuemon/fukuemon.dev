@@ -6,7 +6,7 @@ const STYLE =
   ".far{filter:url(#f-wash)}.mid,.near .lines{filter:url(#f-dry)}.pine{fill:url(#g-pine);opacity:.2}</style>";
 
 /**
- * 庭を出さないときのトップの背景に、CSS の `mask-image` で掛ける墨の絵の SVG を作る。
+ * トップ（庭を出さないとき）と記事とプレイグラウンドの一覧の背景に、CSS の `mask-image` で掛ける墨の絵の SVG を作る。
  * イントロの墨の絵と同じ線で、色を持たない。線の濃さは alpha で持ち、塗りは背景の要素がトークンの色で当てる。
  * 筆の順に描くための `--t`、`--d`、`pathLength` は、mask では読まないが、`inkSvg()` の出力の形に依りすぎないよう残す。
  */
