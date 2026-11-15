@@ -134,4 +134,36 @@ test.describe("トップの背景の墨の絵", () => {
       });
     });
   });
+
+  for (const { name, path } of [
+    { name: "記事の一覧", path: "/articles/" },
+    { name: "プレイグラウンドの一覧", path: "/playground/" },
+  ]) {
+    test.describe(name, () => {
+      test("背景を出して SVG を 1 回取得し、ヘッダーが絵を隠すこと", async ({ page }) => {
+        const responses = inkResponses(page);
+        await page.goto(path);
+        await expect(background(page)).toBeVisible();
+        await expect(background(page)).toHaveAttribute("aria-hidden", "true");
+        expect(await backgroundColor(siteHeader(page))).toBe(
+          await backgroundColor(htmlElement(page)),
+        );
+        await page.waitForLoadState("load");
+        expect(responses).toStrictEqual([200]);
+      });
+
+      test("アニメーションをオンにすると、霞が流れること", async ({ page }) => {
+        await presetSettings(page, { motion: "on" });
+        await page.goto(path);
+        await expect.poll(() => runningHaze(page)).toBeGreaterThan(0);
+      });
+
+      test("アニメーションをオフにすると、霞が止まること", async ({ page }) => {
+        await presetSettings(page, { motion: "off" });
+        await page.goto(path);
+        await expect(background(page)).toBeVisible();
+        expect(await runningHaze(page)).toBe(0);
+      });
+    });
+  }
 });
