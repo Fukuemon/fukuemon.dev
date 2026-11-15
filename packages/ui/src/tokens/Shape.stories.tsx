@@ -77,7 +77,7 @@ function ShapeTokens() {
             ))}
           </div>
           <code className="font-mono text-code-dense">
-            band（親要素）。子要素の枠線、ステッチ、選択中の反転は band が描く
+            band は親要素に付け、子要素の枠線、ステッチ、選択中の反転を描く
           </code>
         </div>
       </section>
