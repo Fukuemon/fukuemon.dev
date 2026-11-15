@@ -170,7 +170,7 @@ test.describe("トップの庭", () => {
     });
 
     // 和紙は縮んで映るので、44px の押せる範囲は 44px より小さく映る
-    test("プロフィールの GitHub と X のリンクが、44px 四方以上の大きさで映ること", async ({
+    test("庭を開いた場合、プロフィールの GitHub と X のリンクが、44px 四方以上の大きさで映ること", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });

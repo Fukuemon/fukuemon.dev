@@ -82,6 +82,7 @@ const row = "border-t border-border py-2";
         </div>
       </div>
       <div class="mt-4 flex gap-2">
+        {/* 和紙は縮んで映るので、庭では押せる範囲を 52px にし、負の margin で並びの中では 44px を占めるようにする */}
         {
           links.map(({ label, href, path }) => (
             <a
