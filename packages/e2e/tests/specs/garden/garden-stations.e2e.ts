@@ -24,10 +24,14 @@ test.beforeEach(() => test.slow());
  * 庭を開く。`paused` が true のときは、表示の設定でアニメーションをオフにして開く。
  * カメラは、オフにすると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると、`expectAt` の 1 回の待ちの上限（config の expect の時間）を超える。
  * 移動の動き自体を確かめるテスト以外は、止めてから移る。
+ * 止めないときは、舞う物の無い夏の昼で開く。舞う物があると、SwiftShader が描き続けてメインスレッドが空かず、クリックが時間の上限を超えるためである。
  */
 const openGarden = async (page: Page, { paused = false } = {}) => {
   await seenBefore(page);
-  if (paused) await presetSettings(page, { motion: "off", garden: "on" });
+  await presetSettings(
+    page,
+    paused ? { motion: "off", garden: "on" } : { season: "summer", time: "day" },
+  );
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await expect(htmlElement(page)).toHaveClass(/garden-ready/);
