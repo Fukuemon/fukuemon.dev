@@ -373,12 +373,17 @@ describe("ビルド後の作り直し", () => {
     });
   });
 
-  it.each([false, true])(
-    "外した規則のファイルを残した規則も指すときは、作り直しも書き換えもせずにビルドを止める（rebuild: %s）",
-    async (rebuild) => {
+  it.each([
+    ["/_astro/a.AAAAAAAA.woff2", "残した規則も指している", false],
+    ["/_astro/a.AAAAAAAA.woff2", "残した規則も指している", true],
+    ["/_astro/./a.AAAAAAAA.woff2", "残した規則も指している", false],
+    ["/_astro/missing.woff", "出力に無い", false],
+  ])(
+    "外した規則の src の %s を消せないときは、作り直しも書き換えもせずにビルドを止める（%s、rebuild: %s）",
+    async (url, message, rebuild) => {
       const shared = face("b", "U+3044").replace(
         'format("woff2")',
-        'format("woff2"),url(/_astro/a.AAAAAAAA.woff2)format("woff2")',
+        `format("woff2"),url(${url})format("woff")`,
       );
       const css = face("a", "U+3042") + shared;
 
@@ -387,7 +392,7 @@ describe("ビルド後の作り直し", () => {
       );
 
       expect({ error, ...(await state()) }).toStrictEqual({
-        error: expect.stringContaining("残した規則も指している"),
+        error: expect.stringContaining(message),
         site: css + RULE,
         files: ["a.AAAAAAAA.woff2", "app.js", "b.AAAAAAAA.woff2", "page.css", "site.css"],
         subsets: 0,

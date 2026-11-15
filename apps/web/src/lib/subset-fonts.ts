@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
@@ -60,12 +60,25 @@ export function subsetFonts(
           const body = await readFile(f, "utf8");
           rewrites.push([f, body, removeFaces(body, unused, removed)]);
         }
-        const stale = [...removed].filter((url) => /\.woff2?$/.test(url));
-        for (const url of stale) {
-          if (rewrites.some(([, , next]) => urlOf(url).test(next)))
-            throw new Error(`${url}: 外した規則のファイルを、残した規則も指している`);
+        // URL の表記が違っても同じファイルを指すことがあるので、解決したパスで比べる。
+        const stalePaths = new Set(
+          [...removed].filter((url) => /\.woff2?$/.test(url)).map((url) => inside(root, url)),
+        );
+        const kept = new Set(
+          rewrites.flatMap(([, , next]) =>
+            [...next.matchAll(FONT_URL)]
+              .map((m) => m[1]!)
+              .filter((url) => url.startsWith("/") && !url.startsWith("//"))
+              .map((url) => resolve(root, `.${url}`)),
+          ),
+        );
+        for (const path of stalePaths) {
+          const name = relative(root, path);
+          if (kept.has(path))
+            throw new Error(`${name}: 外した規則のファイルを、残した規則も指している`);
+          if (!(await stat(path).catch(() => undefined))?.isFile())
+            throw new Error(`${name}: 外した規則のファイルが出力に無い`);
         }
-        const stalePaths = stale.map((url) => inside(root, url));
         const renames = new Map<string, string>();
         let before = 0;
         let after = 0;
