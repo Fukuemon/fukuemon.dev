@@ -38,7 +38,7 @@ ADR の規則は、[README.md](README.md) にある。
 | [ADR-0075](0075-system-font-for-body-text.md)                | 本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする                                                                 |
 | [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md)     | Tailwind CSS v4 を CSS スタイリングの基盤にし、サイトの共通の CSS で preflight を読み、トークンを packages/ui のテーマ変数から使う                 |
 | [ADR-0024](0024-tokens-of-fukuemon-dev.md)                   | （提案）トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする |
-| [ADR-0028](0028-radius-shadow-and-brush-motion.md)           | （提案）操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄と帯に縫い目の破線を引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする  |
+| [ADR-0028](0028-radius-shadow-and-brush-motion.md)           | （提案）操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄にステッチを引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする          |
 | [ADR-0061](0061-sumi-focus-ring.md)                          | フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする                                                                     |
 | [ADR-0021](0021-ui-components-and-catalog.md)                | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                             |
 | [ADR-0022](0022-code-colors-from-tokens.md)                  | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                     |

@@ -11,7 +11,7 @@ const { Default, Underline } = composeStories(stories);
 describe("TextField の forced-colors: active", () => {
   useForcedColors();
 
-  it("枠のある欄に、縫い目の破線を描かない", () => {
+  it("枠のある欄に、ステッチを描かない", () => {
     render(<Default />);
     const face = screen.getByRole("textbox").nextElementSibling as Element;
     expect(style(face).backgroundImage).toBe("none");

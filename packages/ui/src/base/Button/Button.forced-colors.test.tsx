@@ -55,7 +55,7 @@ describe("Button の forced-colors: active", () => {
     ]).toStrictEqual([button, button]);
   });
 
-  it("縫い目の破線を描かない", () => {
+  it("ステッチを描かない", () => {
     render(<Primary />);
     expect(style(screen.getByRole("button")).backgroundImage).toBe("none");
   });

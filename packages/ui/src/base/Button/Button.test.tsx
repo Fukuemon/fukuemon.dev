@@ -127,7 +127,7 @@ describe("Button", () => {
     expect(getComputedStyle(button).fontSize).toBe("13px");
   });
 
-  it("M と S は、角を 4 px で丸め、縫い目の破線を描く", () => {
+  it("M と S は、角を 4 px で丸め、ステッチを描く", () => {
     const shapes = [<Primary key="m" />, <Small key="s" />].map((ui) => {
       const { unmount } = render(ui);
       const { borderTopLeftRadius, backgroundImage } = getComputedStyle(screen.getByRole("button"));
@@ -143,12 +143,12 @@ describe("Button", () => {
     ]);
   });
 
-  it("XS は、縫い目の破線を描かない", () => {
+  it("XS は、ステッチを描かない", () => {
     render(<ExtraSmall />);
     expect(getComputedStyle(screen.getByRole("button")).backgroundImage).toBe("none");
   });
 
-  it("主のボタンと押せない secondary の破線は、押せる secondary の破線と違う色になる", () => {
+  it("主のボタンと押せない secondary のステッチは、押せる secondary のステッチと違う色になる", () => {
     const images = [<Secondary key="s" />, <Primary key="p" />, <Secondary disabled key="d" />].map(
       (ui) => {
         const { unmount } = render(ui);

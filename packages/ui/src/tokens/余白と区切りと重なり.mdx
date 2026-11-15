@@ -63,7 +63,7 @@ Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全�
   </div>
 </Unstyled>
 
-## 角と縫い目
+## 角とステッチ
 
 <Unstyled>
   <div className="fd-sample flex flex-col gap-3 border border-border bg-surface p-6 text-text">
@@ -80,7 +80,7 @@ Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全�
     />
     <p className="font-mono text-code-dense text-text-secondary">
       stitch stitch-current: 主のボタン、danger
-      のボタン、押した帯のボタン、押せないボタン。破線は文字の色
+      のボタン、選択中のボタン、押せないボタン。破線は文字の色の濃度 70%
     </p>
     <div aria-hidden="true" className="band">
       {["自動", "春", "夏", "秋", "冬"].map((label) => (
@@ -97,8 +97,8 @@ Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全�
       ))}
     </div>
     <p className="font-mono text-code-dense text-text-secondary">
-      band: 区切った帯の外側の要素。子をつなぎ、最初の子の左の 2 つの角と最後の子の右の 2
-      つの角だけを丸める
+      band: ボタングループの親要素。子要素をつなぎ、最初の子要素の左の 2 つの角と最後の子要素の右の
+      2 つの角だけを丸める
     </p>
   </div>
 </Unstyled>

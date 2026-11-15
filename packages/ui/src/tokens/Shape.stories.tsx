@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 /**
  * 区切りと重なりとフォーカスの表示を、見本で並べる。余白は Tailwind のデフォルトの段（1 段 4px）を使う。
  * 区切りは罫線と余白で示す。操作できる要素と重なる面の角は rounded-control で丸め、重なる面は 1px の枠と shadow-raised の影で示す。
- * ボタン、枠のある入力欄、区切った帯は、線の内側に stitch で縫い目の破線を引く。
+ * ボタン、枠のある入力欄、ボタングループのボタンは、枠線の内側に stitch でステッチ（破線）を引く。
  */
 function ShapeTokens() {
   return (
@@ -62,7 +62,7 @@ function ShapeTokens() {
         </ul>
       </section>
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-heading-md font-semibold">区切った帯</h2>
+        <h2 className="font-heading text-heading-md font-semibold">ボタングループ</h2>
         <div className="flex flex-col gap-3">
           <div className="band">
             {["自動", "春", "夏", "秋", "冬"].map((label) => (
@@ -78,7 +78,7 @@ function ShapeTokens() {
           </div>
           <code className="font-mono text-code-dense">
             band（帯）、border border-border-field
-            stitch（子）、aria-pressed:stitch-current（選んだ子）
+            stitch（子要素）、aria-pressed:stitch-current（選択中の子要素）
           </code>
         </div>
       </section>

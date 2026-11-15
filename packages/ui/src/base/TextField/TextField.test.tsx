@@ -155,7 +155,7 @@ describe("TextField", () => {
     expect(getComputedStyle(field).fontSize).toBe("13px");
   });
 
-  it("枠のある欄は、面の角を 4 px で丸め、縫い目の破線を描く", () => {
+  it("枠のある欄は、面の角を 4 px で丸め、ステッチを描く", () => {
     render(<Default />);
     const { borderTopLeftRadius, backgroundImage } = getComputedStyle(
       faceOf(screen.getByRole("textbox")),
@@ -169,7 +169,7 @@ describe("TextField", () => {
     });
   });
 
-  it("compact の欄と押せない欄は、縫い目の破線を描かない", () => {
+  it("compact の欄と押せない欄は、ステッチを描かない", () => {
     const images = [<Compact key="c" />, <Disabled key="d" />].map((ui) => {
       const { unmount } = render(ui);
       const image = getComputedStyle(faceOf(screen.getByRole("textbox"))).backgroundImage;

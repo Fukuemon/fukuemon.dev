@@ -20,7 +20,7 @@ verified_commit: 03fcfcd6f3592d3cb9b8db7ef23c6ec3713acb61
 - 出典: [デジタル庁デザインシステム](https://design.digital.go.jp/dads/)
 - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする](../../docs/adr/0024-tokens-of-fukuemon-dev.md)
 - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../../docs/adr/0021-ui-components-and-catalog.md)
-- ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄と帯に縫い目の破線を引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+- ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄にステッチを引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
 
 ## Scope
 
@@ -148,19 +148,19 @@ DADS の 150% では、行は 19.5px になる。
   - 文中のリンクは、左右を 6px 空ける。フォーカスの表示が外へ 4px 広がり、前後の文字に重なるためである。
   - 記事の一覧の題のように文中に置かないリンクは、`isStandalone` を付けて左右を空けない。見出しや帯と左端をそろえるためである。
 - 操作できる要素と重なる面の角は、4px（`rounded-control`）で丸める。
-- `Button`（S と M）、枠のある `TextField`、区切った帯のボタンは、外の線の 3px 内側に 1px の縫い目の破線（`stitch`）を引く。地を塗った要素では、破線を文字の色にする（`stitch-current`）。破線は背景の画像で描き、フォーカスの表示と重ねない。ハイコントラストでは描かない（ADR-0028）。
   - コードを動かす画面だけ、角を 3 つの段で丸める。紙の面の重なりを、角の丸めで見分けるためである（ADR-0073）。
     - ペインの紙の面は 10px（`rounded-pane`）、`PaneTabs` の帯とファイルのドロワーは 14px（`rounded-sheet`）にする。
     - `density="compact"` と `size="XS"` の操作できる要素は 6px（`rounded-control-compact`）にする。
   - コードを動かす画面の外では、角丸の名前を `rounded-control` の 1 つだけ使う。
-  - 丸めるのは、`Button`、`IconButton`、`boxed` の `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。
+  - 丸めるのは、`Button`、`IconButton`、`boxed` の `TextField`、`TreeView` の行、`Disclosure` の要約、タブの閉じるボタン、`Dialog`、`ActionMenu`、検索の候補の一覧である。ボタングループ（`band`）は、端の角を丸める。
   - `Switch` のトラックとつまみ、`Checkbox` の枠も丸める。
   - `ConsoleEntryList` のログレベルのボタンも丸める。
   - `Tabs` のタブ、下罫だけの検索の欄、メニューの項目、`Notice`、`StatusBadge`、`Table`、コードブロックの角は丸めない。罫で示す要素と、罫で区切る面のためである。
+- `Button`（S と M）、枠のある `TextField`、ボタングループのボタンは、枠線の 3px 内側に 1px のステッチ（破線、`stitch`）を引く。背景を塗った要素では、破線を文字の色の濃度 70% にする（`stitch-current`）。破線は背景の画像で描き、フォーカスの表示と重ねない。ハイコントラストでは描かない（ADR-0028）。
 - 面の上に重なる面（ダイアログ、メニュー、候補の一覧）は、`bg-surface-raised`、1px の `border-field` の枠、`shadow-raised` の影を組にして書く。
   - 影は、ぼかさずに右下へ 4px ずらす。ぼかした影は、ダークの面の上でほぼ見えないためである。
   - 影は、重なる面だけに付ける。ボタンと入力欄には付けない。影が、重なりだけを表すためである。テーマ変数に置く影の名前は、`shadow-raised` の 1 つだけにする。
-- ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄と帯に縫い目の破線を引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+- ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄にステッチを引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
 - ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)
 - ブレークポイントは、DADS の設定の例の 1 つ（48rem）だけを置く。
   - コードを動かす画面の配置だけ、高さが 500px 未満の画面を custom variant の `short` で分ける（ADR-0072）。
@@ -209,7 +209,7 @@ VS Code と DevTools も、一覧の行のフォーカスを、行の内側の�
 テーマ変数のファイルに足すのは、デフォルトで組めない動きだけにする。  
 サイト全体の動きの規則（位置を動かさない、動きのために JavaScript を配らない、5 秒を超える動きを止める）は、[全体の Design Doc の「動き」](../../docs/design/DesignDoc.md#動き) にある。
 
-ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄と帯に縫い目の破線を引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
+ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄にステッチを引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](../../docs/adr/0028-radius-shadow-and-brush-motion.md)
 
 #### 動きを付ける操作
 
