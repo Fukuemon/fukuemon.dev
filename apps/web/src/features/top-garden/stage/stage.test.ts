@@ -444,9 +444,9 @@ describe("stageScript", () => {
 });
 
 describe("stageScript の墨の絵と署名のファイル", () => {
-  it("URL を渡すと、最初の訪問のときだけ、その URL の module の script を足す", () => {
-    const urls = (seen: boolean) => {
-      const b = browser();
+  it("URL を渡すと、イントロを出すとき（最初の訪問か、URL の引数 intro があるとき）だけ、その URL の module の script を足す", () => {
+    const urls = (seen: boolean, search = "") => {
+      const b = browser(search);
       if (seen) b.store.items.set("fd-top-seen", "1");
       const appended: { src?: string }[] = [];
       const globals = {
@@ -463,9 +463,10 @@ describe("stageScript の墨の絵と署名のファイル", () => {
       );
       return appended.map((el) => el.src);
     };
-    expect([urls(false), urls(true)]).toStrictEqual([
+    expect([urls(false), urls(true), urls(true, "?intro")]).toStrictEqual([
       ["/_astro/scene.js", "/_astro/ink.js"],
       ["/_astro/scene.js"],
+      ["/_astro/scene.js", "/_astro/ink.js"],
     ]);
   });
 });
@@ -517,6 +518,14 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
 describe("stageScript の場面のバンドルの URL", () => {
   it("URL に </script> が入っても、script の要素を閉じる文字列を出さない", () => {
     expect(stageScript({ dev: false, bundle: "/a</script><b>" }).includes("</script")).toBe(false);
+  });
+
+  it("墨の絵と署名のファイルの URL に </script> が入っても、script の要素を閉じる文字列を出さない", () => {
+    expect(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/a</script><b>" }).includes(
+        "</script",
+      ),
+    ).toBe(false);
   });
 });
 
