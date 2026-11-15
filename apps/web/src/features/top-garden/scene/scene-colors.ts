@@ -177,7 +177,7 @@ export const SEASON_FALLS: Readonly<Record<Season, SeasonFall>> = {
 
 /**
  * 冬の朝、昼、夕の雪。白砂と空が明るく、季節の表の雪が見分けられないので、色を濃くし、数と大きさを増やす。
- * 夜は地が暗く、季節の表の雪が見えるので使わない。
+ * 夜は白砂と空が暗く、季節の表の雪が見えるので使わない。
  * 値は Design Doc の「季節ごとの葉とパーティクル」の表の下に書いてある
  */
 const WINTER_DAYTIME_FALL: Pick<SeasonFall, "color" | "count" | "size"> = {
