@@ -1,8 +1,11 @@
 import type { BackendInstance, RuntimeBackend } from "./backend";
+import { createConsoleRecords } from "./console-records";
 import { startDatabase } from "./database";
 import { createFiles } from "./files";
+import { previewConsoleScript } from "./preview-console";
 import { createHttpRecords } from "./http-records";
 import { createProcesses } from "./processes";
+import type { RecordKind, RecordSource } from "./record-lines";
 import { createStore } from "./store";
 import { BootError, type BootOptions, type NodeRuntime, type OpenPort } from "./types";
 
@@ -16,11 +19,13 @@ const ignore = () => undefined;
  * 同じ origin のページを、allow-same-origin を付けた iframe で開くと、プレビューのスクリプトがこのページを操作できるためである。
  */
 function isPreviewUrl(url: string) {
-  const pageOrigin = "location" in globalThis ? globalThis.location.origin : undefined;
   if (!URL.canParse(url)) return false;
   const parsed = new URL(url);
-  return parsed.protocol === "https:" && parsed.origin !== pageOrigin;
+  return parsed.protocol === "https:" && parsed.origin !== pageOrigin();
 }
+
+/** このページの origin。ブラウザの外（テスト）では undefined である。 */
+const pageOrigin = () => ("location" in globalThis ? globalThis.location.origin : undefined);
 
 async function createNodeRuntime(
   instance: BackendInstance,
@@ -30,22 +35,37 @@ async function createNodeRuntime(
   const db = options.database ? await startDatabase(instance, options.initialSql) : undefined;
   const files = await createFiles(instance.files);
   const http = createHttpRecords();
-  const processes = createProcesses(instance, http.accept);
+  const consoleRecords = createConsoleRecords();
+  const acceptLine: Record<RecordKind, (line: string, source: RecordSource) => void> = {
+    http: http.accept,
+    console: consoleRecords.acceptLine,
+  };
+  const processes = createProcesses(instance, (line, source, kind) =>
+    acceptLine[kind](line, source),
+  );
   const ports = createStore<readonly OpenPort[]>([]);
   const unsubscribePorts = instance.ports.subscribe((open) =>
     ports.set(open.filter((port) => isPreviewUrl(port.url))),
   );
+  // 直下の確認でプレビューのタブから除いたポートのページは、コンソールにも出さない
+  const unsubscribePreview = instance.previewMessages.subscribe((message, port) => {
+    if (ports.getSnapshot().some((open) => open.port === port)) {
+      consoleRecords.acceptPreviewMessage(message, port);
+    }
+  });
   let disposed: Promise<void> | undefined;
   return {
     files: files.api,
     processes: processes.api,
     ports,
     httpExchanges: http.store,
-    consoleEntries: createStore<readonly never[]>([]),
+    consoleEntries: consoleRecords.store,
     ...(db && { database: db.database }),
     dispose: () => {
       disposed ??= (async () => {
         unsubscribePorts();
+        unsubscribePreview();
+        consoleRecords.dispose();
         db?.dispose();
         files.dispose();
         processes.dispose();
@@ -70,6 +90,7 @@ export async function bootWithBackend(
   const booting = (async () => {
     const instance = await backend.boot({
       files: options.files,
+      previewScript: previewConsoleScript(pageOrigin() ?? "null"),
       database: options.database === true,
     });
     started = instance;

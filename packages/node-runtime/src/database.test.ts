@@ -18,7 +18,7 @@ const stoppedWith = (message: string) => ({ error: { message }, ms: 0 });
 
 const createProcess = async () => {
   const fake = createFakeBackend();
-  const instance = await fake.backend.boot({ files: {}, database: true });
+  const instance = await fake.backend.boot({ files: {}, previewScript: "", database: true });
   return (await instance.spawn("node", ["db"], { internal: true })) as FakeProcess;
 };
 

@@ -3,6 +3,7 @@ import type { TreeNode } from "../../base/TreeView/TreeView";
 /**
  * コンソールに出す 1 つの値。記録の形には依らず、描き方を変える区別だけを持つ。
  * `function` は名前の分かる関数で、`ƒ name()` と描く。`text` は、ほかの種類に当たらない値（DOM の要素など）を呼ぶ側が文字にしたもので、そのまま描く。
+ * `array` の `length` は元の配列の長さで、頭の `Array(n)` に出す。要素を切って渡すときは元の長さを渡し、省くと `items` の数を出す。
  * 循環した参照は `circular` で渡す。`error` の `stack` は、呼び出し元のフレームの行の並びで、どの行を出すかは呼ぶ側が決める。
  */
 export type ConsoleValue =
@@ -16,7 +17,7 @@ export type ConsoleValue =
   | { kind: "function"; name: string }
   | { kind: "text"; value: string }
   | { kind: "circular" }
-  | { kind: "array"; items: readonly ConsoleValue[] }
+  | { kind: "array"; length?: number; items: readonly ConsoleValue[] }
   | { kind: "object"; className?: string; entries: readonly ConsoleProperty[] }
   | { kind: "map"; entries: readonly ConsoleMapEntry[] }
   | { kind: "set"; items: readonly ConsoleValue[] }
@@ -69,7 +70,7 @@ export function preview(value: ConsoleValue, isNested = false): string {
     case "error":
       return `${value.name}: ${value.message}`;
     case "array": {
-      const head = `Array(${value.items.length})`;
+      const head = `Array(${value.length ?? value.items.length})`;
       if (isNested) return head;
       const parts = value.items.slice(0, PREVIEW_ITEMS).map((item) => preview(item, true));
       return `${head} [${list(parts, value.items.length)}]`;
@@ -128,7 +129,11 @@ const stackNodes = (id: string, stack: readonly string[]): TreeNode[] =>
   stack.map((line, index) => ({
     id: `${id}/stack/${index}`,
     label: line,
-    content: <span className="font-mono wrap-anywhere whitespace-pre-wrap">{line}</span>,
+    content: (
+      <span className="font-mono wrap-anywhere whitespace-pre-wrap text-text-secondary">
+        {line}
+      </span>
+    ),
   }));
 
 /**
@@ -156,11 +161,20 @@ export function toTreeNode(
     </span>
   );
   if (!isExpandable(value)) return { id, label, content };
-  const children =
-    value.kind === "error"
-      ? stackNodes(id, value.stack ?? [])
-      : childrenOf(value).map((child, index) =>
-          toTreeNode(child.value, `${id}/${index}`, child.key, child.separator),
-        );
-  return { id, label, content, children };
+  // 子は、初めて読まれたときに 1 段だけ作る。閉じた枝の子まで作ると、大きい値の記録がまとめて届いたときに描画が遅くなるためである
+  let children: TreeNode[] | undefined;
+  return {
+    id,
+    label,
+    content,
+    get children() {
+      children ??=
+        value.kind === "error"
+          ? stackNodes(id, value.stack ?? [])
+          : childrenOf(value).map((child, index) =>
+              toTreeNode(child.value, `${id}/${index}`, child.key, child.separator),
+            );
+      return children;
+    },
+  };
 }

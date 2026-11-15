@@ -9,6 +9,8 @@ import {
   type DirectoryItem,
   type RuntimeBackend,
 } from "../backend";
+import consoleTraceSource from "../guest/console-trace.cjs?raw";
+import consoleValueSource from "../guest/console-value.cjs?raw";
 import dbPackageSource from "../guest/db-package.json?raw";
 import { DB_SERVER_FILE } from "../guest/db-protocol";
 // oxlint-disable-next-line import/default -- vite.ts の guestBundle が、束ねた文字列を default で返す
@@ -18,12 +20,16 @@ import keepAliveSource from "../guest/keep-alive.cjs?raw";
 import type { OpenPort, TerminalSize } from "../types";
 import { spawnOptions, visitorEnv } from "./env";
 import { toBackendError } from "./errors";
+import { portOfOrigin } from "./preview-origin";
 import { toTree } from "./tree";
 
 // 実行環境が追加するファイルは、訪問者の作業ディレクトリの外に置く (docs/adr/0052-runtime-files-outside-workdir.md)
 const RUNTIME_DIRECTORY = "/tmp/fukuemon-playground";
 const PORTS_FILE = `${RUNTIME_DIRECTORY}/ports.json`;
 const HTTP_TRACE_FILE = `${RUNTIME_DIRECTORY}/http-trace.cjs`;
+const CONSOLE_TRACE_FILE = `${RUNTIME_DIRECTORY}/console-trace.cjs`;
+// console-trace.cjs が、同じディレクトリから require する
+const CONSOLE_VALUE_FILE = `${RUNTIME_DIRECTORY}/console-value.cjs`;
 // DB のプロセスのスクリプトと、npm install で入れる依存を置く
 const DB_DIRECTORY = `${RUNTIME_DIRECTORY}/db`;
 const KEEP_ALIVE_FILE = `${DB_DIRECTORY}/keep-alive.cjs`;
@@ -155,6 +161,16 @@ function createPorts(container: WebContainer) {
         return () => listeners.delete(onChange);
       },
     },
+    previewMessages: {
+      subscribe: (onMessage: (message: unknown, port: number) => void) => {
+        const receive = (event: MessageEvent) => {
+          const port = portOfOrigin(open, event.origin);
+          if (port !== undefined) onMessage(event.data, port);
+        };
+        globalThis.addEventListener("message", receive);
+        return () => globalThis.removeEventListener("message", receive);
+      },
+    },
     dispose: unsubscribe,
   };
 }
@@ -162,22 +178,30 @@ function createPorts(container: WebContainer) {
 /** WebContainers で動く実行環境。WebContainers を import するのは、このファイルだけである (apps/playground/DesignDoc.md)。 */
 export const webContainerBackend: RuntimeBackend = {
   isSupported: () => globalThis.crossOriginIsolated === true,
-  boot: async ({ files, database }): Promise<BackendInstance> => {
+  boot: async ({ files, previewScript, database }): Promise<BackendInstance> => {
     const container = await WebContainer.boot({ coep: "require-corp", workdirName: "project" });
     try {
       await container.mount(toTree(files));
-      await writeOutside(container, HTTP_TRACE_FILE, httpTraceSource);
-      if (database) {
-        await Promise.all([
-          writeOutside(container, KEEP_ALIVE_FILE, keepAliveSource),
-          writeOutside(container, `${DB_DIRECTORY}/package.json`, dbPackageSource),
-          writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource),
-        ]);
-      }
+      // ファイルごとに node を起動するので、順に待たずに並べる。ディレクトリは recursive で作るので、同時に作っても失敗しない
+      await Promise.all([
+        writeOutside(container, HTTP_TRACE_FILE, httpTraceSource),
+        writeOutside(container, CONSOLE_VALUE_FILE, consoleValueSource),
+        writeOutside(container, CONSOLE_TRACE_FILE, consoleTraceSource),
+        ...(database
+          ? [
+              writeOutside(container, KEEP_ALIVE_FILE, keepAliveSource),
+              writeOutside(container, `${DB_DIRECTORY}/package.json`, dbPackageSource),
+              writeOutside(container, `${DB_DIRECTORY}/${DB_SERVER_FILE}`, dbServerSource),
+            ]
+          : []),
+      ]);
+      // 登録できなくても、プレビューの記録が欠けるだけなので、起動は続ける (apps/playground/DesignDoc.md)
+      await container.setPreviewScript(previewScript).catch(() => undefined);
       const env = visitorEnv({
         database,
         portsFile: PORTS_FILE,
         httpTraceFile: HTTP_TRACE_FILE,
+        consoleTraceFile: CONSOLE_TRACE_FILE,
         keepAliveFile: KEEP_ALIVE_FILE,
       });
       const ports = createPorts(container);
@@ -193,6 +217,7 @@ export const webContainerBackend: RuntimeBackend = {
             await container.spawn("jsh", [], spawnOptions(options, env, DEFAULT_TERMINAL)),
           ),
         ports: ports.ports,
+        previewMessages: ports.previewMessages,
         guestDirectory: DB_DIRECTORY,
         teardown: async () => {
           ports.dispose();
