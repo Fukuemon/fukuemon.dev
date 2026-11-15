@@ -8,8 +8,10 @@
 
 設計の文書（PRD、Design Doc、ADR）を、ビルドしたサイトとして読めるようにする。
 
-- ドキュメントサイトは `docs.fukuemon.dev` に置き、誰でも開ける。
+- ドキュメントサイトは `docs.fukuemon.dev` に置く。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
+- ドキュメントサイトは、誰でも開ける。
+  - PRD: [カタログとドキュメントサイト](../PRD.md#カタログとドキュメントサイト)
 - 文書の原本は、公開のリポジトリにある。サイトに載る文書は、どれもリポジトリで誰でも読める。
 - 文書は `docs/` に集め、機能ごとの Design Doc を `docs/design/` からシンボリックリンクで指す。
   - ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く](0029-repository-layout-like-buddy.md)

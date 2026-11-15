@@ -34,7 +34,7 @@ while :; do
   dir="$(dirname "$dir")"
 done
 
-# wrangler deploy の --domain、--routes、--config などの引数も、apply を通らずに custom domain 以外の URL を作るおそれがある
+# wrangler deploy の --domain、--routes、--config などの引数も、apply を通らずにホスト名か URL を作るおそれがある
 deploy="$(jq -r '.scripts.deploy // ""' "$APP/package.json")"
 if [ "$deploy" != "wrangler deploy" ]; then
   echo "package.json の deploy が wrangler deploy ではありません。引数を足さない。" >&2
