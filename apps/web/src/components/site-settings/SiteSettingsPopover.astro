@@ -6,10 +6,9 @@ import { Switch } from "@fukuemon/ui";
 import { buttonClassName } from "@fukuemon/ui/button-class-name";
 import { PICK_CHOICES, SITE_SETTINGS_ID } from "./settings";
 
-// 季節と時間帯の帯は、トップの庭の中の移動のボタンと同じく、境の線を 1 本にしてつなぎ、押したボタンの地と字を反転する。
-// 等幅の 5 列にし、幅 320px で面にスクロールバーが出ても折り返さない
-const pickClass =
-  "relative -ms-px -mt-px min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-1 text-label whitespace-nowrap text-text focus-visible:z-20 focus-visible:focus-ring aria-pressed:z-10 aria-pressed:border-text aria-pressed:bg-text aria-pressed:text-surface aria-pressed:forced-on-row";
+// 季節と時間帯の帯は、トップの庭の中の移動のボタンと同じく band のボタングループにする。枠線、ステッチ、押したボタンの反転は band が描く。
+// 5 つを同じ幅（flex-1）で並べ、幅 320px で面にスクロールバーが出ても 1 行に収める
+const pickClass = "min-h-11 min-w-11 flex-1 cursor-pointer px-1 text-label whitespace-nowrap focus-visible:focus-ring";
 const picks = [
   { name: "season", label: "季節", choices: PICK_CHOICES.season },
   { name: "time", label: "時間帯", choices: PICK_CHOICES.time },
@@ -45,7 +44,7 @@ const picks = [
               {label}
             </p>
             <div
-              class="mt-2 grid grid-cols-5 ps-px pt-px"
+              class="band mt-2"
               role="group"
               aria-labelledby={`setting-${name}-label`}
               aria-describedby="setting-scene-note"

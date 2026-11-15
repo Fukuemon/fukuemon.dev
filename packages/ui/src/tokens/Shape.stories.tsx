@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 /**
  * 区切りと重なりとフォーカスの表示を、見本で並べる。余白は Tailwind のデフォルトの段（1 段 4px）を使う。
  * 区切りは罫線と余白で示す。操作できる要素と重なる面の角は rounded-control で丸め、重なる面は 1px の枠と shadow-raised の影で示す。
+ * ボタン、枠のある入力欄、ボタングループのボタンは、枠線の内側に stitch でステッチ（破線）を引く。
  */
 function ShapeTokens() {
   return (
@@ -44,13 +45,47 @@ function ShapeTokens() {
             />
             <code className="font-mono text-code-dense">rounded-control</code>
           </li>
+          <li className="flex flex-col items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-12 w-32 rounded-control bg-surface stitch ring-1 ring-border-field ring-inset"
+            />
+            <code className="font-mono text-code-dense">rounded-control stitch</code>
+          </li>
+          <li className="flex flex-col items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-12 w-32 rounded-control bg-primary stitch stitch-current text-text-inverse"
+            />
+            <code className="font-mono text-code-dense">stitch stitch-current</code>
+          </li>
         </ul>
+      </section>
+      <section className="flex flex-col gap-3">
+        <h2 className="font-heading text-heading-md font-semibold">ボタングループ</h2>
+        <div className="flex flex-col gap-3">
+          <div className="band">
+            {["自動", "春", "夏", "秋", "冬"].map((label) => (
+              <button
+                aria-pressed={label === "秋"}
+                className="min-h-11 min-w-11 cursor-pointer px-3 text-label focus-visible:focus-ring"
+                key={label}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <code className="font-mono text-code-dense">
+            band は親要素に付け、子要素の枠線、ステッチ、選択中の反転を描く
+          </code>
+        </div>
       </section>
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-heading-md font-semibold">フォーカス</h2>
         <button
           type="button"
-          className="focus-ring w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
+          className="focus-ring w-fit rounded-control bg-primary stitch stitch-current px-4 py-3 text-label text-text-inverse"
         >
           フォーカスの表示
         </button>
@@ -68,3 +103,24 @@ const meta = {
 export default meta;
 
 export const Overview: StoryObj<typeof meta> = { name: "一覧" };
+
+/** 選択中を aria-current で示すボタングループ。トップの庭の中の移動のボタンと同じ属性である。 */
+export const BandCurrent: StoryObj<typeof meta> = {
+  name: "ボタングループ（aria-current）",
+  render: () => (
+    <div className="bg-surface p-6 text-text">
+      <div className="band">
+        {["自動", "朝", "昼"].map((label) => (
+          <button
+            aria-current={label === "昼" ? "true" : "false"}
+            className="min-h-11 min-w-11 cursor-pointer px-3 text-label focus-visible:focus-ring"
+            key={label}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
