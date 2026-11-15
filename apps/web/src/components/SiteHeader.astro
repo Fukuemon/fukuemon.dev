@@ -1,7 +1,6 @@
 ---
 import { signSvg } from "./sign/sign";
 import signSource from "./sign/sign.svg?raw";
-import { SiteSettingsButton } from "./site-settings/SiteSettingsButton";
 import { SITE_NAV, ariaCurrent } from "./site-nav";
 
 const { pathname } = Astro.url;
@@ -19,7 +18,6 @@ const sign = signSvg(signSource, "h-8 w-auto fill-current md:h-10");
     >
       <Fragment set:html={sign} />
     </a>
-    <div class="flex items-center md:gap-x-2" data-site-header-tools>
     <nav aria-label="サイトの中の移動">
       <ul class="flex gap-2 md:gap-6">
         {
@@ -37,7 +35,5 @@ const sign = signSvg(signSource, "h-8 w-auto fill-current md:h-10");
         }
       </ul>
     </nav>
-    <SiteSettingsButton />
-    </div>
   </div>
 </header>

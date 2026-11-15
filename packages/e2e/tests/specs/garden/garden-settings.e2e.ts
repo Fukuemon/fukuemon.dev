@@ -107,3 +107,28 @@ test.describe("表示の設定とトップの庭", () => {
     await expect(htmlElement(page)).toHaveAttribute("data-time", "day");
   });
 });
+
+for (const width of [320, 430]) {
+  test.describe(`幅 ${width}px の庭`, () => {
+    test.use({ viewport: { width, height: 640 } });
+
+    test("庭を出した場合、右下の歯車が 3 つの文へ移るボタンと 1 列に並び、押すと表示の設定が開くこと", async ({
+      page,
+    }) => {
+      await seenBefore(page);
+      // 舞う物があると SwiftShader が描き続けて操作が遅れるので、舞う物の無い夏の昼で開く
+      await presetSettings(page, { season: "summer", time: "day" });
+      await page.goto("/");
+      await expect(htmlElement(page)).toHaveClass(/garden-ready/);
+      const first = await page.getByTestId("garden-station-0").boundingBox();
+      const last = await page.getByTestId("garden-station-2").boundingBox();
+      const gear = await page.getByTestId("site-settings-open").boundingBox();
+      expect(first?.y).toBe(gear?.y);
+      expect(last?.y).toBe(gear?.y);
+      expect((last?.x ?? 0) + (last?.width ?? 0)).toBeLessThanOrEqual(gear?.x ?? 0);
+      expect((gear?.x ?? 0) + (gear?.width ?? 0)).toBeLessThanOrEqual(width);
+      await page.getByTestId("site-settings-open").click();
+      await expect(page.getByTestId("site-settings")).toBeVisible();
+    });
+  });
+}

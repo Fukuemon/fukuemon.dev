@@ -1,7 +1,7 @@
 import { IconButton } from "@fukuemon/ui";
 import { SITE_SETTINGS_ID } from "./settings";
 
-/** ヘッダーの歯車のボタン。`client:*` を付けずに静的な HTML に描き、popover の `popovertarget` で設定の面を開く */
+/** トップのフッターの歯車のボタン。`client:*` を付けずに静的な HTML に描き、popover の `popovertarget` で設定の面を開く */
 export function SiteSettingsButton() {
   return (
     <IconButton
