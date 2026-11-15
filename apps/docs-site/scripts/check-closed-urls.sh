@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 文書のサイトは custom domain の docs.<zone> だけで公開し、workers.dev とバージョンごとの URL を閉じておく (ADR-0032)。
-# 値を true にした変更が develop に入ると、deploy の workflow が apply を通らずに custom domain のほかの URL を開く。
+# ドキュメントサイトは custom domain の docs.<zone> だけで公開し、workers.dev とバージョンごとの URL を閉じておく (ADR-0032)。
+# 値を true にした変更が develop に入ると、deploy の workflow が apply を通らずに custom domain 以外の URL を開く。
 # JSONC を解釈せずに 1 行ずつ正規表現で比べるので、コメントの行を除き、トップレベル（半角スペース 2 つのインデント）に false の行があることを確認する。
 # env の中に同じキーを書いても見逃さないよう、どの深さにも true の行が無いことも確認する
 set -euo pipefail
@@ -34,7 +34,7 @@ while :; do
   dir="$(dirname "$dir")"
 done
 
-# wrangler deploy の --domain、--routes、--config などの引数も、apply を通らずに custom domain のほかの URL を作るおそれがある
+# wrangler deploy の --domain、--routes、--config などの引数も、apply を通らずに custom domain 以外の URL を作るおそれがある
 deploy="$(jq -r '.scripts.deploy // ""' "$APP/package.json")"
 if [ "$deploy" != "wrangler deploy" ]; then
   echo "package.json の deploy が wrangler deploy ではありません。引数を足さない。" >&2
@@ -88,6 +88,6 @@ if ! awk '
 fi
 
 if [ "$status" -eq 0 ]; then
-  echo "custom domain のほかの URL は閉じていて、すべてのパスに noindex があります"
+  echo "custom domain 以外の URL は閉じていて、すべてのパスに noindex があります"
 fi
 exit "$status"

@@ -1,4 +1,4 @@
-# noindex は、検索の結果に載せるかを決めるまで返す。frame-ancestors は、どのページにも埋め込ませないため
+# noindex は、検索の結果に載せるかを決めるまで返す。frame-ancestors は、どのページにも埋め込ませないために返す
 /*
   X-Robots-Tag: noindex
   X-Content-Type-Options: nosniff

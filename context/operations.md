@@ -120,7 +120,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 `docs.fukuemon.dev` が返すヘッダは次のとおり。
 
 - すべてのパスに、`X-Robots-Tag: noindex` と、カタログと同じ `X-Content-Type-Options`、`Referrer-Policy`、`Strict-Transport-Security` を返す。
-  - ドキュメントサイトを検索の結果に載せるかは、決めていない。決めるまで noindex を返す。
+  - noindex は、ドキュメントサイトを検索の結果に載せるかを決めるまで返す。
 - すべてのパスに、`Content-Security-Policy: frame-ancestors 'none'` を返す。文書のサイトを埋め込むページは無いので、自分の origin にも埋め込ませない。
 - Mermaid の図は、Zensical のテーマが `https://unpkg.com/mermaid@12/dist/mermaid.min.js` を実行時に読んで描く。SRI は付かず、CSP でスクリプトの読み込み元を絞らない。
   - 受け入れる。サイトに載る文書は public のリポジトリにある文書で、スクリプトが読めても困る中身が無いためである。

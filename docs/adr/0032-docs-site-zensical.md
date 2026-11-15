@@ -8,7 +8,7 @@
 
 設計の文書（PRD、Design Doc、ADR）を、ビルドしたサイトとして読めるようにする。
 
-- ドキュメントサイトは `docs.fukuemon.dev` に置き、誰でも開ける。
+- ドキュメントサイトは `docs.fukuemon.dev` に置く。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
 - 文書の原本は、公開のリポジトリにある。
 - 文書は `docs/` に集め、機能ごとの Design Doc を `docs/design/` からシンボリックリンクで指す。
@@ -31,19 +31,19 @@
 - Zensical で `docs/` をビルドし、`apps/docs-site/` の Worker（`fukuemon-dev-docs`）から、静的なアセットとして配信する。buddy と設定と手順を共有するためである。
 - 含める文書は、`docs/` の PRD、全体の Design Doc、ADR と、シンボリックリンクで指す機能ごとの Design Doc とデザインシステムの文書にする。`context/` は含めない。
 - カタログは含めず、`design.fukuemon.dev` へのリンクを置く。
+- ドキュメントサイトは、誰でも開けるようにする。載せる文書は公開のリポジトリにあるものだけで、見られて困る内容が無いためである。
 - develop への push で check が通ったときにデプロイする。
 
-### 2. ほかの URL を閉じる
+### 2. custom domain だけで配信する
 
-- Worker の `workers_dev` と `preview_urls` を `false` にする。
-  - 公開先を、Terraform で持つ custom domain の `docs.fukuemon.dev` だけにするためである。カタログとプレイグラウンドの Worker と同じにする。
 - `docs.<zone>` の custom domain（`cloudflare_workers_custom_domain.docs`）は、Terraform で持つ。ホスト名の作成は、ほかのサブドメインと同じ管轄にそろえる。
+- Worker の `workers_dev` と `preview_urls` を `false` にする。
+  - 公開先を custom domain だけにするためである。カタログとプレイグラウンドの Worker と同じ設定にする。
 
 ## 承認の条件
 
-次の 1 つを確認する。
-
-- `workers_dev` と `preview_urls` を `false` にした Worker が、custom domain 以外の URL で開けないこと。ドキュメントサイトを公開するときに確認する。
+`workers_dev` と `preview_urls` を `false` にした Worker が、custom domain 以外の URL で開けないことを確認する。
+ドキュメントサイトを公開するときに確認する。
 
 ## Considered Options
 

@@ -43,7 +43,7 @@ jobs:
       - run: pnpm --filter @fukuemon/docs-site run build
 
       # workflow_dispatch で起動したときは check workflow の結果を条件にしないので、配信の前にも確認する
-      - name: custom domain のほかの URL が閉じていることを確認する
+      - name: custom domain 以外の URL が閉じていることを確認する
         run: pnpm --filter @fukuemon/docs-site run check:closed-urls dist/_headers
 
       - name: Cloudflare へ配信する
