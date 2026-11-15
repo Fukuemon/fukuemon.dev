@@ -3,7 +3,6 @@
 このディレクトリは、トップの最初の訪問に出す墨の絵の SVG を作るコードと、門の内側の立体の庭を three で描くコードを持つ。
 
 コードの構成と見た目の数値は、[トップの水墨の門と立体の庭の Design Doc](DesignDoc.md) にある。
-Design Doc の数値は、[試作](../../../../../docs/design/prototypes/top/README.md) のコードから取った。
 
 ## Testing
 

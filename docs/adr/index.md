@@ -25,11 +25,12 @@ ADR の規則は、[README.md](README.md) にある。
 
 ## 配信の基盤
 
-| ADR                                                     | 題                                                                                         |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [ADR-0005](0005-workers-terraform-wrangler-boundary.md) | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する |
-| [ADR-0031](0031-subdomains-and-workers.md)              | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる        |
-| [ADR-0032](0032-docs-site-zensical.md)                  | ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する                     |
+| ADR                                                              | 題                                                                                           |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [ADR-0005](0005-workers-terraform-wrangler-boundary.md)          | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する   |
+| [ADR-0031](0031-subdomains-and-workers.md)                       | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる          |
+| [ADR-0032](0032-docs-site-zensical.md)                           | ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する                       |
+| [ADR-0084](0084-deploy-site-on-check-success-without-preview.md) | （提案）本番の Worker を develop の check の成功で deploy し、プレビューの Worker を置かない |
 
 ## 書体、トークン、コンポーネント
 
@@ -112,6 +113,7 @@ flowchart TB
     A0005["ADR-0005"]
     A0031["ADR-0031"]
     A0032["ADR-0032"]
+    A0084["ADR-0084"]
   end
   subgraph design["書体、トークン、コンポーネント"]
     A0075["ADR-0075"]
@@ -182,6 +184,8 @@ flowchart TB
   A0032 --> A0021
   A0032 --> A0005
   A0032 --> A0001
+  A0084 --> A0031
+  A0084 --> A0005
   A0075 --> A0034
   A0055 --> A0029
   A0055 --> A0024
@@ -386,3 +390,5 @@ flowchart TB
 | ADR-0071 | 触る端末では、押せる領域を 44×44 CSS px 以上にする                                   | ADR-0062 |
 | ADR-0073 | `SplitPane` の仕切りの押せる幅を、8px と 44px にする                                 | ADR-0062 |
 | ADR-0073 | `SplitPane` の仕切りのフォーカスの輪を、仕切りの内側に引く                           | ADR-0079 |
+| ADR-0005 | 本番の Worker の deploy workflow を、切り替えまで手で起動したときだけ動かす          | ADR-0084 |
+| ADR-0031 | 切り替えまでのプレビューの Worker と、本番の Worker の手動の deploy                  | ADR-0084 |

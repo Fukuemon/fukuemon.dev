@@ -253,10 +253,7 @@ const JSX_A11Y_RULES = [
 
 export default defineConfig({
   plugins: ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y", "import"],
-  ignorePatterns: [
-    "docs/design/prototypes/**/vendor/",
-    "packages/go-runtime/src/worker/vendor/wasm_exec.js",
-  ],
+  ignorePatterns: ["packages/go-runtime/src/worker/vendor/wasm_exec.js"],
   rules: {
     "import/no-cycle": "error",
     "react/rules-of-hooks": "error",

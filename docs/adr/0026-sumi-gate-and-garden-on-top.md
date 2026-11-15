@@ -102,7 +102,7 @@ PRD の「Lighthouse の Performance が 90 以上で、LCP が 2.5 秒以内（
 
 ## Verification
 
-`design/prototypes/top/` の試作（`i-mon.html`）で、chromium と Apple M2（ANGLE の Metal のレンダラー）で確認した。
+`design/prototypes/top/` の試作（`i-mon.html`。試作は 2026-11-15 に消した）で、chromium と Apple M2（ANGLE の Metal のレンダラー）で確認した。
 `file://` で開いた値で、通信の時間を含まない。
 
 - 最初の訪問は、署名を入れて 8.3 秒で終わった。署名と墨の絵が 3.8 秒、色が差して門をくぐり終えるまでが 4.5 秒である。
