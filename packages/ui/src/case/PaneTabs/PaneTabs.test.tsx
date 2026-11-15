@@ -77,7 +77,7 @@ describe("PaneTabs", () => {
 
     it.each([5, 6])("%i 個のタブを並べると、帯を横にスクロールできる", (count) => {
       renderNarrow(count);
-      const list = screen.getByRole("tablist");
+      const list = screen.getByRole("tablist").parentElement as HTMLElement;
       list.scrollLeft = 10;
       expect(list.scrollLeft).toBeGreaterThan(0);
     });
@@ -87,7 +87,9 @@ describe("PaneTabs", () => {
       screen.getByRole("tab", { name: "エディタ" }).focus();
       await userEvent.keyboard("{End}");
       const rect = document.activeElement?.getBoundingClientRect();
-      const list = screen.getByRole("tablist").getBoundingClientRect();
+      const list = (
+        screen.getByRole("tablist").parentElement as HTMLElement
+      ).getBoundingClientRect();
       expect(rect?.right).toBeLessThanOrEqual(list.right + 1);
     });
   });
