@@ -39,13 +39,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # 検証用の記事を書き出さない (context/operations.md)
       - run: pnpm --filter @fukuemon/web run build
-        env:
-          SITE_ENV: production
-
-      # 渡し忘れた build が本番へ出ないよう、検証用の記事の出力が dist に無いことを配信の前に確認する
-      - run: node apps/web/scripts/check-production-dist.ts
 
       # workflow_dispatch で起動したときは check workflow の結果を条件にしないので、配信の前にも確認する
       - name: workers.dev が閉じていることを確認する

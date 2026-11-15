@@ -10,7 +10,7 @@ const fadeOpacity = (box: Locator) =>
 test.use({ viewport: { width: 1280, height: 900 } });
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/articles/page-check/body-and-figure/");
+  await page.goto("/articles/article-elements/body-and-figure/");
 });
 
 test.describe("記事のページ", () => {

@@ -186,7 +186,7 @@ test.describe("薄墨の背景の絵", () => {
   }
 
   test.describe("背景を出さないページ（記事の本文）", () => {
-    const article = "/articles/page-check/body-and-figure/";
+    const article = "/articles/article-elements/body-and-figure/";
 
     test("背景の要素を置かないこと", async ({ page }) => {
       await page.goto(article);

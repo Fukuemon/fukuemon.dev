@@ -1,5 +1,5 @@
 {
-  "name": "embed-check-node-db",
+  "name": "article-elements-node-db",
   "private": true,
   "type": "module",
   "dependencies": {

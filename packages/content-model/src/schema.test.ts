@@ -18,10 +18,6 @@ describe("articleSchema", () => {
     expect(articleSchema.safeParse({ ...base, format: "steps" }).success).toBe(false);
   });
 
-  it("verificationOnly を省くと false になる", () => {
-    expect(articleSchema.parse(base).verificationOnly).toBe(false);
-  });
-
   it("整数でない order は受け付けない", () => {
     expect(articleSchema.safeParse({ ...base, order: 1.5 }).success).toBe(false);
   });
