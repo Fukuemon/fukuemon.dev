@@ -14,12 +14,11 @@ watch = [
   "packages/ui/DESIGN.md",
   "packages/ui/design",
 ]
-# ADR のテンプレートとトップの試作は文書ではないので、サイトに載せない。
+# ADR のテンプレートは文書ではないので、サイトに載せない。
 # adr/README.md は ADR を書く人への規則で、adr/index.md と同じ URL になるので載せない
 exclude_docs = """
 adr/template.md
 adr/README.md
-design/prototypes/
 """
 # ADR は adr/index.md から辿る。nav に ADR のファイルを並べると、ADR を足すか消すたびに nav を直すことになる
 nav = [

@@ -90,7 +90,7 @@ export interface Brush {
 
 /**
  * 筆の線を溜める筆を作る。同じ種で同じ順に呼べば、同じ線ができる。
- * 乱数を進める順は試作（`docs/design/prototypes/top/src/h-strokes.mjs`）と同じにしてあり、順を変えると絵が変わる。
+ * 乱数を進める順を変えると、絵が変わる。
  */
 export function brush(seed: number): Brush {
   const R = rng(seed);

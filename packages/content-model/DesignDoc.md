@@ -282,7 +282,7 @@ frontmatter の項目が違い、1 つの schema にまとめると、記事の�
 `isPublic()` は、実行の種類（`SiteMode`）ごとに通す記事を決める。  
 dev server はすべてを通す。  
 本番の build（`SITE_ENV=production`）は、`status` が `published` で、`verificationOnly` が `true` でないものだけを通す。  
-プレビューと手元の build は、`status` が `published` のものを、`verificationOnly` を問わず通す。  
+E2E と手元の build は、`status` が `published` のものを、`verificationOnly` を問わず通す。  
 `planArticlePages()` は、シリーズの位置と前後を、`isPublic()` を通った記事だけで数える。  
 シリーズの所属と読む順は、Astro の `id` の先頭のディレクトリ名と `order` から、`planArticlePages()` が導く。  
 `listArticles()` は、`isPublic()` を通った記事を、公開の日付の新しい順に返す。  

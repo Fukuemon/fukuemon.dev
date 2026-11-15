@@ -71,7 +71,6 @@ describe("_headers", () => {
   );
 
   const COMMON: Record<string, string> = {
-    "x-robots-tag": "noindex",
     "x-content-type-options": "nosniff",
     "referrer-policy": "strict-origin-when-cross-origin",
     "strict-transport-security": "max-age=31536000; includeSubDomains",
@@ -79,12 +78,21 @@ describe("_headers", () => {
   };
 
   it.each(["/", "/node/", "/sql/", "/go/", "/assets/node-abc.js"])(
-    "%s に noindex、nosniff、Referrer-Policy、HSTS、frame-ancestors を返す",
+    "%s に nosniff、Referrer-Policy、HSTS、frame-ancestors を返す",
     (path) => {
       const headers = headersFor(path);
       expect(
         Object.fromEntries(Object.keys(COMMON).map((name) => [name, headers.get(name)])),
       ).toStrictEqual(COMMON);
+    },
+  );
+});
+
+describe("_headers の検索エンジン向けのヘッダ", () => {
+  it.each(["/", "/node/", "/sql/", "/go/", "/assets/node-abc.js"])(
+    "%s に X-Robots-Tag を返さない",
+    (path) => {
+      expect(headersFor(path).has("x-robots-tag")).toBe(false);
     },
   );
 });

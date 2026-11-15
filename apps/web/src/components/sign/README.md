@@ -29,7 +29,7 @@
 読み上げの名前は、署名を置く側が持つ。
 ヘッダーのロゴのリンクは、`aria-label` に「Fukuemon」を持つ。
 
-`sign.svg` は、書体 Great Vibes の輪郭を、試作の `docs/design/prototypes/top/src/sign-path.py` で取り出したものである。
+`sign.svg` は、書体 Great Vibes の輪郭を取り出したものである。
 書体のファイルは、リポジトリにもサイトにも置かない。
 
 ## License

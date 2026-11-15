@@ -27,7 +27,6 @@ fukuemon.dev のドメインの下に、サイトのほかに、複数のアプ�
 - キャンバスの候補の draw.io の Embed Mode は、draw.io のエディタを、別の origin の iframe で読み込む。そのレスポンスは、COEP と CORP のヘッダを返さない（`curl -I` で確認した）。
   - 出典: [draw.io: Embed mode](https://www.drawio.com/docs/reference/embed-mode/)
 - isolation が要る実行環境を、別の origin の iframe で記事に埋め込むときは、iframe の側がヘッダを返しても、親の記事のページがヘッダを返さなければ、iframe の中は isolation の状態にならない。実行環境の要求の prototype で確認した。
-- サイトを作り直すあいだ、本番は切り替える前のサイトを配信し続ける。開発中のサイトを、実機と E2E で確認する URL が要る。
 
 ## Decision
 
@@ -85,12 +84,7 @@ fukuemon.dev の全体には、cross-origin isolation のヘッダを返さな�
 
 ### 6. 切り替えまでのプレビュー
 
-- 新しいサイトを、本番と別の名前の Worker（`fukuemon-dev-preview`）にデプロイする。custom domain を付けず、workers.dev の URL で開く。
-- develop への push で check が通ったときにデプロイする。
-- 誰でも開けるままにし、全てのレスポンスに `X-Robots-Tag: noindex` を返す。E2E と Lighthouse を、認証なしで実行するためである。
-- 本番の Worker（`fukuemon-dev`）への deploy は、運用者が手動で実行したときだけ行う。
-  - 通常の deploy workflow が push で動くとした [ADR-0005 の 5](0005-workers-terraform-wrangler-boundary.md#5-credential-を-2-系統に分ける) の、切り替えまでの例外である。例外は本番の Worker だけで、credential の 2 系統は変えない。
-- 本番を新しいサイトに切り替えるときに、プレビューの Worker を消し、本番の Worker へ develop への push でデプロイする設定に変更する。
+- 切り替えまでの間に、プレビューの Worker を置き、本番の Worker の deploy を手動だけにする決定は、ADR-0084 が置き換えた。
 
 ## 承認の条件
 
@@ -110,8 +104,6 @@ fukuemon.dev の全体には、cross-origin isolation のヘッダを返さな�
 | プレイグラウンドのサブドメインの全体に、isolation のヘッダを返す                                                        | ヘッダを書き分けない                                                                                                                                                        | COEP を返さない別の origin のページを iframe で読み込むツールを、置けない                                                                                                                                              |
 | サイトの全てを fukuemon.dev の下のパスに置く                                                                            | Worker が少ない。同じ origin なので、埋め込みが単純になる                                                                                                                   | 訪問者のコードが、サイトと同じ origin で動く。isolation のヘッダを、サイトのパスごとに書き分ける                                                                                                                       |
 | ツールの配置先を決めず、実行環境の方式と一緒に決める                                                                    | 方式が決まる前に、origin を固定しない                                                                                                                                       | キャンバスとスライドのエディタの要求を、配置先が決まらないまま書くことになる                                                                                                                                           |
-| プレビューを、本番の Worker のバージョンごとの URL で公開する                                                           | Worker が増えない                                                                                                                                                           | 上げるたびに URL が変わる。本番の Worker への操作なので、コマンドを誤ると本番が替わる                                                                                                                                  |
-| プレビューを用意せず、手元だけで確認する                                                                                | 基盤が増えない                                                                                                                                                              | 実機で確認できない。E2E と Lighthouse を、配信した状態で実行できない                                                                                                                                                   |
 
 ## Consequences
 
@@ -119,14 +111,11 @@ fukuemon.dev の全体には、cross-origin isolation のヘッダを返さな�
 
 - 新しいアプリを追加するときに、配置先を規則で決められる。
 - プレイグラウンドにツールを追加するときに、Worker とホスト名が増えない。
-- 開発中のサイトを、本番の Worker に触れずに、変わらない URL で確認できる。
 
 ### Negative
 
-- Worker が、サイト、プレイグラウンド、カタログ、ドキュメントサイト、プレビューの 5 つになる。
+- Worker が、サイト、プレイグラウンド、カタログ、ドキュメントサイトの 4 つになる。
 - プレイグラウンドの Worker は、パスごとに違うヘッダを返す。ヘッダの設定を誤ると、isolation を求めるツールが起動しないか、iframe を読み込むツールが動かない。
 - isolation を求めるツールと、別の origin のページを iframe で読み込むツールは、同じ画面に並べられない。ツールを移るときは、ページを読み込み直す。
 - isolation を求める実行環境を埋め込む記事では、CORP を返さない外部のリソースがブロックされる。
 - 訪問者が、他人の書いたコードを貼って動かすと、そのコードが、同じ端末のプレイグラウンドに保存した図、スライド、ファイルを読むか、消すことがある。
-- プレビューの Worker は custom domain を持たないので、Worker の名前を Terraform の変数と比べるチェックの対象の外になる。
-- プレビューの URL を知っている人は、開発中のサイトを開ける。

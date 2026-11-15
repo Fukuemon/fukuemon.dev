@@ -20,7 +20,7 @@ export type ArticleSeries = {
 /**
  * 書き出す範囲を決める実行の種類。
  * - dev: dev server。すべてを書き出す
- * - internal: SITE_ENV を指定しない build。プレビューの Worker、E2E、手元の build で、公開した記事と検証用の記事を書き出す
+ * - internal: SITE_ENV を指定しない build。E2E と手元の build で、公開した記事と検証用の記事を書き出す
  * - production: SITE_ENV=production の build。検証用でない公開した記事だけを書き出す
  */
 export type SiteMode = "dev" | "internal" | "production";

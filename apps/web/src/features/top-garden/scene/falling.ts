@@ -1,5 +1,5 @@
 // 季節の舞う物（春の桜、夏の蛍、秋の紅葉、冬の雪）。全てを 1 つの InstancedMesh にして、1 回の描画の呼び出しで描く。
-// 動きの式と乱数の順は、試作の docs/design/prototypes/top/src/i-scene.js と同じにしてある。
+// 乱数の順を変えると、舞う物の動きが変わる。
 import {
   AdditiveBlending,
   DynamicDrawUsage,
@@ -17,7 +17,7 @@ import { shapeTexture } from "./scene-parts";
 
 /** 舞う物が上から下へ抜ける高さ（m）。下の端まで来た物は、上の端に戻る */
 const FALL_H = 5.2;
-/** 試作の i-scene.js と同じ種。場面の物の種と分けるので、場面の物の配置を変えない */
+/** 場面の物の種と分けるので、場面の物の配置を変えない */
 const FALL_SEED = 5;
 
 export interface Falling {
