@@ -4,6 +4,7 @@ import { meanDiff } from "../../widgets/actions/mean-diff";
 import { settledCenterX } from "../../widgets/waits/settled-center-x";
 import {
   careerSummaries,
+  cardsLayer,
   currentCards,
   draggableCards,
   htmlElement,
@@ -128,6 +129,25 @@ test.describe("トップの庭", () => {
       await expect
         .poll(async () => Math.abs((await card(page, "career").boundingBox())!.height - closed) < 3)
         .toBe(true);
+    });
+
+    // summary へのフォーカスやクリックで、ブラウザが文の層の入れ物をスクロールすると、文だけが立体の和紙からずれる
+    test("文の層の入れ物をスクロールしようとした場合、スクロールせず、経歴の文が和紙と同じ位置に映ること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      const before = (await card(page, "career").boundingBox())!.y;
+      const scrolled = await cardsLayer(page).evaluate((el) => {
+        el.scrollTop = 160;
+        return el.scrollTop;
+      });
+      const after = (await card(page, "career").boundingBox())!.y;
+      expect({ scrolled, moved: Math.round(after - before) }).toStrictEqual({
+        scrolled: 0,
+        moved: 0,
+      });
     });
   });
 

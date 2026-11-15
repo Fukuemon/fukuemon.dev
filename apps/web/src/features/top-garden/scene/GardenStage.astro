@@ -59,9 +59,11 @@ const skip =
     block-size: 100%;
   }
 
+  /* 和紙の文の summary にフォーカスやクリックが届くと、ブラウザが入れ物をスクロールし、文が立体の和紙からずれる。CSS3DRenderer が overflow: hidden をインラインで書くので、!important で clip にしてスクロールさせない */
   .garden-stage :global(.garden-cards) {
     position: absolute;
     inset: 0;
+    overflow: clip !important;
   }
 
   /* 見せていない和紙の文は、クリックを受けない。CSS3DRenderer が要素に pointer-events: auto を書くので、!important で止める */
