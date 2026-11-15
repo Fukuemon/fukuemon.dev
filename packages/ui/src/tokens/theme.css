@@ -472,8 +472,9 @@
 }
 
 /*
- * 区切った帯。子のボタンを、境の線を 1 本にしてつなぎ、折り返す。外側の 4 つの角だけを rounded-control と同じ値で丸める。
- * 子には、枠の線（border）と stitch を付け、選んだ子に z-index を付けて、濃い線を隣の線の上に出す。
+ * 区切った帯。子のボタンを、境の線を 1 本にしてつなぎ、折り返す。最初の子の左の 2 つの角と、最後の子の右の 2 つの角を、rounded-control と同じ値で丸める。
+ * 折り返したときも、丸めるのはこの 4 つの角だけである。CSS では行の端の子を選べないためである。
+ * 子には、枠の線（border）と stitch を付け、margin を付けない。選んだ子に z-10 を付けて、濃い線を隣の線の上に出す。フォーカスした子は、その上に出し、輪を隣の面に隠さない。
  */
 @utility band {
   display: flex;
@@ -482,9 +483,11 @@
   padding-block-start: 1px;
 
   & > * {
-    position: relative;
     margin-inline-start: -1px;
     margin-block-start: -1px;
+  }
+  & > :focus-visible {
+    z-index: 20;
   }
   & > :first-child {
     border-start-start-radius: --theme(--radius-control);

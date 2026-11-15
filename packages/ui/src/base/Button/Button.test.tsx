@@ -6,8 +6,16 @@ import { userEvent } from "vite-plus/test/browser/context";
 
 import * as stories from "./Button.stories";
 
-const { Primary, PrimaryDisabled, Loading, SecondaryLoading, DangerLoading, Small, ExtraSmall } =
-  composeStories(stories);
+const {
+  Primary,
+  Secondary,
+  PrimaryDisabled,
+  Loading,
+  SecondaryLoading,
+  DangerLoading,
+  Small,
+  ExtraSmall,
+} = composeStories(stories);
 
 describe("Button", () => {
   it("押すと onClick を呼ぶ。Enter と Space でも押せる", async () => {
@@ -119,15 +127,37 @@ describe("Button", () => {
     expect(getComputedStyle(button).fontSize).toBe("13px");
   });
 
-  it("S と M は角を 4 px で丸めて縫い目の破線を描き、XS は破線を描かない", () => {
-    const { unmount } = render(<Primary />);
-    const medium = getComputedStyle(screen.getByRole("button"));
-    expect([medium.borderTopLeftRadius, medium.backgroundImage]).toStrictEqual([
-      "4px",
-      expect.stringContaining("repeating-linear-gradient"),
+  it("M と S は、角を 4 px で丸め、縫い目の破線を描く", () => {
+    const shapes = [<Primary key="m" />, <Small key="s" />].map((ui) => {
+      const { unmount } = render(ui);
+      const { borderTopLeftRadius, backgroundImage } = getComputedStyle(screen.getByRole("button"));
+      unmount();
+      return {
+        radius: borderTopLeftRadius,
+        stitched: backgroundImage.includes("repeating-linear-gradient"),
+      };
+    });
+    expect(shapes).toStrictEqual([
+      { radius: "4px", stitched: true },
+      { radius: "4px", stitched: true },
     ]);
-    unmount();
+  });
+
+  it("XS は、縫い目の破線を描かない", () => {
     render(<ExtraSmall />);
     expect(getComputedStyle(screen.getByRole("button")).backgroundImage).toBe("none");
+  });
+
+  it("主のボタンと押せない secondary の破線は、押せる secondary の破線と違う色になる", () => {
+    const images = [<Secondary key="s" />, <Primary key="p" />, <Secondary disabled key="d" />].map(
+      (ui) => {
+        const { unmount } = render(ui);
+        const image = getComputedStyle(screen.getByRole("button")).backgroundImage;
+        unmount();
+        return image;
+      },
+    );
+    const [secondary, ...others] = images;
+    expect(others.map((image) => image === secondary)).toStrictEqual([false, false]);
   });
 });
