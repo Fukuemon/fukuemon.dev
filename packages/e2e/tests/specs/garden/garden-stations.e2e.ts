@@ -212,7 +212,7 @@ test.describe("トップの庭", () => {
   test.describe("幅 375px、高さ 548px", () => {
     test.use({ viewport: { width: 375, height: 548 }, colorScheme: "light" });
 
-    test("4 つの文に移った場合、4 つの文へ移るボタンが 1 行に並び、どの文でも和紙の下の端に重ならないこと", async ({
+    test("4 つの文のどれへ移った場合も、4 つの文へ移るボタンが 1 行に並び、和紙の下の端に重ならないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
@@ -221,11 +221,11 @@ test.describe("トップの庭", () => {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         const tops = await stations(page).evaluateAll((els) =>
-          els.map((el) => Math.round(el.getBoundingClientRect().top)),
+          els.map((el) => el.getBoundingClientRect().top),
         );
         const paper = (await card(page, id).boundingBox())!;
         result[id] = {
-          rows: new Set(tops).size,
+          rows: new Set(tops.map(Math.round)).size,
           overlap: paper.y + paper.height > Math.min(...tops),
         };
       }
