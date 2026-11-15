@@ -381,8 +381,8 @@ DADS にないコンポーネントは、WAI-ARIA Authoring Practices Guide（AP
   - `bottom` と `start` は、20px の印の下に 12px のラベルを置く。`top` は、印の右に 13px の太字のラベルを置く。
   - ラベルは折り返さない。
   - `bottom` のタブは、幅をラベルの長さ以上にする。並べた幅が帯を超えるときは、帯を横にスクロールさせる。
-  - 右に隠れたタブがある間は、帯の右端を `surface-pane` の色で薄くする（`scroll-fade-end`、`scroll-fade-pane`、`scroll-fade-narrow`）。
-  - ラベルは隣のラベルと重ならない。
+  - `bottom` の帯は、右に隠れたタブがある間、右端を `surface-pane` の色で薄くする（`scroll-fade-end`、`scroll-fade-pane`、`scroll-fade-narrow`）。
+  - `bottom` のラベルは、隣のラベルと重ならない。
   - 選んだタブが帯の外にあっても、帯は自動では送らない。
   - 帯の先頭に、タブの並びの外の操作を 1 つ置ける（`leading`）。ファイルのドロワーを開くボタンに使う。タブの並び（`role="tablist"`）の中に、タブ以外の操作を置けないためである。
 - 状態: デフォルト、hover、フォーカス、選択。選んだタブには、帯のペインの側の端に緑の筆の線を引き、ラベルを太字にする。
