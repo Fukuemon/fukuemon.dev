@@ -33,7 +33,7 @@ ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐっ
 
 - 水墨の門の絵と立体の庭の時間、色、配置。[トップの水墨の門と立体の庭の Design Doc](../../../../apps/web/src/features/top-garden/DesignDoc.md) が持つ。
 - 挿絵の濃さのトークンの値。`packages/ui/src/tokens/semantic.css` と `semantic-dark.css` が持つ。
-- 動きの規則と、トップの庭の例外。[全体の Design Doc の「動き」](../../../../docs/design/DesignDoc.md#動き) が持つ。
+- 動きの規則と、トップの庭と背景の霞の例外。[全体の Design Doc の「動き」](../../../../docs/design/DesignDoc.md#動き) が持つ。
 
 ## Design
 

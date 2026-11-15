@@ -23,7 +23,7 @@ verified_commit: unverified
 
 - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../../../../../docs/adr/0026-sumi-gate-and-garden-on-top.md)
 - ADR-0027: [トップの庭の絵を、訪問者の端末の日付と時刻で、季節と時間帯ごとに変える](../../../../../docs/adr/0027-garden-by-season-and-time.md)
-- ADR-0082（提案）: [トップと記事とプレイグラウンドの一覧の画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-ink-background-as-css-mask.md)
+- ADR-0082: [トップと記事とプレイグラウンドの一覧の画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-ink-background-as-css-mask.md)
 
 ## Scope
 
@@ -43,7 +43,7 @@ verified_commit: unverified
 
 - 版画風の挿絵の版の仕様。[挿絵の Design Doc](../../../../../packages/ui/src/art/DesignDoc.md) が持つ。
 - 紙と墨の色のトークン。[デザインシステム（packages/ui）の Design Doc](../../../../../packages/ui/DesignDoc.md) が持つ。
-- 動きの規則と、トップの庭の例外。[全体の Design Doc の「動き」](../../../../../docs/design/DesignDoc.md#動き) が持つ。
+- 動きの規則と、トップの庭と背景の霞の例外。[全体の Design Doc の「動き」](../../../../../docs/design/DesignDoc.md#動き) が持つ。
 
 ## Design
 
