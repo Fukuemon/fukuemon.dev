@@ -59,4 +59,4 @@ Worker がまだ無いときは、deploy-docs workflow を `workflow_dispatch` �
 2. `curl -sI https://fukuemon-dev-docs.<アカウントの workers.dev のサブドメイン>.workers.dev` を実行し、ドキュメントサイトの HTML が返らないことを確認する。返るステータスコードは未確認である。
 3. バージョンごとの URL（`https://<バージョンの ID の先頭 8 文字>-fukuemon-dev-docs.<サブドメイン>.workers.dev`）にも、`curl -sI` を実行する。バージョンの ID は `wrangler deployments list` で出る。
 
-- ADR-0032: [承認の条件](../../docs/adr/0032-docs-site-zensical.md#承認の条件)
+- ADR-0032: [custom domain だけで配信する](../../docs/adr/0032-docs-site-zensical.md#2-custom-domain-だけで配信する)
