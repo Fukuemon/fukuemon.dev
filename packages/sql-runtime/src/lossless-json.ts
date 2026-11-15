@@ -5,12 +5,15 @@ type Database = Pick<PGliteInterface, "exec">;
 const text: types.Parser = (value) => value;
 const textArray: types.Parser = (value) => types.arrayParser(value, text, 0);
 
+const JSON_ARRAY = 199;
+const JSONB_ARRAY = 3807;
+
 // PGlite の既定は、json と jsonb を JSON.parse する。安全な整数の範囲を超える値は、桁を落とす
 const PARSERS = {
   [types.JSON]: text,
   [types.JSONB]: text,
-  199: textArray,
-  3807: textArray,
+  [JSON_ARRAY]: textArray,
+  [JSONB_ARRAY]: textArray,
 };
 
 /**

@@ -1,4 +1,4 @@
-import { PGlite } from "@electric-sql/pglite";
+import { PGlite, types } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { runSql, toJsonResponse } from "./index";
@@ -38,7 +38,7 @@ describe("withLosslessJson", () => {
     expect(rows).toStrictEqual([[['{"n": 9007199254740993}', null], ['{"n":9007199254740993}']]]);
   });
 
-  it("json 以外の型は、PGlite の既定のまま返す", async () => {
+  it("json 以外の型と、jsonb の NULL は、PGlite の既定のまま返す", async () => {
     const rows = await rowsOf("select 1, 'x', null::jsonb");
     expect(rows).toStrictEqual([[1, "x", null]]);
   });
@@ -47,7 +47,7 @@ describe("withLosslessJson", () => {
     const database = withLosslessJson(pg);
     const results = await database.exec(`select '{"a":1}'::jsonb`, {
       rowMode: "array",
-      parsers: { 3802: () => "custom" },
+      parsers: { [types.JSONB]: () => "custom" },
     });
     expect(results[0]?.rows).toStrictEqual([["custom"]]);
   });
@@ -60,8 +60,9 @@ describe("withLosslessJson", () => {
     expect(JSON.parse(JSON.stringify(rows))).toStrictEqual([['{"n": 9007199254740993}']]);
   });
 
-  it("使わない PGlite は、今までどおり桁が落ちる", async () => {
-    const rows = await rowsOf(`select '{"n": 9007199254740993}'::jsonb`, pg);
-    expect(rows).toStrictEqual([[{ n: 9007199254740992 }]]);
+  it("EXPLAIN (FORMAT JSON) の結果は、JSON.parse すると Plan を持つ配列になる文字列で返す", async () => {
+    const rows = await rowsOf("explain (format json) select 1");
+    const plan: unknown = JSON.parse(String(rows?.[0]?.[0]));
+    expect(plan).toMatchObject([{ Plan: { "Node Type": "Result" } }]);
   });
 });

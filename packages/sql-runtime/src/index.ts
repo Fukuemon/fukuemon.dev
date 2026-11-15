@@ -88,7 +88,7 @@ const bigintAsText = (_: string, item: unknown) =>
 
 /**
  * セルを、JSON で送っても表に出す文字列が変わらない値にする。表は、日時を ISO 8601 で、bytea を `\x` で始まる 16 進数で出す。
- * NaN と Infinity は JSON で null になり、表が NULL と出すので、文字列にする。配列と JSON の中の bigint も、文字列にする。
+ * NaN と Infinity は JSON で null になり、表が NULL と出すので、文字列にする。配列の中の bigint も、文字列にする。
  */
 function toJsonCell(value: unknown): unknown {
   switch (typeof value) {

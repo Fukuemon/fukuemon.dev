@@ -22,7 +22,7 @@ await new PGLiteSocketServer({
   path: DB_SOCKET_PATH,
   maxConnections: MAX_CONNECTIONS,
 }).start();
-const sqlDb = withLosslessJson(db);
+const losslessDb = withLosslessJson(db);
 
 // 前のリクエストの ROLLBACK が終わる前に、次のリクエストを実行しない
 let queue = Promise.resolve();
@@ -34,7 +34,7 @@ createInterface({ input: process.stdin }).on("line", (line) => {
     try {
       send({
         id: request.id,
-        response: toJsonResponse(keepLastRows(await runSql(sqlDb, request.sql))),
+        response: toJsonResponse(keepLastRows(await runSql(losslessDb, request.sql))),
       });
     } catch (error) {
       send({ id: request.id, response: { error: toSqlError(error), ms: 0 } });
