@@ -121,7 +121,7 @@ ADR-0029: [リポジトリの構成を buddy に合わせる](../docs/adr/0029-r
 あふれたときだけ薄い色が出ることは、ブラウザで描画しないと確認できない。そのため、E2E で確認する。  
 コードブロックのコピーの吹き出しが、1 行目の字とボタンの枠に重ならないことも、ブラウザで描画して矩形を比べる E2E（`code-copy-feedback.e2e.ts`）で確認する。  
 次の spec は、シリーズ「このサイトの記事で使われる構成要素」の記事 `article-elements/body-and-figure` に依存する。  
-`scroll-box-fade.e2e.ts`、`code-copy-feedback.e2e.ts`、`packages/e2e` の一覧から記事を開く spec が該当する。  
+`scroll-box-fade.e2e.ts`、`code-copy-feedback.e2e.ts`、`garden-background.e2e.ts` が該当する。  
 その記事の本文を変えるときは、spec が見る語（表の列の名前、コードの語）を残す。
 
 トップの庭は、Playwright のスクリーンショットの比較で確認する。  

@@ -4,7 +4,7 @@ title: 本文、表、コード、図
 description: このサイトの記事が使う、本文、表、コードブロック、図の見え方と、それぞれの置き方を説明する。
 tags: [記事の構成要素]
 status: published
-publishedAt: 2026-11-15
+publishedAt: 2026-11-14
 order: 1
 ---
 
