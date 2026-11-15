@@ -81,6 +81,7 @@ const row = "border-t border-border py-2";
           <p>好み：妻、甘いもの、運動、自然、</p>
         </div>
       </div>
+      {/* -ms-2.5 は、押せる範囲の中央に置いた 24px のアイコンの左端を、文の左端に揃える量である。ふつうのページは (44 - 24) / 2、庭は (60 - 24) / 2 - 8 で、どちらも 10px になる */}
       <div class="-ms-2.5 mt-4 flex gap-2 [html.stage-on_&]:gap-4">
         {
           links.map(({ label, href, path }) => (
@@ -106,7 +107,7 @@ const row = "border-t border-border py-2";
               <details name="career">
                 <summary class="cursor-pointer focus-visible:focus-ring [html.stage-on_&]:-my-1 [html.stage-on_&]:py-1">
                   <span class="text-caption text-text-secondary tabular-nums">{year}</span>
-                  <span class="block [html.stage-on_&]:font-semibold">{title}</span>
+                  <span class="block [html.stage-on_&]:font-bold">{title}</span>
                 </summary>
                 <div class="space-y-2 pt-2">
                   {detail.map((line) => (
