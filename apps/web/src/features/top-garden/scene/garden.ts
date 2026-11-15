@@ -1,5 +1,5 @@
 // 庭を canvas に描き、プロフィールの 4 つのセクションを、木の枝に掛けた和紙に置く。
-// カメラが動く間とポインタに合わせて揺れる間だけ、フレームごとに描く。止まっている間は描かない。
+// カメラが動く間、ポインタに合わせて揺れる間、季節の舞う物が舞う間だけ、フレームごとに描く。どれも無い間は描かない。
 import {
   FramebufferTexture,
   PCFSoftShadowMap,
@@ -10,6 +10,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
+import { createFalling } from "./falling";
 import { createInkPass } from "./ink-pass";
 import { INTRO } from "../intro-timing";
 import { CAM0, DESIGN, PAPER_PAD, PX, STATIONS } from "../layout";
@@ -24,7 +25,7 @@ export interface Garden {
   go(i: number): number;
   /** 今いる和紙の番号 */
   current(): number;
-  /** true のあいだ、カメラを動かさずに切り替え、ポインタに合わせて揺らさない */
+  /** true のあいだ、カメラを動かさずに切り替え、ポインタに合わせて揺らさず、舞う物を止める */
   pause(on: boolean): void;
   /** ポインタの位置（-1〜1）に合わせて、カメラを少し揺らす */
   pointer(x: number, y: number): void;
@@ -39,6 +40,9 @@ export interface Garden {
   /** 描くのをやめ、セクションを元の場所に戻し、和紙に置いたときに書いた属性と変数を消す */
   stop(): void;
 }
+
+/** 舞う物だけが動く間の、フレームの最小の間隔（ms）。60 fps のフレームの間隔より少し短くし、60Hz の画面でフレームを飛ばさない */
+const MIN_FRAME_MS = 15;
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
@@ -115,6 +119,8 @@ export function startGarden(
 
     const C = scenePalette(opts.time, opts.season);
     const { scene, boughFrom } = buildGarden(C, renderer.capabilities.getMaxAnisotropy());
+    const fall = C.fall && createFalling(C.fall);
+    if (fall) scene.add(fall.mesh);
     /** 紙と墨の色を、今のテーマのトークンから読む */
     const inkColors = () => {
       const cs = getComputedStyle(document.documentElement);
@@ -196,7 +202,9 @@ export function startGarden(
     };
     const start = { pos: new Vector3(...CAM0.pos), look: new Vector3(...CAM0.look) };
 
-    const state = { current: 0, paused: false, px: 0, py: 0, last: 0 };
+    /** sec は舞う物を動かした秒数で、止めている間と墨だけの絵で待つ間は進めない */
+    /** onlyFall は、前のフレームでカメラが止まり、舞う物だけが動いていたことを示す */
+    const state = { current: 0, paused: false, px: 0, py: 0, last: 0, sec: 0, onlyFall: false };
     /** wait は墨だけの絵で待つ間、enter は色を差して門をくぐる間、garden は和紙の間を移る間 */
     let phase: "wait" | "enter" | "garden" = opts.intro ? "wait" : "garden";
     let enteredAt = 0;
@@ -205,6 +213,7 @@ export function startGarden(
     let target: FramebufferTexture | null = null;
 
     const render = (): void => {
+      fall?.place(state.sec, camera);
       renderer.render(scene, camera);
       renderer.copyFramebufferToTexture(target!);
       renderer.render(pass.scene, pass.camera);
@@ -232,15 +241,16 @@ export function startGarden(
     const draw = (now: number): void => {
       const dt = state.last ? Math.min(100, now - state.last) : 16;
       state.last = now;
+      if (!state.paused && phase !== "wait") state.sec += dt / 1000;
       if (phase !== "garden") {
         camera.fov = phase === "enter" ? drawEnter(now) : fov0();
         camera.position.copy(cur.pos);
         camera.lookAt(cur.look);
         camera.updateProjectionMatrix();
         render();
-        // 淡彩とカメラが変わる間だけ、次のフレームを描く。終わりのタイマーが、最後の 1 枚を描かせる
+        // 淡彩とカメラが変わる間と、舞う物が舞う間だけ、次のフレームを描く。終わりのタイマーが、最後の 1 枚を描かせる
         const t = now - enteredAt;
-        if (phase === "enter" && t < INTRO.move0 + INTRO.move) kick();
+        if (phase === "enter" && (t < INTRO.move0 + INTRO.move || (fall && !state.paused))) kick();
         else state.last = 0;
         return;
       }
@@ -259,13 +269,19 @@ export function startGarden(
       camera.updateProjectionMatrix();
       render();
       const moving = cur.pos.distanceTo(tgt.pos) + cur.look.distanceTo(tgt.look) > 0.003;
-      if (moving) kick();
+      state.onlyFall = !moving && !!fall && !state.paused;
+      if (moving || state.onlyFall) kick();
       else state.last = 0;
     };
     // requestAnimationFrame の中の例外は startGarden の呼び出し元に届かないので、ここで受けて元に戻す。
     const frame = (now: number): void => {
       raf = 0;
       if (stopped || !target) return;
+      // 舞う物だけが動く間は、60 fps を上限にする。リフレッシュレートの高い画面で、見た目を変えずに描く回数を減らすためである
+      if (state.onlyFall && now - state.last < MIN_FRAME_MS) {
+        kick();
+        return;
+      }
       try {
         draw(now);
       } catch (e) {

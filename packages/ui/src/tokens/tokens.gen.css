@@ -156,6 +156,8 @@
   --fd-color-surface-disabled: var(--fd-primitive-color-sumi-100);
   /* ダイアログ、メニューのように、面の上に重なる面。影を使わず、1px の枠（border-field）と組にする */
   --fd-color-surface-raised: var(--fd-primitive-color-sumi-0);
+  /* 重なる面の上の hover の面（docs/adr/0083-hover-surface-on-raised-surfaces.md） */
+  --fd-color-surface-raised-subtle: var(--fd-primitive-color-sumi-50);
   /* コードを動かす画面だけで使う、地と、地の上に重ねるペインの紙の面と、面の上の hover と選んだ行の面（docs/adr/0073-layered-panes-and-radius-in-playground.md） */
   --fd-color-surface-ground: var(--fd-primitive-color-sumi-100);
   --fd-color-surface-pane: var(--fd-primitive-color-sumi-0);
@@ -262,6 +264,7 @@
     --fd-color-surface-subtle: var(--fd-primitive-color-sumi-800);
     --fd-color-surface-disabled: var(--fd-primitive-color-sumi-750);
     --fd-color-surface-raised: var(--fd-primitive-color-sumi-800);
+    --fd-color-surface-raised-subtle: var(--fd-primitive-color-sumi-750);
     --fd-color-surface-ground: var(--fd-primitive-color-sumi-950);
     --fd-color-surface-pane: var(--fd-primitive-color-sumi-800);
     --fd-color-surface-pane-subtle: var(--fd-primitive-color-sumi-750);
@@ -343,6 +346,7 @@
   --fd-color-surface-subtle: var(--fd-primitive-color-sumi-800);
   --fd-color-surface-disabled: var(--fd-primitive-color-sumi-750);
   --fd-color-surface-raised: var(--fd-primitive-color-sumi-800);
+  --fd-color-surface-raised-subtle: var(--fd-primitive-color-sumi-750);
   --fd-color-surface-ground: var(--fd-primitive-color-sumi-950);
   --fd-color-surface-pane: var(--fd-primitive-color-sumi-800);
   --fd-color-surface-pane-subtle: var(--fd-primitive-color-sumi-750);

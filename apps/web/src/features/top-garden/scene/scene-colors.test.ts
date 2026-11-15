@@ -1,6 +1,6 @@
 import { Color } from "three";
 import { describe, expect, it } from "vitest";
-import { SEASON_LEAVES, TIME_PALETTES, mixHex, scenePalette } from "./scene-colors";
+import { SEASON_FALLS, SEASON_LEAVES, TIME_PALETTES, mixHex, scenePalette } from "./scene-colors";
 import type { TimeOfDay } from "../stage/season";
 
 /** WCAG 2.2 の相対輝度。three の Color は、16 進数を sRGB から線形に直して持つ */
@@ -29,6 +29,7 @@ describe("scenePalette", () => {
       ...TIME_PALETTES.day,
       mossSpeck: TIME_PALETTES.day.mossDark,
       leaf: SEASON_LEAVES.autumn,
+      fall: { ...SEASON_FALLS.autumn, additive: false },
     });
   });
 
@@ -52,6 +53,38 @@ describe("scenePalette", () => {
   it("夜のほかの時間帯は、季節の木の葉の色を変えない", () => {
     expect(scenePalette("evening", "summer").leaf).toStrictEqual(SEASON_LEAVES.summer);
   });
+});
+
+describe("舞う物", () => {
+  const seasons = ["spring", "autumn", "winter"] as const;
+  const times = ["morning", "day", "evening", "night"] as const;
+  it.each(seasons.flatMap((s) => times.map((t) => [s, t] as const)))(
+    "%s の %s は、季節の表の舞う物を、加算で重ねずに出す",
+    (season, t) => {
+      expect(scenePalette(t, season).fall).toStrictEqual({
+        ...SEASON_FALLS[season],
+        additive: false,
+      });
+    },
+  );
+
+  it.each(["morning", "day"] as const)("夏の %s は、蛍を出さない", (t) => {
+    expect(scenePalette(t, "summer").fall).toBeNull();
+  });
+
+  it.each([
+    ["evening", false, 1],
+    ["night", true, 0.7],
+  ] as const)(
+    "夏の %s は、蛍を出し、加算で重ねるかは %s で、大きさを %s 倍にする",
+    (t, additive, k) => {
+      expect(scenePalette(t, "summer").fall).toStrictEqual({
+        ...SEASON_FALLS.summer,
+        size: SEASON_FALLS.summer.size * k,
+        additive,
+      });
+    },
+  );
 });
 
 describe("和紙の字の色", () => {

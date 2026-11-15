@@ -156,13 +156,40 @@ export const SEASON_LEAVES: Readonly<
   winter: null,
 };
 
+/** 舞う物の形。glow は蛍の光、flake は雪 */
+export type FallShape = LeafShape | "glow" | "flake";
+
+export interface SeasonFall {
+  readonly color: string;
+  readonly shape: FallShape;
+  readonly count: number;
+  /** 1 つの大きさ（m）。物ごとに 0.6〜1.3 倍に散らす */
+  readonly size: number;
+}
+
+/** 季節ごとの舞う物。値は Design Doc の「季節ごとの葉とパーティクル」の表と同じ */
+export const SEASON_FALLS: Readonly<Record<Season, SeasonFall>> = {
+  spring: { color: "#e08aa3", shape: "petal", count: 120, size: 0.16 },
+  summer: { color: "#e9f58a", shape: "glow", count: 34, size: 0.42 },
+  autumn: { color: "#9a3420", shape: "momiji", count: 90, size: 0.17 },
+  winter: { color: "#d6dde6", shape: "flake", count: 110, size: 0.08 },
+};
+
 /** canvas に描く、色を持たない形の塗り。テクスチャの色は、材質の色で付ける */
 export const SHAPE_FILL = "#ffffff";
 /** canvas のグラデーションの、透明の端 */
 export const CLEAR = "rgba(0, 0, 0, 0)";
+/** 蛍の光の、中心から外への色の段。色は材質の色で付ける */
+export const GLOW_STOPS: readonly (readonly [number, string])[] = [
+  [0, "rgba(255, 255, 255, 1)"],
+  [0.25, "rgba(255, 255, 255, 0.5)"],
+  [1, "rgba(255, 255, 255, 0)"],
+];
 
 const SNOW = "#ffffff";
 const NIGHT_LEAF = "#10151c";
+/** 夜の蛍は加算で重ねて明るくなるので、光の輪を小さくする倍率 */
+const NIGHT_GLOW_SIZE = 0.7;
 
 const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const toSrgb = (c: number) => (c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055);
@@ -190,27 +217,41 @@ export function mixHex(a: string, b: string, k: number): string {
   );
 }
 
+/** 時間帯で決めた舞う物。additive が true のときは、加算で重ねて光らせる */
+export type ScenePaletteFall = SeasonFall & { readonly additive: boolean };
+
 /** 時間帯の表と季節の表を掛け合わせた、場面の色 */
 export interface ScenePalette extends TimePalette {
   /** 季節の木の葉。冬は null */
   readonly leaf: { readonly colors: readonly string[]; readonly shape: LeafShape } | null;
   /** 苔の暗い所に散らす色。冬は雪の色にする */
   readonly mossSpeck: string;
+  /** 舞う物。夏の朝と昼は null */
+  readonly fall: ScenePaletteFall | null;
 }
 
 /**
  * 時間帯と季節から、場面の色を決める。
  * 冬は白砂と苔に雪の色を混ぜ、夜は季節の木の葉を暗くする。
+ * 夏の蛍は夕と夜だけに出し、夜は加算で重ねて光らせる。
  */
 export function scenePalette(time: TimeOfDay, season: Season): ScenePalette {
   const c = TIME_PALETTES[time];
   const leaf = SEASON_LEAVES[season];
   const winter = season === "winter";
+  const fall = SEASON_FALLS[season];
+  const glow = fall.shape === "glow";
   return {
     ...c,
     sand: winter ? mixHex(c.sand, SNOW, 0.55) : c.sand,
     moss: winter ? mixHex(c.moss, SNOW, 0.6) : c.moss,
     mossSpeck: winter ? SNOW : c.mossDark,
+    fall:
+      glow && (time === "morning" || time === "day")
+        ? null
+        : glow && time === "night"
+          ? { ...fall, size: fall.size * NIGHT_GLOW_SIZE, additive: true }
+          : { ...fall, additive: false },
     leaf: leaf && {
       shape: leaf.shape,
       colors: time === "night" ? leaf.colors.map((x) => mixHex(x, NIGHT_LEAF, 0.3)) : leaf.colors,

@@ -26,6 +26,7 @@ const SURFACES = [
   "surface",
   "surface-subtle",
   "surface-raised",
+  "surface-raised-subtle",
   "surface-ground",
   "surface-pane",
   "surface-pane-subtle",
