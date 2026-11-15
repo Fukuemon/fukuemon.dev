@@ -19,9 +19,20 @@ export const draggableCards = (page: Page) => page.locator("[data-garden-card][d
 /** イントロの墨の絵の SVG。SVG の文字列はハッシュのテストが固定しているので、testid を足さずに class で拾う */
 export const inkSvg = (page: Page) => page.locator(".ink-svg");
 
+/** 和紙の文を置く CSS3DRenderer の層。three が作る要素で testid を付けられないので、場面のコードが付けるクラスで拾う */
+export const cardsLayer = (page: Page) => page.locator(".garden-cards");
+
 /** プロフィールの h1。アクセシビリティツリーに h1 の役割で載ることを確かめるので、役割で拾う */
 export const profileHeading = (page: Page) =>
   page.getByRole("heading", { level: 1, name: "プロフィール" });
+
+/** 経歴の行の、詳細を開閉する summary。行ごとに testid を足さず、経歴の和紙の中の summary を順に拾う */
+export const careerSummaries = (page: Page) =>
+  page.getByTestId("garden-card-career").locator("summary");
+
+/** プロフィールの和紙の GitHub と X のリンク。アイコンだけのリンクに名前が付いていることも確かめるので、役割と名前で拾う */
+export const profileLinks = (page: Page) =>
+  page.getByTestId("garden-card-profile").getByRole("link", { name: /^(GitHub|X)$/ });
 
 /** ページの本文のランドマーク。WCAG 2.4.1 をランドマークと見出しで満たすことを確かめるので、役割で拾う */
 export const mainLandmark = (page: Page) => page.getByRole("main");

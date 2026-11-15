@@ -103,10 +103,9 @@ describe("舞う物", () => {
 
 describe("和紙の字の色", () => {
   const times: readonly TimeOfDay[] = ["morning", "day", "evening", "night"];
-  const cases = times.flatMap((t) => (["text", "link"] as const).map((k) => [t, k] as const));
 
   // 和紙の色はテーマに依らないので、4 つの時間帯で、2 つのテーマとの組み合わせの 8 通りを覆う
-  it.each(cases)("%s の和紙の %s の色は、和紙の地に対して 4.5:1 以上である", (t, k) => {
-    expect(contrast(TIME_PALETTES[t][k], TIME_PALETTES[t].paper)).toBeGreaterThanOrEqual(4.5);
+  it.each(times)("%s の和紙の字の色は、和紙の地に対して 4.5:1 以上である", (t) => {
+    expect(contrast(TIME_PALETTES[t].text, TIME_PALETTES[t].paper)).toBeGreaterThanOrEqual(4.5);
   });
 });

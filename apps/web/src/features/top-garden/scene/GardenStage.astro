@@ -59,9 +59,11 @@ const skip =
     block-size: 100%;
   }
 
+  /* 和紙の文の summary にフォーカスやクリックが届くと、ブラウザが入れ物をスクロールし、文が立体の和紙からずれる。CSS3DRenderer が overflow: hidden をインラインで書くので、!important で clip にしてスクロールさせない */
   .garden-stage :global(.garden-cards) {
     position: absolute;
     inset: 0;
+    overflow: clip !important;
   }
 
   /* 見せていない和紙の文は、クリックを受けない。CSS3DRenderer が要素に pointer-events: auto を書くので、!important で止める */
@@ -123,9 +125,10 @@ const skip =
     --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
-  /* 最初の訪問のイントロの間は、墨の絵の下に隠れたヘッダーと和紙の文のリンクにフォーカスが移らないよう、文を出すまで隠す。和紙の文は、h1 を読み上げから隠さないよう、リンクだけを隠す。head の時点では要素が無く、場面のバンドルが動くまで効かないので、inert は使わない */
+  /* 最初の訪問のイントロの間は、墨の絵の下に隠れたヘッダーと和紙の文のリンクと summary にフォーカスが移らないよう、文を出すまで隠す。和紙の文は、h1 を読み上げから隠さないよう、リンクと summary だけを隠す。head の時点では要素が無く、場面のバンドルが動くまで効かないので、inert は使わない */
   :global(html.stage-on.intro:not(.garden-ready) [data-site-header]),
-  :global(html.stage-on.intro:not(.garden-ready) [data-garden-card] a) {
+  :global(html.stage-on.intro:not(.garden-ready) [data-garden-card] a),
+  :global(html.stage-on.intro:not(.garden-ready) [data-garden-card] summary) {
     visibility: hidden;
   }
 
