@@ -208,7 +208,7 @@ test.describe("トップの庭", () => {
     });
   });
 
-  // 高さは、iPhone SE（375 × 667）の Safari で、状態バーとアドレスバーを除いた表示域のおおよその高さである
+  // 高さは、幅 375px、高さ 667px の iPhone の Safari の、ビューポートのおおよその高さである
   test.describe("幅 375px、高さ 548px", () => {
     test.use({ viewport: { width: 375, height: 548 }, colorScheme: "light" });
 
