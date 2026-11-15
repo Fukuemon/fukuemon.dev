@@ -13,10 +13,10 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 | 種類       | 名前                    | 使う場面                                                                                                                                                                                            |
 | ---------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 面         | `surface`               | ページの背景                                                                                                                                                                                        |
-| 面         | `surface-subtle`        | 押せる行とボタンの hover の面、`Switch` と `Checkbox` の hover の面、`TextField` の `boxed` の入力欄の面、`neutral` の状態のラベルの面、HTTP の流れの一覧の選んだ行の面                             |
+| 面         | `surface-subtle`        | `surface` の上の、押せる行とボタンの hover の面、`Switch` と `Checkbox` の hover の面、`TextField` の `boxed` の入力欄の面、`neutral` の状態のラベルの面、HTTP の流れの一覧の選んだ行の面           |
 | 面         | `surface-disabled`      | 無効の入力欄とボタン、`Switch`、`Checkbox` の面                                                                                                                                                     |
 | 面         | `surface-raised`        | 面の上に重なる面（ダイアログ、メニュー、候補の一覧）。`border-field` の 1px の枠と組にする                                                                                                          |
-| 面         | `surface-raised-subtle` | `surface-raised` の上の、押せる項目とボタンの hover の面。メニューの項目、検索の候補、ダイアログの閉じるボタンが `surface-subtle` の代わりに使う（ADR-0083）                                        |
+| 面         | `surface-raised-subtle` | `surface-raised` の上の、押せる項目とボタンの hover の面。メニューの項目、検索の候補、ダイアログの閉じるボタンが `surface-subtle` の代わりに使う。`density` によらず使う（ADR-0083）                |
 | 面         | `surface-ground`        | コードを動かす画面で、ペインの下に敷く地。ペインの紙の面を、この上に重ねる。コードを動かす画面の外で使わない（ADR-0073）                                                                            |
 | 面         | `surface-pane`          | コードを動かす画面のペインの紙の面。コードを動かす画面の外で使わない（ADR-0073）                                                                                                                    |
 | 面         | `surface-pane-subtle`   | `surface-pane` の上の hover と選んだ行の面。`density="compact"` か `size="XS"` のコンポーネントと、コードを動かす画面だけで使う Case のコンポーネントが `surface-subtle` の代わりに使う（ADR-0073） |
