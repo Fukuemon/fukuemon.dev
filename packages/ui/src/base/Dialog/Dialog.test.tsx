@@ -66,8 +66,12 @@ describe("Dialog", () => {
         const surface = getComputedStyle(screen.getByRole("dialog")).backgroundColor;
         const close = screen.getByRole("button", { name: "閉じる" });
         await userEvent.hover(close);
-        await expect.poll(() => getComputedStyle(close).backgroundColor).toBe(expected);
-        expect(expected).not.toBe(surface);
+        await expect
+          .poll(() => {
+            const hovered = getComputedStyle(close).backgroundColor;
+            return { isToken: hovered === expected, differsFromSurface: hovered !== surface };
+          })
+          .toStrictEqual({ isToken: true, differsFromSurface: true });
       } finally {
         delete document.documentElement.dataset.theme;
       }

@@ -158,8 +158,12 @@ describe("SearchBox", () => {
         const surface = getComputedStyle(screen.getByRole("listbox")).backgroundColor;
         const target = option("PKCE の code_verifier を作る");
         await userEvent.hover(target);
-        await expect.poll(() => getComputedStyle(target).backgroundColor).toBe(expected);
-        expect(expected).not.toBe(surface);
+        await expect
+          .poll(() => {
+            const hovered = getComputedStyle(target).backgroundColor;
+            return { isToken: hovered === expected, differsFromSurface: hovered !== surface };
+          })
+          .toStrictEqual({ isToken: true, differsFromSurface: true });
       } finally {
         delete document.documentElement.dataset.theme;
       }

@@ -92,8 +92,12 @@ describe("ActionMenu", () => {
         const surface = getComputedStyle(screen.getByRole("menu")).backgroundColor;
         const item = screen.getAllByRole("menuitem")[1] as HTMLElement;
         await userEvent.hover(item);
-        await expect.poll(() => getComputedStyle(item).backgroundColor).toBe(expected);
-        expect(expected).not.toBe(surface);
+        await expect
+          .poll(() => {
+            const hovered = getComputedStyle(item).backgroundColor;
+            return { isToken: hovered === expected, differsFromSurface: hovered !== surface };
+          })
+          .toStrictEqual({ isToken: true, differsFromSurface: true });
       } finally {
         delete document.documentElement.dataset.theme;
       }
