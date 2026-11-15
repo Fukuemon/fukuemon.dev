@@ -276,7 +276,7 @@
   }
 }
 
-/* 文字を持つ行の選択。Chromium は文字の下に Canvas の板を敷くので、文字は CanvasText のまま、塗りと枠だけを選択の色にする */
+/* 文字を持つ要素の選択。Chromium は文字の下に Canvas の板を敷くので、文字は CanvasText のまま、塗りと枠だけを選択の色にする */
 @utility forced-on-row {
   @media (forced-colors: active) {
     background-color: var(--fd-forced-on) !important;
