@@ -4,7 +4,7 @@ import { delayResponse } from "../../fixtures/delay-response";
 import { htmlElement, inkSvg } from "../../selectors/garden";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
-import { AUTUMN_NOON } from "./garden-time";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
 import { settledCenterX } from "../../widgets/waits/settled-center-x";
 import { waitForPresentedFrames } from "../../widgets/waits/presented-frames";
 

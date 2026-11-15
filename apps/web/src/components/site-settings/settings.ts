@@ -35,7 +35,7 @@ interface SettingsRoot {
   readonly dataset: DOMStringMap;
 }
 
-/** 設定を書き換えたときに `html` の要素へ送るイベントの名前。トップの庭の場面と `head` の inline script が受ける */
+/** 設定を書き換えたときに `html` の要素へ送るイベントの名前。トップの庭の場面と、トップの `head` の inline script が受ける */
 export const SETTINGS_CHANGE = "fd-settings-change";
 
 /** 設定の面の要素の id。歯車のボタンの `popovertarget` が指す */
@@ -46,7 +46,16 @@ export const INTRO_PARAM = "intro";
 
 export type SettingsChange =
   | { readonly name: SettingName; readonly on: boolean }
-  | { readonly name: PickName; readonly value: string };
+  | { readonly [N in PickName]: { readonly name: N; readonly value: PickValue<N> } }[PickName];
+
+/** 設定の面のボタンの `data-value` を、選べる値に絞る。選べる値のほかは `undefined` を返す */
+export function pickValueOf<N extends PickName>(
+  name: N,
+  value: string | undefined,
+): PickValue<N> | undefined {
+  const choices = PICK_CHOICES[name] as readonly { readonly value: PickValue<N> }[];
+  return choices.find((c) => c.value === value)?.value;
+}
 
 /**
  * 保存した設定を読み、`html` に書く。
@@ -73,13 +82,14 @@ export function applySettings(
     const saved = read(`fd-${name}`);
     root.dataset[name] = saved === "on" || saved === "off" ? saved : reducedMotion ? "off" : "on";
   }
-  const picks: { readonly [N in PickName]: readonly string[] } = {
+  const allowed: { readonly [N in PickName]: readonly string[] } = {
     season: ["spring", "summer", "autumn", "winter"],
     time: ["morning", "day", "evening", "night"],
   };
   for (const name of ["season", "time"] as const) {
     const saved = read(`fd-${name}`);
-    root.dataset[`${name}Setting`] = saved !== null && picks[name].includes(saved) ? saved : "auto";
+    root.dataset[`${name}Setting`] =
+      saved !== null && allowed[name].includes(saved) ? saved : "auto";
   }
 }
 

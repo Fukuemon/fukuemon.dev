@@ -13,7 +13,7 @@ import {
   styledCards,
 } from "../../selectors/garden";
 
-import { AUTUMN_NOON } from "./garden-time";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
 import { seenBefore } from "../../widgets/actions/seen-before";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 

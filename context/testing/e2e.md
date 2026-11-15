@@ -36,7 +36,8 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 表示の設定の testid は次のとおり。
 
 - 歯車のボタンは `site-settings-open`、設定の面は `site-settings` である。
-- アニメーションのスイッチは `setting-motion`、トップの庭のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。 - 季節と時間帯の帯は `setting-season` と `setting-time`、帯の中のボタンは `setting-season-<値>` と `setting-time-<値>` である。値は `auto` か、季節と時間帯の区分（`spring`、`morning` など）である。
+- アニメーションのスイッチは `setting-motion`、トップの庭のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。
+- 季節と時間帯の帯は `setting-season` と `setting-time`、帯の中のボタンは `setting-season-<値>` と `setting-time-<値>` である。値は `auto` か、季節と時間帯の区分（`spring`、`morning` など）である。
 - testid は、`apps/web/src/components/site-settings/` の `SiteSettingsPopover.astro` と `SiteSettingsButton.tsx` に付ける。
 - 開く前に設定を保存した状態にするときは、`tests/widgets/actions/preset-settings.ts` の `presetSettings` を使う。
 

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   applySettings,
   changeSetting,
+  PICK_CHOICES,
+  pickValueOf,
   SETTINGS_CHANGE,
   settingsScript,
   type SettingsChange,
@@ -27,6 +29,31 @@ function settingsOf(entries: [string, string][], reducedMotion: boolean) {
   applySettings(root, () => memory(entries), reducedMotion);
   return { motion: root.dataset.motion, garden: root.dataset.garden };
 }
+
+function picksOf(entries: [string, string][]) {
+  const root = { dataset: {} as DOMStringMap };
+  applySettings(root, () => memory(entries), false);
+  return { season: root.dataset.seasonSetting, time: root.dataset.timeSetting };
+}
+
+function target() {
+  const events: SettingsChange[] = [];
+  const root = {
+    dataset: {} as DOMStringMap,
+    dispatchEvent: (e: Event) => {
+      if (e.type === SETTINGS_CHANGE) events.push((e as CustomEvent<SettingsChange>).detail);
+      return true;
+    },
+  };
+  return { root, events };
+}
+
+const pickRows = (["season", "time"] as const).flatMap((name) =>
+  PICK_CHOICES[name]
+    .map((c) => c.value)
+    .filter((v) => v !== "auto")
+    .map((value) => ({ name, value })),
+);
 
 describe("applySettings", () => {
   it("保存していないときは、2 つとも on にする", () => {
@@ -61,6 +88,23 @@ describe("applySettings", () => {
       garden: "off",
     });
   });
+
+  it("季節と時間帯を保存していないときは、2 つとも auto にする", () => {
+    expect(picksOf([])).toStrictEqual({ season: "auto", time: "auto" });
+  });
+
+  it.each(pickRows)("保存した $name の $value を、そのまま html に書く", ({ name, value }) => {
+    expect(picksOf([[`fd-${name}`, value]])[name]).toBe(value);
+  });
+
+  it("季節と時間帯の決めた値のほかは auto にする", () => {
+    expect(
+      picksOf([
+        ["fd-season", "Winter"],
+        ["fd-time", "noon"],
+      ]),
+    ).toStrictEqual({ season: "auto", time: "auto" });
+  });
 });
 
 describe("settingsScript", () => {
@@ -79,18 +123,6 @@ describe("settingsScript", () => {
 });
 
 describe("changeSetting", () => {
-  function target() {
-    const events: SettingsChange[] = [];
-    const root = {
-      dataset: {} as DOMStringMap,
-      dispatchEvent: (e: Event) => {
-        if (e.type === SETTINGS_CHANGE) events.push((e as CustomEvent<SettingsChange>).detail);
-        return true;
-      },
-    };
-    return { root, events };
-  }
-
   it("html に書き、保存し、変えた設定をイベントで知らせる", () => {
     const { root, events } = target();
     const store = memory();
@@ -110,42 +142,9 @@ describe("changeSetting", () => {
       events: [{ name: "garden", on: true }],
     });
   });
-});
 
-describe("季節と時間帯の設定", () => {
-  function picksOf(entries: [string, string][]) {
-    const root = { dataset: {} as DOMStringMap };
-    applySettings(root, () => memory(entries), false);
-    return { season: root.dataset.seasonSetting, time: root.dataset.timeSetting };
-  }
-
-  it("保存していないときは、2 つとも auto にする", () => {
-    expect(picksOf([])).toStrictEqual({ season: "auto", time: "auto" });
-  });
-
-  it("保存した季節と時間帯を書き、決めた値のほかは auto にする", () => {
-    expect(
-      picksOf([
-        ["fd-season", "winter"],
-        ["fd-time", "noon"],
-      ]),
-    ).toStrictEqual({ season: "winter", time: "auto" });
-  });
-
-  function pickTarget() {
-    const events: SettingsChange[] = [];
-    const root = {
-      dataset: {} as DOMStringMap,
-      dispatchEvent: (e: Event) => {
-        events.push((e as CustomEvent<SettingsChange>).detail);
-        return true;
-      },
-    };
-    return { root, events };
-  }
-
-  it("選んだ値を html に書いて保存し、イベントで知らせる", () => {
-    const { root, events } = pickTarget();
+  it("選んだ季節か時間帯を html に書いて保存し、イベントで知らせる", () => {
+    const { root, events } = target();
     const store = memory();
     changeSetting(root, () => store, { name: "time", value: "night" });
     expect({
@@ -159,8 +158,8 @@ describe("季節と時間帯の設定", () => {
     });
   });
 
-  it("auto に戻すと、保存した値を消す", () => {
-    const { root } = pickTarget();
+  it("季節か時間帯を auto に戻すと、保存した値を消す", () => {
+    const { root } = target();
     const store = memory([["fd-season", "winter"]]);
     changeSetting(root, () => store, { name: "season", value: "auto" });
     expect({ attr: root.dataset.seasonSetting, saved: store.items.has("fd-season") }).toStrictEqual(
@@ -169,5 +168,28 @@ describe("季節と時間帯の設定", () => {
         saved: false,
       },
     );
+  });
+
+  it.each([
+    { name: "season", value: "winter" },
+    { name: "season", value: "auto" },
+  ] as const)("保存できない端末でも、季節の $value を html に書いてイベントを送る", (change) => {
+    const { root, events } = target();
+    changeSetting(root, blocked, change);
+    expect({ attr: root.dataset.seasonSetting, events }).toStrictEqual({
+      attr: change.value,
+      events: [change],
+    });
+  });
+});
+
+describe("pickValueOf", () => {
+  it("選べる値はそのまま返し、ほかは undefined を返す", () => {
+    expect([
+      pickValueOf("season", "winter"),
+      pickValueOf("time", "auto"),
+      pickValueOf("season", "night"),
+      pickValueOf("time", undefined),
+    ]).toStrictEqual(["winter", "auto", undefined, undefined]);
   });
 });

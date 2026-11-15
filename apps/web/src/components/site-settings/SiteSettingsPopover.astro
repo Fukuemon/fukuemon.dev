@@ -7,7 +7,7 @@ import { buttonClassName } from "@fukuemon/ui/button-class-name";
 import { PICK_CHOICES, SITE_SETTINGS_ID } from "./settings";
 
 // 季節と時間帯の帯は、トップの庭の中の移動のボタンと同じく、境の線を 1 本にしてつなぎ、押したボタンの地と字を反転する
-const pick =
+const pickClass =
   "relative -ms-px -mt-px min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-3 text-label text-text focus-visible:focus-ring aria-pressed:z-10 aria-pressed:border-text aria-pressed:bg-text aria-pressed:text-surface";
 const picks = [
   { name: "season", label: "季節", choices: PICK_CHOICES.season },
@@ -52,7 +52,7 @@ const picks = [
               data-testid={`setting-${name}`}
             >
               {choices.map(({ value, label: text }) => (
-                <button type="button" class={pick} aria-pressed="false" data-value={value} data-testid={`setting-${name}-${value}`}>
+                <button type="button" class={pickClass} aria-pressed="false" data-value={value} data-testid={`setting-${name}-${value}`}>
                   {text}
                 </button>
               ))}
@@ -91,15 +91,15 @@ const picks = [
 </style>
 
 <script>
-  import { changeSetting, INTRO_PARAM, type PickName, type SettingName } from "./settings";
+  import { changeSetting, INTRO_PARAM, pickValueOf, type PickName, type SettingName, type SettingsChange } from "./settings";
 
   const root = document.documentElement;
   const panel = document.querySelector<HTMLElement>("[data-site-settings]");
   const switches = [...(panel?.querySelectorAll<HTMLButtonElement>("[data-setting]") ?? [])];
+  const groups = [...(panel?.querySelectorAll<HTMLElement>("[data-pick]") ?? [])];
   const introAgain = panel?.querySelector<HTMLButtonElement>("[data-intro-again]");
 
-  // 静的に描いた Switch は、保存した値を知らずに off で出るので、面を開くたびと切り替えるたびに、html の属性へ合わせる。
-  const groups = [...(panel?.querySelectorAll<HTMLElement>("[data-pick]") ?? [])];
+  // 静的に描いた Switch と帯のボタンは、保存した値を知らずに出るので、面を開くたびと切り替えるたびに、html の属性へ合わせる。
   const sync = () => {
     for (const g of groups) {
       const picked = root.dataset[`${g.dataset.pick as PickName}Setting`] ?? "auto";
@@ -144,9 +144,9 @@ const picks = [
     const name = g.dataset.pick as PickName;
     for (const b of g.querySelectorAll<HTMLButtonElement>("[data-value]")) {
       b.addEventListener("click", () => {
-        const value = b.dataset.value ?? "auto";
-        if (root.dataset[`${name}Setting`] === value) return;
-        changeSetting(root, () => localStorage, { name, value });
+        const value = pickValueOf(name, b.dataset.value);
+        if (value === undefined || root.dataset[`${name}Setting`] === value) return;
+        changeSetting(root, () => localStorage, { name, value } as SettingsChange);
         sync();
       });
     }

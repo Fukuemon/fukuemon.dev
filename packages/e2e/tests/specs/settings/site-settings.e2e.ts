@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { htmlElement } from "../../selectors/garden";
 import { articlesNavLink } from "../../selectors/site-header";
 import { presetSettings } from "../../widgets/actions/preset-settings";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
 
 const openButton = (page: Page) => page.getByTestId("site-settings-open");
 const panel = (page: Page) => page.getByTestId("site-settings");
@@ -35,6 +36,8 @@ test.describe("表示の設定", () => {
   test("保存していない場合、季節と時間帯は自動で出て、選んだ値はトップを開いたときの季節と時間帯になること", async ({
     page,
   }) => {
+    // 選んだ値を無視しても、端末の日付と時刻が同じ季節と時間帯なら通ってしまうので、秋の昼に固定し、夏の夕を選ぶ
+    await page.clock.setFixedTime(AUTUMN_NOON);
     await page.goto("/articles");
     await openButton(page).click();
     await expect(page.getByTestId("setting-season-auto")).toHaveAttribute("aria-pressed", "true");

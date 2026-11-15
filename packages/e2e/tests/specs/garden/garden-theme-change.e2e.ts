@@ -2,7 +2,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 
 import { waitForGardenCanvasWidth } from "../../widgets/waits/canvas-width";
 import { meanDiff } from "../../widgets/actions/mean-diff";
-import { AUTUMN_NOON } from "./garden-time";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
 import { seenBefore } from "../../widgets/actions/seen-before";
 
 const VIEWPORT = { width: 1440, height: 900 };

@@ -292,20 +292,25 @@ describe("stageScript", () => {
     expect(b.replaced).toStrictEqual(["https://fukuemon.dev/?season=winter"]);
   });
 
-  it("庭を出しているときに季節か時間帯を選ぶと読み込み直し、庭を出していないときは読み込み直さない", () => {
-    const b = browser();
-    let reloads = 0;
-    runInNewContext(stageScript({ dev: false }), {
-      ...b.globals,
-      location: { ...b.globals.location, reload: () => void reloads++ },
-    });
-    const fire = (detail: SettingsChange) => b.root.listeners.get(SETTINGS_CHANGE)?.({ detail });
-    fire({ name: "season", value: "winter" });
-    const before = reloads;
-    b.root.classList.add("stage-on");
-    fire({ name: "time", value: "night" });
-    expect([before, reloads]).toStrictEqual([0, 1]);
-  });
+  it.each([
+    { change: { name: "season", value: "winter" }, stage: true, reloads: 1 },
+    { change: { name: "time", value: "night" }, stage: true, reloads: 1 },
+    { change: { name: "season", value: "winter" }, stage: false, reloads: 0 },
+    { change: { name: "time", value: "night" }, stage: false, reloads: 0 },
+  ] as const)(
+    "$change.name を選んだとき、庭を出しているかが $stage なら $reloads 回読み込み直す",
+    ({ change, stage, reloads: expected }) => {
+      const b = browser();
+      let reloads = 0;
+      runInNewContext(stageScript({ dev: false }), {
+        ...b.globals,
+        location: { ...b.globals.location, reload: () => void reloads++ },
+      });
+      if (stage) b.root.classList.add("stage-on");
+      b.root.listeners.get(SETTINGS_CHANGE)?.({ detail: change satisfies SettingsChange });
+      expect(reloads).toBe(expected);
+    },
+  );
 
   it("庭を出しているときは、表示の設定で庭の表示をオンにしても読み込み直さない", () => {
     const b = browser();
