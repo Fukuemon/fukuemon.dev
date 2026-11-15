@@ -50,6 +50,7 @@ function run(
   root.dataset.timeSetting = o.timeSetting ?? "auto";
   const store = memory(o.seen);
   const loads: (() => void)[] = [];
+  const inks: (() => void)[] = [];
   const timers: { fn: () => void; ms: number }[] = [];
   applyStage(
     {
@@ -59,12 +60,13 @@ function run(
       introAgain: false,
       storage: () => store,
       load: (onError) => void loads.push(onError),
+      loadInk: (onError) => void inks.push(onError),
       later: (fn, ms) => void timers.push({ fn, ms }),
       ...o,
     },
     fns,
   );
-  return { root, store, loads, timers };
+  return { root, store, loads, inks, timers };
 }
 
 const summary = ({ root, store, loads }: ReturnType<typeof run>) => ({
@@ -165,6 +167,64 @@ describe("applyStage", () => {
     expect([...r.root.classes].sort()).toStrictEqual(["scene-ready", "stage-on"]);
   });
 
+  it("最初の訪問と、イントロをもう一度見るときだけ、墨の絵と署名のファイルを読み込む", () => {
+    expect([
+      run().inks.length,
+      run({ seen: true }).inks.length,
+      run({ seen: true, introAgain: true }).inks.length,
+    ]).toStrictEqual([1, 0, 1]);
+  });
+
+  it("墨の絵と署名のファイルが無いときは、最初の訪問でもイントロを出さず、庭だけを出す", () => {
+    expect([...run({ loadInk: null }).root.classes]).toStrictEqual(["stage-on"]);
+  });
+
+  it("アニメーションか庭の表示がオフのときと、場面のバンドルが無いときは、墨の絵と署名のファイルを読み込まない", () => {
+    expect([
+      run({ motion: "off" }).inks.length,
+      run({ garden: "off" }).inks.length,
+      run({ load: null }).inks.length,
+    ]).toStrictEqual([0, 0, 0]);
+  });
+
+  it("墨の絵と署名のファイルの読み込みに失敗すると、ink-failed を付け、庭を出す class は外さない", () => {
+    const r = run();
+    r.inks[0]!();
+    expect([...r.root.classes].sort()).toStrictEqual(["ink-failed", "intro", "stage-on"]);
+  });
+
+  it("6 秒の後に場面の準備ができていて墨の絵が届いていないと、ink-failed を付ける", () => {
+    const r = run();
+    r.root.classList.add("scene-ready");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual([
+      "ink-failed",
+      "intro",
+      "scene-ready",
+      "stage-on",
+    ]);
+  });
+
+  it("6 秒の後に場面の準備と墨の絵がそろっていれば、庭を出したままにする", () => {
+    const r = run();
+    r.root.classList.add("scene-ready", "ink-ready");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual([
+      "ink-ready",
+      "intro",
+      "scene-ready",
+      "stage-on",
+    ]);
+  });
+
+  it("6 秒の後に、イントロが外れていれば、墨の絵が届いていなくても ink-failed を付けない", () => {
+    const r = run();
+    r.root.classList.add("scene-ready");
+    r.root.classList.remove("intro");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual(["scene-ready", "stage-on"]);
+  });
+
   it("庭の表示がオフのときは、6 秒の打ち切りを仕掛けない", () => {
     expect(run({ garden: "off" }).timers).toStrictEqual([]);
   });
@@ -181,6 +241,7 @@ describe("applyStage", () => {
           throw new DOMException("blocked", "SecurityError");
         },
         load: () => {},
+        loadInk: () => {},
         later: () => {},
       },
       fns,
@@ -268,14 +329,17 @@ describe("stageScript", () => {
   it("URL の引数 intro があると、2 回目でもイントロを出し、引数を URL から消す", () => {
     const b = browser("?intro");
     b.store.items.set("fd-top-seen", "1");
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), {
-      ...b.globals,
-      document: {
-        documentElement: b.root,
-        createElement: () => ({}),
-        head: { appendChild: () => {} },
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      {
+        ...b.globals,
+        document: {
+          documentElement: b.root,
+          createElement: () => ({}),
+          head: { appendChild: () => {} },
+        },
       },
-    });
+    );
     expect({ classes: [...b.root.classes].sort(), replaced: b.replaced }).toStrictEqual({
       classes: ["intro", "stage-on"],
       replaced: ["https://fukuemon.dev/"],
@@ -363,7 +427,10 @@ describe("stageScript", () => {
         head: { appendChild: (s: { src?: string; type?: string }) => void appended.push(s) },
       },
     };
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      globals,
+    );
     expect({
       classes: [...b.root.classes].sort(),
       src: appended[0]?.src,
@@ -373,6 +440,33 @@ describe("stageScript", () => {
       src: "/_astro/scene.js",
       type: "module",
     });
+  });
+});
+
+describe("stageScript の墨の絵と署名のファイル", () => {
+  it("URL を渡すと、最初の訪問のときだけ、その URL の module の script を足す", () => {
+    const urls = (seen: boolean) => {
+      const b = browser();
+      if (seen) b.store.items.set("fd-top-seen", "1");
+      const appended: { src?: string }[] = [];
+      const globals = {
+        ...b.globals,
+        document: {
+          documentElement: b.root,
+          createElement: () => ({}),
+          head: { appendChild: (el: { src?: string }) => void appended.push(el) },
+        },
+      };
+      runInNewContext(
+        stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+        globals,
+      );
+      return appended.map((el) => el.src);
+    };
+    expect([urls(false), urls(true)]).toStrictEqual([
+      ["/_astro/scene.js", "/_astro/ink.js"],
+      ["/_astro/scene.js"],
+    ]);
   });
 });
 
@@ -388,7 +482,10 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
         head: { appendChild: (s: { onerror?: () => void }) => void appended.push(s) },
       },
     };
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      globals,
+    );
     appended[0]?.onerror?.();
     expect([...b.root.classes]).toStrictEqual([]);
   });
@@ -405,7 +502,10 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
       },
       setTimeout: (fn: () => void, ms: number) => void timers.push({ fn, ms }),
     };
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      globals,
+    );
     timers[0]!.fn();
     expect({ ms: timers.map((t) => t.ms), classes: [...b.root.classes] }).toStrictEqual({
       ms: [6000],
@@ -432,6 +532,7 @@ describe("inline script に埋め込む形", () => {
         introAgain: false,
         storage: () => memory(),
         load: () => {},
+        loadInk: () => {},
         later: () => {},
       },
       fns,

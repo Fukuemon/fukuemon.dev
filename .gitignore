@@ -98,3 +98,4 @@ packages/e2e/tests/evidence/
 
 # scripts/measure-top-lighthouse.mjs の結果
 lighthouse-results/
+intro-results/
