@@ -75,6 +75,27 @@ describe("HttpExchangeList", () => {
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 
+  it.each(["light", "dark"])(
+    "%s で行に hover すると、背景がペインの面と違う surface-pane-subtle の色になる",
+    async (theme) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        render(
+          <div className="bg-surface-pane">
+            <span className="bg-surface-pane-subtle" data-testid="expected" />
+            <Default />
+          </div>,
+        );
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
+        const row = rows()[0] as HTMLElement;
+        await userEvent.hover(row);
+        await expect.poll(() => getComputedStyle(row).backgroundColor).toBe(expected);
+      } finally {
+        delete document.documentElement.dataset.theme;
+      }
+    },
+  );
+
   it("行のフォーカスの輪は、行の内側に引く（ADR-0079）", async () => {
     render(<Default />);
     await userEvent.tab();
