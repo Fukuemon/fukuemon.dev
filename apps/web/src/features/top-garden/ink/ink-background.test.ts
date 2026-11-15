@@ -5,8 +5,8 @@ import { inkBackgroundSvg } from "./ink-background";
 describe("inkBackgroundSvg", () => {
   const svg = inkBackgroundSvg();
 
-  it("生成した SVG が、コミットした ink-background.svg と同じである", async () => {
-    await expect(svg).toMatchFileSnapshot("./ink-background.svg");
+  it("生成した SVG が、コミットした components/ink-background/ink-background.svg と同じである", async () => {
+    await expect(svg).toMatchFileSnapshot("../../../components/ink-background/ink-background.svg");
   });
 
   it("画像として単独で読めるよう、SVG の名前空間を持つ", () => {

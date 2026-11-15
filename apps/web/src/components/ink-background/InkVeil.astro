@@ -1,0 +1,28 @@
+---
+// 一覧のページの本文を包み、本文の高さだけ背景の墨の絵を薄くする。絵の横の線が、罫と文字の後ろに濃く重ならないためである（ADR-0082）
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={["ink-veil", className]}><slot /></div>
+
+<style>
+  /* 紙の色の 60% を、上下の 2rem で薄めながら敷く。値はこの層だけのもので、COLOR-TOKEN の例外である（ADR-0082） */
+  .ink-veil {
+    --ink-veil-paper: color-mix(in srgb, var(--fd-color-surface) 60%, transparent);
+    background: linear-gradient(
+      transparent,
+      var(--ink-veil-paper) 2rem,
+      var(--ink-veil-paper) calc(100% - 2rem),
+      transparent
+    );
+  }
+
+  @media (forced-colors: active) {
+    .ink-veil {
+      background: none;
+    }
+  }
+</style>

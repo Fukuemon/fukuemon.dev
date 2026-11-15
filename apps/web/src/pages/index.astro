@@ -1,5 +1,4 @@
 ---
-import InkBackground from "../features/top-garden/ink/InkBackground.astro";
 import InkGate from "../features/top-garden/ink/InkGate.astro";
 import GardenStage from "../features/top-garden/scene/GardenStage.astro";
 import Profile from "../features/top-garden/Profile.astro";
@@ -7,9 +6,8 @@ import TopStageScript from "../features/top-garden/stage/TopStageScript.astro";
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
-<SiteLayout title="fukuemon.dev" description="Fukuemon の技術記事を公開しています。">
+<SiteLayout title="fukuemon.dev" description="Fukuemon の技術記事を公開しています。" inkBackground>
   <TopStageScript slot="head" />
-  <InkBackground />
   <Profile />
   <GardenStage>
     <InkGate />

@@ -1,22 +1,13 @@
 ---
-// トップ（庭を出さないとき）、記事の一覧、プレイグラウンドの一覧の背景の墨の絵。庭を出すとき（html の class stage-on）は出さず、SVG も取得しない
+// 画面全体に敷く薄墨の背景の絵。SiteLayout の inkBackground が置く。庭を出すとき（html の class stage-on）は出さず、SVG も取得しない（ADR-0082）
 ---
 
-<div class="ink-background" aria-hidden="true" data-testid="garden-background">
+<div class="ink-background" aria-hidden="true" data-testid="ink-background">
   <div class="ink-background-art"></div>
   <div class="ink-background-haze"><i></i><i></i><i></i></div>
 </div>
 
 <style>
-  /* 墨の絵を body の背景に隠させず本文の後ろに出すため、ページの背景の色を html に移す */
-  :global(html:not(.stage-on)) {
-    background: var(--fd-color-surface);
-  }
-
-  :global(html:not(.stage-on) body) {
-    background: transparent;
-  }
-
   /* 高さを大きいほうの画面の高さに固定し、スマートフォンのアドレスバーが伸び縮みしても、filter を含む絵を描き直さない */
   .ink-background {
     position: fixed;
@@ -26,11 +17,6 @@
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-  }
-
-  /* 絵がロゴと下の罫に重ならないよう、ヘッダーに紙の色を敷き、絵を罫で切る。ヘッダーが折り返して高くなっても、ヘッダーの高さのまま隠れる */
-  :global(html:not(.stage-on) [data-site-header]) {
-    background: var(--fd-color-surface);
   }
 
   :global(html.stage-on) .ink-background {

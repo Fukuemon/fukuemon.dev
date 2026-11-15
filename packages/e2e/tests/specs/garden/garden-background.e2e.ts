@@ -4,7 +4,7 @@ import { backgroundHaze, htmlElement } from "../../selectors/garden";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
 
-const background = (page: Page) => page.getByTestId("garden-background");
+const background = (page: Page) => page.getByTestId("ink-background");
 const siteHeader = (page: Page) => page.getByTestId("site-header");
 
 /** 要素の背景の色。ヘッダーがページと同じ紙の色を敷き、後ろの絵を隠すかを比べる */
@@ -52,7 +52,7 @@ test.describe("トップの背景の墨の絵", () => {
         // 本文の字はシステムフォントで描くので、背景の絵だけを比べる
         await page.addStyleTag({
           content:
-            "body { visibility: hidden; } [data-testid='garden-background'] { visibility: visible; }",
+            "body { visibility: hidden; } [data-testid='ink-background'] { visibility: visible; }",
         });
         // 線は濃さ 16% で紙の色との差が小さいので、既定の threshold では絵が消えても差に数えない
         await expect(background(page)).toHaveScreenshot(`garden-background-${colorScheme}.png`, {

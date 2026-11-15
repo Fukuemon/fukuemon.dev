@@ -1,6 +1,6 @@
 ---
 import { Link } from "@fukuemon/ui";
-import InkBackground from "../../features/top-garden/ink/InkBackground.astro";
+import InkVeil from "../../components/ink-background/InkVeil.astro";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { PLAYGROUND_ORIGIN } from "../../lib/playground/origin";
 
@@ -12,9 +12,8 @@ const tools = [
 ];
 ---
 
-<SiteLayout title="プレイグラウンド | fukuemon.dev" description="Node、SQL、Go の実行環境の一覧です。">
-  <InkBackground />
-  <div class="px-4 py-8 md:px-6">
+<SiteLayout title="プレイグラウンド | fukuemon.dev" description="Node、SQL、Go の実行環境の一覧です。" inkBackground>
+  <InkVeil class="px-4 py-8 md:px-6">
     <div class="mx-auto flex max-w-page flex-col gap-4">
       <h1 class="font-heading text-heading-lg font-semibold">プレイグラウンド</h1>
       <ul class="flex flex-col border-t border-border">
@@ -34,5 +33,5 @@ const tools = [
         }
       </ul>
     </div>
-  </div>
+  </InkVeil>
 </SiteLayout>
