@@ -39,6 +39,61 @@ describe("PaneTabs", () => {
     }
   });
 
+  describe("幅 320 px の下の帯", () => {
+    const allLabels = ["エディタ", "端末", "コンソール", "プレビュー", "通信", "SQL"];
+    const renderNarrow = (count: number) => {
+      const labels = allLabels.slice(0, count);
+      render(
+        <div className="h-96 w-80">
+          <PaneTabs
+            items={labels.map((label) => ({
+              id: label,
+              label,
+              icon: <svg aria-hidden="true" height="20" width="20" />,
+              content: <p>{label}</p>,
+            }))}
+            label="ペイン"
+            leading={<button aria-label="ファイル" className="size-11" type="button" />}
+            onSelect={() => undefined}
+            placement="bottom"
+            selectedId="エディタ"
+          />
+        </div>,
+      );
+      return labels;
+    };
+
+    it.each([5, 6])("%i 個のタブのラベルが、隣のラベルと重ならない", (count) => {
+      const labels = renderNarrow(count);
+      const rects = labels.map((label) =>
+        screen.getByText(label, { selector: "span" }).getBoundingClientRect(),
+      );
+      const overlaps = rects.filter((rect, index) => {
+        const next = rects[index + 1];
+        return next !== undefined && rect.right > next.left;
+      });
+      expect(overlaps).toHaveLength(0);
+    });
+
+    it.each([5, 6])("%i 個のタブを並べると、帯を横にスクロールできる", (count) => {
+      renderNarrow(count);
+      const list = screen.getByRole("tablist").parentElement as HTMLElement;
+      list.scrollLeft = 10;
+      expect(list.scrollLeft).toBeGreaterThan(0);
+    });
+
+    it("端のタブへ End で移ると、フォーカスしたタブが帯の中に見える", async () => {
+      renderNarrow(6);
+      screen.getByRole("tab", { name: "エディタ" }).focus();
+      await userEvent.keyboard("{End}");
+      const rect = document.activeElement?.getBoundingClientRect();
+      const list = (
+        screen.getByRole("tablist").parentElement as HTMLElement
+      ).getBoundingClientRect();
+      expect(rect?.right).toBeLessThanOrEqual(list.right + 1);
+    });
+  });
+
   it("タブを替えても、隠したペインを描いたまま残し、入力が消えない", async () => {
     render(<Bottom />);
     await userEvent.type(screen.getByRole("textbox", { name: "エディタの中身" }), "abc");

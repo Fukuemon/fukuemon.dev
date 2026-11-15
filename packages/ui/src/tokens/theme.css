@@ -510,7 +510,7 @@
       justify-self: end;
       position: sticky;
       inset-inline-end: 0;
-      width: calc(var(--spacing) * 12);
+      width: var(--fd-scroll-fade-width, calc(var(--spacing) * 12));
       background-image: linear-gradient(
         to right,
         transparent,
@@ -525,6 +525,11 @@
       animation-timeline: scroll(nearest inline);
     }
   }
+}
+
+/* 薄い色の幅を 48px から 24px に狭める。幅の狭いタブの帯で、右端に見えているラベルを読めるようにする */
+@utility scroll-fade-narrow {
+  --fd-scroll-fade-width: calc(var(--spacing) * 6);
 }
 
 @utility scroll-fade-code {
