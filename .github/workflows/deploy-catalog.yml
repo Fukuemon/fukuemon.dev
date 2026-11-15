@@ -1,7 +1,7 @@
 name: Deploy Catalog
 
 # packages/ui の Storybook を design.fukuemon.dev の Worker へ配信する (ADR-0021)。
-# サイトの deploy と違い、develop で check workflow が通るたびに出す。手動の起動は、初回の配信と出し直しに使う。
+# develop で check workflow が通るたびに出す。手動の起動は、初回の配信と出し直しに使う。
 # custom domain は Terraform の管轄で、この workflow は触らない (ADR-0005)。
 on:
   workflow_run:

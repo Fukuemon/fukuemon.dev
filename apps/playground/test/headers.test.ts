@@ -89,9 +89,12 @@ describe("_headers", () => {
 });
 
 describe("_headers の検索エンジン向けのヘッダ", () => {
-  it.each(["/", "/node/", "/sql/"])("%s に X-Robots-Tag を返さない", (path) => {
-    expect(headersFor(path).has("x-robots-tag")).toBe(false);
-  });
+  it.each(["/", "/node/", "/sql/", "/go/", "/assets/node-abc.js"])(
+    "%s に X-Robots-Tag を返さない",
+    (path) => {
+      expect(headersFor(path).has("x-robots-tag")).toBe(false);
+    },
+  );
 });
 
 describe("_redirects", () => {

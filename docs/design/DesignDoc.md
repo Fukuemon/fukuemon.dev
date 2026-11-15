@@ -66,7 +66,6 @@ flowchart TD
     reader --> play["Worker: play.fukuemon.dev<br/>Static Assets"]
     dev["運営者 (Browser)"] --> catalog["Worker: design.fukuemon.dev<br/>Static Assets"]
     dev --> docsw["Worker: docs.fukuemon.dev<br/>Static Assets"]
-    e2e["packages/e2e (Playwright)"] --> preview["Worker: プレビュー<br/>workers.dev の URL"]
 
     subgraph repo ["fukuemon.dev monorepo"]
         md["記事の原稿 (Markdown)"] --> web["apps/web (Astro)"]
@@ -77,8 +76,7 @@ flowchart TD
         infra["infra/ (Terraform)"]
     end
 
-    web -->|"astro build と wrangler deploy"| preview
-    web -->|"切り替えの後"| site
+    web -->|"astro build と wrangler deploy"| site
     sb -->|"wrangler deploy"| catalog
     ds -->|"wrangler deploy"| docsw
     infra -->|"terraform apply"| cfbase["Zone / custom domain"]
