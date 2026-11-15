@@ -295,7 +295,7 @@ function addPond(scene: Scene, C: ScenePalette, R: () => number): void {
 /**
  * 庭の場面を組み立てる。乱数を使う順は試作と同じにしてあり、同じ色からは同じ場面ができる。
  * @param anisotropy 地面のテクスチャの異方性フィルタの値。renderer の上限を渡す
- * @returns 場面と、和紙を掛ける 4 本の木の、枝を伸ばし始める点。STATIONS の順に並ぶ
+ * @returns 場面と、和紙を掛ける 3 本の木の、枝を伸ばし始める点。STATIONS の順に並ぶ
  */
 export function buildGarden(
   C: ScenePalette,
