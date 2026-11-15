@@ -47,6 +47,10 @@ jobs:
       # 渡し忘れた build が本番へ出ないよう、検証用の記事の出力が dist に無いことを配信の前に確認する
       - run: node apps/web/scripts/check-production-dist.ts
 
+      # workflow_dispatch で起動したときは check workflow の結果を条件にしないので、配信の前にも確認する
+      - name: workers.dev が閉じていることを確認する
+        run: pnpm run check:closed-workers-dev
+
       - name: Cloudflare へ配信する
         run: pnpm --filter @fukuemon/web run deploy
         env:

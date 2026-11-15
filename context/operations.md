@@ -132,6 +132,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
   - custom domain の `play.<zone>` は、初回の deploy で Worker ができてから apply する。
 - ドキュメントサイトの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-docs workflow が行う。
   初回の deploy と出し直しは、運用者が deploy-docs workflow を `workflow_dispatch` で `develop` から手で起動する。
+  - deploy workflow、deploy-catalog workflow、deploy-playground workflow は、配信の前に `check:closed-workers-dev` を実行する。`workflow_dispatch` で起動した workflow は、check workflow の結果を条件にしないためである。
   - deploy-docs workflow は、build の後、配信の前に `check:closed-urls` を実行する。`workflow_dispatch` で起動した deploy-docs workflow は、check workflow の結果を条件にしないためである。
   - custom domain の `docs.<zone>` は、初回の deploy で Worker ができてから apply する。
   - 初めて公開する手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
