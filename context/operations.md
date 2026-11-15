@@ -132,15 +132,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 - 本番の Worker（`fukuemon-dev`）の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
   - ADR-0031: [切り替えまでのプレビュー](../docs/adr/0031-subdomains-and-workers.md#6-切り替えまでのプレビュー)
-- 本番の Worker の deploy workflow は、build に環境変数 `SITE_ENV=production` を渡す。
-  - `verificationOnly: true` の記事（検証用の記事）は、`SITE_ENV=production` の build では、記事の一覧、RSS、記事のページ、シリーズのページに出ない。
-  - プレビュー、E2E、手元の build は `SITE_ENV` を渡さないので、検証用の記事も書き出す。
-  - `SITE_ENV` に `production` 以外の値を渡すと、build が失敗する。
-  - deploy workflow は、build の後、配信の前に、`apps/web/scripts/check-production-dist.ts` を流す。
-    - `dist` に、検証用の記事のページ、プロジェクトの JSON、検証用の記事だけのシリーズのページがあれば失敗する。
-  - ページを書き出す記事が埋め込むプロジェクトの JSON（`/playground-projects/*`）も、検証用の記事のものは出ない。
-  - 本番の記事が 0 本のとき、記事の一覧は準備中の文を出し、RSS は item の無いチャンネルを返す。
-  - `SITE_ENV` は `build:site` のキャッシュの鍵に入れてある（`apps/web/vite.config.ts`）。
+- 記事が 0 本のとき、記事の一覧は準備中の文を出し、RSS は item の無いチャンネルを返す。
 - カタログの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-catalog workflow が行う。初回の deploy と出し直しは、運用者が deploy-catalog workflow を `workflow_dispatch` で `develop` から手で起動する。
   - ADR-0021: [packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする](../docs/adr/0021-ui-components-and-catalog.md)
 - プレイグラウンドの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-playground workflow が行う。

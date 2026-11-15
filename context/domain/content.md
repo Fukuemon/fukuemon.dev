@@ -14,7 +14,6 @@ schema と関係グラフの設計は [Content Model の Design Doc](../../packa
 - `draft` のコンテンツは、dev server でだけ見える。
 - `published` のコンテンツは、build が書き出す。
 - `archived` のコンテンツは、`draft` と同じく dev server でだけ見え、build は書き出さない。
-- `verificationOnly: true` のコンテンツは、`published` でも、本番の build（`SITE_ENV=production`）は書き出さない。プレビューと手元の build と dev server は書き出す。
 - 著者は frontmatter の `status` を `draft` から `published` に書き換えて公開する。
 - 著者は `status` を `published` から `archived` に書き換えると、build の出力からそのコンテンツを外せる。
 - `related` が `draft` か `archived` のコンテンツを指しても、ビルドは失敗しない。build の出力の関連には出ない。

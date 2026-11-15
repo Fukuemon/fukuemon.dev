@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
-// 検証用の原稿（page-check）に依存する。原稿を消すときは、ここの指し方も差し替える。
+// シリーズ「このサイトの記事で使われる構成要素」の記事 article-elements/body-and-figure に依存する。記事の本文を変えるときは、ここの指し方が見る語を残す。
 
 export const smallTable = (page: Page): Locator =>
   page

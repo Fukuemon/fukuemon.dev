@@ -17,7 +17,7 @@ test.describe("記事のページ", () => {
         context,
       }) => {
         await context.grantPermissions(["clipboard-write"]);
-        await page.goto("/articles/page-check/body-and-figure/");
+        await page.goto("/articles/article-elements/body-and-figure/");
 
         const frame = codeFrame(page, marker);
         await frame.scrollIntoViewIfNeeded();

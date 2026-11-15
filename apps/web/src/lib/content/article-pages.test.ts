@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { type ArticleSource, isPublic, planArticlePages, siteModeOf } from "./article-pages";
+import { type ArticleSource, isPublic, planArticlePages } from "./article-pages";
 
 const article = (id: string, over: Partial<ArticleSource["data"]> = {}): ArticleSource => ({
   id,
-  data: { title: id, status: "published", verificationOnly: false, ...over },
+  data: { title: id, status: "published", ...over },
 });
 
 const TITLES = new Map([["rdbms", "RDBMS を手で追う"]]);
@@ -12,61 +12,26 @@ const seriesById = (pages: ReturnType<typeof planArticlePages>) =>
   Object.fromEntries(pages.map((p) => [p.article.id, p.series]));
 
 describe("isPublic", () => {
-  const data = (status: "draft" | "archived" | "published", verificationOnly = false) => ({
-    status,
-    verificationOnly,
+  it.each([
+    ["draft", false],
+    ["archived", false],
+    ["published", true],
+  ] as const)("build では status が %s の記事を書き出すかが %s になる", (status, expected) => {
+    expect(isPublic({ status }, false)).toBe(expected);
   });
-
-  it.each([
-    ["draft", false, false],
-    ["archived", false, false],
-    ["published", false, true],
-    ["published", true, false],
-  ] as const)(
-    "本番の build では status が %s、verificationOnly が %s の記事を書き出すかが %s になる",
-    (status, verificationOnly, expected) => {
-      expect(isPublic(data(status, verificationOnly), "production")).toBe(expected);
-    },
-  );
-
-  it.each([
-    ["draft", false, false],
-    ["published", false, true],
-    ["published", true, true],
-  ] as const)(
-    "内部向けの build では status が %s、verificationOnly が %s の記事を書き出すかが %s になる",
-    (status, verificationOnly, expected) => {
-      expect(isPublic(data(status, verificationOnly), "internal")).toBe(expected);
-    },
-  );
 
   it.each(["draft", "archived", "published"] as const)(
-    "dev server では %s も、検証用の記事も書き出す",
+    "dev server では %s も書き出す",
     (status) => {
-      expect(isPublic(data(status, true), "dev")).toBe(true);
+      expect(isPublic({ status }, true)).toBe(true);
     },
   );
-});
-
-describe("siteModeOf", () => {
-  it.each([
-    [true, "production", "dev"],
-    [false, undefined, "internal"],
-    [false, "", "internal"],
-    [false, "production", "production"],
-  ] as const)("dev が %s、SITE_ENV が %s のとき %s にする", (dev, siteEnv, expected) => {
-    expect(siteModeOf(dev, siteEnv)).toBe(expected);
-  });
-
-  it("production 以外の値は throw する", () => {
-    expect(() => siteModeOf(false, "prod")).toThrow("SITE_ENV の値が誤っている: prod");
-  });
 });
 
 describe("planArticlePages", () => {
   it("渡した記事をそのまま返し、シリーズに入れない記事には、シリーズの値を付けない", () => {
     const standalone = article("standalone");
-    expect(planArticlePages([standalone], TITLES, "production")).toStrictEqual([
+    expect(planArticlePages([standalone], TITLES, false)).toStrictEqual([
       { article: standalone, series: undefined },
     ]);
   });
@@ -79,7 +44,7 @@ describe("planArticlePages", () => {
         article("rdbms/b", { order: 3 }),
       ],
       TITLES,
-      "production",
+      false,
     );
     expect(seriesById(pages)["rdbms/b"]).toStrictEqual({
       title: "RDBMS を手で追う",
@@ -95,7 +60,7 @@ describe("planArticlePages", () => {
       planArticlePages(
         [article("rdbms/a", { order: 1 }), article("rdbms/b", { order: 2 })],
         TITLES,
-        "production",
+        false,
       ),
     );
     expect([series["rdbms/a"]?.prev, series["rdbms/b"]?.next]).toStrictEqual([
@@ -112,7 +77,7 @@ describe("planArticlePages", () => {
         article("rdbms/c", { order: 3 }),
       ],
       TITLES,
-      "production",
+      false,
     );
     expect(
       pages.map((p) => [p.article.id, p.series?.position, p.series?.total, p.series?.next?.href]),
@@ -126,24 +91,20 @@ describe("planArticlePages", () => {
     const pages = planArticlePages(
       [article("rdbms/a", { order: 1 }), article("rdbms/b", { order: 2, status: "draft" })],
       TITLES,
-      "dev",
+      true,
     );
     expect(pages.map((p) => p.series?.total)).toStrictEqual([2, 2]);
   });
 
   it("題が引けないシリーズがあると、ビルドを失敗させる", () => {
-    expect(() =>
-      planArticlePages([article("unknown/a", { order: 1 })], TITLES, "production"),
-    ).toThrow("unknown");
+    expect(() => planArticlePages([article("unknown/a", { order: 1 })], TITLES, false)).toThrow(
+      "unknown",
+    );
   });
 
   it("order の無いシリーズの記事があると、ビルドを失敗させる", () => {
     expect(() =>
-      planArticlePages(
-        [article("rdbms/a", { order: 1 }), article("rdbms/b")],
-        TITLES,
-        "production",
-      ),
+      planArticlePages([article("rdbms/a", { order: 1 }), article("rdbms/b")], TITLES, false),
     ).toThrow("rdbms/b");
   });
 });
