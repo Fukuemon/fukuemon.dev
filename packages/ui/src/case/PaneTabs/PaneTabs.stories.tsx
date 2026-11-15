@@ -44,7 +44,7 @@ function PaneTabsExample({ placement }: { placement: PaneTabsPlacement }) {
         leading={
           <button
             aria-label="ファイル"
-            className="inline-grid size-11 place-items-center focus-visible:focus-ring-inset"
+            className="inline-grid size-11 place-items-center focus-visible:focus-ring"
             type="button"
           >
             {icon("M2.75 4.75h5l1.5 1.5h8v9h-14.5z")}

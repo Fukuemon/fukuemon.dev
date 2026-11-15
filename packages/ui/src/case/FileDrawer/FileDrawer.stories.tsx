@@ -24,7 +24,7 @@ function FileDrawerExample({ initialOpen = false }: { initialOpen?: boolean }) {
             <li key={name}>
               <button
                 aria-current={name === "package.json" ? "true" : undefined}
-                className="h-11 w-full px-3 text-left focus-visible:focus-ring-inset"
+                className="h-11 w-full px-3 text-left focus-visible:focus-ring"
                 onClick={() => setOpen(false)}
                 type="button"
               >

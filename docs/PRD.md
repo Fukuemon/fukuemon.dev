@@ -124,7 +124,7 @@ C4Context
     System(catalog, "カタログ", "デザインシステムのコンポーネントの一覧")
     System(docs, "ドキュメントサイト", "設計の文書をビルドしたサイト")
     System_Ext(github, "GitHub", "原稿とコードの保管と、配信の起点")
-    System_Ext(cf, "Cloudflare", "配信、DNS、ドキュメントサイトのアクセスの認証")
+    System_Ext(cf, "Cloudflare", "配信と DNS")
     Rel(reader, site, "閲覧と、コードの実行")
     Rel(author, github, "push")
     Rel(author, catalog, "閲覧")
@@ -199,7 +199,7 @@ C4Context
 ### カタログとドキュメントサイト
 
 - カタログ: デザインシステムのコンポーネントを、誰でも開ける。
-- ドキュメントサイト: PRD、Design Doc、ADR をビルドしたサイトを、Access をオンにしている間は、運営者が許可した人だけが開ける。文書の原本は、公開のリポジトリにある。
+- ドキュメントサイト: PRD、Design Doc、ADR をビルドしたサイトを、誰でも開ける。文書の原本は、公開のリポジトリにある。
 
 ### Milestones
 
@@ -247,7 +247,7 @@ Success Metrics の「記事を読める」「記事の追加が 1 枚で済む�
   - Lighthouse の Performance が 90 以上で、LCP が 2.5 秒以内である（Moto G Power、Slow 4G 相当）。
   - トップの最初の訪問は、この条件の対象から除く。最初の訪問だけに、水墨の門のイントロ（約 10 秒）を表示するためである。2 回目以降の訪問のトップは、対象に含める。
   - トップの合否を判定する GPU、スロットリング、回数は、[ADR-0078](adr/0078-top-lighthouse-gpu-and-throttling.md) にある。
-- 公開に関わる Cloudflare の設定が、Dashboard の上の属人的な設定として残らない。ドキュメントサイトの Access は除く。
+- 公開に関わる Cloudflare の設定が、Dashboard の上の属人的な設定として残らない。
   - ドメイン、DNS、配信先の設定が、リポジトリに書いた定義と一致する。
   - 確認した結果は [基盤の Design Doc の Verification](../infra/DesignDoc.md#verification) にある。
 

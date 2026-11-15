@@ -51,7 +51,7 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - CodeMirror 6 は、プレイグラウンドのツールのエディタに使う。色は、`packages/ui` のテーマ変数を読む。
 - xterm.js は、プレイグラウンドで、Node の実行環境の端末を表示するのに使う。
 - Zensical は、`docs/` をビルドするドキュメントサイト（`apps/docs-site`）に使う。Python と依存は uv が用意する。
-  - ADR-0032: [ドキュメントサイトを Zensical でビルドし、Cloudflare Access を運営者がダッシュボードで設定する](../docs/adr/0032-docs-site-behind-access.md)
+  - ADR-0032: [ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する](../docs/adr/0032-docs-site-zensical.md)
 - Expressive Code（`astro-expressive-code`）は、記事のコードブロックの描画に使う。
 - Pele は、記事の mermaid の図を、ビルドのときに SVG にするのに使う。
   - ADR-0016: [mermaid を Pele で描く](../docs/adr/0016-render-mermaid-with-pele.md)

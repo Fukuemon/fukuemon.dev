@@ -2,7 +2,7 @@ name: Deploy Docs
 
 # docs/ を Zensical でビルドし、docs.fukuemon.dev の Worker へ配信する (ADR-0032)。
 # develop で check workflow が通るたびに出す。手動の起動は、初回の配信と出し直しに使う。
-# custom domain は Terraform の、Access はダッシュボードの管轄で、この workflow は触らない (ADR-0005、ADR-0032)。
+# custom domain は Terraform の管轄で、この workflow は触らない (ADR-0005)。
 on:
   workflow_run:
     workflows: [Check]
@@ -43,7 +43,7 @@ jobs:
       - run: pnpm --filter @fukuemon/docs-site run build
 
       # workflow_dispatch で起動したときは check workflow の結果を条件にしないので、配信の前にも確認する
-      - name: Access の外の URL が閉じていることを確認する
+      - name: custom domain 以外の URL が閉じていることを確認する
         run: pnpm --filter @fukuemon/docs-site run check:closed-urls dist/_headers
 
       - name: Cloudflare へ配信する
