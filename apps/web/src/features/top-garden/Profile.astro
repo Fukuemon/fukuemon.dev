@@ -74,17 +74,17 @@ const row = "border-t border-border py-2";
       <div class="flex items-start gap-4">
         <img src={avatar.src} alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
         <div class="min-w-0">
-          <ul class="mb-4 space-y-1 text-text-secondary [html.stage-on_&]:space-y-4 [html.stage-on_&]:text-inherit">
+          <ul class="mb-4 space-y-1 text-text-secondary [html.stage-on_&]:text-inherit">
             {
               roles.map(({ text, href }) =>
                 href ? (
                   <li>
                     <a
-                      class="inline-flex min-h-11 items-center text-link-external underline underline-offset-4 focus-visible:focus-ring [html.stage-on_&]:-my-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:text-inherit"
+                      class="inline-flex min-h-11 items-center text-link-external focus-visible:focus-ring [html.stage-on_&]:-my-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:text-inherit"
                       href={href}
                       data-testid="profile-activity-link"
                     >
-                      {text}
+                      <span class="link-rule link-rule-below-underline underline underline-offset-4">{text}</span>
                     </a>
                   </li>
                 ) : (
@@ -177,6 +177,11 @@ const row = "border-t border-border py-2";
   /* 狭い画面で、語の途中で折れないようにする。長い段落は行の終わりが不揃いになるので、短い文だけに当てる */
   :global(html.stage-on) [data-garden-card] :is(p, summary, ul:not(:has(details)) > li):not(details p) {
     word-break: auto-phrase;
+  }
+
+  /* 庭の活動のリンクは押せる範囲が 60px あるので、リンクどうしの間だけを 1rem あけて範囲を重ねない */
+  :global(html.stage-on) [data-garden-card] li:has(> a) + li:has(> a) {
+    margin-block-start: 1rem;
   }
 
   :global(html.stage-on) [data-garden-card] details p {
