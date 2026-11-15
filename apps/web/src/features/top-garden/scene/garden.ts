@@ -321,6 +321,8 @@ export function startGarden(
         "toggle",
         () => {
           try {
+            // 別の行を開くと、閉じた行と開いた行の 2 回届く。高さが変わらない 2 回目は掛け直さない。
+            if (cards[i]!.offsetHeight / PX === slots[i]!.h) return;
             hang(i);
             kick();
           } catch (e) {
