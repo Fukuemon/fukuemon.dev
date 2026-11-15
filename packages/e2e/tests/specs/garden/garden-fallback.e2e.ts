@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { PROFILE_ACTIVITIES, stubActivityPages } from "../../fixtures/profile";
-import { mainLandmark } from "../../selectors/garden";
+import { mainCards, mainLandmark } from "../../selectors/garden";
 
 test.use({ launchOptions: { args: ["--disable-3d-apis"] } });
 
@@ -12,11 +12,11 @@ test.describe("トップの庭", () => {
       await expect(page.getByTestId("garden-stage")).toBeHidden();
     });
 
-    test("トップを開いた場合、技術スタックの文と活動の肩書きを出さず、活動を団体の名前のリンクで出すこと", async ({
+    test("トップを開いた場合、技術スタックの文と活動の役職を出さず、活動を団体の名前のリンクで出すこと", async ({
       page,
     }) => {
       await page.goto("/");
-      await expect(page.getByTestId("garden-card-stack")).toHaveCount(0);
+      await expect(mainCards(page)).toHaveCount(3);
       await expect(mainLandmark(page)).not.toContainText("技術スタック");
       await expect(mainLandmark(page)).not.toContainText(/organizer|HackBar|\bTA\b/);
       await expect(page.getByTestId("profile-activity-link")).toHaveText(

@@ -17,6 +17,7 @@ import {
 } from "../../selectors/garden";
 
 import { AUTUMN_NOON } from "../../fixtures/garden-time";
+import { PROFILE_ACTIVITIES } from "../../fixtures/profile";
 import { seenBefore } from "../../widgets/actions/seen-before";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 
@@ -39,6 +40,9 @@ const openGarden = async (page: Page, { paused = false } = {}) => {
   await page.goto("/");
   await expect(htmlElement(page)).toHaveClass(/garden-ready/);
 };
+
+/** 文のセクションの id。apps/web の layout.ts の STATIONS と同じ順にする */
+const CARD_IDS = ["profile", "career", "portfolio"] as const;
 
 const card = (page: Page, id: string) => page.getByTestId(`garden-card-${id}`);
 
@@ -163,7 +167,7 @@ test.describe("トップの庭", () => {
       page,
     }) => {
       await openGarden(page, { paused: true });
-      for (const [i, id] of ["profile", "career", "portfolio"].entries()) {
+      for (const [i, id] of CARD_IDS.entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         const paper = (await card(page, id).boundingBox())!;
@@ -330,15 +334,14 @@ test.describe("トップの庭", () => {
         overlap: links.length === 2 && links[0]!.right - links[1]!.left > 0.5,
         activities: activities.length,
         smallActivities: activities.filter((b) => b.height < 44).length,
-        activityOverlap:
-          activities.length === 2 && activities[0]!.bottom - activities[1]!.top > 0.5,
+        activityOverlap: activities.slice(1).some((b, i) => activities[i]!.bottom - b.top > 0.5),
         summaries: summaries.length,
         smallSummaries: summaries.filter((h) => h < 44).length,
       }).toStrictEqual({
         links: 2,
         smallLinks: 0,
         overlap: false,
-        activities: 2,
+        activities: PROFILE_ACTIVITIES.length,
         smallActivities: 0,
         activityOverlap: false,
         summaries: 8,
@@ -361,7 +364,7 @@ test.describe("トップの庭", () => {
         return (16 * box.width) / (await c.evaluate((el) => (el as HTMLElement).offsetWidth));
       };
       const small: string[] = [];
-      for (const [i, id] of ["profile", "career", "portfolio"].entries()) {
+      for (const [i, id] of CARD_IDS.entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         if ((await shown(id)) < 14) small.push(id);
@@ -409,7 +412,7 @@ test.describe("トップの庭", () => {
     }) => {
       await openGarden(page, { paused: true });
       const overlap: Record<string, boolean> = {};
-      for (const [i, id] of ["profile", "career", "portfolio"].entries()) {
+      for (const [i, id] of CARD_IDS.entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         const tops = await stations(page).evaluateAll((els) =>
