@@ -35,6 +35,7 @@ export const MAX_ROWS = 100_000;
  * 複数の文は 1 回の simple query で送るので、Postgres が 1 つの暗黙のトランザクションとして扱い、1 つが失敗すると全部を取り消す。
  * 1 つの結果が MAX_ROWS 行を超えるときは、先頭の MAX_ROWS 行だけを返す。
  * 失敗したときは ROLLBACK を流す。SQL の中の BEGIN で始めたトランザクションが失敗したまま残ると、次の SQL が全て失敗するためである。
+ * json と jsonb のセルを桁を落とさず文字列で受けるには、`withLosslessJson` を通した PGlite を渡す。
  */
 export async function runSql(
   pg: Pick<PGliteInterface, "exec">,
