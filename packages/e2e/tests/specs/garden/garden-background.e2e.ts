@@ -42,6 +42,7 @@ test.describe("トップの背景の墨の絵", () => {
         await presetSettings(page, { garden: "off", motion: "off" });
         await page.goto("/");
         await expect(background(page)).toBeVisible();
+        await expect(headerFade(page)).toBeVisible();
         // 本文の字はシステムフォントで描くので、背景の絵と上端の紙の色だけを比べる
         await page.addStyleTag({
           content:
