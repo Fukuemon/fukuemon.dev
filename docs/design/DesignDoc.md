@@ -82,7 +82,7 @@ flowchart TD
     web -->|"切り替えの後"| site
     sb -->|"wrangler deploy"| catalog
     ds -->|"wrangler deploy"| docsw
-    infra -->|"terraform apply"| cfbase["Zone / custom domain / Access"]
+    infra -->|"terraform apply"| cfbase["Zone / custom domain"]
     cfbase -.-> site
     cfbase -.-> catalog
     cfbase -.-> docsw
@@ -114,7 +114,7 @@ ADR-0026: [トップの水墨の門と庭](../adr/0026-sumi-gate-and-garden-on-t
 | `@fukuemon/go-runtime`         | Go のコードを実行する処理                                                                                                              | 画面と、React への依存                                    |
 | `@fukuemon/config`             | tsconfig の共有の設定                                                                                                                  | 無い                                                      |
 | `@fukuemon/e2e`                | 配信したサイトを操作する E2E のテストと、エビデンス                                                                                    | サイトのコードへの依存                                    |
-| `infra/`                       | Zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケット                                   | Worker の script と静的なアセット                         |
+| `infra/`                       | Zone、Workers の custom domain、Terraform の state を置く R2 のバケット                                                                | Worker の script と静的なアセット                         |
 
 次の図は、package の間の依存の向きを示す。
 
@@ -166,13 +166,13 @@ ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-work
 ツールは、デフォルトのプロジェクトを開き、訪問者のブラウザに保存した内容があれば、保存した内容で開く。  
 保存の形は、[プレイグラウンドの Design Doc の「保存」](../../apps/playground/DesignDoc.md#保存) にある。
 
-| ホスト名              | 置くもの                                       | アクセスできる人                           |
-| --------------------- | ---------------------------------------------- | ------------------------------------------ |
-| `fukuemon.dev`        | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                     |
-| `play.fukuemon.dev`   | プレイグラウンドの全てのツール                 | 誰でも                                     |
-| `design.fukuemon.dev` | カタログ                                       | 誰でも                                     |
-| `docs.fukuemon.dev`   | ドキュメントサイト                             | 運営者が許可した人                         |
-| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない |
+| ホスト名              | 置くもの                                       | アクセスできる人                                      |
+| --------------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| `fukuemon.dev`        | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                                |
+| `play.fukuemon.dev`   | プレイグラウンドの全てのツール                 | 誰でも                                                |
+| `design.fukuemon.dev` | カタログ                                       | 誰でも                                                |
+| `docs.fukuemon.dev`   | ドキュメントサイト                             | 運営者が許可した人。Access をオフにしている間は誰でも |
+| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない            |
 
 ドキュメントサイトのビルドの方法と、アクセスの認証は、次の ADR にある。  
 ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)

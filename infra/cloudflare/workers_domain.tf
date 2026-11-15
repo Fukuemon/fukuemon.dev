@@ -24,7 +24,4 @@ resource "cloudflare_workers_custom_domain" "docs" {
   hostname   = "docs.${var.zone_name}"
   service    = var.docs_worker_name
   zone_id    = cloudflare_zone.site.id
-
-  # custom domain を Access より先に作ると、ホスト名が認証なしで開ける時間ができる
-  depends_on = [cloudflare_zero_trust_access_application.docs]
 }

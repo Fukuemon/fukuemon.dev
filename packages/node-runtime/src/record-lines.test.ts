@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { BackendProcess } from "./backend";
-import { HTTP_PREFIX, createRecordLineFilter, withoutRecordLines } from "./record-lines";
+import {
+  HTTP_PREFIX,
+  createPrefixedLineReader,
+  createRecordLineFilter,
+  withoutRecordLines,
+} from "./record-lines";
 
 /** 抜き出す処理に chunks を順に渡し、端末に渡した出力と記録の行を返す。 */
 const filtered = (...chunks: string[]) => {
@@ -101,6 +106,35 @@ function fakeProcess() {
   };
   return { process, emit, finish, fail, listeners };
 }
+
+describe("createPrefixedLineReader", () => {
+  const read = (...chunks: string[]) => {
+    const lines: string[] = [];
+    const push = createPrefixedLineReader("@@p ", (line) => lines.push(line));
+    for (const chunk of chunks) push(chunk);
+    return lines;
+  };
+
+  it("頭の付いた行の中身を渡し、頭の無い行、途中に頭がある行、改行の届かない行は捨てる", () => {
+    expect(read("log\n@@p a\nx @@p b\n@@p c")).toStrictEqual(["a"]);
+  });
+
+  it("途中で切れて届いた行を 1 行にし、CRLF の \\r を外す", () => {
+    expect(read("@@", "p a", "b\r\n")).toStrictEqual(["ab"]);
+  });
+
+  it("CRLF の \\r と \\n が別の chunk で届いても、\\r を外す", () => {
+    expect(read("@@p a\r", "\n")).toStrictEqual(["a"]);
+  });
+
+  it("createRecordLineFilter の上限の 4 MB を超える行も、細かく切れて届いたら 1 行にする", () => {
+    const body = "x".repeat(5 * 1024 * 1024);
+    const chunks = ["@@p "];
+    for (let at = 0; at < body.length; at += 64 * 1024) chunks.push(body.slice(at, at + 64 * 1024));
+    chunks.push("\n");
+    expect(read(...chunks).map((line) => line.length)).toStrictEqual([body.length]);
+  });
+});
 
 describe("withoutRecordLines", () => {
   it.each([

@@ -11,11 +11,21 @@ import {
   PaneTabs,
   PreviewFrame,
   SplitPane,
+  Tabs,
   TerminalFrame,
 } from "@fukuemon/ui";
-import { type ReactNode, Suspense, use, useReducer, useState, useSyncExternalStore } from "react";
+import {
+  Activity,
+  type ReactNode,
+  Suspense,
+  use,
+  useReducer,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import {
+  DATABASE_ICON,
   EDITOR_ICON,
   FOLDER_ICON,
   NETWORK_ICON,
@@ -37,6 +47,7 @@ import { BOOT_LABEL } from "./messages";
 import { PreviewPane } from "./PreviewPane";
 import { type SelectionAction, initialSelection, selectionReducer } from "./selection";
 import { type NodeSession, createNodeSessionOpener } from "./session";
+import { SqlPane } from "./SqlPane";
 import { TerminalPane } from "./TerminalPane";
 import { Toolbar } from "./Toolbar";
 
@@ -100,6 +111,11 @@ const previewFallback = (
   </PreviewFrame>
 );
 const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</TerminalFrame>;
+const sqlFallback = (
+  <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
+    {() => null}
+  </EditorFrame>
+);
 
 // 高さの低い画面では、題を読み上げだけに残す（docs/adr/0072-short-landscape-layout-in-playground.md）
 const title = (
@@ -140,8 +156,51 @@ function HttpPanes({ orientation = "horizontal" }: { orientation?: "horizontal" 
   );
 }
 
+/** 右の列のタブ。選んでいないタブのペインは Activity で隠し、SQL の入力欄と結果を残す。 */
+type RightTab = "preview" | "sql";
+
+/**
+ * PC の配置の右の列。DB を使うプロジェクトでは、プレビューと SQL のペインをタブで切り替える。
+ * どちらのペインも列の高さを全て使い、SQL の入力欄と結果を同時に見られるようにする。
+ */
+function PreviewColumn({ database }: { database: boolean }) {
+  const [tab, setTab] = useState<RightTab>("preview");
+  const preview = (
+    <Pane fallback={previewFallback}>
+      <PreviewPane />
+    </Pane>
+  );
+  if (!database) return preview;
+  // Tabs は選んだタブの中身だけを描くので、どのタブにも同じ中身を渡し、中で Activity で切り替える
+  const content = (
+    <div className="flex min-h-0 flex-1 flex-col *:min-h-0 *:flex-1">
+      <Activity mode={tab === "preview" ? "visible" : "hidden"}>{preview}</Activity>
+      <Activity mode={tab === "sql" ? "visible" : "hidden"}>
+        <Pane editorFocusRing fallback={sqlFallback}>
+          <SqlPane />
+        </Pane>
+      </Activity>
+    </div>
+  );
+  return (
+    <div className="flex size-full min-h-0 flex-col [&>div>[role=tablist]]:mx-1">
+      <Tabs
+        density="compact"
+        items={[
+          { id: "preview", label: "プレビュー", content },
+          { id: "sql", label: "SQL", content },
+        ]}
+        label="プレビューと SQL"
+        onSelect={(id) => setTab(id === "sql" ? "sql" : "preview")}
+        panel="flush"
+        selectedId={tab}
+      />
+    </div>
+  );
+}
+
 /** PC の配置。ファイルの木、エディタ、プレビュー、下のタブ（端末と HTTP の流れ）を並べ、仕切りで幅と高さを変える。 */
-function WidePanes() {
+function WidePanes({ database }: { database: boolean }) {
   return (
     // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
     <div className="-m-1 min-h-0 flex-1">
@@ -166,11 +225,7 @@ function WidePanes() {
                     <EditorPane />
                   </Pane>
                 }
-                secondary={
-                  <Pane fallback={previewFallback}>
-                    <PreviewPane />
-                  </Pane>
-                }
+                secondary={<PreviewColumn database={database} />}
               />
             }
             secondary={
@@ -190,14 +245,22 @@ function WidePanes() {
   );
 }
 
-const NARROW_PANES = ["editor", "terminal", "preview", "http"] as const;
+const NARROW_PANES = ["editor", "terminal", "preview", "sql", "http"] as const;
 type NarrowPane = (typeof NARROW_PANES)[number];
 
 /**
- * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビュー、通信をタブで 1 つずつ出す。
+ * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビュー、通信をタブで 1 つずつ出す。DB を使うプロジェクトでは、プレビューの後に SQL のタブを足す。
  * ドロワーでファイルを選ぶと、ドロワーを閉じてエディタのタブに替える。フォルダの行は開閉だけをし、ドロワーを閉じない。
  */
-function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; embedded: boolean }) {
+function NarrowPanes({
+  mode,
+  embedded,
+  database,
+}: {
+  mode: Exclude<LayoutMode, "wide">;
+  embedded: boolean;
+  database: boolean;
+}) {
   const { selection, dispatch } = useSelection();
   const [pane, setPane] = useState<NarrowPane>("editor");
   const [isDrawerOpen, setDrawerOpen] = useState(false);
@@ -244,6 +307,20 @@ function NarrowPanes({ mode, embedded }: { mode: Exclude<LayoutMode, "wide">; em
               </Pane>
             ),
           },
+          ...(database
+            ? [
+                {
+                  id: "sql",
+                  label: "SQL",
+                  icon: DATABASE_ICON,
+                  content: (
+                    <Pane editorFocusRing fallback={sqlFallback} flush={embedded} inTab>
+                      <SqlPane />
+                    </Pane>
+                  ),
+                },
+              ]
+            : []),
           {
             id: "http",
             label: "通信",
@@ -287,17 +364,35 @@ function NodeLayout({ session, embedded }: { session: NodeSession; embedded: boo
   const [selection, dispatch] = useReducer(selectionReducer, project.open, initialSelection);
   // 配置が替わってエディタを作り直しても、ファイルごとの元に戻す履歴とカーソルを残す
   const [editorStates] = useState<EditorStates>(() => new Map());
+  // SQL のペインの入力欄の履歴は、ファイルのパスと混ざらないよう別の入れ物に保つ。結果の表は残さない
+  const [sqlEditorStates] = useState<EditorStates>(() => new Map());
   const mode = useLayoutMode();
   const runtime = useSyncExternalStore(session.runtime.subscribe, session.runtime.getSnapshot);
+  const database = project.database === true;
   return (
-    <RuntimeContext value={{ project, runtime }}>
+    <RuntimeContext
+      value={{
+        project,
+        runtime,
+        restart: session.restart,
+        busy: session.busy,
+        sqlQuery: session.sqlQuery,
+        setSqlQuery: session.setSqlQuery,
+        sqlEditorStates,
+        sqlResets: session.sqlResets,
+      }}
+    >
       <Toolbar session={session} title={!embedded && title} />
       <SelectionContext value={{ selection, dispatch }}>
         <Suspense fallback={<PageLoading label={BOOT_LABEL} />}>
           <BootWait />
         </Suspense>
         <EditorStatesContext value={editorStates}>
-          {mode === "wide" ? <WidePanes /> : <NarrowPanes embedded={embedded} mode={mode} />}
+          {mode === "wide" ? (
+            <WidePanes database={database} />
+          ) : (
+            <NarrowPanes database={database} embedded={embedded} mode={mode} />
+          )}
         </EditorStatesContext>
       </SelectionContext>
     </RuntimeContext>

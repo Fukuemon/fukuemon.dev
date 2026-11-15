@@ -1,0 +1,46 @@
+import { ArgTypes, Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import { Select } from "./Select";
+import * as Stories from "./Select.stories";
+
+<Meta of={Stories} />
+
+# Select
+
+決まった値から 1 つを選ぶ欄。
+
+## 規則
+
+規則の本文は、次の文書のセクションにある。
+
+- 使う場面、使わない場面、変種、状態、内容の制約、キーボードの操作: `packages/ui/design/components.md` の「コンポーネント」の「Select」
+- 当たる原則: `packages/ui/DESIGN.md` の「画面を作るときの原則」の次の ID
+  - `FOCUS-ONE`
+  - `TARGET-SIZE`
+  - `PLAYGROUND-ONLY`
+
+## 状態
+
+### デフォルト
+
+<Canvas of={Stories.Default} />
+
+### フォーカス
+
+<Canvas of={Stories.Focus} />
+
+### 無効
+
+<Canvas of={Stories.Disabled} />
+
+### compact
+
+コードを動かす画面のペインに使う（ADR-0062）。  
+欄の高さは 28px、文字は 13px である。  
+触る端末では、欄の高さを 44px にする（ADR-0071）。
+
+<Canvas of={Stories.Compact} />
+
+## props
+
+<ArgTypes of={Select} />
