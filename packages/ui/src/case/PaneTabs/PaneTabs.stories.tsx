@@ -10,10 +10,21 @@ const icon = (d: string) => (
 );
 
 /** 選んだペインを保つ組。タブを替えても、隠したペインの入力が残ることを確かめるのに使う。 */
-function PaneTabsExample({ placement }: { placement: PaneTabsPlacement }) {
+function PaneTabsExample({
+  placement,
+  narrow = false,
+}: {
+  placement: PaneTabsPlacement;
+  /** 幅 320px で、タブを 6 つ並べて帯を超えさせる。 */
+  narrow?: boolean;
+}) {
   const [selected, setSelected] = useState("editor");
   return (
-    <div className="h-96 w-full max-w-sm border border-border">
+    <div
+      className={
+        narrow ? "h-96 w-80 border border-border" : "h-96 w-full max-w-sm border border-border"
+      }
+    >
       <PaneTabs
         items={[
           {
@@ -39,6 +50,28 @@ function PaneTabsExample({ placement }: { placement: PaneTabsPlacement }) {
             icon: icon("M2.75 3.75h14.5v12.5H2.75zM2.75 7.25h14.5"),
             content: <p className="p-3 text-compact">Hello from Node</p>,
           },
+          ...(narrow
+            ? [
+                {
+                  id: "console",
+                  label: "コンソール",
+                  icon: icon("M3.5 6l4 4-4 4M9.5 14.5h7"),
+                  content: <p className="p-3 text-compact">console.log</p>,
+                },
+                {
+                  id: "network",
+                  label: "通信",
+                  icon: icon("M3 10h14M12 5l5 5-5 5"),
+                  content: <p className="p-3 text-compact">GET /</p>,
+                },
+                {
+                  id: "sql",
+                  label: "SQL",
+                  icon: icon("M3.5 5.5h13v9h-13z"),
+                  content: <p className="p-3 text-compact">SELECT 1</p>,
+                },
+              ]
+            : []),
         ]}
         label="ペイン"
         leading={
@@ -68,5 +101,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Bottom: Story = { args: { placement: "bottom" } };
+export const BottomOverflow: Story = { args: { placement: "bottom", narrow: true } };
 export const Start: Story = { args: { placement: "start" } };
 export const Top: Story = { args: { placement: "top" } };

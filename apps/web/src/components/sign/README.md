@@ -1,7 +1,9 @@
 # 署名
 
 このディレクトリは、「Fukuemon」の署名の SVG と、それを HTML に置く `<svg>` にするコードを持つ。
-トップの最初の訪問のイントロ（`features/top-garden/ink/InkGate.astro`）と、全てのページのヘッダーのロゴ（`components/SiteHeader.astro`）の両方が、同じ `sign.svg` を読む。
+同じ `sign.svg` を、2 か所が読む。
+1 つは、トップのイントロ（`features/top-garden/ink/ink-gate-fragment.ts`）である。
+もう 1 つは、全てのページのヘッダーのロゴ（`components/SiteHeader.astro`）である。
 
 ## Structure
 

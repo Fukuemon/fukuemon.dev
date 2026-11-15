@@ -10,44 +10,44 @@ DADS の指針から外れる規則は、その規則の隣に、DADS が求め�
 画面のコードは、テーマ変数のユーティリティ（`bg-surface`、`text-primary`、`border-border-field` など）で色を書く。  
 名前は、下の表の名前に、Tailwind の接頭辞（`bg-`、`text-`、`border-`）を付けたものになる。
 
-| 種類       | 名前                  | 使う場面                                                                                                                                                                |
-| ---------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 面         | `surface`             | ページの背景                                                                                                                                                            |
-| 面         | `surface-subtle`      | 押せる行とボタンの hover の面、`Switch` と `Checkbox` の hover の面、`TextField` の `boxed` の入力欄の面、`neutral` の状態のラベルの面、HTTP の流れの一覧の選んだ行の面 |
-| 面         | `surface-disabled`    | 無効の入力欄とボタン、`Switch`、`Checkbox` の面                                                                                                                         |
-| 面         | `surface-raised`      | 面の上に重なる面（ダイアログ、メニュー、候補の一覧）。`border-field` の 1px の枠と組にする                                                                              |
-| 面         | `surface-ground`      | コードを動かす画面で、ペインの下に敷く地。ペインの紙の面を、この上に重ねる。コードを動かす画面の外で使わない（ADR-0073）                                                |
-| 面         | `surface-pane`        | コードを動かす画面のペインの紙の面。コードを動かす画面の外で使わない（ADR-0073）                                                                                        |
-| 面         | `surface-pane-subtle` | `surface-pane` の上の hover と選んだ行の面。`density="compact"` か `size="XS"` のコンポーネントが `surface-subtle` の代わりに使う（ADR-0073）                           |
-| 面         | `overlay`             | ダイアログの後ろの幕                                                                                                                                                    |
-| 文字       | `text`                | 本文、見出し、操作のラベル、オフの `Switch` の hover の枠                                                                                                               |
-| 文字       | `text-secondary`      | 補足、日付、図の説明                                                                                                                                                    |
-| 文字       | `text-disabled`       | 無効の操作のラベル。WCAG 1.4.3 の対象外なので、読ませたい文に使わない                                                                                                   |
-| 文字       | `text-inverse`        | `primary` と `danger` の面の上の文字                                                                                                                                    |
-| 枠         | `border`              | 飾りの区切りの罫と、無効の `boxed` の入力欄の下罫。押せるものと、有効の入力欄の境界には使わない                                                                         |
-| 枠         | `border-field`        | 入力欄と押せるものの境界（`boxed` の入力欄では下罫）、重なる面の枠。面に対して 3:1 以上                                                                                 |
-| 操作       | `primary`             | 主のボタンの面、選んだタブと選んだ行の罫、検索の欄のフォーカスの罫、読み込み中の印の罫                                                                                  |
-| 操作       | `primary-hover`       | 主のボタンの hover の面                                                                                                                                                 |
-| 操作       | `primary-surface`     | 木の選んだ項目と、検索の候補の選んだ項目の面                                                                                                                            |
-| 操作       | `link`                | 内部のリンク                                                                                                                                                            |
-| 操作       | `link-visited`        | 訪問済みのリンク。`link` と同じ色を指す                                                                                                                                 |
-| 操作       | `link-external`       | 外部のリンク                                                                                                                                                            |
-| 操作       | `current-page`        | 目次の現在地、サイトのヘッダーのナビの今いるページの筆の線                                                                                                              |
-| フォーカス | `focus`               | フォーカスの表示の墨の輪。画面のコードは `focus-ring` か `focus-ring-inset` のユーティリティで書き、この名前を直に使わない                                              |
-| 状態       | `danger`              | エラーの文と印、データを失う操作のボタンの面、コンソールの error の行の印と罫                                                                                           |
-| 状態       | `danger-hover`        | `danger` のボタンの hover の面                                                                                                                                          |
-| 状態       | `warning`             | 注意の文と印、コンソールの warn の行の印と罫                                                                                                                            |
-| 状態       | `success`             | 成功の文と印                                                                                                                                                            |
-| 状態       | `info`                | 情報の文と印、コードの系統のファイルの印、コンソールの info の行の印                                                                                                    |
-| 状態       | `<状態>-surface`      | `danger`、`warning`、`success`、`info` の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面                                                        |
-| 区別       | `categorical-1`〜`6`  | 意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる。並びの条件は [Design Doc](../DesignDoc.md#http-の流れの色) にある             |
-| 庭         | `garden-mist-day`     | トップの立体の庭の、朝、昼、夕の場面の上端と下端に敷く霞と、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの面                                            |
-| 庭         | `garden-ink-day`      | `garden-mist-day` の上の字とフォーカスの輪（ヘッダーのロゴとリンク、庭の中のボタン、イントロで色が差した後の「飛ばす」のボタン）                                        |
-| 庭         | `garden-edge-day`     | `garden-mist-day` の上の、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの枠                                                                              |
-| 庭         | `garden-mist-night`   | 夜の場面の霞と、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの面                                                                                        |
-| 庭         | `garden-ink-night`    | `garden-mist-night` の上の字とフォーカスの輪                                                                                                                            |
-| 庭         | `garden-edge-night`   | `garden-mist-night` の上の、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの枠                                                                            |
-| コード     | `code-surface` など   | 記事のコードブロック、エディタ、端末の字句。当てる字句の表は [Design Doc の「コードの色」](../DesignDoc.md#コードの色) にある                                           |
+| 種類       | 名前                  | 使う場面                                                                                                                                                                                            |
+| ---------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 面         | `surface`             | ページの背景                                                                                                                                                                                        |
+| 面         | `surface-subtle`      | 押せる行とボタンの hover の面、`Switch` と `Checkbox` の hover の面、`TextField` の `boxed` の入力欄の面、`neutral` の状態のラベルの面、HTTP の流れの一覧の選んだ行の面                             |
+| 面         | `surface-disabled`    | 無効の入力欄とボタン、`Switch`、`Checkbox` の面                                                                                                                                                     |
+| 面         | `surface-raised`      | 面の上に重なる面（ダイアログ、メニュー、候補の一覧）。`border-field` の 1px の枠と組にする                                                                                                          |
+| 面         | `surface-ground`      | コードを動かす画面で、ペインの下に敷く地。ペインの紙の面を、この上に重ねる。コードを動かす画面の外で使わない（ADR-0073）                                                                            |
+| 面         | `surface-pane`        | コードを動かす画面のペインの紙の面。コードを動かす画面の外で使わない（ADR-0073）                                                                                                                    |
+| 面         | `surface-pane-subtle` | `surface-pane` の上の hover と選んだ行の面。`density="compact"` か `size="XS"` のコンポーネントと、コードを動かす画面だけで使う Case のコンポーネントが `surface-subtle` の代わりに使う（ADR-0073） |
+| 面         | `overlay`             | ダイアログの後ろの幕                                                                                                                                                                                |
+| 文字       | `text`                | 本文、見出し、操作のラベル、オフの `Switch` の hover の枠                                                                                                                                           |
+| 文字       | `text-secondary`      | 補足、日付、図の説明                                                                                                                                                                                |
+| 文字       | `text-disabled`       | 無効の操作のラベル。WCAG 1.4.3 の対象外なので、読ませたい文に使わない                                                                                                                               |
+| 文字       | `text-inverse`        | `primary` と `danger` の面の上の文字                                                                                                                                                                |
+| 枠         | `border`              | 飾りの区切りの罫と、無効の `boxed` の入力欄の下罫。押せるものと、有効の入力欄の境界には使わない                                                                                                     |
+| 枠         | `border-field`        | 入力欄と押せるものの境界（`boxed` の入力欄では下罫）、重なる面の枠。面に対して 3:1 以上                                                                                                             |
+| 操作       | `primary`             | 主のボタンの面、選んだタブと選んだ行の罫、検索の欄のフォーカスの罫、読み込み中の印の罫                                                                                                              |
+| 操作       | `primary-hover`       | 主のボタンの hover の面                                                                                                                                                                             |
+| 操作       | `primary-surface`     | 木の選んだ項目と、検索の候補の選んだ項目の面                                                                                                                                                        |
+| 操作       | `link`                | 内部のリンク                                                                                                                                                                                        |
+| 操作       | `link-visited`        | 訪問済みのリンク。`link` と同じ色を指す                                                                                                                                                             |
+| 操作       | `link-external`       | 外部のリンク                                                                                                                                                                                        |
+| 操作       | `current-page`        | 目次の現在地、サイトのヘッダーのナビの今いるページの筆の線                                                                                                                                          |
+| フォーカス | `focus`               | フォーカスの表示の墨の輪。画面のコードは `focus-ring` か `focus-ring-inset` のユーティリティで書き、この名前を直に使わない                                                                          |
+| 状態       | `danger`              | エラーの文と印、データを失う操作のボタンの面、コンソールの error の行の印と罫                                                                                                                       |
+| 状態       | `danger-hover`        | `danger` のボタンの hover の面                                                                                                                                                                      |
+| 状態       | `warning`             | 注意の文と印、コンソールの warn の行の印と罫                                                                                                                                                        |
+| 状態       | `success`             | 成功の文と印                                                                                                                                                                                        |
+| 状態       | `info`                | 情報の文と印、コードの系統のファイルの印、コンソールの info の行の印                                                                                                                                |
+| 状態       | `<状態>-surface`      | `danger`、`warning`、`success`、`info` の薄い面。注意書きと状態のラベルの地、コンソールの warn と error の行の面                                                                                    |
+| 区別       | `categorical-1`〜`6`  | 意味を持たない並びの色分け。HTTP の流れの通信する者に、流れの中で 1 色ずつ固定して当てる。並びの条件は [Design Doc](../DesignDoc.md#http-の流れの色) にある                                         |
+| 庭         | `garden-mist-day`     | トップの立体の庭の、朝、昼、夕の場面の上端と下端に敷く霞と、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの面                                                                        |
+| 庭         | `garden-ink-day`      | `garden-mist-day` の上の字とフォーカスの輪（ヘッダーのロゴとリンク、庭の中のボタン、イントロで色が差した後の「飛ばす」のボタン）                                                                    |
+| 庭         | `garden-edge-day`     | `garden-mist-day` の上の、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの枠                                                                                                          |
+| 庭         | `garden-mist-night`   | 夜の場面の霞と、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの面                                                                                                                    |
+| 庭         | `garden-ink-night`    | `garden-mist-night` の上の字とフォーカスの輪                                                                                                                                                        |
+| 庭         | `garden-edge-night`   | `garden-mist-night` の上の、庭の中のボタンと、イントロで色が差した後の「飛ばす」のボタンの枠                                                                                                        |
+| コード     | `code-surface` など   | 記事のコードブロック、エディタ、端末の字句。当てる字句の表は [Design Doc の「コードの色」](../DesignDoc.md#コードの色) にある                                                                       |
 
 - `<状態>-surface` の上の文字は、同じ状態の色か `text` にする。どちらの組も、コントラストのチェックが確認する。
 - 状態の色相は DADS のとおり、エラーは赤、成功は緑にする。
@@ -150,6 +150,7 @@ ADR-0075: [本文をシステムフォントで描き、Web フォントを記�
 | 動き             | `scroll-fade-end`                                            | `Table`、記事の本文の表と図とコードブロック、`HttpExchangeDetail` の本文、プレイグラウンドの SQL の実行計画を横に送る枠で、右に続きがある間だけ、右端を背景の色で薄くする。薄い色は、右端まで送る手前から消え始める。枠を grid にし、薄い色（`::after`）を中身と同じセルに重ねる。そのため、要素の子を 1 つだけ持つ枠に付け、余白は枠ではなく子に持たせる。薄い色は `surface` の色で、別の面の上では `--fd-scroll-fade-bg` にその面の色を渡す                                                                                                               |
 | 動き             | `scroll-fade-code`                                           | `scroll-fade-end` と並べて付け、薄い色を `code-surface` の色にする。`code-surface` の面の上にある枠で使う                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 動き             | `scroll-fade-pane`                                           | `scroll-fade-end` と並べて付け、薄い色を `surface-pane` の色にする。コードを動かす画面のペインの面の上で横に続く枠に使う（ADR-0073）                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 動き             | `scroll-fade-narrow`                                         | `scroll-fade-end` と並べて付け、薄い色の幅を 48px から 24px に狭める。幅の狭いタブの帯（`PaneTabs` の `bottom`）で、右端に見えているラベルを読めるようにする                                                                                                                                                                                                                                                                                                                                                                                                |
 
 - 余白の段は、DADS が値を決めず使う側に任せているので、Tailwind のデフォルトの段を使う。
   - 出典: [DADS の余白](https://design.digital.go.jp/dads/foundations/spacing/)
