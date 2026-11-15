@@ -116,7 +116,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 例外: スクロールに合わせた動きのうち、`scroll-fade-end` だけは残す。`scroll-fade-end` は右に続きがあることを知らせる印で、途中の濃さを出さず、右端まで送ったときに一度に消える。
   - 確認: レビューで、テーマ変数のファイルの止め方を見る。
   - 確認: 動きを減らす設定で描画した画面を調べるテストは、`packages/e2e/tests/specs/` の次の 2 つ。
-    - `articles/scroll-box-fade.e2e.ts`。記事のページの検証用の原稿を開くので、原稿を消すときは、開く記事を差し替える。
+    - `articles/scroll-box-fade.e2e.ts`。記事 `article-elements/body-and-figure` を開くので、本文を変えるときは、spec が見る語を残す。
     - `settings/site-settings.e2e.ts`
 - `PLAYGROUND-ONLY`: コードを動かす画面だけの面、角丸、高さの条件を、コードを動かす画面と、そのコンポーネントの外で使わない。対象は、`surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact`、`short:` である。`packages/ui` の Base では、`density="compact"` か `size="XS"` のときだけ使う。例外として、コードを動かす画面だけで使う `PageLoading` は、`density` と `size` によらず、覆いの面に `surface-pane` を使う。同じく、コードを動かす画面だけで使う `Select` は、`density` によらず、欄の面に `surface-pane` を使う。
   - ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)

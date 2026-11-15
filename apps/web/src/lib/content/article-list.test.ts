@@ -95,7 +95,7 @@ describe("listArticles", () => {
     ]);
   });
 
-  it("本番の build では、公開していない記事を外す", () => {
+  it("build では、公開していない記事を外す", () => {
     const items = listArticles(
       [
         article("draft", "2026-11-01", { status: "draft" }),
@@ -173,7 +173,7 @@ describe("planSeriesPages", () => {
     ]);
   });
 
-  it("本番の build では、公開していない記事を外す", () => {
+  it("build では、公開していない記事を外す", () => {
     const pages = planSeriesPages(
       [
         article("rdbms/first", "2026-11-01", { order: 1 }),
@@ -213,7 +213,7 @@ describe("planSeriesPages", () => {
     ).toThrow("シリーズの題が無い: unknown");
   });
 
-  it("本番の build では、公開していない記事だけの、index.md の無いディレクトリでは失敗しない", () => {
+  it("build では、公開していない記事だけの、index.md の無いディレクトリでは失敗しない", () => {
     const pages = planSeriesPages(
       [article("unknown/a", "2026-11-01", { order: 1, status: "draft" })],
       [RDBMS],

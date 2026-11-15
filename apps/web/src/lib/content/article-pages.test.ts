@@ -69,7 +69,7 @@ describe("planArticlePages", () => {
     ]);
   });
 
-  it("本番の build では下書きを書き出さず、位置と前後も下書きを飛ばして数える", () => {
+  it("build では下書きを書き出さず、位置と前後も下書きを飛ばして数える", () => {
     const pages = planArticlePages(
       [
         article("rdbms/a", { order: 1 }),
