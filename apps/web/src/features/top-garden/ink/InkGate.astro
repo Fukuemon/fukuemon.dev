@@ -1,19 +1,12 @@
 ---
-import { inkSvg } from "./ink-svg";
-import { signSvg } from "../../../components/sign/sign";
-import signSource from "../../../components/sign/sign.svg?raw";
 import { INTRO, SIGN_LEAD } from "../intro-timing";
 
-const ink = inkSvg().svg;
 // 墨の線を描き始める時刻と、カメラが動き始める時刻。イントロの CSS の遅延が読む
 const timing = `--ink0: ${SIGN_LEAD}ms; --move0: ${INTRO.move0}ms`;
-const sign = signSvg(signSource);
 ---
 
-<div class="ink-gate" style={timing}>
-  <Fragment set:html={ink} />
-  <Fragment set:html={sign} />
-</div>
+<!-- 墨の絵と署名は、最初の訪問のときだけ ink-gate-entry.ts が挿入する -->
+<div class="ink-gate" style={timing}></div>
 
 <style>
   /* 描き終えた後の、止まった絵を出す。トップの最初の訪問では、後ろのイントロの CSS が筆の順に描く */
