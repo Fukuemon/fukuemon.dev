@@ -23,7 +23,7 @@ export const inkSvg = (page: Page) => page.locator(".ink-svg");
 export const profileHeading = (page: Page) =>
   page.getByRole("heading", { level: 1, name: "プロフィール" });
 
-/** ページの本文のランドマーク。WCAG 2.4.1 を、スキップリンクでなくランドマークで満たすことを確かめるので、役割で拾う */
+/** ページの本文のランドマーク。WCAG 2.4.1 をランドマークと見出しで満たすことを確かめるので、役割で拾う */
 export const mainLandmark = (page: Page) => page.getByRole("main");
 
 /** ページの h1。ランドマークと同じく、アクセシビリティツリーでの役割を確かめるので、役割で拾う */
