@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { keepLastRows, runSql, toJsonResponse, toSqlError } from "@fukuemon/sql-runtime";
+import { withLosslessJson } from "@fukuemon/sql-runtime/lossless-json";
 
 import { DB_SOCKET_PATH, SQL_PREFIX, parseSqlRequest } from "./db-protocol";
 
@@ -21,6 +22,7 @@ await new PGLiteSocketServer({
   path: DB_SOCKET_PATH,
   maxConnections: MAX_CONNECTIONS,
 }).start();
+const sqlDb = withLosslessJson(db);
 
 // 前のリクエストの ROLLBACK が終わる前に、次のリクエストを実行しない
 let queue = Promise.resolve();
@@ -32,7 +34,7 @@ createInterface({ input: process.stdin }).on("line", (line) => {
     try {
       send({
         id: request.id,
-        response: toJsonResponse(keepLastRows(await runSql(db, request.sql))),
+        response: toJsonResponse(keepLastRows(await runSql(sqlDb, request.sql))),
       });
     } catch (error) {
       send({ id: request.id, response: { error: toSqlError(error), ms: 0 } });
