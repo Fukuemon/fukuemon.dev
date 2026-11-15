@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: 基盤
-description: Cloudflare の基盤を Terraform で持つ構成。ドキュメントサイトの Access、bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
+description: Cloudflare の基盤を Terraform で持つ構成。ドキュメントサイトの Access を Terraform で持たないこと、bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 status: stable
 governs:
   - infra/
@@ -16,7 +16,7 @@ verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 
 ## Overview
 
-基盤は、Cloudflare の zone、Workers の custom domain、ドキュメントサイトの Access、Terraform の state を置く R2 のバケットを、Terraform のコードで持つ。  
+基盤は、Cloudflare の zone、Workers の custom domain、Terraform の state を置く R2 のバケットを、Terraform のコードで持つ。  
 Worker script と静的アセットの deploy は Wrangler が持ち、この文書の対象に入らない。  
 全体の構成は [Design Doc](../docs/design/DesignDoc.md#components) にある。  
 ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-workers-terraform-wrangler-boundary.md)
@@ -28,7 +28,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - `infra/bootstrap/` と `infra/cloudflare/` の分け方
 - R2 の state backend の設定
 - deploy と apply の流れ
-- ドキュメントサイトの Access の構成
+- ドキュメントサイトの Access を Terraform で持たないことと、custom domain を作る順序
 
 持たないものは次のとおり。
 
@@ -61,7 +61,7 @@ flowchart TD
     dwd --> docs["ドキュメントサイトの Worker + assets"]
     manual["運用者が手動で起動（mode=plan、次に mode=apply）"] --> env["environment protection rules"]
     env -->|"apply 用の token"| tf["terraform plan / apply"]
-    tf --> base["Zone / custom domain / Access"]
+    tf --> base["Zone / custom domain"]
     ci -. "触らない" .-x base
     cci -. "触らない" .-x base
     pci -. "触らない" .-x base
@@ -82,13 +82,13 @@ Cloudflare は新しいプロジェクトに JSONC を勧めており、一部�
 
 ### bootstrap と本体
 
-| ディレクトリ        | 対象                                   | state の置き場                  | 実行する人               |
-| ------------------- | -------------------------------------- | ------------------------------- | ------------------------ |
-| `infra/bootstrap/`  | state 用の R2 のバケット               | 手元（commit しない）           | 運用者が手元で 1 回      |
-| `infra/cloudflare/` | zone、Workers の custom domain、Access | R2（`infra/bootstrap/` が作る） | apply の workflow か手元 |
+| ディレクトリ        | 対象                           | state の置き場                  | 実行する人               |
+| ------------------- | ------------------------------ | ------------------------------- | ------------------------ |
+| `infra/bootstrap/`  | state 用の R2 のバケット       | 手元（commit しない）           | 運用者が手元で 1 回      |
+| `infra/cloudflare/` | zone、Workers の custom domain | R2（`infra/bootstrap/` が作る） | apply の workflow か手元 |
 
 `infra/bootstrap/` を CI から apply しない。state を手元に置く前提が成り立たなくなる。  
-CI は `infra:check` で、fmt の確認、init（backend なし）、validate、provider を mock にした test だけを実行する。
+CI は `infra:check` で、fmt の確認、init（backend なし）、validate だけを実行する。
 
 zone は Terraform で作らない。  
 Cloudflare Registrar がドメインを取得したときに作った zone を、`zone.tf` の `import` ブロックが、state にまだないときに取り込む。  
@@ -98,13 +98,12 @@ Cloudflare Registrar がドメインを取得したときに作った zone を�
 
 ### ドキュメントサイトの Access
 
-`docs.<zone>` に、Access のアプリケーション（`self_hosted`）と、メールアドレスで通すポリシーを置く。  
-ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#2-アクセスの認証)
+`docs.<zone>` の Access のアプリケーションとポリシーは、Terraform で持たない。  
+運営者がダッシュボードで設定する。  
+ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 
-- ポリシーは、アプリケーションの中に書かず、`cloudflare_zero_trust_access_policy` として作り、アプリケーションの `policies` から参照する。
-- 許可するメールアドレスは、変数 `docs_allowed_emails` で受け取る。変数に `sensitive = true` を付け、plan のログに出さない。
-- custom domain の `docs` は、Access のアプリケーションに `depends_on` を持つ。同じ apply で作るときに、ホスト名が認証なしで開ける時間を作らないためである。
-- Zero Trust の組織は Terraform で持たない。最初の 1 回だけ、運用者がダッシュボードで作る。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
+- Terraform は、custom domain の `docs` だけを持つ。Terraform では、Access と custom domain を作る順序を制御しない。
+- custom domain は、Access より先に作ってよい。Access を掛けるまでは、ドキュメントサイトを誰でも開ける。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 - Access は `docs.<zone>` のホスト名にだけ掛かる。Worker の `workers_dev` と `preview_urls` を `false` にして、ほかの URL を閉じる。
 
 ### state backend
@@ -142,15 +141,14 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `infra/cloudflare/provider.tf`: provider と state backend
 - `infra/cloudflare/zone.tf`: zone の取り込み
 - `infra/cloudflare/workers_domain.tf`: Workers の custom domain。サイトの apex（`site`）、カタログの `design.<zone>`（`catalog`）、プレイグラウンドの `play.<zone>`（`playground`）、ドキュメントサイトの `docs.<zone>`（`docs`）
-- `infra/cloudflare/access.tf`: ドキュメントサイトの Access のアプリケーションとポリシー（`docs`）
-- `infra/cloudflare/vars.tf`: 変数。Worker の名前の `worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` を持つ。ほかに `account_id`、`zone_id`、`zone_name`、`docs_allowed_emails` を持つ。
+- `infra/cloudflare/vars.tf`: 変数。Worker の名前の `worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` を持つ。ほかに `account_id`、`zone_id`、`zone_name` を持つ。
 - `apps/web/wrangler.jsonc`: サイトの Worker の設定。`env.preview` に、プレビューの Worker（`fukuemon-dev-preview`）の設定を置く。プレビューの Worker は custom domain を持たず、workers.dev の URL で公開する
 - `packages/ui/wrangler.jsonc`: カタログの Worker の設定。`workers_dev` と `preview_urls` を切り、`design.<zone>` だけで公開する
 - `apps/playground/wrangler.jsonc`: プレイグラウンドの Worker の設定。`workers_dev` と `preview_urls` を切り、`play.<zone>` だけで公開する
 - `apps/docs-site/wrangler.jsonc`: ドキュメントサイトの Worker の設定。`workers_dev` と `preview_urls` を切り、`docs.<zone>` だけで公開する
 
 変数の値は、手元では各ディレクトリの `terraform.tfvars` に置き、commit しない。  
-CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name`、`TF_VAR_docs_allowed_emails` を渡す。  
+CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name` を渡す。  
 値は secret と variable から取る。  
 `worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` と、bootstrap の `location` はデフォルト値を持つ。
 
@@ -158,7 +156,7 @@ CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`T
 
 - `pnpm run infra:init`、`infra:plan`、`infra:apply`: `infra/cloudflare/` を対象にする
 - `pnpm run infra:bootstrap:init`、`infra:bootstrap:apply`: `infra/bootstrap/` を対象にする
-- `pnpm run infra:check`: `terraform fmt -check`、`terraform validate`、`terraform test` を、backend を無効にして実行する。credential は要らない。`terraform test` は provider を mock にし、変数の validation を確認する
+- `pnpm run infra:check`: `terraform fmt -check` と `terraform validate` を、backend を無効にして実行する。credential は要らない
 - `pnpm run check:worker-name`: 4 つの Worker の名前が、`wrangler.jsonc` と `vars.tf` で一致するかを確認する。
   - `apps/web/wrangler.jsonc` の `name` と `worker_name` のデフォルト値を比べる
   - `packages/ui/wrangler.jsonc` の `name` と `catalog_worker_name` のデフォルト値を比べる
