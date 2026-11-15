@@ -85,7 +85,7 @@ const row = "border-t border-border py-2";
         {
           links.map(({ label, href, path }) => (
             <a
-              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring"
+              class="profile-link inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring"
               href={href}
               aria-label={label}
             >
@@ -212,6 +212,13 @@ const row = "border-t border-border py-2";
 
   :global(html.stage-on) [data-garden-card] a {
     color: var(--scene-link);
+  }
+
+  /* 和紙は縮んで映るので、44px の押せる範囲は 44px より小さく映る。押せる範囲を 52px にし、負の margin で並びと和紙の高さを変えない */
+  :global(html.stage-on) .profile-link {
+    min-inline-size: 3.25rem;
+    min-block-size: 3.25rem;
+    margin: -0.25rem;
   }
 
   :global(html.stage-on) [data-garden-card] :focus-visible {

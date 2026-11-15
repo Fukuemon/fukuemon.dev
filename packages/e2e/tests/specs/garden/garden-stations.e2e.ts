@@ -11,6 +11,7 @@ import {
   mainCards,
   navButtons,
   notCurrentCards,
+  profileLinks,
   stations,
   styledCards,
 } from "../../selectors/garden";
@@ -166,6 +167,19 @@ test.describe("トップの庭", () => {
         expect(paper.x + paper.width).toBeLessThanOrEqual(390);
         expect(paper.y + paper.height).toBeLessThanOrEqual(await navTop(page));
       }
+    });
+
+    // 和紙は縮んで映るので、44px の押せる範囲は 44px より小さく映る
+    test("プロフィールの GitHub と X のリンクが、44px 四方以上の大きさで映ること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await expectAt(page, "profile");
+      await expect(profileLinks(page)).toHaveCount(2);
+      const boxes = await profileLinks(page).evaluateAll((els) =>
+        els.map((el) => el.getBoundingClientRect()),
+      );
+      expect(boxes.filter((b) => b.width < 44 || b.height < 44)).toStrictEqual([]);
     });
 
     // 和紙が伸びると、カメラが和紙を画面に収めようと引き、字と押せる範囲が小さく映る

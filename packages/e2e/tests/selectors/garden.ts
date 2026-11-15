@@ -30,6 +30,10 @@ export const profileHeading = (page: Page) =>
 export const careerSummaries = (page: Page) =>
   page.getByTestId("garden-card-career").locator("summary");
 
+/** プロフィールの和紙の GitHub と X のリンク。アイコンだけのリンクに名前が付いていることも確かめるので、役割と名前で拾う */
+export const profileLinks = (page: Page) =>
+  page.getByTestId("garden-card-profile").getByRole("link", { name: /^(GitHub|X)$/ });
+
 /** ページの本文のランドマーク。WCAG 2.4.1 をランドマークと見出しで満たすことを確かめるので、役割で拾う */
 export const mainLandmark = (page: Page) => page.getByRole("main");
 
