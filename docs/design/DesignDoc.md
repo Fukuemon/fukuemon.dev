@@ -171,7 +171,6 @@ ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-work
 | `play.fukuemon.dev`   | プレイグラウンドの全てのツール                 | 誰でも                                                                       |
 | `design.fukuemon.dev` | カタログ                                       | 誰でも                                                                       |
 | `docs.fukuemon.dev`   | ドキュメントサイト                             | 誰でも。検索の結果に載せるかを決めるまで、検索エンジンにインデックスさせない |
-| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない                                   |
 
 ドキュメントサイトのビルドの方法と、公開する URL は、次の ADR にある。  
 ADR-0032: [ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する](../adr/0032-docs-site-zensical.md)

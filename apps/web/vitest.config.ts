@@ -32,7 +32,6 @@ export default defineConfig({
         "src/lib/playground/project-pages.ts",
         "src/lib/playground/rehype-playground.ts",
         "scripts/lighthouse-judge.ts",
-        "scripts/preview-assets.ts",
         "src/lib/rehype-fence.ts",
         "src/lib/rehype-ja-linebreak.ts",
         "src/lib/rehype-mermaid.ts",
