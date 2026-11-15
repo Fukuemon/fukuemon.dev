@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { check, intro, step } from "../../fixtures/caption";
+import { mainLandmark, pageHeadings } from "../../selectors/garden";
 import { FIRST_ARTICLE_TITLE } from "../../fixtures/articles";
 
 test.describe("記事の一覧", () => {
@@ -19,6 +20,14 @@ test.describe("記事の一覧", () => {
     });
     await check(page, "ならば 記事のページの見出しが、一覧の題と同じである", async () => {
       await expect(page.getByTestId("article-title")).toHaveText(FIRST_ARTICLE_TITLE);
+    });
+  });
+
+  test("記事の一覧は、main のランドマークと h1 を 1 つずつ持つこと", async ({ page }) => {
+    await page.goto("/articles");
+    await check(page, "ならば main のランドマークと h1 が 1 つずつある", async () => {
+      await expect(mainLandmark(page)).toHaveCount(1);
+      await expect(pageHeadings(page)).toHaveCount(1);
     });
   });
 });

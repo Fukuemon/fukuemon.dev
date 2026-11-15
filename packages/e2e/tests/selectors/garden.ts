@@ -25,3 +25,9 @@ export const profileHeading = (page: Page) =>
 
 /** 庭を出さないときの背景の霞。3 つの飾りの要素で testid を持たないので、背景の testid の中を要素名で拾う */
 export const backgroundHaze = (page: Page) => page.getByTestId("garden-background").locator("i");
+
+/** ページの本文のランドマーク。WCAG 2.4.1 をランドマークと見出しで満たすことを確かめるので、役割で拾う */
+export const mainLandmark = (page: Page) => page.getByRole("main");
+
+/** ページの h1。ランドマークと同じく、アクセシビリティツリーでの役割を確かめるので、役割で拾う */
+export const pageHeadings = (page: Page) => page.getByRole("heading", { level: 1 });
