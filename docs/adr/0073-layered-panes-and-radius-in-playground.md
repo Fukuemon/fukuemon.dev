@@ -10,13 +10,13 @@
 
 - トークンを、プリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、テーマの組をコントラストのチェックで確認すると決めている。
   - ADR-0024: [トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする](0024-tokens-of-fukuemon-dev.md)
-- 罫で区切る版面を保ち、操作できる要素と重なる面の角を 2px で丸めると決めている。ふだんの画面が使う角丸の名前は、テーマ変数の `rounded-control` の 1 つだけである。Tabs のタブ、Notice、Table、コードブロックなどの角は丸めない。重なる面は、`surface-raised` の面、1px の枠、ずらした影を組にして示す。
-  - ADR-0028: [操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする](0028-radius-shadow-and-brush-motion.md)
+- 罫で区切る版面を保ち、操作できる要素と重なる面の角を丸めると決めている。値は ADR-0028 が決める。ふだんの画面が使う角丸の名前は、テーマ変数の `rounded-control` の 1 つだけである。Tabs のタブ、Notice、Table、コードブロックなどの角は丸めない。重なる面は、`surface-raised` の面、1px の枠、ずらした影を組にして示す。
+  - ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄にステッチを引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする](0028-radius-shadow-and-brush-motion.md)
 - コードを動かす画面は、文字と押せる領域を詰めた画面で、記事の本文と読み方が違う。触る端末では、押せる領域を 44px にする。
   - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで小さくし、押せる領域をマウスで押す端末は 24×24 CSS px、触る端末は 44×44 CSS px にする](0062-dense-text-and-targets-in-playground.md)
 - フォーカスの表示は墨の 2px の輪で、詰めたペインでは要素の内側に引くと決めている。
   - ADR-0061: [フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする](0061-sumi-focus-ring.md)
-  - ADR-0066: [コードを動かす画面の詰めたペイン、木の行の中の名前の欄、`SplitPane` の仕切りで、フォーカスの輪を要素の内側に引く](0066-inset-focus-ring-in-dense-panes.md)
+  - ADR-0079: [コードを動かす画面の詰めたペイン、木の行の中の名前の欄、`SplitPane` の仕切りで、フォーカスの輪を要素の内側に引く](0079-inset-focus-ring-in-dense-panes.md)
 - 狭い配置（ファイルのドロワー、下のタブ、左の縦のタブ、記事の枠の上のタブ）と PC の配置を分ける。
   - ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](0072-short-landscape-layout-in-playground.md)
 - 今のプレイグラウンドの画面は、ペインごとに四方の 1px の枠を引き、その中の見出しの帯とタブの帯に罫を引き、ペインの間に仕切りの罫を引く。PC の画面では、仕切りの押せる幅 44px とペインの余白で、ペインの間が約 52px 空く。
@@ -57,9 +57,9 @@
     - ダークの `sumi-750` は `surface-disabled` と同じ値である。hover の面と無効の面は、面の色では見分けられないので、文字の色（`text-disabled`）で見分ける。
 - 角
   - ペインの面を 10px、ペインの中の操作できる要素を 6px で丸める。下のタブの帯、左の縦のタブの帯、ファイルのドロワーは 14px で丸める。紙の面の重なりを、角の丸めで見分けるためである。
-  - テーマ変数に、`rounded-pane`（10px）、`rounded-sheet`（14px）、`rounded-control-compact`（6px）を足す。`rounded-control`（2px）の値は変えない。
+  - テーマ変数に、`rounded-pane`（10px）、`rounded-sheet`（14px）、`rounded-control-compact`（6px）を足す。`rounded-control` の値は ADR-0028 が決める。
   - `rounded-control-compact` は、`packages/ui` のコンポーネントが `density="compact"` のとき（Button は `size="XS"` のとき）に、`rounded-control` の代わりに使う。対象は、Button、IconButton、`boxed` の TextField、TreeView の行、Disclosure の要約、タブの閉じるボタン、ActionMenu の開くボタン、Switch、Checkbox である。値を上書きせずに別の名前にし、既にある `density` と `size` の props で切り替えると、使う所をコードで追えるためである。ADR-0062 の compact のトークンと同じ分け方である。
-  - Dialog、ActionMenu のメニューの面、エディタの補完の一覧は、重なる面なので 2px のままにする。ページのヘッダの要素も 2px のままにする。
+  - Dialog、ActionMenu のメニューの面、エディタの補完の一覧は、重なる面なので `rounded-control` のままにする。ページのヘッダの要素も `rounded-control` のままにする。
   - ADR-0028 が丸めないと決めた要素（Tabs のタブ、下罫だけの検索の欄、メニューの項目、Notice、StatusBadge、Table、コードブロック）は、今のとおり丸めない。
   - フォーカスの輪は、要素の角の丸めに沿わせる。
 - 重なる面
@@ -78,7 +78,7 @@
   - マウスで押す端末の PC の配置では、ペインの間を 8px にする。面の間に地が見えないと、紙を重ねたように見えないためである。
   - 分割の幅を変える `SplitPane` の仕切りは、ペインの間の余白に置く。
     - 線はふだん出さず、マウスを載せたときに 2px の線を出す。
-    - 仕切りの押せる幅は [ADR-0062](0062-dense-text-and-targets-in-playground.md) が、フォーカスの輪は [ADR-0066](0066-inset-focus-ring-in-dense-panes.md) が決める。
+    - 仕切りの押せる幅は [ADR-0062](0062-dense-text-and-targets-in-playground.md) が、フォーカスの輪は [ADR-0079](0079-inset-focus-ring-in-dense-panes.md) が決める。
   - 触る端末（`pointer: coarse`）で PC の配置になるとき（横に向けたタブレット）は、ペインの間を 44px にする。触る端末の仕切りの押せる幅（44px）にそろえるためである。
 - 記事の埋め込み
   - 記事の枠の中で、ペインを 1 つずつ出す配置では、地を出さず、ペインの面を枠いっぱいに置き、角を丸めない。記事の枠と面の縁が、二重の線に見えないようにするためである。枠の上のタブは、ペインの面の上に置き、タブの帯の下の罫だけを引く。

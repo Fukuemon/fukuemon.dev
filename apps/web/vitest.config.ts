@@ -8,9 +8,11 @@ export default defineConfig({
       // ファイル単位で明示列挙する。列挙し忘れると何もゲートしない
       include: [
         "src/components/site-nav.ts",
+        "src/components/site-settings/settings.ts",
         "src/lib/subset-fonts.ts",
         "src/features/top-garden/ink/brush.ts",
         "src/features/top-garden/ink/ink-art.ts",
+        "src/features/top-garden/ink/ink-gate-fragment.ts",
         "src/features/top-garden/ink/ink-svg.ts",
         "src/features/top-garden/ink/ink-trees.ts",
         "src/features/top-garden/layout.ts",

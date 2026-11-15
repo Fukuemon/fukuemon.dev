@@ -1,5 +1,5 @@
 import type { BackendInstance, BackendProcess } from "./backend";
-import { type RecordSource, withoutRecordLines } from "./record-lines";
+import { type RecordKind, type RecordSource, withoutRecordLines } from "./record-lines";
 import { createOutputLog } from "./output";
 import { type WritableStore, createStore } from "./store";
 import type { NodeRuntime, ProcessHandle, ProcessInfo } from "./types";
@@ -53,7 +53,7 @@ function trackProcess(
 /** 起動したプロセスの一覧と、出力の記録。終了したプロセスも一覧に残し、出力を読める。 */
 export function createProcesses(
   instance: BackendInstance,
-  onRecordLine: (line: string, source: RecordSource) => void,
+  onRecordLine: (line: string, source: RecordSource, kind: RecordKind) => void,
 ): {
   api: NodeRuntime["processes"];
   dispose: () => void;
@@ -63,7 +63,7 @@ export function createProcesses(
   const track = (process: BackendProcess, info: Pick<ProcessInfo, "kind" | "name">) =>
     trackProcess(
       { list, tracked },
-      withoutRecordLines(process, (l) => onRecordLine(l, info)),
+      withoutRecordLines(process, (line, kind) => onRecordLine(line, info, kind)),
       info,
     );
 

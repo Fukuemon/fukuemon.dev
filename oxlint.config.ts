@@ -87,11 +87,15 @@ const GARDEN_PREFIX =
   "^(~/features/top-garden/|(\\.\\./)+(features/)?(top-garden/)?|\\./(\\.\\./)+)";
 
 // stage/ の関数は文字列にして head の inline script に埋め込むので、scene/ のコードを import できない。
-// 例外は、TopStageScript.astro が読む場面のバンドルの URL (?worker&url) だけ
+// 例外は、TopStageScript.astro が読む場面のバンドルと、墨の絵と署名のファイルの URL (?worker&url) だけ
 const topGardenSubdirs: SubdirRestriction[] = [
   {
     name: "ink",
     patterns: [
+      {
+        regex: `${GARDEN_PREFIX}stage(/|$)`,
+        message: `ink/ から stage/ へは import しない (${TOP_GARDEN_DESIGN_DOC})`,
+      },
       {
         regex: `${GARDEN_PREFIX}scene(/|$)`,
         message: `ink/ と scene/ は互いを import しない (${TOP_GARDEN_DESIGN_DOC})`,
@@ -119,6 +123,10 @@ const topGardenSubdirs: SubdirRestriction[] = [
         // 先読みが無いので、接尾辞の無い import と、?worker&url 以外の接尾辞を止める
         regex: `${GARDEN_PREFIX}scene(/[^?]*)?$|${GARDEN_PREFIX}scene(/.*)?\\?(?:$|[^w]|w(?:$|[^o])|wo(?:$|[^r])|wor(?:$|[^k])|work(?:$|[^e])|worke(?:$|[^r])|worker(?:$|[^&])|worker&(?:$|[^u])|worker&u(?:$|[^r])|worker&ur(?:$|[^l])|worker&url.)`,
         message: `stage/ から scene/ へは場面のバンドルの URL (?worker&url) だけを import する (${TOP_GARDEN_DESIGN_DOC})`,
+      },
+      {
+        regex: `${GARDEN_PREFIX}ink(/[^?]*)?$|${GARDEN_PREFIX}ink(/.*)?\\?(?:$|[^w]|w(?:$|[^o])|wo(?:$|[^r])|wor(?:$|[^k])|work(?:$|[^e])|worke(?:$|[^r])|worker(?:$|[^&])|worker&(?:$|[^u])|worker&u(?:$|[^r])|worker&ur(?:$|[^l])|worker&url.)`,
+        message: `stage/ から ink/ へは墨の絵と署名のファイルの URL (?worker&url) だけを import する (${TOP_GARDEN_DESIGN_DOC})`,
       },
     ],
   },
@@ -325,6 +333,27 @@ export default defineConfig({
     {
       files: ["packages/node-runtime/src/webcontainer/**"],
       rules: { "no-restricted-imports": ["error", { patterns: noPackagesToApps }] },
+    },
+    {
+      // guest/ は実行環境の中の Node で動き、ブラウザのコードと分ける (apps/playground/DesignDoc.md)
+      files: ["packages/node-runtime/src/guest/**"],
+      rules: restrict(
+        [
+          {
+            name: "@fukuemon/sql-runtime/worker",
+            message:
+              "guest/ は、PGlite を Web Worker で動かす実装を import しない (apps/playground/DesignDoc.md)",
+          },
+        ],
+        [
+          ...noPackagesToApps,
+          {
+            regex: "^\\.\\./",
+            message:
+              "guest/ は、node-runtime/ の直下と webcontainer/ を import しない (apps/playground/DesignDoc.md)",
+          },
+        ],
+      ),
     },
     {
       // decorator の useEffect は Storybook の hook で、React の hook の規則が当たらない (context/conventions.md)

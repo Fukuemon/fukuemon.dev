@@ -8,6 +8,7 @@ import * as actionMenu from "../base/ActionMenu/ActionMenu.stories";
 import * as button from "../base/Button/Button.stories";
 import * as disclosure from "../base/Disclosure/Disclosure.stories";
 import * as iconButton from "../base/IconButton/IconButton.stories";
+import * as select from "../base/Select/Select.stories";
 import * as splitPane from "../base/SplitPane/SplitPane.stories";
 import * as tabs from "../base/Tabs/Tabs.stories";
 import * as textField from "../base/TextField/TextField.stories";
@@ -19,7 +20,7 @@ import * as httpExchangeList from "../case/HttpExchangeList/HttpExchangeList.sto
 import * as previewFrame from "../case/PreviewFrame/PreviewFrame.stories";
 
 const TARGETS =
-  "button, a[href], input, summary, [role=tab], [role=treeitem], [role=menuitem], [role=separator][tabindex]";
+  "button, a[href], input, select, summary, [role=tab], [role=treeitem], [role=menuitem], [role=separator][tabindex]";
 
 /** 見えている押せる要素の数と、そのうち幅か高さが 44px に届かないものの名前と大きさを返す。 */
 const measureTargets = (root: ParentNode) => {
@@ -43,6 +44,7 @@ const cases: [string, ComponentType][] = [
   ["TreeView の body-compact", composeStories(treeView).CompactBody],
   ["Disclosure の compact", composeStories(disclosure).Compact],
   ["TextField の compact", composeStories(textField).Compact],
+  ["Select の compact", composeStories(select).Compact],
   ["ActionMenu の compact", composeStories(actionMenu).Compact],
   ["Tabs の compact", composeStories(tabs).Compact],
   ["ConsoleEntryList", composeStories(consoleEntryList).Default],

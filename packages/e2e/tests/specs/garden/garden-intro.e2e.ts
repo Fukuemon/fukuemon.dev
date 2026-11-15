@@ -17,7 +17,7 @@ test.beforeEach(() => test.slow());
 test.use({ viewport: { width: 480, height: 270 }, colorScheme: "light" });
 
 /**
- * 開いてから色を差すまでの下限（ms）。apps/web の intro-timing.ts の INK_END（5600）から、
+ * 墨の絵と署名を挿入してから、色を差すまでの下限（ms）。apps/web の intro-timing.ts の INK_END（5600）から、
  * タイマーの誤差と、mark の時刻を ms に丸める誤差を見込んだ 10ms を引いた値である
  */
 const INK_FLOOR = 5590;
@@ -32,6 +32,8 @@ const skipButton = (page: Page) => page.getByTestId("garden-skip");
 const stage = (page: Page) => page.getByTestId("garden-stage");
 /** 場面のバンドル */
 const BUNDLE = "**/_astro/garden-entry-*.js";
+/** 墨の絵と署名のファイル */
+const INK = "**/_astro/ink-gate-entry-*.js";
 
 interface ClassLog {
   __classes: string[];
@@ -115,7 +117,7 @@ test("初めての端末で開くと、墨の絵の後に色を差して門を�
   const m = await marks(page);
   // 墨の絵を描き終える 5.6 秒より前には色を差さず、色を差し始めてから 4.5 秒より前には終えない。
   // CI の SwiftShader はメインスレッドを止めて時刻が後ろへずれるので、時刻の上限は見ない。上限は GPU のあるローカル環境で測る
-  expect(m["garden-enter"]).toBeGreaterThanOrEqual(INK_FLOOR);
+  expect(m["garden-enter"]! - m["ink-ready"]!).toBeGreaterThanOrEqual(INK_FLOOR);
   expect(m["garden-intro-done"]! - m["garden-enter"]!).toBeGreaterThanOrEqual(4500);
   await expectGardenEnd(page);
 });
@@ -133,7 +135,9 @@ test("同じ端末で 2 回目に開くと、イントロを出さず、カメ�
   expect(await marks(page)).not.toHaveProperty("garden-enter");
 });
 
-test("動きを減らす設定で開くと、イントロも庭も出さず、ふつうのページを出す", async ({ page }) => {
+test("動きを減らす設定で、表示の設定を保存せずに開くと、イントロも庭も出さず、ふつうのページを出す", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(html(page)).not.toHaveClass(/stage-on|intro/);
@@ -422,7 +426,7 @@ test.describe("場面の準備が遅いとき", () => {
     expect({
       delayed: m["garden-scene-ready"]! >= 2000,
       afterReady: m["garden-enter"]! >= m["garden-scene-ready"]!,
-      afterInk: m["garden-enter"]! >= INK_FLOOR,
+      afterInk: m["garden-enter"]! - m["ink-ready"]! >= INK_FLOOR,
     }).toStrictEqual({ delayed: true, afterReady: true, afterInk: true });
   });
 });
@@ -430,7 +434,7 @@ test.describe("場面の準備が遅いとき", () => {
 test.describe("イントロの途中でふつうのページに戻る", () => {
   const INTRO_CLASSES = /\b(stage-on|intro|enter|scene-ready|garden-ready|no-anim)\b/;
 
-  test("文が出てからカメラが止まるまでに「文だけで読む」を押すと、ふつうのページに戻り、イントロの class が後から付かない", async ({
+  test("文が出てからカメラが止まるまでに表示の設定で庭の表示をオフにすると、ふつうのページに戻り、イントロの class が後から付かない", async ({
     page,
   }) => {
     await recordClasses(page);
@@ -440,11 +444,11 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
         const root = document.documentElement;
         if (!root.classList.contains("garden-ready") || !root.classList.contains("intro")) return;
         observer.disconnect();
-        document.querySelector<HTMLButtonElement>("[data-garden-plain]")?.click();
+        document.querySelector<HTMLButtonElement>('[data-setting="garden"]')?.click();
       }).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
     });
     await page.goto("/");
-    await expect(heading(page)).toBeFocused();
+    await expect(html(page)).toHaveAttribute("data-garden", "off");
     // 押した時点で、まだイントロの途中だった
     const states = await page.evaluate(() => (window as unknown as ClassLog).__classes);
     const left = states.findIndex((s) => !s.split(" ").includes("stage-on"));
@@ -542,5 +546,68 @@ test.describe("場面のバンドル", () => {
     await expect(html(page)).not.toHaveClass(/stage-on|intro/);
     await expect(inkSvg(page)).toBeHidden();
     await expect(heading(page)).toBeVisible();
+  });
+});
+
+test.describe("墨の絵と署名のファイル", () => {
+  test("トップの HTML に、墨の絵と署名の SVG を入れない", async ({ page }) => {
+    const body = await (await page.request.get("/")).text();
+    expect(body).not.toContain("ink-svg");
+    expect(body).toMatch(/class="ink-gate[^"]*"[^>]*><\/div>/);
+  });
+
+  test("初めての訪問で読み込みに失敗すると、庭を止めてふつうのページを出す", async ({ page }) => {
+    await page.route(INK, (route) => route.abort());
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/ink-failed/);
+    await expect(html(page)).not.toHaveClass(/stage-on|intro/);
+    await expect(inkSvg(page)).toBeHidden();
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("初めての訪問で 404 の HTML が返っても、ふつうのページを出す", async ({ page }) => {
+    await page.route(INK, (route) =>
+      route.fulfill({ status: 404, contentType: "text/html", body: "<p>not found</p>" }),
+    );
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/ink-failed/);
+    await expect(html(page)).not.toHaveClass(/stage-on|intro/);
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("初めての訪問で、挿入しないファイルが届くと、6 秒で庭を止めてふつうのページを出す", async ({
+    page,
+  }) => {
+    // 読み込みは成功するが、ink-ready を付けない。場面の準備ができた後に、6 秒の判定が ink-failed を付ける
+    await page.route(INK, (route) =>
+      route.fulfill({ status: 200, contentType: "text/javascript", body: "" }),
+    );
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/ink-failed/);
+    await expect(html(page)).not.toHaveClass(/stage-on|intro/);
+    expect(await page.evaluate(() => performance.now())).toBeGreaterThanOrEqual(6000);
+    await expect(inkSvg(page)).toHaveCount(0);
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("墨の絵と署名のファイルが 7 秒遅れて届いても、ふつうのページを出したままにする", async ({
+    page,
+  }) => {
+    await delayResponse(page, INK, 7_000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(html(page)).not.toHaveClass(/stage-on/);
+    await expect(inkSvg(page)).toHaveCount(0);
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("2 回目の訪問では、墨の絵と署名のファイルを読み込まない", async ({ page }) => {
+    await seenBefore(page);
+    const requested: string[] = [];
+    page.on("request", (req) => {
+      if (/ink-gate-entry/.test(req.url())) requested.push(req.url());
+    });
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/garden-ready/);
+    expect(requested).toStrictEqual([]);
   });
 });

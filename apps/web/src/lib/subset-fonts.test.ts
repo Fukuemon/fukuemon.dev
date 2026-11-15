@@ -228,6 +228,7 @@ describe("ビルド後の作り直し", () => {
     js?: string;
     pageCss?: string;
     extraFile?: string;
+    options?: Parameters<typeof subsetFonts>[1];
   }
 
   async function build({
@@ -237,6 +238,7 @@ describe("ビルド後の作り直し", () => {
     js = "",
     pageCss = "",
     extraFile = "",
+    options,
   }: Build) {
     dir = await mkdtemp(join(tmpdir(), "subset-fonts-"));
     await mkdir(join(dir, "_astro"));
@@ -247,7 +249,7 @@ describe("ビルド後の作り直し", () => {
     await writeFile(join(dir, "_astro/a.AAAAAAAA.woff2"), "a");
     await writeFile(join(dir, "_astro/b.AAAAAAAA.woff2"), "b");
     if (extraFile !== "") await writeFile(join(dir, "_astro", extraFile), "x");
-    const hook = subsetFonts(FAMILY).hooks["astro:build:done"]!;
+    const hook = subsetFonts(FAMILY, options).hooks["astro:build:done"]!;
     await hook({ dir: pathToFileURL(`${dir}/`), logger: { info: vi.fn(), warn } } as never);
   }
 
@@ -258,17 +260,17 @@ describe("ビルド後の作り直し", () => {
   );
   const both = face("a", "U+3042") + face("b", "U+3044");
 
-  it("使う字を含むスライスだけを、使う字で作り直す", async () => {
+  it("使う字を含む分割だけを、使う字で作り直す", async () => {
     await build({ html: heading("あ"), css: both });
 
     expect(texts()).toStrictEqual(["あ"]);
   });
 
-  it("作り直したスライスを、中身の hash の名前で置く", async () => {
+  it("作り直した分割を、中身の hash の名前で置く", async () => {
     await build({ html: heading("あ"), css: both });
 
     expect((await readdir(join(dir, "_astro"))).sort()).toStrictEqual(
-      ["app.js", "b.AAAAAAAA.woff2", "page.css", "site.css", renamed].sort(),
+      ["app.js", "page.css", "site.css", renamed].sort(),
     );
   });
 
@@ -276,9 +278,7 @@ describe("ビルド後の作り直し", () => {
     await build({ html: heading("あ"), css: both });
 
     const next = face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed);
-    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(
-      next + face("b", "U+3044") + RULE,
-    );
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(next + RULE);
   });
 
   it("HTML に埋め込んだ style の content の字も使う", async () => {
@@ -297,7 +297,7 @@ describe("ビルド後の作り直し", () => {
     expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe(other);
   });
 
-  it("複数の CSS に同じスライスがあっても、1 回だけ作り直す", async () => {
+  it("複数の CSS に同じ分割があっても、1 回だけ作り直す", async () => {
     await build({ html: heading("あ"), css: face("a", "U+3042"), pageCss: face("a", "U+3042") });
 
     expect(subsetFont).toHaveBeenCalledTimes(1);
@@ -309,19 +309,133 @@ describe("ビルド後の作り直し", () => {
     expect(texts()).toStrictEqual(["あ"]);
   });
 
-  it("ワイルドカードのスライスにも、使う字を渡す", async () => {
+  it("ワイルドカードの分割にも、使う字を渡す", async () => {
     await build({ html: heading("Aあ—"), css: face("a", "U+??,U+2000-206F") });
 
     expect(texts()).toStrictEqual(["A—"]);
   });
 
-  it("使う字がないスライスは、そのまま残す", async () => {
-    await build({ html: "<p>z</p>", css: face("a", "U+3042") });
-
-    expect(await readdir(join(dir, "_astro"))).toContain("a.AAAAAAAA.woff2");
+  const state = async () => ({
+    site: await readFile(join(dir, "_astro/site.css"), "utf8"),
+    files: (await readdir(join(dir, "_astro"))).sort(),
+    subsets: subsetFont.mock.calls.length,
   });
 
-  it("書体を当てない要素の字では、スライスを作り直さない", async () => {
+  it("使う字の無い分割は、@font-face を CSS から削除し、ファイルも削除する", async () => {
+    await build({ html: heading("あ"), css: both });
+
+    expect(await state()).toStrictEqual({
+      site: face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed) + RULE,
+      files: ["app.js", "page.css", "site.css", renamed].sort(),
+      subsets: 1,
+    });
+  });
+
+  it("使う字の無い分割の @font-face を削除するときは、@font-face が指す woff のファイルも削除する", async () => {
+    const withWoff = face("b", "U+3044").replace(
+      'format("woff2")',
+      'format("woff2"),url("/_astro/b.BBBBBBBB.woff")format("woff")',
+    );
+    await build({
+      html: heading("あ"),
+      css: face("a", "U+3042") + withWoff,
+      extraFile: "b.BBBBBBBB.woff",
+    });
+
+    expect((await state()).files).toStrictEqual(["app.js", "page.css", "site.css", renamed].sort());
+  });
+
+  it("使う字の無い分割の @font-face は、どの CSS からも削除する", async () => {
+    await build({ html: heading("あ"), css: both, pageCss: face("b", "U+3044") });
+
+    expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe("");
+  });
+
+  it("引用符で囲んだ URL の @font-face も削除する", async () => {
+    const quoted = face("b", "U+3044").replace(
+      "url(/_astro/b.AAAAAAAA.woff2)",
+      'url("/_astro/b.AAAAAAAA.woff2")',
+    );
+    await build({ html: heading("あ"), css: face("a", "U+3042") + quoted });
+
+    expect((await state()).site).toBe(
+      face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed) + RULE,
+    );
+  });
+
+  it("rebuild が false のときは、使う字のある分割を作り直さず、使う字の無い分割の @font-face だけを削除する", async () => {
+    await build({ html: heading("あ"), css: both, options: { rebuild: false } });
+
+    expect(await state()).toStrictEqual({
+      site: face("a", "U+3042") + RULE,
+      files: ["a.AAAAAAAA.woff2", "app.js", "page.css", "site.css"],
+      subsets: 0,
+    });
+  });
+
+  it.each([
+    ["/_astro/a.AAAAAAAA.woff2", "残した @font-face も指している", false],
+    ["/_astro/a.AAAAAAAA.woff2", "残した @font-face も指している", true],
+    ["/_astro/./a.AAAAAAAA.woff2", "残した @font-face も指している", false],
+    ["/_astro/missing.woff", "出力に無い", false],
+  ])(
+    "削除する @font-face の src の %s を削除できないときは、作り直しも書き換えもせずにビルドを止める（%s、rebuild: %s）",
+    async (url, message, rebuild) => {
+      const shared = face("b", "U+3044").replace(
+        'format("woff2")',
+        `format("woff2"),url(${url})format("woff")`,
+      );
+      const css = face("a", "U+3042") + shared;
+
+      const error = await build({ html: heading("あ"), css, options: { rebuild } }).catch(
+        (e: Error) => e.message,
+      );
+
+      expect({ error, ...(await state()) }).toStrictEqual({
+        error: expect.stringContaining(message),
+        site: css + RULE,
+        files: ["a.AAAAAAAA.woff2", "app.js", "b.AAAAAAAA.woff2", "page.css", "site.css"],
+        subsets: 0,
+      });
+    },
+  );
+
+  it("削除する @font-face の src のうち、woff2 と woff でないファイルは削除しない", async () => {
+    const svg = face("b", "U+3044").replace(
+      'format("woff2")',
+      'format("woff2"),url(/_astro/b.svg)format("svg")',
+    );
+    await build({ html: heading("あ"), css: face("a", "U+3042") + svg, extraFile: "b.svg" });
+
+    expect((await state()).files).toStrictEqual(
+      ["app.js", "b.svg", "page.css", "site.css", renamed].sort(),
+    );
+  });
+
+  it("rebuild が false のときは、要素を特定できなくても警告しない", async () => {
+    await build({
+      html: heading("あ"),
+      css: face("a", "U+3042"),
+      rule: `h2{font-family:"Zen Old Mincho"}`,
+      options: { rebuild: false },
+    });
+
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("rebuild が false のときは、名前に hash の無いファイルでもビルドを止めない", async () => {
+    const odd = face("a", "U+3042").replace("a.AAAAAAAA.woff2", "odd.woff2");
+    await build({
+      html: heading("あ"),
+      css: odd,
+      extraFile: "odd.woff2",
+      options: { rebuild: false },
+    });
+
+    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(odd + RULE);
+  });
+
+  it("書体を当てない要素の字では、分割を作り直さない", async () => {
     await build({ html: `${heading("あ")}<p>い</p>`, css: both });
 
     expect(texts()).toStrictEqual(["あ"]);
@@ -380,13 +494,35 @@ describe("ビルド後の作り直し", () => {
     await expect(build({ html: heading("あ"), css: outside })).rejects.toThrow("の外を指している");
   });
 
-  it("使う字のないスライスの URL が出力の外を指すときも、何も書き換えずにビルドを止める", async () => {
-    const outside = face("b", "U+3044").replace("/_astro/b.AAAAAAAA.woff2", "/../x.AAAAAAAA.woff2");
-    await expect(
-      build({ html: heading("あ"), css: face("a", "U+3042") + outside }),
-    ).rejects.toThrow("の外を指している");
-    expect(subsetFont).not.toHaveBeenCalled();
-  });
+  it.each([
+    ["woff2", false],
+    ["woff2", true],
+    ["woff", false],
+    ["woff", true],
+  ])(
+    "使う字の無い分割の %s の URL が出力の外を指すときは、作り直しも書き換えもせずにビルドを止める（rebuild: %s）",
+    async (format, rebuild) => {
+      const outside =
+        format === "woff2"
+          ? face("b", "U+3044").replace("/_astro/b.AAAAAAAA.woff2", "/../x.AAAAAAAA.woff2")
+          : face("b", "U+3044").replace(
+              'format("woff2")',
+              'format("woff2"),url(/../x.woff)format("woff")',
+            );
+      const css = face("a", "U+3042") + outside;
+
+      const error = await build({ html: heading("あ"), css, options: { rebuild } }).catch(
+        (e: Error) => e.message,
+      );
+
+      expect({ error, ...(await state()) }).toStrictEqual({
+        error: expect.stringContaining("の外を指している"),
+        site: css + RULE,
+        files: ["a.AAAAAAAA.woff2", "app.js", "b.AAAAAAAA.woff2", "page.css", "site.css"],
+        subsets: 0,
+      });
+    },
+  );
 
   it.each([
     ["相対パス", "_astro/a.AAAAAAAA.woff2"],

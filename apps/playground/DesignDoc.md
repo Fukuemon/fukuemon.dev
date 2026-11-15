@@ -96,7 +96,7 @@ packages/
   sql-runtime/src/        SqlDatabase の型、結果とエラーの形、PGlite で SQL を実行して結果の形にする関数、PGlite を Web Worker で動かす実装
   node-runtime/src/       NodeRuntime の型、bootNodeRuntime、store、記録の行を抜き出す処理、標準入出力で SqlDatabase を実装する処理
     webcontainer/         @webcontainer/api を import する実装。WebContainers に依る処理
-    guest/                実行環境の中の Node が動かすファイル（preload、DB のプロセスのスクリプト、DB のプロセスの依存を書く package.json）
+    guest/                実行環境の中の Node とプレビューのページが動かすファイル（preload、プレビューに入れるスクリプト、DB のプロセスのスクリプト、DB のプロセスの依存を書く db-package.json、標準入出力の形式）
   go-runtime/src/         GoRunner の型、import のパスと、テストを持つ package を求める関数
     worker/               Yaegi を Web Worker で動かす GoRunner の実装、Web Worker の fetch を差し替える処理
   go-runtime/go/          WASM にする Go のコード。Yaegi で訪問者のファイルを実行する処理
@@ -114,16 +114,22 @@ packages/
   - 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。`@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
   - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。`@fukuemon/go-runtime` の WASM だけは、package の `build` の script がビルドする（[Go](#go)）。
 - この文書では、`node-runtime/` は `packages/node-runtime/src/` を、`webcontainer/` と `guest/` はその下のディレクトリを指す。
-- `@fukuemon/sql-runtime` は、エントリーポイントを 2 つに分ける。
+- `@fukuemon/sql-runtime` は、エントリーポイントを 3 つに分ける。
   - 型と、PGlite で SQL を実行して結果の形にする関数。このエントリーポイントは、PGlite から型だけを import する。関数はブラウザと Node の両方で動くので、このエントリーポイントは DOM と Worker の API を使わない。`Store` の型も、このエントリーポイントに置く。
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
+  - `withLosslessJson`。`json` と `jsonb` のセルを文字列のまま持つ PGlite にする。このエントリーポイントは、PGlite を値で import する。import してよいのは、Web Worker のスクリプト（`worker/worker.ts`）と、`guest/` の DB のプロセスのスクリプトだけである。メインスレッドのコードは import しない。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
-- `guest/` のファイルは、ブラウザではなく、実行環境の中の Node で動く。`webcontainer/` が、ファイルの中身を文字列として読み込み、実行環境に書く。tsconfig と lint の対象を、ブラウザのコードと分ける。
-- `guest/` の `package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つの `package.json` の PGlite のバージョンを比べ、同じことを確認する。
+- `guest/` のファイルは、ツールのページではなく、実行環境の中の Node か、プレビューのページで動く。tsconfig と lint の対象を、ツールのページのコードと分ける。
+  - 実行環境の中の Node で動くファイルは、`webcontainer/` が中身を文字列として読み込み、実行環境に書く。
+  - プレビューに入れるスクリプト（`guest/preview-console.cjs`）は、`node-runtime/` の直下が中身を文字列として読み込み、`previewScript` で `webcontainer/` に渡す。
+  - 値の木に写す処理（`guest/console-value.cjs`）は、preload とプレビューに入れるスクリプトが共有する。`webcontainer/` と `node-runtime/` の直下の両方が、中身を文字列として読み込む。
+- `guest/` の `db-package.json` は、DB のプロセスの依存（PGlite、`pglite-socket`）のバージョンを、範囲ではなく 1 つの値で書く。`webcontainer/` は、このファイルを実行環境の中の `package.json` として書く。PGlite のバージョンは、`@fukuemon/sql-runtime` の依存と同じにする。`@fukuemon/node-runtime` のテストで、2 つのファイルの PGlite のバージョンを比べ、同じことを確認する。
 - `node-runtime/` の中の import の向きは、次のとおり。
   - `node-runtime/` の直下は、`webcontainer/` の `RuntimeBackend` の実装を、`bootNodeRuntime` の 1 か所だけで import する。
   - `webcontainer/` が `node-runtime/` の直下から import するのは、型と、`backend.ts` が定義するエラークラス（`PathNotFoundError`）だけである。
   - `guest/` は、`node-runtime/` の直下と `webcontainer/` を import しない。
+  - `node-runtime/` の直下と `webcontainer/` が `guest/` からモジュールとして値を import するのは、標準入出力の形式を書く `db-protocol.ts` だけである。このファイルはブラウザと Node の両方で読むので、どちらの API も使わない。`webcontainer/` は、ほかのファイルを文字列（`?raw`、`?bundle`）として import する。
+- Vite の plugin は、package の直下の `vite.ts` に置く。`guest/` と `vite.ts` の型は、Node の型を読む `tsconfig.node.json` で確認する。
 
 次の図は、`apps/playground/src/` のディレクトリと package の、互いの間で許す import の向きを示す。矢印の無い組は、import しない。
 
@@ -178,15 +184,17 @@ flowchart TB
 ```
 
 - `src/node/`、`sql-console/`、`node-runtime/` が `@fukuemon/sql-runtime` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
-  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数を import する。`guest/` は、PGlite を Web Worker で動かす `SqlDatabase` の実装のエントリーポイントを import しない。
+  - `sql-console/` のテストだけは、`toJsonResponse` を値で import する。DB のプロセスが JSON で送ったセルと、Web Worker の実装のセルが、同じ文字列で表に出ることを確認するためである。
+  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数と、`withLosslessJson` を import する。`guest/` は、PGlite を Web Worker で動かす `SqlDatabase` の実装のエントリーポイントを import しない。
 - `node-runtime/` は、`project/` を import しない。`BootOptions` は、プロジェクトの型を使わない。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
 - `@webcontainer/api` に依存するのは、`@fukuemon/node-runtime` だけである。`apps/playground` の `package.json` には、`@webcontainer/api` を依存として書かない。
-- Oxlint の `no-restricted-imports` が止める import は、次の 3 つ。
+- Oxlint の `no-restricted-imports` が止める import は、次の 4 つ。
   - `packages/node-runtime/src/webcontainer/` のほかからの、`@webcontainer/api` の import
   - `apps/playground/src/` の `node/`、`sql/`、`go/`、`drawio/`、`excalidraw/`、`slides/` の間の import
   - `apps/playground/src/ai-operations/` からの、ツールのディレクトリの import
+  - `packages/node-runtime/src/guest/` からの、`node-runtime/` の直下、`webcontainer/`、`@fukuemon/sql-runtime/worker` の import
 
 ### NodeRuntime
 
@@ -200,7 +208,7 @@ type Store<T> = {
 
 type BootOptions = {
   files: Readonly<Record<string, string>>;
-  database: boolean;
+  database?: boolean;
   initialSql?: string;
 };
 
@@ -319,11 +327,13 @@ type BackendInstance = {
   spawn: (
     command: string,
     args: readonly string[],
-    options?: { terminal?: TerminalSize; cwd?: string },
+    options?: { terminal?: TerminalSize; internal?: boolean },
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
-  previewMessages: { subscribe: (onMessage: (message: unknown) => void) => () => void };
+  previewMessages: {
+    subscribe: (onMessage: (message: unknown, port: number) => void) => () => void;
+  };
   guestDirectory: string;
   teardown: () => Promise<void>;
 };
@@ -343,11 +353,13 @@ type BackendProcess = {
   - 一覧と読み込みは、パスが存在しないときに `PathNotFoundError` で失敗する。WebContainers の `fs` のエラーには `code` が無いので、`webcontainer/` の実装は、パスが存在しないことを、`message` の先頭の `ENOENT:` で見分ける。
 - `webcontainer/` が持つ処理は、次のとおり。
   - `isSupported`: `crossOriginIsolated` の判定。
-  - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。
-  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`spawn` で起動する全てのプロセスに、同じ環境変数を渡す。`node-runtime/` の直下は、DB の依存の `npm install` を `guestDirectory` で実行するときに、`cwd` を渡す。
-  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が渡すのと同じ値を渡す。
+  - `boot`: WebContainers の起動、初期ファイルの書き込み、`guest/` のファイルを実行環境のディレクトリに置く処理、プレビューに入れるスクリプトの登録。スクリプトを登録できなかったときは、プレビューの記録が欠けるだけなので、起動を続ける。
+  - `spawn`: `NODE_OPTIONS` と環境変数の組み立て。`NODE_OPTIONS` は、HTTP とコンソールを記録する preload を読ませ、DB を使うときは終了させない preload を足す。`internal` が `true` のプロセスには、環境変数を渡さず、端末も付けない。`node-runtime/` の直下は、DB の依存を `npm install --prefix <guestDirectory>` で入れ、DB のプロセスを `guestDirectory` の下のスクリプトの絶対パスで起動する。
+  - `spawnShell`: 起動するシェルのプログラムの決定と、シェルの起動。環境変数は、`spawn` が、`internal` を指定しないプロセスに渡すのと同じ値を渡す。
   - `ports`: 待ち受けたポートの通知、`OpenPort` の `sandbox` と `allow` の値、ポートの URL を書くファイルの更新。
   - `previewMessages`: プレビューからの `postMessage` の受信と、origin の確認。
+    - 待ち受けているポートの URL と同じ origin から届いたメッセージだけを、そのポートと一緒に渡す。ほかの iframe とウィンドウからのメッセージは渡さない。
+    - `node-runtime/` の直下は、`ports` の store にあるポートのメッセージだけを、コンソールの記録にする。
 - `node-runtime/` の直下が持つ処理は、store、記録の行を抜き出す処理、30 秒の判定、プレビューの URL の確認、DB のプロセスの起動と、標準入出力での `SqlDatabase` の実装である。
 - `node-runtime/` の直下は、`webcontainer/` が知らせたポートのうち、URL が `https:` で、ツールのページと別の origin のものだけを、`ports` の store に入れる。
   合わないポートは、プレビューのタブに出さない。
@@ -362,9 +374,62 @@ type BackendProcess = {
 - プロセスの出力は、`OutputLog` で公開する。端末のペインは、Effect の中で、`read` の結果を端末のエンジンに書いてから、`subscribe` で追加の出力を書く。
 - preload は、記録の行の行頭に、固定のプレフィックスを付ける。`node-runtime/` の直下（`webcontainer/` の外）の処理が、`BackendProcess` の `output` から受けたそのままの出力から、プレフィックスの付いた行を抜き出して、store に入れる。`OutputLog` には、抜き出した後の出力を渡す。
 - コンソールの記録の、出力したプロセスの名前は、行を抜き出す処理が付ける。名前は、行を出力したプロセスの、`start` の `name` である。シェルで起動したプロセスの行には、シェルの名前が付く。
-- プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下に 1 つ置く。
+- コンソールの記録を取る preload（`guest/console-trace.cjs`）とプレビューに入れるスクリプト（`guest/preview-console.cjs`）は、次のことを行う。
+  - `console.debug` から `console.error` までの 5 つの関数を包み、ログレベル、時刻（`Date.now()`）、引数を 1 件の記録にする。
+    - 元の関数も呼ぶので、端末の出力とプレビューのページの DevTools の出力は変わらない。
+    - `console.table`、`console.dir`、`console.trace`、`console.assert`、`console.group` は記録しない。
+    - 書式指定子（`%s`、`%o`）は解釈せず、引数をそのまま記録する。
+    - プレビューの捕捉されなかった例外と、処理されなかった Promise の拒否は記録しない。
+  - 引数は、呼んだ時点の値を、値の木に写す。写す処理（`guest/console-value.cjs`）は、preload とスクリプトが共有する。
+  - 値の木は、文字列、数、bigint、真偽値、`null`、`undefined`、symbol、関数の名前、循環参照を区別する。
+    - 入れ子の値は、配列、オブジェクト（クラスの名前と、自身の列挙可能なプロパティ）、`Map`、`Set`、`Error`（名前、メッセージ、スタックトレースの行）を区別する。
+    - 数は、NaN、Infinity、-0 を JSON で表せるよう、文字列で表す。
+    - ほかの値（`Date`、正規表現、Proxy、DOM の要素など）は、文字列にする。
+  - getter、`toJSON`、Proxy のトラップは実行しない。getter のプロパティは `(...)` にする。訪問者のコードを、記録のために実行しないためである。
+    - `Map` と `Set` の中身と大きさは、組み込みのメソッドで読み、サブクラスが上書きしたメソッドを呼ばない。
+    - `Error` の `name`、`message`、`stack`、`code` は、組み込みの getter（V8 と Firefox の `stack`、`DOMException` の `name`、`message`、`code`）だけを呼ぶ。訪問者が定義した getter は呼ばない。
+    - 例外として、Node のプロセスでは、`util.types.isNativeError` が true を返す値について、その値が自身のプロパティとして持つ `stack` の getter も呼ぶ。
+      WebContainers の Node は、`Error` のインスタンスごとに別の `stack` の getter を持ち、組み込みの getter と同じ関数かでは見分けられないためである。
+      訪問者が組み込みの `Error` のインスタンスに `stack` の getter を定義すると、その getter も呼ぶ。影響は訪問者自身のプロセスに閉じるので、防がない。
+    - `name`、`message`、`code` のどれかを、文字列のデータでも組み込みの getter でもない形で持つ `Error` は、`stack` を読まず、スタックトレースの行を出さない。プロパティが無いときは読む。
+      プロトタイプチェーンの上で `stack` を自身のプロパティとして持つオブジェクトの `name`、`message`、`code` も、同じく確認する。
+      - V8 の `stack` の getter は、初めて読むときに `name` と `message` を読んでスタックトレースの文字列を作り、Node は内部のエラーの `code` も読む。
+        そのため、`stack` を読むと、訪問者の getter や `toString` が実行される。
+    - Node のプロセスでも、値のプロトタイプが Proxy のときは、プロトタイプチェーンをたどる処理（記述子の読み取りと `instanceof`）が Proxy のトラップを実行する。
+      影響は訪問者自身のプロセスに閉じるので、組み込みを書き換えたときと同じく防がない。
+    - プレビューのページでは、ブラウザの JavaScript が Proxy を見分けられないので、Proxy のトラップが実行される。
+      配列の要素は記述子で読むので、`get` のトラップで要素を返す Proxy の配列は、中身が `undefined` で出る。
+      配列を写すときは、`get` のトラップが読むたびに別の値を返せるので、Proxy の配列の `length` を 1 回だけ読み、0 以上 2^32−1 以下の整数でなければ 0 にする。
+    - 訪問者のコードが、グローバルの組み込み（`Object`、`Array`、`JSON` のメソッドなど）を書き換えたときと、`Error.prepareStackTrace` を定義したときは、写す処理は、その関数を呼び、防がない。書き換えた関数は、記録しなくても訪問者のコードの中で呼ばれ、影響は訪問者自身のプロセスとページに閉じるためである。
+  - 写す量に上限を置く。1 件の記録が、記録の行を抜き出す処理の上限を超えないようにするためである。
+    - 深さは 6 段、引数と 1 つの入れ子の要素は 100 個、1 つの文字列は 1 万字、スタックトレースの行は 30 行まで写す。
+    - 1 回の呼び出しで写す値は 2000 個、文字は 256 K 字までにする。
+    - 超えた分は、文字列の末尾の「…」か、残りの件数を書いた文字列（「…ほか 3 件」）にする。
+    - 記録の配列は、上限で要素を省いても元の長さを持ち、コンソールの `Array(n)` に元の長さを出す。読む側は、長さが、写した要素の数以上で 2^32−1 以下の整数であることを確認する。
+  - preload は、記録を `@@fd:console ` を付けた 1 行の JSON にして、標準出力に書く。記録を書く途中で呼ばれた `console.*` は、記録しない。
+    - 標準出力が端末（`process.stdout.isTTY`）のときだけ書く。パイプやファイルに書くプログラムの出力に、記録の JSON を混ぜないためである。
+    - 端末のタブで動くプロセス（シェル、npm install、起動のコマンド）の標準出力は、端末である。
+    - 標準出力をパイプにして起動された子のプロセスのコンソールは、記録しない。元の出力は、親が中継すれば端末に出る。
+    - ワーカーのスレッドの標準出力は `isTTY` を持たずに親のスレッドへ送られるので、ワーカーは、親のスレッドの値を `worker_threads` の `setEnvironmentData` で受け取って使う。
+    - `stdout: true` で作ったワーカーは、親のスレッドの標準出力が端末なら記録の行を書き、その行は親が読む `worker.stdout` に入る。
+    - HTTP の記録には、この条件を置かない。標準出力をパイプにして起動された子のサーバーの通信も記録するためである。
+  - プレビューに入れるスクリプトは、iframe の中のページでだけ `console.*` を包む。
+    - 記録は、ツールのページの origin を宛先にして、`window.parent` へ `postMessage` で送る。
+    - ツールのページの origin は、`node-runtime/` の直下がスクリプトを組むときに埋め込む。
+    - スクリプトは 1 つの関数に包み、ページのグローバルに名前を足さない。
+- `node-runtime/` の直下は、記録の行とプレビューのメッセージを `ConsoleRecord` にして、`consoleEntries` の store に入れる。
+  - `ConsoleRecord` は、ID、ログレベル、出力元、時刻、値の木を持つ。出力元は、Node のプロセス（`start` の `name`）か、プレビュー（ページを返したサーバーのポート）である。
+  - 訪問者のプログラムとプレビューのページも、同じ形の記録を出せる。形に合わない記録と、読む側の上限を超えた記録は捨てる。
+    - 読む側の上限は、写す側の上限に、残りの件数を書いた項目の分の余裕を足す。写す側が出せる最大の記録は、読む側の上限に収まる。
+    - 引数と 1 つの入れ子の要素は 101 個（100 個と、残りの件数を書いた項目）まで受ける。
+    - プレビューの `postMessage` には大きさの上限が無いので、1 件の文字数の合計も 512 K 字までに限る。
+  - 時刻が 0 以上の安全な整数で、今より 1 日を超えて先でない記録だけを受ける。HTTP の記録と同じ条件である。
+  - 記録は、届いた順に並べる。プロセスとプレビューをまたいで、時刻の順に並べ直さない。
+  - 届いた記録は、1 フレームごとに（`requestAnimationFrame`）まとめて store に入れる。1 件ごとに入れると、表示中の全ての行の再描画とレイアウトが、1 件ごとに起きるためである。
+- プレフィックスは、HTTP の記録が `@@fd:http `、コンソールの記録が `@@fd:console `、DB のプロセスの応答が `@@fd:sql ` である。見分ける処理は、`node-runtime/` の直下の `record-lines.ts` に置く。端末に出すプロセスの記録の行（HTTP とコンソール）と、DB のプロセスの応答の行は、別のプロセスの出力に出るので、別の処理で読む。
   - ADR-0054: [HTTP の流れとコンソールを preload とプレビューのスクリプトで記録し、記録の行は端末に出さない](../../docs/adr/0054-record-http-and-console-with-prefixed-lines.md)
 - 出力のチャンクは、記録の行の途中で切れて届くことがある。行を抜き出す処理（`record-lines.ts`）は、プレフィックスから改行までがそろうまで、その部分を端末に渡さない。チャンクの末尾がプレフィックスの先頭の数文字で終わるときは、続きを 50 ms 待ち、続きが来なければ端末に渡す。端末で打った `@` のような文字が、次の入力まで出なくならないようにするためである。プレフィックスから 4 MB を超えても改行が来ないときは、記録の行でないとみなして端末に渡す。プロセスが終わったときは、手元の出力を端末に渡す。プロセスの終わりが、最後の出力より先に届くかは確認していない。
+- DB のプロセスの出力は、端末に出さない。`record-lines.ts` は、端末に出さないプロセスのための、もう 1 つの行を抜き出す処理を持ち、DB のプロセスの応答の行は、こちらで読む。応答の行は 10 MB を超えることがあるので、長さの上限と 50 ms の保留を置かず、届いたチャンクだけで改行を探す。頭の無い行は捨てる。
 - HTTP の記録を取る preload（`guest/http-trace.cjs`）は、次のことを行う。
   - `http.Server` の `emit` を包み、`request` のたびに、メソッド、URL（パスとクエリ）、リクエストとレスポンスのヘッダ、本文、ステータスコード、受けた時刻、所要時間を 1 行に書く。時刻は `Date.now()` で取る。WebContainers では、`performance.timeOrigin` がプロセスごとにずれ、プロセスをまたいで比べられないためである。同じミリ秒に受けた記録は、届いた順に並ぶ。訪問者のコードが同じリクエストで `request` を出し直したときは、2 回記録しない。`listening` のときは、待ち受けたポートを 1 行に書く。
   - リクエストの本文は、`data` の購読を足さずに、`emit` を包んで、訪問者の処理が読んだ分を写す。購読を足すと、訪問者の処理より先に本文が流れ出るためである。
@@ -389,7 +454,17 @@ type BackendProcess = {
     - 切ったヘッダの名前と値は、末尾に「…」を付ける。切った本文は `truncated`、捨てたヘッダの数は `omittedHeaders`、切った URL は `urlTruncated` で示し、画面はそのことを文で添える。
     - 名前を保持するサーバーは 100 個までにし、超えた後に待ち受けたサーバーは、ポートの番号で呼ぶ。
   - 記録は、受けた時刻の順に並べる。記録の行はプロセスごとの出力から届くので、届いた順は、受けた順と違うことがある。認可コードフローでは、クライアントが `/callback` の処理の中で送った `/token` の記録が、`/callback` の記録より先に届く。
-- store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。HTTP の記録は、1 件が本文を最大 64 KB ずつ 2 つ持つので、500 件で最大 64 MB 前後の文字を持つ。この値は見積もりで、測っていない。訪問者のプログラムが出す偽の記録の行は、ヘッダの名前に 256 文字、値に 8,192 文字を、100 個ずつ持てるので、1 件が最大 2 MB 前後の文字になる。偽の行で上限まで埋めたときに重くなるのは、訪問者自身のタブだけである。値は、実装のタスクで測って変えてよい。
+- store は、記録の件数に上限を置き、超えた古い記録を消す。上限は、プロセスの出力が 1 つのプロセスにつき 1 MB、コンソールの記録が 1000 件、HTTP の記録が 500 件である。
+  - コンソールの記録は、重さ（下の項目で定める）の合計も 4 M（1 件の文字数の上限の 8 倍）までにする。1 件が最大 512 K 字なので、件数だけでは 1000 件で 5 億字を持てるためである。
+  - 件数と重さは、store に入れる前に 1 フレームの間ためた記録も合わせて数え、最新の 1 件は必ず残す。
+  - 1 件の重さは、値とプロパティの名前が持つ文字数に、値の数の 8 倍を足した数である。
+    - 真偽値、`null`、`undefined`、循環参照と、配列、オブジェクト、`Map`、`Set` そのものは、文字を持たないがメモリを使うので、値として数える。`Error` のスタックの行も、1 行を値 1 個と数える。
+    - 8 は、小さい JavaScript のオブジェクトの大きさ（16 バイト前後）を、UTF-16 の 1 字の 2 バイトで割った値である。
+    - 値とスタックの行の数は、全体で 4 M を 8 で割った約 52 万個までになる。
+  - 捨てた記録は、すぐには配列から消さない。捨てた件数が残す件数を超えたとき、捨てた重さが 4 M を超えたとき、store に入れるときに消すので、その間は最大で重さ 4 M の 2 倍前後を持つ。
+  - HTTP の記録は、1 件が本文を最大 64 KB ずつ 2 つ持つので、500 件で最大 64 MB 前後の文字を持つ。この値は見積もりで、測っていない。
+  - 訪問者のプログラムが出す偽の記録の行は、ヘッダの名前に 256 文字、値に 8,192 文字を、100 個ずつ持てるので、1 件が最大 2 MB 前後の文字になる。偽の行で上限まで埋めたときに重くなるのは、訪問者自身のタブだけである。
+  - 値は、実装のタスクで測って変えてよい。
 
 ### React のツリーと状態
 
@@ -421,7 +496,7 @@ flowchart TB
 ```
 
 - Context は 2 つで、`src/node/` に定義する。
-  - 実行環境のインスタンスを、起動の Promise で渡す Context。開いたプロジェクトも一緒に渡す。ペインは、Promise を `use` で読み、ペインごとの `Suspense` で起動を待つ。値が変わるのは、実行環境を起動し直すときだけである。
+  - 実行環境のインスタンスを、起動の Promise で渡す Context。開いたプロジェクトと、「実行環境を起動し直す」の関数と、起動し直している間かどうかの値（`busy` の store）も一緒に渡す。ペインは、Promise を `use` で読み、ペインごとの `Suspense` で起動を待つ。値が変わるのは、実行環境を起動し直すときだけである。
   - 画面の選択の状態を渡す Context。選んだファイル、開いているタブ、選んだ端末のタブ、選んだプレビューのポート、選んだ HTTP のやり取り、下のペインのタブを持つ。状態は、`NodePage` がプロジェクトを読んだ後に描く `NodeLayout` が、`useReducer` で持つ。
 - Context は、`<Context>` を provider として書き、`use(Context)` で読む。
 - ツリーをまたぐ通知（`CustomEvent`）と、状態管理のライブラリは使わない。
@@ -431,10 +506,15 @@ flowchart TB
   - `sql-console/` のコンポーネントは、`SqlDatabase` の `status`、SQL を実行する関数、実行中かどうかの値、入力欄の値、入力欄のファイルの名前、DB が止まったときに出す案内の文を、props で受ける。`status` は、`useSyncExternalStore` で読む。
   - DB が止まった後の戻り方は `SqlDatabase` の実装ごとに違うので、案内の文は呼ぶ側が渡す。
   - 実行の結果は、`sql-console/` のコンポーネントが持ち、表に出す。
+  - `SqlPane` は、DB を使うプロジェクトのときだけ置く。`wide` の配置では右の列に、`narrow` と `short` の配置ではプレビューの後のタブに置く。`wide` の配置の右の列は、プレビューと SQL のペインをタブで切り替え、どちらのペインも列の高さを全て使う。SQL の入力欄と結果を、スクロールせずに同時に見るためである。選んでいないタブのペインは `Activity` で隠し、入力欄と結果を残す。
+  - SQL のペインの入力欄は、どの配置でもペインの面の縁まで広げる。`short` の配置では、結果の領域を残すために、入力欄を 160px から 128px に低くする。
+  - 配置が `wide` と狭い配置の間で替わると、`SqlPane` を作り直す。`narrow` と `short` の間では作り直さない。
+    - 入力欄の SQL と、元に戻す履歴とカーソルは残る。SQL は `src/node/` のモジュールが、履歴とカーソルは `NodeLayout` の入れ物が持つためである。
+    - 実行の結果は消える。`sql-console/` のコンポーネントが持つためである。訪問者は、もう一度実行して結果を出す。
   - `SqlPane` は、`NodeRuntime` の `database` の `status` と `run`、`useTransition` から得た実行中かどうかの値、入力欄の値を、`sql-console/` のコンポーネントに渡す。
   - SQL だけを動かすツールは、`src/sql/` の React の外のモジュールが持つ、SQL を実行する関数と、実行中かどうかの値を渡す。画面の実行のボタンと、AI からの操作の `sql_run_query` は、同じ関数を呼ぶ。
   - SQL だけを動かすツールは、`sql-console/` のコンポーネントの省略できる props で、もう 1 つの値を渡す。AI からの操作が、時間の上限で DB を初期の状態に戻したかどうかを表す値である。値は、`src/sql/` のモジュールが持つ。`sql-console/` のコンポーネントは、値が戻したことを示すときに、DB を初期の状態に戻したことを出す。`SqlPane` は、渡さない。
-  - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数を、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
+  - 「実行環境を起動し直す」の関数は、起動の Promise を持つ `src/node/` のモジュールが公開する。`SqlPane` は、この関数と、起動し直している間かどうかを、`sql-console/` のコンポーネントの、省略できる props で渡す。SQL だけを動かすツールは、渡さない。
 - `Suspense` の境界は、ペインごとに置く。fallback は、同じ Case に、`state` の `pending` を渡したものにする。待ちの印は、ペインの外の `Suspense` が `PageLoading` で出す。プロジェクトの読み込みと起動の待ちは続けて起きるので、境界が別の 2 つの `Suspense` にも、`PageLoading` に同じ文を渡す。
 - `use` に渡す Promise は、React の外のモジュールが、埋め込みの ID ごとに 1 つ作って持つ。プロジェクトの JSON の Promise は `project/` が持つ。`src/node/` と `src/sql/` のモジュールは、プロジェクトの JSON と、`workspace/` から読んだ、保存してあるファイルを、1 つにまとめた Promise を持つ。ページは、まとめた Promise を `use` で読む。起動の Promise は `src/node/` が持つ。Go を動かすツールでは、`src/go/` のモジュールが、プロジェクトの JSON と保存したファイルを読んだ後のモジュールの Promise を、1 つにまとめて持つ。実行環境を起動し直すときは、`src/node/` が、起動の Promise を新しいものに替える。
 - タブで切り替えるペイン（端末、コンソール、HTTP の一覧、プレビュー）は、`Activity` で包む。隠している間の記録は、store が持つ。
@@ -474,7 +554,8 @@ SQL だけを動かすツールのページは、次のとおり組む。
   - 戻した後に入力欄を変えて保存するレコードは、プロジェクトの初期ファイルのバージョンを持つ。
   - 戻した後は、「初期の状態に戻す」が消えるので、フォーカスを「実行する」へ移す。確認で取り消したときは、フォーカスが「初期の状態に戻す」へ戻る。
   - 保存した SQL を消している間の入力欄の変更は、無視する。
-  - 今の値と同じ値の変更の通知は、保存しない。エディタは、戻した直後に初期の SQL を変更として通知する。この通知を保存すると、消したレコードが作り直されるためである。
+  - 今の値と同じ値の変更の通知は、保存しない。保存すると、戻した直後に消したレコードが作り直されるためである。
+  - 初期の状態に戻すときは、入力欄が既に初期の SQL と同じでも、入力欄の元に戻す履歴を消す。確認のダイアログが、消した SQL を戻せないと出すためである。
   - 保存した SQL を消せないときは、入力欄を変えずに、戻せなかったことを出す。
   - 保存した SQL があるかは、`SqlSession` の store が持つ。保存に成功したときに true に、消したときに false にする。IndexedDB を読めないときは、書き込まないので false のままである。
 - 実行のボタンを押してから結果が出るまで、待っている段階を出す。PGlite の読み込みと初期データの投入の間は、`PageLoading` で画面を覆って出す。SQL の実行の間は、結果の欄に `Loading` で出す。
@@ -482,8 +563,8 @@ SQL だけを動かすツールのページは、次のとおり組む。
 
 Node の実行環境のページは、次のとおり組む。
 
-- `wide` の配置では、ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー、下に端末と HTTP の流れを置く。下のペインは、端末と HTTP の流れをタブで切り替え、最初は端末を出す。HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
-- `narrow` と `short` の配置では、エディタ、端末、プレビュー、通信（HTTP の流れ）を `PaneTabs` のタブで 1 つずつ出す。通信のタブは、一覧と詳細を、`narrow` では上下に、`short` では左右に並べる。ファイルのツリーは、タブの帯の先頭の「ファイル」のボタンで `FileDrawer` に開き、ファイルを選ぶと、ドロワーを閉じてエディタのタブに替え、エディタにフォーカスを移す。選んでいないタブのペインも隠して残し、タブを切り替えても、端末の出力とプレビューのページの状態を消さない。
+- `wide` の配置では、ペインは、左にファイルのツリー、中央にエディタ、右にプレビュー（DB を使うプロジェクトでは、プレビューと SQL のタブ）、下に端末とコンソールと HTTP の流れを置く。下のペインは、端末、コンソール、HTTP の流れをタブで切り替え、最初は端末を出す。コンソールと HTTP の流れのタブの文には、記録の件数を添える。端末を見ている間も、記録が届いたことが分かるようにするためである。HTTP の流れのタブは、一覧と、選んだ通信の詳細を、`SplitPane` で左右に並べる。ペインの間は `SplitPane` で分け、訪問者が幅と高さを変えられる。
+- `narrow` と `short` の配置では、エディタ、端末、コンソール、プレビュー、通信（HTTP の流れ）を `PaneTabs` のタブで 1 つずつ出す。DB を使うプロジェクトでは、プレビューの後に SQL のタブを足す。SQL のペインは、狭い配置でも入力と結果をタブに分けず、入力欄と操作を上に置いたまま結果の領域だけを送る。通信のタブは、一覧と詳細を、`narrow` では上下に、`short` では左右に並べる。ファイルのツリーは、タブの帯の先頭の「ファイル」のボタンで `FileDrawer` に開き、ファイルを選ぶと、ドロワーを閉じてエディタのタブに替え、エディタにフォーカスを移す。選んでいないタブのペインも隠して残し、タブを切り替えても、端末の出力とプレビューのページの状態を消さない。
 - `NodePage` は、プロジェクトと保存したファイルをまとめた Promise を `use` で読んでから、ペインを並べる。起動の Promise は、`RuntimeContext` で渡し、ペインが `use` で読む。起動を待つ間は、ペインごとの `Suspense` が、同じ Case に `state` の `pending` を渡した空のペインを出す。プロジェクトと保存したファイルを読む間は `NodePage` の `Suspense` が、起動を待つ間は `NodeLayout` の `Suspense` が、`PageLoading` で画面を覆う。どちらの `Suspense` も、`messages.ts` の `BOOT_LABEL` を渡す。
 - `src/node/` の React の外のモジュールが、埋め込みの ID ごとに 1 つ、起動の Promise を持つ。起動した後に、シェル、`npm install`、起動のコマンドの順にプロセスを起動する。Promise は、プロセスの起動を待たずに解決する。
 - ファイルのツリーは、`node_modules` の下を、パッケージのディレクトリ（`node_modules/<名前>` と `node_modules/@scope/<名前>`）までにし、その中身を出さない。中身まで出すと、項目が数千になるためである。この規則は、`node-runtime/` の直下が、ツリーの store を組むときに持つ。
@@ -542,6 +623,7 @@ ADR-0077: [訪問者のファイルを、埋め込みの ID ごとに IndexedDB 
 - IndexedDB から読んだ値がレコードの形に合わないときは、保存したファイルが無いときと同じに扱う。Node の実行環境では、次のレコードも形に合わないとみなす。
   - パスが、プロジェクトの JSON の `files` のキーと同じ規則（`isSafeFilePath`）に合わないもの。
   - あるファイルのパスが、別のファイルのパスの途中のディレクトリになっているもの（`a` と `a/b`）。
+- Node の実行環境のレコードに、SQL のペインの入力欄の SQL（`sql`）が無くても、形に合うとみなす。SQL を保存する前に保存したレコードも開くためである。`sql` が文字列でないか 1 MB を超えるときは、SQL だけを捨て、ファイルは使う。捨てた後のレコードは、すぐには書き直さず、次の保存で上書きする。入力欄は、最初の SQL で始める。
 - Go を動かすツールのレコードは、ファイルのパスと中身、訪問者が作ったディレクトリ、保存した時刻、初期ファイルのバージョンを持つ。ファイルを変えると、レコードを丸ごと置き換える。保存の途中に来た変更は、最新の 1 件だけを後で書く。
 
 Node の実行環境は、次のとおり保存する。
@@ -549,14 +631,18 @@ Node の実行環境は、次のとおり保存する。
 - レコードは、ファイルのパスと中身の一覧、保存した時刻、初期ファイルのバージョンを持つ。DB を使うプロジェクトでは、SQL のペインの入力欄の SQL も持つ。
 - `src/node/` が、`files.changes` の通知を受けて、`files.readAll` の結果を `workspace/` に渡す。
 - `src/node/` は、`files.readAll` の結果と、SQL のペインの入力欄の SQL を合わせて、1 つのレコードとして `workspace/` に渡す。`workspace/` は、保存してあるレコードを、受け取ったレコードで丸ごと置き換える。
-- `src/node/` は、`files.changes` の通知を受けたときだけ保存する。`files.changes` は、シェルのコマンドが作ったファイルとディレクトリ、追記、名前の変更、削除も通知するためである。
+- `src/node/` は、`files.changes` の通知を受けたときと、SQL のペインの入力欄の SQL が変わったときだけ保存する。`files.changes` は、シェルのコマンドが作ったファイルとディレクトリ、追記、名前の変更、削除も通知するためである。
+  - 入力欄の SQL が変わったときも、ファイルの変更の通知と同じ 500 ms の待ちに入れ、作業ディレクトリを読んで、ファイルと SQL を 1 つのレコードで書く。Node の実行環境のレコードは、ファイルの一覧を必ず持つためである。
+  - 入力欄の SQL の値は、`src/node/` のモジュールが持つ。起動し直すときは残し、初期の状態に戻すときは、最初の SQL に戻す。初期の状態に戻すときは、入力欄が既に最初の SQL と同じでも、入力欄の元に戻す履歴を消す。確認のダイアログが「入力欄の SQL は戻せません」と出すためである。
+  - 保存したレコードがあるときは、入力欄の最初の SQL（保存した SQL か、無ければ最初の SQL）を保存済みとみなす。SQL の無いレコードを、訪問者が何も変えないうちに書き直さないためである。
+  - 起動し直している間に入力欄の SQL を替えたときは、前の実行環境の保存が止まっているので、新しい実行環境が起動した後に保存する。初期の状態に戻す間に替えた SQL は、最初の SQL で上書きするので保存しない。
 - `src/node/` は、通知を受けてから 500 ms 待って `files.readAll` を呼ぶ。
   - 待つ間に来た通知は 1 回の保存にまとめ、500 ms を待ち直す。通知が続くときも、最初の通知から 2 秒のうちに読む。
   - 結果を使う `files.readAll` は、同時に 1 回だけ呼ぶ。読んでいる途中に次の読む時刻が来たときは、読み終えてから 1 回だけ読み直す。
   - 5 秒の上限で諦めた `files.readAll` は止めずに、結果を捨てる。その間に次の `files.readAll` を呼ぶので、実行環境の応答が遅いと、読み込みが重なる。
   - 保存のための `files.readAll` にも、起動し直すときと同じ 5 秒の上限を付ける。上限までに終わらないときは、その回の保存をやめ、次の通知を待つ。
-  - 保存しないパスだけの通知と、前に保存したものと同じ中身では、保存しない。
-- 訪問者が操作する前の変更は保存しない。操作は、エディタの入力、ファイルのツリーの操作、端末への入力、実行のボタンである。保存したファイルがあるときは、開いたときから保存する。
+  - 保存しないパスだけの通知と、前に保存したものと同じ中身（ファイルと SQL）では、保存しない。
+- 訪問者が操作する前の変更は保存しない。操作は、エディタの入力、ファイルのツリーの操作、端末への入力、実行のボタン、SQL のペインの入力欄の入力である。SQL だけを変えたときも、ファイルと合わせて保存し、保存したファイルがある扱いにする。保存したファイルがあるときは、開いたときから保存する。
   - 自動の `npm install` は、訪問者が何もしなくても `package-lock.json` を書く。これを保存すると、何も変えていない訪問者も、次に開いたときに保存したファイルがある扱いになり、起動のコマンドが自動で動かなくなるためである。
   - `src/node/` は、画面に渡す `NodeRuntime` の、ファイルの操作とプロセスの入力の関数を包む。これらの関数が呼ばれたら、訪問者が操作したとみなす。操作したかは実行環境ごとに持ち、起動し直すときは引き継ぎ、初期の状態に戻すときは引き継がない。
 - `src/node/` は、起動し直すときに作業ディレクトリのファイルを読む。訪問者が操作した後なら、読んだファイルを保存してから起動し直す。
@@ -578,12 +664,13 @@ Node の実行環境は、次のとおり保存する。
 - 保存しないディレクトリの外のファイルが 1000 個を超えるか、合計が 10 MB を超えたら、保存しない。前に保存したレコードは残す。
   - 保存のための `files.readAll` に `limit` を渡し、超えた時点で読むのをやめる。起動し直すときに読んだ結果も、同じ上限で数える。
   - テキストとして読めないファイルとリンクも数える。読む時間を抑えるための上限なので、読めたものを全て数える。一覧を読んだ後に消えたファイルと、読めないシンボリックリンクは数えない。
-  - 超えている間は、「保存の上限を超えたため、保存していません」の案内を出す。案内の本文には、ページを閉じたときに、前に保存したファイルに戻るか、変えたファイルが消えるかを書く。
+  - 超えている間は、「保存の上限を超えたため、保存していません」の案内を出す。案内の本文には、ページを閉じたときに、前に保存したファイルに戻るか、変えたファイルが消えるかを書く。DB を使うプロジェクトでは、SQL も保存しないことを書く。
+  - SQL のペインの入力欄の SQL は、上限に数えない。超えている間は、SQL も保存しない。
   - 超えている間は、「ファイルを保存できませんでした」の案内を出さない。上限の案内は、上限を下回って読めたときと、初期の状態に戻したときに消す。
   - 値の根拠は、ADR-0077 の Verification にある。
-- 保存したファイルがあるときは、ページのヘッダに「初期の状態に戻す」の操作を出す。保存したバージョンと、プロジェクトの JSON のバージョンが違うときは、保存したファイルを開き、初期ファイルが変わったことの案内も出す。
+- 保存したファイルがあるときは、ページのヘッダに「初期の状態に戻す」の操作を出す。保存したバージョンと、プロジェクトの JSON のバージョンが違うときは、保存したファイルを開き、初期ファイルが変わったことの案内も出す。バージョンは初期ファイルから求め、SQL のペインの入力欄の SQL は含めない。
   - 埋め込みの ID が無いページで開くデフォルトのプロジェクトでは、初期ファイルが変わったことの案内を出さない。デフォルトのプロジェクトの初期ファイルは、記事の初期ファイルではないためである。
-- 「初期の状態に戻す」は、`ConfirmDialog` で確認してから、保存したファイルを消し、初期ファイルで実行環境を起動し直す。初めて開いたときと同じく、`npm install` と起動のコマンドを自動で実行する。保存したファイルを消せないときは、起動し直さずに、戻せなかったことを出す。
+- 「初期の状態に戻す」は、`ConfirmDialog` で確認してから、保存したファイルを消し、初期ファイルで実行環境を起動し直す。DB を使うプロジェクトでは、SQL のペインの入力欄も最初の SQL に戻すことを、確認の文に書く。初めて開いたときと同じく、`npm install` と起動のコマンドを自動で実行する。保存したファイルを消せないときは、起動し直さずに、戻せなかったことを出す。
 - `workspace/` は、読み込みの結果を、保存したファイルが無い、保存したファイルがある、IndexedDB を読めない、の 3 つの種類で返す。IndexedDB を読めないときは、`src/node/` のモジュールが、保存したファイルが無いときと同じに扱って、初期ファイルで起動する。`NodePage` は、保存できないことを画面に出す。
 - `workspace/` は、IndexedDB を読めなかったことを、ページを開いている間だけ持ち、その間は IndexedDB に書き込まない。SQL だけを動かすツールと、Go を動かすツールでも、`workspace/` は同じように書き込まない。
 - 実行環境が追加するファイルは、作業ディレクトリの外にあるので、保存の対象に入らない。
@@ -643,6 +730,7 @@ sequenceDiagram
 - 図の `NodePage` の手順のうち、`bootNodeRuntime` の呼び出し、`npm install`、起動のコマンドの実行は、起動の Promise を持つ `src/node/` のモジュールが進める。React のコンポーネントは、Effect の中でプロセスを起動しない。
 - `bootNodeRuntime` は、DB を使うプロジェクトのときに、DB のプロセスの依存を入れ、DB のプロセスを起動し、初期データの SQL を実行してから、Promise を解決する。30 秒は、`bootNodeRuntime` を呼んでから、Promise が解決するまでの時間で判定する。
 - 30 秒で終わらないときは、`bootNodeRuntime` が、作りかけのインスタンスを破棄してから、Promise を失敗させる。
+- DB の依存の `npm install` が失敗したときは、Promise を失敗させる。`BootError` の `cause` の Error の `cause` に、`npm install` の出力から端末の制御の文字（`\r`、CSI、OSC、ほかの C0 の制御の文字）とスピナーの文字を除き、末尾の 4096 文字を入れる。画面の文は、ほかの起動の失敗と同じにする。原因は、ブラウザのコンソールで読む。
 - 起動が失敗したときは、端末とプレビューのペインに、動かせない理由と、対応するブラウザを出す。
 - `npm install` が 0 でない終了コードで終了したときは、起動のコマンドを実行しない。端末に、`npm install` の出力が残る。
 - 起動のコマンドが複数あるときは、`start` の順に起動する。前のコマンドの終了を待たない。
@@ -668,7 +756,7 @@ sequenceDiagram
   - `PLAYGROUND_PORTS_FILE`: 待ち受けたポートの URL を書くファイルのパス。
   - DB を使うプロジェクトのときは、`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`。
 - 待ち受けたポートの URL を書くファイルは、`/tmp/fukuemon-playground/ports.json` である。中身は、ポートの番号をキー、URL を値にした 1 行の JSON（`{"3000":"https://..."}`）で、ポートが開くか閉じるたびに書き直す。ポートが 1 つも無いときは `{}` である。
-  - `webcontainer/` は、このファイルを、実行環境の中の Node で書く。書く中身を環境変数で渡すので、中身を 1 行にする。WebContainers は、改行を含む環境変数の値を、最初の行で切る。
+  - `webcontainer/` は、このファイルを、実行環境の中の Node で書く。書く中身を環境変数で渡す。WebContainers は、改行を含む環境変数の値を最初の行で切るので、中身を base64 の 1 行にして渡す。
 - `public/_headers` は、Cloudflare でだけ働く。`apps/playground` の `vite.config` は、`vp dev` と `vp preview` でも、`/node/` に同じ isolation のヘッダを返す。
 
 ### SQL
@@ -703,7 +791,7 @@ type SqlResult = {
 ```
 
 - 複数の文を 1 回で渡したときは、`results` に、文ごとの結果が入る。SQL の画面は、最後の文の結果を表示する。
-  - Web Worker で動かす実装は、最後の文のほかの結果の `rows` を空にしてから送る。`fields`、`affectedRows`、`totalRows` は残す。
+  - Web Worker で動かす実装と DB のプロセスは、最後の文のほかの結果の `rows` を空にしてから送る。`fields`、`affectedRows`、`totalRows` は残す。
 - 1 つの文が失敗したときは、全部を取り消す。SQL の画面は、エラーと、全部を取り消したことを表示する。
   - 失敗したときは、`ROLLBACK` を流す。SQL の中の `BEGIN` で始めたトランザクションが失敗したまま残ると、次の SQL が全て失敗するためである。
   - 前の実行で `BEGIN` を流し、開いたままのトランザクションも、この `ROLLBACK` で取り消す。`ROLLBACK` も失敗したときは、元のエラーを返す。
@@ -720,18 +808,29 @@ type SqlResult = {
 - `run` は、SQL の失敗でも、DB が止まっているときでも、Promise を失敗させず、`error` を持つ値を返す。
 - SQL の実行、100,000 行で切る処理、`SqlResponse` を組み立てる処理は、`@fukuemon/sql-runtime` の 1 つの関数が持つ。関数は、PGlite のインスタンスと SQL を受け取る。2 つの実装は、同じ関数を呼ぶ。
   - `guest/` の DB のプロセスのスクリプトは、この関数を import し、ビルドで 1 つのファイルに束ねる。PGlite と `pglite-socket` は束ねず、実行環境の中で `npm install` する。
-  - 束ねる処理は、`@fukuemon/node-runtime` が export する Vite の plugin が持つ。`apps/playground` の `vite.config` は、plugin を登録するだけである。束ねた結果は、コミットしない。
-  - plugin は、ブラウザのコードと別のエントリーポイントから export する。`webcontainer/` は、plugin が束ねた結果を、文字列として import する。
+  - 束ねる処理は、`@fukuemon/node-runtime/vite` が export する Vite の plugin（`guestBundle`）が持つ。plugin は、`<パス>?bundle` の import を、パスのファイルを 1 つの ES module に束ねた文字列にする。`apps/playground` の `vite.config` と `vitest.config` は、plugin を登録するだけである。束ねた結果は、コミットしない。
+  - `webcontainer/` は、plugin が束ねた結果を、文字列として import する。
   - `@fukuemon/node-runtime` は、npm に公開しない。plugin を使うのは、このリポジトリの中だけである。
-  - 束ねられないときは、関数を `guest/` にコピーし、同じテストの入力で、2 つの実装をテストする。束ねられるかは、実装のタスクで確認する。
 
 DB のプロセスの標準入出力では、次の形式で送る。
 
 - リクエスト: 1 行の JSON（`{"id": "<連番>", "sql": "<SQL>"}`）。
 - レスポンス: 行頭にプレフィックスを付けた、1 行の JSON。`id` と、`SqlResponse` の値を持つ。
 - `node-runtime/` は、`id` でリクエストとレスポンスを対応づける。プレフィックスの無い行（DB のプロセスのログと、入力のエコー）は捨てる。
+- `node-runtime/` は、レスポンスの値が `SqlResponse` の形かを確認する。実行環境の中は訪問者が触れるので、DB のプロセスの出力も信頼しない。`id` があり、形に合わない行には、待っているリクエストに `error` を持つ値を返す。
+- リクエストの JSON の U+2028 と U+2029 は、`\u2028` と `\u2029` にエスケープして書く。DB のプロセスの `readline` が、この 2 つを行の区切りとして読むためである。
+- DB のプロセスは、ソケットで待ち受けた後に、プレフィックスを付けた `{"ready": true}` の行を出す。`node-runtime/` は、この行を受けてから、初期データの SQL を送る。
+- DB のプロセスは、結果のセルの bigint、日時、`bytea`、`NaN`、`Infinity` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
+- `json` と `jsonb` のセルは、どちらの実装でも、`JSON.parse` せず Postgres が返す文字列のまま持つ。
+  `JSON.parse` は、安全な整数の範囲を超える値の桁を落とすためである。
+  `json[]` と `jsonb[]` のセルは、要素を文字列のまま、`[` と `]` の間に `, ` でつないだ 1 つの文字列にする。NULL の要素は `null` と書く。
+  JSON の `null` の要素も `null` と書くので、2 つは見分けられない。
+  変える関数（`withLosslessJson`）は、`@fukuemon/sql-runtime` に置く。
+- DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
+- `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。`database` の `status` は変えず、その後に DB のプロセスが終了しても `stopped` にしない。訪問者が起動し直すときに、SQL のペインに DB が止まったことを出さないためである。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
-- `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。端末と、Node のコードのプロセスは、動かし続ける。
+- `status` が `stopped` のときは、SQL のペインにだけ、DB が止まったことをエラーとして出す。エラーの隣に、「実行環境を起動し直す」の操作を出す。起動し直している間は、ヘッダの「起動し直す」と同じく、待ちの表示にして押せなくする。端末と、Node のコードのプロセスは、動かし続ける。
+- 実行環境を起動し直すと、DB のプロセスも作り直し、初期データの SQL から DB を作り直す。SQL で変えた行は残らない。「初期の状態に戻す」も同じである。
 - SQL だけを動かすツールでは、Web Worker が異常終了したときに、`@fukuemon/sql-runtime` が、`status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。SQL の画面は、エラーを出す。次に `run` を呼んだときに、Web Worker を作り直し、`status` を `ready` に戻す。DB の中身は、初期の状態に戻る。
 - Web Worker で動かす実装は、`SqlDatabase` に加えて、読み込みの段階の store（`idle`、`loading`、`seeding`、`ready`、`failed`）と、読み込みを始める関数を持つ。Web Worker は、最初に読み込みを始める関数か `run` を呼んだときに作る。
 - PGlite を読み込めないとき、初期データの SQL が失敗したとき、Web Worker を作れないときは、`run` が `error` を持つ値を返し、Web Worker を終了する。次の `run` で、Web Worker を作り直す。

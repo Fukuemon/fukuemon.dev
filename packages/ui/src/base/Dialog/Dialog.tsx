@@ -55,7 +55,7 @@ export function Dialog({ isOpen, onClose, title, children, footer }: DialogProps
           </h2>
           <button
             aria-label="閉じる"
-            className="-m-2 inline-grid size-11 shrink-0 cursor-pointer place-items-center rounded-control hover:bg-surface-subtle focus-visible:focus-ring"
+            className="-m-2 inline-grid size-11 shrink-0 cursor-pointer place-items-center rounded-control hover:bg-surface-raised-subtle focus-visible:focus-ring"
             onClick={onClose}
             type="button"
           >

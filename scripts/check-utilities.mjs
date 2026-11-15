@@ -100,6 +100,8 @@ const PLAYGROUND_PATHS = [
     "TerminalFrame",
     "PreviewFrame",
     "FileTree",
+    "ConsoleEntryList",
+    "HttpExchangeList",
   ].map((c) => `./packages/ui/src/case/${c}`),
   ...[
     "Button",
@@ -111,6 +113,7 @@ const PLAYGROUND_PATHS = [
     "ActionMenu",
     "SplitPane",
     "PageLoading",
+    "Select",
   ].map((c) => `./packages/ui/src/base/${c}`),
 ].map((p) => resolve(p));
 

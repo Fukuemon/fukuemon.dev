@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
@@ -7,16 +7,24 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import subsetFont from "subset-font";
 
 /**
- * 和文の書体のスライスを、その書体を当てる要素の字だけに作り直す。
+ * 和文の書体の分割を、その書体を当てる要素の字だけに作り直し、使う字の無い分割の @font-face を CSS から削除する。
  * 書体を当てる要素は、ビルドした CSS で、その書体を font-family に持つクラスのセレクタから決める。
  * 要素を特定できないときは、字を取りこぼさないように、全ての HTML の字を使う。
- * スライスの分け方と unicode-range はそのまま残すので、ページは今までと同じスライスだけを取得する。
+ * 使う字のある分割の分け方と unicode-range はそのまま残すので、ページが取得する分割は、作り直す前と変わらない。
+ * 使う字の無い分割のファイルは、どのページも取得しない。その @font-face はレンダリングを妨げる CSS の転送量を増やすので、
+ * CSS から削除し、@font-face が指すファイルも削除する。
  * 作り直したファイルは中身の hash で名前を付け直す。同じ名前のまま中身を変えると、
  * 長く保存したキャッシュが古い字の集合を返し、新しく使った字が別の書体で描かれる。
+ * @param options.rebuild false のときは、使う字のある分割を作り直さず、使う字の無い分割の @font-face を削除するだけにする。
+ *   要素を特定できないときの警告も出さない。全ての HTML の字を使っても、削除する分割が減るだけで、残す分割の中身は変わらないためである。
+ *   名前の hash を差し替えないので、hash の検査もしない
  */
-export function subsetFonts(family: string): AstroIntegration {
+export function subsetFonts(
+  family: string,
+  { rebuild = true }: { rebuild?: boolean } = {},
+): AstroIntegration {
   return {
-    name: "subset-fonts",
+    name: `subset-fonts:${family}`,
     hooks: {
       "astro:build:done": async ({ dir, logger }) => {
         const root = fileURLToPath(dir);
@@ -25,23 +33,62 @@ export function subsetFonts(family: string): AstroIntegration {
         const rules = await collectFontRules(files, family);
         if (rules.classes.size === 0 && rules.unresolved.length === 0)
           throw new Error(`${family}: 書体を当てる規則が CSS に見つからない`);
-        for (const selector of new Set(rules.unresolved))
-          logger.warn(`${family}: ${selector} の要素を特定できないので、全ての HTML の字を使う`);
+        if (rebuild)
+          for (const selector of new Set(rules.unresolved))
+            logger.warn(`${family}: ${selector} の要素を特定できないので、全ての HTML の字を使う`);
         const used = await usedChars(files, css, rules, family);
         const chars = [...used];
         const faces = await collectFaces(css, family);
         if (faces.length === 0)
-          throw new Error(`${family}: 作り直す @font-face が CSS に見つからない`);
+          throw new Error(`${family}: 対象の @font-face が CSS に見つからない`);
         const paths = new Map(faces.map((face) => [face.url, inside(root, face.url)]));
-        for (const face of faces)
-          if (!HASHED.test(face.url))
-            throw new Error(`${face.url}: 名前の hash を差し替えられない`);
+        if (rebuild)
+          for (const face of faces)
+            if (!HASHED.test(face.url))
+              throw new Error(`${face.url}: 名前の hash を差し替えられない`);
+        const texts = new Map(
+          faces.map((face) => [
+            face.url,
+            chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join(""),
+          ]),
+        );
+        const unused = new Set(
+          faces.filter((face) => texts.get(face.url) === "").map((f) => f.url),
+        );
+        // 削除するファイルは、分割の作り直しと CSS の書き換えの前に全て検査する。途中で止まると、出力が書き換えの途中のまま残る。
+        const removed = new Set<string>();
+        const rewrites: [string, string, string][] = [];
+        for (const f of css) {
+          const body = await readFile(f, "utf8");
+          rewrites.push([f, body, removeFaces(body, unused, removed)]);
+        }
+        // URL の表記が違っても同じファイルを指すことがあるので、解決したパスで比べる。
+        const stalePaths = new Set(
+          [...removed].filter((url) => /\.woff2?$/.test(url)).map((url) => inside(root, url)),
+        );
+        const kept = new Set(
+          rewrites.flatMap(([, , next]) =>
+            [...next.matchAll(FONT_URL)]
+              .map((m) => m[1]!)
+              .filter((url) => url.startsWith("/") && !url.startsWith("//"))
+              .map((url) => resolve(root, `.${url}`)),
+          ),
+        );
+        for (const path of stalePaths) {
+          const name = relative(root, path);
+          if (kept.has(path))
+            throw new Error(
+              `${name}: 削除する @font-face のファイルを、残した @font-face も指している`,
+            );
+          if (!(await stat(path).catch(() => undefined))?.isFile())
+            throw new Error(`${name}: 削除する @font-face のファイルが出力に無い`);
+        }
         const renames = new Map<string, string>();
         let before = 0;
         let after = 0;
         for (const face of faces) {
-          const text = chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
-          if (text === "") continue;
+          const text = texts.get(face.url)!;
+          if (text === "" || !rebuild) continue;
           const path = paths.get(face.url)!;
           const src = await readFile(path);
           const subset = await subsetFont(src, text, { targetFormat: "woff2" });
@@ -52,19 +99,39 @@ export function subsetFonts(family: string): AstroIntegration {
           before += src.length;
           after += subset.length;
         }
-        for (const f of css) {
-          const body = await readFile(f, "utf8");
-          let next = body;
-          for (const [from, to] of renames) next = next.replace(urlOf(from), `$1${to}$2`);
+        for (const [f, body, pruned] of rewrites) {
+          let next = pruned;
+          for (const [from, to] of renames)
+            next = next.replace(urlOf(from), (_, open: string, close: string) => open + to + close);
           if (next !== body) await writeFile(f, next);
         }
+        for (const path of stalePaths) await rm(path);
         logger.info(
-          `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars)`,
+          rebuild
+            ? `${family}: ${renames.size} files, ${kib(before)} KiB -> ${kib(after)} KiB (${used.size} chars), ${unused.size} unused faces removed`
+            : `${family}: ${unused.size} unused faces removed (${used.size} chars)`,
         );
       },
     },
   };
 }
+
+/** woff2 の URL が `urls` にある @font-face を、CSS から削除する。削除した @font-face の src の URL を `removed` に足す */
+function removeFaces(css: string, urls: ReadonlySet<string>, removed: Set<string>): string {
+  if (urls.size === 0) return css;
+  return css.replace(/@font-face\s*\{([^}]*)\}/g, (rule, body: string) => {
+    const url = woff2Of(body);
+    if (url === undefined || !urls.has(url)) return rule;
+    for (const [, src] of body.matchAll(FONT_URL)) removed.add(src!);
+    return "";
+  });
+}
+
+/** url() の中身。引用符で囲んでも囲まなくてもよい */
+const FONT_URL = /url\(["']?([^)"']+)["']?\)/g;
+
+const woff2Of = (body: string): string | undefined =>
+  [...body.matchAll(FONT_URL)].map((m) => m[1]!).find((u) => u.endsWith(".woff2"));
 
 interface Face {
   url: string;
@@ -82,7 +149,7 @@ export function parseFaces(css: string, family: string): Face[] {
   const named = new RegExp(`font-family:\\s*["']?${escapeRegExp(family)}["']?\\s*;`, "i");
   for (const [, body] of css.matchAll(/@font-face\s*\{([^}]*)\}/g)) {
     if (!named.test(body)) continue;
-    const url = /url\(([^)]+\.woff2)\)/.exec(body)?.[1]?.replace(/^["']|["']$/g, "");
+    const url = woff2Of(body);
     const range = /unicode-range:([^;}]*)/.exec(body)?.[1];
     if (url === undefined || range === undefined) continue;
     out.push({ url, ranges: parseRanges(range) });
@@ -144,12 +211,13 @@ export function parseFontRules(css: string, family: string): FontRules {
 
 /** .css と、HTML に埋め込まれた style の規則から、書体を持つ規則を集める */
 async function collectFontRules(files: string[], family: string): Promise<FontRules> {
-  const texts: string[] = [];
+  // ページに共通の style は、同じ文字列を 1 回だけ読む。
+  const texts = new Set<string>();
   for (const f of files) {
-    if (f.endsWith(".css")) texts.push(await readFile(f, "utf8"));
-    if (f.endsWith(".html")) texts.push(...styleTexts(await readFile(f, "utf8")));
+    if (f.endsWith(".css")) texts.add(await readFile(f, "utf8"));
+    if (f.endsWith(".html")) for (const t of styleTexts(await readFile(f, "utf8"))) texts.add(t);
   }
-  return parseFontRules(texts.join("\n"), family);
+  return parseFontRules([...texts].join("\n"), family);
 }
 
 type HtmlNode = DefaultTreeAdapterMap["node"];
@@ -222,7 +290,7 @@ const cssContentChars = (css: string): string =>
  * 字を集める。HTML は、書体を当てる要素の字だけを集める。
  * 要素を特定できないセレクタがあるときは、全ての要素の字を集める。
  * JS の字は U+2000 から上だけを集める。
- * JS は island が描く文言を持つが、ライブラリの欧文の表まで拾うと Latin のスライスが減らない
+ * JS は island が描く文言を持つが、ライブラリの欧文の表まで拾うと Latin の分割が減らない
  */
 async function usedChars(
   files: string[],
@@ -252,6 +320,7 @@ function inside(root: string, url: string): string {
   if (
     !url.startsWith("/") ||
     url.startsWith("//") ||
+    rel === "" ||
     rel === ".." ||
     rel.startsWith(`..${sep}`) ||
     isAbsolute(rel)

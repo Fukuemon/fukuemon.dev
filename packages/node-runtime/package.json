@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./vite": "./vite.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
   },
@@ -16,9 +17,14 @@
     "@webcontainer/api": "1.6.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "@electric-sql/pglite-socket": "0.2.19",
     "@fukuemon/config": "workspace:*",
+    "@types/node": "^26.6.5",
     "@vitest/coverage-v8": "^4.1.11",
+    "rolldown": "1.2.19",
     "typescript": "6.0.2",
+    "vite": "catalog:",
     "vitest": "^4.1.11"
   }
 }

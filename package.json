@@ -39,7 +39,8 @@
     "infra:bootstrap:apply": "terraform -chdir=infra/bootstrap apply",
     "test:garden": "pnpm --filter @fukuemon/e2e run test:garden",
     "check:garden-bundle": "node scripts/check-garden-bundle.mjs",
-    "measure:top": "node scripts/measure-top-lighthouse.mjs"
+    "measure:top": "node scripts/measure-top-lighthouse.mjs",
+    "measure:top-intro": "node scripts/measure-top-intro.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

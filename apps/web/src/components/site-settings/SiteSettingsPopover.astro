@@ -1,0 +1,166 @@
+---
+// ヘッダーの歯車（SiteSettingsButton）で開く設定の面。React は配らず、Switch を静的な HTML に描き、下の script で動かす。
+// 面は popover にする。庭とヘッダーより上の層に出し、Esc と面の外のクリックで閉じ、閉じたら歯車にフォーカスを戻すのを、ブラウザに任せる。
+// ヘッダーの外に置く。トップの庭がヘッダーに掛ける霞の色を、面に引き継がないためである。
+import { Switch } from "@fukuemon/ui";
+import { buttonClassName } from "@fukuemon/ui/button-class-name";
+import { PICK_CHOICES, SITE_SETTINGS_ID } from "./settings";
+
+// 季節と時間帯の帯は、トップの庭の中の移動のボタンと同じく band のボタングループにする。枠線、ステッチ、押したボタンの反転は band が描く。
+// 5 つを同じ幅（flex-1）で並べ、幅 320px で面にスクロールバーが出ても 1 行に収める
+const pickClass = "min-h-11 min-w-11 flex-1 cursor-pointer px-1 text-label whitespace-nowrap focus-visible:focus-ring";
+const picks = [
+  { name: "season", label: "季節", choices: PICK_CHOICES.season },
+  { name: "time", label: "時間帯", choices: PICK_CHOICES.time },
+] as const;
+---
+
+<div
+  id={SITE_SETTINGS_ID}
+  popover
+  class="site-settings m-0 w-80 animate-fade-in rounded-control border border-border-field bg-surface-raised p-6 text-text shadow-raised"
+  role="dialog"
+  aria-labelledby="site-settings-title"
+  data-site-settings
+  data-testid="site-settings"
+>
+  <h2 class="font-heading text-heading-sm font-semibold" id="site-settings-title">表示の設定</h2>
+  <div class="mt-4 flex flex-col gap-4">
+    <div>
+      <Switch label="アニメーション" data-setting="motion" data-testid="setting-motion" aria-describedby="setting-motion-note" />
+      <p class="text-caption text-text-secondary" id="setting-motion-note">オフにすると、サイト全体で動きを止めます。</p>
+    </div>
+    <div>
+      <Switch label="トップの庭" data-setting="garden" data-testid="setting-garden" aria-describedby="setting-garden-note" />
+      <p class="text-caption text-text-secondary" id="setting-garden-note">
+        オフにすると、トップを通常のページとして表示します。トップを開いているときにオンにすると、ページを読み込み直します。
+      </p>
+    </div>
+    <div class="flex flex-col gap-4 border-t border-border pt-4">
+      {
+        picks.map(({ name, label, choices }) => (
+          <div>
+            <p class="text-body-dense text-text" id={`setting-${name}-label`}>
+              {label}
+            </p>
+            <div
+              class="band mt-2"
+              role="group"
+              aria-labelledby={`setting-${name}-label`}
+              aria-describedby="setting-scene-note"
+              data-pick={name}
+              data-testid={`setting-${name}`}
+            >
+              {choices.map(({ value, label: text }) => (
+                <button type="button" class={pickClass} aria-pressed="false" data-value={value} data-testid={`setting-${name}-${value}`}>
+                  {text}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+      <p class="text-caption text-text-secondary" id="setting-scene-note">
+        トップの庭の場面を選びます。自動にすると、端末の日付と時刻で決めます。庭を開いているときに選ぶと、ページを読み込み直します。
+      </p>
+    </div>
+    <div class="border-t border-border pt-4">
+      <button
+        type="button"
+        class={buttonClassName({ variant: "secondary", size: "S" })}
+        aria-describedby="intro-again-note"
+        data-intro-again
+        data-testid="intro-again"
+      >
+        イントロをもう一度見る
+      </button>
+      <p class="mt-2 text-caption text-text-secondary" id="intro-again-note">
+        トップをもう一度開き、初めての訪問と同じイントロを流します。アニメーションとトップの庭がオンのときに使えます。
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 面は、歯車の下に、右端を歯車にそろえて出す。位置と大きさの上限は、開くときに script が歯車から決める。popover は top layer に出るので、庭とヘッダーの重なりの順に依らない。背の低い画面では、面の中を縦に送る */
+  .site-settings:popover-open {
+    position: fixed;
+    inset: auto;
+    overflow-y: auto;
+  }
+</style>
+
+<script>
+  import { changeSetting, INTRO_PARAM, pickChangeOf, type PickName, type SettingName } from "./settings";
+
+  const root = document.documentElement;
+  const panel = document.querySelector<HTMLElement>("[data-site-settings]");
+  const switches = [...(panel?.querySelectorAll<HTMLButtonElement>("[data-setting]") ?? [])];
+  const groups = [...(panel?.querySelectorAll<HTMLElement>("[data-pick]") ?? [])];
+  const introAgain = panel?.querySelector<HTMLButtonElement>("[data-intro-again]");
+
+  // 静的に描いた Switch と帯のボタンは、保存した値を知らずに出るので、面を開くたびと切り替えるたびに、html の属性へ合わせる。
+  const sync = () => {
+    for (const g of groups) {
+      const picked = root.dataset[`${g.dataset.pick as PickName}Setting`] ?? "auto";
+      for (const b of g.querySelectorAll<HTMLButtonElement>("[data-value]")) {
+        b.setAttribute("aria-pressed", String(b.dataset.value === picked));
+      }
+    }
+    for (const b of switches) {
+      b.setAttribute("aria-checked", String(root.dataset[b.dataset.setting as SettingName] !== "off"));
+    }
+    const ready = root.dataset.motion !== "off" && root.dataset.garden !== "off";
+    if (ready) introAgain?.removeAttribute("aria-disabled");
+    else introAgain?.setAttribute("aria-disabled", "true");
+  };
+
+  const opener = document.querySelector<HTMLElement>(`[popovertarget="${panel?.id}"]`);
+  // 面の位置は、ヘッダーが折り返すかと、歯車の右端の位置に依るので、開くたびと画面の大きさが変わるたびに、歯車から決める。
+  const place = () => {
+    if (!panel || !opener) return;
+    const gap = 8;
+    const edge = 16;
+    const r = opener.getBoundingClientRect();
+    const top = r.bottom + gap;
+    panel.style.top = `${top}px`;
+    // 面の幅は w-80（20rem）で、狭い画面では左右に edge を残して縮める。左端が画面の外に出ないよう、右端の位置を抑える。
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const width = Math.min(20 * rem, innerWidth - 2 * edge);
+    const right = Math.min(Math.max(edge, innerWidth - r.right), innerWidth - edge - width);
+    panel.style.right = `${right}px`;
+    panel.style.maxInlineSize = `${innerWidth - 2 * edge}px`;
+    panel.style.maxBlockSize = `${innerHeight - top - edge}px`;
+  };
+
+  panel?.addEventListener("beforetoggle", (e) => {
+    sync();
+    if ((e as ToggleEvent).newState === "open") place();
+  });
+  addEventListener("resize", () => {
+    if (panel?.matches(":popover-open")) place();
+  });
+  for (const g of groups) {
+    const name = g.dataset.pick as PickName;
+    for (const b of g.querySelectorAll<HTMLButtonElement>("[data-value]")) {
+      b.addEventListener("click", () => {
+        const change = pickChangeOf(root, name, b.dataset.value);
+        if (change === undefined) return;
+        changeSetting(root, () => localStorage, change);
+        sync();
+      });
+    }
+  }
+  for (const b of switches) {
+    b.addEventListener("click", () => {
+      const name = b.dataset.setting as SettingName;
+      changeSetting(root, () => localStorage, { name, on: root.dataset[name] === "off" });
+      sync();
+    });
+  }
+  introAgain?.addEventListener("click", () => {
+    if (introAgain.getAttribute("aria-disabled") === "true") return;
+    location.assign(`/?${INTRO_PARAM}`);
+  });
+  sync();
+</script>

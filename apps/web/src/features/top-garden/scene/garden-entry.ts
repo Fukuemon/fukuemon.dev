@@ -4,13 +4,14 @@
 import { startGarden, type Garden } from "./garden";
 import { INK_END } from "../intro-timing";
 import { STATIONS } from "../layout";
+import { SETTINGS_CHANGE, type SettingsChange } from "../../../components/site-settings/settings";
 import type { Season, TimeOfDay } from "../stage/season";
 
 const root = document.documentElement;
 const wiring = new AbortController();
 const on = { signal: wiring.signal };
 
-/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと「文だけで読む」で呼ぶ */
+/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと、設定で庭の表示をオフにしたときに呼ぶ */
 function leave(cards: readonly HTMLElement[]): void {
   wiring.abort();
   for (const el of cards) el.classList.remove("is-current");
@@ -22,8 +23,6 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
   const nav = document.querySelector<HTMLElement>("[data-garden-nav]");
   const live = document.querySelector<HTMLElement>("[data-garden-live]");
   const stops = [...(nav?.querySelectorAll<HTMLButtonElement>("[data-station]") ?? [])];
-  const pause = nav?.querySelector<HTMLButtonElement>("[data-garden-pause]");
-  const plain = nav?.querySelector<HTMLButtonElement>("[data-garden-plain]");
 
   const select = (i: number, announce: boolean) => {
     const s = garden.go(i);
@@ -55,20 +54,11 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       if (
         e.target instanceof Element &&
-        e.target.closest("input, textarea, select, [contenteditable]")
+        e.target.closest("input, textarea, select, [contenteditable], [popover]")
       )
         return;
       if (e.key === "ArrowRight") select(garden.current() + 1, true);
       else if (e.key === "ArrowLeft") select(garden.current() - 1, true);
-    },
-    on,
-  );
-  pause?.addEventListener(
-    "click",
-    () => {
-      const pressed = pause.getAttribute("aria-pressed") !== "true";
-      pause.setAttribute("aria-pressed", String(pressed));
-      garden.pause(pressed);
     },
     on,
   );
@@ -78,20 +68,6 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
     (e) => {
       if (fine.matches)
         garden.pointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
-    },
-    on,
-  );
-  plain?.addEventListener(
-    "click",
-    () => {
-      try {
-        garden.stop();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        leave(cards);
-        cards[0]?.querySelector<HTMLElement>("h1")?.focus();
-      }
     },
     on,
   );
@@ -145,33 +121,111 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
     },
     introOn,
   );
-  // 墨の線と署名の遷移は、最初にスタイルが付いた時点から動くので、HTML が遅く届くとその分だけ後ろにずれる。遷移が終わるのを待つ。遷移を取れない場合に備え、開いてからの時刻（INK_END）も下限として待つ。
+  // 墨の線と署名の遷移は、墨の絵と署名のファイルを挿入した時点（ink-ready）から動くので、ファイルが遅く届くとその分だけ後ろにずれる。届いてから、遷移が終わるのを待つ。遷移を取れない場合に備え、ink-ready からの時刻（INK_END）も下限として待つ。
   // 松の円の不透明度の遷移は線より後に終わるので待たない。色が差した後も、松の円は現れ続けてよい（Design Doc の「イントロの各段の時間」）。
-  const drawing = (
-    document.querySelector("[data-garden-stage] .ink-gate")?.getAnimations({ subtree: true }) ?? []
-  ).filter(
-    (a) =>
-      a instanceof CSSTransition &&
-      (a.transitionProperty === "stroke-dashoffset" || a.transitionProperty === "--sign-w"),
-  );
-  const floor = new Promise((r) => setTimeout(r, Math.max(0, INK_END - performance.now())));
-  void Promise.allSettled([floor, ...drawing.map((a) => a.finished)]).then(() => {
-    if (introWiring.signal.aborted) return;
-    root.classList.add("enter");
-    performance.mark("garden-enter");
-    garden.enter({ cards: show, done: finish });
+  afterInk(garden, cards, introWiring.signal, (inkReadyAt) => {
+    const drawing = (
+      document.querySelector("[data-garden-stage] .ink-gate")?.getAnimations({ subtree: true }) ??
+      []
+    ).filter(
+      (a) =>
+        a instanceof CSSTransition &&
+        (a.transitionProperty === "stroke-dashoffset" || a.transitionProperty === "--sign-w"),
+    );
+    const floor = new Promise((r) =>
+      setTimeout(r, Math.max(0, inkReadyAt + INK_END - performance.now())),
+    );
+    void Promise.allSettled([floor, ...drawing.map((a) => a.finished)]).then(() => {
+      if (introWiring.signal.aborted) return;
+      root.classList.add("enter");
+      performance.mark("garden-enter");
+      garden.enter({ cards: show, done: finish });
+    });
   });
+}
+
+/**
+ * 表示の設定に合わせる。アニメーションがオフの間は、カメラを動かさずに切り替え、ポインタに合わせて揺らさない。
+ * 庭の表示をオフにしたら、ふつうのページに戻す。フォーカスは設定の面に残す。
+ */
+function follow(garden: Garden, cards: readonly HTMLElement[]): void {
+  garden.pause(root.dataset.motion === "off");
+  root.addEventListener(
+    SETTINGS_CHANGE,
+    (e) => {
+      const change = (e as CustomEvent<SettingsChange>).detail;
+      // 季節と時間帯の変更は、head の inline script が読み込み直して当てる。
+      if (!("on" in change)) return;
+      if (change.name === "motion") {
+        garden.pause(!change.on);
+        return;
+      }
+      if (change.on) return;
+      try {
+        garden.stop();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        leave(cards);
+      }
+    },
+    on,
+  );
+}
+
+/**
+ * 墨の絵と署名が挿入される（class `ink-ready`）のを待ち、挿入した時刻を渡して `run` を呼ぶ。
+ * 届かなかったとき（class `ink-failed`）は、庭を止めて、ふつうのページに戻す。
+ */
+function afterInk(
+  garden: Garden,
+  cards: readonly HTMLElement[],
+  signal: AbortSignal,
+  run: (inkReadyAt: number) => void,
+): void {
+  const check = (): boolean => {
+    if (signal.aborted) return true;
+    if (root.classList.contains("ink-ready")) {
+      run(performance.getEntriesByName("ink-ready")[0]?.startTime ?? performance.now());
+      return true;
+    }
+    if (!root.classList.contains("ink-failed")) return false;
+    try {
+      garden.stop();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      leave(cards);
+    }
+    return true;
+  };
+  if (check()) return;
+  const observer = new MutationObserver(() => {
+    if (check()) observer.disconnect();
+  });
+  observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+  signal.addEventListener("abort", () => observer.disconnect(), { once: true });
 }
 
 function boot(): void {
   if (!root.classList.contains("stage-on")) return;
+  // バンドルを読み込む間に、表示の設定で庭の表示をオフにしていたら、庭を立ち上げずにふつうのページに戻す。
+  if (root.dataset.garden === "off") {
+    leave([]);
+    return;
+  }
   const stage = document.querySelector<HTMLElement>("[data-garden-stage]");
   // 和紙を掛ける木は STATIONS の順なので、セクションを文書の順でなく id で引く。
   const cards = STATIONS.map(({ id }) =>
     document.querySelector<HTMLElement>(`[data-garden-card][aria-labelledby="${id}"]`),
   ).filter((el) => el !== null);
-  // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。
+  // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。選んだ値は、表示の設定の applySettings が決めた値に絞っている。
   const intro = root.classList.contains("intro");
+  // 墨の絵と署名が届かなかったときは、場面を組み立てずに、ふつうのページに戻す。
+  if (intro && root.classList.contains("ink-failed")) {
+    leave(cards);
+    return;
+  }
   const opts = {
     season: root.dataset.season as Season,
     time: root.dataset.time as TimeOfDay,
@@ -190,6 +244,7 @@ function boot(): void {
   }
   root.classList.add("scene-ready");
   performance.mark("garden-scene-ready");
+  follow(garden, cards);
   if (intro) runIntro(garden, cards);
   else reveal(garden, cards);
 }

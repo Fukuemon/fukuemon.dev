@@ -11,7 +11,8 @@ status: draft
 
 E2E は Playwright（`@playwright/test`）で書く。
 要素は testid（`getByTestId`）で拾い、確認は `expect(locator)` の自動の待ちに任せる。
-画面の文字を比べるときは、`packages/e2e/tests/fixtures/articles.ts` の定数を、確認の両側に渡す。値を読んでから比べない。
+画面の文字を比べるときは、`packages/e2e/tests/fixtures/` の定数（記事の題は `articles.ts`、プレイグラウンドのツールは `playground.ts`）を、確認の両側に渡す。
+値を読んでから比べない。
 
 ## Test IDs
 
@@ -19,15 +20,27 @@ E2E は Playwright（`@playwright/test`）で書く。
 testid は、アプリのコンポーネント（`apps/web/src/features/articles/ArticleRow.astro`、`apps/web/src/pages/articles/[...slug].astro`）に付ける。
 `@fukuemon/ui` の `Link` は、渡された `data-testid` を `<a>` に付ける。
 
+プレイグラウンドの一覧のツールのリンクは `playground-tool-link` で、`apps/web/src/pages/playground/index.astro` に付ける。
+ヘッダーのリンクは `SITE_NAV` から並べるので testid を付けず、`selectors/site-header.ts` に置いた関数が、リンクの名前で指す。
+
 トップの庭の testid は次のとおり。
 
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
-- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。「動きを止める」は `garden-pause`、「文だけで読む」は `garden-plain`、イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
+- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
 - 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-stack`、`garden-card-portfolio` である。プロフィールの見出しは `garden-title` である。
 - testid は、次のファイルに付ける。
   - `apps/web/src/features/top-garden/Profile.astro`
   - `apps/web/src/features/top-garden/scene/GardenStage.astro`
   - `apps/web/src/components/SiteHeader.astro`
+
+表示の設定の testid は次のとおり。
+
+- 歯車のボタンは `site-settings-open`、設定の面は `site-settings` である。
+- アニメーションのスイッチは `setting-motion`、トップの庭のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。
+- 季節と時間帯の帯は `setting-season` と `setting-time`、帯の中のボタンは `setting-season-<値>` と `setting-time-<値>` である。
+  値には、`auto` か、季節と時間帯の区分（`spring`、`morning` など）が入る。
+- testid は、`apps/web/src/components/site-settings/` の `SiteSettingsPopover.astro` と `SiteSettingsButton.tsx` に付ける。
+- 開く前に設定を保存した状態にするときは、`tests/widgets/actions/preset-settings.ts` の `presetSettings` を使う。
 
 testid を付けられない要素は、`packages/e2e/tests/selectors/` にまとめる。
 記事の本文の表、図、コードブロックは Markdown の変換が作る要素なので、`selectors/article-body.ts` で指す。
@@ -97,10 +110,10 @@ pnpm run test:garden
   - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
 - 庭は WebGL で描くので、GPU に依らないよう、project `garden` が chromium に SwiftShader で描かせる。
   - SwiftShader は 1 フレームを描くのが遅く、ほかの spec と並べると、最初の絵が画面に出るまでに数秒かかる。
-  - `garden-appearance.e2e.ts`、`garden-intro.e2e.ts`、`garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
+  - `garden-appearance.e2e.ts`、`garden-falling.e2e.ts`、`garden-intro.e2e.ts`、`garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
   - project `garden` は、`expect` の待ちを 45 秒にする。カメラが行き先に着くまでの待ちが、デフォルトの 5 秒を超えるためである。
   - `page.clock` を使うと、ページの `requestAnimationFrame` は 16ms のタイマーに替わり、画面にフレームが出るのを待たない。本物の `requestAnimationFrame` を待つときは、`tests/widgets/waits/presented-frames.ts` の `waitForPresentedFrames` を使う。
-  - カメラの移動の動きを確認しない庭の spec は、「動きを止める」を押してから移る。止めたカメラは 1 フレームで行き先に着く。
+  - カメラの移動の動きを確認しない庭の spec は、アニメーションをオフにした設定で開いてから移る。オフのカメラは 1 フレームで行き先に着く。
 - 基準のスナップショットは、`packages/e2e/tests/specs/garden/__screenshots__/<spec のファイル名>/` に、Linux で作った 1 枚だけを置く。
   - 比べるときは、違うピクセルを全体の 1% まで許す（`maxDiffPixelRatio`）。
   - 合否は CI の Linux で決める。

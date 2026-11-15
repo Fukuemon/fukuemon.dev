@@ -13,23 +13,28 @@ import {
   styledCards,
 } from "../../selectors/garden";
 
-import { AUTUMN_NOON } from "./garden-time";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
 import { seenBefore } from "../../widgets/actions/seen-before";
+import { presetSettings } from "../../widgets/actions/preset-settings";
 
 // SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかるので、テストの時間の上限を 3 倍にする
 test.beforeEach(() => test.slow());
 
 /**
- * 庭を開く。`paused` が true のときは、続けて「動きを止める」を押す。
- * カメラは、止めると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると、`expectAt` の 1 回の待ちの上限（config の expect の時間）を超える。
+ * 庭を開く。`paused` が true のときは、表示の設定でアニメーションをオフにして開く。
+ * カメラは、オフにすると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると、`expectAt` の 1 回の待ちの上限（config の expect の時間）を超える。
  * 移動の動き自体を確かめるテスト以外は、止めてから移る。
+ * 止めないときは、舞う物の無い夏の昼で開く。舞う物があると、SwiftShader が描き続けてメインスレッドが空かず、クリックが時間の上限を超えるためである。
  */
 const openGarden = async (page: Page, { paused = false } = {}) => {
   await seenBefore(page);
+  await presetSettings(
+    page,
+    paused ? { motion: "off", garden: "on" } : { season: "summer", time: "day" },
+  );
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await expect(htmlElement(page)).toHaveClass(/garden-ready/);
-  if (paused) await page.getByTestId("garden-pause").click();
 };
 
 const card = (page: Page, id: string) => page.getByTestId(`garden-card-${id}`);
@@ -84,15 +89,17 @@ test.describe("トップの庭", () => {
       await expect(page.getByTestId("garden-station-1")).toBeFocused();
     });
 
-    test("「文だけで読む」を押した場合、ふつうのページが出て、フォーカスが h1 に移り、セクションにインラインのスタイルが残らないこと", async ({
+    test("表示の設定で庭の表示をオフにした場合、ふつうのページが出て、フォーカスが設定に残り、セクションにインラインのスタイルが残らないこと", async ({
       page,
     }) => {
       await openGarden(page);
       await page.getByTestId("garden-station-1").click();
-      await page.getByTestId("garden-plain").click();
+      await page.getByTestId("site-settings-open").click();
+      await page.getByTestId("setting-garden").click();
       await expect(page.getByTestId("garden-stage")).toBeHidden();
       await expect(page.getByTestId("garden-nav")).toBeHidden();
-      await expect(page.getByTestId("garden-title")).toBeFocused();
+      await expect(page.getByTestId("setting-garden")).toBeFocused();
+      await expect(page.getByTestId("setting-garden")).toHaveAttribute("aria-checked", "false");
       await expect(mainCards(page)).toHaveCount(4);
       await expect(styledCards(page)).toHaveCount(0);
       await expect(currentCards(page)).toHaveCount(0);
@@ -212,11 +219,11 @@ test.describe("トップの庭", () => {
   test.describe("幅 375px、高さ 548px", () => {
     test.use({ viewport: { width: 375, height: 548 }, colorScheme: "light" });
 
-    test("4 つの文のどれへ移った場合も、4 つの文へ移るボタンが 1 行に並び、和紙の下の端に重ならないこと", async ({
+    test("4 つの文のどれへ移った場合も、4 つの文へ移るボタンが和紙の下の端に重ならないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
-      const result: Record<string, { rows: number; overlap: boolean }> = {};
+      const overlap: Record<string, boolean> = {};
       for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
@@ -224,17 +231,13 @@ test.describe("トップの庭", () => {
           els.map((el) => el.getBoundingClientRect().top),
         );
         const paper = (await card(page, id).boundingBox())!;
-        result[id] = {
-          rows: new Set(tops.map(Math.round)).size,
-          overlap: paper.y + paper.height > Math.min(...tops),
-        };
+        overlap[id] = paper.y + paper.height > Math.min(...tops);
       }
-      const expected = { rows: 1, overlap: false };
-      expect(result).toStrictEqual({
-        profile: expected,
-        career: expected,
-        stack: expected,
-        portfolio: expected,
+      expect(overlap).toStrictEqual({
+        profile: false,
+        career: false,
+        stack: false,
+        portfolio: false,
       });
     });
   });

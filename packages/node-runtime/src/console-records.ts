@@ -1,0 +1,282 @@
+import { createStore } from "./store";
+import type {
+  ConsoleLevel,
+  ConsoleRecord,
+  ConsoleRecordValue,
+  ConsoleSource,
+  ProcessInfo,
+  Store,
+} from "./types";
+
+/** プレビューに入れるスクリプトが送るメッセージの type。 */
+export const PREVIEW_CONSOLE_MESSAGE = "fukuemon:console";
+
+/** 1 つの実行環境が持つコンソールの記録の上限。超えたときは、古いものから捨てる。 */
+const MAX_RECORDS = 1000;
+/**
+ * 1 つの実行環境が持つコンソールの記録の重さの合計の上限。超えたときは、古いものから捨てる。
+ * 1 件の重さは、値の木が持つ文字数に、値と Error のスタックの行の数に VALUE_WEIGHT を掛けた数を足したものである。
+ * 真偽値、null、配列、オブジェクトのように文字を持たない値も、メモリを使うので数える。
+ */
+const MAX_TOTAL_WEIGHT = 4 * 1024 * 1024;
+/** 値の 1 個を、文字の何字分と数えるか。小さい JavaScript のオブジェクトの大きさ（16 バイト前後）を、UTF-16 の 1 字の 2 バイトで割った値である。 */
+const VALUE_WEIGHT = 8;
+
+/**
+ * 1 件の記録の大きさの上限。訪問者のプログラムとプレビューのページも記録を出せるので、写す側（guest/console-value.cjs）の上限を超えた分を捨てる。
+ * 深さは、写す側が中身を写さずに文字にした段を含める。値の数は、写す側の上限に、入れ子ごとに 1 つ足す残りの件数の印の分の余裕を足す。
+ * 引数と 1 つの入れ子の要素は、写す側の上限の 100 個に、残りの件数の印を 1 つ足した数まで受ける。
+ * 文字数の合計は、写す側の上限の 256 K 字に、切った印と、写す側が数えない文字（数、項目の名前、残りの件数の印）の余裕を足す。
+ * プレビューのページの postMessage には大きさの上限が無いので、1 件の記録が持つ文字の全体を数える。
+ */
+const MAX_DEPTH = 6;
+const MAX_NODES = 2100;
+const MAX_ITEMS = 101;
+const MAX_CHARS = 512 * 1024;
+/** 時刻は、HTTP の記録と同じく、0 以上の安全な整数で、今より 1 日を超えて先でないものだけを受ける。 */
+const MAX_FUTURE_MS = 24 * 60 * 60 * 1000;
+const MAX_TEXT = 10_001;
+const MAX_STACK = 30;
+
+const LEVELS: ReadonlySet<string> = new Set(["debug", "log", "info", "warn", "error"]);
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isLevel = (value: unknown): value is ConsoleLevel =>
+  typeof value === "string" && LEVELS.has(value);
+
+const isTime = (value: unknown): value is number =>
+  Number.isSafeInteger(value) &&
+  (value as number) >= 0 &&
+  (value as number) <= Date.now() + MAX_FUTURE_MS;
+
+/** 配列の長さ。写した要素の数（残りの件数の印を含む）より短くなく、JavaScript の配列の長さの上限を超えない。 */
+const isArrayLength = (value: unknown, itemCount: number): value is number =>
+  Number.isSafeInteger(value) && (value as number) >= itemCount && (value as number) <= 2 ** 32 - 1;
+
+const isText = (value: unknown): value is string =>
+  typeof value === "string" && value.length <= MAX_TEXT;
+
+/** 形に合わない値、上限を超えた値に当たったときに、記録の全体を捨てるための印。 */
+class Rejected extends Error {}
+
+const reject = (): never => {
+  throw new Rejected();
+};
+
+/**
+ * 1 件の記録で読める値の数と文字数の残りと、値の数のほかに重さに数える項目の数。
+ * Error のスタックの行は、値の数の上限に数えない。写す側が、文字数を使い切った後も Error ごとに「…」の行を出すためである。重さには、値と同じく数える。
+ * 1 件の重さの最大は、512 K 字と (2100 + 2100 × 30) × 8 の和の約 1.05 M で、MAX_TOTAL_WEIGHT を下回る。上限の値を変えるときは、この関係を保つ。
+ */
+type Budget = { nodes: number; chars: number; stackLines: number };
+
+const createBudget = (): Budget => ({ nodes: MAX_NODES, chars: MAX_CHARS, stackLines: 0 });
+
+/**
+ * 配列の要素を、先頭から順に読む。長さを先に確かめ、穴は undefined として読む。
+ * map は穴で callback を呼ばないので、穴だけの長い配列を、値の数を減らさずに回してしまう。
+ */
+function each<T>(items: unknown, read: (item: unknown) => T): T[] {
+  if (!Array.isArray(items) || items.length > MAX_ITEMS) return reject();
+  const out: T[] = [];
+  for (let index = 0; index < items.length; index += 1) out.push(read(items[index]));
+  return out;
+}
+
+/** 値の木を読む。budget は、1 件の記録で読める値の数と文字数の残りである。 */
+function toValue(raw: unknown, depth: number, budget: Budget): ConsoleRecordValue {
+  budget.nodes -= 1;
+  if (budget.nodes < 0 || depth > MAX_DEPTH || !isObject(raw)) return reject();
+  const text = (value: unknown) => {
+    if (!isText(value)) return reject();
+    budget.chars -= value.length;
+    return budget.chars < 0 ? reject() : value;
+  };
+  const next = (item: unknown) => toValue(item, depth + 1, budget);
+  const list = (items: unknown) => each(items, next);
+  switch (raw.kind) {
+    case "string":
+    case "text":
+      return { kind: raw.kind, value: text(raw.value) };
+    case "bigint": {
+      // 写す側は、長い bigint の末尾を「…」にし、文字数を使い切った後は「…」だけにする
+      const value = text(raw.value);
+      return /^-?(\d+…?|…)$/.test(value) ? { kind: "bigint", value } : reject();
+    }
+    case "number": {
+      // 写す側が String(数) で書いた文字だけを受ける。Number は、空の文字や 16 進数の文字も数にする
+      const source = text(raw.value);
+      const value = Number(source);
+      return source === "-0" || String(value) === source ? { kind: "number", value } : reject();
+    }
+    case "boolean":
+      return typeof raw.value === "boolean" ? { kind: "boolean", value: raw.value } : reject();
+    case "null":
+    case "undefined":
+    case "circular":
+      return { kind: raw.kind };
+    case "symbol":
+      return { kind: "symbol", description: text(raw.description) };
+    case "function":
+      return { kind: "function", name: text(raw.name) };
+    case "array": {
+      const items = list(raw.items);
+      return isArrayLength(raw.length, items.length)
+        ? { kind: "array", length: raw.length, items }
+        : reject();
+    }
+    case "set":
+      return { kind: "set", items: list(raw.items) };
+    case "object": {
+      const entries = each(raw.entries, (entry) =>
+        isObject(entry) ? { key: text(entry.key), value: next(entry.value) } : reject(),
+      );
+      return {
+        kind: "object",
+        ...(raw.className !== undefined && { className: text(raw.className) }),
+        entries,
+      };
+    }
+    case "map": {
+      const entries = each(raw.entries, (entry) =>
+        isObject(entry) ? { key: next(entry.key), value: next(entry.value) } : reject(),
+      );
+      return { kind: "map", entries };
+    }
+    case "error": {
+      const stack =
+        raw.stack === undefined
+          ? undefined
+          : Array.isArray(raw.stack) && raw.stack.length <= MAX_STACK
+            ? each(raw.stack, text)
+            : reject();
+      budget.stackLines += stack?.length ?? 0;
+      return {
+        kind: "error",
+        name: text(raw.name),
+        message: text(raw.message),
+        ...(stack && { stack }),
+      };
+    }
+    default:
+      return reject();
+  }
+}
+
+type Parsed = { record: Pick<ConsoleRecord, "level" | "time" | "args">; weight: number };
+
+/** 記録の中身と、値の木の重さ（文字数と、値と Error のスタックの行の数に VALUE_WEIGHT を掛けた数の和）を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
+function parseWithWeight(value: unknown): Parsed | undefined {
+  if (!isObject(value) || !isLevel(value.level) || !isTime(value.time)) return undefined;
+  const { level, time } = value;
+  const budget = createBudget();
+  try {
+    const args = each(value.args, (arg) => toValue(arg, 0, budget));
+    return {
+      record: { level, time, args },
+      weight:
+        MAX_CHARS - budget.chars + (MAX_NODES - budget.nodes + budget.stackLines) * VALUE_WEIGHT,
+    };
+  } catch (error) {
+    if (error instanceof Rejected) return undefined;
+    throw error;
+  }
+}
+
+const parseLineWithWeight = (line: string) => {
+  try {
+    return parseWithWeight(JSON.parse(line));
+  } catch {
+    return undefined;
+  }
+};
+
+/** 記録の中身を読む。形に合わないものと、上限を超えたものは、undefined を返す。 */
+export const parseConsoleRecord = (value: unknown) => parseWithWeight(value)?.record;
+
+/** 記録の行の中身（頭を除いた JSON）を読む。 */
+export const parseConsoleLine = (line: string) => parseLineWithWeight(line)?.record;
+
+/** 次の描画の前に run を呼ぶ。返す関数で、呼ぶ前に取り消す。 */
+type Schedule = (run: () => void) => () => void;
+
+const nextFrame: Schedule = (run) => {
+  if (typeof requestAnimationFrame === "function") {
+    const id = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(id);
+  }
+  const id = setTimeout(run, 16);
+  return () => clearTimeout(id);
+};
+
+/**
+ * コンソールの記録の store。届いた記録は、描画の 1 回分ずつまとめて store に入れる。
+ * 1 件ごとに入れると、表示中の全ての行の再描画とレイアウトが、1 件ごとに起きるためである。
+ * 記録は、届いた順に並べる。プロセスとプレビューをまたいで時刻の順に並べ直さない。
+ * 件数と重さの合計の上限は、store に入れた記録と、まだ入れていない記録を合わせて数える。最新の 1 件は、上限を超えても残す。
+ */
+export function createConsoleRecords({
+  max = MAX_RECORDS,
+  maxWeight = MAX_TOTAL_WEIGHT,
+  schedule = nextFrame,
+}: { max?: number; maxWeight?: number; schedule?: Schedule } = {}) {
+  const store = createStore<readonly ConsoleRecord[]>([]);
+  // 残す記録は kept の first 番目から後である。捨てるたびに配列を詰めると、届くたびに上限の数を複製するので、first を進めて、捨てた件数が残す件数を超えたときか、捨てた重さが上限を超えたときと、store に入れるときに詰める
+  let kept: { record: ConsoleRecord; weight: number }[] = [];
+  let first = 0;
+  let weight = 0;
+  let dropped = 0;
+  let count = 0;
+  let cancel: (() => void) | undefined;
+  let disposed = false;
+
+  const compact = () => {
+    kept = kept.slice(first);
+    first = 0;
+    dropped = 0;
+  };
+
+  const flush = () => {
+    cancel = undefined;
+    compact();
+    store.set(kept.map((entry) => entry.record));
+  };
+
+  const add = (parsed: Parsed | undefined, source: ConsoleSource) => {
+    if (parsed === undefined || disposed) return;
+    count += 1;
+    kept.push({ record: { id: String(count), source, ...parsed.record }, weight: parsed.weight });
+    weight += parsed.weight;
+    while (kept.length - first > 1 && (kept.length - first > max || weight > maxWeight)) {
+      const oldest = kept[first]?.weight ?? 0;
+      weight -= oldest;
+      dropped += oldest;
+      first += 1;
+    }
+    if (first > kept.length - first || dropped > maxWeight) compact();
+    cancel ??= schedule(flush);
+  };
+
+  return {
+    store: store as Store<readonly ConsoleRecord[]>,
+    /** Node の preload が出した記録の行を受ける。source は、行を出したプロセスである。 */
+    acceptLine: (line: string, source: Pick<ProcessInfo, "name">) =>
+      add(parseLineWithWeight(line), { kind: "process", name: source.name }),
+    /** プレビューのページから届いたメッセージを受ける。port は、メッセージを送ったページのサーバーのポートである。 */
+    acceptPreviewMessage: (message: unknown, port: number) => {
+      if (!isObject(message) || message.type !== PREVIEW_CONSOLE_MESSAGE) return;
+      add(parseWithWeight(message), { kind: "preview", port });
+    },
+    dispose: () => {
+      disposed = true;
+      cancel?.();
+      cancel = undefined;
+      kept = [];
+      first = 0;
+      weight = 0;
+      dropped = 0;
+    },
+  };
+}

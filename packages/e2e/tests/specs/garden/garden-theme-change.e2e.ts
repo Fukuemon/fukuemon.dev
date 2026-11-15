@@ -2,7 +2,8 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 
 import { waitForGardenCanvasWidth } from "../../widgets/waits/canvas-width";
 import { meanDiff } from "../../widgets/actions/mean-diff";
-import { AUTUMN_NOON } from "./garden-time";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
+import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
 
 const VIEWPORT = { width: 1440, height: 900 };
@@ -10,6 +11,8 @@ const VIEWPORT = { width: 1440, height: 900 };
 const openGarden = async (browser: Browser, colorScheme: "light" | "dark") => {
   const page = await browser.newPage({ viewport: VIEWPORT, colorScheme });
   await seenBefore(page);
+  // 舞う物が動くと、同じテーマの絵どうしでも差が出るので止める
+  await presetSettings(page, { motion: "off" });
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await waitForGardenCanvasWidth(page, VIEWPORT.width);

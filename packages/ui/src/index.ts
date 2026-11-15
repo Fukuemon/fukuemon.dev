@@ -22,6 +22,8 @@ export { Notice } from "./base/Notice/Notice";
 export type { NoticeProps, NoticeTone } from "./base/Notice/Notice";
 export { PageLoading } from "./base/PageLoading/PageLoading";
 export type { PageLoadingProps } from "./base/PageLoading/PageLoading";
+export { Select } from "./base/Select/Select";
+export type { SelectProps } from "./base/Select/Select";
 export { SplitPane } from "./base/SplitPane/SplitPane";
 export type { SplitPaneOrientation, SplitPaneProps } from "./base/SplitPane/SplitPane";
 export { StatusBadge } from "./base/StatusBadge/StatusBadge";

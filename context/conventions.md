@@ -85,6 +85,13 @@ Why not のコメントには、該当する ADR へのリンクを 1 行添え�
   - プロジェクトは、記事の Markdown があるディレクトリの `playground/<埋め込みの名前>/` に置く。`playground.json` と初期ファイルを置く。形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#プロジェクト) にある。
   - プロジェクトのディレクトリの全てのファイルが、公開の JSON に入る。ドットで始まるファイルとディレクトリ（`.env` など）を置くと、ビルドが失敗する。初期ファイルは、UTF-8 の文字列にする。
   - 埋め込みの名前は、英小文字、数字、ハイフンで書き、1 本の記事の中で重複させない。
+  - Node のコードから DB に接続する記事は、`playground.json` に `"database": true` を書き、初期データの SQL のファイルのパスを `initialSql` に書く。
+    `package.json` の依存に `pg` を書く。
+  - DB に接続するコードは、接続先を書かずに `new Pool()` と書くか、`new Pool({ connectionString: process.env.DATABASE_URL })` と書く。
+    実行環境が、接続先を環境変数（`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`）で渡す。
+    `host: "localhost"` と `port: 5432` では接続できない。
+    実行環境は、TCP で待ち受けないためである。
+  - ADR-0053: [Node のコードから DB に接続する記事](../docs/adr/0053-pglite-database-in-playground.md#2-node-のコードから-db-に接続する記事)
   - Node の実行環境を埋め込む記事には、別の origin の画像と埋め込み（`img`、`iframe`、`video` など）を置かない。SQL と Go のツールも置かない。
     記事には `COEP: require-corp` を返すので、ブラウザがそれらを読み込まないためである。置くと、ビルドが失敗する。
   - ADR-0034: [記事への埋め込み](../docs/adr/0034-playground-origin-and-embedding.md#3-記事への埋め込み)
@@ -243,20 +250,30 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
 - Oxlint の `jsx-a11y` の規則は全てエラーにする。次の 3 種類だけ、理由を書いて抑制する。
   - `no-noninteractive-tabindex`: 横か縦にスクロールする領域に `tabIndex={0}` を付ける。キーボードだけでスクロールできるようにするためである（WCAG 2.1.1）。
     - 設定（`roles`）で許す要素: `role="region"` か `role="log"` を書いた要素（Go の画面の出力、`pre`）。
-    - 行ごとに抑制する要素: `role` を書かない `section`（`Table`、`ConsoleEntryList`、`ResultView`）と、`SplitPane` の story の `ol`。
+    - 行ごとに抑制する要素: `role` を書かない `section`（`Table`、`ResultView`）と、`SplitPane` の story の `ol`。
+    - `ConsoleEntryList` の行の `li` も抑制する。行の 1 つだけを Tab のキーの順に入れ、その行に `tabIndex={0}`、ほかの行に `tabIndex={-1}` を付ける。行を移る一覧に当たる ARIA の役割が無く、`grid` にすると、値の木を入れたセルの操作まで決めることになるためである。
   - `prefer-tag-over-role`: 次の 3 種類の `role`。
     - `pre` の `role="region"`。`section` に替えられない。包むと余白と背景を外の要素へ移し、見た目が変わる。
     - `SplitPane` の `role="separator"`。`hr` は子を持てず、押せる領域の中に線を描けない。
     - `SearchBox` の `combobox`、`listbox`、`option`。APG の Combobox の形で、候補は遷移するリンクである。
   - `click-events-have-key-events` と `no-noninteractive-element-interactions`: `Dialog` の背景のクリックと、`FileDrawer` の外の面のクリック。キーボードの代わりは Esc のキーと閉じるボタンである。
+    - `no-noninteractive-element-interactions` は、`ConsoleEntryList` の行の `li` のキーの操作（矢印のキーで前後の行と行の中の木へ移る）でも抑制する。
 - 色の値のチェック（`check:raw-values`）は、`apps/web/src/features/top-garden/scene/scene-colors.ts` とそのテストを対象から外す（`EXCLUDES`）。
   - トップの庭の場面の色は、トークンの対象の外である（`packages/ui/DesignDoc.md` の Scope）。
   - テストは、色を混ぜる式を、色の値で確認する。
 - 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
   - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
-- Oxlint の `import/default` は、`?worker&url` の import の 1 行だけで抑制する。
-  - 対象は `apps/web/src/features/top-garden/stage/TopStageScript.astro` である。
-  - Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+- Oxlint の `import/default` は、次の 2 か所の import だけで抑制する。
+  - `apps/web/src/features/top-garden/stage/TopStageScript.astro` の `?worker&url` の import（場面のバンドルと、墨の絵と署名のファイルの 2 行）。
+    Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
+  - `packages/node-runtime/src/webcontainer/index.ts` の `?bundle` の import。
+    `packages/node-runtime/vite.ts` の plugin が、束ねたスクリプトを文字列の default で返す。Oxlint は、この接尾辞を解決できない。
+- Oxlint の `typescript/triple-slash-reference` は、`packages/node-runtime/src/webcontainer/index.ts` の 1 行だけで抑制する。
+  `?bundle` の型の宣言を、このファイルを import する `apps/playground` の tsc にも読ませるためである。
+- Oxlint の `typescript/unbound-method` は、preload で Node の関数をラップする行だけで抑制する。
+  - 対象は、実行環境の中の Node が読む `packages/node-runtime/src/guest/` の `.cjs` である。
+  - ラップした関数から、元の関数を、`this` を指定して呼ぶためである。
+  - `console-value.cjs` は、訪問者のコードが上書きしたメソッドを呼ばないよう、組み込みの getter を取り出して、`call` で値を `this` にして呼ぶ。この行も抑制する。
 
 チェックが実行されなかったことを、通ったとして扱わない。
 

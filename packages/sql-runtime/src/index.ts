@@ -35,6 +35,7 @@ export const MAX_ROWS = 100_000;
  * 複数の文は 1 回の simple query で送るので、Postgres が 1 つの暗黙のトランザクションとして扱い、1 つが失敗すると全部を取り消す。
  * 1 つの結果が MAX_ROWS 行を超えるときは、先頭の MAX_ROWS 行だけを返す。
  * 失敗したときは ROLLBACK を流す。SQL の中の BEGIN で始めたトランザクションが失敗したまま残ると、次の SQL が全て失敗するためである。
+ * json と jsonb のセルを桁を落とさず文字列で受けるには、`withLosslessJson` を通した PGlite を渡す。
  */
 export async function runSql(
   pg: Pick<PGliteInterface, "exec">,
@@ -74,6 +75,50 @@ export function keepLastRows(response: SqlResponse): SqlResponse {
     results: response.results.map((result, index) =>
       index === last ? result : { ...result, rows: [] },
     ),
+  };
+}
+
+const hex = (bytes: Uint8Array) =>
+  `\\x${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+
+const isoDate = (date: Date) =>
+  Number.isNaN(date.getTime()) ? "Invalid Date" : date.toISOString();
+
+const bigintAsText = (_: string, item: unknown) =>
+  typeof item === "bigint" ? item.toString() : item;
+
+/**
+ * セルを、JSON で送っても表に出す文字列が変わらない値にする。表は、日時を ISO 8601 で、bytea を `\x` で始まる 16 進数で出す。
+ * NaN と Infinity は JSON で null になり、表が NULL と出すので、文字列にする。配列の中の bigint も、文字列にする。
+ */
+function toJsonCell(value: unknown): unknown {
+  switch (typeof value) {
+    case "bigint":
+      return value.toString();
+    case "number":
+      return Number.isFinite(value) ? value : String(value);
+    case "object":
+      if (value === null) return null;
+      if (value instanceof Date) return isoDate(value);
+      if (value instanceof Uint8Array) return hex(value);
+      return JSON.parse(JSON.stringify(value, bigintAsText)) as unknown;
+    default:
+      return value;
+  }
+}
+
+/**
+ * 結果を、JSON.stringify で送れる値にする。DB のプロセスは、結果を標準出力の 1 行の JSON で送る。
+ * bigint、Date、Uint8Array は JSON で型が残らないので、表に出す文字列にしてから送る。
+ */
+export function toJsonResponse(response: SqlResponse): SqlResponse {
+  if ("error" in response) return response;
+  return {
+    ...response,
+    results: response.results.map((result) => ({
+      ...result,
+      rows: result.rows.map((row) => row.map(toJsonCell)),
+    })),
   };
 }
 

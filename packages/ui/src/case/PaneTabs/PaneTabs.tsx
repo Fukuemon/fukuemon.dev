@@ -70,6 +70,62 @@ export function PaneTabs({
     action();
   };
 
+  const tabList = (
+    <div
+      aria-label={label}
+      aria-orientation={isVertical ? "vertical" : "horizontal"}
+      className={clsx("flex min-w-0", isVertical && "flex-col", placement === "top" && "flex-1")}
+      role="tablist"
+    >
+      {items.map((item, index) => {
+        const isSelected = item.id === selected?.id;
+        return (
+          <button
+            aria-controls={`${baseId}-panel-${item.id}`}
+            aria-selected={isSelected}
+            className={clsx(
+              "relative flex cursor-pointer items-center justify-center transition-colors focus-visible:focus-ring-inset",
+              placement === "top"
+                ? "h-11 gap-1.5 px-3 text-label-compact"
+                : "min-h-13 min-w-13 flex-col gap-0.5 px-2 py-1 text-compact",
+              placement === "bottom" && "flex-auto shrink-0",
+              isSelected ? "text-text" : "text-text-secondary hover:text-text",
+            )}
+            id={`${baseId}-tab-${item.id}`}
+            key={item.id}
+            onClick={() => onSelect(item.id)}
+            onKeyDown={(event) => handleKeyDown(event, index)}
+            ref={(node) => {
+              if (node) tabRefs.current.set(item.id, node);
+              else tabRefs.current.delete(item.id);
+            }}
+            role="tab"
+            tabIndex={isSelected ? 0 : -1}
+            type="button"
+          >
+            {isSelected && (
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  "pointer-events-none absolute animate-stroke bg-primary stroke-brush forced-fill forced-solid",
+                  placement === "bottom" && "inset-x-3 top-0 h-0.75",
+                  placement === "top" && "inset-x-0 bottom-0 h-0.75",
+                  placement === "start" && "inset-y-2 right-0 w-0.75",
+                )}
+              />
+            )}
+            <span aria-hidden="true" className="relative flex">
+              {item.icon}
+            </span>
+            <span className={clsx("whitespace-nowrap", isSelected && "font-semibold")}>
+              {item.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   const bar = (
     <div
       className={clsx(
@@ -91,57 +147,18 @@ export function PaneTabs({
           {leading}
         </div>
       )}
-      <div
-        aria-label={label}
-        aria-orientation={isVertical ? "vertical" : "horizontal"}
-        className={clsx("flex min-w-0", isVertical ? "flex-col" : "flex-1")}
-        role="tablist"
-      >
-        {items.map((item, index) => {
-          const isSelected = item.id === selected?.id;
-          return (
-            <button
-              aria-controls={`${baseId}-panel-${item.id}`}
-              aria-selected={isSelected}
-              className={clsx(
-                "relative flex cursor-pointer items-center justify-center transition-colors focus-visible:focus-ring-inset",
-                placement === "top"
-                  ? "h-11 gap-1.5 px-3 text-label-compact"
-                  : "min-h-13 min-w-13 flex-col gap-0.5 px-2 py-1 text-compact",
-                placement === "bottom" && "flex-1",
-                isSelected ? "text-text" : "text-text-secondary hover:text-text",
-              )}
-              id={`${baseId}-tab-${item.id}`}
-              key={item.id}
-              onClick={() => onSelect(item.id)}
-              onKeyDown={(event) => handleKeyDown(event, index)}
-              ref={(node) => {
-                if (node) tabRefs.current.set(item.id, node);
-                else tabRefs.current.delete(item.id);
-              }}
-              role="tab"
-              tabIndex={isSelected ? 0 : -1}
-              type="button"
-            >
-              {isSelected && (
-                <span
-                  aria-hidden="true"
-                  className={clsx(
-                    "pointer-events-none absolute animate-stroke bg-primary stroke-brush forced-fill forced-solid",
-                    placement === "bottom" && "inset-x-3 top-0 h-0.75",
-                    placement === "top" && "inset-x-0 bottom-0 h-0.75",
-                    placement === "start" && "inset-y-2 right-0 w-0.75",
-                  )}
-                />
-              )}
-              <span aria-hidden="true" className="relative flex">
-                {item.icon}
-              </span>
-              <span className={clsx(isSelected && "font-semibold")}>{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {placement === "bottom" ? (
+        <div
+          className={clsx(
+            "min-w-0 flex-1 overflow-x-auto scroll-fade-end scroll-fade-narrow scroll-fade-pane",
+            !flush && "rounded-r-sheet",
+          )}
+        >
+          {tabList}
+        </div>
+      ) : (
+        tabList
+      )}
     </div>
   );
 
