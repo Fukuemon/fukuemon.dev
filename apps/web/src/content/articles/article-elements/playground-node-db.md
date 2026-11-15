@@ -8,7 +8,7 @@ publishedAt: 2026-11-13
 order: 5
 ---
 
-この記事は、シリーズ「このサイトの記事で使われる構成要素」の 5 本目である。
+この記事は、シリーズ「このサイトの記事で使われる構成要素」の記事である。
 Node の実行環境には、DB を付けられる。
 DB に接続するコードを、記事の中で動かして確認できる。
 
@@ -32,10 +32,3 @@ node-pg
 
 プレビューの隣の「SQL」のタブは、Node のコードと同じ DB に SQL を送る。
 `node pool.js` で追加した行は、SQL のタブで `select user_name from sessions order by id;` を実行すると、結果に出る。
-
-## 書く人向けの置き方
-
-- `playground.json` に `"database": true` を書き、初期データの SQL のファイルのパスを `initialSql` に書く。
-- `package.json` の依存に `pg` を書く。
-- 接続先は、コードに書かない。`new Pool()` か、`new Pool({ connectionString: process.env.DATABASE_URL })` と書く。実行環境が、接続先を環境変数（`PGHOST`、`PGUSER`、`PGDATABASE`、`DATABASE_URL`）で渡す。
-- `host: "localhost"` と `port: 5432` では接続できない。実行環境は、TCP で待ち受けないためである。
