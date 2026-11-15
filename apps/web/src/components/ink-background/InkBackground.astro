@@ -1,0 +1,90 @@
+---
+// 画面全体に敷く薄墨の背景の絵。SiteLayout の inkBackground が置く。庭を出すとき（html の class stage-on）は出さず、SVG も取得しない（ADR-0082）
+---
+
+<div class="ink-background" aria-hidden="true" data-testid="ink-background">
+  <div class="ink-background-art"></div>
+  <div class="ink-background-haze"><i></i><i></i><i></i></div>
+</div>
+
+<style>
+  /* 高さを大きいほうの画面の高さに固定し、スマートフォンのアドレスバーが伸び縮みしても、filter を含む絵を描き直さない */
+  .ink-background {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 100lvh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  :global(html.stage-on) .ink-background {
+    display: none;
+  }
+
+  /* 濃さ 16% は、補足の文字とリンクの色が、ライトとダークでコントラスト 4.5:1 を保つ上限から決めた。文字の色のトークンを変えたら測り直す（ADR-0082） */
+  @supports (mask-image: url("")) {
+    .ink-background-art {
+      position: absolute;
+      inset: 0;
+      background-color: var(--fd-color-text);
+      opacity: 0.16;
+      mask: url("./ink-background.svg") center / cover no-repeat;
+    }
+  }
+
+  .ink-background-haze i {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--fd-color-surface), transparent);
+  }
+
+  .ink-background-haze i:nth-child(1) {
+    inset-block-start: 20%;
+    inset-inline-start: -15%;
+    inline-size: 70vw;
+    block-size: 28vh;
+  }
+
+  .ink-background-haze i:nth-child(2) {
+    inset-block-start: 48%;
+    inset-inline-start: 40%;
+    inline-size: 80vw;
+    block-size: 32vh;
+  }
+
+  .ink-background-haze i:nth-child(3) {
+    inset-block-start: 70%;
+    inset-inline-start: -5%;
+    inline-size: 60vw;
+    block-size: 26vh;
+  }
+
+  /* 霞は、表示の設定のアニメーションがオンのときだけ流す。JavaScript が動かないときは data-motion が付かないので止まる */
+  :global(html[data-motion="on"]) .ink-background-haze i {
+    animation: ink-haze-drift 48s linear infinite alternate;
+  }
+
+  :global(html[data-motion="on"]) .ink-background-haze i:nth-child(2) {
+    animation-duration: 64s;
+    animation-direction: alternate-reverse;
+  }
+
+  @keyframes ink-haze-drift {
+    from {
+      translate: -20vw 0;
+    }
+
+    to {
+      translate: 20vw 0;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ink-background {
+      display: none;
+    }
+  }
+</style>
