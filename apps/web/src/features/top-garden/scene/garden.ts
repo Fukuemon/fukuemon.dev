@@ -137,7 +137,6 @@ export function startGarden(
     sceneVars
       .set("--scene-paper", C.paper)
       .set("--scene-text", C.text)
-      .set("--scene-link", C.link)
       .set("--scene-pad-x", `${(PAPER_PAD.w / 2) * PX}px`)
       .set("--scene-pad-y", `${(PAPER_PAD.h / 2) * PX}px`);
     for (const [k, v] of sceneVars) vars.setProperty(k, v);
@@ -159,9 +158,10 @@ export function startGarden(
         n: new Vector3(Math.sin(st.rot), 0, Math.cos(st.rot)),
       };
     });
-    /** 和紙の大きさをセクションの大きさから測り、和紙と枝を掛け直す */
-    const hang = (): void => {
+    /** 和紙の大きさをセクションの大きさから測り、和紙と枝を掛け直す。`only` を渡すと、その和紙だけを掛け直す */
+    const hang = (only?: number): void => {
       slots.forEach((p, i) => {
+        if (only !== undefined && i !== only) return;
         p.unhang();
         p.w = cards[i]!.offsetWidth / PX;
         p.h = cards[i]!.offsetHeight / PX;
@@ -181,7 +181,7 @@ export function startGarden(
       const p = slots[i]!;
       const t2 = 2 * Math.tan((fov() * Math.PI) / 360);
       const aspect = stage.clientWidth / stage.clientHeight;
-      const d = Math.max(2.1, p.w / (portrait() ? 0.88 : 0.46) / (t2 * aspect), p.h / 0.56 / t2);
+      const d = Math.max(2.1, p.w / (portrait() ? 0.88 : 0.46) / (t2 * aspect), p.h / 0.65 / t2);
       return {
         pos: p.c
           .clone()
@@ -333,6 +333,21 @@ export function startGarden(
         }
       },
       on,
+    );
+    // 詳細の開閉でセクションの高さが変わる。toggle は親へ伝わらないので、捕捉で受ける。
+    cards.forEach((el, i) =>
+      el.addEventListener(
+        "toggle",
+        () => {
+          try {
+            hang(i);
+            kick();
+          } catch (e) {
+            broken(e);
+          }
+        },
+        { ...on, capture: true },
+      ),
     );
     canvas.addEventListener("webglcontextlost", () => broken("WebGL のコンテキストを失った"), on);
     resize();

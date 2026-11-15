@@ -1,13 +1,67 @@
 ---
-const career = [
-  { year: "2018", text: "経歴の見本の 1 行目。所属と役割を書く。" },
-  { year: "2021", text: "経歴の見本の 2 行目。担当した領域を書く。" },
-  { year: "2024", text: "経歴の見本の 3 行目。今の仕事を書く。" },
+import avatar from "./avatar.webp";
+
+/** 打ち消し線で出す部分は `s: true` にする */
+type Line = { text: string; s?: true }[];
+const career: { year: string; title: string; detail: Line[] }[] = [
+  {
+    year: "2020/04〜2023/03",
+    title: "農業高校 造園科",
+    detail: [
+      [
+        { text: "普通科の勉強が嫌いで", s: true },
+        {
+          text: " 手に職付けたくて、庭師を目指してました。モンハンのジオラマ作ってる動画にハマってたのがきっかけ。庭園様式や樹木、盆栽などの勉強が主でしたが農業についても少しだけかじってました。当時学んだ記憶はもう覚えてない...",
+        },
+      ],
+    ],
+  },
+  {
+    year: "2023/04〜2025/03",
+    title: "神戸電子専門学校 AIシステム開発学科",
+    detail: [
+      [{ text: "色々あって庭師からIT業界に志望変更しました。" }],
+      [{ text: "1年目は3DとARでメニューが見えるグルメSNSアプリを作ってました" }],
+      [{ text: "2年目はとある訪問看護施設の業務改善を行ってました" }],
+    ],
+  },
+  {
+    year: "2024/01〜",
+    title: "株式会社 オプティム アルバイト",
+    detail: [[{ text: "医療分野のサービス開発に従事" }]],
+  },
+  {
+    year: "2025/04〜",
+    title: "株式会社 オプティム 正社員",
+    detail: [
+      [{ text: "農業分野のサービス開発に従事" }],
+      [
+        {
+          text: "高校生の時はまさか農業事業をDX(AX)する側に回るなんて思ってもなかったですね。もっとあの頃に農業の勉強しておけばな...と時々思います",
+        },
+      ],
+    ],
+  },
 ];
 const stack = [
-  { area: "言語", items: "見本: TypeScript、Go、Rust" },
-  { area: "フロントエンド", items: "見本: Astro、React、Tailwind CSS" },
-  { area: "基盤", items: "見本: Cloudflare Workers、Terraform" },
+  { area: "言語", items: "Go、TypeScript、Java、Python" },
+  { area: "フロントエンド", items: "React、Astro、TanStack、Tailwind\u00a0CSS" },
+  { area: "バックエンド", items: "PostgreSQL、Valkey、OpenAPI" },
+  { area: "インフラ", items: "Terraform、AWS、Google\u00a0Cloud、Cloudflare\u00a0Workers" },
+];
+const titles = ["うぇぶえんじにあ", "GDG Greater Kwansai organizer", "Alpha+Project TA"];
+/** アイコンの path は simple-icons（CC0-1.0）から写した */
+const links = [
+  {
+    label: "GitHub",
+    href: "https://github.com/Fukuemon",
+    path: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
+  },
+  {
+    label: "X",
+    href: "https://x.com/fukuemony",
+    path: "M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z",
+  },
 ];
 const section = "max-w-body border-t border-border py-8 first:border-t-0 first:pt-0";
 const heading = "mb-2 font-heading font-semibold";
@@ -18,17 +72,49 @@ const row = "border-t border-border py-2";
   <div class="mx-auto max-w-page">
     <section class={section} data-garden-card data-testid="garden-card-profile" aria-labelledby="profile">
       <h1 id="profile" data-testid="garden-title" tabindex="-1" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
-      <p class="mb-4 text-text-secondary">自己紹介の見本。どんな仕事をしていて、このサイトに何を書いているかを、数行で書く。</p>
-      <p>関心のある技術と、書いている主題を書く。</p>
+      <div class="flex items-start gap-4">
+        <img src={avatar.src} alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
+        <div class="min-w-0">
+          <ul class="mb-4 space-y-1 text-text-secondary [html.stage-on_&]:text-inherit">
+            {titles.map((t) => <li>{t}</li>)}
+          </ul>
+          <p>好み：妻、甘いもの、運動、自然、</p>
+        </div>
+      </div>
+      {/* -ms-2.5 は、押せる範囲の中央に置いた 24px のアイコンの左端を、文の左端に揃える量である。ふつうのページは (44 - 24) / 2、庭は (60 - 24) / 2 - 8 で、どちらも 10px になる。庭の 60px と -8px の理由は DesignDoc.md の「和紙の文」にある */}
+      <div class="-ms-2.5 mt-4 flex gap-2 [html.stage-on_&]:gap-4">
+        {
+          links.map(({ label, href, path }) => (
+            <a
+              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring [html.stage-on_&]:-m-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:min-w-15 [html.stage-on_&]:text-inherit"
+              href={href}
+              aria-label={label}
+            >
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" focusable="false">
+                <path d={path} />
+              </svg>
+            </a>
+          ))
+        }
+      </div>
     </section>
     <section class={section} data-garden-card data-testid="garden-card-career" aria-labelledby="career">
       <h2 id="career" class:list={[heading, "text-heading-md"]}>経歴</h2>
       <ul>
         {
-          career.map(({ year, text }) => (
-            <li class:list={[row, "flex gap-4"]}>
-              <span class="w-18 flex-none text-text-secondary tabular-nums">{year}</span>
-              <span class="min-w-0">{text}</span>
+          career.map(({ year, title, detail }) => (
+            <li class={row}>
+              <details name="career">
+                <summary class="cursor-pointer focus-visible:focus-ring [html.stage-on_&]:-my-1 [html.stage-on_&]:py-1">
+                  <span class="text-caption text-text-secondary tabular-nums">{year}</span>
+                  <span class="block [html.stage-on_&]:font-bold">{title}</span>
+                </summary>
+                <div class="space-y-2 pt-2">
+                  {detail.map((line) => (
+                    <p>{line.map(({ text, s }) => (s ? <s>{text}</s> : text))}</p>
+                  ))}
+                </div>
+              </details>
             </li>
           ))
         }
@@ -86,31 +172,43 @@ const row = "border-t border-border py-2";
     color: inherit;
   }
 
-  /* 整備中の文が、狭い画面で語の途中で折れないようにする */
-  :global(html.stage-on) #portfolio + p {
+  /* 狭い画面で、語の途中で折れないようにする。長い段落は行の終わりが不揃いになるので、短い文だけに当てる */
+  :global(html.stage-on) [data-garden-card] :is(p, summary, ul:not(:has(details)) > li):not(details p) {
     word-break: auto-phrase;
+  }
+
+  :global(html.stage-on) [data-garden-card] details p {
+    margin-block-end: 0.5rem;
   }
 
   :global(html.stage-on) [data-garden-card] p:last-child {
     margin-block-end: 0;
   }
 
-  :global(html.stage-on) [data-garden-card] :is(li, dl > div) {
+  :global(html.stage-on) [data-garden-card] :is(li:has(> details), dl > div) {
     padding-block: 0.625rem;
     border-color: color-mix(in srgb, currentColor 25%, transparent);
   }
 
-  :global(html.stage-on) [data-garden-card] :is(li, dl > div):first-child {
+  :global(html.stage-on) [data-garden-card] :is(li:has(> details), dl > div):first-child {
     padding-block-start: 0;
     border-block-start: 0;
   }
 
-  :global(html.stage-on) [data-garden-card] :is(span, dt) {
-    color: inherit;
+  /* 詳細を開いた行のほかは隠す。和紙が伸びると、カメラが和紙を画面に収めようと引き、字が 14px より小さく映るためである */
+  :global(html.stage-on) [data-garden-card] ul:has(details[open]) > li:not(:has(details[open])) {
+    display: none;
   }
 
-  :global(html.stage-on) [data-garden-card] a {
-    color: var(--scene-link);
+  :global(html.stage-on) [data-garden-card] ul:has(details[open]) > li {
+    padding-block-start: 0;
+    border-block-start: 0;
+  }
+
+  /* 和紙は縮んで映るので、14px の字は 14px より小さく映る。年と区分も本文と同じ大きさにし、色の濃さで分ける */
+  :global(html.stage-on) [data-garden-card] :is(summary > span:first-child, dt) {
+    font-size: 1rem;
+    color: color-mix(in srgb, currentColor 70%, transparent);
   }
 
   :global(html.stage-on) [data-garden-card] :focus-visible {
