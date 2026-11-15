@@ -1,4 +1,5 @@
 ---
+import InkBackground from "../components/ink-background/InkBackground.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteSettingsPopover from "../components/site-settings/SiteSettingsPopover.astro";
 import { settingsScript } from "../components/site-settings/settings";
@@ -9,13 +10,15 @@ interface Props {
   description: string;
   /** 検索エンジンに載せないページ。canonical を出さず、noindex を出す */
   noindex?: boolean;
+  /** 画面全体に薄墨の背景の絵を敷くページ（ADR-0082）。トップでは、庭を出さないときだけ出る */
+  inkBackground?: boolean;
 }
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, inkBackground = false } = Astro.props;
 const url = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="ja">
+<html lang="ja" data-ink-background={inkBackground ? "" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,8 +32,25 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <slot name="head" />
   </head>
   <body class="min-h-dvh bg-surface font-sans text-body text-text">
+    {inkBackground && <InkBackground />}
     <SiteHeader />
     <SiteSettingsPopover />
     <main id="main"><slot /></main>
   </body>
 </html>
+
+<style is:global>
+  /* 背景の絵を body の背景に隠させず本文の後ろに出すため、ページの背景の色を html に移す */
+  html[data-ink-background]:not(.stage-on) {
+    background: var(--fd-color-surface);
+  }
+
+  html[data-ink-background]:not(.stage-on) body {
+    background: transparent;
+  }
+
+  /* 絵がロゴと下の罫に重ならないよう、ヘッダーに紙の色を敷き、絵を罫で切る。ヘッダーが折り返して高くなっても、ヘッダーの高さのまま隠れる */
+  html[data-ink-background]:not(.stage-on) [data-site-header] {
+    background: var(--fd-color-surface);
+  }
+</style>

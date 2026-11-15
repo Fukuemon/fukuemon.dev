@@ -1,7 +1,7 @@
 ---
 type: design-doc
 title: fukuemon.dev Design Doc
-description: 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、サイト全体の動きの規則とトップの庭の例外、条件つきで追加する機能の形
+description: 記事とシリーズの静的サイト、カタログ、ドキュメントサイトの全体像。C4 の L2、モジュールの責務と依存、ホスト名と URL の構成、設計不変量、サイト全体の動きの規則とトップの庭と背景の霞の例外、条件つきで追加する機能の形
 status: draft
 ---
 
@@ -218,16 +218,16 @@ URL の規約は [context/codebase.md](../../context/codebase.md#url) にある�
 変えるときは ADR を書く。  
 この 8 点のほかに、将来のための先行投資をしない。
 
-| #   | 不変量                                                                                                                                    | 何を可能にするか                                                                  | 根拠                                                           |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | `contentId` の不変。[context/domain/content.md](../../context/domain/content.md#prohibitions) の取り決め                                  | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 2   | 関連の片方向の辺。[context/domain/content.md](../../context/domain/content.md#invariants) の取り決め                                      | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 3   | 依存規約 1。ページとコンポーネントは `astro:content` を直接参照しない                                                                     | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                                                               | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)          |
-| 5   | 画面の色、字、余白は、`@fukuemon/ui` のトークンから取る。画面のコードに値を直接書かない                                                   | 配色と版面を、トークンの変更だけで変えられる                                      | [ADR-0024](../adr/0024-tokens-of-fukuemon-dev.md)              |
-| 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                                                                | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md) |
-| 7   | `fukuemon.dev` の全体には、cross-origin isolation のヘッダを返さない。返すのは、isolation を求める実行環境を埋め込む記事の URL だけにする | 全体に適用すると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる            | [ADR-0031](../adr/0031-subdomains-and-workers.md)              |
-| 8   | 種別を増やさない。構成は記事の形式で、分類での絞り込みは URL パラメータで表す                                                             | 一覧と URL が種別の数に応じて増えない。分類の組み合わせをページとして書き出さない | [ADR-0030](../adr/0030-articles-format-and-series.md)          |
+| #   | 不変量                                                                                                                                                                               | 何を可能にするか                                                                  | 根拠                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1   | `contentId` の不変。[context/domain/content.md](../../context/domain/content.md#prohibitions) の取り決め                                                                             | URL を改名しても関係が切れない。将来の主キーになる                                | [ADR-0002](../adr/0002-content-model-independence.md)                                                    |
+| 2   | 関連の片方向の辺。[context/domain/content.md](../../context/domain/content.md#invariants) の取り決め                                                                                 | 書き忘れによる不整合が起きない。関係のテーブルへそのまま写せる                    | [ADR-0002](../adr/0002-content-model-independence.md)                                                    |
+| 3   | 依存規約 1。ページとコンポーネントは `astro:content` を直接参照しない                                                                                                                | ページの実装がデータソースに依存しない                                            | [ADR-0002](../adr/0002-content-model-independence.md)                                                    |
+| 4   | 依存規約 2。`@fukuemon/content-model` は Astro に依存しない                                                                                                                          | Astro なしで単体テストできる。別の消費者から再利用できる                          | [ADR-0002](../adr/0002-content-model-independence.md)                                                    |
+| 5   | 画面の色、字、余白は、`@fukuemon/ui` のトークンから取る。画面のコードに値を直接書かない。例外は、薄墨の背景の濃さ（16%）と、一覧の本文の後ろの紙の色（ライト 60%、ダーク 42%）である | 配色と版面を、トークンの変更だけで変えられる                                      | [ADR-0024](../adr/0024-tokens-of-fukuemon-dev.md)、[ADR-0082](../adr/0082-ink-background-as-css-mask.md) |
+| 6   | 1 つの Cloudflare のリソースを、Terraform と Wrangler の両方から管理しない                                                                                                           | 二重の管理で差分が互いに打ち消されることがない                                    | [ADR-0005](../adr/0005-workers-terraform-wrangler-boundary.md)                                           |
+| 7   | `fukuemon.dev` の全体には、cross-origin isolation のヘッダを返さない。返すのは、isolation を求める実行環境を埋め込む記事の URL だけにする                                            | 全体に適用すると外部の埋め込みが一律に動かなくなる。影響を局所に閉じる            | [ADR-0031](../adr/0031-subdomains-and-workers.md)                                                        |
+| 8   | 種別を増やさない。構成は記事の形式で、分類での絞り込みは URL パラメータで表す                                                                                                        | 一覧と URL が種別の数に応じて増えない。分類の組み合わせをページとして書き出さない | [ADR-0030](../adr/0030-articles-format-and-series.md)                                                    |
 
 ### 種別と分類の切り分け
 
@@ -343,6 +343,19 @@ ADR-0028: [操作できる要素と重なる面の角を 4px で丸め、ボタ�
 
 ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../adr/0026-sumi-gate-and-garden-on-top.md)  
 イントロの各段の時間は [トップの水墨の門と立体の庭の Design Doc](../../apps/web/src/features/top-garden/DesignDoc.md) にある。
+
+#### 背景の霞の例外
+
+**庭を出さないときのトップと、記事の一覧とプレイグラウンドの一覧の背景の霞は、位置を動かさない規則と、5 秒以内に止める規則の例外にする**。  
+位置の規則の例外は、トップの庭とこの背景の 2 つである。
+
+- 紙の色の霞の 3 つの要素が、薄墨の絵の上を 48 秒と 64 秒で左右に往復する。霞は本文の後ろにあり、本文と罫の位置は動かない。
+- CSS のアニメーションだけで動かし、動きのための JavaScript は配らない。
+- `html` の `data-motion` が `on` のときだけ動かす。表示の設定でアニメーションをオフにしたとき、表示の設定を保存せずに OS で動きを減らす設定にしているとき、JavaScript が動かない環境では、止まった絵になる。
+- 止める手段は、トップの庭のパーティクルと同じく、表示の設定のアニメーションのスイッチにする。背景に止めるボタンは足さない。
+
+ADR-0082: [トップと記事とプレイグラウンドの一覧の画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../adr/0082-ink-background-as-css-mask.md)  
+背景の要素と配信は [トップの水墨の門と立体の庭の Design Doc の「庭を出さないときの背景」](../../apps/web/src/features/top-garden/DesignDoc.md#庭を出さないときの背景) にある。
 
 ### 配信
 
