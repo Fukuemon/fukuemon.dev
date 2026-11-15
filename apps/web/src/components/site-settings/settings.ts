@@ -22,7 +22,7 @@ export const PICK_CHOICES = {
   ],
 } as const satisfies { [N in PickName]: readonly { value: string; label: string }[] };
 
-/** 選ぶ設定の値。`auto` は、端末の日付と時刻で決める。トップの庭の季節と時間帯の型は、この型から作る */
+/** 選ぶ設定の値。`auto` は、端末の日付と時刻で決める */
 export type PickValue<N extends PickName> = (typeof PICK_CHOICES)[N][number]["value"];
 
 type SettingStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -46,7 +46,8 @@ export type SettingsChange =
 
 /**
  * 設定の面のボタンの `data-value` から、送る変更を作る。
- * 選べる値のほかと、今の値と同じ値は `undefined` を返す。同じ値で読み込み直さないためである
+ * 今の値は `root` の `data-<名前>-setting` から読み、無ければ `auto` とみなす。
+ * 選べない値、`undefined`、今の値と同じ値では `undefined` を返す。同じ値で読み込み直さないためである
  */
 export function pickChangeOf(
   root: SettingsRoot,
@@ -55,7 +56,8 @@ export function pickChangeOf(
 ): SettingsChange | undefined {
   const choices: readonly { readonly value: string }[] = PICK_CHOICES[name];
   const picked = choices.find((c) => c.value === value)?.value;
-  if (picked === undefined || root.dataset[`${name}Setting`] === picked) return undefined;
+  if (picked === undefined || (root.dataset[`${name}Setting`] ?? "auto") === picked)
+    return undefined;
   // picked は name の一覧から引いたので、name と組になる
   return { name, value: picked } as SettingsChange;
 }

@@ -184,22 +184,40 @@ describe("changeSetting", () => {
 });
 
 describe("pickChangeOf", () => {
-  it("選べる値で、今の値と違うときだけ変更を返す", () => {
-    const root = { dataset: { seasonSetting: "winter", timeSetting: "auto" } as DOMStringMap };
-    expect([
-      pickChangeOf(root, "season", "spring"),
-      pickChangeOf(root, "time", "night"),
-      pickChangeOf(root, "season", "winter"),
-      pickChangeOf(root, "time", "auto"),
-      pickChangeOf(root, "season", "night"),
-      pickChangeOf(root, "time", undefined),
-    ]).toStrictEqual([
-      { name: "season", value: "spring" },
-      { name: "time", value: "night" },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-    ]);
+  const allChoices = (["season", "time"] as const).flatMap((name) =>
+    PICK_CHOICES[name].map((c) => ({ name, value: c.value })),
+  );
+  const rootWith = (seasonSetting?: string, timeSetting?: string) => ({
+    dataset: { seasonSetting, timeSetting } as DOMStringMap,
+  });
+
+  it.each(["season", "time"] as const)("%s の帯の先頭は自動である", (name) => {
+    expect(PICK_CHOICES[name][0]?.value).toBe("auto");
+  });
+
+  it.each(allChoices)(
+    "今の値と違う $name の $value では、その組の変更を返す",
+    ({ name, value }) => {
+      const other = PICK_CHOICES[name].find((c) => c.value !== value)?.value;
+      const root = name === "season" ? rootWith(other) : rootWith(undefined, other);
+      expect(pickChangeOf(root, name, value)).toStrictEqual({ name, value });
+    },
+  );
+
+  it.each(allChoices)("今の値と同じ $name の $value では undefined を返す", ({ name, value }) => {
+    const root = name === "season" ? rootWith(value) : rootWith(undefined, value);
+    expect(pickChangeOf(root, name, value)).toBeUndefined();
+  });
+
+  it("今の値が無いときに自動を押すと undefined を返す", () => {
+    expect(pickChangeOf(rootWith(), "season", "auto")).toBeUndefined();
+  });
+
+  it("時間帯の値 night を季節に渡すと undefined を返す", () => {
+    expect(pickChangeOf(rootWith("spring"), "season", "night")).toBeUndefined();
+  });
+
+  it("値が undefined のときは undefined を返す", () => {
+    expect(pickChangeOf(rootWith("spring", "day"), "time", undefined)).toBeUndefined();
   });
 });
