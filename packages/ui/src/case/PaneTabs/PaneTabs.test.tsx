@@ -10,6 +10,35 @@ import * as stories from "./PaneTabs.stories";
 const { Bottom, Start, Top } = composeStories(stories);
 
 describe("PaneTabs", () => {
+  it("下の帯に 5 つのタブを並べても、幅 360 px ではどのラベルも 1 行に収める", () => {
+    const labels = ["エディタ", "端末", "プレビュー", "SQL", "通信"];
+    render(
+      <div className="h-96 w-90">
+        <PaneTabs
+          items={labels.map((label) => ({
+            id: label,
+            label,
+            icon: <svg aria-hidden="true" height="20" width="20" />,
+            content: <p>{label}</p>,
+          }))}
+          label="ペイン"
+          leading={<button aria-label="ファイル" className="size-11" type="button" />}
+          onSelect={() => undefined}
+          placement="bottom"
+          selectedId="プレビュー"
+        />
+      </div>,
+    );
+    const heights = labels.map((label) =>
+      Math.round(screen.getByText(label, { selector: "span" }).getBoundingClientRect().height),
+    );
+    expect(new Set(heights).size).toBe(1);
+    for (const label of labels) {
+      const tab = screen.getByRole("tab", { name: label });
+      expect(tab.scrollWidth).toBeLessThanOrEqual(tab.clientWidth);
+    }
+  });
+
   it("タブを替えても、隠したペインを描いたまま残し、入力が消えない", async () => {
     render(<Bottom />);
     await userEvent.type(screen.getByRole("textbox", { name: "エディタの中身" }), "abc");

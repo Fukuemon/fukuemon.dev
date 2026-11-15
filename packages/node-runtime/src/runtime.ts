@@ -1,5 +1,6 @@
 import type { BackendInstance, RuntimeBackend } from "./backend";
 import { createConsoleRecords } from "./console-records";
+import { startDatabase } from "./database";
 import { createFiles } from "./files";
 import { previewConsoleScript } from "./preview-console";
 import { createHttpRecords } from "./http-records";
@@ -26,7 +27,12 @@ function isPreviewUrl(url: string) {
 /** このページの origin。ブラウザの外（テスト）では undefined である。 */
 const pageOrigin = () => ("location" in globalThis ? globalThis.location.origin : undefined);
 
-async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime> {
+async function createNodeRuntime(
+  instance: BackendInstance,
+  options: BootOptions,
+): Promise<NodeRuntime> {
+  // DB のプロセスは、訪問者のプロセスより先に起動する。訪問者のコードが、起動のコマンドで接続するためである
+  const db = options.database ? await startDatabase(instance, options.initialSql) : undefined;
   const files = await createFiles(instance.files);
   const http = createHttpRecords();
   const consoleRecords = createConsoleRecords();
@@ -54,11 +60,13 @@ async function createNodeRuntime(instance: BackendInstance): Promise<NodeRuntime
     ports,
     httpExchanges: http.store,
     consoleEntries: consoleRecords.store,
+    ...(db && { database: db.database }),
     dispose: () => {
       disposed ??= (async () => {
         unsubscribePorts();
         unsubscribePreview();
         consoleRecords.dispose();
+        db?.dispose();
         files.dispose();
         processes.dispose();
         await instance.teardown();
@@ -78,13 +86,16 @@ export async function bootWithBackend(
   timeoutMs = BOOT_TIMEOUT_MS,
 ): Promise<NodeRuntime> {
   if (!backend.isSupported()) throw new BootError("not-isolated");
+  let started: BackendInstance | undefined;
   const booting = (async () => {
     const instance = await backend.boot({
       files: options.files,
       previewScript: previewConsoleScript(pageOrigin() ?? "null"),
+      database: options.database === true,
     });
+    started = instance;
     try {
-      return await createNodeRuntime(instance);
+      return await createNodeRuntime(instance, options);
     } catch (cause) {
       await instance.teardown().catch(ignore);
       throw cause;
@@ -98,6 +109,8 @@ export async function bootWithBackend(
     return await Promise.race([booting, timeout]);
   } catch (cause) {
     if (cause instanceof BootError) {
+      // DB の依存の npm install のように、終わらない段階で止まっていても、起動した実行環境を破棄する
+      void started?.teardown().catch(ignore);
       void booting.then((runtime) => runtime.dispose(), ignore).catch(ignore);
       throw cause;
     }

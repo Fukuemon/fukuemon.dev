@@ -5,15 +5,20 @@ import {
   type DirectoryItem,
   PathNotFoundError,
   type RuntimeBackend,
+  type SpawnOptions,
 } from "../backend";
 import { bootWithBackend } from "../runtime";
 import type { NodeRuntime, OpenPort, TerminalSize } from "../types";
+
+export const GUEST_DIRECTORY = "/tmp/guest";
 
 /** テストから操作するプロセス。出力を流し、終了させる。 */
 export type FakeProcess = BackendProcess & {
   command: string;
   args: readonly string[];
   terminal: TerminalSize | undefined;
+  /** spawn に渡した internal。spawnShell で起動したプロセスは、空である。 */
+  options: Omit<SpawnOptions, "terminal">;
   written: string[];
   emit: (chunk: string) => void;
   finish: (code: number) => void;
@@ -23,7 +28,7 @@ export type FakeProcess = BackendProcess & {
 function createFakeProcess(
   command: string,
   args: readonly string[],
-  terminal: TerminalSize | undefined,
+  { terminal, ...options }: SpawnOptions = {},
 ): FakeProcess {
   const listeners = new Set<(chunk: string) => void>();
   let finish: (code: number) => void = () => undefined;
@@ -36,6 +41,7 @@ function createFakeProcess(
     command,
     args,
     terminal,
+    options,
     written: [],
     output: {
       subscribe: (onChunk) => {
@@ -175,13 +181,19 @@ function createFakeFiles(initial: Readonly<Record<string, string>>) {
 }
 
 /** WebContainers の代わりに、テストが使う実装。起動した実行環境と、起動したプロセスを、テストから読める。 */
-export function createFakeBackend(options: { supported?: boolean } = {}) {
+export function createFakeBackend(
+  options: {
+    supported?: boolean;
+    /** spawn と spawnShell でプロセスを作るたびに呼ぶ。テストが、出力と終了を進める。 */
+    onSpawn?: (process: FakeProcess) => void;
+  } = {},
+) {
   const instances: ReturnType<typeof createInstance>[] = [];
   const previewScripts: string[] = [];
   let bootGate: Promise<void> = Promise.resolve();
   let bootError: unknown;
 
-  function createInstance(initial: Readonly<Record<string, string>>) {
+  function createInstance(initial: Readonly<Record<string, string>>, database: boolean) {
     const files = createFakeFiles(initial);
     const processes: FakeProcess[] = [];
     const portListeners = new Set<(ports: readonly OpenPort[]) => void>();
@@ -189,14 +201,16 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
     const state = { tornDown: false };
     const instance: BackendInstance = {
       files: files.api,
-      spawn: async (command, args, spawnOptions = {}) => {
-        const process = createFakeProcess(command, args, spawnOptions.terminal);
+      spawn: async (command, args, spawnOptions) => {
+        const process = createFakeProcess(command, args, spawnOptions);
         processes.push(process);
+        options.onSpawn?.(process);
         return process;
       },
       spawnShell: async (spawnOptions = {}) => {
-        const process = createFakeProcess("jsh", [], spawnOptions.terminal);
+        const process = createFakeProcess("jsh", [], { terminal: spawnOptions.terminal });
         processes.push(process);
+        options.onSpawn?.(process);
         return process;
       },
       ports: {
@@ -211,12 +225,14 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
           return () => messageListeners.delete(onMessage);
         },
       },
+      guestDirectory: GUEST_DIRECTORY,
       teardown: async () => {
         state.tornDown = true;
       },
     };
     return {
       instance,
+      database,
       files,
       processes,
       state,
@@ -233,11 +249,11 @@ export function createFakeBackend(options: { supported?: boolean } = {}) {
 
   const backend: RuntimeBackend = {
     isSupported: () => options.supported ?? true,
-    boot: async ({ files, previewScript }) => {
+    boot: async ({ files, previewScript, database }) => {
       await bootGate;
       if (bootError !== undefined) throw bootError;
       previewScripts.push(previewScript);
-      const created = createInstance(files);
+      const created = createInstance(files, database);
       instances.push(created);
       return created.instance;
     },

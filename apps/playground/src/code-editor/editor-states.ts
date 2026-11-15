@@ -3,8 +3,8 @@ import { EditorView } from "@codemirror/view";
 import { createContext } from "react";
 
 /**
- * エディタの状態（中身、元に戻す履歴、カーソル）を、ファイルのパスごとに保つ入れ物。
- * 配置が替わってエディタを作り直しても、履歴を残すために使う。入れ物はページの配置より上で 1 つ作る。
+ * エディタの状態（中身、元に戻す履歴、カーソル）を、キー（ファイルのパスなど）ごとに保つ入れ物。
+ * 配置が替わってエディタを作り直しても、履歴を残すために使う。入れ物はページの配置より上で作る。
  */
 export type EditorStates = Map<string, EditorState>;
 

@@ -41,6 +41,14 @@ if [ "$deploy" != "wrangler deploy" ]; then
   status=1
 fi
 
+# predeploy と postdeploy は、pnpm の設定によって pnpm run deploy の前後に、deploy の token を持った step の中で動く
+for hook in predeploy postdeploy; do
+  if [ "$(jq -r --arg k "$hook" '.scripts | has($k)' "$APP/package.json")" = "true" ]; then
+    echo "package.json に $hook があります。deploy の前後にスクリプトを足さない。" >&2
+    status=1
+  fi
+done
+
 # ブロックコメントの中の行は、下の行ごとの確認では除けない
 if grep -qF '/*' "$WRANGLER"; then
   echo "wrangler.jsonc にブロックコメントがあります。コメントは // で書く。" >&2

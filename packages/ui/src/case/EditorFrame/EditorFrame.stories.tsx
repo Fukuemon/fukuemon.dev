@@ -11,7 +11,7 @@ const FILES: EditorFile[] = [
 
 /** 開いたファイルと選んだファイルを state で持つ例。 */
 function EditorFrameExample(
-  props: Pick<EditorFrameProps, "files" | "state" | "status" | "themeName"> & {
+  props: Pick<EditorFrameProps, "files" | "state" | "status" | "themeName" | "minBodyHeight"> & {
     isClosable?: boolean;
   },
 ) {
@@ -30,6 +30,7 @@ function EditorFrameExample(
       state={props.state}
       status={props.status}
       themeName={props.themeName}
+      minBodyHeight={props.minBodyHeight}
     >
       {(theme, file) => (
         <DummyEngine
@@ -63,6 +64,17 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = { name: "ファイルを開いている" };
 export const Closable: Story = { name: "閉じられるタブ", args: { isClosable: true } };
 export const Empty: Story = { name: "空", args: { files: [] } };
+export const Short: Story = {
+  name: "低い枠",
+  args: { minBodyHeight: "none" },
+  decorators: [
+    (Story) => (
+      <div className="grid h-40">
+        <Story />
+      </div>
+    ),
+  ],
+};
 export const Pending: Story = { name: "起動を待つ空", args: { state: { kind: "pending" } } };
 export const Loading: Story = {
   name: "読み込み中",

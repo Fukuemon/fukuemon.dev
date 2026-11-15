@@ -71,7 +71,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
 - `STATE-NOT-COLOR-ONLY`: 状態を色だけで伝えない。エラーと注意には、文と印を色と一緒に出す。
   - 確認: レビューで、色を見分けられない人がエラーの場所と内容を読み取れるかを見る。
 - `TEXT-MIN-SIZE`: 14px より小さい文字を使わない。本文と操作の文字は 16px にし、14px は補足だけに使う。
-  - 例外: コードを動かす画面のコンポーネントは、コンソールの値と補足を 12px まで小さくしてよい。コードと操作のラベル、ファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文、注意の枠の本文、読み込み中の文は 13px まで小さくしてよい。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062、ADR-0067）。
+  - 例外: コードを動かす画面のコンポーネントは、コンソールの値と補足を 12px まで小さくしてよい。コードと操作のラベル、ファイルの木の行、入力欄の値、表のセル、メニューの項目、開閉の中身、空の状態の文、注意の枠の本文、読み込み中の文は 13px まで小さくしてよい。SQL の結果の文（影響した行の数、ページの番号、実行計画のツリーと時間）も 13px まで小さくしてよい。DevTools とコードエディタに近い密度で、多くの行を見渡すためである（ADR-0062、ADR-0067）。
     - 使うトークンは、`text-compact`、`text-label-compact`、`text-body-compact`、`text-code-compact` の 4 つである。
     - ADR-0062: [コードを動かす画面だけ、文字を 12px と 13px まで、押せる領域を 24×24 CSS px まで小さくする](../../docs/adr/0062-dense-text-and-targets-in-playground.md)
     - ADR-0067: [コードを動かす画面の詰めたペインの文字のトークンを 4 つにし、13px の等幅の行高に DADS に無い値を使う](../../docs/adr/0067-compact-text-tokens-in-dense-panes.md)
@@ -112,7 +112,7 @@ DADS から外れる規則は、この表に並べず、外れる規則の隣に
   - 例外: スクロールに合わせた動きのうち、`scroll-fade-end` だけは残す。`scroll-fade-end` は右に続きがあることを知らせる印で、途中の濃さを出さず、右端まで送ったときに一度に消える。
   - 確認: レビューで、テーマ変数のファイルの止め方を見る。
   - 確認: 動きを減らす設定で描画した画面を調べるテストは、`packages/e2e/tests/specs/articles/scroll-box-fade.e2e.ts` だけである。この spec は記事のページの検証用の原稿を開くので、原稿を消すときは、開く記事を差し替える。
-- `PLAYGROUND-ONLY`: コードを動かす画面だけの面、角丸、高さの条件を、コードを動かす画面と、そのコンポーネントの外で使わない。対象は、`surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact`、`short:` である。`packages/ui` の Base では、`density="compact"` か `size="XS"` のときだけ使う。例外として、コードを動かす画面だけで使う `PageLoading` は、`density` と `size` によらず、覆いの面に `surface-pane` を使う。
+- `PLAYGROUND-ONLY`: コードを動かす画面だけの面、角丸、高さの条件を、コードを動かす画面と、そのコンポーネントの外で使わない。対象は、`surface-ground`、`surface-pane`、`surface-pane-subtle`、`rounded-pane`、`rounded-sheet`、`rounded-control-compact`、`short:` である。`packages/ui` の Base では、`density="compact"` か `size="XS"` のときだけ使う。例外として、コードを動かす画面だけで使う `PageLoading` は、`density` と `size` によらず、覆いの面に `surface-pane` を使う。同じく、コードを動かす画面だけで使う `Select` は、`density` によらず、欄の面に `surface-pane` を使う。
   - ADR-0072: [コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える](../../docs/adr/0072-short-landscape-layout-in-playground.md)
   - ADR-0073: [コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める](../../docs/adr/0073-layered-panes-and-radius-in-playground.md)
   - 確認: `pnpm run check:utilities`。使ってよい置き場は、チェックのスクリプトの `PLAYGROUND_PATHS` に列挙する。Base の中で compact の分岐の外に書いていないかは、レビューで見る。

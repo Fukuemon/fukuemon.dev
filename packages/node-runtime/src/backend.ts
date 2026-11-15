@@ -1,7 +1,14 @@
 import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
-/** previewScript は、プレビューのページに入れるスクリプトの中身である。 */
-type BackendBootOptions = Pick<BootOptions, "files"> & { previewScript: string };
+type BackendBootOptions = Pick<BootOptions, "files"> & {
+  /** プレビューのページに入れるスクリプトの中身。 */
+  previewScript: string;
+  /** true のときに、DB のプロセスのスクリプトと依存の package.json を guestDirectory に置き、訪問者のプロセスに接続先と、終了させない preload を渡す。 */
+  database: boolean;
+};
+
+/** 実行環境が自分で起動するプロセス（internal）には、preload と接続先を渡さず、端末も付けない。 */
+export type SpawnOptions = { terminal?: TerminalSize; internal?: boolean };
 
 /** other は、ファイルでもディレクトリでもないもの（シンボリックリンクなど）である。 */
 export type DirectoryItem = { name: string; kind: "file" | "directory" | "other" };
@@ -39,7 +46,7 @@ export type BackendInstance = {
   spawn: (
     command: string,
     args: readonly string[],
-    options?: { terminal?: TerminalSize },
+    options?: SpawnOptions,
   ) => Promise<BackendProcess>;
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   /** 待ち受けているポートの全体を、変わるたびに知らせる。 */
@@ -48,6 +55,8 @@ export type BackendInstance = {
   previewMessages: {
     subscribe: (onMessage: (message: unknown, port: number) => void) => () => void;
   };
+  /** DB を使うときに、DB のプロセスのスクリプト、依存の package.json、preload を置くディレクトリの、絶対パス。 */
+  guestDirectory: string;
   teardown: () => Promise<void>;
 };
 

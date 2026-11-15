@@ -1,11 +1,23 @@
-import type { BootFailureReason, NodeRuntime } from "@fukuemon/node-runtime";
-import { type ActionDispatch, createContext, use } from "react";
+import type { BootFailureReason, NodeRuntime, Store } from "@fukuemon/node-runtime";
+import { type ActionDispatch, createContext, use, useSyncExternalStore } from "react";
 
+import type { EditorStates } from "../code-editor/editor-states";
 import type { Selection, SelectionAction } from "./selection";
 import type { NodeProject, RuntimeResult } from "./session";
 
-/** 開いたプロジェクトと、実行環境の起動の Promise。値が変わるのは、実行環境を起動し直すときだけである。 */
-export type RuntimeValue = { project: NodeProject; runtime: Promise<RuntimeResult> };
+/** 開いたプロジェクト、実行環境の起動の Promise、実行環境を起動し直す操作と、起動し直している間かどうか、SQL のペインの入力欄の SQL と、その元に戻す履歴の入れ物。値が変わるのは、実行環境を起動し直すときだけである。 */
+export type RuntimeValue = {
+  project: NodeProject;
+  runtime: Promise<RuntimeResult>;
+  restart: () => Promise<void>;
+  busy: Store<boolean>;
+  sqlQuery: Store<string>;
+  setSqlQuery: (sql: string) => void;
+  /** 配置が替わって SQL のペインを作り直しても、入力欄の元に戻す履歴とカーソルを残すための入れ物。 */
+  sqlEditorStates: EditorStates;
+  /** 初期の状態に戻した回数。SQL のペインは、増えたときに入力欄の元に戻す履歴を消す。 */
+  sqlResets: Store<number>;
+};
 
 export const RuntimeContext = createContext<RuntimeValue | null>(null);
 
@@ -26,6 +38,42 @@ export function useRuntime():
   return result.kind === "running"
     ? { project: value.project, runtime: result.runtime }
     : { project: value.project, reason: result.reason };
+}
+
+/** 実行環境を起動し直す操作と、起動し直している間かどうか。ヘッダの「起動し直す」と同じ操作である。 */
+export function useRestart(): { restart: () => Promise<void>; restarting: boolean } {
+  const value = use(RuntimeContext);
+  if (!value) throw new Error("RuntimeContext の provider が無い");
+  const restarting = useSyncExternalStore(
+    value.busy.subscribe,
+    value.busy.getSnapshot,
+    value.busy.getSnapshot,
+  );
+  return { restart: value.restart, restarting };
+}
+
+/** SQL のペインの入力欄の元に戻す履歴の入れ物と、初期の状態に戻した回数。 */
+export function useSqlEditorHistory(): { editorStates: EditorStates; resets: number } {
+  const value = use(RuntimeContext);
+  if (!value) throw new Error("RuntimeContext の provider が無い");
+  const resets = useSyncExternalStore(
+    value.sqlResets.subscribe,
+    value.sqlResets.getSnapshot,
+    value.sqlResets.getSnapshot,
+  );
+  return { editorStates: value.sqlEditorStates, resets };
+}
+
+/** SQL のペインの入力欄の SQL と、替える関数。値は src/node/ のモジュールが持ち、保存する。 */
+export function useSqlQuery(): [string, (sql: string) => void] {
+  const value = use(RuntimeContext);
+  if (!value) throw new Error("RuntimeContext の provider が無い");
+  const query = useSyncExternalStore(
+    value.sqlQuery.subscribe,
+    value.sqlQuery.getSnapshot,
+    value.sqlQuery.getSnapshot,
+  );
+  return [query, value.setSqlQuery];
 }
 
 export function useSelection(): SelectionValue {
