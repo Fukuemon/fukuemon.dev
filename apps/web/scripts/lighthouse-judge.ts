@@ -1,4 +1,4 @@
-/** トップの Lighthouse の計測（scripts/measure-top-lighthouse.mjs）の 1 回の値のうち、集計に使うもの */
+/** Lighthouse の計測（scripts/measure-top-lighthouse.mjs。既定はトップで、--path でほかのページ）の 1 回の値のうち、集計に使うもの */
 export type Row = {
   score: number;
   fcp: number;

@@ -1,15 +1,15 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-import { backgroundHaze, htmlElement } from "../../selectors/garden";
+import { htmlElement } from "../../selectors/garden";
+import { backgroundHaze, bodyElement, inkBackground } from "../../selectors/ink-background";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
 
-const background = (page: Page) => page.getByTestId("ink-background");
+const background = inkBackground;
 const siteHeader = (page: Page) => page.getByTestId("site-header");
 
-/** 要素の背景の色。ヘッダーがページと同じ紙の色を敷き、後ろの絵を隠すかを比べる */
-const backgroundColor = (locator: Locator) =>
-  locator.evaluate((el) => getComputedStyle(el).backgroundColor);
+/** 背景の色が無いときの値 */
+const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
 /** 背景の霞のうち、動いているアニメーションの数 */
 const runningHaze = (page: Page) =>
@@ -29,14 +29,14 @@ const runningHaze = (page: Page) =>
 const inkResponses = (page: Page) => {
   const statuses: number[] = [];
   page.on("response", (r) => {
-    if (r.url().includes("ink-background")) statuses.push(r.status());
+    if (/\/ink-background\.[^/]*\.svg$/.test(new URL(r.url()).pathname)) statuses.push(r.status());
   });
   return statuses;
 };
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
-test.describe("トップの背景の墨の絵", () => {
+test.describe("薄墨の背景の絵", () => {
   test.describe("見た目", () => {
     for (const colorScheme of ["light", "dark"] as const) {
       test(`3D 表示（WebGL）とアニメーションをオフにして ${colorScheme} で開いた場合、止まった背景の絵が基準の画像と同じであること`, async ({
@@ -46,9 +46,6 @@ test.describe("トップの背景の墨の絵", () => {
         await presetSettings(page, { garden: "off", motion: "off" });
         await page.goto("/");
         await expect(background(page)).toBeVisible();
-        expect(await backgroundColor(siteHeader(page))).toBe(
-          await backgroundColor(htmlElement(page)),
-        );
         // 本文の字はシステムフォントで描くので、背景の絵だけを比べる
         await page.addStyleTag({
           content:
@@ -61,6 +58,20 @@ test.describe("トップの背景の墨の絵", () => {
         });
       });
     }
+  });
+
+  test("庭を出さない場合、ページの背景の色を html に移し、body を透明にすること", async ({
+    page,
+  }) => {
+    await presetSettings(page, { garden: "off" });
+    await page.goto("/");
+    await expect(bodyElement(page)).toHaveCSS("background-color", TRANSPARENT);
+  });
+
+  test("庭を出さない場合、ヘッダーに紙の色を敷いて絵を隠すこと", async ({ page }) => {
+    await presetSettings(page, { garden: "off" });
+    await page.goto("/");
+    await expect(siteHeader(page)).not.toHaveCSS("background-color", TRANSPARENT);
   });
 
   test("背景の絵を読み上げから外していること", async ({ page }) => {
@@ -142,25 +153,30 @@ test.describe("トップの背景の墨の絵", () => {
     { name: "プレイグラウンドの一覧", path: "/playground/" },
   ]) {
     test.describe(name, () => {
-      test("背景を出して SVG を 1 回取得し、ヘッダーが絵を隠すこと", async ({ page }) => {
-        const responses = inkResponses(page);
+      test("背景を出すこと", async ({ page }) => {
         await page.goto(path);
         await expect(background(page)).toBeVisible();
-        await expect(background(page)).toHaveAttribute("aria-hidden", "true");
-        expect(await backgroundColor(siteHeader(page))).toBe(
-          await backgroundColor(htmlElement(page)),
-        );
+      });
+
+      test("墨の絵の SVG を 1 回取得すること", async ({ page }) => {
+        const responses = inkResponses(page);
+        await page.goto(path);
         await page.waitForLoadState("load");
         expect(responses).toStrictEqual([200]);
       });
 
-      test("アニメーションをオンにすると、霞が流れること", async ({ page }) => {
+      test("ヘッダーに紙の色を敷いて絵を隠すこと", async ({ page }) => {
+        await page.goto(path);
+        await expect(siteHeader(page)).not.toHaveCSS("background-color", TRANSPARENT);
+      });
+
+      test("アニメーションをオンにした場合、霞が流れること", async ({ page }) => {
         await presetSettings(page, { motion: "on" });
         await page.goto(path);
         await expect.poll(() => runningHaze(page)).toBeGreaterThan(0);
       });
 
-      test("アニメーションをオフにすると、霞が止まること", async ({ page }) => {
+      test("アニメーションをオフにした場合、霞が止まること", async ({ page }) => {
         await presetSettings(page, { motion: "off" });
         await page.goto(path);
         await expect(background(page)).toBeVisible();
@@ -168,4 +184,25 @@ test.describe("トップの背景の墨の絵", () => {
       });
     });
   }
+
+  test.describe("背景を出さないページ（記事の本文）", () => {
+    const article = "/articles/page-check/body-and-figure/";
+
+    test("背景の要素を置かないこと", async ({ page }) => {
+      await page.goto(article);
+      await expect(background(page)).toHaveCount(0);
+    });
+
+    test("墨の絵の SVG を取得しないこと", async ({ page }) => {
+      const responses = inkResponses(page);
+      await page.goto(article);
+      await page.waitForLoadState("load");
+      expect(responses).toStrictEqual([]);
+    });
+
+    test("html に背景を出すページの印を付けないこと", async ({ page }) => {
+      await page.goto(article);
+      await expect(htmlElement(page)).not.toHaveAttribute("data-ink-background");
+    });
+  });
 });
