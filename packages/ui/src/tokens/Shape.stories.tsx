@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 /**
  * 区切りと重なりとフォーカスの表示を、見本で並べる。余白は Tailwind のデフォルトの段（1 段 4px）を使う。
  * 区切りは罫線と余白で示す。操作できる要素と重なる面の角は rounded-control で丸め、重なる面は 1px の枠と shadow-raised の影で示す。
+ * ボタン、枠のある入力欄、区切った帯は、線の内側に stitch で縫い目の破線を引く。
  */
 function ShapeTokens() {
   return (
@@ -44,7 +45,42 @@ function ShapeTokens() {
             />
             <code className="font-mono text-code-dense">rounded-control</code>
           </li>
+          <li className="flex flex-col items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-12 w-32 rounded-control bg-surface stitch ring-1 ring-border-field ring-inset"
+            />
+            <code className="font-mono text-code-dense">rounded-control stitch</code>
+          </li>
+          <li className="flex flex-col items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-12 w-32 rounded-control bg-primary stitch stitch-current text-text-inverse"
+            />
+            <code className="font-mono text-code-dense">stitch stitch-current</code>
+          </li>
         </ul>
+      </section>
+      <section className="flex flex-col gap-3">
+        <h2 className="font-heading text-heading-md font-semibold">区切った帯</h2>
+        <div className="flex flex-col gap-3">
+          <div aria-label="季節" className="band" role="group">
+            {["自動", "春", "夏", "秋", "冬"].map((label) => (
+              <button
+                aria-pressed={label === "秋"}
+                className="min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface stitch px-3 text-label text-text focus-visible:focus-ring aria-pressed:z-10 aria-pressed:border-text aria-pressed:bg-text aria-pressed:text-surface aria-pressed:stitch-current"
+                key={label}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <code className="font-mono text-code-dense">
+            band（帯）、border border-border-field
+            stitch（子）、aria-pressed:stitch-current（選んだ子）
+          </code>
+        </div>
       </section>
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-heading-md font-semibold">フォーカス</h2>

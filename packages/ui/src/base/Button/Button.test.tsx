@@ -118,4 +118,16 @@ describe("Button", () => {
     expect(button.getBoundingClientRect().height).toBe(28);
     expect(getComputedStyle(button).fontSize).toBe("13px");
   });
+
+  it("S と M は角を 4 px で丸めて縫い目の破線を描き、XS は破線を描かない", () => {
+    const { unmount } = render(<Primary />);
+    const medium = getComputedStyle(screen.getByRole("button"));
+    expect([medium.borderTopLeftRadius, medium.backgroundImage]).toStrictEqual([
+      "4px",
+      expect.stringContaining("repeating-linear-gradient"),
+    ]);
+    unmount();
+    render(<ExtraSmall />);
+    expect(getComputedStyle(screen.getByRole("button")).backgroundImage).toBe("none");
+  });
 });

@@ -142,7 +142,7 @@
   --container-page: 68rem;
 
   /* 操作できる要素と、重なる面の角 */
-  --radius-control: 2px;
+  --radius-control: 4px;
   /* コードを動かす画面だけで使う。ペインの面、下のタブの帯とドロワー、density が compact の操作できる要素（docs/adr/0073-layered-panes-and-radius-in-playground.md） */
   --radius-pane: 10px;
   --radius-sheet: 14px;
@@ -428,6 +428,71 @@
     background: var(--fd-color-current-page);
     clip-path: inset(0);
     animation: var(--animate-stroke);
+  }
+}
+
+/*
+ * 縫い目の破線。外の線の 3px 内側に、3px ずつの 1px の破線を引く（docs/adr/0028-radius-shadow-and-brush-motion.md）。
+ * 背景の画像で描く。outline は focus-ring が、::before は ink-press が、::after は Button の S の押せる範囲が使うためである。
+ * 破線は飾りなので、ハイコントラストでは消す。
+ */
+@property --fd-stitch {
+  syntax: "*";
+  inherits: false;
+}
+
+@utility stitch {
+  --fd-stitch-dash: var(--fd-stitch, var(--fd-color-border-field)) 0 3px, transparent 3px 6px;
+  background-image:
+    repeating-linear-gradient(to right, var(--fd-stitch-dash)),
+    repeating-linear-gradient(to right, var(--fd-stitch-dash)),
+    repeating-linear-gradient(to bottom, var(--fd-stitch-dash)),
+    repeating-linear-gradient(to bottom, var(--fd-stitch-dash));
+  background-origin: border-box;
+  background-position:
+    left 3px top 3px,
+    left 3px bottom 3px,
+    left 3px top 3px,
+    right 3px top 3px;
+  background-size:
+    calc(100% - 6px) 1px,
+    calc(100% - 6px) 1px,
+    1px calc(100% - 6px),
+    1px calc(100% - 6px);
+  background-repeat: no-repeat;
+
+  @media (forced-colors: active) {
+    background-image: none;
+  }
+}
+
+/* 地を塗った要素（主のボタン、押した帯）の縫い目。破線を文字の色にし、地と反対の色で見せる */
+@utility stitch-current {
+  --fd-stitch: color-mix(in srgb, currentColor 70%, transparent);
+}
+
+/*
+ * 区切った帯。子のボタンを、境の線を 1 本にしてつなぎ、折り返す。外側の 4 つの角だけを rounded-control と同じ値で丸める。
+ * 子には、枠の線（border）と stitch を付け、選んだ子に z-index を付けて、濃い線を隣の線の上に出す。
+ */
+@utility band {
+  display: flex;
+  flex-wrap: wrap;
+  padding-inline-start: 1px;
+  padding-block-start: 1px;
+
+  & > * {
+    position: relative;
+    margin-inline-start: -1px;
+    margin-block-start: -1px;
+  }
+  & > :first-child {
+    border-start-start-radius: --theme(--radius-control);
+    border-end-start-radius: --theme(--radius-control);
+  }
+  & > :last-child {
+    border-start-end-radius: --theme(--radius-control);
+    border-end-end-radius: --theme(--radius-control);
   }
 }
 

@@ -154,4 +154,17 @@ describe("TextField", () => {
     expect(field.getBoundingClientRect().height).toBe(28);
     expect(getComputedStyle(field).fontSize).toBe("13px");
   });
+
+  it("枠のある欄は、面の角を 4 px で丸めて縫い目の破線を描き、compact の欄は破線を描かない", () => {
+    const { unmount } = render(<Default />);
+    const face = getComputedStyle(screen.getByRole("textbox").nextElementSibling as Element);
+    expect([face.borderTopLeftRadius, face.backgroundImage]).toStrictEqual([
+      "4px",
+      expect.stringContaining("repeating-linear-gradient"),
+    ]);
+    unmount();
+    render(<Compact />);
+    const compact = screen.getByRole("textbox").nextElementSibling as Element;
+    expect(getComputedStyle(compact).backgroundImage).toBe("none");
+  });
 });

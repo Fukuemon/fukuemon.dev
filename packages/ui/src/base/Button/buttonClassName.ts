@@ -16,9 +16,11 @@ export type ButtonStyleOptions = {
 };
 
 const variantClassName: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-text-inverse not-aria-disabled:not-aria-busy:hover:bg-primary-hover",
+  primary:
+    "bg-primary text-text-inverse stitch-current not-aria-disabled:not-aria-busy:hover:bg-primary-hover",
   secondary: "bg-surface text-primary ring-1 ring-border-field ring-inset",
-  danger: "bg-danger text-text-inverse not-aria-disabled:not-aria-busy:hover:bg-danger-hover",
+  danger:
+    "bg-danger text-text-inverse stitch-current not-aria-disabled:not-aria-busy:hover:bg-danger-hover",
 };
 
 const sizeClassName: Record<ButtonSize, string> = {
@@ -34,7 +36,7 @@ const sizeClassName: Record<ButtonSize, string> = {
 export const buttonClassName = ({ variant = "primary", size = "M" }: ButtonStyleOptions = {}) =>
   clsx(
     "relative inline-flex cursor-pointer items-center justify-center gap-2 ink-press",
-    size === "XS" ? "rounded-control-compact" : "rounded-control",
+    size === "XS" ? "rounded-control-compact" : "rounded-control stitch",
     "not-aria-disabled:not-aria-busy:active:brightness-90",
     "focus-visible:focus-ring",
     "forced-frame aria-disabled:forced-off-disabled",
