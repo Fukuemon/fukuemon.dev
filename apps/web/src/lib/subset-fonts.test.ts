@@ -358,7 +358,9 @@ describe("ビルド後の作り直し", () => {
     );
     await build({ html: heading("あ"), css: face("a", "U+3042") + quoted });
 
-    expect((await state()).site).not.toContain("b.AAAAAAAA");
+    expect((await state()).site).toBe(
+      face("a", "U+3042").replace("a.AAAAAAAA.woff2", renamed) + RULE,
+    );
   });
 
   it("rebuild が false のときは、使う字のある分割を作り直さず、使う字の無い分割の規則だけを外す", async () => {
@@ -400,7 +402,9 @@ describe("ビルド後の作り直し", () => {
     );
     await build({ html: heading("あ"), css: face("a", "U+3042") + svg, extraFile: "b.svg" });
 
-    expect((await state()).files).toContain("b.svg");
+    expect((await state()).files).toStrictEqual(
+      ["app.js", "b.svg", "page.css", "site.css", renamed].sort(),
+    );
   });
 
   it("rebuild が false のときは、要素を特定できなくても警告しない", async () => {
@@ -485,18 +489,35 @@ describe("ビルド後の作り直し", () => {
     await expect(build({ html: heading("あ"), css: outside })).rejects.toThrow("の外を指している");
   });
 
-  it("使う字のないスライスの URL が出力の外を指すときも、何も書き換えずにビルドを止める", async () => {
-    const outside = face("b", "U+3044").replace("/_astro/b.AAAAAAAA.woff2", "/../x.AAAAAAAA.woff2");
+  it.each([
+    ["woff2", false],
+    ["woff2", true],
+    ["woff", false],
+    ["woff", true],
+  ])(
+    "使う字の無い分割の %s の URL が出力の外を指すときは、作り直しも書き換えもせずにビルドを止める（rebuild: %s）",
+    async (format, rebuild) => {
+      const outside =
+        format === "woff2"
+          ? face("b", "U+3044").replace("/_astro/b.AAAAAAAA.woff2", "/../x.AAAAAAAA.woff2")
+          : face("b", "U+3044").replace(
+              'format("woff2")',
+              'format("woff2"),url(/../x.woff)format("woff")',
+            );
+      const css = face("a", "U+3042") + outside;
 
-    const error = await build({ html: heading("あ"), css: face("a", "U+3042") + outside }).catch(
-      (e: Error) => e.message,
-    );
+      const error = await build({ html: heading("あ"), css, options: { rebuild } }).catch(
+        (e: Error) => e.message,
+      );
 
-    expect({ error, subsets: subsetFont.mock.calls.length }).toStrictEqual({
-      error: expect.stringContaining("の外を指している"),
-      subsets: 0,
-    });
-  });
+      expect({ error, ...(await state()) }).toStrictEqual({
+        error: expect.stringContaining("の外を指している"),
+        site: css + RULE,
+        files: ["a.AAAAAAAA.woff2", "app.js", "b.AAAAAAAA.woff2", "page.css", "site.css"],
+        subsets: 0,
+      });
+    },
+  );
 
   it.each([
     ["相対パス", "_astro/a.AAAAAAAA.woff2"],
