@@ -3,6 +3,7 @@ import {
   currentCards,
   htmlElement,
   inkSvg,
+  mainLandmark,
   profileHeading,
   styledCards,
 } from "../../selectors/garden";
@@ -312,39 +313,21 @@ test.describe("「飛ばす」の色と位置", () => {
   }
 });
 
-test.describe("「本文へスキップ」のリンク", () => {
-  /** フォーカスが当たった要素が、画面に固定した庭とヘッダーに隠れず、いちばん上に出ている */
-  const focusedOnTop = (page: Page) =>
-    page.evaluate(() => {
-      const el = document.activeElement!;
-      const r = el.getBoundingClientRect();
-      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
-      return {
-        link: el instanceof HTMLAnchorElement ? el.hash : null,
-        onTop: top === el || el.contains(top),
-      };
-    });
-
-  test("2 回目の訪問の庭で Tab を押すと、リンクがヘッダーに隠れずに出る", async ({ page }) => {
-    await seenBefore(page);
-    await page.goto("/");
-    await expect(html(page)).toHaveClass(/garden-ready/);
-    await page.keyboard.press("Tab");
-    expect(await focusedOnTop(page)).toStrictEqual({ link: "#main", onTop: true });
-  });
-
-  test("初めての訪問で場面の準備の前に Tab を押すと、リンクが墨の絵とヘッダーに隠れずに出る", async ({
+test.describe("イントロの間のフォーカス", () => {
+  test("場面の準備の前に Tab を押しても、ヘッダーと和紙の文にフォーカスが移らない", async ({
     page,
   }) => {
-    // 準備の前は Tab でイントロが止まらず、庭の面が画面を覆ったままになる
     await delayResponse(page, BUNDLE, 4000);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(html(page)).toHaveClass(/\bintro\b/);
     await page.keyboard.press("Tab");
-    expect({
-      ...(await focusedOnTop(page)),
-      ready: await page.evaluate(() => document.documentElement.classList.contains("scene-ready")),
-    }).toStrictEqual({ link: "#main", onTop: true, ready: false });
+    expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  });
+
+  test("本文は main のランドマークの中にあり、h1 が 1 つある", async ({ page }) => {
+    await page.goto("/");
+    await expect(mainLandmark(page)).toHaveCount(1);
+    await expect(profileHeading(page)).toHaveCount(1);
   });
 });
 
