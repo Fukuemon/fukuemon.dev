@@ -33,3 +33,9 @@ variable "playground_worker_name" {
   type        = string
   default     = "fukuemon-dev-play"
 }
+
+variable "docs_worker_name" {
+  description = "ドキュメントサイトを配信する Worker の名前 (apps/docs-site/wrangler.jsonc の name と一致させる)"
+  type        = string
+  default     = "fukuemon-dev-docs"
+}

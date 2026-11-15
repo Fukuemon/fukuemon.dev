@@ -6,6 +6,7 @@ import { EDITOR_ICON, RESULT_ICON } from "../layout/icons";
 import { useLayoutMode } from "../layout/useLayoutMode";
 import type { EditorStates } from "../code-editor/editor-states";
 import { usePaneFocus } from "../layout/usePaneFocus";
+import { DenseContext } from "./density";
 import { ResultView } from "./ResultView";
 import { SqlEditor } from "./SqlEditor";
 
@@ -19,14 +20,34 @@ export type SqlConsoleProps = {
   status: Store<DatabaseStatus>;
   /** DB が止まったときに、止まった理由の後に出す、復帰の案内。 */
   stoppedHint?: string;
+  /** 渡すと、DB が止まったときに、エラーの隣に「起動し直す」のボタンを出し、押すと呼ぶ。 */
+  onRestart?: () => void;
+  /** true のときは、「起動し直す」のボタンを待ちの表示にし、押せなくする。 */
+  restarting?: boolean;
+  /** 実行のボタンの文。ほかの「実行する」のボタンと同じページに置くときに替える。 */
+  runLabel?: string;
+  /** 実行のボタンの見た目。同じ画面にほかの主のボタンがあるときは secondary にする（PRIMARY-ACTION-ONE）。 */
+  runVariant?: "primary" | "secondary";
   /** 入力欄のタブに出すファイルの名前。 */
   fileName: string;
   /** 渡すと、結果の欄に、SQL の実行を待っていることを出す。PGlite の読み込みと初期データの投入の待ちは、呼ぶ側が画面全体に出す。 */
   progress?: string;
-  /** 記事に埋め込んだときは、狭い配置のタブを枠の上に置く。 */
+  /**
+   * 渡すと、入力欄を低くし、間隔と字を詰め、親の高さを埋めて結果の欄だけを送る。ほかのペインと並べて置くときに使う。
+   * 配置は呼ぶ側のペインが決めるので、狭い配置でも入力と結果のタブに分けない。
+   */
+  dense?: boolean;
+  /** 記事に埋め込んだときは、狭い配置のタブを枠の上に置く。`dense` のときは使わない。 */
   embedded?: boolean;
   /** 実行のボタンへの ref。呼ぶ側が、操作の後にフォーカスをボタンへ移すために使う。 */
   runButtonRef?: Ref<HTMLButtonElement>;
+  /**
+   * 入力欄の元に戻す履歴とカーソルを保つ入れ物。呼ぶ側の配置が替わってこのコンポーネントを作り直しても、履歴を残すときに渡す。
+   * 渡さないときは、このコンポーネントが持ち、作り直すと履歴が消える。結果の表は、どちらでも作り直すと消える。
+   */
+  editorStates?: EditorStates;
+  /** 初期の状態に戻した回数。増えたときは、入力欄の元に戻す履歴を消す。 */
+  resets?: number;
   /** 実行のボタンの行の右端に置くもの。出入りしても、入力欄の位置が動かないようにするため、行は常にある。 */
   actions?: ReactNode;
 };
@@ -39,10 +60,17 @@ export function SqlConsole({
   running,
   status,
   stoppedHint,
+  onRestart,
+  restarting = false,
+  runLabel = "実行する",
+  runVariant = "primary",
   fileName,
   progress,
+  dense = false,
   embedded = false,
   runButtonRef,
+  editorStates: givenStates,
+  resets,
   actions,
 }: SqlConsoleProps) {
   const file = { id: fileName, label: fileName };
@@ -53,7 +81,8 @@ export function SqlConsole({
   const [pane, setPane] = useState<"input" | "result">("input");
   const { rootRef, focusSelectedTab } = usePaneFocus();
   // 配置が替わって入力欄を作り直しても、元に戻す履歴とカーソルを残す
-  const [editorStates] = useState<EditorStates>(() => new Map());
+  const [ownStates] = useState<EditorStates>(() => new Map());
+  const editorStates = givenStates ?? ownStates;
 
   const run = async () => {
     if (running) return;
@@ -63,25 +92,43 @@ export function SqlConsole({
     focusSelectedTab();
   };
 
+  const density = dense ? "compact" : "default";
+  const gap = dense ? "gap-2" : "gap-4";
   const editor = (
-    <EditorFrame files={[file]} onSelect={() => {}} selectedId={file.id} title="SQL">
+    <EditorFrame
+      files={[file]}
+      minBodyHeight={dense ? "none" : "default"}
+      onSelect={() => {}}
+      selectedId={file.id}
+      title="SQL"
+    >
       {() => (
         <SqlEditor
           describedBy={hintId}
           onChange={onChange}
           onRun={() => void run()}
-          states={editorStates}
+          editorStates={editorStates}
+          resets={resets}
           value={value}
         />
       )}
     </EditorFrame>
   );
   const runRow = (
-    <div className="flex flex-wrap items-center gap-4">
-      <Button isLoading={running} onClick={() => void run()} ref={runButtonRef} size="S">
-        実行する
+    <div className={`flex shrink-0 flex-wrap items-center ${gap}`}>
+      <Button
+        isLoading={running}
+        onClick={() => void run()}
+        ref={runButtonRef}
+        size={dense ? "XS" : "S"}
+        variant={runVariant}
+      >
+        {runLabel}
       </Button>
-      <span className="text-caption text-text-secondary" id={hintId}>
+      <span
+        className={`${dense ? "text-compact" : "text-caption"} text-text-secondary`}
+        id={hintId}
+      >
         Ctrl か ⌘ と Enter でも実行します。Tab でインデントし、Esc の後の Tab
         でエディタの外へ移ります
       </span>
@@ -89,17 +136,53 @@ export function SqlConsole({
     </div>
   );
   const results = (
-    <section aria-label="実行の結果" className="flex min-w-0 flex-col gap-4">
-      {progress !== undefined && <Loading label={progress} />}
+    <section
+      aria-label="実行の結果"
+      className={`flex min-w-0 flex-col ${gap} ${dense ? "min-h-0 flex-1 overflow-y-auto scroll-fade-pane" : ""}`}
+    >
+      {progress !== undefined && <Loading density={density} label={progress} />}
       {database.kind === "stopped" && (
-        <Notice isAlert title="DB が止まりました" tone="danger">
+        <Notice density={density} isAlert title="DB が止まりました" tone="danger">
           {database.reason}。{stoppedHint}
+          {onRestart && (
+            <span className="mt-2 block">
+              <Button
+                disabled={restarting}
+                isLoading={restarting}
+                onClick={onRestart}
+                size={dense ? "XS" : "S"}
+                variant="secondary"
+              >
+                起動し直す
+              </Button>
+            </span>
+          )}
         </Notice>
       )}
       {shown && <ResultView key={shown.id} response={shown.response} />}
     </section>
   );
 
+  if (dense) {
+    return (
+      <DenseContext value>
+        {/*
+          入力欄と操作を上に置いたまま、結果の領域だけを送る。面はペインの紙の面にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）。
+          入力欄は面の縁まで広げ、紙の面の中に入力欄の面を重ねない。入力欄の下の角は丸めず、余白は実行の行と結果にだけ取る。高さの低い画面では、結果の領域を残すため入力欄を低くする。
+          入力欄のフォーカスの輪は、呼ぶ側のペインが面の外に引く。内側に引くと、エディタの背景が輪を塗る（docs/adr/0066-inset-focus-ring-in-dense-panes.md）。
+        */}
+        <div className="flex h-full min-h-0 min-w-0 flex-col rounded-pane bg-surface-pane">
+          <div className="grid h-40 min-h-0 shrink-0 short:h-32 [&>section]:rounded-b-none">
+            {editor}
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-2">
+            {runRow}
+            {results}
+          </div>
+        </div>
+      </DenseContext>
+    );
+  }
   if (mode === "wide") {
     return (
       <div className="flex min-w-0 flex-col gap-4">

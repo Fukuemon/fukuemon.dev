@@ -88,6 +88,8 @@ zone_id    = "<zone ID>"
 zone_name  = "fukuemon.dev"
 ```
 
+ドキュメントサイトを初めて公開する手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
+
 ## CI から apply する
 
 1. Actions の **Terraform Apply** を、`mode` を `plan` にして `workflow_dispatch` で起動する。

@@ -18,3 +18,10 @@ resource "cloudflare_workers_custom_domain" "playground" {
   service    = var.playground_worker_name
   zone_id    = cloudflare_zone.site.id
 }
+
+resource "cloudflare_workers_custom_domain" "docs" {
+  account_id = var.account_id
+  hostname   = "docs.${var.zone_name}"
+  service    = var.docs_worker_name
+  zone_id    = cloudflare_zone.site.id
+}

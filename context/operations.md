@@ -11,6 +11,8 @@ governs:
   - apps/playground/wrangler.jsonc
   - apps/playground/public/_headers
   - apps/playground/public/_redirects
+  - apps/docs-site/wrangler.jsonc
+  - apps/docs-site/public/_headers
 verified_commit: 01101c7
 ---
 
@@ -37,17 +39,20 @@ ADR-0031: [切り替えまでのプレビュー](../docs/adr/0031-subdomains-and
 ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-workers-terraform-wrangler-boundary.md)  
 管轄はこの表で決め、リソースが増減したら表を直す。
 
-| リソース                                                    | 管轄                            | 使うか   |
-| ----------------------------------------------------------- | ------------------------------- | -------- |
-| Zone、DNS レコード、TLS                                     | Terraform                       | 使う     |
-| Workers custom domain（`cloudflare_workers_custom_domain`） | Terraform                       | 使う     |
-| Terraform の state 用の R2 バケット                         | Terraform（`infra/bootstrap/`） | 使う     |
-| Worker script と静的アセット                                | Wrangler                        | 使う     |
-| deployment                                                  | Wrangler                        | 使う     |
-| レスポンスヘッダ（`_headers`）                              | Wrangler（配信物の一部）        | 使う     |
-| runtime secret                                              | Wrangler                        | 該当なし |
-| binding（D1、KV、R2）                                       | Wrangler（`wrangler.jsonc`）    | 該当なし |
-| D1、KV、R2 のデータ本体                                     | Terraform                       | 該当なし |
+| リソース                                                                   | 管轄                                                                              | 使うか   |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------- |
+| Zone、DNS レコード、TLS                                                    | Terraform                                                                         | 使う     |
+| Workers custom domain（`cloudflare_workers_custom_domain`）                | Terraform                                                                         | 使う     |
+| Access のアプリケーションとポリシー                                        | ダッシュボード（運営者がオンとオフを切り替える。ADR-0032）                        | 使う     |
+| Zero Trust の組織                                                          | ダッシュボード（最初の 1 回）                                                     | 使う     |
+| Terraform の state 用の R2 バケット                                        | Terraform（`infra/bootstrap/`）                                                   | 使う     |
+| workers.dev とバージョンごとの URL の公開（`workers_dev`、`preview_urls`） | Wrangler（`wrangler.jsonc`）。ドキュメントサイトは `check:closed-urls` が確認する | 使う     |
+| Worker script と静的アセット                                               | Wrangler                                                                          | 使う     |
+| deployment                                                                 | Wrangler                                                                          | 使う     |
+| レスポンスヘッダ（`_headers`）                                             | Wrangler（配信物の一部）                                                          | 使う     |
+| runtime secret                                                             | Wrangler                                                                          | 該当なし |
+| binding（D1、KV、R2）                                                      | Wrangler（`wrangler.jsonc`）                                                      | 該当なし |
+| D1、KV、R2 のデータ本体                                                    | Terraform                                                                         | 該当なし |
 
 管轄が決まらない新しいリソースは、次の順に判定する。
 
@@ -56,6 +61,10 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 3. 変更が本番の可用性かドメインへの到達に影響するなら、Terraform にする。
 4. どれにも当たらなければ、Terraform にする。変更の履歴とレビューを残せる。
 
+ドキュメントサイトの Access のアプリケーションとポリシーは、判定の 3 の例外で、ダッシュボードで設定する。  
+運営者が Access のオンとオフを頻繁に切り替えるためである。  
+ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
+
 - `cloudflare_workers_script` で静的アセットを配らない。deploy が Terraform を経由し、apply の権限が日常の CI へ降りる。
 - Terraform が作ったリソースの識別子（R2 のバケット名、D1 の database id など）を Wrangler へ渡す方法は、データを保持するリソースが 2 つ目になる前にこの節に定める。
 
@@ -63,12 +72,13 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 レスポンスヘッダは、Worker ごとに、配信物の `_headers` に書く。
 
-| Worker           | ホスト名              | `_headers`                               |
-| ---------------- | --------------------- | ---------------------------------------- |
-| サイト           | `fukuemon.dev`        | `apps/web/public/_headers`               |
-| カタログ         | `design.fukuemon.dev` | `packages/ui/.storybook/public/_headers` |
-| プレイグラウンド | `play.fukuemon.dev`   | `apps/playground/public/_headers`        |
-| プレビュー       | workers.dev の URL    | `apps/web/public/_headers`               |
+| Worker             | ホスト名              | `_headers`                               |
+| ------------------ | --------------------- | ---------------------------------------- |
+| サイト             | `fukuemon.dev`        | `apps/web/public/_headers`               |
+| カタログ           | `design.fukuemon.dev` | `packages/ui/.storybook/public/_headers` |
+| プレイグラウンド   | `play.fukuemon.dev`   | `apps/playground/public/_headers`        |
+| ドキュメントサイト | `docs.fukuemon.dev`   | `apps/docs-site/public/_headers`         |
+| プレビュー         | workers.dev の URL    | `apps/web/public/_headers`               |
 
 `fukuemon.dev` が返すヘッダは次のとおり。
 
@@ -113,10 +123,22 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
   - JSON を読む origin は、`apps/playground` の開発サーバー（`vp dev`）でだけ、環境変数 `VITE_SITE_ORIGIN` で替えられる。本番のビルドは読まない。
 - `/` は、`apps/playground/public/_redirects` で `https://fukuemon.dev/playground` へリダイレクトする。
 
+`docs.fukuemon.dev` が返すヘッダは次のとおり。
+
+- すべてのパスに、`X-Robots-Tag: noindex` と、カタログと同じ `X-Content-Type-Options`、`Referrer-Policy`、`Strict-Transport-Security` を返す。
+  - noindex は、Access をオフにしている間と、Access の外へ文書のサイトが漏れたときに、検索の結果に載せないためである。
+- すべてのパスに、`Content-Security-Policy: frame-ancestors 'none'` を返す。文書のサイトを埋め込むページは無いので、自分の origin にも埋め込ませない。
+- Mermaid の図は、Zensical のテーマが `https://unpkg.com/mermaid@12/dist/mermaid.min.js` を実行時に読んで描く。SRI は付かず、CSP でスクリプトの読み込み元を絞らない。
+  - 受け入れる。サイトに載る文書は public のリポジトリにある文書で、スクリプトが読めても困る中身が無いためである。
+  - 受け入れる範囲には、unpkg のファイルが改ざんされたときに、同じ origin で表示を書き換えられることと、許可した閲覧者のブラウザで動くことも入る。Access が返す閲覧者の情報をスクリプトから読めるかは未確認である。
+  - テーマのバンドルは、pyodide、ace-builds、glightbox、resize-observer-polyfill の unpkg の URL も持つ。この設定で読まれるかは未確認である。
+  - Zensical に、読み込み元を自前の配信に替える設定があるかは未確認である。
+
 ## Deployment Conditions
 
-- サイトの Worker の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
-- サイトの Worker の deploy workflow は、build に環境変数 `SITE_ENV=production` を渡す。
+- 本番の Worker（`fukuemon-dev`）の deploy は、運用者が deploy workflow を `workflow_dispatch` でデフォルトのブランチ（`develop`）から手で起動したときだけ行う。サイトを作り直す間は、develop への push で deploy しない。
+  - ADR-0031: [切り替えまでのプレビュー](../docs/adr/0031-subdomains-and-workers.md#6-切り替えまでのプレビュー)
+- 本番の Worker の deploy workflow は、build に環境変数 `SITE_ENV=production` を渡す。
   - `verificationOnly: true` の記事（検証用の記事）は、`SITE_ENV=production` の build では、記事の一覧、RSS、記事のページ、シリーズのページに出ない。
   - プレビュー、E2E、手元の build は `SITE_ENV` を渡さないので、検証用の記事も書き出す。
   - `SITE_ENV` に `production` 以外の値を渡すと、build が失敗する。
@@ -130,6 +152,11 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - プレイグラウンドの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-playground workflow が行う。
   初回の deploy と出し直しは、運用者が deploy-playground workflow を `workflow_dispatch` で `develop` から手で起動する。
   - custom domain の `play.<zone>` は、初回の deploy で Worker ができてから apply する。
+- ドキュメントサイトの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-docs workflow が行う。
+  初回の deploy と出し直しは、運用者が deploy-docs workflow を `workflow_dispatch` で `develop` から手で起動する。
+  - deploy-docs workflow は、build の後、配信の前に `check:closed-urls` を実行する。`workflow_dispatch` で起動した deploy-docs workflow は、check workflow の結果を条件にしないためである。
+  - custom domain の `docs.<zone>` は、初回の deploy で Worker ができてから apply する。Access は運営者が後から掛けてよく、掛けるまではドキュメントサイトを誰でも開ける。
+  - 初めて公開する手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
 - プレビューの Worker の deploy は、develop への push で check workflow が通ったときに、deploy-preview workflow が行う。
   出し直しは、運用者が deploy-preview workflow を `workflow_dispatch` で `develop` から手で起動する。
   - 初回の deploy が Worker を作る。custom domain を付けないので、apply は要らない。
@@ -155,36 +182,38 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 ## Secrets
 
 credential は、deploy workflow 用と apply workflow 用の 2 系統に分ける。  
-1 名の体制で意味を持つ分離は、apply を手で起動することと、通常の CI が apply 用の credential を持たないことの 2 つである。  
-レビューによる職務の分離は成り立たないので、`CODEOWNERS` を置かない。
+`CODEOWNERS` を置かない。  
+ADR-0005: [credential を 2 系統に分ける](../docs/adr/0005-workers-terraform-wrangler-boundary.md#5-credential-を-2-系統に分ける)
 
 apply 用の credential は `infra` environment だけに置く。  
 deploy workflow は environment を指定しないので、apply 用の credential に届かない。
 
-| 名前                      | 置き場                          | 使う場面                                                                                                      |
-| ------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | repository secret               | deploy workflow、deploy-catalog workflow、deploy-playground workflow、deploy-preview workflow                 |
-| `CLOUDFLARE_ACCOUNT_ID`   | repository secret               | deploy workflow、deploy-catalog workflow、deploy-playground workflow、deploy-preview workflow、apply workflow |
-| `TF_CLOUDFLARE_API_TOKEN` | `infra` environment の secret   | apply workflow                                                                                                |
-| `R2_ACCESS_KEY_ID`        | `infra` environment の secret   | apply workflow の state backend                                                                               |
-| `R2_SECRET_ACCESS_KEY`    | `infra` environment の secret   | apply workflow の state backend                                                                               |
-| `R2_STATE_BUCKET`         | `infra` environment の secret   | apply workflow の state backend                                                                               |
-| `CLOUDFLARE_ZONE_ID`      | repository secret               | apply workflow（zone の import）                                                                              |
-| `ZONE_NAME`               | `infra` environment の variable | apply workflow                                                                                                |
+| 名前                      | 置き場                          | 使う場面                                                                                                                            |
+| ------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | repository secret               | deploy workflow、deploy-catalog workflow、deploy-playground workflow、deploy-preview workflow、deploy-docs workflow                 |
+| `CLOUDFLARE_ACCOUNT_ID`   | repository secret               | deploy workflow、deploy-catalog workflow、deploy-playground workflow、deploy-preview workflow、deploy-docs workflow、apply workflow |
+| `TF_CLOUDFLARE_API_TOKEN` | `infra` environment の secret   | apply workflow                                                                                                                      |
+| `R2_ACCESS_KEY_ID`        | `infra` environment の secret   | apply workflow の state backend                                                                                                     |
+| `R2_SECRET_ACCESS_KEY`    | `infra` environment の secret   | apply workflow の state backend                                                                                                     |
+| `R2_STATE_BUCKET`         | `infra` environment の secret   | apply workflow の state backend                                                                                                     |
+| `CLOUDFLARE_ZONE_ID`      | repository secret               | apply workflow（zone の import）                                                                                                    |
+| `ZONE_NAME`               | `infra` environment の variable | apply workflow                                                                                                                      |
 
 token の権限は、スコープ、権限グループ、アクセスレベルの 3 段で指定する。
 
-| token                     | 使う場面                                                                                      | 権限                                                 |
-| ------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`    | deploy workflow、deploy-catalog workflow、deploy-playground workflow、deploy-preview workflow | Account / Workers Scripts / Edit                     |
-| `TF_CLOUDFLARE_API_TOKEN` | apply workflow                                                                                | Account / Workers Scripts / Edit、Zone / Zone / Edit |
-| bootstrap 用（手元だけ）  | `infra/bootstrap/` の apply                                                                   | Account / Workers R2 Storage / Edit                  |
-| R2 の S3 互換キー         | state backend                                                                                 | Object Read & Write。state のバケットに限る          |
+| token                     | 使う場面                                                                                                            | 権限                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | deploy workflow、deploy-catalog workflow、deploy-playground workflow、deploy-preview workflow、deploy-docs workflow | Account / Workers Scripts / Edit                     |
+| `TF_CLOUDFLARE_API_TOKEN` | apply workflow                                                                                                      | Account / Workers Scripts / Edit、Zone / Zone / Edit |
+| bootstrap 用（手元だけ）  | `infra/bootstrap/` の apply                                                                                         | Account / Workers R2 Storage / Edit                  |
+| R2 の S3 互換キー         | state backend                                                                                                       | Object Read & Write。state のバケットに限る          |
 
 - apply workflow の token に R2 の権限を与えない。CI は state backend へ S3 互換キーで接続する。
 - bootstrap 用の token を CI へ渡さない。
-- deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy の 4 つの workflow は custom domain を触らない。
-- DNS の権限は要らない。custom domain が作るレコード（サイトの apex、カタログの `design`、プレイグラウンドの `play`）は `Workers Scripts` の配下にある。
+- deploy 用の token に、Zone の権限と `Account Settings / Read` は要らない。custom domain は Terraform の管轄で、deploy の 5 つの workflow は custom domain を触らない。
+- DNS の権限は要らない。custom domain が作るレコード（サイトの apex、カタログの `design`、プレイグラウンドの `play`、ドキュメントサイトの `docs`）は `Workers Scripts` の配下にある。
+- deploy 用と apply 用の token に Access の権限を与えない。Access は、運営者がダッシュボードで設定する。
+  - ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
 - `Zone / Zone / Edit` の Zone Resources は、対象の zone だけに限る。
 - R2 の S3 互換キーは、R2 の画面から発行したものだけを使う。
   - ほかの画面で作った token で起きるエラーと、発行時に出る値のどれを使うかは、[infra/README.md](../infra/README.md#prerequisites) にある。
@@ -205,6 +234,7 @@ secret を Terraform の state に載せない。
 - secret、認証情報、トークンの実値
 - 個人の PC の絶対パス。`$(ghq root)` のように動的に解決する。
 - Cloudflare の account ID と zone ID の実値。`vars.tf` の変数として渡す。
+- ドキュメントサイトを開けるメールアドレス。ダッシュボードの Access のポリシーにだけ書く。
 
 アカウントの workers.dev のサブドメインは、秘密として扱わない。  
 `wrangler deploy` は、workers.dev で公開する Worker の URL を Actions のログに出す。ログで伏せず、secret にも登録しない。  

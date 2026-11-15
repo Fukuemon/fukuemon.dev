@@ -3,8 +3,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { nodeDefaultProject } from "../project/defaults";
-import { RuntimeContext, SelectionContext, useRuntime, useSelection } from "./context";
+import {
+  RuntimeContext,
+  SelectionContext,
+  useRestart,
+  useRuntime,
+  useSelection,
+  useSqlEditorHistory,
+  useSqlQuery,
+} from "./context";
 import { initialSelection } from "./selection";
+import { createStore } from "./store";
 import type { RuntimeResult } from "./session";
 
 // React の use は、status が fulfilled の Promise を、待たずに読む
@@ -22,7 +31,18 @@ function SelectionProbe() {
 
 const renderRuntime = (result: RuntimeResult) =>
   renderToStaticMarkup(
-    <RuntimeContext value={{ project: nodeDefaultProject, runtime: settled(result) }}>
+    <RuntimeContext
+      value={{
+        project: nodeDefaultProject,
+        runtime: settled(result),
+        restart: async () => undefined,
+        busy: createStore(false),
+        sqlQuery: createStore(""),
+        setSqlQuery: () => undefined,
+        sqlEditorStates: new Map(),
+        sqlResets: createStore(0),
+      }}
+    >
       <RuntimeProbe />
     </RuntimeContext>,
   );
@@ -38,6 +58,117 @@ describe("useRuntime", () => {
 
   it("provider の外では、誤りにする", () => {
     expect(() => renderToStaticMarkup(<RuntimeProbe />)).toThrow("RuntimeContext");
+  });
+});
+
+describe("useRestart", () => {
+  const restart = async () => undefined;
+  function RestartProbe() {
+    const value = useRestart();
+    return (
+      <p>
+        {value.restart === restart ? "same" : "other"} {String(value.restarting)}
+      </p>
+    );
+  }
+
+  it.each([false, true])("provider の restart と、busy の値 %s を返す", (busy) => {
+    const result: RuntimeResult = { kind: "unavailable", reason: "timeout" };
+    const html = renderToStaticMarkup(
+      <RuntimeContext
+        value={{
+          project: nodeDefaultProject,
+          runtime: settled(result),
+          restart,
+          busy: createStore(busy),
+          sqlQuery: createStore(""),
+          setSqlQuery: () => undefined,
+          sqlEditorStates: new Map(),
+          sqlResets: createStore(0),
+        }}
+      >
+        <RestartProbe />
+      </RuntimeContext>,
+    );
+    expect(html).toBe(`<p>same ${busy}</p>`);
+  });
+
+  it("provider の外では、誤りにする", () => {
+    expect(() => renderToStaticMarkup(<RestartProbe />)).toThrow("RuntimeContext");
+  });
+});
+
+describe("useSqlQuery", () => {
+  const setSqlQuery = () => undefined;
+  function QueryProbe() {
+    const [query, set] = useSqlQuery();
+    return (
+      <p>
+        {query} {set === setSqlQuery ? "same" : "other"}
+      </p>
+    );
+  }
+
+  it("provider の SQL の store の値と、setSqlQuery を返す", () => {
+    const result: RuntimeResult = { kind: "unavailable", reason: "timeout" };
+    const html = renderToStaticMarkup(
+      <RuntimeContext
+        value={{
+          project: nodeDefaultProject,
+          runtime: settled(result),
+          restart: async () => undefined,
+          busy: createStore(false),
+          sqlQuery: createStore("select 1;"),
+          setSqlQuery,
+          sqlEditorStates: new Map(),
+          sqlResets: createStore(0),
+        }}
+      >
+        <QueryProbe />
+      </RuntimeContext>,
+    );
+    expect(html).toBe("<p>select 1; same</p>");
+  });
+
+  it("provider の外では、誤りにする", () => {
+    expect(() => renderToStaticMarkup(<QueryProbe />)).toThrow("RuntimeContext");
+  });
+});
+
+describe("useSqlEditorHistory", () => {
+  it("provider の SQL の入力欄の履歴の入れ物と、戻した回数を返す", () => {
+    const states = new Map();
+    let got: unknown;
+    function StatesProbe() {
+      got = useSqlEditorHistory();
+      return null;
+    }
+    renderToStaticMarkup(
+      <RuntimeContext
+        value={{
+          project: nodeDefaultProject,
+          runtime: settled({ kind: "unavailable", reason: "timeout" }),
+          restart: async () => undefined,
+          busy: createStore(false),
+          sqlQuery: createStore(""),
+          setSqlQuery: () => undefined,
+          sqlEditorStates: states,
+          sqlResets: createStore(2),
+        }}
+      >
+        <StatesProbe />
+      </RuntimeContext>,
+    );
+    expect(got).toStrictEqual({ editorStates: states, resets: 2 });
+    expect((got as { editorStates: unknown }).editorStates).toBe(states);
+  });
+
+  it("provider の外では、誤りにする", () => {
+    function OutsideProbe() {
+      useSqlEditorHistory();
+      return null;
+    }
+    expect(() => renderToStaticMarkup(<OutsideProbe />)).toThrow("RuntimeContext");
   });
 });
 

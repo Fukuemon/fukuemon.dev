@@ -1,13 +1,14 @@
 ---
 type: feature-design
 title: 基盤
-description: Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
+description: Cloudflare の基盤を Terraform で持つ構成。ドキュメントサイトの Access を Terraform で持たないこと、bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 status: stable
 governs:
   - infra/
   - apps/web/wrangler.jsonc
   - packages/ui/wrangler.jsonc
   - apps/playground/wrangler.jsonc
+  - apps/docs-site/wrangler.jsonc
 verified_commit: 93d21baeb77b38b94145b8c174b0229c9d0752fe
 ---
 
@@ -27,6 +28,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - `infra/bootstrap/` と `infra/cloudflare/` の分け方
 - R2 の state backend の設定
 - deploy と apply の流れ
+- ドキュメントサイトの Access を Terraform で持たないことと、custom domain を作る順序
 
 持たないものは次のとおり。
 
@@ -54,6 +56,9 @@ flowchart TD
     check --> vci["deploy-preview workflow"]
     vci -->|"deploy 用の token"| vwd["wrangler deploy --env preview（apps/web）"]
     vwd --> preview["プレビューの Worker + assets"]
+    check --> dci["deploy-docs workflow"]
+    dci -->|"deploy 用の token"| dwd["wrangler deploy（apps/docs-site）"]
+    dwd --> docs["ドキュメントサイトの Worker + assets"]
     manual["運用者が手動で起動（mode=plan、次に mode=apply）"] --> env["environment protection rules"]
     env -->|"apply 用の token"| tf["terraform plan / apply"]
     tf --> base["Zone / custom domain"]
@@ -61,16 +66,15 @@ flowchart TD
     cci -. "触らない" .-x base
     pci -. "触らない" .-x base
     vci -. "触らない" .-x base
+    dci -. "触らない" .-x base
 ```
 
 Worker のコードの変更は、通常の pull request に含まれる。  
-サイトを作り直す間は、merge で deploy せず、運用者が deploy workflow を `develop` から手で起動する。apply の workflow と違い、environment の承認は挟まない。  
+deploy と apply を起動する条件と、apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md#deployment-conditions) にある。  
+deploy の workflow は、apply の workflow と違い、environment の承認を挟まない。  
 変更を止める手段は、pull request のレビューと自動のテストに頼る。  
 `develop` には branch protection を掛けていないので、pull request を通すのは慣行であり、仕組みでは強制しない。  
 deploy 用の token は Workers Scripts の権限を持つので、custom domain の apex のレコードにも届きうる。deploy の workflow がそれを触らないのは、`wrangler deploy` の振る舞いによる。  
-apply を plan と apply の 2 回に分けて起動する手順は [context/operations.md](../context/operations.md) にある。  
-develop の check workflow が通るたびに、deploy-catalog、deploy-playground、deploy-preview の workflow が、それぞれの Worker へ deploy する。  
-初回と出し直しは、運用者が `develop` から手で起動する。  
 どの Worker もハンドラを持たないので、誤った変更が及ぶ範囲は静的アセットの誤った配信に限られる。
 
 Wrangler の設定ファイルは `wrangler.jsonc` にする。  
@@ -78,19 +82,29 @@ Cloudflare は新しいプロジェクトに JSONC を勧めており、一部�
 
 ### bootstrap と本体
 
-| ディレクトリ        | 対象                             | state の置き場                  | 実行する人               |
-| ------------------- | -------------------------------- | ------------------------------- | ------------------------ |
-| `infra/bootstrap/`  | state 用の R2 のバケット         | 手元（commit しない）           | 運用者が手元で 1 回      |
-| `infra/cloudflare/` | zone と Workers の custom domain | R2（`infra/bootstrap/` が作る） | apply の workflow か手元 |
+| ディレクトリ        | 対象                           | state の置き場                  | 実行する人               |
+| ------------------- | ------------------------------ | ------------------------------- | ------------------------ |
+| `infra/bootstrap/`  | state 用の R2 のバケット       | 手元（commit しない）           | 運用者が手元で 1 回      |
+| `infra/cloudflare/` | zone、Workers の custom domain | R2（`infra/bootstrap/` が作る） | apply の workflow か手元 |
 
 `infra/bootstrap/` を CI から apply しない。state を手元に置く前提が成り立たなくなる。  
-CI は `infra:check` で init（backend なし）と validate だけを実行する。
+CI は `infra:check` で、fmt の確認、init（backend なし）、validate だけを実行する。
 
 zone は Terraform で作らない。  
 Cloudflare Registrar がドメインを取得したときに作った zone を、`zone.tf` の `import` ブロックが、state にまだないときに取り込む。  
 `cloudflare_zone` には `prevent_destroy` を付ける。
 
-`cloudflare_workers_custom_domain` が、サイトの apex、カタログの `design`、プレイグラウンドの `play` のレコードを管理するので、DNS のレコードは書かない。
+`cloudflare_workers_custom_domain` が、サイトの apex、カタログの `design`、プレイグラウンドの `play`、ドキュメントサイトの `docs` のレコードを管理するので、DNS のレコードは書かない。
+
+### ドキュメントサイトの Access
+
+`docs.<zone>` の Access のアプリケーションとポリシーは、Terraform で持たない。  
+運営者がダッシュボードで設定する。  
+ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
+
+- Terraform は、custom domain の `docs` だけを持つ。Terraform では、Access と custom domain を作る順序を制御しない。
+- custom domain は、Access より先に作ってよい。Access を掛けるまでは、ドキュメントサイトを誰でも開ける。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
+- Access は `docs.<zone>` のホスト名にだけ掛かる。Worker の `workers_dev` と `preview_urls` を `false` にして、ほかの URL を閉じる。
 
 ### state backend
 
@@ -126,34 +140,39 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `infra/bootstrap/provider.tf`、`r2_state_bucket.tf`、`vars.tf`: state 用のバケット
 - `infra/cloudflare/provider.tf`: provider と state backend
 - `infra/cloudflare/zone.tf`: zone の取り込み
-- `infra/cloudflare/workers_domain.tf`: Workers の custom domain。サイトの apex（`site`）、カタログの `design.<zone>`（`catalog`）、プレイグラウンドの `play.<zone>`（`playground`）
-- `infra/cloudflare/vars.tf`: `account_id`、`zone_id`、`zone_name`、`worker_name`、`catalog_worker_name`、`playground_worker_name` の変数
+- `infra/cloudflare/workers_domain.tf`: Workers の custom domain。サイトの apex（`site`）、カタログの `design.<zone>`（`catalog`）、プレイグラウンドの `play.<zone>`（`playground`）、ドキュメントサイトの `docs.<zone>`（`docs`）
+- `infra/cloudflare/vars.tf`: 変数。Worker の名前の `worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` を持つ。ほかに `account_id`、`zone_id`、`zone_name` を持つ。
 - `apps/web/wrangler.jsonc`: サイトの Worker の設定。`env.preview` に、プレビューの Worker（`fukuemon-dev-preview`）の設定を置く。プレビューの Worker は custom domain を持たず、workers.dev の URL で公開する
 - `packages/ui/wrangler.jsonc`: カタログの Worker の設定。`workers_dev` と `preview_urls` を切り、`design.<zone>` だけで公開する
 - `apps/playground/wrangler.jsonc`: プレイグラウンドの Worker の設定。`workers_dev` と `preview_urls` を切り、`play.<zone>` だけで公開する
+- `apps/docs-site/wrangler.jsonc`: ドキュメントサイトの Worker の設定。`workers_dev` と `preview_urls` を切り、`docs.<zone>` だけで公開する
 
 変数の値は、手元では各ディレクトリの `terraform.tfvars` に置き、commit しない。  
-CI では、apply の workflow が `TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name` を secret と variable から渡す。  
-`worker_name`、`catalog_worker_name`、`playground_worker_name` と、bootstrap の `location` はデフォルト値を持つ。
+CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`TF_VAR_zone_name` を渡す。  
+値は secret と variable から取る。  
+`worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` と、bootstrap の `location` はデフォルト値を持つ。
 
 ### 実行するコマンドとチェック
 
 - `pnpm run infra:init`、`infra:plan`、`infra:apply`: `infra/cloudflare/` を対象にする
 - `pnpm run infra:bootstrap:init`、`infra:bootstrap:apply`: `infra/bootstrap/` を対象にする
 - `pnpm run infra:check`: `terraform fmt -check` と `terraform validate` を、backend を無効にして実行する。credential は要らない
-- `pnpm run check:worker-name`: 3 つの Worker の名前が、`wrangler.jsonc` と `vars.tf` で一致するかを確認する。
+- `pnpm run check:worker-name`: 4 つの Worker の名前が、`wrangler.jsonc` と `vars.tf` で一致するかを確認する。
   - `apps/web/wrangler.jsonc` の `name` と `worker_name` のデフォルト値を比べる
   - `packages/ui/wrangler.jsonc` の `name` と `catalog_worker_name` のデフォルト値を比べる
   - `apps/playground/wrangler.jsonc` の `name` と `playground_worker_name` のデフォルト値を比べる
+  - `apps/docs-site/wrangler.jsonc` の `name` と `docs_worker_name` のデフォルト値を比べる
   - プレビューの Worker は custom domain を持たず、Terraform の変数に名前が無いので、比べない
-- `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンドの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を読む
-- check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 2 つを含む `pnpm run check` を実行する
-- workflow は次の 5 つ
+- `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンド、ドキュメントサイトの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を、ドキュメントサイトは `apps/docs-site` の build の出力を読む
+- `pnpm run check:closed-urls`: `apps/docs-site/scripts/check-closed-urls.sh` を実行する。ドキュメントサイトの Worker の `workers_dev` と `preview_urls` が `false` であることと、`_headers` のすべてのパスに noindex があることを確認する。`wrangler.jsonc` のほかに wrangler の設定ファイル（`wrangler.json`、`.wrangler/deploy/config.json`）が無いことと、`route` と `routes` が無いことも確認する。`package.json` の `deploy` が、引数の無い `wrangler deploy` であることと、`predeploy` と `postdeploy` が無いことも確認する。custom domain は Terraform で作る（ADR-0005）。deploy の workflow は apply を通らないので、Access の外の URL を開く変更を、この確認で止める。deploy-docs workflow も、配信の前にこの確認を実行する
+- check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 3 つを含む `pnpm run check` を実行する
+- workflow は次の 6 つ
   - apply: `.github/workflows/apply.yml`
   - deploy: `.github/workflows/deploy.yml`
   - deploy-catalog: `.github/workflows/deploy-catalog.yml`
   - deploy-playground: `.github/workflows/deploy-playground.yml`
   - deploy-preview: `.github/workflows/deploy-preview.yml`
+  - deploy-docs: `.github/workflows/deploy-docs.yml`
 
 ## Verification
 

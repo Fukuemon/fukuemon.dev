@@ -6,10 +6,10 @@
 
 ## Context
 
-ADR-0009 は、`mermaid` のフェンスをビルドのときに SVG にし、`mermaid run` のフェンスをクライアントの島で描くと決めた。  
+`mermaid` のフェンスをビルドのときに SVG にし、`mermaid run` のフェンスをクライアントの島で描くと決めている。  
 ビルドのときの描画には `rehype-mermaid` を使っている。  
 `rehype-mermaid` は `mermaid-isomorphic` を経由して `playwright` を peer dependency に持ち、headless の chromium の中で mermaid を動かす。  
-ADR-0009: [サイトを about / blog / playground の 3 つのセクションに分け、playground を collection にする](0009-site-sections-and-playground-collection.md)
+ADR-0030: [種別を記事の 1 つにし、構成を記事の形式で、シリーズをディレクトリで表す](0030-articles-format-and-series.md)
 
 chromium を使う描画には、次の制約がある。
 
@@ -53,7 +53,7 @@ Pele は Node では書体を測れず、組み込みの字幅で箱の大きさ
 配る量も減る。1 つのファイルにまとめた版で比べると、mermaid 11.17.2 の `mermaid.min.js` は gzip で 953 KiB、Pele 1.6.0 の `pele.global.js` は gzip で 246 KiB だった。  
 flowchart だけを登録して esbuild でまとめると、Pele は gzip で 43 KiB だった。
 
-この決定は、ADR-0009 の「mermaid はフェンスの `run` で 2 通りに分ける」のうち、描画の手段を置き換える。  
+この決定は、描画の手段だけを決める。  
 フェンスの `run` の有無で、ビルドのときの描画とクライアントの島の描画に分ける規則は変えない。
 
 ## Verification
@@ -68,12 +68,12 @@ flowchart だけを登録して esbuild でまとめると、Pele は gzip で 4
 
 ## Considered Options
 
-| 選択肢                                           | 強み                                                                                                                        | 弱み                                                                                                                                                                     |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **採用:** Pele で SVG にする                     | build に chromium が要らない。色を CSS 変数で渡せる。ビルドと島で同じ描画にできる。全部の図の種類を入れても gzip で 246 KiB | mermaid と別の実装で、レイアウトが mermaid と同じにならない。GitHub が描く図と見た目が変わる。リリースが新しく、間隔が短い。書体の字幅を組み込みの値に合わせる必要がある |
-| `rehype-mermaid` で SVG にする（現状、ADR-0009） | mermaid 本体で描くので、レイアウトが mermaid と同じになる                                                                   | build と CI に chromium が要る。色を目印で描かせて置き換える処理が要る。書体を総称に固定する必要がある                                                                   |
-| `@beoe/rehype-mermaid` で SVG にする             | 出力を svgo で縮められる                                                                                                    | `mermaid-isomorphic` を使うので、`rehype-mermaid` と同じく `playwright` と chromium が要る                                                                               |
-| `@mermaid-js/mermaid-cli` で SVG にする          | mermaid の公式の CLI で、レイアウトが mermaid と同じになる                                                                  | `puppeteer` を peer dependency に持ち、chromium が要る。rehype のプラグインを自前で書く必要がある                                                                        |
+| 選択肢                                  | 強み                                                                                                                        | 弱み                                                                                                                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **採用:** Pele で SVG にする            | build に chromium が要らない。色を CSS 変数で渡せる。ビルドと島で同じ描画にできる。全部の図の種類を入れても gzip で 246 KiB | mermaid と別の実装で、レイアウトが mermaid と同じにならない。GitHub が描く図と見た目が変わる。リリースが新しく、間隔が短い。書体の字幅を組み込みの値に合わせる必要がある |
+| `rehype-mermaid` で SVG にする（現状）  | mermaid 本体で描くので、レイアウトが mermaid と同じになる                                                                   | build と CI に chromium が要る。色を目印で描かせて置き換える処理が要る。書体を総称に固定する必要がある                                                                   |
+| `@beoe/rehype-mermaid` で SVG にする    | 出力を svgo で縮められる                                                                                                    | `mermaid-isomorphic` を使うので、`rehype-mermaid` と同じく `playwright` と chromium が要る                                                                               |
+| `@mermaid-js/mermaid-cli` で SVG にする | mermaid の公式の CLI で、レイアウトが mermaid と同じになる                                                                  | `puppeteer` を peer dependency に持ち、chromium が要る。rehype のプラグインを自前で書く必要がある                                                                        |
 
 ## Consequences
 

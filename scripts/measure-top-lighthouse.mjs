@@ -11,6 +11,10 @@
 // テキストのファイル（HTML、CSS、JavaScript、JSON、XML、SVG）は gzip で送る。本番の配信が圧縮して返すためである。
 // 配信は TLS の無い HTTP/1.1 である。本番の配信の HTTP/2 と Brotli とは、通信の値が違う。
 // 庭の最初の 1 枚が、ページの最初の描画に入った回は、LCP が FCP と同じ値になる。その回は lcpIsFcp を true にする。
+// summary の median は全ての回の中央値で、judged は lcpIsFcp の回を除いた中央値である（apps/web/scripts/lighthouse-judge.ts）。
+// judged を合否に使うのは、docs/adr/0078-top-lighthouse-gpu-and-throttling.md の条件で測ったときだけである。
+//
+// 終了コードは、全ての回を測れたら 0、途中の回が失敗したら 1、引数と前提が不正なら 2 である。
 import { execFile } from "node:child_process";
 import {
   existsSync,
@@ -28,6 +32,12 @@ import { extname, join, resolve, sep } from "node:path";
 import { parseArgs, promisify } from "node:util";
 import { gzipSync } from "node:zlib";
 import { chromium } from "playwright";
+import {
+  isAdrConditions,
+  judge,
+  medians,
+  needsRemeasure,
+} from "../apps/web/scripts/lighthouse-judge.ts";
 
 const require = createRequire(import.meta.url);
 let LIGHTHOUSE_CLI;
@@ -71,6 +81,7 @@ if (!["simulate", "devtools"].includes(opt.throttling))
   fail(`--throttling が不正: ${opt.throttling}`);
 const runs = Number(opt.runs);
 if (!Number.isInteger(runs) || runs < 1) fail(`--runs が不正: ${opt.runs}`);
+const conditions = { visit: opt.visit, gpu: opt.gpu, throttling: opt.throttling, runs };
 if (!existsSync(join(DIST, "index.html")))
   fail(`${DIST}/index.html が無い。pnpm run build の後に流す`);
 // CHROME_PATH が無効だと、Lighthouse が別の Chrome で測ることがあるので、先に止める。
@@ -175,6 +186,9 @@ function readRow(r) {
   const observed = a.metrics?.details?.items?.[0] ?? {};
   const fcp = observed.observedFirstContentfulPaint;
   const lcp = observed.observedLargestContentfulPaint;
+  // lcpIsFcp を決められない回を、除かない回として合否の中央値に入れない。
+  if (!Number.isFinite(fcp) || !Number.isFinite(lcp))
+    throw new Error("観測した FCP か LCP の値が無い");
   const ms = (k) => Math.round(a[k].numericValue);
   return {
     score: Math.round(score * 100),
@@ -186,7 +200,7 @@ function readRow(r) {
     observedFcp: fcp,
     observedLcp: lcp,
     observedLoad: observed.observedLoad,
-    lcpIsFcp: Number.isFinite(fcp) && Number.isFinite(lcp) && fcp === lcp,
+    lcpIsFcp: fcp === lcp,
     lcpElement: a["lcp-breakdown-insight"]?.details?.items?.find((d) => d.type === "node")
       ?.selector,
     benchmarkIndex: r.environment.benchmarkIndex,
@@ -197,11 +211,6 @@ mkdirSync(opt.out, { recursive: true });
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const label = [opt.visit, opt.gpu, opt.throttling].join("-");
 const rows = [];
-const median = (k) => {
-  const v = rows.map((r) => r[k]).sort((x, y) => x - y);
-  const m = Math.floor(v.length / 2);
-  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
-};
 /** 結果を書く。途中の回が失敗したときは、それまでの回と失敗を書き、中央値は書かない */
 const writeSummary = (error) => {
   const summary = {
@@ -214,9 +223,9 @@ const writeSummary = (error) => {
       ? { failedRun: rows.length, error: String(error) }
       : {
           lcpIsFcpRuns: rows.filter((r) => r.lcpIsFcp).length,
-          median: Object.fromEntries(
-            ["score", "fcp", "lcp", "tbt", "si", "cls"].map((k) => [k, median(k)]),
-          ),
+          median: medians(rows),
+          adrConditions: isAdrConditions(conditions),
+          judged: judge(rows, opt.visit),
         }),
     rows,
   };
@@ -278,4 +287,7 @@ try {
 if (!process.exitCode) {
   const summary = writeSummary();
   console.log(JSON.stringify({ lcpIsFcpRuns: summary.lcpIsFcpRuns, ...summary.median }));
+  console.log(JSON.stringify({ adrConditions: summary.adrConditions, judged: summary.judged }));
+  if (needsRemeasure(conditions, summary.judged))
+    console.error("lcpIsFcp の回を 3 回以上除いた。ADR-0078 の規則で、5 回を 1 度だけ測り直す");
 }
