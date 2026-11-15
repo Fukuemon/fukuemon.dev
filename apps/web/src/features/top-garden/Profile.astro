@@ -173,10 +173,6 @@ const row = "border-t border-border py-2";
     border-block-start: 0;
   }
 
-  :global(html.stage-on) [data-garden-card] :is(span, dt) {
-    color: inherit;
-  }
-
   /* 和紙は縮んで映るので、14px の字は 14px より小さく映る。年と区分も本文と同じ大きさにし、色の濃さで分ける */
   :global(html.stage-on) [data-garden-card] :is(summary > span:first-child, dt) {
     font-size: 1rem;

@@ -27,9 +27,6 @@ export const profileHeading = (page: Page) =>
 export const careerSummaries = (page: Page) =>
   page.getByTestId("garden-card-career").locator("summary");
 
-export const openedCareerDetails = (page: Page) =>
-  page.getByTestId("garden-card-career").locator("details[open]");
-
 /** ページの本文のランドマーク。WCAG 2.4.1 をランドマークと見出しで満たすことを確かめるので、役割で拾う */
 export const mainLandmark = (page: Page) => page.getByRole("main");
 

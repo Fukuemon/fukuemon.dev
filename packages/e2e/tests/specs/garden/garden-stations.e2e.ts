@@ -10,7 +10,6 @@ import {
   mainCards,
   navButtons,
   notCurrentCards,
-  openedCareerDetails,
   stations,
   styledCards,
 } from "../../selectors/garden";
@@ -116,6 +115,20 @@ test.describe("トップの庭", () => {
       await expect(draggableCards(page)).toHaveCount(0);
       await expect(htmlElement(page)).not.toHaveAttribute("style", /--scene-/);
     });
+
+    // 幅 1440px の経歴の和紙は、画面の高さで距離が決まる。掛け直さないと、詳細を開いて低くなった文が、閉じたときの距離のまま小さく映る
+    test("経歴の 1 行目の詳細を開いた場合、和紙を掛け直し、閉じたときと同じ高さで映ること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      const closed = (await card(page, "career").boundingBox())!.height;
+      await careerSummaries(page).first().click();
+      await expect
+        .poll(async () => Math.abs((await card(page, "career").boundingBox())!.height - closed) < 3)
+        .toBe(true);
+    });
   });
 
   test.describe("幅 390px", () => {
@@ -136,7 +149,7 @@ test.describe("トップの庭", () => {
     });
 
     // 和紙が伸びると、カメラが和紙を画面に収めようと引き、字と押せる範囲が小さく映る
-    test("経歴の行の詳細を 1 つずつ開いた場合、開いた詳細は 1 つだけで、その行が 44px 以上の高さと 14px 以上の字で映り、和紙が画面の幅とボタンの上に収まること", async ({
+    test("経歴の行の詳細を 1 つずつ開いた場合、開いた行のほかの行が隠れ、開いた行が 44px 以上の高さと 14px 以上の字で映り、和紙が画面の幅とボタンの上に収まること", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
@@ -153,7 +166,7 @@ test.describe("トップの庭", () => {
         const laid = await summary.evaluate((el) => (el as HTMLElement).offsetHeight);
         const top = await navTop(page);
         rows.push({
-          opened: await openedCareerDetails(page).count(),
+          shownRows: await careerSummaries(page).filter({ visible: true }).count(),
           tall: shown >= 44,
           text: (16 * shown) / laid >= 14,
           inside: paper.x >= 0 && paper.x + paper.width <= 390,
@@ -163,31 +176,13 @@ test.describe("トップの庭", () => {
       }
       expect(rows).toStrictEqual(
         Array.from({ length: 4 }, () => ({
-          opened: 1,
+          shownRows: 1,
           tall: true,
           text: true,
           inside: true,
           aboveNav: true,
         })),
       );
-    });
-  });
-
-  test.describe("経歴の詳細の開閉", () => {
-    test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
-
-    // 幅 1440px の経歴の和紙は、画面の高さで距離が決まる。掛け直さないと、詳細を開いて低くなった文が、閉じたときの距離のまま小さく映る
-    test("経歴の 1 行目の詳細を開いた場合、和紙を掛け直し、閉じたときと同じ高さで映ること", async ({
-      page,
-    }) => {
-      await openGarden(page, { paused: true });
-      await page.getByTestId("garden-station-1").click();
-      await expectAt(page, "career");
-      const closed = (await card(page, "career").boundingBox())!.height;
-      await careerSummaries(page).first().click();
-      await expect
-        .poll(async () => Math.abs((await card(page, "career").boundingBox())!.height - closed) < 3)
-        .toBe(true);
     });
   });
 
