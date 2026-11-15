@@ -1,11 +1,15 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { backgroundHaze } from "../../selectors/garden";
+import { backgroundHaze, htmlElement } from "../../selectors/garden";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
 
 const background = (page: Page) => page.getByTestId("garden-background");
-const headerFade = (page: Page) => page.getByTestId("garden-background-header-fade");
+const siteHeader = (page: Page) => page.getByTestId("site-header");
+
+/** 要素の背景の色。ヘッダーがページと同じ紙の色を敷き、後ろの絵を隠すかを比べる */
+const backgroundColor = (locator: Locator) =>
+  locator.evaluate((el) => getComputedStyle(el).backgroundColor);
 
 /** 背景の霞のうち、動いているアニメーションの数 */
 const runningHaze = (page: Page) =>
@@ -42,11 +46,13 @@ test.describe("トップの背景の墨の絵", () => {
         await presetSettings(page, { garden: "off", motion: "off" });
         await page.goto("/");
         await expect(background(page)).toBeVisible();
-        await expect(headerFade(page)).toBeVisible();
-        // 本文の字はシステムフォントで描くので、背景の絵と上端の紙の色だけを比べる
+        expect(await backgroundColor(siteHeader(page))).toBe(
+          await backgroundColor(htmlElement(page)),
+        );
+        // 本文の字はシステムフォントで描くので、背景の絵だけを比べる
         await page.addStyleTag({
           content:
-            "body { visibility: hidden; } [data-testid^='garden-background'] { visibility: visible; }",
+            "body { visibility: hidden; } [data-testid='garden-background'] { visibility: visible; }",
         });
         // 線は濃さ 16% で紙の色との差が小さいので、既定の threshold では絵が消えても差に数えない
         await expect(background(page)).toHaveScreenshot(`garden-background-${colorScheme}.png`, {
@@ -80,7 +86,6 @@ test.describe("トップの背景の墨の絵", () => {
     await expect(page.getByTestId("garden-stage")).toBeVisible();
     await page.waitForLoadState("load");
     await expect(background(page)).toBeHidden();
-    await expect(headerFade(page)).toBeHidden();
     expect(responses).toStrictEqual([]);
   });
 
@@ -91,7 +96,6 @@ test.describe("トップの背景の墨の絵", () => {
       await presetSettings(page, { garden: "off" });
       await page.goto("/");
       await expect(background(page)).toBeHidden();
-      await expect(headerFade(page)).toBeHidden();
     });
   });
 

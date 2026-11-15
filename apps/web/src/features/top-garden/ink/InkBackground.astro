@@ -6,7 +6,6 @@
   <div class="ink-background-art"></div>
   <div class="ink-background-haze"><i></i><i></i><i></i></div>
 </div>
-<div class="ink-background-header-fade" aria-hidden="true" data-testid="garden-background-header-fade"></div>
 
 <style>
   /* 墨の絵を body の背景に隠させず本文の後ろに出すため、ページの背景の色を html に移す */
@@ -29,19 +28,12 @@
     pointer-events: none;
   }
 
-  /* ヘッダーは背景を持たないので、絵がロゴと下の罫に重ならないよう、ページの上端だけ絵を紙の色で消す。ヘッダーと一緒にスクロールで流れるよう、画面ではなくページに置く */
-  .ink-background-header-fade {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-    block-size: 5rem;
-    z-index: -1;
-    pointer-events: none;
-    background: linear-gradient(var(--fd-color-surface) 60%, transparent);
+  /* 絵がロゴと下の罫に重ならないよう、ヘッダーに紙の色を敷き、絵を罫で切る。ヘッダーが折り返して高くなっても、ヘッダーの高さのまま隠れる */
+  :global(html:not(.stage-on) [data-site-header]) {
+    background: var(--fd-color-surface);
   }
 
-  :global(html.stage-on) .ink-background,
-  :global(html.stage-on) .ink-background-header-fade {
+  :global(html.stage-on) .ink-background {
     display: none;
   }
 
@@ -105,8 +97,7 @@
   }
 
   @media (forced-colors: active) {
-    .ink-background,
-    .ink-background-header-fade {
+    .ink-background {
       display: none;
     }
   }
