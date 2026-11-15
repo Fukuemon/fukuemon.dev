@@ -8,14 +8,15 @@ const STYLE =
 /**
  * 庭を出さないときのトップの背景に、CSS の `mask-image` で掛ける墨の絵の SVG を作る。
  * イントロの墨の絵と同じ線で、色を持たない。線の濃さは alpha で持ち、塗りは背景の要素がトークンの色で当てる。
+ * 筆の順に描くための `--t`、`--d`、`pathLength` は、mask では読まないが、`inkSvg()` の出力の形に依りすぎないよう残す。
  */
 export function inkBackgroundSvg(ink: InkSvg = inkSvg()): string {
-  const open = '<svg class="ink-svg" ';
-  const attrs = ' aria-hidden="true" focusable="false">';
-  if (!ink.svg.startsWith(open) || !ink.svg.includes(attrs))
-    throw new Error("inkSvg() の開きタグの形が変わった");
+  const tag = /^<svg class="ink-svg" (viewBox="[^"]+") aria-hidden="true" focusable="false">/;
+  if (!tag.test(ink.svg)) throw new Error("inkSvg() の開きタグの形が変わった");
   return ink.svg
-    .replace(open, '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" ')
-    .replace(attrs, `>${STYLE}`)
+    .replace(
+      tag,
+      `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" $1>${STYLE}`,
+    )
     .replaceAll("var(--art-pine)", "black");
 }

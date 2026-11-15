@@ -22,3 +22,6 @@ export const inkSvg = (page: Page) => page.locator(".ink-svg");
 /** プロフィールの h1。アクセシビリティツリーに h1 の役割で載ることを確かめるので、役割で拾う */
 export const profileHeading = (page: Page) =>
   page.getByRole("heading", { level: 1, name: "プロフィール" });
+
+/** 庭を出さないときの背景の霞。3 つの飾りの要素で testid を持たないので、背景の testid の中を要素名で拾う */
+export const backgroundHaze = (page: Page) => page.getByTestId("garden-background").locator("i");

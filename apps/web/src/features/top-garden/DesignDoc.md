@@ -23,7 +23,7 @@ verified_commit: unverified
 
 - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../../../../../docs/adr/0026-sumi-gate-and-garden-on-top.md)
 - ADR-0027: [トップの庭の絵を、訪問者の端末の日付と時刻で、季節と時間帯ごとに変える](../../../../../docs/adr/0027-garden-by-season-and-time.md)
-- ADR-0082（提案）: [庭を出さないときのトップの画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-band-ink-art-as-css-mask.md)
+- ADR-0082（提案）: [庭を出さないときのトップの画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-top-ink-background-as-css-mask.md)
 
 ## Scope
 
@@ -50,7 +50,7 @@ verified_commit: unverified
 ### コードの構成
 
 `apps/web/src/features/top-garden/` は、墨の絵の SVG を作るコード、立体の庭を three で描くコード、その両方が読む庭の配置、トップのプロフィールの本文を持つ。
-墨の絵の SVG を作るモジュールは、`layout.ts` と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`、`ink-trees.ts` の 5 つである。
+墨の絵の SVG を作るモジュールは、`layout.ts` と、`ink/` の `brush.ts`、`ink-art.ts`、`ink-svg.ts`、`ink-trees.ts`、`ink-background.ts` の 6 つである。
 どれも React と DOM に依らない TypeScript で書く。
 ビルドのときに Node で動く。
 `ink/ink-gate-fragment.ts` は、ヘッダーのロゴと同じ `sign.svg` を [`components/sign/`](../../components/sign/README.md) から読む。
@@ -120,7 +120,7 @@ verified_commit: unverified
 出力は、線が 399 本、`path` が 543 本である。
 `path` の `d` は、座標を 0.1 の単位に丸め、2 点目以降を相対座標のコマンド（`l`）で書く。
 相対座標で書くと、最初の訪問で読み込むファイルの転送量が減るためである。
-SVG のサイズの上限は gzip で 28 KiB で、署名を足した墨の絵と署名のファイル全体の上限は gzip で 36 KiB である。どちらもユニットテストが確認する。
+SVG のサイズの上限は gzip で 28 KiB で、署名を足した墨の絵と署名のファイル全体の上限は gzip で 36 KiB である。背景の mask の SVG の上限は gzip で 30 KiB である。どれもユニットテストが確認する。
 
 ### イントロの各段の時間
 

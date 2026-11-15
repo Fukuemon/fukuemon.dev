@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { htmlElement } from "../../selectors/garden";
+import { backgroundHaze } from "../../selectors/garden";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 import { seenBefore } from "../../widgets/actions/seen-before";
 
@@ -20,13 +20,13 @@ const runningHaze = (page: Page) =>
         ).length,
   );
 
-/** 背景の墨の絵の SVG の取得を数える */
-const countInkRequests = (page: Page) => {
-  const urls: string[] = [];
-  page.on("request", (r) => {
-    if (r.url().includes("ink-background")) urls.push(r.url());
+/** 背景の墨の絵の SVG の応答を集める。値は応答の状態コード */
+const inkResponses = (page: Page) => {
+  const statuses: number[] = [];
+  page.on("response", (r) => {
+    if (r.url().includes("ink-background")) statuses.push(r.status());
   });
-  return urls;
+  return statuses;
 };
 
 test.use({ viewport: { width: 1280, height: 800 } });
@@ -46,8 +46,10 @@ test.describe("トップの背景の墨の絵", () => {
           content:
             "body { visibility: hidden; } [data-testid='garden-background'] { visibility: visible; }",
         });
+        // 線は濃さ 16% で紙の色との差が小さいので、既定の threshold では絵が消えても差に数えない
         await expect(background(page)).toHaveScreenshot(`garden-background-${colorScheme}.png`, {
           maxDiffPixelRatio: 0.01,
+          threshold: 0.02,
         });
       });
     }
@@ -59,14 +61,34 @@ test.describe("トップの背景の墨の絵", () => {
     await expect(background(page)).toHaveAttribute("aria-hidden", "true");
   });
 
+  test("庭を出さない訪問では、墨の絵の SVG を 1 回取得すること", async ({ page }) => {
+    const responses = inkResponses(page);
+    await presetSettings(page, { garden: "off" });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    expect(responses).toStrictEqual([200]);
+  });
+
   test("庭を出す訪問では、背景を出さず、墨の絵の SVG を取得しないこと", async ({ page }) => {
-    const requests = countInkRequests(page);
+    // SwiftShader で庭が出るまで待つので、ほかの庭の spec と同じく時間の上限を 3 倍にする
+    test.slow();
+    const responses = inkResponses(page);
     await seenBefore(page);
     await page.goto("/");
     await expect(page.getByTestId("garden-stage")).toBeVisible();
     await page.waitForLoadState("load");
     await expect(background(page)).toBeHidden();
-    expect(requests).toStrictEqual([]);
+    expect(responses).toStrictEqual([]);
+  });
+
+  test.describe("ハイコントラストの場合", () => {
+    test.use({ forcedColors: "active" });
+
+    test("背景を出さないこと", async ({ page }) => {
+      await presetSettings(page, { garden: "off" });
+      await page.goto("/");
+      await expect(background(page)).toBeHidden();
+    });
   });
 
   test.describe("動き", () => {
@@ -100,7 +122,7 @@ test.describe("トップの背景の墨の絵", () => {
       test("止まった背景の絵を出すこと", async ({ page }) => {
         await page.goto("/");
         await expect(background(page)).toBeVisible();
-        await expect(htmlElement(page)).not.toHaveAttribute("data-motion", /.*/);
+        await expect(backgroundHaze(page).first()).toHaveCSS("animation-name", "none");
       });
     });
   });

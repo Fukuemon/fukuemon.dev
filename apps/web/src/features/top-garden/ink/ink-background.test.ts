@@ -5,12 +5,15 @@ import { inkBackgroundSvg } from "./ink-background";
 describe("inkBackgroundSvg", () => {
   const svg = inkBackgroundSvg();
 
-  it("書き出した ink-background.svg と同じである。生成のコードを変えたら -u で書き出し直す", async () => {
+  it("生成した SVG が、コミットした ink-background.svg と同じである", async () => {
     await expect(svg).toMatchFileSnapshot("./ink-background.svg");
   });
 
-  it("画像として単独で読めるよう、名前空間を持ち、ページの CSS 変数を参照しない", () => {
+  it("画像として単独で読めるよう、SVG の名前空間を持つ", () => {
     expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true);
+  });
+
+  it("mask の画像にはページの CSS が当たらないので、CSS 変数を参照しない", () => {
     expect(svg).not.toContain("var(");
   });
 
@@ -22,7 +25,12 @@ describe("inkBackgroundSvg", () => {
     expect(gzipSync(svg).length).toBeLessThanOrEqual(30 * 1024);
   });
 
-  it("開きタグの形が想定と違うときは、黙って壊れた SVG を作らずに例外を投げる", () => {
-    expect(() => inkBackgroundSvg({ svg: "<svg>", strokes: 0, paths: 0 })).toThrow();
+  it.each([
+    ["class が違う", '<svg viewBox="0 0 1 1" aria-hidden="true" focusable="false">'],
+    ["読み上げの属性が無い", '<svg class="ink-svg" viewBox="0 0 1 1">'],
+  ])("開きタグの%sときは、壊れた SVG を作らずに例外を投げる", (_, svg) => {
+    expect(() => inkBackgroundSvg({ svg, strokes: 0, paths: 0 })).toThrow(
+      "inkSvg() の開きタグの形が変わった",
+    );
   });
 });

@@ -73,7 +73,7 @@
 
 ## Verification
 
-- 帯の要素が `display: none` のとき、別の SVG のファイルを取得するかを、出し方ごとに、最小のページで確認した。
+- 背景を入れる要素が `display: none` のとき、別の SVG のファイルを取得するかを、出し方ごとに、最小のページで確認した。最小のページでは、帯の形の要素で確認した。
   - Playwright の Chromium と WebKit で、同じスクリプトで、ブラウザのエンジンだけを替えた。Firefox は確認していない。
   - `<img>` は取得し、`<img loading="lazy">`、CSS の `background-image`、CSS の `mask-image` は取得しなかった。`background-image` は、`html:not(.stage-on)` のセレクタで掛けた条件で確認した。
 - 実装したトップで、次を E2E で確認した。
