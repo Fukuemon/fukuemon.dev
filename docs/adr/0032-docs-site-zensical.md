@@ -10,7 +10,7 @@
 
 - ドキュメントサイトは `docs.fukuemon.dev` に置き、誰でも開ける。
   - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md)
-- 文書の原本は、公開のリポジトリにある。サイトに載せるのは原本だけで、見られて困る内容は無い。
+- 文書の原本は、公開のリポジトリにある。サイトに載る文書は、どれもリポジトリで誰でも読める。
 - 文書は `docs/` に集め、機能ごとの Design Doc を `docs/design/` からシンボリックリンクで指す。
   - ADR-0029: [リポジトリの構成を buddy に合わせ、文書を `docs/` に、E2E を `packages/e2e` に置く](0029-repository-layout-like-buddy.md)
 - カタログは `design.fukuemon.dev` で誰でも開ける。ドキュメントサイトには入れない。
@@ -41,8 +41,7 @@
 
 ## 承認の条件
 
-`workers_dev` と `preview_urls` を `false` にした Worker が、custom domain 以外の URL で開けないことを確認する。
-ドキュメントサイトを公開するときに確認する。
+ドキュメントサイトを公開するときに、`workers_dev` と `preview_urls` を `false` にした Worker が、custom domain 以外の URL で開けないことを確認する。
 
 ## Considered Options
 
