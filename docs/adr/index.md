@@ -48,7 +48,7 @@ ADR の規則は、[README.md](README.md) にある。
 | [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | コードを動かす画面の文字の大きさを端末の種類で分けず、iOS と iPadOS の入力時の拡大を viewport の指定で止める                               |
 | [ADR-0072](0072-short-landscape-layout-in-playground.md)     | コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える        |
 | [ADR-0073](0073-layered-panes-and-radius-in-playground.md)   | コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める                                                  |
-| [ADR-0083](0083-hover-surface-on-raised-surfaces.md)         | （提案）重なる面の上の hover の面に、セマンティックトークン `surface-raised-subtle` を足す                                                 |
+| [ADR-0083](0083-hover-surface-on-raised-surfaces.md)         | 重なる面の上の hover の面に、セマンティックトークン `surface-raised-subtle` を足す                                                         |
 
 ## 挿絵とトップの演出
 

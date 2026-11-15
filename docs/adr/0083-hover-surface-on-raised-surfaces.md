@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -51,10 +51,13 @@
     開くボタンは重なる面の上に無いので替えない。
   - `SearchBox` の候補
   - `Dialog` の閉じるボタン
+- コードを動かす画面のファイルのドロワー（`FileDrawer`）の閉じるボタンの hover の面を、`surface-pane-subtle` から `surface-raised-subtle` に替える。
+  ドロワーは `surface-raised` の面で、ペインの紙の面ではないためである。
+  値は同じなので、見た目は変わらない。
 - コントラストのチェックの面の一覧に `surface-raised-subtle` を足し、ほかの面と同じ組で確認する。
   文字は 4.5:1 以上、枠と輪は 3:1 以上にする。
 - ダークの `sumi-750` は、`surface-disabled` と同じ値である。
-  メニューの項目、候補、閉じるボタンには無効の状態が無いので、hover の面と無効の面は並ばない。
+  メニューの項目、候補、2 つの閉じるボタンには無効の状態が無いので、hover の面と無効の面は並ばない。
 
 ## Considered Options
 
