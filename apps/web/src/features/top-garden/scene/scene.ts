@@ -1,5 +1,5 @@
 // 門の内側の立体の庭を組み立てる。墨の絵と共有する配置は layout.ts から、色は scene-colors.ts から読む。
-// 苔、石、灯籠、奥と左右の塀、和紙を掛けない 2 本の松の配置は、場面だけが使うので、このファイルに置く。
+// 苔、石、灯籠、奥と左右の塀の配置は、場面だけが使うので、このファイルに置く。
 import {
   BoxGeometry,
   Color,
@@ -293,9 +293,9 @@ function addPond(scene: Scene, C: ScenePalette, R: () => number): void {
 }
 
 /**
- * 庭の場面を組み立てる。乱数を使う順は試作と同じにしてあり、同じ色からは同じ場面ができる。
+ * 庭の場面を組み立てる。同じ色からは同じ場面ができる。
  * @param anisotropy 地面のテクスチャの異方性フィルタの値。renderer の上限を渡す
- * @returns 場面と、和紙を掛ける 4 本の木の、枝を伸ばし始める点。STATIONS の順に並ぶ
+ * @returns 場面と、和紙を掛ける 3 本の木の、枝を伸ばし始める点。STATIONS の順に並ぶ
  */
 export function buildGarden(
   C: ScenePalette,

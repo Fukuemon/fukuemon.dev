@@ -17,6 +17,7 @@ import {
 } from "../../selectors/garden";
 
 import { AUTUMN_NOON } from "../../fixtures/garden-time";
+import { PROFILE_ACTIVITIES } from "../../fixtures/profile";
 import { seenBefore } from "../../widgets/actions/seen-before";
 import { presetSettings } from "../../widgets/actions/preset-settings";
 
@@ -40,6 +41,9 @@ const openGarden = async (page: Page, { paused = false } = {}) => {
   await expect(htmlElement(page)).toHaveClass(/garden-ready/);
 };
 
+/** 文のセクションの id。apps/web の layout.ts の STATIONS と同じ順にする */
+const CARD_IDS = ["profile", "career", "portfolio"] as const;
+
 const card = (page: Page, id: string) => page.getByTestId(`garden-card-${id}`);
 
 /** 庭の中のボタンのうち、いちばん上のボタンの上端の y */
@@ -52,7 +56,7 @@ const navTop = async (page: Page) =>
 
 /** カメラがその文の正面に来て、その文だけが見えている */
 const expectAt = async (page: Page, id: string) => {
-  await expect(notCurrentCards(page)).toHaveCount(3);
+  await expect(notCurrentCards(page)).toHaveCount(2);
   await expect
     .poll(async () => {
       const x = await settledCenterX(card(page, id));
@@ -81,10 +85,10 @@ test.describe("トップの庭", () => {
       await page.keyboard.press("ArrowRight");
       await expectAt(page, "career");
       await page.keyboard.press("ArrowRight");
-      await expectAt(page, "stack");
+      await expectAt(page, "portfolio");
     });
 
-    test("最初の文で左の矢印キーを押した場合、4 つ目の文へ回ること", async ({ page }) => {
+    test("最初の文で左の矢印キーを押した場合、3 つ目の文へ回ること", async ({ page }) => {
       await openGarden(page, { paused: true });
       await page.keyboard.press("ArrowLeft");
       await expectAt(page, "portfolio");
@@ -111,7 +115,7 @@ test.describe("トップの庭", () => {
       await expect(page.getByTestId("garden-nav")).toBeHidden();
       await expect(page.getByTestId("setting-garden")).toBeFocused();
       await expect(page.getByTestId("setting-garden")).toHaveAttribute("aria-checked", "false");
-      await expect(mainCards(page)).toHaveCount(4);
+      await expect(mainCards(page)).toHaveCount(3);
       await expect(styledCards(page)).toHaveCount(0);
       await expect(currentCards(page)).toHaveCount(0);
       await expect(draggableCards(page)).toHaveCount(0);
@@ -159,11 +163,11 @@ test.describe("トップの庭", () => {
   test.describe("幅 390px", () => {
     test.use({ viewport: { width: 390, height: 844 }, colorScheme: "light" });
 
-    test("4 つの文のどれへ移った場合も、和紙が画面の幅に収まり、ボタンが文に重ならないこと", async ({
+    test("3 つの文のどれへ移った場合も、和紙が画面の幅に収まり、ボタンが文に重ならないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
-      for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
+      for (const [i, id] of CARD_IDS.entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         const paper = (await card(page, id).boundingBox())!;
@@ -265,7 +269,7 @@ test.describe("トップの庭", () => {
   test.describe("幅 320px", () => {
     test.use({ viewport: { width: 320, height: 640 }, colorScheme: "light" });
 
-    test("庭を開いた場合、4 つの文へ移るボタンが 44px 四方以上の大きさで 2 行以内に並び、ヘッダーが 1 段に収まること", async ({
+    test("庭を開いた場合、3 つの文へ移るボタンが 44px 四方以上の大きさで 1 行に並び、ヘッダーが 1 段に収まること", async ({
       page,
     }) => {
       await openGarden(page);
@@ -287,15 +291,15 @@ test.describe("トップの庭", () => {
       );
       const header = (await page.getByTestId("site-header").boundingBox())!.height;
       expect({
-        rows: new Set(boxes.map((b) => Math.round(b.top))).size <= 2,
+        rows: new Set(boxes.map((b) => Math.round(b.top))).size,
         small: boxes.filter((b) => b.width < 44 || b.height < 44 || !b.edges).length,
         inside: boxes.every((b) => b.left >= 0 && b.right <= 320),
         headerOneRow: header < 80,
-      }).toStrictEqual({ rows: true, small: 0, inside: true, headerOneRow: true });
+      }).toStrictEqual({ rows: 1, small: 0, inside: true, headerOneRow: true });
     });
 
     // 幅 320px では和紙がいちばん小さく映るので、押せる範囲が 44px を下回りやすい
-    test("プロフィールのリンクが 44px 四方以上、経歴の行の summary が閉じても開いても 44px 以上の高さで映り、リンクの押せる範囲が重ならないこと", async ({
+    test("プロフィールのアイコンのリンクが 44px 四方以上、活動のリンクが 44px 以上の高さ、経歴の行の summary が閉じても開いても 44px 以上の高さで映り、リンクの押せる範囲が重ならないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
@@ -304,6 +308,12 @@ test.describe("トップの庭", () => {
         els.map((el) => {
           const b = el.getBoundingClientRect();
           return { left: b.left, right: b.right, width: b.width, height: b.height };
+        }),
+      );
+      const activities = await page.getByTestId("profile-activity-link").evaluateAll((els) =>
+        els.map((el) => {
+          const b = el.getBoundingClientRect();
+          return { top: b.top, bottom: b.bottom, height: b.height };
         }),
       );
       await page.getByTestId("garden-station-1").click();
@@ -322,12 +332,18 @@ test.describe("トップの庭", () => {
         links: links.length,
         smallLinks: links.filter((b) => b.width < 44 || b.height < 44).length,
         overlap: links.length === 2 && links[0]!.right - links[1]!.left > 0.5,
+        activities: activities.length,
+        smallActivities: activities.filter((b) => b.height < 44).length,
+        activityOverlap: activities.slice(1).some((b, i) => activities[i]!.bottom - b.top > 0.5),
         summaries: summaries.length,
         smallSummaries: summaries.filter((h) => h < 44).length,
       }).toStrictEqual({
         links: 2,
         smallLinks: 0,
         overlap: false,
+        activities: PROFILE_ACTIVITIES.length,
+        smallActivities: 0,
+        activityOverlap: false,
         summaries: 8,
         smallSummaries: 0,
       });
@@ -338,7 +354,7 @@ test.describe("トップの庭", () => {
     test.use({ viewport: { width: 375, height: 667 }, colorScheme: "light" });
 
     // 和紙の距離が画面の高さで決まるとき、高い和紙は字が 14px より小さく映りやすい
-    test("4 つの文のどれへ移った場合も、経歴の行を開いた場合も、和紙の字が 14px 以上で映ること", async ({
+    test("3 つの文のどれへ移った場合も、経歴の行を開いた場合も、和紙の字が 14px 以上で映ること", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
@@ -348,7 +364,7 @@ test.describe("トップの庭", () => {
         return (16 * box.width) / (await c.evaluate((el) => (el as HTMLElement).offsetWidth));
       };
       const small: string[] = [];
-      for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
+      for (const [i, id] of CARD_IDS.entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         if ((await shown(id)) < 14) small.push(id);
@@ -366,16 +382,37 @@ test.describe("トップの庭", () => {
     });
   });
 
+  test.describe("幅 375px、高さ 812px", () => {
+    test.use({ viewport: { width: 375, height: 812 }, colorScheme: "light" });
+
+    test("庭を開いた場合、3 つの文へ移るボタンが 1 行に並び、画面の幅に収まること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await expect(stations(page)).toHaveCount(3);
+      const boxes = await stations(page).evaluateAll((els) =>
+        els.map((el) => {
+          const b = el.getBoundingClientRect();
+          return { top: b.top, left: b.left, right: b.right };
+        }),
+      );
+      expect({
+        rows: new Set(boxes.map((b) => Math.round(b.top))).size,
+        inside: boxes.every((b) => b.left >= 0 && b.right <= 375),
+      }).toStrictEqual({ rows: 1, inside: true });
+    });
+  });
+
   // 高さは、幅 375px、高さ 667px の iPhone の Safari の、ビューポートのおおよその高さである
   test.describe("幅 375px、高さ 548px", () => {
     test.use({ viewport: { width: 375, height: 548 }, colorScheme: "light" });
 
-    test("4 つの文のどれへ移った場合も、4 つの文へ移るボタンが和紙の下の端に重ならないこと", async ({
+    test("3 つの文のどれへ移った場合も、3 つの文へ移るボタンが和紙の下の端に重ならないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
       const overlap: Record<string, boolean> = {};
-      for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
+      for (const [i, id] of CARD_IDS.entries()) {
         await page.getByTestId(`garden-station-${i}`).click();
         await expectAt(page, id);
         const tops = await stations(page).evaluateAll((els) =>
@@ -387,7 +424,6 @@ test.describe("トップの庭", () => {
       expect(overlap).toStrictEqual({
         profile: false,
         career: false,
-        stack: false,
         portfolio: false,
       });
     });
@@ -434,7 +470,7 @@ test.describe("トップの庭", () => {
       });
       await page.clock.setFixedTime(AUTUMN_NOON);
       await page.goto("/");
-      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
+      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 3, styled: 0 });
     });
 
     test("幅 1440px から 390px に変えたときに和紙を掛け直す途中で例外が出た場合、ふつうのページに戻り、セクションにインラインのスタイルが残らないこと", async ({
@@ -450,7 +486,7 @@ test.describe("トップの庭", () => {
         });
       });
       await page.setViewportSize({ width: 390, height: 844 });
-      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
+      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 3, styled: 0 });
     });
 
     test("経歴の詳細を開いたときに和紙を掛け直す途中で例外が出た場合、ふつうのページに戻り、セクションにインラインのスタイルが残らないこと", async ({
@@ -468,7 +504,7 @@ test.describe("トップの庭", () => {
         });
       });
       await careerSummaries(page).first().click();
-      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
+      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 3, styled: 0 });
     });
   });
 });

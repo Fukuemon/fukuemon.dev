@@ -43,13 +43,12 @@ const career: { year: string; title: string; detail: Line[] }[] = [
     ],
   },
 ];
-const stack = [
-  { area: "言語", items: "Go、TypeScript、Java、Python" },
-  { area: "フロントエンド", items: "React、Astro、TanStack、Tailwind\u00a0CSS" },
-  { area: "バックエンド", items: "PostgreSQL、Valkey、OpenAPI" },
-  { area: "インフラ", items: "Terraform、AWS、Google\u00a0Cloud、Cloudflare\u00a0Workers" },
+/** 肩書きと活動の行。活動は団体の名前だけを、団体の公式のページへのリンクにする */
+const roles: { text: string; href?: string }[] = [
+  { text: "うぇぶえんじにあ" },
+  { text: "GDG Greater Kwansai", href: "https://x.com/gdgkwansai" },
+  { text: "Alpha+Project", href: "https://greek-academy.org/" },
 ];
-const titles = ["うぇぶえんじにあ", "GDG Greater Kwansai organizer", "Alpha+Project TA"];
 /** アイコンの path は simple-icons（CC0-1.0）から写した */
 const links = [
   {
@@ -76,7 +75,23 @@ const row = "border-t border-border py-2";
         <img src={avatar.src} alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
         <div class="min-w-0">
           <ul class="mb-4 space-y-1 text-text-secondary [html.stage-on_&]:text-inherit">
-            {titles.map((t) => <li>{t}</li>)}
+            {
+              roles.map(({ text, href }) =>
+                href ? (
+                  <li>
+                    <a
+                      class="inline-flex min-h-11 items-center text-link-external focus-visible:focus-ring [html.stage-on_&]:-my-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:text-inherit"
+                      href={href}
+                      data-testid="profile-activity-link"
+                    >
+                      <span class="link-rule link-rule-below-underline underline underline-offset-4">{text}</span>
+                    </a>
+                  </li>
+                ) : (
+                  <li>{text}</li>
+                ),
+              )
+            }
           </ul>
           <p>好み：妻、甘いもの、運動、自然、</p>
         </div>
@@ -119,19 +134,6 @@ const row = "border-t border-border py-2";
           ))
         }
       </ul>
-    </section>
-    <section class={section} data-garden-card data-testid="garden-card-stack" aria-labelledby="stack">
-      <h2 id="stack" class:list={[heading, "text-heading-md"]}>技術スタック</h2>
-      <dl>
-        {
-          stack.map(({ area, items }) => (
-            <div class={row}>
-              <dt class="text-caption text-text-secondary">{area}</dt>
-              <dd>{items}</dd>
-            </div>
-          ))
-        }
-      </dl>
     </section>
     <section class={section} data-garden-card data-testid="garden-card-portfolio" aria-labelledby="portfolio">
       <h2 id="portfolio" class:list={[heading, "text-heading-md"]}>ポートフォリオ</h2>
@@ -177,6 +179,11 @@ const row = "border-t border-border py-2";
     word-break: auto-phrase;
   }
 
+  /* 庭の活動のリンクは押せる範囲が 60px あるので、リンクどうしの間だけを 1rem あけて範囲を重ねない */
+  :global(html.stage-on) [data-garden-card] li:has(> a) + li:has(> a) {
+    margin-block-start: 1rem;
+  }
+
   :global(html.stage-on) [data-garden-card] details p {
     margin-block-end: 0.5rem;
   }
@@ -185,12 +192,12 @@ const row = "border-t border-border py-2";
     margin-block-end: 0;
   }
 
-  :global(html.stage-on) [data-garden-card] :is(li:has(> details), dl > div) {
+  :global(html.stage-on) [data-garden-card] li:has(> details) {
     padding-block: 0.625rem;
     border-color: color-mix(in srgb, currentColor 25%, transparent);
   }
 
-  :global(html.stage-on) [data-garden-card] :is(li:has(> details), dl > div):first-child {
+  :global(html.stage-on) [data-garden-card] li:has(> details):first-child {
     padding-block-start: 0;
     border-block-start: 0;
   }
@@ -205,8 +212,8 @@ const row = "border-t border-border py-2";
     border-block-start: 0;
   }
 
-  /* 和紙は縮んで映るので、14px の字は 14px より小さく映る。年と区分も本文と同じ大きさにし、色の濃さで分ける */
-  :global(html.stage-on) [data-garden-card] :is(summary > span:first-child, dt) {
+  /* 和紙は縮んで映るので、14px の字は 14px より小さく映る。年も本文と同じ大きさにし、色の濃さで分ける */
+  :global(html.stage-on) [data-garden-card] summary > span:first-child {
     font-size: 1rem;
     color: color-mix(in srgb, currentColor 70%, transparent);
   }

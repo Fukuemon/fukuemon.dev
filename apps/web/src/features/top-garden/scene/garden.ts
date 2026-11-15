@@ -1,4 +1,4 @@
-// 庭を canvas に描き、プロフィールの 4 つのセクションを、木の枝に掛けた和紙に置く。
+// 庭を canvas に描き、プロフィールの 3 つのセクションを、木の枝に掛けた和紙に置く。
 // カメラが動く間、ポインタに合わせて揺れる間、季節の舞う物が舞う間だけ、フレームごとに描く。どれも無い間は描かない。
 import {
   FramebufferTexture,
@@ -51,7 +51,7 @@ const webglAvailable = () => document.createElement("canvas").getContext("webgl2
 
 /**
  * 庭を `stage` の中の canvas に描き、`cards` を STATIONS の順に和紙に置く。
- * @param cards プロフィールの 4 つのセクション。STATIONS と同じ順に並べる
+ * @param cards プロフィールの 3 つのセクション。STATIONS と同じ順に並べる
  * @param onBroken 描き始めた後に、フレームを描く途中の例外、和紙を掛け直す途中の例外、WebGL のコンテキストの喪失で描けなくなったときに呼ぶ。呼ぶ前に、`stop` と同じく元に戻す
  * @returns 描き始めたら操作する口。canvas が無いときと WebGL を使えないときは、何も変えずに null を返す
  * @throws 場面を組み立てる途中の例外は、セクションと html を元に戻してから投げる
