@@ -11,11 +11,13 @@ import {
   PlaneGeometry,
 } from "three";
 import { rng } from "../rng";
-import type { ScenePalette } from "./scene-colors";
+import type { ScenePaletteFall } from "./scene-colors";
 import { shapeTexture } from "./scene-parts";
 
 /** 舞う物が上から下へ抜ける高さ（m）。下の端まで来た物は、上の端に戻る */
 const FALL_H = 5.2;
+/** 試作の i-scene.js と同じ種。場面の物の種と分けるので、場面の物の配置を変えない */
+const FALL_SEED = 5;
 
 export interface Falling {
   readonly mesh: InstancedMesh;
@@ -27,7 +29,7 @@ export interface Falling {
 }
 
 /** `fall` の数の舞う物を作る。場面の乱数と別の種を使うので、場面の物の配置を変えない */
-export function createFalling(fall: NonNullable<ScenePalette["fall"]>): Falling {
+export function createFalling(fall: ScenePaletteFall): Falling {
   const glow = fall.shape === "glow";
   const flake = fall.shape === "flake";
   const mesh = new InstancedMesh(
@@ -45,7 +47,7 @@ export function createFalling(fall: NonNullable<ScenePalette["fall"]>): Falling 
     fall.count,
   );
   mesh.frustumCulled = false;
-  const R = rng(5);
+  const R = rng(FALL_SEED);
   const seeds = Array.from({ length: fall.count }, () => ({
     x: -8 + R() * 16,
     z: -12 + R() * 16,

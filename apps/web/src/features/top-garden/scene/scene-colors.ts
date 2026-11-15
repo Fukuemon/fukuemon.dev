@@ -213,6 +213,9 @@ export function mixHex(a: string, b: string, k: number): string {
   );
 }
 
+/** 時間帯で決めた舞う物。additive が true のときは、加算で重ねて光らせる */
+export type ScenePaletteFall = SeasonFall & { readonly additive: boolean };
+
 /** 時間帯の表と季節の表を掛け合わせた、場面の色 */
 export interface ScenePalette extends TimePalette {
   /** 季節の木の葉。冬は null */
@@ -220,7 +223,7 @@ export interface ScenePalette extends TimePalette {
   /** 苔の暗い所に散らす色。冬は雪の色にする */
   readonly mossSpeck: string;
   /** 舞う物。夏の朝と昼は null */
-  readonly fall: (SeasonFall & { readonly additive: boolean }) | null;
+  readonly fall: ScenePaletteFall | null;
 }
 
 /**
