@@ -43,7 +43,7 @@
   - Content-Security-Policy は `frame-ancestors` だけで、同じ origin の script を止めない。後で `script-src` を絞るときは、この読み込みを許す。
 - 結果の伝え方
   - ファイルは、挿入できたときに、`html` の class `ink-ready` を付ける。
-  - script の読み込みに失敗したときは、head のスクリプトが class `ink-failed` を付ける。無い URL に 404 の HTML が返ったときも、module の script として読み込めないので、`ink-failed` になる。
+  - script の読み込みに失敗したときは、html に class `intro` があれば、head のスクリプトが class `ink-failed` を付ける。`intro` が外れた後に届いた失敗では付けない。無い URL に 404 の HTML が返ったときも、module の script として読み込めないので、`ink-failed` になる。
   - class を読んで動くのは、場面のバンドルである。
 - 失敗とタイムアウト
   - 場面のバンドルが `ink-failed` を読んで、ふつうのページに戻す。場面が動き出した後のクリーンアップは、場面のバンドルが持つためである。
