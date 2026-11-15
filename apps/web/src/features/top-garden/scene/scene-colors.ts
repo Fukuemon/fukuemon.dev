@@ -175,6 +175,17 @@ export const SEASON_FALLS: Readonly<Record<Season, SeasonFall>> = {
   winter: { color: "#d6dde6", shape: "flake", count: 110, size: 0.08 },
 };
 
+/**
+ * 冬の朝、昼、夕の雪。白砂と空が明るく、季節の表の雪が見分けられないので、色を濃くし、数と大きさを増やす。
+ * 夜は地が暗く、季節の表の雪が見えるので使わない。
+ * 値は Design Doc の「季節ごとの葉とパーティクル」の表の下に書いてある
+ */
+const WINTER_LIGHT_FALL: Pick<SeasonFall, "color" | "count" | "size"> = {
+  color: "#b4c0ce",
+  count: 220,
+  size: 0.12,
+};
+
 /** canvas に描く、色を持たない形の塗り。テクスチャの色は、材質の色で付ける */
 export const SHAPE_FILL = "#ffffff";
 /** canvas のグラデーションの、透明の端 */
@@ -233,7 +244,7 @@ export interface ScenePalette extends TimePalette {
 /**
  * 時間帯と季節から、場面の色を決める。
  * 冬は白砂と苔に雪の色を混ぜ、夜は季節の木の葉を暗くする。
- * 夏の蛍は夕と夜だけに出し、夜は加算で重ねて光らせる。
+ * 夏の蛍は夕と夜だけに出し、夜は加算で重ねて光らせる。冬の夜のほかの時間帯は、雪を濃く、多く、大きくする。
  */
 export function scenePalette(time: TimeOfDay, season: Season): ScenePalette {
   const c = TIME_PALETTES[time];
@@ -251,7 +262,9 @@ export function scenePalette(time: TimeOfDay, season: Season): ScenePalette {
         ? null
         : glow && time === "night"
           ? { ...fall, size: fall.size * NIGHT_GLOW_SIZE, additive: true }
-          : { ...fall, additive: false },
+          : winter && time !== "night"
+            ? { ...fall, ...WINTER_LIGHT_FALL, additive: false }
+            : { ...fall, additive: false },
     leaf: leaf && {
       shape: leaf.shape,
       colors: time === "night" ? leaf.colors.map((x) => mixHex(x, NIGHT_LEAF, 0.3)) : leaf.colors,
