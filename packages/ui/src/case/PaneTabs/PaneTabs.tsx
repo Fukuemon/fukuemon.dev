@@ -94,7 +94,7 @@ export function PaneTabs({
       <div
         aria-label={label}
         aria-orientation={isVertical ? "vertical" : "horizontal"}
-        className={clsx("flex min-w-0", isVertical ? "flex-col" : "flex-1")}
+        className={clsx("flex min-w-0", isVertical ? "flex-col" : "flex-1 overflow-x-auto")}
         role="tablist"
       >
         {items.map((item, index) => {
@@ -108,7 +108,7 @@ export function PaneTabs({
                 placement === "top"
                   ? "h-11 gap-1.5 px-3 text-label-compact"
                   : "min-h-13 min-w-13 flex-col gap-0.5 px-2 py-1 text-compact",
-                placement === "bottom" && "flex-1",
+                placement === "bottom" && "flex-auto shrink-0",
                 isSelected ? "text-text" : "text-text-secondary hover:text-text",
               )}
               id={`${baseId}-tab-${item.id}`}

@@ -39,6 +39,47 @@ describe("PaneTabs", () => {
     }
   });
 
+  it.each([5, 6])(
+    "下の帯に %i 個のタブを並べると、幅 320 px でもラベルが隣と重ならず、帯が横にスクロールする",
+    (count) => {
+      const labels = ["エディタ", "端末", "コンソール", "プレビュー", "通信", "SQL"].slice(
+        0,
+        count,
+      );
+      render(
+        <div className="h-96 w-80">
+          <PaneTabs
+            items={labels.map((label) => ({
+              id: label,
+              label,
+              icon: <svg aria-hidden="true" height="20" width="20" />,
+              content: <p>{label}</p>,
+            }))}
+            label="ペイン"
+            leading={<button aria-label="ファイル" className="size-11" type="button" />}
+            onSelect={() => undefined}
+            placement="bottom"
+            selectedId="エディタ"
+          />
+        </div>,
+      );
+      const tabs = labels.map((label) => screen.getByRole("tab", { name: label }));
+      for (const tab of tabs) {
+        expect(tab.scrollWidth).toBeLessThanOrEqual(tab.clientWidth);
+      }
+      for (const [index, tab] of tabs.entries()) {
+        const next = tabs[index + 1];
+        if (next) {
+          expect(tab.getBoundingClientRect().right).toBeLessThanOrEqual(
+            next.getBoundingClientRect().left,
+          );
+        }
+      }
+      const list = screen.getByRole("tablist");
+      expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+    },
+  );
+
   it("タブを替えても、隠したペインを描いたまま残し、入力が消えない", async () => {
     render(<Bottom />);
     await userEvent.type(screen.getByRole("textbox", { name: "エディタの中身" }), "abc");
