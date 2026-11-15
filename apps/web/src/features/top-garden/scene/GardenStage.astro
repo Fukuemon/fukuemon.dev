@@ -7,11 +7,11 @@ import { STATIONS } from "../layout";
 // 色は surface、text、border-field、focus で書き、庭の範囲で時間帯の霞の色に差し替える（top-garden の Design Doc の「ヘッダーと霞」）
 const mist = "garden-mist from-surface to-transparent";
 const stop =
-  "relative -ms-px -mt-px min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-1 text-label text-text focus-visible:focus-ring aria-[current=true]:z-10 aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface md:px-4";
+  "min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface stitch px-1 text-label text-text focus-visible:focus-ring aria-[current=true]:z-10 aria-[current=true]:border-text aria-[current=true]:bg-text aria-[current=true]:text-surface aria-[current=true]:stitch-current md:px-4";
 const tool =
   "min-h-11 cursor-pointer px-1 text-label text-text underline decoration-1 underline-offset-4 focus-visible:focus-ring aria-pressed:decoration-2";
 const skip =
-  "min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface px-4 text-label text-text transition-colors focus-visible:focus-ring";
+  "min-h-11 min-w-11 cursor-pointer rounded-control border border-border-field bg-surface stitch px-4 text-label text-text transition-colors focus-visible:focus-ring";
 ---
 
 <div class="garden-stage bg-surface" data-garden-stage data-testid="garden-stage">
@@ -22,7 +22,7 @@ const skip =
 <div class:list={[mist, "garden-mist-bottom bg-linear-to-t from-65%"]} aria-hidden="true">
 </div>
 <nav class="garden-nav" data-garden-nav data-testid="garden-nav" aria-label="庭の中の移動">
-  <div class="flex flex-wrap justify-center ps-px pt-px">
+  <div class="band justify-center">
     {
       STATIONS.map(({ label }, i) => (
         <button type="button" class={stop} data-station={i} data-testid={`garden-station-${i}`} aria-current={i === 0 ? "true" : "false"}>
