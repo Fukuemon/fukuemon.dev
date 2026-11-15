@@ -110,7 +110,7 @@ pnpm run test:garden
   - `BASE_URL` を渡したときは、配信を立てないので、ポートを決めない。
 - 庭は WebGL で描くので、GPU に依らないよう、project `garden` が chromium に SwiftShader で描かせる。
   - SwiftShader は 1 フレームを描くのが遅く、ほかの spec と並べると、最初の絵が画面に出るまでに数秒かかる。
-  - `garden-appearance.e2e.ts`、`garden-intro.e2e.ts`、`garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
+  - `garden-appearance.e2e.ts`、`garden-falling.e2e.ts`、`garden-intro.e2e.ts`、`garden-stations.e2e.ts` は、`test.slow()` で時間の上限を 3 倍にする。
   - project `garden` は、`expect` の待ちを 45 秒にする。カメラが行き先に着くまでの待ちが、デフォルトの 5 秒を超えるためである。
   - `page.clock` を使うと、ページの `requestAnimationFrame` は 16ms のタイマーに替わり、画面にフレームが出るのを待たない。本物の `requestAnimationFrame` を待つときは、`tests/widgets/waits/presented-frames.ts` の `waitForPresentedFrames` を使う。
   - カメラの移動の動きを確認しない庭の spec は、アニメーションをオフにした設定で開いてから移る。オフのカメラは 1 フレームで行き先に着く。

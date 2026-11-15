@@ -157,7 +157,7 @@ export function SearchBox({
                 <a
                   aria-selected={index === activeIndex}
                   className={clsx(
-                    "flex min-h-11 items-center px-4 text-body-dense text-text hover:bg-surface-subtle",
+                    "flex min-h-11 items-center px-4 text-body-dense text-text hover:bg-surface-raised-subtle",
                     "border-l-2 border-transparent aria-selected:border-primary aria-selected:bg-primary-surface aria-selected:font-bold",
                   )}
                   href={suggestion.url}

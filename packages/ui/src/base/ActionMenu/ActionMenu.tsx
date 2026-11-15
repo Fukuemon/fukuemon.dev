@@ -102,7 +102,7 @@ export function ActionMenu({ label, items, density = "default" }: ActionMenuProp
           {ordered.map((item, index) => (
             <button
               className={clsx(
-                "cursor-pointer text-left hover:bg-surface-subtle focus-visible:focus-ring",
+                "cursor-pointer text-left hover:bg-surface-raised-subtle focus-visible:focus-ring",
                 isCompact
                   ? "min-h-7 px-3 text-body-compact pointer-coarse:min-h-11"
                   : "min-h-11 px-4 text-body-dense",
