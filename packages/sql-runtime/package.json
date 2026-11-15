@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./lossless-json": "./src/lossless-json.ts",
     "./worker": "./src/worker/index.ts"
   },
   "scripts": {

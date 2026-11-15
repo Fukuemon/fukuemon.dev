@@ -114,9 +114,10 @@ packages/
   - 3 つの package は、`@fukuemon/ui`、`@fukuemon/playground-project`、React に依存しない。`@fukuemon/sql-runtime` と `@fukuemon/go-runtime` は、workspace のどの package にも依存しない。
   - package は、ほかの package と同じく、`exports` でソースのファイルを指す。ビルドは、`apps/playground` の Vite が行う。`@fukuemon/go-runtime` の WASM だけは、package の `build` の script がビルドする（[Go](#go)）。
 - この文書では、`node-runtime/` は `packages/node-runtime/src/` を、`webcontainer/` と `guest/` はその下のディレクトリを指す。
-- `@fukuemon/sql-runtime` は、エントリーポイントを 2 つに分ける。
+- `@fukuemon/sql-runtime` は、エントリーポイントを 3 つに分ける。
   - 型と、PGlite で SQL を実行して結果の形にする関数。このエントリーポイントは、PGlite から型だけを import する。関数はブラウザと Node の両方で動くので、このエントリーポイントは DOM と Worker の API を使わない。`Store` の型も、このエントリーポイントに置く。
   - PGlite を Web Worker で動かす、`SqlDatabase` の実装。SQL だけを動かすツールが使う。
+  - `withLosslessJson`。`json` と `jsonb` のセルを文字列のまま持つ PGlite にする。このエントリーポイントは、PGlite を値で import する。import してよいのは、Web Worker のスクリプト（`worker/worker.ts`）と、`guest/` の DB のプロセスのスクリプトだけである。メインスレッドのコードは import しない。
 - プロジェクトの JSON と、`playground.json` の型と schema は、`packages/playground-project`（`@fukuemon/playground-project`）に置く。`apps/web` のビルドと、`project/` が使う。
 - `guest/` のファイルは、ツールのページではなく、実行環境の中の Node か、プレビューのページで動く。tsconfig と lint の対象を、ツールのページのコードと分ける。
   - 実行環境の中の Node で動くファイルは、`webcontainer/` が中身を文字列として読み込み、実行環境に書く。
@@ -184,7 +185,7 @@ flowchart TB
 
 - `src/node/`、`sql-console/`、`node-runtime/` が `@fukuemon/sql-runtime` から import するのは、型だけである。`workspace/` が `project/` から import するのも、型だけである。
   - `sql-console/` のテストだけは、`toJsonResponse` を値で import する。DB のプロセスが JSON で送ったセルと、Web Worker の実装のセルが、同じ文字列で表に出ることを確認するためである。
-  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数を import する。`guest/` は、PGlite を Web Worker で動かす `SqlDatabase` の実装のエントリーポイントを import しない。
+  - `guest/` の DB のプロセスのスクリプトだけは、`@fukuemon/sql-runtime` の、PGlite で SQL を実行して結果の形にする関数と、`withLosslessJson` を import する。`guest/` は、PGlite を Web Worker で動かす `SqlDatabase` の実装のエントリーポイントを import しない。
 - `node-runtime/` は、`project/` を import しない。`BootOptions` は、プロジェクトの型を使わない。
 - `workspace/` と `node-runtime/` は、互いを import しない。2 つをつなぐ処理は、`src/node/` が持つ。
 - `sql-console/` は、`workspace/` を import しない。入力欄の値と、値の変更は、props で受ける。値を持ち、保存するのは、`src/node/` と `src/sql/` である。
@@ -820,6 +821,11 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - リクエストの JSON の U+2028 と U+2029 は、`\u2028` と `\u2029` にエスケープして書く。DB のプロセスの `readline` が、この 2 つを行の区切りとして読むためである。
 - DB のプロセスは、ソケットで待ち受けた後に、プレフィックスを付けた `{"ready": true}` の行を出す。`node-runtime/` は、この行を受けてから、初期データの SQL を送る。
 - DB のプロセスは、結果のセルの bigint、日時、`bytea`、`NaN`、`Infinity` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
+- `json` と `jsonb` のセルは、どちらの実装でも、`JSON.parse` せず Postgres が返す文字列のまま持つ。
+  `JSON.parse` は、安全な整数の範囲を超える値の桁を落とすためである。
+  `json[]` と `jsonb[]` のセルは、要素を文字列のまま、`[` と `]` の間に `, ` でつないだ 1 つの文字列にする。NULL の要素は `null` と書く。
+  JSON の `null` の要素も `null` と書くので、2 つは見分けられない。
+  変える関数（`withLosslessJson`）は、`@fukuemon/sql-runtime` に置く。
 - DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
 - `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。`database` の `status` は変えず、その後に DB のプロセスが終了しても `stopped` にしない。訪問者が起動し直すときに、SQL のペインに DB が止まったことを出さないためである。
 - DB のプロセスが終了したときは、`node-runtime/` が、`database` の `status` を `stopped` にし、待っているリクエストに、`error` を持つ値を返す。その後の `run` も、同じ値を返す。
