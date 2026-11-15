@@ -64,7 +64,7 @@ function ShapeTokens() {
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-heading-md font-semibold">区切った帯</h2>
         <div className="flex flex-col gap-3">
-          <div aria-label="季節" className="band" role="group">
+          <div className="band">
             {["自動", "春", "夏", "秋", "冬"].map((label) => (
               <button
                 aria-pressed={label === "秋"}
