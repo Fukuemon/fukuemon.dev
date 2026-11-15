@@ -60,6 +60,15 @@ describe("judge", () => {
     });
   });
 
+  it("トップ以外のページでは、2 回目以降の訪問でも lcpIsFcp の回を除かない", () => {
+    const rows = [row(100, 900, true), row(100, 902, true), row(100, 901, true)];
+    expect(judge(rows, "second", "/articles/")).toStrictEqual({
+      excludedRuns: 0,
+      keptRuns: 3,
+      median: { score: 100, lcp: 901, ...fixed },
+    });
+  });
+
   it("全ての回を除いたときは、中央値を null にする", () => {
     expect(judge([row(62, 1500, true), row(58, 2290, true)], "second")).toStrictEqual({
       excludedRuns: 2,

@@ -53,9 +53,10 @@ export function medians(rows: readonly Row[]): Medians | null {
  * 合否の判定に使う回と中央値（docs/adr/0078-top-lighthouse-gpu-and-throttling.md）。
  * 庭を出すトップでは lcpIsFcp の回を除く。
  * 庭を出さないトップ（reduced-motion）は、本文の描画が LCP になり、どの回も lcpIsFcp になるので除かない。
+ * トップ以外のページ（path が `/` 以外）も、庭が無く、どの回も lcpIsFcp になるので除かない（ADR-0082）。
  */
-export function judge(rows: readonly Row[], visit: string): Judged {
-  const kept = visit === "reduced-motion" ? rows : rows.filter((r) => !r.lcpIsFcp);
+export function judge(rows: readonly Row[], visit: string, path = "/"): Judged {
+  const kept = visit === "reduced-motion" || path !== "/" ? rows : rows.filter((r) => !r.lcpIsFcp);
   return {
     excludedRuns: rows.length - kept.length,
     keptRuns: kept.length,

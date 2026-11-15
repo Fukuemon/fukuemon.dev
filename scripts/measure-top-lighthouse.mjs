@@ -2,7 +2,9 @@
 // トップを Lighthouse で測る。既定は、2 回目以降の訪問（localStorage に fd-top-seen がある状態）で 5 回測り、中央値を出す。
 // ビルドした apps/web/dist/ を配るので、pnpm run build の後に、リポジトリの直下で流す。
 //
-//   node scripts/measure-top-lighthouse.mjs [--visit second|first|reduced-motion] [--runs 5] [--gpu metal|swiftshader] [--throttling simulate|devtools] [--out lighthouse-results]
+//   node scripts/measure-top-lighthouse.mjs [--visit second|first|reduced-motion] [--path /] [--runs 5] [--gpu metal|swiftshader] [--throttling simulate|devtools] [--out lighthouse-results]
+//
+// --path は開くページのパスで、既定はトップ（/）である。記事の一覧とプレイグラウンドの一覧も、同じ条件で測る（ADR-0082）。
 //
 // 条件は、Lighthouse の既定の mobile（Moto G Power の画面と、Slow 4G と CPU 4 倍の遅さ）である。
 // 既定の --throttling simulate は、スロットリングを掛けずに読み込んだ記録から遅い端末の値を推定する。devtools は、通信と CPU にスロットリングを掛けて読み込む。
@@ -68,6 +70,7 @@ function fail(message) {
 const { values: opt } = parseArgs({
   options: {
     visit: { type: "string", default: "second" },
+    path: { type: "string", default: "/" },
     runs: { type: "string", default: "5" },
     gpu: { type: "string", default: "metal" },
     throttling: { type: "string", default: "simulate" },
@@ -76,6 +79,7 @@ const { values: opt } = parseArgs({
 });
 if (!["second", "first", "reduced-motion"].includes(opt.visit))
   fail(`--visit が不正: ${opt.visit}`);
+if (!opt.path.startsWith("/") || opt.path.startsWith("//")) fail(`--path が不正: ${opt.path}`);
 if (!["metal", "swiftshader"].includes(opt.gpu)) fail(`--gpu が不正: ${opt.gpu}`);
 if (!["simulate", "devtools"].includes(opt.throttling))
   fail(`--throttling が不正: ${opt.throttling}`);
@@ -216,6 +220,7 @@ const writeSummary = (error) => {
   const summary = {
     lighthouse: LIGHTHOUSE_SPEC,
     visit: opt.visit,
+    path: opt.path,
     gpu: opt.gpu,
     throttling: opt.throttling,
     runs: rows.length,
@@ -225,7 +230,7 @@ const writeSummary = (error) => {
           lcpIsFcpRuns: rows.filter((r) => r.lcpIsFcp).length,
           median: medians(rows),
           adrConditions: isAdrConditions(conditions),
-          judged: judge(rows, opt.visit),
+          judged: judge(rows, opt.visit, opt.path),
         }),
     rows,
   };
@@ -246,7 +251,7 @@ try {
         process.execPath,
         [
           LIGHTHOUSE_CLI,
-          `${origin}/`,
+          `${origin}${opt.path}`,
           `--chrome-flags=${chromeFlags(profile)}`,
           "--disable-storage-reset",
           "--only-categories=performance",
