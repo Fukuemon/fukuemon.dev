@@ -56,34 +56,27 @@ describe("scenePalette", () => {
 });
 
 describe("舞う物", () => {
-  it.each([
-    ["spring", "petal", 70],
-    ["autumn", "momiji", 60],
-    ["winter", "flake", 110],
-  ] as const)("%s は、全ての時間帯で %s を %d 個舞わせる", (season, shape, count) => {
-    for (const t of ["morning", "day", "evening", "night"] as const) {
-      expect(scenePalette(t, season).fall).toMatchObject({ shape, count, additive: false });
-    }
-  });
+  const seasons = ["spring", "autumn", "winter"] as const;
+  const times = ["morning", "day", "evening", "night"] as const;
+  it.each(seasons.flatMap((s) => times.map((t) => [s, t] as const)))(
+    "%s の %s は、季節の表の舞う物を、加算で重ねずに出す",
+    (season, t) => {
+      expect(scenePalette(t, season).fall).toStrictEqual({
+        ...SEASON_FALLS[season],
+        additive: false,
+      });
+    },
+  );
 
   it.each(["morning", "day"] as const)("夏の %s は、蛍を出さない", (t) => {
     expect(scenePalette(t, "summer").fall).toBeNull();
   });
 
-  it("夏の夕は、蛍を 34 個、加算で重ねずに出す", () => {
-    expect(scenePalette("evening", "summer").fall).toMatchObject({
-      shape: "glow",
-      count: 34,
-      additive: false,
-    });
-  });
-
-  it("夏の夜は、蛍を 34 個、加算で重ねて光らせる", () => {
-    expect(scenePalette("night", "summer").fall).toMatchObject({
-      shape: "glow",
-      count: 34,
-      additive: true,
-    });
+  it.each([
+    ["evening", false],
+    ["night", true],
+  ] as const)("夏の %s は、蛍を出し、加算で重ねるかは %s である", (t, additive) => {
+    expect(scenePalette(t, "summer").fall).toStrictEqual({ ...SEASON_FALLS.summer, additive });
   });
 });
 

@@ -157,7 +157,7 @@ export const SEASON_LEAVES: Readonly<
 };
 
 /** 舞う物の形。glow は蛍の光、flake は雪 */
-export type FallShape = "petal" | "momiji" | "glow" | "flake";
+export type FallShape = LeafShape | "glow" | "flake";
 
 export interface SeasonFall {
   readonly color: string;

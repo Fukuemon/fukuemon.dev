@@ -29,7 +29,7 @@ export interface Falling {
 /** `fall` の数の舞う物を作る。場面の乱数と別の種を使うので、場面の物の配置を変えない */
 export function createFalling(fall: NonNullable<ScenePalette["fall"]>): Falling {
   const glow = fall.shape === "glow";
-  const snow = fall.shape === "flake";
+  const flake = fall.shape === "flake";
   const mesh = new InstancedMesh(
     new PlaneGeometry(1, 1),
     new MeshBasicMaterial({
@@ -72,16 +72,16 @@ export function createFalling(fall: NonNullable<ScenePalette["fall"]>): Falling 
             0.42 * q.s * (0.35 + 0.65 * Math.max(0, Math.sin(sec * 1.3 * q.v + q.a))),
           );
         } else {
-          const speed = snow ? 0.42 : 0.55;
+          const speed = flake ? 0.42 : 0.55;
           const y = FALL_H - ((sec * speed * q.v + q.p * FALL_H) % FALL_H);
           d.position.set(
-            q.x + Math.sin(sec * 0.9 * q.v + q.a) * (snow ? 0.15 : 0.45),
+            q.x + Math.sin(sec * 0.9 * q.v + q.a) * (flake ? 0.15 : 0.45),
             y,
             q.z + Math.cos(sec * 0.7 + q.a) * 0.25,
           );
-          if (snow) d.quaternion.copy(camera.quaternion);
+          if (flake) d.quaternion.copy(camera.quaternion);
           else d.rotation.set(sec * 1.7 * q.v + q.a, sec * 1.1 + q.a, q.a);
-          d.scale.setScalar((snow ? 0.045 : 0.13) * q.s);
+          d.scale.setScalar((flake ? 0.045 : 0.13) * q.s);
         }
         d.updateMatrix();
         mesh.setMatrixAt(i, d.matrix);

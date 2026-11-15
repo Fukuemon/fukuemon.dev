@@ -243,9 +243,9 @@ export function startGarden(
         camera.lookAt(cur.look);
         camera.updateProjectionMatrix();
         render();
-        // 淡彩とカメラが変わる間だけ、次のフレームを描く。終わりのタイマーが、最後の 1 枚を描かせる
+        // 淡彩とカメラが変わる間と、舞う物が舞う間だけ、次のフレームを描く。終わりのタイマーが、最後の 1 枚を描かせる
         const t = now - enteredAt;
-        if (phase === "enter" && t < INTRO.move0 + INTRO.move) kick();
+        if (phase === "enter" && (t < INTRO.move0 + INTRO.move || (fall && !state.paused))) kick();
         else state.last = 0;
         return;
       }

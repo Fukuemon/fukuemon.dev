@@ -21,7 +21,7 @@ import {
   Vector3,
 } from "three";
 import { TREE_PADS, TRUNK } from "../layout";
-import { GLOW_STOPS, SHAPE_FILL, type FallShape } from "./scene-colors";
+import { GLOW_STOPS, SHAPE_FILL, type FallShape, type LeafShape } from "./scene-colors";
 
 /**
  * canvas に描いた絵をテクスチャにする。
@@ -117,7 +117,7 @@ export function rock(rand: () => number, color: string, sx: number, sy: number, 
 }
 
 export interface TreeLeaf {
-  readonly shape: PartShape;
+  readonly shape: LeafShape | "fan";
   readonly colors: readonly string[];
 }
 
