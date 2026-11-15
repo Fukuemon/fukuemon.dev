@@ -1,13 +1,51 @@
 ---
-const career = [
-  { year: "2018", text: "経歴の見本の 1 行目。所属と役割を書く。" },
-  { year: "2021", text: "経歴の見本の 2 行目。担当した領域を書く。" },
-  { year: "2024", text: "経歴の見本の 3 行目。今の仕事を書く。" },
+/** 打ち消し線で出す部分は `s: true` にする */
+type Line = { text: string; s?: true }[];
+const career: { year: string; title: string; detail: Line[] }[] = [
+  {
+    year: "2020/04〜2023/03",
+    title: "農業高校 造園科",
+    detail: [
+      [
+        { text: "普通科の勉強が嫌いで", s: true },
+        {
+          text: " 手に職付けたくて、庭師を目指してました。モンハンのジオラマ作ってる動画にハマってたのがきっかけ。庭園様式や樹木、盆栽などの勉強が主でしたが農業についても少しだけかじってました。当時学んだ記憶はもう覚えてない...",
+        },
+      ],
+    ],
+  },
+  {
+    year: "2023/04〜2025/03",
+    title: "神戸電子専門学校 AIシステム開発学科",
+    detail: [
+      [{ text: "色々あって庭師からIT業界に志望変更しました。" }],
+      [{ text: "1年目は3DとARでメニューが見えるグルメSNSアプリを作ってました" }],
+      [{ text: "2年目はとある訪問看護施設の業務改善を行ってました" }],
+    ],
+  },
+  {
+    year: "2024/01〜",
+    title: "株式会社 オプティム アルバイト",
+    detail: [[{ text: "医療分野のサービス開発に従事" }]],
+  },
+  {
+    year: "2025/04〜",
+    title: "株式会社 オプティム 正社員",
+    detail: [
+      [{ text: "農業分野のサービス開発に従事" }],
+      [
+        {
+          text: "高校生の時はまさか農業事業をDX(AX)する側に回るなんて思ってもなかったですね。もっとあの頃に農業の勉強しておけばな...と時々思います",
+        },
+      ],
+    ],
+  },
 ];
 const stack = [
-  { area: "言語", items: "見本: TypeScript、Go、Rust" },
-  { area: "フロントエンド", items: "見本: Astro、React、Tailwind CSS" },
-  { area: "基盤", items: "見本: Cloudflare Workers、Terraform" },
+  { area: "言語", items: "Go、TypeScript、Java、Python" },
+  { area: "フロントエンド", items: "React、Astro、TanStack、Tailwind CSS" },
+  { area: "バックエンド", items: "PostgreSQL、Valkey、OpenAPI" },
+  { area: "インフラ", items: "Terraform、AWS、Google Cloud、Cloudflare Workers" },
 ];
 const section = "max-w-body border-t border-border py-8 first:border-t-0 first:pt-0";
 const heading = "mb-2 font-heading font-semibold";
@@ -18,17 +56,31 @@ const row = "border-t border-border py-2";
   <div class="mx-auto max-w-page">
     <section class={section} data-garden-card data-testid="garden-card-profile" aria-labelledby="profile">
       <h1 id="profile" data-testid="garden-title" tabindex="-1" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
-      <p class="mb-4 text-text-secondary">自己紹介の見本。どんな仕事をしていて、このサイトに何を書いているかを、数行で書く。</p>
-      <p>関心のある技術と、書いている主題を書く。</p>
+      <div class="flex items-start gap-4">
+        <img src="/avatar.webp" alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
+        <div class="min-w-0">
+          <p class="mb-4 text-text-secondary">うぇぶえんじにあ</p>
+          <p>好み：妻、甘いもの、運動、自然、</p>
+        </div>
+      </div>
     </section>
     <section class={section} data-garden-card data-testid="garden-card-career" aria-labelledby="career">
       <h2 id="career" class:list={[heading, "text-heading-md"]}>経歴</h2>
       <ul>
         {
-          career.map(({ year, text }) => (
-            <li class:list={[row, "flex gap-4"]}>
-              <span class="w-18 flex-none text-text-secondary tabular-nums">{year}</span>
-              <span class="min-w-0">{text}</span>
+          career.map(({ year, title, detail }) => (
+            <li class={row}>
+              <details name="career">
+                <summary class="cursor-pointer">
+                  <span class="text-caption text-text-secondary tabular-nums">{year}</span>
+                  <span class="block">{title}</span>
+                </summary>
+                <div class="pt-2">
+                  {detail.map((line) => (
+                    <p>{line.map(({ text, s }) => (s ? <s>{text}</s> : text))}</p>
+                  ))}
+                </div>
+              </details>
             </li>
           ))
         }

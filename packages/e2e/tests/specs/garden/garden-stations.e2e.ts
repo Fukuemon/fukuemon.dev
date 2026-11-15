@@ -3,12 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { meanDiff } from "../../widgets/actions/mean-diff";
 import { settledCenterX } from "../../widgets/waits/settled-center-x";
 import {
+  careerSummaries,
   currentCards,
   draggableCards,
   htmlElement,
   mainCards,
   navButtons,
   notCurrentCards,
+  openCareerDetails,
   stations,
   styledCards,
 } from "../../selectors/garden";
@@ -123,6 +125,31 @@ test.describe("トップの庭", () => {
           )),
         );
         expect(paper.y + paper.height).toBeLessThanOrEqual(top);
+      }
+    });
+
+    // 和紙を掛け直さないと、詳細を開いた文が、閉じたときの大きさの和紙からはみ出す
+    test("経歴の行の詳細を 1 つずつ開いた場合、開いた詳細は 1 つだけで、和紙が画面の幅とボタンの上に収まること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      const count = await careerSummaries(page).count();
+      for (let i = 0; i < count; i++) {
+        await careerSummaries(page).nth(i).click();
+        await expect(openCareerDetails(page)).toHaveCount(1);
+        await expectAt(page, "career");
+        const paper = (await card(page, "career").boundingBox())!;
+        const top = Math.min(
+          ...(await navButtons(page).evaluateAll((els) =>
+            els.map((el) => el.getBoundingClientRect().top),
+          )),
+        );
+        expect({
+          inside: paper.x >= 0 && paper.x + paper.width <= 390,
+          aboveNav: paper.y + paper.height <= top,
+        }).toStrictEqual({ inside: true, aboveNav: true });
       }
     });
   });

@@ -22,3 +22,10 @@ export const inkSvg = (page: Page) => page.locator(".ink-svg");
 /** プロフィールの h1。アクセシビリティツリーに h1 の役割で載ることを確かめるので、役割で拾う */
 export const profileHeading = (page: Page) =>
   page.getByRole("heading", { level: 1, name: "プロフィール" });
+
+/** 経歴の行の、詳細を開閉する summary。行ごとに testid を足さず、経歴の和紙の中の summary を順に拾う */
+export const careerSummaries = (page: Page) =>
+  page.getByTestId("garden-card-career").locator("summary");
+
+export const openCareerDetails = (page: Page) =>
+  page.getByTestId("garden-card-career").locator("details[open]");

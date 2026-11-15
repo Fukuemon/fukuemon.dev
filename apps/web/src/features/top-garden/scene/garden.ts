@@ -152,9 +152,10 @@ export function startGarden(
         n: new Vector3(Math.sin(st.rot), 0, Math.cos(st.rot)),
       };
     });
-    /** 和紙の大きさをセクションの大きさから測り、和紙と枝を掛け直す */
-    const hang = (): void => {
+    /** 和紙の大きさをセクションの大きさから測り、和紙と枝を掛け直す。`only` を渡すと、その和紙だけを掛け直す */
+    const hang = (only?: number): void => {
       slots.forEach((p, i) => {
+        if (only !== undefined && i !== only) return;
         p.unhang();
         p.w = cards[i]!.offsetWidth / PX;
         p.h = cards[i]!.offsetHeight / PX;
@@ -313,6 +314,21 @@ export function startGarden(
         }
       },
       on,
+    );
+    // 詳細の開閉でセクションの高さが変わる。toggle は親へ伝わらないので、捕捉で受ける。
+    cards.forEach((el, i) =>
+      el.addEventListener(
+        "toggle",
+        () => {
+          try {
+            hang(i);
+            kick();
+          } catch (e) {
+            broken(e);
+          }
+        },
+        { ...on, capture: true },
+      ),
     );
     canvas.addEventListener("webglcontextlost", () => broken("WebGL のコンテキストを失った"), on);
     resize();
