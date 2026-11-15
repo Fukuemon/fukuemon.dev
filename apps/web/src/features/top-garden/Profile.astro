@@ -71,7 +71,7 @@ const row = "border-t border-border py-2";
           career.map(({ year, title, detail }) => (
             <li class={row}>
               <details name="career">
-                <summary class="cursor-pointer">
+                <summary class="cursor-pointer focus-visible:focus-ring">
                   <span class="text-caption text-text-secondary tabular-nums">{year}</span>
                   <span class="block">{title}</span>
                 </summary>
@@ -153,6 +153,16 @@ const row = "border-t border-border py-2";
   }
 
   :global(html.stage-on) [data-garden-card] :is(li, dl > div):first-child {
+    padding-block-start: 0;
+    border-block-start: 0;
+  }
+
+  /* 詳細を開いた行のほかは隠す。和紙が伸びると、カメラが和紙を画面に収めようと引き、字が 14px より小さく映るためである */
+  :global(html.stage-on) [data-garden-card] ul:has(details[open]) > li:not(:has(details[open])) {
+    display: none;
+  }
+
+  :global(html.stage-on) [data-garden-card] ul:has(details[open]) > li {
     padding-block-start: 0;
     border-block-start: 0;
   }

@@ -27,5 +27,5 @@ export const profileHeading = (page: Page) =>
 export const careerSummaries = (page: Page) =>
   page.getByTestId("garden-card-career").locator("summary");
 
-export const openCareerDetails = (page: Page) =>
+export const openedCareerDetails = (page: Page) =>
   page.getByTestId("garden-card-career").locator("details[open]");

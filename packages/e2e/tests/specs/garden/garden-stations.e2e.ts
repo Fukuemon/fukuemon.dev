@@ -10,7 +10,7 @@ import {
   mainCards,
   navButtons,
   notCurrentCards,
-  openCareerDetails,
+  openedCareerDetails,
   stations,
   styledCards,
 } from "../../selectors/garden";
@@ -36,6 +36,14 @@ const openGarden = async (page: Page, { paused = false } = {}) => {
 };
 
 const card = (page: Page, id: string) => page.getByTestId(`garden-card-${id}`);
+
+/** 庭の中のボタンのうち、いちばん上のボタンの上端の y */
+const navTop = async (page: Page) =>
+  Math.min(
+    ...(await navButtons(page).evaluateAll((els) =>
+      els.map((el) => el.getBoundingClientRect().top),
+    )),
+  );
 
 /** カメラがその文の正面に来て、その文だけが見えている */
 const expectAt = async (page: Page, id: string) => {
@@ -119,38 +127,63 @@ test.describe("トップの庭", () => {
         const paper = (await card(page, id).boundingBox())!;
         expect(paper.x).toBeGreaterThanOrEqual(0);
         expect(paper.x + paper.width).toBeLessThanOrEqual(390);
-        const top = Math.min(
-          ...(await navButtons(page).evaluateAll((els) =>
-            els.map((el) => el.getBoundingClientRect().top),
-          )),
-        );
-        expect(paper.y + paper.height).toBeLessThanOrEqual(top);
+        expect(paper.y + paper.height).toBeLessThanOrEqual(await navTop(page));
       }
     });
 
-    // 和紙を掛け直さないと、詳細を開いた文が、閉じたときの大きさの和紙からはみ出す
-    test("経歴の行の詳細を 1 つずつ開いた場合、開いた詳細は 1 つだけで、和紙が画面の幅とボタンの上に収まること", async ({
+    // 和紙が伸びると、カメラが和紙を画面に収めようと引き、字と押せる範囲が小さく映る
+    test("経歴の行の詳細を 1 つずつ開いた場合、開いた詳細は 1 つだけで、その行が 44px 以上の高さと 14px 以上の字で映り、和紙が画面の幅とボタンの上に収まること", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
       await page.getByTestId("garden-station-1").click();
       await expectAt(page, "career");
-      const count = await careerSummaries(page).count();
-      for (let i = 0; i < count; i++) {
-        await careerSummaries(page).nth(i).click();
-        await expect(openCareerDetails(page)).toHaveCount(1);
+      await expect(careerSummaries(page)).toHaveCount(4);
+      const rows = [];
+      for (let i = 0; i < 4; i++) {
+        const summary = careerSummaries(page).nth(i);
+        await summary.click();
         await expectAt(page, "career");
         const paper = (await card(page, "career").boundingBox())!;
-        const top = Math.min(
-          ...(await navButtons(page).evaluateAll((els) =>
-            els.map((el) => el.getBoundingClientRect().top),
-          )),
-        );
-        expect({
+        const shown = (await summary.boundingBox())!.height;
+        const laid = await summary.evaluate((el) => (el as HTMLElement).offsetHeight);
+        const top = await navTop(page);
+        rows.push({
+          opened: await openedCareerDetails(page).count(),
+          tall: shown >= 44,
+          text: (16 * shown) / laid >= 14,
           inside: paper.x >= 0 && paper.x + paper.width <= 390,
           aboveNav: paper.y + paper.height <= top,
-        }).toStrictEqual({ inside: true, aboveNav: true });
+        });
+        await summary.click();
       }
+      expect(rows).toStrictEqual(
+        Array.from({ length: 4 }, () => ({
+          opened: 1,
+          tall: true,
+          text: true,
+          inside: true,
+          aboveNav: true,
+        })),
+      );
+    });
+  });
+
+  test.describe("経歴の詳細の開閉", () => {
+    test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "light" });
+
+    // 幅 1440px の経歴の和紙は、画面の高さで距離が決まる。掛け直さないと、詳細を開いて低くなった文が、閉じたときの距離のまま小さく映る
+    test("経歴の 1 行目の詳細を開いた場合、和紙を掛け直し、閉じたときと同じ高さで映ること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      const closed = (await card(page, "career").boundingBox())!.height;
+      await careerSummaries(page).first().click();
+      await expect
+        .poll(async () => Math.abs((await card(page, "career").boundingBox())!.height - closed) < 3)
+        .toBe(true);
     });
   });
 
@@ -289,6 +322,24 @@ test.describe("トップの庭", () => {
         });
       });
       await page.setViewportSize({ width: 390, height: 844 });
+      await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
+    });
+
+    test("経歴の詳細を開いたときに和紙を掛け直す途中で例外が出た場合、ふつうのページに戻り、セクションにインラインのスタイルが残らないこと", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      await page.evaluate(() => {
+        Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+          configurable: true,
+          get() {
+            throw new Error("測る途中の失敗");
+          },
+        });
+      });
+      await careerSummaries(page).first().click();
       await expect.poll(() => plainPage(page)).toStrictEqual({ stage: false, cards: 4, styled: 0 });
     });
   });
