@@ -1,0 +1,239 @@
+import type { DatabaseStatus, SqlDatabase, SqlResponse } from "@fukuemon/sql-runtime";
+
+import type { BackendInstance, BackendProcess } from "./backend";
+import { DB_SERVER_FILE, SQL_PREFIX } from "./guest/db-protocol";
+import { createPrefixedLineReader } from "./record-lines";
+import { createStore } from "./store";
+
+const INITIAL_SQL_FAILED = "初期データの SQL が失敗しました: ";
+
+const INVALID_REPLY: SqlResponse = {
+  error: { message: "DB のプロセスの応答を読めませんでした" },
+  ms: 0,
+};
+
+type Reply = { id: string; response: SqlResponse };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isCount = (value: unknown) =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0;
+
+function isSqlResult(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const { fields, rows, affectedRows, totalRows, truncated } = value;
+  return (
+    Array.isArray(fields) &&
+    fields.every((field) => typeof field === "string") &&
+    Array.isArray(rows) &&
+    rows.every(Array.isArray) &&
+    isCount(affectedRows) &&
+    isCount(totalRows) &&
+    typeof truncated === "boolean"
+  );
+}
+
+function isSqlError(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const { message, code, position } = value;
+  return (
+    typeof message === "string" &&
+    (code === undefined || typeof code === "string") &&
+    (position === undefined || typeof position === "number")
+  );
+}
+
+/** 画面が描ける SqlResponse の形か。実行環境の中は訪問者が触れるので、DB のプロセスの応答も信頼しない。 */
+function isSqlResponse(value: unknown): value is SqlResponse {
+  if (!isRecord(value) || typeof value.ms !== "number") return false;
+  if ("error" in value) return isSqlError(value.error);
+  return Array.isArray(value.results) && value.results.every(isSqlResult);
+}
+
+/**
+ * DB のプロセスの応答の行の中身を読む。id の無い行は undefined を返す。
+ * id があり、応答が SqlResponse の形に合わない行は、待っている画面を止めないよう、error を持つ値にする。
+ */
+function parseReply(text: string): { ready: true } | Reply | undefined {
+  try {
+    const message = JSON.parse(text) as unknown;
+    if (!isRecord(message)) return undefined;
+    if (message.ready === true) return { ready: true };
+    const { id, response } = message;
+    if (typeof id !== "string") return undefined;
+    return { id, response: isSqlResponse(response) ? response : INVALID_REPLY };
+  } catch {
+    return undefined;
+  }
+}
+
+/** 1 行の JSON にする。JSON.stringify は U+2028 と U+2029 をそのまま残し、readline はそれを行の区切りとして読むので、エスケープする。 */
+const toLine = (value: unknown) =>
+  JSON.stringify(value).replaceAll("\u2028", "\\u2028").replaceAll("\u2029", "\\u2029");
+
+/**
+ * DB のプロセスの標準入出力で、SqlDatabase を実装する。リクエストを 1 行の JSON で書き、同じ id の応答の行で結果を返す。
+ * 頭の無い行（DB のプロセスのログと、入力のエコー）は捨てる。
+ * プロセスが終了したら、status を stopped にし、待っているリクエストと、その後の run に error を持つ値を返す。dispose の後に終了したときは、status を変えない。
+ */
+export function createStdioDatabase(process: BackendProcess): {
+  database: SqlDatabase;
+  /** DB のプロセスが、ソケットで待ち受けて、リクエストを受けられるようになったときに解決する。その前に終了したときは失敗する。 */
+  ready: Promise<void>;
+  dispose: () => void;
+} {
+  const status = createStore<DatabaseStatus>({ kind: "ready" });
+  const pending = new Map<string, (response: SqlResponse) => void>();
+  let sequence = 0;
+  let markReady: () => void = () => undefined;
+  let failReady: (cause: Error) => void = () => undefined;
+  const ready = new Promise<void>((resolve, reject) => {
+    markReady = resolve;
+    failReady = reject;
+  });
+  // 待つ前にプロセスが終了しても、未処理の失敗にしない。待つ側には、失敗が届く
+  ready.catch(() => undefined);
+
+  const stoppedResponse = (reason: string): SqlResponse => ({ error: { message: reason }, ms: 0 });
+
+  const stopOutput = process.output.subscribe(
+    createPrefixedLineReader(SQL_PREFIX, (line) => {
+      const reply = parseReply(line);
+      if (!reply) return;
+      if ("ready" in reply) {
+        markReady();
+        return;
+      }
+      pending.get(reply.id)?.(reply.response);
+      pending.delete(reply.id);
+    }),
+  );
+
+  void process.exit.then(
+    (code) => stop(`DB のプロセスが終了しました（終了コード ${code}）`),
+    () => stop("DB のプロセスが終了しました"),
+  );
+
+  // 呼ぶ側が破棄した後は、status を変えない。訪問者が起動し直すときに、DB が止まったと出さないためである
+  let disposedReason: string | undefined;
+
+  function rejectAll(reason: string) {
+    failReady(new Error(reason));
+    for (const resolve of pending.values()) resolve(stoppedResponse(reason));
+    pending.clear();
+  }
+
+  function stop(reason: string) {
+    if (disposedReason !== undefined || status.getSnapshot().kind === "stopped") return;
+    status.set({ kind: "stopped", reason });
+    rejectAll(reason);
+  }
+
+  return {
+    database: {
+      status,
+      run: (sql) => {
+        if (disposedReason !== undefined) return Promise.resolve(stoppedResponse(disposedReason));
+        const current = status.getSnapshot();
+        if (current.kind === "stopped") return Promise.resolve(stoppedResponse(current.reason));
+        sequence += 1;
+        const id = String(sequence);
+        return new Promise<SqlResponse>((resolve) => {
+          pending.set(id, resolve);
+          process.write(`${toLine({ id, sql })}\n`);
+        });
+      },
+    },
+    ready,
+    /** 出力の購読を外し、待っているリクエストとその後の run に error を返す。status は変えない。 */
+    dispose: () => {
+      if (disposedReason !== undefined) return;
+      stopOutput();
+      disposedReason = "実行環境を止めました";
+      rejectAll(disposedReason);
+    },
+  };
+}
+
+/** 失敗したときに cause に入れる、出力の末尾の文字数。 */
+const FAILED_OUTPUT_TAIL_LENGTH = 4096;
+
+/** 制御の文字を除く前に持つ、出力の末尾の文字数。npm のスピナーの文字は、除くと残らないので、多めに持つ。 */
+const RAW_OUTPUT_TAIL_LENGTH = FAILED_OUTPUT_TAIL_LENGTH * 4;
+
+const ESCAPE = String.fromCharCode(27);
+/** 行の先頭に戻す制御（`\r` と、1 列目へ動かす CSI）。この前の文字は、後の文字で書き直される。 */
+const LINE_RESET = new RegExp(`\\r|${ESCAPE}\\[1?G`);
+const CSI = new RegExp(`${ESCAPE}\\[[0-9;?]*[ -/]*[@-~]`, "g");
+/** 端末の題やリンクを書く OSC。BEL か、ESC とバックスラッシュの 2 文字で終わる。 */
+const OSC = new RegExp(`${ESCAPE}\\][^\\u0007${ESCAPE}]*(?:\\u0007|${ESCAPE}\\\\)`, "g");
+/** CSI と OSC を除いた後に残る、タブ以外の C0 の制御の文字と DEL。 */
+const OTHER_CONTROLS = new RegExp("[\\u0000-\\u0008\\u000b-\\u001f\\u007f]", "g");
+
+/**
+ * 端末に向けた出力を、コンソールで読める文字にする。
+ * 行ごとに、行の先頭に戻した後の文字だけを残し、色などの CSI、OSC、ほかの制御の文字を除く。npm のスピナーは、行の先頭に戻して書き直すので、残らない。
+ */
+function plainTerminalOutput(raw: string): string {
+  return raw
+    .split("\n")
+    .map((line) =>
+      (line.replace(/\r$/, "").split(LINE_RESET).pop() ?? "")
+        .replace(OSC, "")
+        .replace(CSI, "")
+        .replace(OTHER_CONTROLS, ""),
+    )
+    .join("\n");
+}
+
+/**
+ * spawn が 0 でない終了コードで終わったときに投げる。
+ * 画面には出さない原因をコンソールで読めるよう、制御の文字を除いた出力の末尾の FAILED_OUTPUT_TAIL_LENGTH 文字を、投げる Error の cause に入れる。
+ */
+async function runToEnd(process: BackendProcess, what: string) {
+  let tail = "";
+  process.output.subscribe((chunk) => {
+    tail = (tail + chunk).slice(-RAW_OUTPUT_TAIL_LENGTH);
+  });
+  const code = await process.exit;
+  if (code !== 0) {
+    throw new Error(`${what}が失敗した: ${code}`, {
+      cause: plainTerminalOutput(tail).slice(-FAILED_OUTPUT_TAIL_LENGTH),
+    });
+  }
+}
+
+/**
+ * DB のプロセスの依存を入れ、DB のプロセスを起動し、初期データの SQL を実行する。
+ * どの段階が失敗しても、投げる。初期データの SQL の失敗は、メッセージを INITIAL_SQL_FAILED で始める。
+ */
+export async function startDatabase(
+  instance: BackendInstance,
+  initialSql: string | undefined,
+): Promise<ReturnType<typeof createStdioDatabase>> {
+  const directory = instance.guestDirectory;
+  const options = { internal: true };
+  await runToEnd(
+    await instance.spawn(
+      "npm",
+      ["install", "--prefix", directory, "--no-audit", "--no-fund"],
+      options,
+    ),
+    "DB の依存の npm install ",
+  );
+  const db = createStdioDatabase(
+    await instance.spawn("node", [`${directory}/${DB_SERVER_FILE}`], options),
+  );
+  try {
+    await db.ready;
+    if (initialSql !== undefined && initialSql.trim() !== "") {
+      const response = await db.database.run(initialSql);
+      if ("error" in response) throw new Error(INITIAL_SQL_FAILED + response.error.message);
+    }
+    return db;
+  } catch (cause) {
+    db.dispose();
+    throw cause;
+  }
+}

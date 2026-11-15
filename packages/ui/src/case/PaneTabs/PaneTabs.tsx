@@ -137,7 +137,9 @@ export function PaneTabs({
               <span aria-hidden="true" className="relative flex">
                 {item.icon}
               </span>
-              <span className={clsx(isSelected && "font-semibold")}>{item.label}</span>
+              <span className={clsx("whitespace-nowrap", isSelected && "font-semibold")}>
+                {item.label}
+              </span>
             </button>
           );
         })}
