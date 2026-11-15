@@ -30,7 +30,7 @@ const skip =
     }
   </div>
 </nav>
-<button type="button" class:list={[skip, "garden-skip"]} data-garden-skip data-testid="garden-skip">飛ばす</button>
+<button type="button" class:list={[skip, "garden-skip"]} data-garden-skip data-testid="garden-skip">スキップ</button>
 <p class="sr-only" data-garden-live data-testid="garden-live" aria-live="polite"></p>
 
 <style>
@@ -100,7 +100,7 @@ const skip =
     border-color: transparent;
   }
 
-  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない。歯車の hover の面も霞の色にし、テーマの面の色を霞の上に出さない。「飛ばす」も、色が差した後は場面と明るさをそろえるよう、同じ色にする */
+  /* 霞と、霞の上のヘッダーとボタンの色は、和紙と同じく時間帯で決め、テーマに依らない。歯車の hover の面も霞の色にし、テーマの面の色を霞の上に出さない。「スキップ」も、色が差した後は場面と明るさをそろえるよう、同じ色にする */
   :global(html.stage-on.garden-ready [data-site-header]),
   :global(html.stage-on.garden-ready) .garden-nav,
   :global(html.stage-on.garden-ready) .garden-mist,
@@ -176,7 +176,7 @@ const skip =
     opacity: 0;
   }
 
-  /* 「飛ばす」は、場面の準備ができてから、文を出すまでの間だけ右下に出す */
+  /* 「スキップ」は、場面の準備ができてから、文を出すまでの間だけ右下に出す */
   :global(html.stage-on.intro.scene-ready:not(.garden-ready)) .garden-skip {
     position: fixed;
     inset: auto 0.5rem 0.5rem auto;
@@ -203,7 +203,7 @@ const skip =
     animation: garden-appear 600ms ease both;
   }
 
-  /* 飛ばしたときは、遷移を止めて最後の状態を 1 度に出す */
+  /* スキップしたときは、遷移を止めて最後の状態を 1 度に出す */
   :global(html.no-anim *) {
     transition: none !important;
     animation: none !important;

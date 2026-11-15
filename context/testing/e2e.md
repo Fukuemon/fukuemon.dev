@@ -26,7 +26,7 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 トップの庭の testid は次のとおり。
 
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
-- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
+- 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。イントロの「スキップ」は `garden-skip`、読み上げの通知は `garden-live` である。
 - 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-stack`、`garden-card-portfolio` である。プロフィールの見出しは `garden-title` である。
 - 庭を出さないときの背景の墨の絵は `garden-background` である。
 - testid は、次のファイルに付ける。
@@ -38,7 +38,7 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 表示の設定の testid は次のとおり。
 
 - 歯車のボタンは `site-settings-open`、設定の面は `site-settings` である。
-- アニメーションのスイッチは `setting-motion`、トップの庭のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。
+- アニメーションのスイッチは `setting-motion`、「3D 表示（WebGL）」のスイッチは `setting-garden`、「イントロをもう一度見る」は `intro-again` である。
 - 季節と時間帯の帯は `setting-season` と `setting-time`、帯の中のボタンは `setting-season-<値>` と `setting-time-<値>` である。
   値には、`auto` か、季節と時間帯の区分（`spring`、`morning` など）が入る。
 - testid は、`apps/web/src/components/site-settings/` の `SiteSettingsPopover.astro` と `SiteSettingsButton.tsx` に付ける。

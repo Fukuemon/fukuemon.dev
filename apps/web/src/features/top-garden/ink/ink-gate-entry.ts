@@ -1,6 +1,6 @@
 // 墨の絵と署名のファイル。トップの head の inline script が、イントロを出すときだけ読み込む。
 // 墨の絵と署名を `.ink-gate` に挿入し、html の class `ink-ready` を付ける。挿入した時点から、線を描く遷移が動く。
-// イントロを出さなくなった後（6 秒のタイムアウト、`ink-failed`、飛ばした後）に届いたときは、何も書かない。
+// イントロを出さなくなった後（6 秒のタイムアウト、`ink-failed`、スキップした後）に届いたときは、何も書かない。
 import fragment from "virtual:ink-gate";
 
 const root = document.documentElement;
