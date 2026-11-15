@@ -43,4 +43,34 @@ describe("FileDrawer", () => {
     await userEvent.click(drawer, { position: { x: box.width + 20, y: 100 } });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
+
+  it.each(["light", "dark"])(
+    "%s で閉じるボタンに hover すると、背景がドロワーの面と違う surface-raised-subtle の色になる",
+    async (theme) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        render(
+          <>
+            <span className="bg-surface-raised-subtle" data-testid="expected" />
+            <Closed />
+          </>,
+        );
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
+        await userEvent.click(screen.getByRole("button", { name: "ファイルを開く" }));
+        const drawer = screen.getByRole("dialog");
+        await waitFor(() => expect(drawer).toBeVisible());
+        const surface = getComputedStyle(drawer).backgroundColor;
+        const close = screen.getByRole("button", { name: "閉じる" });
+        await userEvent.hover(close);
+        await expect
+          .poll(() => {
+            const hovered = getComputedStyle(close).backgroundColor;
+            return { isToken: hovered === expected, differsFromSurface: hovered !== surface };
+          })
+          .toStrictEqual({ isToken: true, differsFromSurface: true });
+      } finally {
+        delete document.documentElement.dataset.theme;
+      }
+    },
+  );
 });
