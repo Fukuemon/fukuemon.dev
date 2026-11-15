@@ -270,6 +270,33 @@ test.describe("トップの庭", () => {
     });
   });
 
+  // 高さは、幅 375px、高さ 667px の iPhone の Safari の、ビューポートのおおよその高さである
+  test.describe("幅 375px、高さ 548px", () => {
+    test.use({ viewport: { width: 375, height: 548 }, colorScheme: "light" });
+
+    test("4 つの文のどれへ移った場合も、4 つの文へ移るボタンが和紙の下の端に重ならないこと", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      const overlap: Record<string, boolean> = {};
+      for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
+        await page.getByTestId(`garden-station-${i}`).click();
+        await expectAt(page, id);
+        const tops = await stations(page).evaluateAll((els) =>
+          els.map((el) => el.getBoundingClientRect().top),
+        );
+        const paper = (await card(page, id).boundingBox())!;
+        overlap[id] = paper.y + paper.height > Math.min(...tops);
+      }
+      expect(overlap).toStrictEqual({
+        profile: false,
+        career: false,
+        stack: false,
+        portfolio: false,
+      });
+    });
+  });
+
   test.describe("ダークのテーマ", () => {
     test.use({ viewport: { width: 1440, height: 900 }, colorScheme: "dark" });
 
