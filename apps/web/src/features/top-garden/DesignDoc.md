@@ -373,6 +373,8 @@ SVG を `set:html` で HTML に置くので、SVG の中の `path` にユーテ�
 | `html` の class `intro`         | 最初の訪問のイントロを出す             |
 | `localStorage` の `fd-top-seen` | 端末でトップを開いたことがある         |
 
+- `data-season` と `data-time` は、表示の設定で選んだ値（`html` の `data-season-setting` と `data-time-setting`）から決める。
+  - 開発のビルドの URL の引数 `season` と `time`、選んだ値、端末の日付と時刻の順に先に使う。選んだ値が `auto` のときは、端末の日付と時刻を使う。
 - 庭の表示の設定（`html` の `data-garden`）が `off` のときは、`stage-on` を付けず、場面のバンドルを読み込まない。
   - 設定の属性は、全てのページの `head` の inline script が、このスクリプトより先に書く。値の決め方は、[全体の Design Doc の「表示の設定」](../../../../../docs/design/DesignDoc.md#表示の設定) にある。
 - アニメーションの設定（`html` の `data-motion`）が `off` のときは、最初の訪問でも `intro` を付けず、庭だけを出す。
