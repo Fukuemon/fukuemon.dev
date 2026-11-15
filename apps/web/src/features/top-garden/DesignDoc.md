@@ -52,6 +52,7 @@ verified_commit: unverified
 ビルドのときに Node で動く。
 `ink/InkGate.astro` は、ヘッダーのロゴと同じ `sign.svg` を [`components/sign/`](../../components/sign/README.md) から読む。
 `stage/stage.ts` と `scene/garden-entry.ts` は、設定が変わったときのイベントの名前と型、URL の引数の名前を `components/site-settings/settings.ts` から読む。
+`stage/season.ts` は、季節と時間帯の値の型を同じファイルから読む。
 `stage/stage.ts` の `stageScript` は、`stage/season.ts` と `stage/visit.ts` の関数と `applyStage` を、文字列にしてトップの `head` の inline script に埋め込む。
 埋め込んだ関数は、ブラウザで、表示の前に動く。
 `readOverride` は、開発のビルドの inline script にだけ埋め込む。
