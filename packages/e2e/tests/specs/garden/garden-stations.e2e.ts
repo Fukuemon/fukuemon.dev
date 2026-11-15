@@ -295,7 +295,7 @@ test.describe("トップの庭", () => {
     });
 
     // 幅 320px では和紙がいちばん小さく映るので、押せる範囲が 44px を下回りやすい
-    test("プロフィールのリンクが 44px 四方以上、閉じた経歴の行の summary が 44px 以上の高さで映り、リンクの押せる範囲が重ならないこと", async ({
+    test("プロフィールのリンクが 44px 四方以上、経歴の行の summary が閉じても開いても 44px 以上の高さで映り、リンクの押せる範囲が重ならないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
@@ -308,10 +308,16 @@ test.describe("トップの庭", () => {
       );
       await page.getByTestId("garden-station-1").click();
       await expectAt(page, "career");
-      // 閉じた行が全て出ているときに和紙がいちばん高く、summary がいちばん小さく映る
-      const summaries = await careerSummaries(page).evaluateAll((els) =>
-        els.map((el) => el.getBoundingClientRect().height),
-      );
+      // 開いた行は和紙が伸びてカメラが引くので、閉じたときと開いたときの両方の高さを測る
+      const summaries: number[] = [];
+      for (let i = 0; i < 4; i++) {
+        const summary = careerSummaries(page).nth(i);
+        summaries.push((await summary.boundingBox())!.height);
+        await summary.click();
+        await expectAt(page, "career");
+        summaries.push((await summary.boundingBox())!.height);
+        await summary.click();
+      }
       expect({
         links: links.length,
         smallLinks: links.filter((b) => b.width < 44 || b.height < 44).length,
@@ -322,7 +328,7 @@ test.describe("トップの庭", () => {
         links: 2,
         smallLinks: 0,
         overlap: false,
-        summaries: 4,
+        summaries: 8,
         smallSummaries: 0,
       });
     });
