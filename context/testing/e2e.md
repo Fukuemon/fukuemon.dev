@@ -28,7 +28,7 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
 - 3 つの文へ移るボタンは `garden-station-0` から `garden-station-2` である。イントロの「スキップ」は `garden-skip`、読み上げの通知は `garden-live` である。
 - 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-portfolio` である。プロフィールの見出しは `garden-title` である。
-- プロフィールの活動のリンクは `profile-activity-link` である。団体の名前と URL は `tests/fixtures/profile.ts` に置き、リンクの先への通信は同じファイルの `stubActivityPages` で空のページに替える。
+- プロフィールの活動のリンクは `profile-activity-link` である。団体の名前と URL は `tests/fixtures/profile.ts` に置き、リンクの先へのリクエストには、同じファイルの `stubActivityPages` が空のページを返す。
 - 薄墨の背景の絵は `ink-background` である。
 - testid は、次のファイルに付ける。
   - `apps/web/src/features/top-garden/Profile.astro`
