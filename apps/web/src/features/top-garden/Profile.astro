@@ -1,4 +1,6 @@
 ---
+import avatar from "./avatar.webp";
+
 /** 打ち消し線で出す部分は `s: true` にする */
 type Line = { text: string; s?: true }[];
 const career: { year: string; title: string; detail: Line[] }[] = [
@@ -57,7 +59,7 @@ const row = "border-t border-border py-2";
     <section class={section} data-garden-card data-testid="garden-card-profile" aria-labelledby="profile">
       <h1 id="profile" data-testid="garden-title" tabindex="-1" class:list={[heading, "text-heading-lg"]}>プロフィール</h1>
       <div class="flex items-start gap-4">
-        <img src="/avatar.webp" alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
+        <img src={avatar.src} alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
         <div class="min-w-0">
           <p class="mb-4 text-text-secondary">うぇぶえんじにあ</p>
           <p>好み：妻、甘いもの、運動、自然、</p>
