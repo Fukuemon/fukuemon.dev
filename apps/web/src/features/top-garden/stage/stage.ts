@@ -18,6 +18,8 @@ export interface StageEnv {
   readonly storage: () => SeenStore;
   /** 場面のバンドルを読み込む。失敗したら、渡した関数を呼ぶ。バンドルが無いときは null */
   readonly load: ((onError: () => void) => void) | null;
+  /** 墨の絵と署名のファイルを読み込む。失敗したら、渡した関数を呼ぶ。最初の訪問のイントロを出すときだけ呼ぶ。ファイルが無いときは null */
+  readonly loadInk?: ((onError: () => void) => void) | null;
   /** 渡した関数を、渡したミリ秒の後に 1 回呼ぶ。inline script では `setTimeout` */
   readonly later: (fn: () => void, ms: number) => void;
 }
@@ -47,8 +49,12 @@ export function applyStage(env: StageEnv, fns: StageFns): void {
   if (first) root.classList.add("intro");
   const plain = () => root.classList.remove("stage-on", "intro");
   env.load(plain);
+  const ink = first && env.loadInk;
+  if (ink) ink(() => root.classList.add("ink-failed"));
   env.later(() => {
     if (!root.classList.contains("scene-ready")) plain();
+    // 場面が動き出した後のクリーンアップは場面のバンドルが持つので、墨の絵が届いていないことだけを class で伝える
+    else if (ink && !root.classList.contains("ink-ready")) root.classList.add("ink-failed");
   }, 6000);
 }
 
@@ -71,14 +77,23 @@ export function readOverride(search: string): StageOverride {
  * `dev` が true のときだけ、URL の引数を読む処理を入れる。`bundle` を渡さないときは、庭を出さない。
  * バンドルは module の script で読み込む。開発のサーバーはバンドルを ES モジュールのまま配り、本番のビルドの IIFE は module としても動くためである。
  */
-export function stageScript({ dev, bundle }: { dev: boolean; bundle?: string }): string {
+export function stageScript({
+  dev,
+  bundle,
+  ink,
+}: {
+  dev: boolean;
+  bundle?: string;
+  ink?: string;
+}): string {
   const override = dev ? `(${readOverride.toString()})(location.search)` : "{}";
-  const load = bundle
-    ? `function(e){var s=document.createElement("script");s.type="module";s.src=${JSON.stringify(bundle).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`
-    : "null";
+  const loader = (url: string) =>
+    `function(e){var s=document.createElement("script");s.type="module";s.src=${JSON.stringify(url).replace(/</g, "\\u003c")};s.onerror=e;document.head.appendChild(s)}`;
+  const load = bundle ? loader(bundle) : "null";
+  const loadInk = ink ? loader(ink) : "null";
   return (
     `(${applyStage.toString()})({root:document.documentElement,now:new Date,override:${override},` +
-    `reducedMotion:matchMedia("(prefers-reduced-motion: reduce)").matches,storage:function(){return localStorage},load:${load},later:function(f,m){setTimeout(f,m)}},` +
+    `reducedMotion:matchMedia("(prefers-reduced-motion: reduce)").matches,storage:function(){return localStorage},load:${load},loadInk:${loadInk},later:function(f,m){setTimeout(f,m)}},` +
     `{seasonOf:${seasonOf.toString()},timeOfDayOf:${timeOfDayOf.toString()},takeFirstVisit:${takeFirstVisit.toString()}})`
   );
 }

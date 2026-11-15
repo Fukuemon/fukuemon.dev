@@ -32,6 +32,8 @@ const skipButton = (page: Page) => page.getByTestId("garden-skip");
 const stage = (page: Page) => page.getByTestId("garden-stage");
 /** 場面のバンドル */
 const BUNDLE = "**/_astro/garden-entry-*.js";
+/** 墨の絵と署名のファイル */
+const INK = "**/_astro/ink-gate-entry-*.js";
 
 interface ClassLog {
   __classes: string[];
@@ -542,5 +544,43 @@ test.describe("場面のバンドル", () => {
     await expect(html(page)).not.toHaveClass(/stage-on|intro/);
     await expect(inkSvg(page)).toBeHidden();
     await expect(heading(page)).toBeVisible();
+  });
+});
+
+test.describe("墨の絵と署名のファイル", () => {
+  test("トップの HTML に、墨の絵と署名の SVG を入れない", async ({ page }) => {
+    const body = await (await page.request.get("/")).text();
+    expect(body).not.toContain("ink-svg");
+    expect(body).toMatch(/class="ink-gate[^"]*"[^>]*><\/div>/);
+  });
+
+  test("初めての訪問で読み込みに失敗すると、庭を止めてふつうのページを出す", async ({ page }) => {
+    await page.route(INK, (route) => route.abort());
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/ink-failed/);
+    await expect(html(page)).not.toHaveClass(/stage-on|intro/);
+    await expect(inkSvg(page)).toBeHidden();
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("初めての訪問で 404 の HTML が返っても、ふつうのページを出す", async ({ page }) => {
+    await page.route(INK, (route) =>
+      route.fulfill({ status: 404, contentType: "text/html", body: "<p>not found</p>" }),
+    );
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/ink-failed/);
+    await expect(html(page)).not.toHaveClass(/stage-on|intro/);
+    await expect(heading(page)).toBeVisible();
+  });
+
+  test("2 回目の訪問では、墨の絵と署名のファイルを読み込まない", async ({ page }) => {
+    await seenBefore(page);
+    const requested: string[] = [];
+    page.on("request", (req) => {
+      if (/ink-gate-entry/.test(req.url())) requested.push(req.url());
+    });
+    await page.goto("/");
+    await expect(html(page)).toHaveClass(/garden-ready/);
+    expect(requested).toStrictEqual([]);
   });
 });

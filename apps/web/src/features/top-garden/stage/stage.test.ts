@@ -33,6 +33,7 @@ function run(o: Partial<Omit<StageEnv, "root" | "storage">> & { seen?: boolean }
   const root = fakeRoot();
   const store = memory(o.seen);
   const loads: (() => void)[] = [];
+  const inks: (() => void)[] = [];
   const timers: { fn: () => void; ms: number }[] = [];
   applyStage(
     {
@@ -42,12 +43,13 @@ function run(o: Partial<Omit<StageEnv, "root" | "storage">> & { seen?: boolean }
       reducedMotion: false,
       storage: () => store,
       load: (onError) => void loads.push(onError),
+      loadInk: (onError) => void inks.push(onError),
       later: (fn, ms) => void timers.push({ fn, ms }),
       ...o,
     },
     fns,
   );
-  return { root, store, loads, timers };
+  return { root, store, loads, inks, timers };
 }
 
 const summary = ({ root, store, loads }: ReturnType<typeof run>) => ({
@@ -119,6 +121,54 @@ describe("applyStage", () => {
   });
 
   it("6 秒の後に場面の準備ができていれば、庭を出したままにする", () => {
+    const r = run({ seen: true });
+    r.root.classList.add("scene-ready");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual(["scene-ready", "stage-on"]);
+  });
+
+  it("最初の訪問のときだけ、墨の絵と署名のファイルを読み込む", () => {
+    expect([run().inks.length, run({ seen: true }).inks.length]).toStrictEqual([1, 0]);
+  });
+
+  it("動きを減らす設定と、場面のバンドルが無いときは、墨の絵と署名のファイルを読み込まない", () => {
+    expect([
+      run({ reducedMotion: true }).inks.length,
+      run({ load: null }).inks.length,
+    ]).toStrictEqual([0, 0]);
+  });
+
+  it("墨の絵と署名のファイルの読み込みに失敗すると、ink-failed を付け、庭を出す class は外さない", () => {
+    const r = run();
+    r.inks[0]!();
+    expect([...r.root.classes].sort()).toStrictEqual(["ink-failed", "intro", "stage-on"]);
+  });
+
+  it("6 秒の後に場面の準備ができていて墨の絵が届いていないと、ink-failed を付ける", () => {
+    const r = run();
+    r.root.classList.add("scene-ready");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual([
+      "ink-failed",
+      "intro",
+      "scene-ready",
+      "stage-on",
+    ]);
+  });
+
+  it("6 秒の後に場面の準備と墨の絵がそろっていれば、庭を出したままにする", () => {
+    const r = run();
+    r.root.classList.add("scene-ready", "ink-ready");
+    r.timers[0]!.fn();
+    expect([...r.root.classes].sort()).toStrictEqual([
+      "ink-ready",
+      "intro",
+      "scene-ready",
+      "stage-on",
+    ]);
+  });
+
+  it("2 回目以降の訪問は、墨の絵が無くても、場面の準備ができていれば庭を出したままにする", () => {
     const r = run({ seen: true });
     r.root.classList.add("scene-ready");
     r.timers[0]!.fn();
@@ -238,6 +288,33 @@ describe("stageScript", () => {
       src: "/_astro/scene.js",
       type: "module",
     });
+  });
+});
+
+describe("stageScript の墨の絵と署名のファイル", () => {
+  it("URL を渡すと、最初の訪問のときだけ、その URL の module の script を足す", () => {
+    const urls = (seen: boolean) => {
+      const b = browser();
+      if (seen) b.store.items.set("fd-top-seen", "1");
+      const appended: { src?: string }[] = [];
+      const globals = {
+        ...b.globals,
+        document: {
+          documentElement: b.root,
+          createElement: () => ({}),
+          head: { appendChild: (el: { src?: string }) => void appended.push(el) },
+        },
+      };
+      runInNewContext(
+        stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+        globals,
+      );
+      return appended.map((el) => el.src);
+    };
+    expect([urls(false), urls(true)]).toStrictEqual([
+      ["/_astro/scene.js", "/_astro/ink.js"],
+      ["/_astro/scene.js"],
+    ]);
   });
 });
 
