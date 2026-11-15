@@ -46,7 +46,7 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../adr/0005-workers-ter
 - 運営者は 1 名である。レビューによる職務の分離が成り立たないので、規約は自動でチェックできる形にする。
 - サーバー側の永続的な状態を持たない。動的な機能は、静的な生成と、ブラウザの中の処理で表せる範囲に限る。
 - 日本語の技術文書を主とし、本文には Latin の技術用語が頻繁に現れる。
-- リポジトリは公開である。許可するメールアドレス、account ID、zone ID を、文書とコードに書かない。
+- リポジトリは公開である。account ID と zone ID を、文書とコードに書かない。
 
 ### Astro の制約
 
@@ -65,8 +65,7 @@ flowchart TD
     reader["訪問者 (Browser)"] --> site["Worker: fukuemon.dev<br/>Static Assets"]
     reader --> play["Worker: play.fukuemon.dev<br/>Static Assets"]
     dev["運営者 (Browser)"] --> catalog["Worker: design.fukuemon.dev<br/>Static Assets"]
-    dev --> access["Cloudflare Access"]
-    access --> docsw["Worker: docs.fukuemon.dev<br/>Static Assets"]
+    dev --> docsw["Worker: docs.fukuemon.dev<br/>Static Assets"]
     e2e["packages/e2e (Playwright)"] --> preview["Worker: プレビュー<br/>workers.dev の URL"]
 
     subgraph repo ["fukuemon.dev monorepo"]
@@ -166,16 +165,16 @@ ADR-0031: [サブドメインに分ける規則](../adr/0031-subdomains-and-work
 ツールは、デフォルトのプロジェクトを開き、訪問者のブラウザに保存した内容があれば、保存した内容で開く。  
 保存の形は、[プレイグラウンドの Design Doc の「保存」](../../apps/playground/DesignDoc.md#保存) にある。
 
-| ホスト名              | 置くもの                                       | アクセスできる人                                      |
-| --------------------- | ---------------------------------------------- | ----------------------------------------------------- |
-| `fukuemon.dev`        | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                                |
-| `play.fukuemon.dev`   | プレイグラウンドの全てのツール                 | 誰でも                                                |
-| `design.fukuemon.dev` | カタログ                                       | 誰でも                                                |
-| `docs.fukuemon.dev`   | ドキュメントサイト                             | 運営者が許可した人。Access をオフにしている間は誰でも |
-| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない            |
+| ホスト名              | 置くもの                                       | アクセスできる人                                                             |
+| --------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| `fukuemon.dev`        | トップ、記事、シリーズ、プレイグラウンドの一覧 | 誰でも                                                                       |
+| `play.fukuemon.dev`   | プレイグラウンドの全てのツール                 | 誰でも                                                                       |
+| `design.fukuemon.dev` | カタログ                                       | 誰でも                                                                       |
+| `docs.fukuemon.dev`   | ドキュメントサイト                             | 誰でも。検索の結果に載せるかを決めるまで、検索エンジンにインデックスさせない |
+| workers.dev の URL    | 切り替えまでの、新しいサイトのプレビュー       | 誰でも。検索エンジンにインデックスさせない                                   |
 
-ドキュメントサイトのビルドの方法と、アクセスの認証は、次の ADR にある。  
-ADR-0032: [ドキュメントサイトと Cloudflare Access](../adr/0032-docs-site-behind-access.md)
+ドキュメントサイトのビルドの方法と、公開する URL は、次の ADR にある。  
+ADR-0032: [ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する](../adr/0032-docs-site-zensical.md)
 
 ### URL の構成
 
@@ -350,7 +349,7 @@ ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐっ
 ### 配信
 
 deploy と apply の条件は [context/operations.md](../../context/operations.md#deployment-conditions) にある。  
-ドキュメントサイトの deploy の条件は、[ADR-0032](../adr/0032-docs-site-behind-access.md) にある。
+ドキュメントサイトの deploy の条件は、[ADR-0032](../adr/0032-docs-site-zensical.md) にある。
 
 ### 検証
 

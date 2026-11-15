@@ -1,7 +1,7 @@
 ---
 type: feature-design
 title: 基盤
-description: Cloudflare の基盤を Terraform で持つ構成。ドキュメントサイトの Access を Terraform で持たないこと、bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
+description: Cloudflare の基盤を Terraform で持つ構成。bootstrap と本体の分け方、R2 の state backend の設定と理由、deploy と apply の流れ
 status: stable
 governs:
   - infra/
@@ -28,7 +28,6 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 - `infra/bootstrap/` と `infra/cloudflare/` の分け方
 - R2 の state backend の設定
 - deploy と apply の流れ
-- ドキュメントサイトの Access を Terraform で持たないことと、custom domain を作る順序
 
 持たないものは次のとおり。
 
@@ -96,16 +95,6 @@ Cloudflare Registrar がドメインを取得したときに作った zone を�
 
 `cloudflare_workers_custom_domain` が、サイトの apex、カタログの `design`、プレイグラウンドの `play`、ドキュメントサイトの `docs` のレコードを管理するので、DNS のレコードは書かない。
 
-### ドキュメントサイトの Access
-
-`docs.<zone>` の Access のアプリケーションとポリシーは、Terraform で持たない。  
-運営者がダッシュボードで設定する。  
-ADR-0032: [アクセスの認証](../docs/adr/0032-docs-site-behind-access.md#3-アクセスの認証)
-
-- Terraform は、custom domain の `docs` だけを持つ。Terraform では、Access と custom domain を作る順序を制御しない。
-- custom domain は、Access より先に作ってよい。Access を掛けるまでは、ドキュメントサイトを誰でも開ける。手順は [apps/docs-site/README.md](../apps/docs-site/README.md#初めて公開する) にある。
-- Access は `docs.<zone>` のホスト名にだけ掛かる。Worker の `workers_dev` と `preview_urls` を `false` にして、ほかの URL を閉じる。
-
 ### state backend
 
 R2 は S3 と互換だが、AWS ではない。  
@@ -164,7 +153,7 @@ CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`T
   - `apps/docs-site/wrangler.jsonc` の `name` と `docs_worker_name` のデフォルト値を比べる
   - プレビューの Worker は custom domain を持たず、Terraform の変数に名前が無いので、比べない
 - `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンド、ドキュメントサイトの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を、ドキュメントサイトは `apps/docs-site` の build の出力を読む
-- `pnpm run check:closed-urls`: `apps/docs-site/scripts/check-closed-urls.sh` を実行する。ドキュメントサイトの Worker の `workers_dev` と `preview_urls` が `false` であることと、`_headers` のすべてのパスに noindex があることを確認する。`wrangler.jsonc` のほかに wrangler の設定ファイル（`wrangler.json`、`.wrangler/deploy/config.json`）が無いことと、`route` と `routes` が無いことも確認する。`package.json` の `deploy` が、引数の無い `wrangler deploy` であることと、`predeploy` と `postdeploy` が無いことも確認する。custom domain は Terraform で作る（ADR-0005）。deploy の workflow は apply を通らないので、Access の外の URL を開く変更を、この確認で止める。deploy-docs workflow も、配信の前にこの確認を実行する
+- `pnpm run check:closed-urls`: `apps/docs-site/scripts/check-closed-urls.sh` を実行する。ドキュメントサイトの Worker の `workers_dev` と `preview_urls` が `false` であることと、`_headers` のすべてのパスに noindex があることを確認する。`wrangler.jsonc` のほかに wrangler の設定ファイル（`wrangler.json`、`.wrangler/deploy/config.json`）が無いことと、`route` と `routes` が無いことも確認する。`package.json` の `deploy` が、引数の無い `wrangler deploy` であることと、`predeploy` と `postdeploy` が無いことも確認する。custom domain は Terraform で作る（ADR-0005）。deploy の workflow は apply を通らないので、Terraform で作った `docs.<zone>` 以外の URL を開く変更を、この確認で止める。deploy-docs workflow も、配信の前にこの確認を実行する
 - check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 3 つを含む `pnpm run check` を実行する
 - workflow は次の 6 つ
   - apply: `.github/workflows/apply.yml`

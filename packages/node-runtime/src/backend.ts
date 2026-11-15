@@ -1,6 +1,8 @@
 import type { BootOptions, OpenPort, TerminalSize } from "./types";
 
 type BackendBootOptions = Pick<BootOptions, "files"> & {
+  /** プレビューのページに入れるスクリプトの中身。 */
+  previewScript: string;
   /** true のときに、DB のプロセスのスクリプトと依存の package.json を guestDirectory に置き、訪問者のプロセスに接続先と、終了させない preload を渡す。 */
   database: boolean;
 };
@@ -49,6 +51,10 @@ export type BackendInstance = {
   spawnShell: (options?: { terminal?: TerminalSize }) => Promise<BackendProcess>;
   /** 待ち受けているポートの全体を、変わるたびに知らせる。 */
   ports: { subscribe: (onChange: (ports: readonly OpenPort[]) => void) => () => void };
+  /** プレビューのページが `postMessage` で送ったメッセージを知らせる。待ち受けているポートの origin から届いたものだけを、そのポートと一緒に渡す。 */
+  previewMessages: {
+    subscribe: (onMessage: (message: unknown, port: number) => void) => () => void;
+  };
   /** DB を使うときに、DB のプロセスのスクリプト、依存の package.json、preload を置くディレクトリの、絶対パス。 */
   guestDirectory: string;
   teardown: () => Promise<void>;

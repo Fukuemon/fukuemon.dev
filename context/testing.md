@@ -60,7 +60,7 @@ ADR-0002: [Content Model の Astro からの独立](../docs/adr/0002-content-mod
 - `src/components/sign/sign.ts`（署名の SVG を HTML に置く形にする）
 - `src/components/site-nav.ts`（ヘッダーのリンクの `aria-current` を返す）
 - `src/components/site-settings/settings.ts`（表示の設定を読み、`html` に書き、保存する）
-- `src/lib/subset-fonts.ts`（ビルドの後に、見出しの書体のファイルを、使う字だけに作り直す）
+- `src/lib/subset-fonts.ts`（ビルドの後に、見出しの書体のファイルを使う字だけに作り直し、Zen Old Mincho と BIZ UDGothic の使う字の無い分割の `@font-face` を CSS から削除する）
 
 `src/lib/` では、次のモジュールも対象。
 

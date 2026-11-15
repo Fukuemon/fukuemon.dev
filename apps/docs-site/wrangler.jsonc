@@ -6,8 +6,8 @@
   "assets": {
     "directory": "./dist",
   },
-  // Access は custom domain の docs.<zone> にだけ掛かる。workers.dev とバージョンごとの URL を開けたままにすると、
-  // 認証を通らずに文書のサイトが開ける (ADR-0032)
+  // 公開先は Terraform の custom domain の docs.<zone> だけにする。workers_dev の既定は true で、
+  // 書かないと apply の前から *.workers.dev でドキュメントサイトが開ける (ADR-0032)
   "workers_dev": false,
   "preview_urls": false,
 }

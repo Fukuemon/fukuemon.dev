@@ -36,7 +36,7 @@ describe("TerminalFrame", () => {
     expect(screen.getByRole("button", { name: "端末を消す" })).toBeInTheDocument();
   });
 
-  it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0066）", () => {
+  it("エンジンを置く枠のフォーカスの輪は、枠の内側に引く（ADR-0079）", () => {
     render(<Default />);
     const engine = screen.getByRole("region", { name: "端末の出力" });
     engine.focus();

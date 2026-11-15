@@ -3,6 +3,7 @@ import {
   FileDrawer,
   FileTree,
   HttpExchangeDetail,
+  ConsoleEntryList,
   HttpExchangeList,
   IconButton,
   Link,
@@ -29,6 +30,7 @@ import {
   EDITOR_ICON,
   FOLDER_ICON,
   NETWORK_ICON,
+  OUTPUT_ICON,
   PREVIEW_ICON,
   TERMINAL_ICON,
 } from "../layout/icons";
@@ -39,6 +41,7 @@ import { type EditorStates, EditorStatesContext } from "../code-editor/editor-st
 import { nodeDefaultProject } from "../project/defaults";
 import { SITE_ORIGIN, createProjectLoader, isEmbedId } from "../project/project";
 import { BottomTabs } from "./BottomTabs";
+import { ConsolePane } from "./ConsolePane";
 import { RuntimeContext, SelectionContext, useRuntime, useSelection } from "./context";
 import { EditorPane } from "./EditorPane";
 import { FilesPane } from "./FilesPane";
@@ -111,6 +114,7 @@ const previewFallback = (
   </PreviewFrame>
 );
 const terminalFallback = <TerminalFrame state={pendingState}>{() => null}</TerminalFrame>;
+const consoleFallback = <ConsoleEntryList entries={[]} state={pendingState} />;
 const sqlFallback = (
   <EditorFrame files={[]} onSelect={() => undefined} state={pendingState} title="SQL">
     {() => null}
@@ -199,7 +203,7 @@ function PreviewColumn({ database }: { database: boolean }) {
   );
 }
 
-/** PC の配置。ファイルの木、エディタ、プレビュー、下のタブ（端末と HTTP の流れ）を並べ、仕切りで幅と高さを変える。 */
+/** PC の配置。ファイルの木、エディタ、プレビュー、下のタブ（端末、コンソール、HTTP の流れ）を並べ、仕切りで幅と高さを変える。 */
 function WidePanes({ database }: { database: boolean }) {
   return (
     // ペインの包みの 4px の余白を外へ出し、画面の縁とペインの間を 6px にする（docs/adr/0073-layered-panes-and-radius-in-playground.md）
@@ -230,6 +234,11 @@ function WidePanes({ database }: { database: boolean }) {
             }
             secondary={
               <BottomTabs
+                consolePane={
+                  <Pane fallback={consoleFallback}>
+                    <ConsolePane />
+                  </Pane>
+                }
                 http={<HttpPanes />}
                 terminal={
                   <Pane fallback={terminalFallback}>
@@ -245,11 +254,11 @@ function WidePanes({ database }: { database: boolean }) {
   );
 }
 
-const NARROW_PANES = ["editor", "terminal", "preview", "sql", "http"] as const;
+const NARROW_PANES = ["editor", "terminal", "console", "preview", "sql", "http"] as const;
 type NarrowPane = (typeof NARROW_PANES)[number];
 
 /**
- * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、プレビュー、通信をタブで 1 つずつ出す。DB を使うプロジェクトでは、プレビューの後に SQL のタブを足す。
+ * 狭い配置。ファイルの木をドロワーで出し、エディタ、端末、コンソール、プレビュー、通信をタブで 1 つずつ出す。DB を使うプロジェクトでは、プレビューの後に SQL のタブを足す。
  * ドロワーでファイルを選ぶと、ドロワーを閉じてエディタのタブに替える。フォルダの行は開閉だけをし、ドロワーを閉じない。
  */
 function NarrowPanes({
@@ -294,6 +303,16 @@ function NarrowPanes({
             content: (
               <Pane fallback={terminalFallback} flush={embedded} inTab>
                 <TerminalPane />
+              </Pane>
+            ),
+          },
+          {
+            id: "console",
+            label: "コンソール",
+            icon: OUTPUT_ICON,
+            content: (
+              <Pane fallback={consoleFallback} flush={embedded} inTab>
+                <ConsolePane />
               </Pane>
             ),
           },

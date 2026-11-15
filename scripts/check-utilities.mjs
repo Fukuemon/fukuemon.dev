@@ -100,6 +100,8 @@ const PLAYGROUND_PATHS = [
     "TerminalFrame",
     "PreviewFrame",
     "FileTree",
+    "ConsoleEntryList",
+    "HttpExchangeList",
   ].map((c) => `./packages/ui/src/case/${c}`),
   ...[
     "Button",
