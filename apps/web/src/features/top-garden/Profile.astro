@@ -50,7 +50,7 @@ const stack = [
   { area: "インフラ", items: "Terraform、AWS、Google\u00a0Cloud、Cloudflare\u00a0Workers" },
 ];
 const titles = ["うぇぶえんじにあ", "GDG Greater Kwansai organizer", "Alpha+Project TA"];
-/** 印の path は simple-icons（CC0-1.0）から写した */
+/** アイコンの path は simple-icons（CC0-1.0）から写した */
 const links = [
   {
     label: "GitHub",
@@ -85,7 +85,7 @@ const row = "border-t border-border py-2";
         {
           links.map(({ label, href, path }) => (
             <a
-              class="profile-link inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring"
+              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring [html.stage-on_&]:-m-1 [html.stage-on_&]:min-h-13 [html.stage-on_&]:min-w-13"
               href={href}
               aria-label={label}
             >
@@ -212,13 +212,6 @@ const row = "border-t border-border py-2";
 
   :global(html.stage-on) [data-garden-card] a {
     color: var(--scene-link);
-  }
-
-  /* 和紙は縮んで映るので、44px の押せる範囲は 44px より小さく映る。押せる範囲を 52px にし、負の margin で並びと和紙の高さを変えない */
-  :global(html.stage-on) .profile-link {
-    min-inline-size: 3.25rem;
-    min-block-size: 3.25rem;
-    margin: -0.25rem;
   }
 
   :global(html.stage-on) [data-garden-card] :focus-visible {

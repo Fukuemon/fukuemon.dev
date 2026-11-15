@@ -133,7 +133,7 @@ test.describe("トップの庭", () => {
     });
 
     // summary へのフォーカスやクリックで、ブラウザが文の層の入れ物をスクロールすると、文だけが立体の和紙からずれる
-    test("文の層の入れ物をスクロールしようとした場合、スクロールせず、経歴の文が和紙と同じ位置に映ること", async ({
+    test("文の層の入れ物をスクロールしようとした場合、スクロールせず、経歴の文の位置が変わらないこと", async ({
       page,
     }) => {
       await openGarden(page, { paused: true });
@@ -175,11 +175,16 @@ test.describe("トップの庭", () => {
     }) => {
       await openGarden(page, { paused: true });
       await expectAt(page, "profile");
-      await expect(profileLinks(page)).toHaveCount(2);
       const boxes = await profileLinks(page).evaluateAll((els) =>
-        els.map((el) => el.getBoundingClientRect()),
+        els.map((el) => {
+          const b = el.getBoundingClientRect();
+          return { width: b.width, height: b.height };
+        }),
       );
-      expect(boxes.filter((b) => b.width < 44 || b.height < 44)).toStrictEqual([]);
+      expect({
+        count: boxes.length,
+        small: boxes.filter((b) => b.width < 44 || b.height < 44),
+      }).toStrictEqual({ count: 2, small: [] });
     });
 
     // 和紙が伸びると、カメラが和紙を画面に収めようと引き、字と押せる範囲が小さく映る
