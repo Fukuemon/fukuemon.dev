@@ -59,7 +59,7 @@ ADR の規則は、[README.md](README.md) にある。
 | [ADR-0065](0065-site-header-with-sign-logo.md)         | 全てのページに、イントロの署名をロゴにしたヘッダーを置き、ナビに記事とプレイグラウンドを並べる       |
 | [ADR-0078](0078-top-lighthouse-gpu-and-throttling.md)  | トップの Lighthouse の合否を、Metal の GPU と simulate のスロットリングで 5 回測った中央値で判定する |
 | [ADR-0080](0080-ink-gate-svg-loaded-on-first-visit.md) | 墨の絵と署名の SVG を、トップの HTML に入れず、最初の訪問のときだけ読み込む                          |
-| [ADR-0082](0082-top-ink-background-as-css-mask.md)     | （提案）庭を出さないときのトップの画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く                |
+| [ADR-0082](0082-ink-background-as-css-mask.md)         | （提案）トップと記事とプレイグラウンドの一覧の画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く    |
 
 ## 実行環境とプレイグラウンド
 

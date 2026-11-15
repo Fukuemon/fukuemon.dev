@@ -23,7 +23,7 @@ verified_commit: unverified
 
 - ADR-0026: [トップの最初の訪問で水墨の門を描き、門をくぐった立体の庭にプロフィールを置く](../../../../../docs/adr/0026-sumi-gate-and-garden-on-top.md)
 - ADR-0027: [トップの庭の絵を、訪問者の端末の日付と時刻で、季節と時間帯ごとに変える](../../../../../docs/adr/0027-garden-by-season-and-time.md)
-- ADR-0082（提案）: [庭を出さないときのトップの画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-top-ink-background-as-css-mask.md)
+- ADR-0082（提案）: [トップと記事とプレイグラウンドの一覧の画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-ink-background-as-css-mask.md)
 
 ## Scope
 
@@ -95,7 +95,7 @@ verified_commit: unverified
 | `ink/InkGate.astro`          | 墨の絵と署名を挿入する空の `.ink-gate` を置く Astro のコンポーネント。トップでは、`scene/GardenStage.astro` の slot に置く。`html` に class `intro` と `enter` が付いている間の、筆の順に描く動きと、線を消す動きの CSS も持つ                                                                                                                                                                                                                                                                                                                                            |
 | `ink/ink-background.ts`      | 庭を出さないときのトップの背景に CSS の `mask-image` で掛ける、色を持たない墨の絵の SVG を、イントロの墨の絵の SVG から作る。線の色と filter は SVG の中の `style` に持つ                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `ink/ink-background.svg`     | `ink-background.ts` の出力。ユニットテストが、出力と同じであることを確認する。生成のコードを変えたら、テストを `-u` で流して書き出し直す                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `ink/InkBackground.astro`    | 庭を出さないときのトップの背景。墨の絵を画面全体に濃さ 16% で敷き、紙の色の霞を左右に流す。庭を出すとき（`stage-on`）は出さず、SVG も取得しない。トップのページが直接置く                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `ink/InkBackground.astro`    | 庭を出さないときのトップの背景。墨の絵を画面全体に濃さ 16% で敷き、紙の色の霞を左右に流す。庭を出すとき（`stage-on`）は出さず、SVG も取得しない。トップ、記事の一覧、プレイグラウンドの一覧のページが直接置く                                                                                                                                                                                                                                                                                                                                                             |
 | `stage/season.ts`            | 端末の日付と時刻から、季節と時間帯を返す                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `stage/visit.ts`             | 端末で初めてトップを開いたかを返す                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `stage/stage.ts`             | 季節と時間帯を `html` の属性に、庭を出すかとイントロを出すかを class に書く。庭の表示とアニメーションの設定は、`html` の `data-garden` と `data-motion` から、選んだ季節と時間帯は `data-season-setting` と `data-time-setting` から読む。庭を出しているときに季節か時間帯を選ぶか、庭を出していないときに庭の表示をオンにすると、読み込み直す。場面の準備が 6 秒で終わらなければ、ふつうのページに戻す。イントロを出すときは、墨の絵と署名のファイルも読み込み、届かなければ `ink-failed` を書く。URL の引数を読む関数と、`head` の inline script を組み立てる関数も持つ |
@@ -180,14 +180,15 @@ SVG を、ビルドのときに作った文字列として挿入するので、S
 
 ### 庭を出さないときの背景
 
-庭を出さないときのトップには、`InkBackground.astro` が、画面全体に固定した背景を本文の後ろに敷く。
+庭を出さないときのトップと、記事の一覧とプレイグラウンドの一覧には、`InkBackground.astro` が、画面全体に固定した背景を本文の後ろに敷く。
+2 つの一覧のページには `stage-on` が付かないので、常に背景を出す。
 ADR-0082 で決めた。
 
-- ADR-0082: [庭を出さないときのトップの画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-top-ink-background-as-css-mask.md)
+- ADR-0082: [トップと記事とプレイグラウンドの一覧の画面全体に、霞が流れる薄墨の絵を CSS の mask で敷く](../../../../../docs/adr/0082-ink-background-as-css-mask.md)
 
 - 絵: `ink/ink-background.svg` を、CSS の `mask-image` で背景の要素に掛け、`--fd-color-text` で塗る。枠を覆うように中央に置く（`cover`）。背景の高さは `100lvh` に固定し、スマートフォンのアドレスバーが伸び縮みしても、絵を描き直さない。
 - 濃さ: 16%（`opacity: 0.16`）にする。トップの文字の色（本文、補足、リンク）が、ライトとダークで 4.5:1 以上を保つ。最も低いのは、ライトのリンクの色の 4.71:1 である。文字の色のトークンを変えたときは、コントラストを測り直す。
-- ヘッダー: 庭を出さないときは、サイトのヘッダー（`[data-site-header]`）に紙の色（`--fd-color-surface`）の背景を敷き、絵を下の罫で切る。絵をロゴと罫に重ねないためで、ヘッダーが折り返して高くなっても隠れる。
+- ヘッダー: 背景を出すページでは、サイトのヘッダー（`[data-site-header]`）に紙の色（`--fd-color-surface`）の背景を敷き、絵を下の罫で切る。絵をロゴと罫に重ねないためで、ヘッダーが折り返して高くなっても隠れる。
 - 霞: 紙の色（`--fd-color-surface`）の放射状グラデーション（`radial-gradient`）を 3 つ重ね、左右に 20vw ずつ往復させる。1 つ目と 3 つ目は 48 秒、2 つ目は 64 秒で逆向きに動く。
 - ページの背景の色: 墨の絵を本文の後ろに出すため、庭を出さないときは、ページの背景の色を `body` から `html` に移す。
 
