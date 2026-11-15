@@ -153,7 +153,7 @@ test.describe("イントロの途中", () => {
   }
 
   /**
-   * html に class `at` が付いた時点で、ページの中から飛ばす操作をし、直後の文の位置と不透明度を記録する。
+   * html に class `at` が付いた時点で、ページの中からスキップする操作をし、直後の文の位置と不透明度を記録する。
    * SwiftShader のフレームはメインスレッドを長く止めるので、テストの側から押すと、押す前にイントロが進むか終わる。
    */
   const jumpAt = (page: Page, at: "scene-ready" | "enter", how: "skip" | "Escape" | "Tab") =>
@@ -179,7 +179,7 @@ test.describe("イントロの途中", () => {
       { at, how },
     );
 
-  /** 飛ばした直後に、文が遷移を経ずに見え、カメラが止まった後の位置と同じ所にあった。カメラが寄るなら数十 px ずれるので、描き直しの丸めの分の 6px までは許す */
+  /** スキップした直後に、文が遷移を経ずに見え、カメラが止まった後の位置と同じ所にあった。カメラが寄るなら数十 px ずれるので、描き直しの丸めの分の 6px までは許す */
   const expectJumped = async (page: Page) => {
     await expect.poll(() => page.evaluate(() => (window as Jumped).__jumped)).toBeTruthy();
     const right = (await page.evaluate(() => (window as Jumped).__jumped))!;
@@ -191,7 +191,7 @@ test.describe("イントロの途中", () => {
     expect(await marks(page)).toHaveProperty("garden-intro-done");
   };
 
-  test("「飛ばす」を押すと、動かずに庭の中の最後の状態になり、フォーカスが h1 に移る", async ({
+  test("「スキップ」を押すと、動かずに庭の中の最後の状態になり、フォーカスが h1 に移る", async ({
     page,
   }) => {
     await jumpAt(page, "scene-ready", "skip");
@@ -222,7 +222,7 @@ test.describe("イントロの途中", () => {
   });
 });
 
-test.describe("「飛ばす」の色と位置", () => {
+test.describe("「スキップ」の色と位置", () => {
   // ライトのテーマの紙と墨の色は、昼の霞の色と同じ値なので、時間帯に依らず色が替わるダークのテーマで見る
   test.use({ colorScheme: "dark" });
 
@@ -277,7 +277,7 @@ test.describe("「飛ばす」の色と位置", () => {
             ).backgroundColor;
           }
           if (!root.classList.contains("enter")) return;
-          // 色は遷移で替わる。遷移の途中の値を読まないよう、「飛ばす」が消えて遷移が止まる garden-ready の時点で色を読む
+          // 色は遷移で替わる。遷移の途中の値を読まないよう、「スキップ」が消えて遷移が止まる garden-ready の時点で色を読む
           log.duration ??= getComputedStyle(el).transitionDuration;
           log.colorTransition ??=
             getComputedStyle(el).transitionProperty.includes("background-color");
@@ -335,7 +335,7 @@ test.describe("場面の準備が遅いとき", () => {
   // バンドルの応答を遅らせ、場面の準備を遅くする
   const delayBundle = (page: Page, ms: number) => delayResponse(page, BUNDLE, ms);
 
-  test("準備ができるまでは、「飛ばす」を出さず、Tab を受けない", async ({ page }) => {
+  test("準備ができるまでは、「スキップ」を出さず、Tab を受けない", async ({ page }) => {
     await delayBundle(page, 2000);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(html(page)).toHaveClass(/\bintro\b/);
@@ -445,7 +445,7 @@ test.describe("イントロの途中でふつうのページに戻る", () => {
     await expect(html(page)).not.toHaveClass(INTRO_CLASSES);
   });
 
-  test("飛ばして最後の状態を描く途中で例外が出ると、ふつうのページに戻り、イントロの class と今いる文の印が残らない", async ({
+  test("スキップして最後の状態を描く途中で例外が出ると、ふつうのページに戻り、イントロの class と今いる文の印が残らない", async ({
     page,
   }) => {
     await page.addInitScript(() => {

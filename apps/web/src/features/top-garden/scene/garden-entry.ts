@@ -82,7 +82,7 @@ function reveal(garden: Garden, cards: readonly HTMLElement[]): void {
 
 /**
  * 墨の絵を描き終えるのを待ち、色を差して門をくぐる。
- * 「飛ばす」のボタン、Esc、Tab では、動かさずに最後の状態にする。
+ * 「スキップ」のボタン、Esc、Tab では、動かさずに最後の状態にする。
  * Tab は既定の動きを止めず、最後の状態でそのまま次の要素へフォーカスを移す。
  */
 function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
