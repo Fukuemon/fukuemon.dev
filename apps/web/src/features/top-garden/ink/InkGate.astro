@@ -5,7 +5,7 @@ import { INTRO, SIGN_LEAD } from "../intro-timing";
 const timing = `--ink0: ${SIGN_LEAD}ms; --move0: ${INTRO.move0}ms`;
 ---
 
-<!-- 墨の絵と署名は、最初の訪問のときだけ ink-gate-entry.ts が挿入する -->
+<!-- 墨の絵と署名は、イントロを出すときだけ ink-gate-entry.ts が挿入する -->
 <div class="ink-gate" style={timing}></div>
 
 <style>

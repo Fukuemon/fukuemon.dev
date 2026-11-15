@@ -20,7 +20,7 @@ export interface StageEnv {
   readonly storage: () => SeenStore;
   /** 場面のバンドルを読み込む。失敗したら、渡した関数を呼ぶ。バンドルが無いときは null */
   readonly load: ((onError: () => void) => void) | null;
-  /** 墨の絵と署名のファイルを読み込む。失敗したら、渡した関数を呼ぶ。最初の訪問のイントロを出すときだけ呼ぶ。ファイルが無いときは null */
+  /** 墨の絵と署名のファイルを読み込む。失敗したら、渡した関数を呼ぶ。イントロを出すときだけ呼ぶ。ファイルが無いときは null */
   readonly loadInk: ((onError: () => void) => void) | null;
   /** 渡した関数を、渡したミリ秒の後に 1 回呼ぶ。inline script では `setTimeout` */
   readonly later: (fn: () => void, ms: number) => void;
