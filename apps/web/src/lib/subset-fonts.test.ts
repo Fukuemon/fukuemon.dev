@@ -371,20 +371,27 @@ describe("ビルド後の作り直し", () => {
     });
   });
 
-  it("外した規則のファイルを残した規則も指すときは、何も書き換えずにビルドを止める", async () => {
-    const shared = face("b", "U+3044").replace(
-      'format("woff2")',
-      'format("woff2"),url(/_astro/a.AAAAAAAA.woff2)format("woff2")',
-    );
-    await expect(
-      build({
-        html: heading("あ"),
-        css: face("a", "U+3042") + shared,
-        options: { rebuild: false },
-      }),
-    ).rejects.toThrow("残した規則も指している");
-    expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toContain("b.AAAAAAAA");
-  });
+  it.each([false, true])(
+    "外した規則のファイルを残した規則も指すときは、作り直しも書き換えもせずにビルドを止める（rebuild: %s）",
+    async (rebuild) => {
+      const shared = face("b", "U+3044").replace(
+        'format("woff2")',
+        'format("woff2"),url(/_astro/a.AAAAAAAA.woff2)format("woff2")',
+      );
+      const css = face("a", "U+3042") + shared;
+
+      const error = await build({ html: heading("あ"), css, options: { rebuild } }).catch(
+        (e: Error) => e.message,
+      );
+
+      expect({ error, ...(await state()) }).toStrictEqual({
+        error: expect.stringContaining("残した規則も指している"),
+        site: css + RULE,
+        files: ["a.AAAAAAAA.woff2", "app.js", "b.AAAAAAAA.woff2", "page.css", "site.css"],
+        subsets: 0,
+      });
+    },
+  );
 
   it("外した規則の src にあるフォントでないファイルは消さない", async () => {
     const svg = face("b", "U+3044").replace(
@@ -480,10 +487,15 @@ describe("ビルド後の作り直し", () => {
 
   it("使う字のないスライスの URL が出力の外を指すときも、何も書き換えずにビルドを止める", async () => {
     const outside = face("b", "U+3044").replace("/_astro/b.AAAAAAAA.woff2", "/../x.AAAAAAAA.woff2");
-    await expect(
-      build({ html: heading("あ"), css: face("a", "U+3042") + outside }),
-    ).rejects.toThrow("の外を指している");
-    expect(subsetFont).not.toHaveBeenCalled();
+
+    const error = await build({ html: heading("あ"), css: face("a", "U+3042") + outside }).catch(
+      (e: Error) => e.message,
+    );
+
+    expect({ error, subsets: subsetFont.mock.calls.length }).toStrictEqual({
+      error: expect.stringContaining("の外を指している"),
+      subsets: 0,
+    });
   });
 
   it.each([

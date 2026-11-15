@@ -44,18 +44,35 @@ export function subsetFonts(
           for (const face of faces)
             if (!HASHED.test(face.url))
               throw new Error(`${face.url}: 名前の hash を差し替えられない`);
+        const texts = new Map(
+          faces.map((face) => [
+            face.url,
+            chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join(""),
+          ]),
+        );
+        const unused = new Set(
+          faces.filter((face) => texts.get(face.url) === "").map((f) => f.url),
+        );
+        // 消すファイルは、分割の作り直しと CSS の書き換えの前に全て検査する。途中で止まると、出力が書き換えの途中のまま残る。
+        const removed = new Set<string>();
+        const rewrites: [string, string, string][] = [];
+        for (const f of css) {
+          const body = await readFile(f, "utf8");
+          rewrites.push([f, body, removeFaces(body, unused, removed)]);
+        }
+        const stale = [...removed].filter((url) => /\.woff2?$/.test(url));
+        for (const url of stale) {
+          if (rewrites.some(([, , next]) => urlOf(url).test(next)))
+            throw new Error(`${url}: 外した規則のファイルを、残した規則も指している`);
+        }
+        const stalePaths = stale.map((url) => inside(root, url));
         const renames = new Map<string, string>();
-        const unused = new Set<string>();
         let before = 0;
         let after = 0;
         for (const face of faces) {
-          const text = chars.filter((c) => inRange(c.codePointAt(0)!, face.ranges)).join("");
+          const text = texts.get(face.url)!;
+          if (text === "" || !rebuild) continue;
           const path = paths.get(face.url)!;
-          if (text === "") {
-            unused.add(face.url);
-            continue;
-          }
-          if (!rebuild) continue;
           const src = await readFile(path);
           const subset = await subsetFont(src, text, { targetFormat: "woff2" });
           const url = hashedUrl(face.url, subset);
@@ -65,23 +82,12 @@ export function subsetFonts(
           before += src.length;
           after += subset.length;
         }
-        // 消すファイルは、CSS を書き換える前に全て検査する。途中で止まると、出力が書き換えの途中のまま残る。
-        const removed = new Set<string>();
-        const rewrites: [string, string, string][] = [];
-        for (const f of css) {
-          const body = await readFile(f, "utf8");
-          let next = removeFaces(body, unused, removed);
+        for (const [f, body, pruned] of rewrites) {
+          let next = pruned;
           for (const [from, to] of renames)
             next = next.replace(urlOf(from), (_, open: string, close: string) => open + to + close);
-          rewrites.push([f, body, next]);
+          if (next !== body) await writeFile(f, next);
         }
-        const stale = [...removed].filter((url) => /\.woff2?$/.test(url));
-        for (const url of stale) {
-          if (rewrites.some(([, , next]) => urlOf(url).test(next)))
-            throw new Error(`${url}: 外した規則のファイルを、残した規則も指している`);
-        }
-        const stalePaths = stale.map((url) => inside(root, url));
-        for (const [f, body, next] of rewrites) if (next !== body) await writeFile(f, next);
         for (const path of stalePaths) await rm(path);
         logger.info(
           rebuild
