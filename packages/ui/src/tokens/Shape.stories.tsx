@@ -68,7 +68,7 @@ function ShapeTokens() {
             {["自動", "春", "夏", "秋", "冬"].map((label) => (
               <button
                 aria-pressed={label === "秋"}
-                className="min-h-11 min-w-11 cursor-pointer border border-border-field bg-surface stitch px-3 text-label text-text focus-visible:focus-ring aria-pressed:z-10 aria-pressed:border-text aria-pressed:bg-text aria-pressed:text-surface aria-pressed:stitch-current"
+                className="min-h-11 min-w-11 cursor-pointer px-3 text-label focus-visible:focus-ring"
                 key={label}
                 type="button"
               >
@@ -77,8 +77,7 @@ function ShapeTokens() {
             ))}
           </div>
           <code className="font-mono text-code-dense">
-            band（帯）、border border-border-field
-            stitch（子要素）、aria-pressed:stitch-current（選択中の子要素）
+            band（親要素）。子要素の枠線、ステッチ、選択中の反転は band が描く
           </code>
         </div>
       </section>

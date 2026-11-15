@@ -86,11 +86,8 @@ Tailwind のデフォルトの段（`p-2`、`gap-4` など。1 段 4px）: 全�
       {["自動", "春", "夏", "秋", "冬"].map((label) => (
         <span
           key={label}
-          className={
-            label === "秋"
-              ? "z-10 flex min-h-11 min-w-11 items-center justify-center border border-text bg-text stitch stitch-current px-3 text-label text-surface"
-              : "flex min-h-11 min-w-11 items-center justify-center border border-border-field bg-surface stitch px-3 text-label text-text"
-          }
+          aria-current={label === "秋" ? "true" : undefined}
+          className="flex min-h-11 min-w-11 items-center justify-center px-3 text-label"
         >
           {label}
         </span>
