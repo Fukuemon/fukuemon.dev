@@ -95,6 +95,39 @@ test.describe("表示の設定", () => {
     });
   });
 
+  for (const colorScheme of ["light", "dark"] as const) {
+    test.describe(`ハイコントラストの${colorScheme === "light" ? "ライト" : "ダーク"}`, () => {
+      test.use({ forcedColors: "active", colorScheme });
+
+      test("季節のボタンを押した場合、押したボタンが選択の色で塗られ、字はふつうの字の色のままであること", async ({
+        page,
+      }) => {
+        await page.goto("/articles");
+        await openButton(page).click();
+        const winter = page.getByTestId("setting-season-winter");
+        await winter.click();
+        await expect(winter).toHaveAttribute("aria-pressed", "true");
+        // システムの色の実際の値はブラウザと OS で変わるので、同じページで同じ指定の要素を描かせて期待の値にする
+        const expected = await page.evaluate(() => {
+          const probe = document.createElement("div");
+          probe.style.backgroundColor = "var(--fd-forced-on)";
+          probe.style.color = "CanvasText";
+          document.body.append(probe);
+          const style = getComputedStyle(probe);
+          const colors = { background: style.backgroundColor, text: style.color };
+          probe.remove();
+          return colors;
+        });
+        await expect(winter).toHaveCSS("background-color", expected.background);
+        await expect(winter).toHaveCSS("color", expected.text);
+        await expect(page.getByTestId("setting-season-auto")).not.toHaveCSS(
+          "background-color",
+          expected.background,
+        );
+      });
+    });
+  }
+
   test("キーボードだけで操作した場合、歯車、設定の面、スイッチ、季節と時間帯のボタンに移れ、Esc で面が閉じて歯車にフォーカスが戻ること", async ({
     page,
   }) => {
