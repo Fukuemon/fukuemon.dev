@@ -2,7 +2,7 @@ import { inkSvg, type InkSvg } from "./ink-svg";
 
 /** 線の色と filter の掛け方。mask の画像にはページの CSS が当たらないので、SVG の中に持つ */
 const STYLE =
-  "<style>path{fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round}" +
+  "<style>path{fill:none;stroke:black;stroke-linecap:round;stroke-linejoin:round}" +
   ".far{filter:url(#f-wash)}.mid,.near .lines{filter:url(#f-dry)}.pine{fill:url(#g-pine);opacity:.2}</style>";
 
 /**
@@ -17,5 +17,5 @@ export function inkBackgroundSvg(ink: InkSvg = inkSvg()): string {
   return ink.svg
     .replace(open, '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" ')
     .replace(attrs, `>${STYLE}`)
-    .replaceAll("var(--art-pine)", "#000");
+    .replaceAll("var(--art-pine)", "black");
 }
