@@ -754,6 +754,7 @@ DB のプロセスの標準入出力では、次の形式で送る。
 - DB のプロセスは、結果のセルの bigint、日時、`bytea`、`NaN`、`Infinity` を、表に出す文字列にしてから JSON にする。JSON では型が残らないためである。変える関数（`toJsonResponse`）は、`@fukuemon/sql-runtime` に置く。表に出る文字列は、Web Worker で動かす実装と同じになる。
 - `json` と `jsonb` のセルは、どちらの実装でも、`JSON.parse` せず Postgres が返す文字列のまま持つ。
   `JSON.parse` は、安全な整数の範囲を超える値の桁を落とすためである。
+  `json[]` と `jsonb[]` のセルは、要素を文字列のまま、`[` と `]` の間に `, ` でつないだ 1 つの文字列にする。NULL の要素は `null` と書く。
   変える関数（`withLosslessJson`）は、`@fukuemon/sql-runtime` に置く。
 - DB の依存の `npm install` が失敗したとき、`ready` の行の前に DB のプロセスが終了したとき、初期データの SQL が失敗したときは、`bootNodeRuntime` が失敗する。初期データの SQL が失敗したときのメッセージは、`初期データの SQL が失敗しました: ` で始める。
 - `dispose` の後は、待っているリクエストと、その後の `run` に、`error` を持つ値を返す。`database` の `status` は変えず、その後に DB のプロセスが終了しても `stopped` にしない。訪問者が起動し直すときに、SQL のペインに DB が止まったことを出さないためである。

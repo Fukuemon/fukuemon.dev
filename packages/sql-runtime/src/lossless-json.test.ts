@@ -31,11 +31,21 @@ describe("withLosslessJson", () => {
     expect(rows).toStrictEqual([['{"n":   9007199254740993}']]);
   });
 
-  it("json と jsonb の配列の要素も、桁を落とさない。NULL の要素は null のまま返す", async () => {
+  it("json と jsonb の配列は、要素の桁を落とさず、引用符のない 1 つの文字列で返す。NULL の要素は null と書く", async () => {
     const rows = await rowsOf(
       `select array['{"n":9007199254740993}'::jsonb, null], array['{"n":9007199254740993}'::json]`,
     );
-    expect(rows).toStrictEqual([[['{"n": 9007199254740993}', null], ['{"n":9007199254740993}']]]);
+    expect(rows).toStrictEqual([['[{"n": 9007199254740993}, null]', '[{"n":9007199254740993}]']]);
+  });
+
+  it("多次元の配列も、入れ子の角括弧でつなぐ", async () => {
+    const rows = await rowsOf(`select array[array['{"a": 1}'::jsonb], array['[2]'::jsonb]]`);
+    expect(rows).toStrictEqual([['[[{"a": 1}], [[2]]]']]);
+  });
+
+  it("空の配列は [] で返す", async () => {
+    const rows = await rowsOf("select '{}'::jsonb[]");
+    expect(rows).toStrictEqual([["[]"]]);
   });
 
   it("json 以外の型と、jsonb の NULL は、PGlite の既定のまま返す", async () => {

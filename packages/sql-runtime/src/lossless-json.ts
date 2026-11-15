@@ -3,7 +3,13 @@ import { type PGliteInterface, types } from "@electric-sql/pglite";
 type Database = Pick<PGliteInterface, "exec">;
 
 const text: types.Parser = (value) => value;
-const textArray: types.Parser = (value) => types.arrayParser(value, text, 0);
+type Elements = (string | null | Elements)[];
+
+// 要素の `"` を `\"` にエスケープして出さないために、配列を 1 つの文字列にする。NULL の要素は null と書く
+const join = (elements: Elements): string =>
+  `[${elements.map((item) => (Array.isArray(item) ? join(item) : (item ?? "null"))).join(", ")}]`;
+
+const textArray: types.Parser = (value) => join(types.arrayParser(value, text, 0) as Elements);
 
 const JSON_ARRAY = 199;
 const JSONB_ARRAY = 3807;
