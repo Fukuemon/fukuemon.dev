@@ -64,7 +64,7 @@ export function applyStage(env: StageEnv, fns: StageFns): void {
   if (ink) root.classList.add("intro");
   const plain = () => root.classList.remove("stage-on", "intro");
   env.load(plain);
-  // 場面のバンドルの失敗で先にふつうのページに戻した後は、届いた失敗を伝えない
+  // `intro` が外れた後（場面のバンドルの失敗、6 秒の打ち切り、飛ばした後など）に届いた失敗は伝えない
   if (ink)
     ink(() => {
       if (root.classList.contains("intro")) root.classList.add("ink-failed");
