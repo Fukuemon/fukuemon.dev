@@ -4,7 +4,7 @@ export type SettingName = "motion" | "garden";
 /** 値を 1 つ選ぶ設定の名前。`html` の `data-<名前>-setting` と、`localStorage` の `fd-<名前>` に書く */
 export type PickName = "season" | "time";
 
-/** 選ぶ設定の値。`auto` は、端末の日付と時刻で決める。値は `features/top-garden/stage/season.ts` の `Season` と `TimeOfDay` と同じである */
+/** 選ぶ設定の値。`auto` は、端末の日付と時刻で決める。トップの庭の季節と時間帯の型は、この型から作る */
 export type PickValue<N extends PickName> =
   | (N extends "season"
       ? "spring" | "summer" | "autumn" | "winter"
@@ -82,14 +82,14 @@ export function applySettings(
     const saved = read(`fd-${name}`);
     root.dataset[name] = saved === "on" || saved === "off" ? saved : reducedMotion ? "off" : "on";
   }
-  const allowed: { readonly [N in PickName]: readonly string[] } = {
+  const allowed: { readonly [N in PickName]: readonly Exclude<PickValue<N>, "auto">[] } = {
     season: ["spring", "summer", "autumn", "winter"],
     time: ["morning", "day", "evening", "night"],
   };
   for (const name of ["season", "time"] as const) {
     const saved = read(`fd-${name}`);
     root.dataset[`${name}Setting`] =
-      saved !== null && allowed[name].includes(saved) ? saved : "auto";
+      saved !== null && (allowed[name] as readonly string[]).includes(saved) ? saved : "auto";
   }
 }
 

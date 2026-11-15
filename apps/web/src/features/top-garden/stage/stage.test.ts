@@ -1,13 +1,9 @@
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
-import { seasonOf, timeOfDayOf, type Season, type TimeOfDay } from "./season";
+import { seasonOf, timeOfDayOf } from "./season";
 import { applyStage, readOverride, stageScript, type StageEnv } from "./stage";
 import { takeFirstVisit } from "./visit";
-import {
-  PICK_CHOICES,
-  SETTINGS_CHANGE,
-  type SettingsChange,
-} from "../../../components/site-settings/settings";
+import { SETTINGS_CHANGE, type SettingsChange } from "../../../components/site-settings/settings";
 
 const fns = { seasonOf, timeOfDayOf, takeFirstVisit };
 const NOV_13_20H = new Date(2026, 10, 13, 20);
@@ -448,16 +444,5 @@ describe("inline script に埋め込む形", () => {
       URLSearchParams,
     }) as typeof readOverride;
     expect({ ...read("?season=summer") }).toStrictEqual({ season: "summer" });
-  });
-});
-
-describe("表示の設定の季節と時間帯の値", () => {
-  it("自動のほかの値は、season.ts の季節と時間帯の区分と同じである", () => {
-    const seasons: readonly Season[] = ["spring", "summer", "autumn", "winter"];
-    const times: readonly TimeOfDay[] = ["morning", "day", "evening", "night"];
-    expect({
-      season: PICK_CHOICES.season.map((c) => c.value).filter((v) => v !== "auto"),
-      time: PICK_CHOICES.time.map((c) => c.value).filter((v) => v !== "auto"),
-    }).toStrictEqual({ season: seasons, time: times });
   });
 });

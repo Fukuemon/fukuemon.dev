@@ -180,7 +180,7 @@ function boot(): void {
   const cards = STATIONS.map(({ id }) =>
     document.querySelector<HTMLElement>(`[data-garden-card][aria-labelledby="${id}"]`),
   ).filter((el) => el !== null);
-  // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。
+  // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。選んだ値は、表示の設定の applySettings が決めた値に絞っている。
   const intro = root.classList.contains("intro");
   const opts = {
     season: root.dataset.season as Season,
