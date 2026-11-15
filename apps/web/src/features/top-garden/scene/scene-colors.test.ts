@@ -73,11 +73,18 @@ describe("舞う物", () => {
   });
 
   it.each([
-    ["evening", false],
-    ["night", true],
-  ] as const)("夏の %s は、蛍を出し、加算で重ねるかは %s である", (t, additive) => {
-    expect(scenePalette(t, "summer").fall).toStrictEqual({ ...SEASON_FALLS.summer, additive });
-  });
+    ["evening", false, 1],
+    ["night", true, 0.7],
+  ] as const)(
+    "夏の %s は、蛍を出し、加算で重ねるかは %s で、大きさを %s 倍にする",
+    (t, additive, k) => {
+      expect(scenePalette(t, "summer").fall).toStrictEqual({
+        ...SEASON_FALLS.summer,
+        size: SEASON_FALLS.summer.size * k,
+        additive,
+      });
+    },
+  );
 });
 
 describe("和紙の字の色", () => {

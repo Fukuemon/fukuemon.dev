@@ -163,14 +163,16 @@ export interface SeasonFall {
   readonly color: string;
   readonly shape: FallShape;
   readonly count: number;
+  /** 1 つの大きさ（m）。物ごとに 0.6〜1.3 倍に散らす */
+  readonly size: number;
 }
 
 /** 季節ごとの舞う物。値は Design Doc の「季節ごとの葉とパーティクル」の表と同じ */
 export const SEASON_FALLS: Readonly<Record<Season, SeasonFall>> = {
-  spring: { color: "#e9a9bb", shape: "petal", count: 70 },
-  summer: { color: "#e9f58a", shape: "glow", count: 34 },
-  autumn: { color: "#b8482d", shape: "momiji", count: 60 },
-  winter: { color: "#fbfaf6", shape: "flake", count: 110 },
+  spring: { color: "#e08aa3", shape: "petal", count: 120, size: 0.16 },
+  summer: { color: "#e9f58a", shape: "glow", count: 34, size: 0.42 },
+  autumn: { color: "#9a3420", shape: "momiji", count: 90, size: 0.17 },
+  winter: { color: "#d6dde6", shape: "flake", count: 110, size: 0.08 },
 };
 
 /** canvas に描く、色を持たない形の塗り。テクスチャの色は、材質の色で付ける */
@@ -186,6 +188,8 @@ export const GLOW_STOPS: readonly (readonly [number, string])[] = [
 
 const SNOW = "#ffffff";
 const NIGHT_LEAF = "#10151c";
+/** 夜の蛍は加算で重ねて明るくなるので、光の輪を小さくする倍率 */
+const NIGHT_GLOW_SIZE = 0.7;
 
 const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const toSrgb = (c: number) => (c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055);
@@ -245,7 +249,9 @@ export function scenePalette(time: TimeOfDay, season: Season): ScenePalette {
     fall:
       glow && (time === "morning" || time === "day")
         ? null
-        : { ...fall, additive: glow && time === "night" },
+        : glow && time === "night"
+          ? { ...fall, size: fall.size * NIGHT_GLOW_SIZE, additive: true }
+          : { ...fall, additive: false },
     leaf: leaf && {
       shape: leaf.shape,
       colors: time === "night" ? leaf.colors.map((x) => mixHex(x, NIGHT_LEAF, 0.3)) : leaf.colors,

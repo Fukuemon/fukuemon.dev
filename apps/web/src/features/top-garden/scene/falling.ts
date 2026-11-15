@@ -73,7 +73,7 @@ export function createFalling(fall: ScenePaletteFall): Falling {
           d.quaternion.copy(camera.quaternion);
           // 明滅させる。光が消える間も、0.35 倍の大きさは残す
           d.scale.setScalar(
-            0.42 * q.s * (0.35 + 0.65 * Math.max(0, Math.sin(sec * 1.3 * q.v + q.a))),
+            fall.size * q.s * (0.35 + 0.65 * Math.max(0, Math.sin(sec * 1.3 * q.v + q.a))),
           );
         } else {
           const speed = flake ? 0.42 : 0.55;
@@ -85,7 +85,7 @@ export function createFalling(fall: ScenePaletteFall): Falling {
           );
           if (flake) d.quaternion.copy(camera.quaternion);
           else d.rotation.set(sec * 1.7 * q.v + q.a, sec * 1.1 + q.a, q.a);
-          d.scale.setScalar((flake ? 0.045 : 0.13) * q.s);
+          d.scale.setScalar(fall.size * q.s);
         }
         d.updateMatrix();
         mesh.setMatrixAt(i, d.matrix);
