@@ -20,6 +20,8 @@ test.describe("表示の設定とトップの庭", () => {
     page,
   }) => {
     await seenBefore(page);
+    // 舞う物があると SwiftShader が描き続けて操作が遅れるので、舞う物の無い夏の昼で開く
+    await presetSettings(page, { season: "summer", time: "day" });
     await page.goto("/");
     await expect(htmlElement(page)).toHaveClass(/garden-ready/);
     await expect(htmlElement(page)).not.toHaveClass(/\bintro\b/);
@@ -34,6 +36,8 @@ test.describe("表示の設定とトップの庭", () => {
     page,
   }) => {
     await seenBefore(page);
+    // 舞う物があると SwiftShader が描き続けて操作が遅れるので、舞う物の無い夏の昼で開く
+    await presetSettings(page, { season: "summer", time: "day" });
     await page.goto("/");
     await expect(htmlElement(page)).toHaveClass(/garden-ready/);
     await page.getByTestId("site-settings-open").click();
@@ -76,6 +80,8 @@ test.describe("表示の設定とトップの庭", () => {
     page,
   }) => {
     await seenBefore(page);
+    // 舞う物が動くと SwiftShader が描き続けて操作が遅れるので、アニメーションを止めて開く
+    await presetSettings(page, { motion: "off" });
     await page.clock.setFixedTime(AUTUMN_NOON);
     await page.goto("/");
     await expect(htmlElement(page)).toHaveClass(/garden-ready/);
