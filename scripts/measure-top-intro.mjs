@@ -60,6 +60,8 @@ const TYPES = {
   ".woff2": "font/woff2",
 };
 const GZIP = new Set([".html", ".js", ".css", ".svg", ".json"]);
+/** 圧縮の時間を応答の時刻に入れないよう、パスごとに 1 回だけ読んで圧縮する */
+const cache = new Map();
 /** 遅らせた応答の数。--bundle-delay が掛かったかの確認に使う */
 let delayedResponses = 0;
 const server = createServer((req, res) => {
@@ -72,11 +74,13 @@ const server = createServer((req, res) => {
       "content-type": TYPES[ext] ?? "application/octet-stream",
       "cache-control": "no-store",
     };
-    let body = readFileSync(file);
-    if (GZIP.has(ext)) {
-      body = gzipSync(body);
-      head["content-encoding"] = "gzip";
+    let body = cache.get(file);
+    if (!body) {
+      body = readFileSync(file);
+      if (GZIP.has(ext)) body = gzipSync(body);
+      cache.set(file, body);
     }
+    if (GZIP.has(ext)) head["content-encoding"] = "gzip";
     const delayed = path.includes("garden-entry");
     if (delayed) delayedResponses++;
     setTimeout(() => res.writeHead(200, head).end(body), delayed ? bundleDelay : 0);
@@ -85,7 +89,7 @@ const server = createServer((req, res) => {
   }
 });
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
-const origin = `http://localhost:${server.address().port}`;
+const origin = `http://127.0.0.1:${server.address().port}`;
 if (!existsSync(join(DIST, "index.html"))) {
   console.error(`${DIST}/index.html が無い。pnpm run build の後に流す`);
   process.exit(2);
@@ -147,7 +151,7 @@ function analyze(text) {
     const inside = tasks.filter((t) => t.end > from && t.start < to);
     const fs = frames.filter((f) => f.start >= from && f.start < to);
     row[name] = {
-      longestTaskMs: Math.round(Math.max(0, ...inside.map((t) => t.dur))),
+      longestTaskMs: Math.round(inside.reduce((max, t) => Math.max(max, t.dur), 0)),
       tasksOver50ms: inside.filter((t) => t.dur > 50).length,
       frames: fs.length,
       dropped: fs.filter((f) => f.state === "STATE_DROPPED").length,
@@ -199,11 +203,17 @@ try {
       });
       const complete = new Promise((ok) => cdp.once("Tracing.tracingComplete", ok));
       await page.goto(`${origin}/`, { waitUntil: "commit" });
-      await page.waitForFunction(
-        () => document.documentElement.classList.contains("garden-ready"),
+      // 庭がふつうのページに戻った回（stage-on が外れた）は、待たずに失敗にする。判定は 250 ms ごとにして、測るメインスレッドに毎フレーム入れない。
+      const outcome = await page.waitForFunction(
+        () => {
+          const c = document.documentElement.classList;
+          if (c.contains("garden-ready")) return "ready";
+          return performance.now() > 1000 && !c.contains("stage-on") ? "plain" : false;
+        },
         null,
-        { timeout: 120_000 },
+        { timeout: 120_000, polling: 250 },
       );
+      if ((await outcome.jsonValue()) === "plain") throw new Error("庭がふつうのページに戻った");
       await page.waitForTimeout(1000);
       await cdp.send("Tracing.end");
       const { stream } = await complete;
