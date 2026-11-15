@@ -25,11 +25,11 @@ ADR の規則は、[README.md](README.md) にある。
 
 ## 配信の基盤
 
-| ADR                                                     | 題                                                                                             |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [ADR-0005](0005-workers-terraform-wrangler-boundary.md) | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する     |
-| [ADR-0031](0031-subdomains-and-workers.md)              | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる            |
-| [ADR-0032](0032-docs-site-behind-access.md)             | ドキュメントサイトを Zensical でビルドし、Cloudflare Access を運営者がダッシュボードで設定する |
+| ADR                                                     | 題                                                                                         |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [ADR-0005](0005-workers-terraform-wrangler-boundary.md) | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する |
+| [ADR-0031](0031-subdomains-and-workers.md)              | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる        |
+| [ADR-0032](0032-docs-site-zensical.md)                  | ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する                     |
 
 ## 書体、トークン、コンポーネント
 
@@ -348,7 +348,6 @@ flowchart TB
 | ADR-0069   | Node の実行環境を起動し直すときに、作業ディレクトリを読めなければ、前に起動したときのファイルで起動する                                                      | ADR-0076                                                 |
 | ADR-0070   | Node の実行環境は、シークレットのファイル、ビルドの出力、`.git`、リンクを保存せず、保存に上限を付ける                                                        | ADR-0077                                                 |
 | ADR-0074   | 詰めた木の行の中の名前の欄に内側の輪を引き、欄の行には輪を引かない                                                                                           | ADR-0066                                                 |
-| ADR-0081   | ドキュメントサイトの Cloudflare Access を、Terraform で持たず、運営者がダッシュボードで設定する                                                              | ADR-0032                                                 |
 
 番号を振り直す前の番号は、次のとおり。
 

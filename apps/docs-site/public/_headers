@@ -1,4 +1,4 @@
-# noindex は、Access の外へ文書のサイトが漏れたときに、検索の結果に載せないため。frame-ancestors は、どのページにも埋め込ませないため
+# noindex は、検索の結果に載せるかを決めるまで返す。frame-ancestors は、どのページにも埋め込ませないため
 /*
   X-Robots-Tag: noindex
   X-Content-Type-Options: nosniff
