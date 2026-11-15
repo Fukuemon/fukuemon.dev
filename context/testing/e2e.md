@@ -28,9 +28,11 @@ testid は、アプリのコンポーネント（`apps/web/src/features/articles
 - 庭の舞台は `garden-stage`、庭の中の移動の帯は `garden-nav`、ヘッダーは `site-header` である。
 - 4 つの文へ移るボタンは `garden-station-0` から `garden-station-3` である。イントロの「飛ばす」は `garden-skip`、読み上げの通知は `garden-live` である。
 - 文のセクションは `garden-card-profile`、`garden-card-career`、`garden-card-stack`、`garden-card-portfolio` である。プロフィールの見出しは `garden-title` である。
+- 庭を出さないときの背景の墨の絵は `garden-background` である。
 - testid は、次のファイルに付ける。
   - `apps/web/src/features/top-garden/Profile.astro`
   - `apps/web/src/features/top-garden/scene/GardenStage.astro`
+  - `apps/web/src/features/top-garden/ink/InkBackground.astro`
   - `apps/web/src/components/SiteHeader.astro`
 
 表示の設定の testid は次のとおり。
