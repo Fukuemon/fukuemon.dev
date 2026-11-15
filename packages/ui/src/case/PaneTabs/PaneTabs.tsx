@@ -94,7 +94,11 @@ export function PaneTabs({
       <div
         aria-label={label}
         aria-orientation={isVertical ? "vertical" : "horizontal"}
-        className={clsx("flex min-w-0", isVertical ? "flex-col" : "flex-1 overflow-x-auto")}
+        className={clsx(
+          "flex min-w-0",
+          isVertical ? "flex-col" : "flex-1",
+          placement === "bottom" && "overflow-x-auto",
+        )}
         role="tablist"
       >
         {items.map((item, index) => {

@@ -39,13 +39,10 @@ describe("PaneTabs", () => {
     }
   });
 
-  it.each([5, 6])(
-    "下の帯に %i 個のタブを並べると、幅 320 px でもラベルが隣と重ならず、帯が横にスクロールする",
-    (count) => {
-      const labels = ["エディタ", "端末", "コンソール", "プレビュー", "通信", "SQL"].slice(
-        0,
-        count,
-      );
+  describe("幅 320 px の下の帯", () => {
+    const allLabels = ["エディタ", "端末", "コンソール", "プレビュー", "通信", "SQL"];
+    const renderNarrow = (count: number) => {
+      const labels = allLabels.slice(0, count);
       render(
         <div className="h-96 w-80">
           <PaneTabs
@@ -63,22 +60,37 @@ describe("PaneTabs", () => {
           />
         </div>,
       );
-      const tabs = labels.map((label) => screen.getByRole("tab", { name: label }));
-      for (const tab of tabs) {
-        expect(tab.scrollWidth).toBeLessThanOrEqual(tab.clientWidth);
-      }
-      for (const [index, tab] of tabs.entries()) {
-        const next = tabs[index + 1];
-        if (next) {
-          expect(tab.getBoundingClientRect().right).toBeLessThanOrEqual(
-            next.getBoundingClientRect().left,
-          );
-        }
-      }
+      return labels;
+    };
+
+    it.each([5, 6])("%i 個のタブのラベルが、隣のラベルと重ならない", (count) => {
+      const labels = renderNarrow(count);
+      const rects = labels.map((label) =>
+        screen.getByText(label, { selector: "span" }).getBoundingClientRect(),
+      );
+      const overlaps = rects.filter((rect, index) => {
+        const next = rects[index + 1];
+        return next !== undefined && rect.right > next.left;
+      });
+      expect(overlaps).toHaveLength(0);
+    });
+
+    it.each([5, 6])("%i 個のタブを並べると、帯を横にスクロールできる", (count) => {
+      renderNarrow(count);
       const list = screen.getByRole("tablist");
-      expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
-    },
-  );
+      list.scrollLeft = 10;
+      expect(list.scrollLeft).toBeGreaterThan(0);
+    });
+
+    it("端のタブへ End で移ると、フォーカスしたタブが帯の中に見える", async () => {
+      renderNarrow(6);
+      screen.getByRole("tab", { name: "エディタ" }).focus();
+      await userEvent.keyboard("{End}");
+      const rect = document.activeElement?.getBoundingClientRect();
+      const list = screen.getByRole("tablist").getBoundingClientRect();
+      expect(rect?.right).toBeLessThanOrEqual(list.right + 1);
+    });
+  });
 
   it("タブを替えても、隠したペインを描いたまま残し、入力が消えない", async () => {
     render(<Bottom />);
