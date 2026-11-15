@@ -56,7 +56,8 @@ export function applyStage(env: StageEnv, fns: StageFns): void {
   env.later(() => {
     if (!root.classList.contains("scene-ready")) plain();
     // 場面が動き出した後のクリーンアップは場面のバンドルが持つので、墨の絵が届いていないことだけを class で伝える
-    else if (ink && !root.classList.contains("ink-ready")) root.classList.add("ink-failed");
+    else if (ink && root.classList.contains("intro") && !root.classList.contains("ink-ready"))
+      root.classList.add("ink-failed");
   }, 6000);
 }
 

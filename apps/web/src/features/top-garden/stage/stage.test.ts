@@ -172,9 +172,10 @@ describe("applyStage", () => {
     ]);
   });
 
-  it("2 回目以降の訪問は、墨の絵が無くても、場面の準備ができていれば庭を出したままにする", () => {
-    const r = run({ seen: true });
+  it("6 秒の後に、イントロが外れていれば、墨の絵が届いていなくても ink-failed を付けない", () => {
+    const r = run();
     r.root.classList.add("scene-ready");
+    r.root.classList.remove("intro");
     r.timers[0]!.fn();
     expect([...r.root.classes].sort()).toStrictEqual(["scene-ready", "stage-on"]);
   });

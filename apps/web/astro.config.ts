@@ -21,8 +21,8 @@ import { inkGateVirtualModule } from "./src/features/top-garden/ink/ink-gate-fra
 export default defineConfig({
   site: "https://fukuemon.dev",
   vite: {
-    plugins: [tailwindcss()],
-    // 墨の絵と署名のファイルは worker の形でバンドルするので、仮想モジュールは worker のプラグインに渡す
+    // 墨の絵と署名のファイルは、ビルドでは worker の形でバンドルし、開発のサーバーでは通常の module として配る。仮想モジュールは、どちらのプラグインにも渡す
+    plugins: [tailwindcss(), inkGateVirtualModule()],
     worker: { plugins: () => [inkGateVirtualModule()] },
     // 小さいフォントのスライスを base64 で CSS に埋めさせない。
     // 埋めると、そのページで使わないスライスまで、描画を止める CSS と一緒に配ることになる

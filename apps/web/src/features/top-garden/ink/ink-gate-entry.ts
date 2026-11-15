@@ -8,10 +8,7 @@ const root = document.documentElement;
 function insert(): void {
   if (!root.classList.contains("intro") || root.classList.contains("ink-failed")) return;
   const gate = document.querySelector(".ink-gate");
-  if (!gate) {
-    root.classList.add("ink-failed");
-    return;
-  }
+  if (!gate) return;
   gate.insertAdjacentHTML("beforeend", fragment);
   root.classList.add("ink-ready");
   performance.mark("ink-ready");

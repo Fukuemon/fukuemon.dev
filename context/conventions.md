@@ -263,8 +263,8 @@ React の誤りのうち、lint で止まるものは Oxlint の規則に任せ�
   - テストは、色を混ぜる式を、色の値で確認する。
 - 色の値のチェックは、トップの庭の場面のコードの、three の `new Color(` の 3 行を対象から外す（行ごとの `design-system-allow`）。
   - 色の関数 `color(` と同じ形に見えるが、three のクラスのコンストラクタで、色の値を書いていない。
-- Oxlint の `import/default` は、次の 2 か所の import の 1 行だけで抑制する。
-  - `apps/web/src/features/top-garden/stage/TopStageScript.astro` の `?worker&url` の import。
+- Oxlint の `import/default` は、次の 2 か所の import だけで抑制する。
+  - `apps/web/src/features/top-garden/stage/TopStageScript.astro` の `?worker&url` の import（場面のバンドルと、墨の絵と署名のファイルの 2 行）。
     Vite がビルドのときに URL の文字列を default で返すが、Oxlint はこの接尾辞を解決できない。
   - `packages/node-runtime/src/webcontainer/index.ts` の `?bundle` の import。
     `packages/node-runtime/vite.ts` の plugin が、束ねたスクリプトを文字列の default で返す。Oxlint は、この接尾辞を解決できない。

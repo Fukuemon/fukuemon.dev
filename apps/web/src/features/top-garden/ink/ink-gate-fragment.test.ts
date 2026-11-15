@@ -16,8 +16,8 @@ describe("inkGateFragment", () => {
   });
 
   it("署名の SVG に差し替えても、墨の絵の部分は変わらない", () => {
-    expect(inkGateFragment(SIGN)).toBe(inkGateFragment(SIGN));
-    expect(inkGateFragment(SIGN)).not.toBe(inkGateFragment('<svg viewBox="0 0 2 2"/>'));
+    const inkOf = (sign: string) => inkGateFragment(sign).split('<svg class="sign"')[0];
+    expect(inkOf(SIGN)).toBe(inkOf('<svg viewBox="0 0 2 2"/>'));
   });
 
   it("実際の署名の SVG を入れた全体が、gzip で 36 KiB 以内に収まる", () => {
@@ -36,8 +36,9 @@ describe("inkGateVirtualModule", () => {
   });
 
   it("解決した id の中身を、フラグメントの文字列の default export にする", () => {
-    const code = plugin.load("\0virtual:ink-gate");
-    expect(code).toBe(`export default ${JSON.stringify(inkGateFragment())};`);
-    expect(plugin.load("./other")).toBeUndefined();
+    expect([plugin.load("\0virtual:ink-gate"), plugin.load("./other")]).toStrictEqual([
+      `export default ${JSON.stringify(inkGateFragment())};`,
+      undefined,
+    ]);
   });
 });

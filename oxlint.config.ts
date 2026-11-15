@@ -87,7 +87,7 @@ const GARDEN_PREFIX =
   "^(~/features/top-garden/|(\\.\\./)+(features/)?(top-garden/)?|\\./(\\.\\./)+)";
 
 // stage/ の関数は文字列にして head の inline script に埋め込むので、scene/ のコードを import できない。
-// 例外は、TopStageScript.astro が読む場面のバンドルの URL (?worker&url) だけ
+// 例外は、TopStageScript.astro が読む場面のバンドルと、墨の絵と署名のファイルの URL (?worker&url) だけ
 const topGardenSubdirs: SubdirRestriction[] = [
   {
     name: "ink",
