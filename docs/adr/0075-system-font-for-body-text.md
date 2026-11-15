@@ -52,7 +52,7 @@ Web フォントは、記事の題と見出しの明朝と、等幅だけにす�
 - 和文の Web フォントに、可変の書体を使わない。和文の Web フォントは書体ごとに 1 つか 2 つのウェイトしか使わないので、ウェイトの軸の分だけ転送量を増やす理由がない。
 - Web フォントは Fontsource で self-host し、外部の CDN から読まない。同一オリジンから配信すれば、COEP の下でもサードパーティのヘッダの方針に左右されない。
 - どの Web フォントも `font-display: swap` にし、和文の分割は preload しない。
-- apps/web のビルドは、Zen Old Mincho と BIZ UDGothic の分割のうち、サイトで使う字を 1 つも含まない分割の `@font-face` を、レンダリングを妨げる CSS から削除する。その `@font-face` が指すファイルも削除する（`apps/web/src/lib/subset-fonts.ts`）。
+- apps/web のビルドは、Zen Old Mincho と BIZ UDGothic の分割のうち、その書体を当てる要素で使う字を 1 つも含まない分割の `@font-face` を、レンダリングを妨げる CSS から削除する。その `@font-face` が指すファイルも削除する（`apps/web/src/lib/subset-fonts.ts`）。
   - どのページも取得しない分割の `@font-face` が、LCP の前に取得する CSS を大きくするためである。
   - BIZ UDGothic の分割のファイルは作り直さず、Decision の表のとおり、Fontsource の分割をそのまま配信する。
   - apps/playground と Storybook のビルドは、`@font-face` を削除しない。
@@ -82,6 +82,8 @@ Web フォントは、記事の題と見出しの明朝と、等幅だけにす�
 - どの案も、LCP の 2.5 秒には届かなかった。
 - 合否に使う測り方（GPU とスロットリング）は、運営者が決める。
 - 最初の訪問、記事のページ、Windows と Android の端末は測っていない。
+- 使う字の無い分割の `@font-face` を削除し、墨の絵の SVG の `path` を相対座標で書いたビルド（コミット 16d980e）を、ADR-0078 の条件で 5 回測った。
+  - Performance は 94、LCP は 2.40 秒だった（`judged.median`）。`lcpIsFcp` で除いた回は無い。
 
 ## Considered Options
 
@@ -113,7 +115,8 @@ Web フォントは、記事の題と見出しの明朝と、等幅だけにす�
 - 記事の題と見出しは、Zen Old Mincho が読み込まれるまで本文の `font-family` の書体で描かれ、読み込まれた後に明朝へ差し替わる。`size-adjust` を使わないので、差し替わるときに字の幅と行の折り返しがずれる。
 - 欧文の字形と大きさが、端末に入っている和文の書体ごとに変わる。
 - トップの LCP は、本文をシステムフォントにするだけでは 2.5 秒に届かない。
-- レンダリングを妨げる CSS には、サイトで使う字を含む分割の `@font-face` が残る。記事の字が増えると、残る `@font-face` も増える。
+- レンダリングを妨げる CSS には、使う字を含む分割の `@font-face` が残る。記事の字が増えると、残る `@font-face` も増える。
+  - Noto Sans Mono の `@font-face` は、削除の対象にしないので全て残る。
 - 削除した分割にしか無い字は、代替の書体で描かれる。
   - apps/web には、訪問者が字を入力する入力欄とエディタが無い。
   - 記事を足して字が増えたときは、ビルドが残す分割を選び直す。
