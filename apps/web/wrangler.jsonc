@@ -8,4 +8,8 @@
     // 書かないと、無い URL に本文の無い 404 を返し、404.html を出さない
     "not_found_handling": "404-page",
   },
+  // 公開先は Terraform の custom domain の fukuemon.dev だけにする。workers_dev の既定は true で、
+  // 書かないと *.workers.dev でも開ける (ADR-0031、ADR-0084)
+  "workers_dev": false,
+  "preview_urls": false,
 }

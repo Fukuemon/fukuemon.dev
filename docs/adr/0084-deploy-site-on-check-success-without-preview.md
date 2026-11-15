@@ -2,7 +2,7 @@
 
 ## Status
 
-提案
+承認
 
 ## Context
 
@@ -37,6 +37,7 @@
 
 - Worker が、サイト、プレイグラウンド、カタログ、ドキュメントサイトの 4 つになる。
 - 4 つの Worker が、同じ契機で deploy される。
+- workers.dev で公開する Worker が無くなる。
 
 ### Negative
 

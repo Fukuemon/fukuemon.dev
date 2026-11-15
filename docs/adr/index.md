@@ -25,12 +25,12 @@ ADR の規則は、[README.md](README.md) にある。
 
 ## 配信の基盤
 
-| ADR                                                              | 題                                                                                           |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| [ADR-0005](0005-workers-terraform-wrangler-boundary.md)          | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する   |
-| [ADR-0031](0031-subdomains-and-workers.md)                       | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる          |
-| [ADR-0032](0032-docs-site-zensical.md)                           | ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する                       |
-| [ADR-0084](0084-deploy-site-on-check-success-without-preview.md) | （提案）本番の Worker を develop の check の成功で deploy し、プレビューの Worker を置かない |
+| ADR                                                              | 題                                                                                         |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [ADR-0005](0005-workers-terraform-wrangler-boundary.md)          | Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する |
+| [ADR-0031](0031-subdomains-and-workers.md)                       | サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる        |
+| [ADR-0032](0032-docs-site-zensical.md)                           | ドキュメントサイトを Zensical でビルドし、custom domain だけで配信する                     |
+| [ADR-0084](0084-deploy-site-on-check-success-without-preview.md) | 本番の Worker を develop の check の成功で deploy し、プレビューの Worker を置かない       |
 
 ## 書体、トークン、コンポーネント
 
