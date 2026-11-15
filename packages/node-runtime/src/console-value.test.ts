@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { types } from "node:util";
 
@@ -257,6 +258,36 @@ describe("toConsoleValues", () => {
       expect({ touched, values: run(shadowed) }).toStrictEqual({
         touched: [],
         values: [{ kind: "error", name: "E", message: "m" }],
+      });
+    });
+
+    it("Node の内部のエラーの code が文字列でないときは、stack を読まない。文字列の code なら読む", () => {
+      const touched: string[] = [];
+      const internal = () => {
+        try {
+          readFileSync({} as string);
+        } catch (thrown) {
+          return thrown as Error & { code: unknown };
+        }
+        throw new Error("readFileSync が投げなかった");
+      };
+      const objectCode = internal();
+      objectCode.code = {
+        toString() {
+          touched.push("code");
+          return "x";
+        },
+      };
+      const [withObject, withString] = run(objectCode, internal());
+      expect({ touched, withObject, withString }).toStrictEqual({
+        touched: [],
+        withObject: { kind: "error", name: "TypeError", message: expect.any(String) },
+        withString: {
+          kind: "error",
+          name: "TypeError",
+          message: expect.any(String),
+          stack: expect.any(Array),
+        },
       });
     });
 

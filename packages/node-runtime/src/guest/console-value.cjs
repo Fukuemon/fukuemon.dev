@@ -13,16 +13,18 @@ const MAX_NODES = 2000;
 const MAX_CHARS = 256 * 1024;
 /** Error の stack から写す、呼び出し元のフレームの行の数。 */
 const MAX_STACK = 30;
+/** stack の文を作るときにエンジンが読むプロパティ。V8 は name と message を、Node は内部のエラーの code も読む。 */
+const STACK_KEYS = ["name", "message", "code"];
 
 const ELLIPSIS = "…";
 
 /**
- * Error の name、message、stack を読むときに、呼んでよい組み込みの getter。
- * stack は、V8 はインスタンスに、Firefox は Error.prototype に定義する。DOMException は、3 つとも DOMException.prototype に定義する。
+ * Error の name、message、stack、code を読むときに、呼んでよい組み込みの getter。
+ * stack は、V8 はインスタンスに、Firefox は Error.prototype に定義する。DOMException は、stack のほかを DOMException.prototype に定義する。
  * Function.prototype.toString の「[native code]」で見分けると、bind した訪問者の関数も通るので、同じ関数かで比べる。
  */
 const errorGetters = new Map(
-  ["name", "message", "stack"].map((key) => {
+  ["name", "message", "stack", "code"].map((key) => {
     const targets = [new Error(), Error.prototype];
     if (typeof DOMException === "function") targets.push(DOMException.prototype);
     const getters = targets
@@ -135,8 +137,8 @@ function toConsoleValues(args, describe, isNativeError) {
   };
 
   /**
-   * V8 の組み込みの stack の getter は、初めて読むときに name と message を読んで文にする。
-   * そのときに訪問者のコードが動かないのは、どちらも文字列のデータか組み込みの getter か、無いときだけである。
+   * V8 の組み込みの stack の getter は、初めて読むときに name と message を読んで文にする。Node は、内部のエラーの code も読む。
+   * そのときに訪問者のコードが動かないのは、どれも文字列のデータか組み込みの getter か、無いときだけである。
    */
   const readsWithoutGuestCode = (value, key) => {
     for (let target = value; target; target = Object.getPrototypeOf(target)) {
@@ -150,14 +152,14 @@ function toConsoleValues(args, describe, isNativeError) {
     return true;
   };
 
-  /** V8 は、値ではなく stack を自身に持つオブジェクトの name と message で文を作るので、両方を確かめる。 */
+  /** V8 は、値ではなく stack を自身に持つオブジェクトの name、message、code で文を作るので、両方を確かめる。 */
   const canReadStack = (value) => {
     let holder = value;
     while (holder && !Object.prototype.hasOwnProperty.call(holder, "stack")) {
       holder = Object.getPrototypeOf(holder);
     }
-    return [value, holder].every(
-      (target) => readsWithoutGuestCode(target, "name") && readsWithoutGuestCode(target, "message"),
+    return [value, holder].every((target) =>
+      STACK_KEYS.every((key) => readsWithoutGuestCode(target, key)),
     );
   };
 
