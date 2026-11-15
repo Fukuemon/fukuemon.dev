@@ -1,24 +1,27 @@
 ---
 import { signSvg } from "./sign/sign";
 import signSource from "./sign/sign.svg?raw";
+import { SiteSettingsButton } from "./site-settings/SiteSettingsButton";
 import { SITE_NAV, ariaCurrent } from "./site-nav";
 
 const { pathname } = Astro.url;
-const sign = signSvg(signSource, "h-10 w-auto fill-current");
+const sign = signSvg(signSource, "h-8 w-auto fill-current md:h-10");
 ---
 
-<header class="border-b-2 border-text px-4 md:px-6" data-site-header data-testid="site-header">
-  <div class="mx-auto flex min-h-16 max-w-page flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2">
+<header class="border-b-2 border-text px-2 md:px-6" data-site-header data-testid="site-header">
+  <div class="mx-auto flex min-h-16 max-w-page flex-wrap items-center justify-between gap-x-2 gap-y-2 py-2 md:gap-x-6">
     <a
       class="inline-flex min-h-11 items-center text-text focus-visible:focus-ring"
       href="/"
+      data-site-logo
       aria-label="Fukuemon"
       aria-current={ariaCurrent(pathname, "/")}
     >
       <Fragment set:html={sign} />
     </a>
+    <div class="flex items-center md:gap-x-2" data-site-header-tools>
     <nav aria-label="サイトの中の移動">
-      <ul class="flex gap-6">
+      <ul class="flex gap-2 md:gap-6">
         {
           SITE_NAV.map(({ label, href }) => (
             <li>
@@ -34,5 +37,7 @@ const sign = signSvg(signSource, "h-10 w-auto fill-current");
         }
       </ul>
     </nav>
+    <SiteSettingsButton />
+    </div>
   </div>
 </header>

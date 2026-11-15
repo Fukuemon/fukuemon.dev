@@ -4,13 +4,14 @@
 import { startGarden, type Garden } from "./garden";
 import { INK_END } from "../intro-timing";
 import { STATIONS } from "../layout";
+import { SETTINGS_CHANGE, type SettingsChange } from "../../../components/site-settings/settings";
 import type { Season, TimeOfDay } from "../stage/season";
 
 const root = document.documentElement;
 const wiring = new AbortController();
 const on = { signal: wiring.signal };
 
-/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと「文だけで読む」で呼ぶ */
+/** 庭の操作を外し、ふつうのページに戻す。庭を描けないときと、設定で庭の表示をオフにしたときに呼ぶ */
 function leave(cards: readonly HTMLElement[]): void {
   wiring.abort();
   for (const el of cards) el.classList.remove("is-current");
@@ -22,8 +23,6 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
   const nav = document.querySelector<HTMLElement>("[data-garden-nav]");
   const live = document.querySelector<HTMLElement>("[data-garden-live]");
   const stops = [...(nav?.querySelectorAll<HTMLButtonElement>("[data-station]") ?? [])];
-  const pause = nav?.querySelector<HTMLButtonElement>("[data-garden-pause]");
-  const plain = nav?.querySelector<HTMLButtonElement>("[data-garden-plain]");
 
   const select = (i: number, announce: boolean) => {
     const s = garden.go(i);
@@ -55,20 +54,11 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       if (
         e.target instanceof Element &&
-        e.target.closest("input, textarea, select, [contenteditable]")
+        e.target.closest("input, textarea, select, [contenteditable], [popover]")
       )
         return;
       if (e.key === "ArrowRight") select(garden.current() + 1, true);
       else if (e.key === "ArrowLeft") select(garden.current() - 1, true);
-    },
-    on,
-  );
-  pause?.addEventListener(
-    "click",
-    () => {
-      const pressed = pause.getAttribute("aria-pressed") !== "true";
-      pause.setAttribute("aria-pressed", String(pressed));
-      garden.pause(pressed);
     },
     on,
   );
@@ -78,20 +68,6 @@ function wire(garden: Garden, cards: readonly HTMLElement[]): void {
     (e) => {
       if (fine.matches)
         garden.pointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1);
-    },
-    on,
-  );
-  plain?.addEventListener(
-    "click",
-    () => {
-      try {
-        garden.stop();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        leave(cards);
-        cards[0]?.querySelector<HTMLElement>("h1")?.focus();
-      }
     },
     on,
   );
@@ -169,6 +145,35 @@ function runIntro(garden: Garden, cards: readonly HTMLElement[]): void {
 }
 
 /**
+ * 表示の設定に合わせる。アニメーションがオフの間は、カメラを動かさずに切り替え、ポインタに合わせて揺らさない。
+ * 庭の表示をオフにしたら、ふつうのページに戻す。フォーカスは設定の面に残す。
+ */
+function follow(garden: Garden, cards: readonly HTMLElement[]): void {
+  garden.pause(root.dataset.motion === "off");
+  root.addEventListener(
+    SETTINGS_CHANGE,
+    (e) => {
+      const change = (e as CustomEvent<SettingsChange>).detail;
+      // 季節と時間帯の変更は、head の inline script が読み込み直して当てる。
+      if (!("on" in change)) return;
+      if (change.name === "motion") {
+        garden.pause(!change.on);
+        return;
+      }
+      if (change.on) return;
+      try {
+        garden.stop();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        leave(cards);
+      }
+    },
+    on,
+  );
+}
+
+/**
  * 墨の絵と署名が挿入される（class `ink-ready`）のを待ち、挿入した時刻を渡して `run` を呼ぶ。
  * 届かなかったとき（class `ink-failed`）は、庭を止めて、ふつうのページに戻す。
  */
@@ -204,12 +209,17 @@ function afterInk(
 
 function boot(): void {
   if (!root.classList.contains("stage-on")) return;
+  // バンドルを読み込む間に、表示の設定で庭の表示をオフにしていたら、庭を立ち上げずにふつうのページに戻す。
+  if (root.dataset.garden === "off") {
+    leave([]);
+    return;
+  }
   const stage = document.querySelector<HTMLElement>("[data-garden-stage]");
   // 和紙を掛ける木は STATIONS の順なので、セクションを文書の順でなく id で引く。
   const cards = STATIONS.map(({ id }) =>
     document.querySelector<HTMLElement>(`[data-garden-card][aria-labelledby="${id}"]`),
   ).filter((el) => el !== null);
-  // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。
+  // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。選んだ値は、表示の設定の applySettings が決めた値に絞っている。
   const intro = root.classList.contains("intro");
   // 墨の絵と署名が届かなかったときは、場面を組み立てずに、ふつうのページに戻す。
   if (intro && root.classList.contains("ink-failed")) {
@@ -234,6 +244,7 @@ function boot(): void {
   }
   root.classList.add("scene-ready");
   performance.mark("garden-scene-ready");
+  follow(garden, cards);
   if (intro) runIntro(garden, cards);
   else reveal(garden, cards);
 }

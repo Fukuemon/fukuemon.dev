@@ -2,8 +2,12 @@
 // 文字列にして運ぶので、関数の外の名前を参照しない。
 // 場面と island は関数を呼び直さず、`html` の `data-season` と `data-time` を読む。
 
-export type Season = "spring" | "summer" | "autumn" | "winter";
-export type TimeOfDay = "morning" | "day" | "evening" | "night";
+import type { PickValue } from "../../../components/site-settings/settings";
+
+/** 季節。値の一覧は、表示の設定（`components/site-settings/settings.ts`）が持つ */
+export type Season = Exclude<PickValue<"season">, "auto">;
+/** 時間帯。値の一覧は、表示の設定が持つ */
+export type TimeOfDay = Exclude<PickValue<"time">, "auto">;
 
 /** 場面の季節と時間帯 */
 export interface SeasonTime {

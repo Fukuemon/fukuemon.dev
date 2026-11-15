@@ -59,8 +59,8 @@ test.describe("プレイグラウンドの一覧", () => {
   }) => {
     await page.goto("/playground");
     const links = page.getByTestId("playground-tool-link");
-    // ヘッダーの最後のリンクが「プレイグラウンド」で、その次が一覧のリンクである前提で、ヘッダーから Tab で続くことを見る
-    await playgroundNavLink(page).focus();
+    // ヘッダーの最後の要素が表示の設定の歯車で、その次が一覧のリンクである前提で、ヘッダーから Tab で続くことを見る
+    await page.getByTestId("site-settings-open").focus();
     for (const index of PLAYGROUND_TOOLS.keys()) {
       await page.keyboard.press("Tab");
       await expect(links.nth(index)).toBeFocused();
