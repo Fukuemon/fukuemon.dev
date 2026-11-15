@@ -58,11 +58,25 @@ describe("scenePalette", () => {
 describe("舞う物", () => {
   const seasons = ["spring", "autumn", "winter"] as const;
   const times = ["morning", "day", "evening", "night"] as const;
-  it.each(seasons.flatMap((s) => times.map((t) => [s, t] as const)))(
-    "%s の %s は、季節の表の舞う物を、加算で重ねずに出す",
-    (season, t) => {
-      expect(scenePalette(t, season).fall).toStrictEqual({
-        ...SEASON_FALLS[season],
+  it.each(
+    seasons
+      .flatMap((s) => times.map((t) => [s, t] as const))
+      .filter(([s, t]) => s !== "winter" || t === "night"),
+  )("%s の %s は、季節の表の舞う物を、加算で重ねずに出す", (season, t) => {
+    expect(scenePalette(t, season).fall).toStrictEqual({
+      ...SEASON_FALLS[season],
+      additive: false,
+    });
+  });
+
+  it.each(["morning", "day", "evening"] as const)(
+    "冬の %s は、雪の色を #b4c0ce に、数を 220 に、大きさを 0.12 m にし、形は季節の表のままにする",
+    (t) => {
+      expect(scenePalette(t, "winter").fall).toStrictEqual({
+        shape: SEASON_FALLS.winter.shape,
+        color: "#b4c0ce",
+        count: 220,
+        size: 0.12,
         additive: false,
       });
     },
