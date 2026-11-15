@@ -75,18 +75,18 @@ const row = "border-t border-border py-2";
       <div class="flex items-start gap-4">
         <img src={avatar.src} alt="Fukuemon のアイコン" width="64" height="64" class="size-16 flex-none rounded-full" />
         <div class="min-w-0">
-          <p class="mb-4 text-text-secondary">
-            {titles.map((t) => <span class="block">{t}</span>)}
-          </p>
+          <ul class="mb-4 space-y-1 text-text-secondary [html.stage-on_&]:text-inherit">
+            {titles.map((t) => <li>{t}</li>)}
+          </ul>
           <p>好み：妻、甘いもの、運動、自然、</p>
         </div>
       </div>
-      <div class="mt-4 flex gap-2">
-        {/* 和紙は縮んで映るので、庭では押せる範囲を 52px にし、負の margin で並びの中では 44px を占めるようにする */}
+      <div class="-ms-2.5 mt-4 flex gap-2 [html.stage-on_&]:gap-4">
+        {/* 和紙は縮んで映るので、庭では押せる範囲を 60px にし、負の margin で並びの中では 44px を占めるようにする。並びの -ms-2.5 は、アイコンの左端を文の左端に揃える */}
         {
           links.map(({ label, href, path }) => (
             <a
-              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring [html.stage-on_&]:-m-1 [html.stage-on_&]:min-h-13 [html.stage-on_&]:min-w-13"
+              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring [html.stage-on_&]:-m-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:min-w-15"
               href={href}
               aria-label={label}
             >
@@ -105,9 +105,9 @@ const row = "border-t border-border py-2";
           career.map(({ year, title, detail }) => (
             <li class={row}>
               <details name="career">
-                <summary class="cursor-pointer focus-visible:focus-ring">
+                <summary class="cursor-pointer focus-visible:focus-ring [html.stage-on_&]:-my-1 [html.stage-on_&]:py-1">
                   <span class="text-caption text-text-secondary tabular-nums">{year}</span>
-                  <span class="block">{title}</span>
+                  <span class="block [html.stage-on_&]:font-semibold">{title}</span>
                 </summary>
                 <div class="space-y-2 pt-2">
                   {detail.map((line) => (
@@ -172,8 +172,8 @@ const row = "border-t border-border py-2";
     color: inherit;
   }
 
-  /* 狭い画面で、語の途中で折れないようにする */
-  :global(html.stage-on) [data-garden-card] :is(p, summary) {
+  /* 狭い画面で、語の途中で折れないようにする。長い段落は行の終わりが不揃いになるので、短い文だけに当てる */
+  :global(html.stage-on) [data-garden-card] :is(p, summary, ul:not(:has(details)) > li):not(details p) {
     word-break: auto-phrase;
   }
 
@@ -185,12 +185,12 @@ const row = "border-t border-border py-2";
     margin-block-end: 0;
   }
 
-  :global(html.stage-on) [data-garden-card] :is(li, dl > div) {
+  :global(html.stage-on) [data-garden-card] :is(li:has(> details), dl > div) {
     padding-block: 0.625rem;
     border-color: color-mix(in srgb, currentColor 25%, transparent);
   }
 
-  :global(html.stage-on) [data-garden-card] :is(li, dl > div):first-child {
+  :global(html.stage-on) [data-garden-card] :is(li:has(> details), dl > div):first-child {
     padding-block-start: 0;
     border-block-start: 0;
   }
@@ -209,10 +209,6 @@ const row = "border-t border-border py-2";
   :global(html.stage-on) [data-garden-card] :is(summary > span:first-child, dt) {
     font-size: 1rem;
     color: color-mix(in srgb, currentColor 70%, transparent);
-  }
-
-  :global(html.stage-on) [data-garden-card] a {
-    color: var(--scene-link);
   }
 
   :global(html.stage-on) [data-garden-card] :focus-visible {

@@ -118,10 +118,11 @@ test.describe("トップの庭", () => {
       await expect(htmlElement(page)).not.toHaveAttribute("style", /--scene-/);
     });
 
-    // 幅 1440px の経歴の和紙は、画面の高さで距離が決まる。掛け直さないと、詳細を開いて低くなった文が、閉じたときの距離のまま小さく映る
-    test("経歴の 1 行目の詳細を開いた場合、和紙を掛け直し、閉じたときと同じ高さで映ること", async ({
+    // 1280×720 の経歴の和紙は、閉じても 1 行目を開いても、画面の高さで距離が決まる。掛け直さないと、詳細を開いて低くなった文が、閉じたときの距離のまま小さく映る
+    test("高さ 720px で経歴の 1 行目の詳細を開いた場合、和紙を掛け直し、閉じたときと同じ高さで映ること", async ({
       page,
     }) => {
+      await page.setViewportSize({ width: 1280, height: 720 });
       await openGarden(page, { paused: true });
       await page.getByTestId("garden-station-1").click();
       await expectAt(page, "career");
@@ -306,6 +307,68 @@ test.describe("トップの庭", () => {
         inside: boxes.every((b) => b.left >= 0 && b.right <= 320),
         headerOneRow: header < 80,
       }).toStrictEqual({ rows: true, small: 0, inside: true, headerOneRow: true });
+    });
+
+    // 幅 320px では和紙がいちばん小さく映るので、押せる範囲が 44px を下回りやすい
+    test("プロフィールのリンクと経歴の行の summary が、44px 四方以上の大きさで映り、リンクの押せる範囲が重ならないこと", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      await expectAt(page, "profile");
+      const links = await profileLinks(page).evaluateAll((els) =>
+        els.map((el) => {
+          const b = el.getBoundingClientRect();
+          return { left: b.left, right: b.right, width: b.width, height: b.height };
+        }),
+      );
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      const summaries: number[] = [];
+      for (let i = 0; i < 4; i++) {
+        const summary = careerSummaries(page).nth(i);
+        await summary.click();
+        await expectAt(page, "career");
+        summaries.push((await summary.boundingBox())!.height);
+        await summary.click();
+      }
+      expect({
+        links: links.length,
+        smallLinks: links.filter((b) => b.width < 44 || b.height < 44).length,
+        overlap: links.length === 2 && links[0]!.right - links[1]!.left > 0.5,
+        smallSummaries: summaries.filter((h) => h < 44).length,
+      }).toStrictEqual({ links: 2, smallLinks: 0, overlap: false, smallSummaries: 0 });
+    });
+  });
+
+  test.describe("幅 375px、高さ 667px", () => {
+    test.use({ viewport: { width: 375, height: 667 }, colorScheme: "light" });
+
+    // 和紙の距離が画面の高さで決まるとき、高い和紙は字が 14px より小さく映りやすい
+    test("4 つの文のどれへ移った場合も、経歴の行を開いた場合も、和紙の字が 14px 以上で映ること", async ({
+      page,
+    }) => {
+      await openGarden(page, { paused: true });
+      const shown = async (id: string) => {
+        const c = card(page, id);
+        const box = (await c.boundingBox())!;
+        return (16 * box.width) / (await c.evaluate((el) => (el as HTMLElement).offsetWidth));
+      };
+      const small: string[] = [];
+      for (const [i, id] of ["profile", "career", "stack", "portfolio"].entries()) {
+        await page.getByTestId(`garden-station-${i}`).click();
+        await expectAt(page, id);
+        if ((await shown(id)) < 14) small.push(id);
+      }
+      await page.getByTestId("garden-station-1").click();
+      await expectAt(page, "career");
+      for (let i = 0; i < 4; i++) {
+        const summary = careerSummaries(page).nth(i);
+        await summary.click();
+        await expectAt(page, "career");
+        if ((await shown("career")) < 14) small.push(`career-open${i + 1}`);
+        await summary.click();
+      }
+      expect(small).toStrictEqual([]);
     });
   });
 
