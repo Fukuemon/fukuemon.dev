@@ -33,21 +33,21 @@ ADR の規則は、[README.md](README.md) にある。
 
 ## 書体、トークン、コンポーネント
 
-| ADR                                                          | 題                                                                                                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| [ADR-0075](0075-system-font-for-body-text.md)                | 本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする                                                         |
-| [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md)     | Tailwind CSS v4 を CSS スタイリングの基盤にし、サイトの共通の CSS で preflight を読み、トークンを packages/ui のテーマ変数から使う         |
-| [ADR-0024](0024-tokens-of-fukuemon-dev.md)                   | トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする |
-| [ADR-0028](0028-radius-shadow-and-brush-motion.md)           | 操作できる要素と重なる面の角を 2px で丸め、重なる面にずらした影を付け、罫を引く動きを筆の線にする                                          |
-| [ADR-0061](0061-sumi-focus-ring.md)                          | フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする                                                             |
-| [ADR-0021](0021-ui-components-and-catalog.md)                | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                     |
-| [ADR-0022](0022-code-colors-from-tokens.md)                  | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                             |
-| [ADR-0062](0062-dense-text-and-targets-in-playground.md)     | コードを動かす画面だけ、文字を 12px と 13px まで小さくし、押せる領域をマウスで押す端末は 24×24 CSS px、触る端末は 44×44 CSS px にする      |
-| [ADR-0079](0079-inset-focus-ring-in-dense-panes.md)          | コードを動かす画面の詰めたペイン、木の行の中の名前の欄、`SplitPane` の仕切りで、フォーカスの輪を要素の内側に引く                           |
-| [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md)     | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                               |
-| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | コードを動かす画面の文字の大きさを端末の種類で分けず、iOS と iPadOS の入力時の拡大を viewport の指定で止める                               |
-| [ADR-0072](0072-short-landscape-layout-in-playground.md)     | コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える        |
-| [ADR-0073](0073-layered-panes-and-radius-in-playground.md)   | コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める                                                  |
+| ADR                                                          | 題                                                                                                                                                 |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-0075](0075-system-font-for-body-text.md)                | 本文をシステムフォントで描き、Web フォントを記事の題と見出しの明朝と等幅だけにする                                                                 |
+| [ADR-0055](0055-tailwind-preflight-and-theme-from-ui.md)     | Tailwind CSS v4 を CSS スタイリングの基盤にし、サイトの共通の CSS で preflight を読み、トークンを packages/ui のテーマ変数から使う                 |
+| [ADR-0024](0024-tokens-of-fukuemon-dev.md)                   | （提案）トークンを、fukuemon.dev の値のプリミティブトークン、セマンティックトークン、テーマ変数の 3 つの層にし、生成りの地と旧サイトの差し色にする |
+| [ADR-0028](0028-radius-shadow-and-brush-motion.md)           | （提案）操作できる要素と重なる面の角を 4px で丸め、ボタンと入力欄と帯に縫い目の破線を引き、重なる面にずらした影を付け、罫を引く動きを筆の線にする  |
+| [ADR-0061](0061-sumi-focus-ring.md)                          | フォーカスの表示を、DADS の黄と黒の 2 重の表示から、墨の 2px の 1 重の輪にする                                                                     |
+| [ADR-0021](0021-ui-components-and-catalog.md)                | packages/ui に Base と Case の React のコンポーネントを置き、packages/ui の Storybook をカタログにする                                             |
+| [ADR-0022](0022-code-colors-from-tokens.md)                  | コードの色を、セマンティックトークンから生成したテーマで、コードブロック、エディタ、端末に配る                                                     |
+| [ADR-0062](0062-dense-text-and-targets-in-playground.md)     | コードを動かす画面だけ、文字を 12px と 13px まで小さくし、押せる領域をマウスで押す端末は 24×24 CSS px、触る端末は 44×44 CSS px にする              |
+| [ADR-0079](0079-inset-focus-ring-in-dense-panes.md)          | コードを動かす画面の詰めたペイン、木の行の中の名前の欄、`SplitPane` の仕切りで、フォーカスの輪を要素の内側に引く                                   |
+| [ADR-0068](0068-solid-tab-indicator-in-forced-colors.md)     | ハイコントラストのとき、選んだタブの下の罫を、筆の線の形でなく全幅の帯にする                                                                       |
+| [ADR-0071](0071-touch-targets-and-ios-zoom-in-playground.md) | コードを動かす画面の文字の大きさを端末の種類で分けず、iOS と iPadOS の入力時の拡大を viewport の指定で止める                                       |
+| [ADR-0072](0072-short-landscape-layout-in-playground.md)     | コードを動かす画面を、幅が 48rem 未満か高さが 500px 未満のときに狭い配置にし、高さが 500px 未満ではペインを左の縦のタブで切り替える                |
+| [ADR-0073](0073-layered-panes-and-radius-in-playground.md)   | コードを動かす画面を、地の上に角の丸い紙の面を重ねる見た目にし、面の角を 6〜14px で丸める                                                          |
 
 ## 挿絵とトップの演出
 
