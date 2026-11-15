@@ -35,7 +35,9 @@
 - ファイル
   - ビルドのときに `ink/` が、リポジトリの中の入力だけから、帯の高さに収まる配置の SVG を作る。`/_astro/` から、内容のハッシュを入れたファイル名で配信する。
   - SVG に色の値を書かない。墨の線の濃さは alpha で持つ。
+  - 帯の配置は `ink/` の中に置く。墨の絵と場面が共有する `layout.ts` は、読むだけにする。
 - 帯の要素
+  - 帯の要素と CSS は、`ink/` のコンポーネントに置き、トップのページが直接 import する。SVG の URL は、`stage/` を経由せずに渡す。
   - 帯の要素は、`html.stage-on` のとき `display: none` にする。
   - 塗りは、`@supports (mask-image: url(""))` の中でだけ、帯の要素の `background-color` に `--fd-color-text` を当てる。`mask-image` に対応しないブラウザで、帯を塗りつぶさないためである。
   - 帯の要素は `aria-hidden="true"` にして読み上げから外す。
@@ -79,7 +81,8 @@
 - ADR-0026 の、ふつうのページに墨の絵を置かない記述と、見た目の回帰の対象（ふつうのページと止めた庭の絵）の記述。
 - `docs/adr/index.md` の「挿絵とトップの演出」の表と、移した判断の表の ADR-0026 の行の移した先。
 - `packages/ui/src/art/DesignDoc.md` の「置く場所」の表。
-- `apps/web/src/features/top-garden/DesignDoc.md` の、帯の絵の配置。
+- `apps/web/src/features/top-garden/DesignDoc.md` の、帯の絵のファイルの置き場と配置。乱数の順と SVG のサイズの上限の節を直すかも、あわせて決める。
+- SVG の URL を接尾辞の付いた import で受けるときは、`context/conventions.md` の `import/default` の抑制の一覧と `oxlint.config.ts`。
 
 ## Considered Options
 
