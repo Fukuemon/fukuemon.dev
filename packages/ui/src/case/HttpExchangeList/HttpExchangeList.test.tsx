@@ -76,19 +76,20 @@ describe("HttpExchangeList", () => {
   });
 
   it.each(["light", "dark"])(
-    "%s で行に hover すると、背景がペインの面と違う色になる",
+    "%s で行に hover すると、背景がペインの面と違う surface-pane-subtle の色になる",
     async (theme) => {
       document.documentElement.dataset.theme = theme;
       try {
         render(
-          <div className="bg-surface-pane" data-testid="pane">
+          <div className="bg-surface-pane">
+            <span className="bg-surface-pane-subtle" data-testid="expected" />
             <Default />
           </div>,
         );
-        const paneColor = getComputedStyle(screen.getByTestId("pane")).backgroundColor;
+        const expected = getComputedStyle(screen.getByTestId("expected")).backgroundColor;
         const row = rows()[0] as HTMLElement;
         await userEvent.hover(row);
-        expect(getComputedStyle(row).backgroundColor).not.toBe(paneColor);
+        await expect.poll(() => getComputedStyle(row).backgroundColor).toBe(expected);
       } finally {
         delete document.documentElement.dataset.theme;
       }
