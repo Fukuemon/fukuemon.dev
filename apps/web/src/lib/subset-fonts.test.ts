@@ -260,13 +260,13 @@ describe("ビルド後の作り直し", () => {
   );
   const both = face("a", "U+3042") + face("b", "U+3044");
 
-  it("使う字を含むスライスだけを、使う字で作り直す", async () => {
+  it("使う字を含む分割だけを、使う字で作り直す", async () => {
     await build({ html: heading("あ"), css: both });
 
     expect(texts()).toStrictEqual(["あ"]);
   });
 
-  it("作り直したスライスを、中身の hash の名前で置く", async () => {
+  it("作り直した分割を、中身の hash の名前で置く", async () => {
     await build({ html: heading("あ"), css: both });
 
     expect((await readdir(join(dir, "_astro"))).sort()).toStrictEqual(
@@ -297,7 +297,7 @@ describe("ビルド後の作り直し", () => {
     expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe(other);
   });
 
-  it("複数の CSS に同じスライスがあっても、1 回だけ作り直す", async () => {
+  it("複数の CSS に同じ分割があっても、1 回だけ作り直す", async () => {
     await build({ html: heading("あ"), css: face("a", "U+3042"), pageCss: face("a", "U+3042") });
 
     expect(subsetFont).toHaveBeenCalledTimes(1);
@@ -309,7 +309,7 @@ describe("ビルド後の作り直し", () => {
     expect(texts()).toStrictEqual(["あ"]);
   });
 
-  it("ワイルドカードのスライスにも、使う字を渡す", async () => {
+  it("ワイルドカードの分割にも、使う字を渡す", async () => {
     await build({ html: heading("Aあ—"), css: face("a", "U+??,U+2000-206F") });
 
     expect(texts()).toStrictEqual(["A—"]);
@@ -321,7 +321,7 @@ describe("ビルド後の作り直し", () => {
     subsets: subsetFont.mock.calls.length,
   });
 
-  it("使う字が無い分割は、@font-face を CSS から外し、ファイルを消す", async () => {
+  it("使う字の無い分割は、@font-face を CSS から外し、ファイルを消す", async () => {
     await build({ html: heading("あ"), css: both });
 
     expect(await state()).toStrictEqual({
@@ -331,7 +331,7 @@ describe("ビルド後の作り直し", () => {
     });
   });
 
-  it("使う字が無い分割の規則を外すときは、規則が指す woff のファイルも消す", async () => {
+  it("使う字の無い分割の規則を外すときは、規則が指す woff のファイルも消す", async () => {
     const withWoff = face("b", "U+3044").replace(
       'format("woff2")',
       'format("woff2"),url("/_astro/b.BBBBBBBB.woff")format("woff")',
@@ -345,7 +345,7 @@ describe("ビルド後の作り直し", () => {
     expect((await state()).files).toStrictEqual(["app.js", "page.css", "site.css", renamed].sort());
   });
 
-  it("使う字が無い分割の @font-face は、どの CSS からも外す", async () => {
+  it("使う字の無い分割の @font-face は、どの CSS からも外す", async () => {
     await build({ html: heading("あ"), css: both, pageCss: face("b", "U+3044") });
 
     expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe("");
@@ -379,7 +379,7 @@ describe("ビルド後の作り直し", () => {
     ["/_astro/./a.AAAAAAAA.woff2", "残した規則も指している", false],
     ["/_astro/missing.woff", "出力に無い", false],
   ])(
-    "外した規則の src の %s を消せないときは、作り直しも書き換えもせずにビルドを止める（%s、rebuild: %s）",
+    "外す規則の src の %s を消せないときは、作り直しも書き換えもせずにビルドを止める（%s、rebuild: %s）",
     async (url, message, rebuild) => {
       const shared = face("b", "U+3044").replace(
         'format("woff2")',
@@ -400,7 +400,7 @@ describe("ビルド後の作り直し", () => {
     },
   );
 
-  it("外した規則の src にあるフォントでないファイルは消さない", async () => {
+  it("外す規則の src のうち、woff2 と woff でないファイルは消さない", async () => {
     const svg = face("b", "U+3044").replace(
       'format("woff2")',
       'format("woff2"),url(/_astro/b.svg)format("svg")',
@@ -435,7 +435,7 @@ describe("ビルド後の作り直し", () => {
     expect(await readFile(join(dir, "_astro/site.css"), "utf8")).toBe(odd + RULE);
   });
 
-  it("書体を当てない要素の字では、スライスを作り直さない", async () => {
+  it("書体を当てない要素の字では、分割を作り直さない", async () => {
     await build({ html: `${heading("あ")}<p>い</p>`, css: both });
 
     expect(texts()).toStrictEqual(["あ"]);

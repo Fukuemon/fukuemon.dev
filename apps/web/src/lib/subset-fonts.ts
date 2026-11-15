@@ -7,15 +7,16 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import subsetFont from "subset-font";
 
 /**
- * 和文の書体の分割を、その書体を当てる要素の字だけに作り直し、使う字の無い分割の @font-face を CSS から外す。
+ * 和文の書体の分割を、その書体を当てる要素の字だけに作り直し、使う字の無い分割の @font-face を CSS から削除する。
  * 書体を当てる要素は、ビルドした CSS で、その書体を font-family に持つクラスのセレクタから決める。
  * 要素を特定できないときは、字を取りこぼさないように、全ての HTML の字を使う。
- * 使う字のある分割の分け方と unicode-range はそのまま残すので、ページは今までと同じ分割だけを取得する。
- * 使う字の無い分割の規則は、どのページも取得しないのに、描画を止める CSS の転送量を増やすので外す。外した規則が指すファイルも消す。
+ * 使う字のある分割の分け方と unicode-range はそのまま残すので、ページが取得する分割は、作り直す前と変わらない。
+ * 使う字の無い分割のファイルは、どのページも取得しない。その @font-face はレンダリングを妨げる CSS の転送量を増やすので、
+ * CSS から削除し、@font-face が指すファイルも削除する。
  * 作り直したファイルは中身の hash で名前を付け直す。同じ名前のまま中身を変えると、
  * 長く保存したキャッシュが古い字の集合を返し、新しく使った字が別の書体で描かれる。
- * @param options.rebuild false のときは、使う字のある分割を作り直さず、使う字の無い分割の規則を外すだけにする。
- *   要素を特定できないことの警告も出さない。作り直さないので、字を広く取っても配るファイルは変わらない
+ * @param options.rebuild false のときは、使う字のある分割を作り直さず、使う字の無い分割の @font-face を削除するだけにする。
+ *   要素を特定できないときの警告も出さない。分割を作り直さないので、全ての HTML の字を使っても、配信するファイルは変わらないためである
  */
 export function subsetFonts(
   family: string,
@@ -112,7 +113,7 @@ export function subsetFonts(
   };
 }
 
-/** woff2 の URL が `urls` にある @font-face を、CSS から外す。外した規則の src の URL を `removed` に足す */
+/** woff2 の URL が `urls` にある @font-face を、CSS から削除する。削除した @font-face の src の URL を `removed` に足す */
 function removeFaces(css: string, urls: ReadonlySet<string>, removed: Set<string>): string {
   if (urls.size === 0) return css;
   return css.replace(/@font-face\s*\{([^}]*)\}/g, (rule, body: string) => {
@@ -286,7 +287,7 @@ const cssContentChars = (css: string): string =>
  * 字を集める。HTML は、書体を当てる要素の字だけを集める。
  * 要素を特定できないセレクタがあるときは、全ての要素の字を集める。
  * JS の字は U+2000 から上だけを集める。
- * JS は island が描く文言を持つが、ライブラリの欧文の表まで拾うと Latin のスライスが減らない
+ * JS は island が描く文言を持つが、ライブラリの欧文の表まで拾うと Latin の分割が減らない
  */
 async function usedChars(
   files: string[],
