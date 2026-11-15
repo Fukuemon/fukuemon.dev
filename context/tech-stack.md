@@ -70,7 +70,6 @@ pnpm のバージョンは、ルートの `package.json` の `packageManager` �
 - Playwright は、次のことに使う。
   - `packages/ui` の story のテスト、カタログの E2E と撮影（`packages/ui/e2e/`）
   - トップの庭の見た目の回帰と、サイトの E2E（`packages/e2e/tests/specs/`）
-  - トップの試作の録画
   - トップの Lighthouse の計測（Chromium のパスの取得と、測る前のプロファイルの作成。`scripts/measure-top-lighthouse.mjs`）
   - トップのイントロの計測（trace の取得。`scripts/measure-top-intro.mjs`）
 - three は、トップの立体の庭を描く場面のバンドルにだけ使う。

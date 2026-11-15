@@ -19,7 +19,7 @@
 
 - `zensical.toml` はリポジトリのルートに置く。Zensical は、設定ファイルのディレクトリの外にある `docs_dir` を読まない。
 - `pyproject.toml` と `uv.lock` もルートに置く。uv は、`zensical.toml` と同じディレクトリで依存を解決する。
-- サイトに載せる文書は、`docs/` の下（ADR のテンプレートとトップの試作を除く）と、`docs/design/` のシンボリックリンクが指す Design Doc とデザインシステムの文書である。`context/` とカタログは載せない。
+- サイトに載せる文書は、`docs/` の下（ADR のテンプレートと `adr/README.md` を除く）と、`docs/design/` のシンボリックリンクが指す Design Doc とデザインシステムの文書である。`context/` とカタログは載せない。
 - ADR は、ナビゲーションに 1 本ずつ並べず、`docs/adr/index.md` からリンクで開く。
 - Design Doc とデザインシステムの文書を足すときは、`zensical.toml` の `nav` に足す。`docs/` の外に置く文書は、`docs/design/` にシンボリックリンクを置き、`zensical.toml` の `watch` にも足す。
 

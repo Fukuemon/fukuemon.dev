@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>fukuemon.dev</title>
+<link>https://fukuemon.dev/</link>
+<description>Fukuemon の技術記事を公開しています。</description>
+<language>ja</language>
+<item><title>本文、表、コード、図</title><link>https://fukuemon.dev/articles/article-elements/body-and-figure</link><guid isPermaLink="true">https://fukuemon.dev/articles/article-elements/body-and-figure</guid><description>このサイトの記事が使う、本文、表、コードブロック、図の見え方と、それぞれの置き方を説明する。</description><pubDate>Sun, 15 Nov 2026 00:00:00 GMT</pubDate></item>
+<item><title>シリーズの前後のリンク</title><link>https://fukuemon.dev/articles/article-elements/series-links</link><guid isPermaLink="true">https://fukuemon.dev/articles/article-elements/series-links</guid><description>記事をシリーズにまとめたときの、ページの下に出る、シリーズの名前、位置、前後の記事へのリンクを説明する。</description><pubDate>Sat, 14 Nov 2026 00:00:00 GMT</pubDate></item>
+<item><title>記事の中で動かせる Node の実行環境</title><link>https://fukuemon.dev/articles/article-elements/playground-node</link><guid isPermaLink="true">https://fukuemon.dev/articles/article-elements/playground-node</guid><description>記事の中のボタンで、ブラウザの中に Node の実行環境を開き、サーバーを動かして結果を見る仕組みを、実物を使って説明する。</description><pubDate>Fri, 13 Nov 2026 00:00:00 GMT</pubDate></item>
+<item><title>Node のコードから DB に接続する</title><link>https://fukuemon.dev/articles/article-elements/playground-node-db</link><guid isPermaLink="true">https://fukuemon.dev/articles/article-elements/playground-node-db</guid><description>記事の中の Node の実行環境から、pg で DB に接続し、同じ DB を SQL のペインからも読み書きできることを、実物を使って説明する。</description><pubDate>Fri, 13 Nov 2026 00:00:00 GMT</pubDate></item>
+<item><title>記事の中で動かせる SQL のツール</title><link>https://fukuemon.dev/articles/article-elements/playground-sql</link><guid isPermaLink="true">https://fukuemon.dev/articles/article-elements/playground-sql</guid><description>記事の中のボタンで SQL のツールを開き、初期データに対してクエリを実行する仕組みと、外部の画像を置いたままにできる理由を説明する。</description><pubDate>Fri, 13 Nov 2026 00:00:00 GMT</pubDate></item>
+<item><title>シリーズに入れない記事</title><link>https://fukuemon.dev/articles/standalone-article</link><guid isPermaLink="true">https://fukuemon.dev/articles/standalone-article</guid><description>シリーズに入れない記事では、ページの下にシリーズの名前と前後の記事へのリンクが出ないことを説明する。</description><pubDate>Fri, 13 Nov 2026 00:00:00 GMT</pubDate></item>
+<item><title>シリーズの読む順</title><link>https://fukuemon.dev/articles/article-elements/a-reading-order</link><guid isPermaLink="true">https://fukuemon.dev/articles/article-elements/a-reading-order</guid><description>シリーズの記事が、ファイル名や公開の日付ではなく、読む順の番号で並ぶことを説明する。</description><pubDate>Thu, 12 Nov 2026 00:00:00 GMT</pubDate></item>
+</channel>
+</rss>

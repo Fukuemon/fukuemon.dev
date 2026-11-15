@@ -43,18 +43,16 @@ ADR-0005: [Workers と Terraform と Wrangler の分担](../docs/adr/0005-worker
 
 ```mermaid
 flowchart TD
-    dmanual["運用者が develop から手動で起動"] --> ci["deploy workflow"]
+    check["develop の check workflow の成功"] --> ci["deploy workflow"]
+    dmanual["運用者が develop から手動で起動"] --> ci
     ci -->|"deploy 用の token"| wd["wrangler deploy"]
     wd --> worker["Worker script + assets"]
-    check["develop の check workflow の成功"] --> cci["deploy-catalog workflow"]
+    check --> cci["deploy-catalog workflow"]
     cci -->|"deploy 用の token"| cwd["wrangler deploy（packages/ui）"]
     cwd --> catalog["カタログの Worker + assets"]
     check --> pci["deploy-playground workflow"]
     pci -->|"deploy 用の token"| pwd["wrangler deploy（apps/playground）"]
     pwd --> playground["プレイグラウンドの Worker + assets"]
-    check --> vci["deploy-preview workflow"]
-    vci -->|"deploy 用の token"| vwd["wrangler deploy --env preview（apps/web）"]
-    vwd --> preview["プレビューの Worker + assets"]
     check --> dci["deploy-docs workflow"]
     dci -->|"deploy 用の token"| dwd["wrangler deploy（apps/docs-site）"]
     dwd --> docs["ドキュメントサイトの Worker + assets"]
@@ -64,7 +62,6 @@ flowchart TD
     ci -. "触らない" .-x base
     cci -. "触らない" .-x base
     pci -. "触らない" .-x base
-    vci -. "触らない" .-x base
     dci -. "触らない" .-x base
 ```
 
@@ -131,7 +128,7 @@ state の key に scope を含める（`cloudflare/main/terraform.tfstate`）。
 - `infra/cloudflare/zone.tf`: zone の取り込み
 - `infra/cloudflare/workers_domain.tf`: Workers の custom domain。サイトの apex（`site`）、カタログの `design.<zone>`（`catalog`）、プレイグラウンドの `play.<zone>`（`playground`）、ドキュメントサイトの `docs.<zone>`（`docs`）
 - `infra/cloudflare/vars.tf`: 変数。Worker の名前の `worker_name`、`catalog_worker_name`、`playground_worker_name`、`docs_worker_name` を持つ。ほかに `account_id`、`zone_id`、`zone_name` を持つ。
-- `apps/web/wrangler.jsonc`: サイトの Worker の設定。`env.preview` に、プレビューの Worker（`fukuemon-dev-preview`）の設定を置く。プレビューの Worker は custom domain を持たず、workers.dev の URL で公開する
+- `apps/web/wrangler.jsonc`: サイトの Worker の設定。`workers_dev` と `preview_urls` を切り、`<zone>` の apex だけで公開する
 - `packages/ui/wrangler.jsonc`: カタログの Worker の設定。`workers_dev` と `preview_urls` を切り、`design.<zone>` だけで公開する
 - `apps/playground/wrangler.jsonc`: プレイグラウンドの Worker の設定。`workers_dev` と `preview_urls` を切り、`play.<zone>` だけで公開する
 - `apps/docs-site/wrangler.jsonc`: ドキュメントサイトの Worker の設定。`workers_dev` と `preview_urls` を切り、`docs.<zone>` だけで公開する
@@ -151,16 +148,15 @@ CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`T
   - `packages/ui/wrangler.jsonc` の `name` と `catalog_worker_name` のデフォルト値を比べる
   - `apps/playground/wrangler.jsonc` の `name` と `playground_worker_name` のデフォルト値を比べる
   - `apps/docs-site/wrangler.jsonc` の `name` と `docs_worker_name` のデフォルト値を比べる
-  - プレビューの Worker は custom domain を持たず、Terraform の変数に名前が無いので、比べない
-- `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンド、ドキュメントサイトの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を、ドキュメントサイトは `apps/docs-site` の build の出力を読む
+- `pnpm run check:deploy`: サイト、カタログ、プレイグラウンド、ドキュメントサイトの `wrangler deploy --dry-run` を実行する。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を、ドキュメントサイトは `apps/docs-site` の build の出力を読む
+- `pnpm run check:closed-workers-dev`: `scripts/check-closed-workers-dev.sh` を実行する。サイト、カタログ、プレイグラウンドの Worker の `workers_dev` と `preview_urls` が、トップレベルで `false` であることと、`true` の行が無いことを確認する。
 - `pnpm run check:closed-urls`: `apps/docs-site/scripts/check-closed-urls.sh` を実行する。ドキュメントサイトの Worker の `workers_dev` と `preview_urls` が `false` であることと、`_headers` のすべてのパスに noindex があることを確認する。`wrangler.jsonc` のほかに wrangler の設定ファイル（`wrangler.json`、`.wrangler/deploy/config.json`）が無いことと、`route` と `routes` が無いことも確認する。`package.json` の `deploy` が、引数の無い `wrangler deploy` であることと、`predeploy` と `postdeploy` が無いことも確認する。custom domain は Terraform で作る（ADR-0005）。deploy の workflow は apply を通らないので、Terraform で作った `docs.<zone>` 以外の URL を開く変更を、この確認で止める。deploy-docs workflow も、配信の前にこの確認を実行する
-- check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 3 つを含む `pnpm run check` を実行する
-- workflow は次の 6 つ
+- check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 4 つを含む `pnpm run check` を実行する
+- workflow は次の 5 つ
   - apply: `.github/workflows/apply.yml`
   - deploy: `.github/workflows/deploy.yml`
   - deploy-catalog: `.github/workflows/deploy-catalog.yml`
   - deploy-playground: `.github/workflows/deploy-playground.yml`
-  - deploy-preview: `.github/workflows/deploy-preview.yml`
   - deploy-docs: `.github/workflows/deploy-docs.yml`
 
 ## Verification

@@ -1,7 +1,7 @@
 name: Deploy Playground
 
 # apps/playground を play.fukuemon.dev の Worker へ配信する (ADR-0031、ADR-0046)。
-# サイトの deploy と違い、develop で check workflow が通るたびに出す。本番の切り替えまでは、_headers が全てのパスに noindex を返す。
+# develop で check workflow が通るたびに出す。
 # 手動の起動は、初回の配信と出し直しに使う。custom domain は Terraform の管轄で、この workflow は触らない (ADR-0005)。
 on:
   workflow_run:
@@ -41,6 +41,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm --filter @fukuemon/playground run build
+
+      # workflow_dispatch で起動したときは check workflow の結果を条件にしないので、配信の前にも確認する
+      - name: workers.dev が閉じていることを確認する
+        run: pnpm run check:closed-workers-dev
 
       - name: Cloudflare へ配信する
         run: pnpm --filter @fukuemon/playground run deploy

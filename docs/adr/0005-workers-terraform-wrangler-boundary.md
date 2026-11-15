@@ -80,7 +80,6 @@ Terraform は secret の**名前**だけを扱う。
 ### 5. credential を 2 系統に分ける
 
 - 通常の deploy workflow は、push を起点に自動で動き、deploy の範囲に絞った token だけを持つ。
-  - 本番の Worker（`fukuemon-dev`）の deploy workflow は、本番を新しいサイトに切り替えるまで、手で起動したときだけ動く。この間も、deploy の範囲に絞った token だけを持つ。切り替えまでの扱いは、[ADR-0031 の 6](0031-subdomains-and-workers.md#6-切り替えまでのプレビュー) が決める。
 - apply workflow は、手で起動し（`workflow_dispatch`）、GitHub environment の protection rules を通し、apply 用の token を持つ。
 
 **1 名の体制でも意味を持つ分離は 2 つある。**  

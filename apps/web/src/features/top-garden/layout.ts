@@ -134,7 +134,7 @@ export interface Station {
   };
 }
 
-/** 和紙を掛けない庭の木。根元の [x, z]、大きさ、幹の傾く向き。どちらも松である */
+/** 和紙を掛けない庭の木。根元の [x, z]、大きさ、幹の傾く向き。どれも松である */
 export const OTHER_TREES: readonly {
   readonly at: Vec2;
   readonly s: number;
@@ -142,6 +142,7 @@ export const OTHER_TREES: readonly {
 }[] = [
   { at: [-9.0, -11.2], s: 1.35, dir: 1 },
   { at: [6.4, -1.4], s: 1.0, dir: -1 },
+  { at: [5.9, -4.2], s: 1.25, dir: -1 },
 ];
 
 /** 木の幹の中心線の点。大きさが 1 で、幹が +x へ傾く（dir が 1）ときの値で、x に dir を掛けて使う */
@@ -162,7 +163,7 @@ export const TREE_PADS: readonly (readonly [number, number, number, number])[] =
   [1, 1.25, 0.05, 0.8],
 ];
 
-/** 和紙を掛ける 4 つの場所。プロフィールのセクションの順に並ぶ */
+/** 和紙を掛ける 3 つの場所。プロフィールのセクションの順に並ぶ */
 export const STATIONS: readonly Station[] = [
   {
     id: "profile",
@@ -177,13 +178,6 @@ export const STATIONS: readonly Station[] = [
     pos: [-4.3, 1.5, -7.0],
     rot: 0.5,
     tree: { at: [-6.4, -7.9], s: 1.4, dir: 1, leaf: "season" },
-  },
-  {
-    id: "stack",
-    label: "技術スタック",
-    pos: [3.5, 1.5, -4.7],
-    rot: -0.45,
-    tree: { at: [5.9, -4.2], s: 1.25, dir: -1, leaf: "pine" },
   },
   {
     id: "portfolio",

@@ -1,7 +1,6 @@
-# noindex は、本番の切り替えまで検索エンジンに載せないため。ほかの 3 つはカタログと同じ値にする
+# X-Content-Type-Options、Referrer-Policy、HSTS はカタログと同じ値にする
 # frame-ancestors は、fukuemon.dev の記事と、play.fukuemon.dev の中のページだけに埋め込みを許す
 /*
-  X-Robots-Tag: noindex
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
