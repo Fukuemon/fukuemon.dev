@@ -121,6 +121,10 @@ hydrate するページはその framework のランタイムを配るので、2
   - ADR-0008: [読者の identity を持たない](../docs/adr/0008-no-reader-identity.md)
 - クライアント側の状態は、訪問者のブラウザにだけ置く。
 - プレイグラウンド（`play.fukuemon.dev`）は、訪問者のファイルを IndexedDB に置く。キーと値の形は、[プレイグラウンドの Design Doc](../apps/playground/DesignDoc.md#保存) にある。
+- サイトは、表示の設定を、`localStorage` の `fd-motion`、`fd-garden`、`fd-season`、`fd-time` に記録する。
+  - 読むのは全てのページの `head` の inline script で、`html` の `data-motion`、`data-garden`、`data-season-setting`、`data-time-setting` に書く。画面のコードとトップの場面のコードは、`html` の属性を読む。
+  - 書くのは設定の面の script（`apps/web/src/components/site-settings/`）だけにする。
+  - キーと値と、値の決め方は、[全体の Design Doc の「表示の設定」](../docs/design/DesignDoc.md#表示の設定) にある。
 - トップ（`/`）は、端末でトップを開いたことを、`localStorage` の `fd-top-seen` に記録する。
   - `fd-top-seen` を読み書きするのは、`head` の inline script だけにする。立体の庭の場面のコードは、`html` の class `intro` を読む。
   - 例外は、Lighthouse の計測のスクリプト（`scripts/measure-top-lighthouse.mjs`）である。2 回目以降の訪問の状態を作るために、測る前のプロファイルに書く。

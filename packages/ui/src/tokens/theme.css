@@ -276,7 +276,7 @@
   }
 }
 
-/* 文字を持つ行の選択。Chromium は文字の下に Canvas の板を敷くので、文字は CanvasText のまま、塗りと枠だけを選択の色にする */
+/* 文字を持つ要素の選択。Chromium は文字の下に Canvas の板を敷くので、文字は CanvasText のまま、塗りと枠だけを選択の色にする */
 @utility forced-on-row {
   @media (forced-colors: active) {
     background-color: var(--fd-forced-on) !important;
@@ -493,7 +493,7 @@
     color: var(--fd-color-text);
   }
   & > :is([aria-current="true"], [aria-pressed="true"]) {
-    @apply stitch-current forced-on;
+    @apply stitch-current forced-on-row;
     z-index: 10;
     border-color: var(--fd-color-text);
     background-color: var(--fd-color-text);
@@ -623,22 +623,37 @@
 }
 
 /*
- * OS で動きを減らす設定にした訪問者には、位置、大きさ、回転を動かす動きを出さない。
+ * OS で動きを減らす設定にした訪問者と、サイトの設定でアニメーションをオフにした訪問者には、位置、大きさ、回転を動かす動きを出さない。
+ * サイトの設定は、html の data-motion に on か off で書く。on の訪問者には、OS の設定に依らず動きを出す。属性の無いページ（カタログ、プレイグラウンド）は、OS の設定に従う。
  * scroll-fade-end の右端の薄い色は、途中の濃さを出さず、右端まで送ったときに一度に消える。
  * step-end がほかのスクロールに合わせた動きに及ばないよう、緩急は変数で scroll-fade-end にだけ渡す。
  */
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-motion="on"]) {
     --fd-scroll-fade-ease: step-end;
   }
 
-  *,
-  *::before,
-  *::after,
-  *::backdrop {
+  :root:not([data-motion="on"]) *,
+  :root:not([data-motion="on"]) *::before,
+  :root:not([data-motion="on"]) *::after,
+  :root:not([data-motion="on"]) *::backdrop {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+:root[data-motion="off"] {
+  --fd-scroll-fade-ease: step-end;
+}
+
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after,
+:root[data-motion="off"] *::backdrop {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
 }

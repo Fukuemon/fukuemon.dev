@@ -20,7 +20,7 @@ interface VirtualModulePlugin {
 
 /**
  * `virtual:ink-gate` の default export を、ビルドのときに作った `inkGateFragment()` の文字列にする。
- * 最初の訪問のときだけ読み込む `ink-gate-entry.ts` が、この文字列を HTML に挿入する。
+ * イントロを出すときだけ読み込む `ink-gate-entry.ts` が、この文字列を HTML に挿入する。
  */
 export function inkGateVirtualModule(): VirtualModulePlugin {
   return {

@@ -13,23 +13,24 @@ import {
   styledCards,
 } from "../../selectors/garden";
 
-import { AUTUMN_NOON } from "./garden-time";
+import { AUTUMN_NOON } from "../../fixtures/garden-time";
 import { seenBefore } from "../../widgets/actions/seen-before";
+import { presetSettings } from "../../widgets/actions/preset-settings";
 
 // SwiftShader は 1 フレームを描くのが遅く、カメラが止まるまで数秒かかるので、テストの時間の上限を 3 倍にする
 test.beforeEach(() => test.slow());
 
 /**
- * 庭を開く。`paused` が true のときは、続けて「動きを止める」を押す。
- * カメラは、止めると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると、`expectAt` の 1 回の待ちの上限（config の expect の時間）を超える。
+ * 庭を開く。`paused` が true のときは、表示の設定でアニメーションをオフにして開く。
+ * カメラは、オフにすると 1 フレームで行き先に着く。止めないと、SwiftShader の描画が遅いので、2 回の移動に単独でも 35〜46 秒かかり、ほかの spec と並べると、`expectAt` の 1 回の待ちの上限（config の expect の時間）を超える。
  * 移動の動き自体を確かめるテスト以外は、止めてから移る。
  */
 const openGarden = async (page: Page, { paused = false } = {}) => {
   await seenBefore(page);
+  if (paused) await presetSettings(page, { motion: "off", garden: "on" });
   await page.clock.setFixedTime(AUTUMN_NOON);
   await page.goto("/");
   await expect(htmlElement(page)).toHaveClass(/garden-ready/);
-  if (paused) await page.getByTestId("garden-pause").click();
 };
 
 const card = (page: Page, id: string) => page.getByTestId(`garden-card-${id}`);
@@ -84,15 +85,17 @@ test.describe("トップの庭", () => {
       await expect(page.getByTestId("garden-station-1")).toBeFocused();
     });
 
-    test("「文だけで読む」を押した場合、ふつうのページが出て、フォーカスが h1 に移り、セクションにインラインのスタイルが残らないこと", async ({
+    test("表示の設定で庭の表示をオフにした場合、ふつうのページが出て、フォーカスが設定に残り、セクションにインラインのスタイルが残らないこと", async ({
       page,
     }) => {
       await openGarden(page);
       await page.getByTestId("garden-station-1").click();
-      await page.getByTestId("garden-plain").click();
+      await page.getByTestId("site-settings-open").click();
+      await page.getByTestId("setting-garden").click();
       await expect(page.getByTestId("garden-stage")).toBeHidden();
       await expect(page.getByTestId("garden-nav")).toBeHidden();
-      await expect(page.getByTestId("garden-title")).toBeFocused();
+      await expect(page.getByTestId("setting-garden")).toBeFocused();
+      await expect(page.getByTestId("setting-garden")).toHaveAttribute("aria-checked", "false");
       await expect(mainCards(page)).toHaveCount(4);
       await expect(styledCards(page)).toHaveCount(0);
       await expect(currentCards(page)).toHaveCount(0);
