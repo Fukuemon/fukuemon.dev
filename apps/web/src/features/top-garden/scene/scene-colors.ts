@@ -33,7 +33,6 @@ export interface TimePalette {
   readonly paper: string;
   readonly water: string;
   readonly text: string;
-  readonly link: string;
   readonly textMist: string;
   readonly hemiSky: string;
   readonly hemiGround: string;
@@ -67,7 +66,6 @@ const DAY: TimePalette = {
   paper: "#f6f2e7",
   water: "#8fb4b0",
   text: "#1a1714",
-  link: "#3d4b2b",
   textMist: "rgba(251, 249, 243, 0.95)",
   hemiSky: "#f6f2e8",
   hemiGround: "#7b785e",
@@ -131,7 +129,6 @@ export const TIME_PALETTES: Readonly<Record<TimeOfDay, TimePalette>> = {
     paper: "#2b303b",
     water: "#27405e",
     text: "#f4f1ea",
-    link: "#b9cca3",
     textMist: "rgba(18, 24, 34, 0.92)",
     hemiSky: "#8ea4c6",
     hemiGround: "#1a1f17",

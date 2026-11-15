@@ -82,11 +82,10 @@ const row = "border-t border-border py-2";
         </div>
       </div>
       <div class="-ms-2.5 mt-4 flex gap-2 [html.stage-on_&]:gap-4">
-        {/* 和紙は縮んで映るので、庭では押せる範囲を 60px にし、負の margin で並びの中では 44px を占めるようにする。並びの -ms-2.5 は、アイコンの左端を文の左端に揃える */}
         {
           links.map(({ label, href, path }) => (
             <a
-              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring [html.stage-on_&]:-m-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:min-w-15"
+              class="inline-flex min-h-11 min-w-11 items-center justify-center text-text focus-visible:focus-ring [html.stage-on_&]:-m-2 [html.stage-on_&]:min-h-15 [html.stage-on_&]:min-w-15 [html.stage-on_&]:text-inherit"
               href={href}
               aria-label={label}
             >
