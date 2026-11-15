@@ -31,7 +31,7 @@ node-pg
 ## SQL のペインと同じ DB
 
 プレビューの隣の「SQL」のタブは、Node のコードと同じ DB に SQL を送る。
-Node のコードで追加した行が、SQL のタブの検索の結果に出る。
+`node pool.js` で追加した行は、SQL のタブで `select user_name from sessions order by id;` を実行すると、結果に出る。
 
 ## 書く人向けの置き方
 
