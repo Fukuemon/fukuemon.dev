@@ -1,12 +1,17 @@
 import type { Page } from "@playwright/test";
 
 /**
- * 表示の設定を、開く前に保存した状態にする。キーは `apps/web/src/components/site-settings/settings.ts` の `fd-motion` と `fd-garden`。
+ * 表示の設定を、開く前に保存した状態にする。キーは `apps/web/src/components/site-settings/settings.ts` の `fd-motion`、`fd-garden`、`fd-season`、`fd-time`。
  * 開くたびに動くが、まだ保存していない設定だけを書く。テストの中で歯車から変えた値を、読み込み直しで戻さないためである。
  */
 export const presetSettings = (
   page: Page,
-  settings: { motion?: "on" | "off"; garden?: "on" | "off" },
+  settings: {
+    motion?: "on" | "off";
+    garden?: "on" | "off";
+    season?: "spring" | "summer" | "autumn" | "winter";
+    time?: "morning" | "day" | "evening" | "night";
+  },
 ) =>
   page.addInitScript((s) => {
     for (const [name, value] of Object.entries(s)) {
