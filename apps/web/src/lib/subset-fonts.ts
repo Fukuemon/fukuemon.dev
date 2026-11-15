@@ -54,7 +54,7 @@ export function subsetFonts(
         const unused = new Set(
           faces.filter((face) => texts.get(face.url) === "").map((f) => f.url),
         );
-        // 消すファイルは、分割の作り直しと CSS の書き換えの前に全て検査する。途中で止まると、出力が書き換えの途中のまま残る。
+        // 削除するファイルは、分割の作り直しと CSS の書き換えの前に全て検査する。途中で止まると、出力が書き換えの途中のまま残る。
         const removed = new Set<string>();
         const rewrites: [string, string, string][] = [];
         for (const f of css) {
@@ -76,9 +76,11 @@ export function subsetFonts(
         for (const path of stalePaths) {
           const name = relative(root, path);
           if (kept.has(path))
-            throw new Error(`${name}: 外した規則のファイルを、残した規則も指している`);
+            throw new Error(
+              `${name}: 削除する @font-face のファイルを、残した @font-face も指している`,
+            );
           if (!(await stat(path).catch(() => undefined))?.isFile())
-            throw new Error(`${name}: 外した規則のファイルが出力に無い`);
+            throw new Error(`${name}: 削除する @font-face のファイルが出力に無い`);
         }
         const renames = new Map<string, string>();
         let before = 0;

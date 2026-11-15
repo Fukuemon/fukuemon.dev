@@ -321,7 +321,7 @@ describe("ビルド後の作り直し", () => {
     subsets: subsetFont.mock.calls.length,
   });
 
-  it("使う字の無い分割は、@font-face を CSS から外し、ファイルを消す", async () => {
+  it("使う字の無い分割は、@font-face を CSS から削除し、ファイルも削除する", async () => {
     await build({ html: heading("あ"), css: both });
 
     expect(await state()).toStrictEqual({
@@ -331,7 +331,7 @@ describe("ビルド後の作り直し", () => {
     });
   });
 
-  it("使う字の無い分割の規則を外すときは、規則が指す woff のファイルも消す", async () => {
+  it("使う字の無い分割の @font-face を削除するときは、@font-face が指す woff のファイルも削除する", async () => {
     const withWoff = face("b", "U+3044").replace(
       'format("woff2")',
       'format("woff2"),url("/_astro/b.BBBBBBBB.woff")format("woff")',
@@ -345,13 +345,13 @@ describe("ビルド後の作り直し", () => {
     expect((await state()).files).toStrictEqual(["app.js", "page.css", "site.css", renamed].sort());
   });
 
-  it("使う字の無い分割の @font-face は、どの CSS からも外す", async () => {
+  it("使う字の無い分割の @font-face は、どの CSS からも削除する", async () => {
     await build({ html: heading("あ"), css: both, pageCss: face("b", "U+3044") });
 
     expect(await readFile(join(dir, "_astro/page.css"), "utf8")).toBe("");
   });
 
-  it("引用符で囲んだ URL の規則も外す", async () => {
+  it("引用符で囲んだ URL の @font-face も削除する", async () => {
     const quoted = face("b", "U+3044").replace(
       "url(/_astro/b.AAAAAAAA.woff2)",
       'url("/_astro/b.AAAAAAAA.woff2")',
@@ -363,7 +363,7 @@ describe("ビルド後の作り直し", () => {
     );
   });
 
-  it("rebuild が false のときは、使う字のある分割を作り直さず、使う字の無い分割の規則だけを外す", async () => {
+  it("rebuild が false のときは、使う字のある分割を作り直さず、使う字の無い分割の @font-face だけを削除する", async () => {
     await build({ html: heading("あ"), css: both, options: { rebuild: false } });
 
     expect(await state()).toStrictEqual({
@@ -374,12 +374,12 @@ describe("ビルド後の作り直し", () => {
   });
 
   it.each([
-    ["/_astro/a.AAAAAAAA.woff2", "残した規則も指している", false],
-    ["/_astro/a.AAAAAAAA.woff2", "残した規則も指している", true],
-    ["/_astro/./a.AAAAAAAA.woff2", "残した規則も指している", false],
+    ["/_astro/a.AAAAAAAA.woff2", "残した @font-face も指している", false],
+    ["/_astro/a.AAAAAAAA.woff2", "残した @font-face も指している", true],
+    ["/_astro/./a.AAAAAAAA.woff2", "残した @font-face も指している", false],
     ["/_astro/missing.woff", "出力に無い", false],
   ])(
-    "外す規則の src の %s を消せないときは、作り直しも書き換えもせずにビルドを止める（%s、rebuild: %s）",
+    "削除する @font-face の src の %s を削除できないときは、作り直しも書き換えもせずにビルドを止める（%s、rebuild: %s）",
     async (url, message, rebuild) => {
       const shared = face("b", "U+3044").replace(
         'format("woff2")',
@@ -400,7 +400,7 @@ describe("ビルド後の作り直し", () => {
     },
   );
 
-  it("外す規則の src のうち、woff2 と woff でないファイルは消さない", async () => {
+  it("削除する @font-face の src のうち、woff2 と woff でないファイルは削除しない", async () => {
     const svg = face("b", "U+3044").replace(
       'format("woff2")',
       'format("woff2"),url(/_astro/b.svg)format("svg")',
