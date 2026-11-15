@@ -103,3 +103,24 @@ const meta = {
 export default meta;
 
 export const Overview: StoryObj<typeof meta> = { name: "一覧" };
+
+/** 選択中を aria-current で示すボタングループ。トップの庭の中の移動のボタンと同じ属性である。 */
+export const BandCurrent: StoryObj<typeof meta> = {
+  name: "ボタングループ（aria-current）",
+  render: () => (
+    <div className="bg-surface p-6 text-text">
+      <div className="band">
+        {["自動", "朝", "昼"].map((label) => (
+          <button
+            aria-current={label === "昼" ? "true" : "false"}
+            className="min-h-11 min-w-11 cursor-pointer px-3 text-label focus-visible:focus-ring"
+            key={label}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};

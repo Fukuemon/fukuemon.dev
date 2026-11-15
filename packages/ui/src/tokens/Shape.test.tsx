@@ -4,7 +4,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import * as stories from "./Shape.stories";
 
-const { Overview } = composeStories(stories);
+const { Overview, BandCurrent } = composeStories(stories);
 
 const styleOf = (name: string) => getComputedStyle(screen.getByRole("button", { name }));
 
@@ -23,15 +23,31 @@ describe("band", () => {
     });
   });
 
-  it("子要素に枠線とステッチを描き、選択中の子要素は背景と文字の色を反転して手前に出す", () => {
-    render(<Overview />);
-    const [plain, picked] = ["春", "秋"].map(styleOf);
-    expect({
-      border: plain?.borderTopWidth,
-      stitched: plain?.backgroundImage.includes("repeating-linear-gradient"),
-      inverted:
-        picked?.backgroundColor === plain?.color && picked?.color === plain?.backgroundColor,
-      zIndex: picked?.zIndex,
-    }).toStrictEqual({ border: "1px", stitched: true, inverted: true, zIndex: "10" });
-  });
+  it.each([
+    { attribute: "aria-pressed", Story: Overview, names: ["春", "秋"] },
+    { attribute: "aria-current", Story: BandCurrent, names: ["朝", "昼"] },
+  ])(
+    "$attribute で選択中の子要素は、背景と文字の色を反転し、ステッチを文字の色にして手前に出す",
+    ({ Story, names }) => {
+      render(<Story />);
+      const [plain, picked] = names.map(styleOf);
+      expect({
+        border: plain?.borderTopWidth,
+        stitched: plain?.backgroundImage.includes("repeating-linear-gradient"),
+        inverted:
+          picked?.backgroundColor === plain?.color && picked?.color === plain?.backgroundColor,
+        stitchColor: [
+          plain?.getPropertyValue("--fd-stitch") === "",
+          picked?.getPropertyValue("--fd-stitch") !== "",
+        ],
+        zIndex: picked?.zIndex,
+      }).toStrictEqual({
+        border: "1px",
+        stitched: true,
+        inverted: true,
+        stitchColor: [true, true],
+        zIndex: "10",
+      });
+    },
+  );
 });
