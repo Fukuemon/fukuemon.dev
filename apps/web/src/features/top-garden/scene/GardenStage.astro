@@ -123,10 +123,10 @@ const skip =
     --fd-color-focus: var(--fd-color-garden-ink-night);
   }
 
-  /* 庭とヘッダーは画面に固定して重ねるので、フォーカスが当たった「本文へスキップ」は、その上に出す */
-  :global(html.stage-on [data-skip-link]:focus) {
-    position: fixed;
-    z-index: 40;
+  /* 最初の訪問のイントロの間は、墨の絵の下に隠れたヘッダーと和紙の文のリンクにフォーカスが移らないよう、文を出すまで隠す */
+  :global(html.stage-on.intro:not(.garden-ready) [data-site-header]),
+  :global(html.stage-on.intro:not(.garden-ready) [data-garden-card]) {
+    visibility: hidden;
   }
 
   /* 狭い画面では、幅 320px でもヘッダーを霞の色で塗りつぶす範囲の 1 段に収めるよう、ロゴをさらに小さくする。左右の余白と間は、ヘッダーの側で詰めてある */
