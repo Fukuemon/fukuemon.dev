@@ -153,7 +153,7 @@ CI では、apply の workflow が、`TF_VAR_account_id`、`TF_VAR_zone_id`、`T
   - `apps/docs-site/wrangler.jsonc` の `name` と `docs_worker_name` のデフォルト値を比べる
   - プレビューの Worker は custom domain を持たず、Terraform の変数に名前が無いので、比べない
 - `pnpm run check:deploy`: サイト、プレビュー、カタログ、プレイグラウンド、ドキュメントサイトの `wrangler deploy --dry-run` を実行する。プレビューは、サイトの build の出力に noindex を足した複製を読む。カタログは `pnpm run build:storybook` の出力を、プレイグラウンドは `apps/playground` の build の出力を、ドキュメントサイトは `apps/docs-site` の build の出力を読む
-- `pnpm run check:closed-urls`: `apps/docs-site/scripts/check-closed-urls.sh` を実行する。ドキュメントサイトの Worker の `workers_dev` と `preview_urls` が `false` であることと、`_headers` のすべてのパスに noindex があることを確認する。`wrangler.jsonc` のほかに wrangler の設定ファイル（`wrangler.json`、`.wrangler/deploy/config.json`）が無いことと、`route` と `routes` が無いことも確認する。`package.json` の `deploy` が、引数の無い `wrangler deploy` であることと、`predeploy` と `postdeploy` が無いことも確認する。custom domain は Terraform で作る（ADR-0005）。deploy の workflow は apply を通らないので、Access の外の URL を開く変更を、この確認で止める。deploy-docs workflow も、配信の前にこの確認を実行する
+- `pnpm run check:closed-urls`: `apps/docs-site/scripts/check-closed-urls.sh` を実行する。ドキュメントサイトの Worker の `workers_dev` と `preview_urls` が `false` であることと、`_headers` のすべてのパスに noindex があることを確認する。`wrangler.jsonc` のほかに wrangler の設定ファイル（`wrangler.json`、`.wrangler/deploy/config.json`）が無いことと、`route` と `routes` が無いことも確認する。`package.json` の `deploy` が、引数の無い `wrangler deploy` であることと、`predeploy` と `postdeploy` が無いことも確認する。custom domain は Terraform で作る（ADR-0005）。deploy の workflow は apply を通らないので、custom domain のほかの URL を開く変更を、この確認で止める。deploy-docs workflow も、配信の前にこの確認を実行する
 - check の workflow（`.github/workflows/check.yml`）が、`infra:check` と、上の 3 つを含む `pnpm run check` を実行する
 - workflow は次の 6 つ
   - apply: `.github/workflows/apply.yml`
