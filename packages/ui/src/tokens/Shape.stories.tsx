@@ -86,7 +86,7 @@ function ShapeTokens() {
         <h2 className="font-heading text-heading-md font-semibold">フォーカス</h2>
         <button
           type="button"
-          className="focus-ring w-fit rounded-control bg-primary px-4 py-3 text-label text-text-inverse"
+          className="focus-ring w-fit rounded-control bg-primary stitch stitch-current px-4 py-3 text-label text-text-inverse"
         >
           フォーカスの表示
         </button>
