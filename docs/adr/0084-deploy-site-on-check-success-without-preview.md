@@ -6,11 +6,9 @@
 
 ## Context
 
-本番を作り直したサイトに切り替える。切り替えまでの間は、本番の Worker の deploy を手動だけにし、開発中のサイトを別の Worker に配信すると決めていた。
+本番を作り直したサイトに切り替えるときに、本番の Worker の deploy の契機と、開発中のサイトの確認先を決める必要がある。
 
-- 切り替えの前は、本番の Worker を手で起動したときだけ deploy し、開発中のサイトをプレビューの Worker（`fukuemon-dev-preview`）に配信すると決めている。
-  - ADR-0031: [サブドメインに分ける規則を決め、1 つのアプリを 1 つの Worker とホスト名に割り当てる](0031-subdomains-and-workers.md#6-切り替えまでのプレビュー)
-- 通常の deploy workflow は push を起点に自動で動き、deploy の範囲に絞った token だけを持つと決めている。本番の Worker は、切り替えまでの例外にしていた。
+- 通常の deploy workflow は、push を起点に自動で動き、deploy の範囲に絞った token だけを持つと決めている。
   - ADR-0005: [Cloudflare Workers Static Assets を採用し、基盤を Terraform、deploy を Wrangler が管理する](0005-workers-terraform-wrangler-boundary.md#5-credential-を-2-系統に分ける)
 - カタログ、プレイグラウンド、ドキュメントサイトの Worker は、すでに develop の check の成功で deploy している。
 
@@ -39,7 +37,6 @@
 
 - Worker が、サイト、プレイグラウンド、カタログ、ドキュメントサイトの 4 つになる。
 - 4 つの Worker が、同じ契機で deploy される。
-- workers.dev で公開する Worker が無くなる。
 
 ### Negative
 
