@@ -131,6 +131,10 @@ describe("applyStage", () => {
     expect([run().inks.length, run({ seen: true }).inks.length]).toStrictEqual([1, 0]);
   });
 
+  it("墨の絵と署名のファイルが無いときは、最初の訪問でもイントロを出さず、庭だけを出す", () => {
+    expect([...run({ loadInk: null }).root.classes]).toStrictEqual(["stage-on"]);
+  });
+
   it("動きを減らす設定と、場面のバンドルが無いときは、墨の絵と署名のファイルを読み込まない", () => {
     expect([
       run({ reducedMotion: true }).inks.length,
@@ -191,6 +195,7 @@ describe("applyStage", () => {
           throw new DOMException("blocked", "SecurityError");
         },
         load: () => {},
+        loadInk: () => {},
         later: () => {},
       },
       fns,
@@ -278,7 +283,10 @@ describe("stageScript", () => {
         head: { appendChild: (s: { src?: string; type?: string }) => void appended.push(s) },
       },
     };
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      globals,
+    );
     expect({
       classes: [...b.root.classes].sort(),
       src: appended[0]?.src,
@@ -330,7 +338,10 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
         head: { appendChild: (s: { onerror?: () => void }) => void appended.push(s) },
       },
     };
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      globals,
+    );
     appended[0]?.onerror?.();
     expect([...b.root.classes]).toStrictEqual([]);
   });
@@ -347,7 +358,10 @@ describe("stageScript の場面のバンドルの読み込みの失敗", () => {
       },
       setTimeout: (fn: () => void, ms: number) => void timers.push({ fn, ms }),
     };
-    runInNewContext(stageScript({ dev: false, bundle: "/_astro/scene.js" }), globals);
+    runInNewContext(
+      stageScript({ dev: false, bundle: "/_astro/scene.js", ink: "/_astro/ink.js" }),
+      globals,
+    );
     timers[0]!.fn();
     expect({ ms: timers.map((t) => t.ms), classes: [...b.root.classes] }).toStrictEqual({
       ms: [6000],
@@ -374,6 +388,7 @@ describe("inline script に埋め込む形", () => {
         reducedMotion: false,
         storage: () => memory(),
         load: () => {},
+        loadInk: () => {},
         later: () => {},
       },
       fns,

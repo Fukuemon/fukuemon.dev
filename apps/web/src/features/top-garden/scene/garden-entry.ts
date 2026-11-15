@@ -211,6 +211,11 @@ function boot(): void {
   ).filter((el) => el !== null);
   // data-season と data-time は、head の inline script が、決めた値のどれかを必ず書いている。
   const intro = root.classList.contains("intro");
+  // 墨の絵と署名が届かなかったときは、場面を組み立てずに、ふつうのページに戻す。
+  if (intro && root.classList.contains("ink-failed")) {
+    leave(cards);
+    return;
+  }
   const opts = {
     season: root.dataset.season as Season,
     time: root.dataset.time as TimeOfDay,
