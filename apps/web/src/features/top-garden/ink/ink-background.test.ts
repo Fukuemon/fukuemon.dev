@@ -17,8 +17,28 @@ describe("inkBackgroundSvg", () => {
     expect(svg).not.toContain("var(");
   });
 
-  it("同じ origin の URL を直接開いたときに動くものを持たない", () => {
-    expect(svg).not.toMatch(/<script|<foreignObject|\son[a-z]+=|href=/i);
+  it("同じ origin の URL を直接開いても動くものが無いよう、絵を描く要素だけを使う", () => {
+    const allowed = [
+      "svg",
+      "style",
+      "defs",
+      "filter",
+      "feTurbulence",
+      "feColorMatrix",
+      "feComposite",
+      "feGaussianBlur",
+      "radialGradient",
+      "stop",
+      "g",
+      "path",
+      "circle",
+    ];
+    const used = new Set([...svg.matchAll(/<([a-zA-Z]+)/g)].map((m) => m[1]));
+    expect([...used].filter((name) => !allowed.includes(name!))).toStrictEqual([]);
+  });
+
+  it("属性に、イベントの処理と外の参照を持たない", () => {
+    expect(svg).not.toMatch(/\son[a-z]+=|href=|@import|url\((?!#)/i);
   });
 
   it("gzip で 30 KiB 以下に収まる", () => {
