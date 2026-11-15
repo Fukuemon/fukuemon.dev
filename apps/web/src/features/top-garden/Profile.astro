@@ -43,8 +43,8 @@ const career: { year: string; title: string; detail: Line[] }[] = [
     ],
   },
 ];
-/** 活動は団体の名前だけを、団体の公式のページへのリンクにする */
-const titles: { text: string; href?: string }[] = [
+/** 肩書きと活動の行。活動は団体の名前だけを、団体の公式のページへのリンクにする */
+const roles: { text: string; href?: string }[] = [
   { text: "うぇぶえんじにあ" },
   { text: "GDG Greater Kwansai", href: "https://gdg.community.dev/gdg-greater-kwansai/" },
   { text: "Alpha+Project", href: "https://greek-academy.org/" },
@@ -76,7 +76,7 @@ const row = "border-t border-border py-2";
         <div class="min-w-0">
           <ul class="mb-4 space-y-1 text-text-secondary [html.stage-on_&]:space-y-4 [html.stage-on_&]:text-inherit">
             {
-              titles.map(({ text, href }) =>
+              roles.map(({ text, href }) =>
                 href ? (
                   <li>
                     <a
