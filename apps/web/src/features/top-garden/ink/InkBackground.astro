@@ -17,9 +17,12 @@
     background: transparent;
   }
 
+  /* 高さを大きいほうの画面の高さに固定し、スマートフォンのアドレスバーが伸び縮みしても、filter を含む絵を描き直さない */
   .ink-background {
     position: fixed;
-    inset: 0;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 100lvh;
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
