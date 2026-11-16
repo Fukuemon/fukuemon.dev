@@ -7,7 +7,8 @@ import "../styles/site.css";
 
 interface Props {
   title: string;
-  description: string;
+  /** 省くと、meta description と og:description を出さない。トップは説明の文を持たない */
+  description?: string;
   /** 検索エンジンに載せないページ。canonical を出さず、noindex を出す */
   noindex?: boolean;
   /** 画面全体に薄墨の背景の絵を敷くページ（ADR-0082）。トップでは、庭を出さないときだけ出る */
@@ -35,10 +36,10 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>{title}</title>
-    <meta name="description" content={description} />
+    {description !== undefined && <meta name="description" content={description} />}
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    {description !== undefined && <meta property="og:description" content={description} />}
     <meta property="og:url" content={url} />
     <meta property="og:image" content={new URL(ogImage, Astro.site)} />
     <meta property="og:type" content={ogType} />

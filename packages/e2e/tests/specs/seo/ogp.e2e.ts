@@ -13,12 +13,20 @@ const OG_PROPERTIES = [
 ];
 
 test.describe("OGP", () => {
-  for (const path of ["/", "/articles", "/playground"]) {
+  // トップは説明の文を持たないので、og:description を出さない
+  for (const { path, hasDescription } of [
+    { path: "/", hasDescription: false },
+    { path: "/articles", hasDescription: true },
+    { path: "/playground", hasDescription: true },
+  ]) {
     test(`${path} の HTML は、OGP の meta を揃え、共通の画像を指すこと`, async ({ page }) => {
       await page.goto(path);
       await check(page, "ならば OGP の meta が揃い、画像は共通の 1 枚を指す", async () => {
-        for (const property of OG_PROPERTIES)
+        for (const property of OG_PROPERTIES.filter(
+          (p) => hasDescription || p !== "og:description",
+        ))
           await expect(ogMeta(page, property)).toHaveAttribute("content", /\S/);
+        if (!hasDescription) await expect(ogMeta(page, "og:description")).toHaveCount(0);
         await expect(ogMeta(page, "og:image")).toHaveAttribute(
           "content",
           "https://fukuemon.dev/og/default.png",

@@ -8,7 +8,7 @@ export const GET: APIRoute = async ({ site }) => {
   const xml = buildRss(
     {
       title: "fukuemon.dev",
-      description: "Fukuemon の技術記事を公開しています。",
+      description: "fukuemon.dev",
       language: "ja",
       site,
     },
