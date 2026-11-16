@@ -30,6 +30,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@fontsource/zen-old-mincho": "5.3.1",
+    "@resvg/resvg-js": "2.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/hast": "^3.0.5",
     "@types/mdast": "^4.0.4",
@@ -40,6 +42,7 @@
     "parse5": "^8.1.1",
     "remark-gfm": "4.0.1",
     "remark-rehype": "11.1.2",
+    "satori": "0.63.2",
     "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.2",

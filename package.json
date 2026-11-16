@@ -83,7 +83,6 @@
       },
       "packages/ui": {
         "entry": [
-          "src/tokens/tokens.gen.css",
           "e2e/**/*.ts"
         ]
       }

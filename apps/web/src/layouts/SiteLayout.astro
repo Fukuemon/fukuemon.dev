@@ -2,6 +2,7 @@
 import InkBackground from "../components/ink-background/InkBackground.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { settingsScript } from "../components/site-settings/settings";
+import { DEFAULT_OG_IMAGE } from "../features/og-image/og-image";
 import "../styles/site.css";
 
 interface Props {
@@ -11,8 +12,19 @@ interface Props {
   noindex?: boolean;
   /** 画面全体に薄墨の背景の絵を敷くページ（ADR-0082）。トップでは、庭を出さないときだけ出る */
   inkBackground?: boolean;
+  /** OGP の画像のパス。省くと、トップと一覧のページの共通の画像になる */
+  ogImage?: string;
+  /** 記事のページは article、ほかは website */
+  ogType?: "website" | "article";
 }
-const { title, description, noindex = false, inkBackground = false } = Astro.props;
+const {
+  title,
+  description,
+  noindex = false,
+  inkBackground = false,
+  ogImage = DEFAULT_OG_IMAGE,
+  ogType = "website",
+} = Astro.props;
 const url = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -25,6 +37,12 @@ const url = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+    <meta property="og:type" content={ogType} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="fukuemon.dev" href="/rss.xml" />
     <script is:inline set:html={settingsScript()} />
