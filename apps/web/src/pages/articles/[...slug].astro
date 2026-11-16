@@ -1,6 +1,7 @@
 ---
 import { SeriesPager } from "@fukuemon/ui";
 import PlaygroundEmbedScript from "../../features/articles/PlaygroundEmbedScript.astro";
+import { articleOgImage } from "../../features/og-image/og-image";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { getArticlePaths, renderArticle, type ArticlePageProps } from "../../lib/content/articles";
 
@@ -13,7 +14,12 @@ const Content = await renderArticle(id);
 const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
 ---
 
-<SiteLayout title={`${title} | fukuemon.dev`} description={description}>
+<SiteLayout
+  title={`${title} | fukuemon.dev`}
+  description={description}
+  ogImage={articleOgImage(id)}
+  ogType="article"
+>
   <div class="mx-auto max-w-page px-4 py-8 md:px-6">
     <article class="flex max-w-body flex-col gap-8">
       <header class="flex flex-col gap-2">

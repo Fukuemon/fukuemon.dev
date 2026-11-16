@@ -6,6 +6,7 @@
     ".": "./src/index.ts",
     "./theme.css": "./src/tokens/theme.css",
     "./fonts.css": "./src/tokens/fonts.css",
+    "./tokens.gen.css": "./src/tokens/tokens.gen.css",
     "./sources.css": "./src/sources.css",
     "./button-class-name": "./src/base/Button/buttonClassName.ts",
     "./ios-viewport": "./src/platform/iosViewport.ts",

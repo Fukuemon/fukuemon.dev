@@ -37,6 +37,7 @@ export default defineConfig({
         "src/lib/rehype-ja-linebreak.ts",
         "src/lib/rehype-mermaid.ts",
         "src/lib/rehype-scroll-box.ts",
+        "src/features/og-image/og-image.ts",
       ],
       thresholds: { branches: 90, functions: 90, lines: 90, statements: 90 },
       reporter: ["text-summary"],
